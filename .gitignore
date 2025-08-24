@@ -27,6 +27,11 @@ dist-ssr
 src-tauri/target/
 src-tauri/gen/
 
+# Rust
+**/target/
+**/Cargo.lock
+**/gen/schemas
+
 # Python (legacy)
 __pycache__/
 *.py[cod]
@@ -35,7 +40,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -57,5 +61,10 @@ venv/
 # IDEs
 .cursor/
 
-/target/
-/gen/schemas
+# Build artifacts
+*.rlib
+*.rmeta
+*.d
+*.o
+*.bin
+incremental/

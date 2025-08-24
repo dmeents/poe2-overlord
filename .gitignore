@@ -56,3 +56,6 @@ venv/
 
 # IDEs
 .cursor/
+
+/target/
+/gen/schemas

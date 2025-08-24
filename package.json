@@ -1,50 +1,29 @@
 {
-  "name": "poe2-master-overlay",
+  "name": "poe2-master",
   "private": true,
   "version": "0.1.0",
   "description": "A powerful game overlay for Path of Exile 2 built with Tauri and React",
   "author": "POE2 Master Team",
   "license": "MIT",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "tauri": "tauri",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "tauri:info": "tauri info",
-    "clean": "rm -rf dist src-tauri/target",
-    "format": "prettier --write src/**/*.{ts,tsx,js,jsx}"
-  },
-  "dependencies": {
-    "@tauri-apps/api": "^2.8.0",
-    "@tauri-apps/plugin-fs": "^2.4.2",
-    "@tauri-apps/plugin-process": "^2.3.0",
-    "@tauri-apps/plugin-shell": "^2.3.0",
-    "@tauri-apps/plugin-window": "^2.0.0-alpha.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.541.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "tailwind-merge": "^3.3.1"
+    "dev": "yarn workspace @poe2-master/frontend dev",
+    "build": "yarn workspace @poe2-master/frontend build",
+    "lint": "yarn workspace @poe2-master/frontend lint",
+    "preview": "yarn workspace @poe2-master/frontend preview",
+    "tauri": "yarn workspace @poe2-master/frontend tauri",
+    "tauri:dev": "yarn workspace @poe2-master/frontend tauri:dev",
+    "tauri:build": "yarn workspace @poe2-master/frontend tauri:build",
+    "tauri:info": "yarn workspace @poe2-master/frontend tauri:info",
+    "clean": "yarn workspace @poe2-master/frontend clean",
+    "format": "yarn workspace @poe2-master/frontend format",
+    "install:all": "yarn install",
+    "build:all": "yarn build && yarn tauri:build"
   },
   "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@tailwindcss/postcss": "^4.1.12",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.33.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.3.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.12",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "@tauri-apps/cli": "^2.0.0"
   }
 }

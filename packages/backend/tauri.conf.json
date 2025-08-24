@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.poe2master.overlay",
   "build": {
-    "frontendDist": "../dist",
+    "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeDevCommand": "yarn workspace @poe2-master/frontend dev",
+    "beforeBuildCommand": "yarn workspace @poe2-master/frontend build"
   },
   "app": {
     "windows": [

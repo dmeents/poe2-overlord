@@ -1,0 +1,7 @@
+{
+  "name": "@poe2-master/backend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Rust backend for POE2 Master Overlay",
+  "type": "module"
+}

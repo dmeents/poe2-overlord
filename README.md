@@ -1,22 +1,23 @@
 # POE2 Master Overlay
 
-A powerful game overlay for Path of Exile 2 on Linux, built with **GTK4** for modern Wayland support and optimal performance.
+A powerful game overlay for Path of Exile 2 on Linux, built with **GTK4** for modern Wayland support and optimal performance. This overlay provides item price checking, build planning, campaign progression tracking, and other utilities while gaming.
 
 ## 🚀 Features
 
-- **Search Functionality** - Look up item prices and information
-- **Configurable Settings** - Customize appearance and behavior
-- **Modern GTK4 Interface** - Native Linux desktop integration
-- **Wayland Support** - Full compatibility with modern display servers
-- **Game Process Detection** - Automatically detects when POE2 is running
-- **Global Hotkeys** - Toggle overlay with keyboard shortcuts
-- **Draggable Interface** - Move overlay anywhere on screen
+- **Search Functionality** - Look up item prices and information with real-time API integration
+- **Configurable Settings** - Customize appearance, behavior, and hotkeys through built-in settings
+- **Modern GTK4 Interface** - Native Linux desktop integration with CSS-based theming
+- **Wayland Support** - Full compatibility with modern display servers and X11 fallback
+- **Game Process Detection** - Automatically detects when POE2 is running and shows/hides overlay
+- **Global Hotkeys** - Toggle overlay with customizable keyboard shortcuts
+- **Draggable Interface** - Move overlay anywhere on screen with position memory
+- **Development Mode** - Hot reloading for rapid development and testing
 
 ## 🛠️ Requirements
 
 - **Linux** (Ubuntu 22.04+, Fedora 36+, Arch Linux, etc.)
 - **Python 3.8+**
-- **GTK4** with Python bindings
+- **GTK4** with Python bindings (PyGObject)
 - **Wayland** or **X11** display server
 
 ## 📦 Installation
@@ -72,6 +73,11 @@ python3 -m src
 
 # Run in development mode with hot reloading
 python3 -m src.dev_server
+
+# Using the Makefile
+make run          # Run the overlay
+make dev          # Start development server
+make run-debug    # Run with debug logging
 ```
 
 ### Controls
@@ -79,6 +85,8 @@ python3 -m src.dev_server
 - **Ctrl+Shift+O** - Toggle overlay visibility
 - **Ctrl+Shift+F** - Quick search
 - **Escape** - Hide overlay
+- **Ctrl+Shift+S** - Show settings dialog
+- **Ctrl+Shift+R** - Refresh data
 - **Mouse drag** - Move overlay around screen
 - **Ctrl+Shift+Arrow keys** - Fine-tune overlay position
 
@@ -89,27 +97,63 @@ The overlay automatically creates a configuration file at `~/.config/poe2-master
 ### Key Settings
 
 - **Window positioning** - Save and restore overlay location
-- **Transparency** - Adjust overlay opacity
+- **Transparency** - Adjust overlay opacity (0.1 - 1.0)
 - **Auto-show/hide** - Automatically show when POE2 starts
 - **Hotkeys** - Customize keyboard shortcuts
-- **API settings** - Configure rate limiting and caching
+- **API settings** - Configure rate limiting, caching, and timeouts
+- **Appearance** - Theme, fonts, colors, and animations
+- **Process detection** - POE2 executable names and check intervals
+
+### Configuration Structure
+
+```json
+{
+  "window": {
+    "width": 400,
+    "height": 300,
+    "transparency": 0.9,
+    "always_on_top": true,
+    "draggable": true
+  },
+  "hotkeys": {
+    "toggle_overlay": "<ctrl>+<shift>+o",
+    "quick_search": "<ctrl>+<shift>+f"
+  },
+  "api": {
+    "rate_limit_requests": 10,
+    "cache_ttl": 300
+  },
+  "search": {
+    "default_league": "Early Access",
+    "max_results": 10
+  }
+}
+```
 
 ## 🏗️ Architecture
 
 The project uses a modular architecture with clear separation of concerns:
 
-- **Core** - Event bus, process monitoring, hotkey management
-- **UI** - GTK4-based interface components
-- **Config** - Configuration management and validation
-- **Services** - Business logic and API integration
+- **Core** - Event bus, process monitoring, hotkey management, overlay coordination
+- **UI** - GTK4-based interface components (main window, search panel, results panel, settings)
+- **Config** - Configuration management, validation, and defaults
+- **Utils** - Logging, helpers, and validation utilities
+
+### Core Components
+
+- **OverlayManager** - Main coordinator for the overlay lifecycle
+- **ProcessMonitor** - Detects POE2 process and manages overlay visibility
+- **HotkeyManager** - Handles global keyboard shortcuts
+- **EventBus** - Inter-component communication system
+- **ConfigManager** - Configuration loading, validation, and persistence
 
 ## 🧪 Development
 
 ### Quick Start
 
 ```bash
-# Install development dependencies
-make install-dev
+# Setup development environment
+make setup-dev
 
 # Start development server with hot reloading
 make dev
@@ -228,10 +272,25 @@ make quick
 poe2-master/
 ├── src/                    # Source code
 │   ├── core/              # Core functionality
+│   │   ├── overlay_manager.py    # Main overlay coordinator
+│   │   ├── process_monitor.py    # POE2 process detection
+│   │   ├── hotkey_manager.py     # Global hotkey handling
+│   │   └── event_bus.py          # Inter-component events
 │   ├── ui/                # GTK4 UI components
+│   │   ├── main_window.py        # Main overlay window
+│   │   ├── search_panel.py       # Search interface
+│   │   ├── results_panel.py      # Results display
+│   │   ├── settings_dialog.py    # Settings configuration
+│   │   └── themes.py             # CSS theming system
 │   ├── config/            # Configuration management
-│   └── services/          # Business logic
+│   │   ├── config_manager.py     # Config loading/validation
+│   │   └── defaults.py           # Default configuration
+│   └── utils/             # Utility functions
+│       ├── logger.py              # Logging setup
+│       ├── helpers.py             # Helper functions
+│       └── validators.py          # Data validation
 ├── tests/                 # Test suite
+│   └── unit/             # Unit tests
 ├── examples/              # Example configurations
 ├── requirements.txt       # Python dependencies
 ├── pyproject.toml         # Project configuration
@@ -254,21 +313,87 @@ This project has been fully migrated from **tkinter** to **GTK4** for:
 
 ### Migration Status
 
-- ✅ **Main Window** - Fully converted to GTK4
-- ✅ **Search Panel** - Converted to GTK4 widgets
-- ✅ **Results Panel** - Converted to GTK4 widgets
-- ✅ **Settings Dialog** - Converted to GTK4 widgets
-- ✅ **Theme Manager** - Updated for GTK4 CSS theming
-- ✅ **Overlay Manager** - Updated for GTK4 Application
-- ✅ **Dependencies** - Updated requirements and installation
+- ✅ **Main Window** - Fully converted to GTK4 with proper overlay behavior
+- ✅ **Search Panel** - Converted to GTK4 widgets with modern search interface
+- ✅ **Results Panel** - Converted to GTK4 widgets with responsive layout
+- ✅ **Settings Dialog** - Converted to GTK4 widgets with form validation
+- ✅ **Theme Manager** - Updated for GTK4 CSS theming system
+- ✅ **Overlay Manager** - Updated for GTK4 Application lifecycle
+- ✅ **Dependencies** - Updated requirements and installation scripts
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite:
+
+- **Unit Tests** - Core functionality testing
+- **Integration Tests** - Component interaction testing
+- **Test Coverage** - Coverage reporting with pytest-cov
+- **Test Configuration** - pytest.ini with custom markers
+
+### Test Categories
+
+- **Unit Tests** - Individual component testing
+- **Integration Tests** - Component interaction testing
+- **Slow Tests** - Performance and stress testing
+
+## 📚 Dependencies
+
+### Core Dependencies
+
+- **requests** - HTTP library for API calls
+- **psutil** - System and process utilities
+- **pynput** - Global hotkey support
+- **PyGObject** - GTK4 Python bindings
+
+### Development Dependencies
+
+- **pytest** - Testing framework
+- **pytest-cov** - Coverage reporting
+- **black** - Code formatter
+- **flake8** - Code linter
+- **mypy** - Type checking
+- **watchdog** - File watching for hot reloading
+
+### System Dependencies
+
+- **GTK4** - Modern GUI toolkit
+- **Python 3.8+** - Python runtime
+- **Linux** - Operating system
+
+## 🚀 Performance Features
+
+- **Hardware Acceleration** - GTK4 rendering with GPU support
+- **Efficient Caching** - API response caching with configurable TTL
+- **Rate Limiting** - Configurable API request throttling
+- **Background Processing** - Non-blocking UI operations
+- **Memory Management** - Efficient resource usage and cleanup
+
+## 🔒 Security Features
+
+- **Input Validation** - Comprehensive data validation
+- **Rate Limiting** - API abuse prevention
+- **Secure Configuration** - Safe configuration file handling
+- **Process Isolation** - Secure process monitoring
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Install development dependencies (`make install-dev`)
+4. Make your changes and add tests
+5. Run the test suite (`make test`)
+6. Format and lint your code (`make format && make lint`)
+7. Commit your changes (`git commit -m 'Add amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Add tests for new functionality
+- Update documentation as needed
+- Use type hints for function parameters
+- Handle errors gracefully with proper logging
 
 ## 📄 License
 
@@ -278,7 +403,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **GTK4** team for the excellent toolkit
 - **Python** community for PyGObject bindings
-- **Path of Exile** community for inspiration
+- **Path of Exile** community for inspiration and feedback
 
 ## 📞 Support
 
@@ -286,6 +411,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Discussions** - Join community discussions
 - **Wiki** - Check the project wiki for detailed documentation
 
+## 🔮 Roadmap
+
+- [ ] **API Integration** - Real-time item price data
+- [ ] **Build Planner** - Character build planning tools
+- [ ] **Campaign Tracker** - Story progression tracking
+- [ ] **Plugin System** - Extensible overlay functionality
+- [ ] **Mobile Companion** - Mobile app integration
+- [ ] **Cloud Sync** - Configuration and data synchronization
+
 ---
 
 **Happy gaming! 🎮⚔️**
+
+_Built with ❤️ for the Path of Exile 2 community_

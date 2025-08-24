@@ -4,6 +4,11 @@
 
 set -e
 
+# Virtual environment paths
+VENV="venv"
+PYTHON="$VENV/bin/python"
+PIP="$VENV/bin/pip"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -26,6 +31,25 @@ print_warning() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Function to check if virtual environment exists
+check_venv() {
+    if [ ! -d "$VENV" ]; then
+        print_error "Virtual environment not found. Creating one..."
+        python3 -m venv "$VENV"
+        print_success "Virtual environment created"
+    fi
+    
+    if [ ! -f "$PYTHON" ]; then
+        print_error "Python not found in virtual environment"
+        exit 1
+    fi
+    
+    if [ ! -f "$PIP" ]; then
+        print_error "Pip not found in virtual environment"
+        exit 1
+    fi
 }
 
 # Function to show help
@@ -65,14 +89,14 @@ check_dependencies() {
     print_status "Checking dependencies..."
     
     # Check GTK4
-    if ! python3 -c "import gi; gi.require_version('Gtk', '4.0')" 2>/dev/null; then
+    if ! $PYTHON -c "import gi; gi.require_version('Gtk', '4.0')" 2>/dev/null; then
         print_error "GTK4 bindings not available. Please install python3-gi and gir1.2-gtk-4.0"
         exit 1
     fi
     
     # Check other dependencies
     for dep in watchdog psutil pynput; do
-        if ! python3 -c "import $dep" 2>/dev/null; then
+        if ! $PYTHON -c "import $dep" 2>/dev/null; then
             print_warning "$dep not available. Run '$0 install' to install dependencies"
         fi
     done
@@ -85,7 +109,7 @@ install_dependencies() {
     print_status "Installing dependencies..."
     
     if [ -f "requirements.txt" ]; then
-        pip3 install -r requirements.txt
+        $PIP install -r requirements.txt
         print_success "Dependencies installed from requirements.txt"
     else
         print_error "requirements.txt not found"
@@ -93,32 +117,32 @@ install_dependencies() {
     fi
     
     # Install in development mode
-    pip3 install -e .
+    $PIP install -e .
     print_success "Package installed in development mode"
 }
 
 # Function to start development server
 start_dev_server() {
     print_status "Starting development server with hot reloading..."
-    python3 -m src.dev_server
+    $PYTHON -m src.dev_server
 }
 
 # Function to run the application
 run_application() {
     print_status "Running POE2 Master Overlay..."
-    python3 -m src
+    $PYTHON -m src
 }
 
 # Function to run tests
 run_tests() {
     print_status "Running tests..."
     
-    if command -v pytest &> /dev/null; then
-        python3 -m pytest tests/ -v
+    if $PYTHON -c "import pytest" 2>/dev/null; then
+        $PYTHON -m pytest tests/ -v
     else
         print_warning "pytest not available. Installing development dependencies..."
         install_dependencies
-        python3 -m pytest tests/ -v
+        $PYTHON -m pytest tests/ -v
     fi
 }
 
@@ -127,22 +151,22 @@ run_checks() {
     print_status "Running code quality checks..."
     
     # Check if tools are available
-    if ! command -v flake8 &> /dev/null; then
+    if ! $PYTHON -c "import flake8" 2>/dev/null; then
         print_warning "flake8 not available. Installing development dependencies..."
         install_dependencies
     fi
     
-    if ! command -v black &> /dev/null; then
+    if ! $PYTHON -c "import black" 2>/dev/null; then
         print_warning "black not available. Installing development dependencies..."
         install_dependencies
     fi
     
     # Run checks
     print_status "Running flake8..."
-    python3 -m flake8 src/ tests/ --max-line-length=100 --ignore=E501,W503
+    $PYTHON -m flake8 src/ tests/ --max-line-length=100 --ignore=E501,W503
     
     print_status "Running black check..."
-    python3 -m black --check src/ tests/ --line-length=100
+    $PYTHON -m black --check src/ tests/ --line-length=100
     
     print_success "All code quality checks passed!"
 }
@@ -173,6 +197,9 @@ clean_artifacts() {
 main() {
     # Check Python availability
     check_python
+    
+    # Check and setup virtual environment
+    check_venv
     
     # Parse command line arguments
     case "${1:-help}" in

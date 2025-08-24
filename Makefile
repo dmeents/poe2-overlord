@@ -3,6 +3,11 @@
 
 .PHONY: help install dev test clean build run install-dev lint format check-deps
 
+# Virtual environment paths
+VENV = venv
+PYTHON = $(VENV)/bin/python
+PIP = $(VENV)/bin/pip
+
 # Default target
 help:
 	@echo "POE2 Master Overlay - Available Commands:"
@@ -40,55 +45,55 @@ help:
 # Development commands
 dev:
 	@echo "🚀 Starting development server with hot reloading..."
-	@python3 -m src.dev_server
+	@$(PYTHON) -m src.dev_server
 
 run:
 	@echo "🎯 Running POE2 Master Overlay..."
-	@python3 -m src
+	@$(PYTHON) -m src
 
 run-debug:
 	@echo "🐛 Running POE2 Master Overlay with debug logging..."
-	@POE2_DEBUG=1 python3 -m src
+	@POE2_DEBUG=1 $(PYTHON) -m src
 
 # Installation commands
 install:
 	@echo "📦 Installing production dependencies..."
-	@pip install -r requirements.txt
+	@$(PIP) install -r requirements.txt
 
 install-dev:
 	@echo "🔧 Installing development dependencies..."
-	@pip install -r requirements.txt
-	@pip install -e .
+	@$(PIP) install -r requirements.txt
+	@$(PIP) install -e .
 
 check-deps:
 	@echo "🔍 Checking dependencies..."
-	@python3 -c "import gi; gi.require_version('Gtk', '4.0'); print('✅ GTK4 bindings available')"
-	@python3 -c "import watchdog; print('✅ Watchdog available')"
-	@python3 -c "import psutil; print('✅ psutil available')"
-	@python3 -c "import pynput; print('✅ pynput available')"
+	@$(PYTHON) -c "import gi; gi.require_version('Gtk', '4.0'); print('✅ GTK4 bindings available')"
+	@$(PYTHON) -c "import watchdog; print('✅ Watchdog available')"
+	@$(PYTHON) -c "import psutil; print('✅ psutil available')"
+	@$(PYTHON) -c "import pynput; print('✅ pynput available')"
 	@echo "✅ All dependencies are available"
 
 # Testing commands
 test:
 	@echo "🧪 Running all tests..."
-	@python3 -m pytest tests/ -v
+	@$(PYTHON) -m pytest tests/ -v
 
 test-unit:
 	@echo "🧪 Running unit tests..."
-	@python3 -m pytest tests/unit/ -v
+	@$(PYTHON) -m pytest tests/unit/ -v
 
 test-cov:
 	@echo "🧪 Running tests with coverage..."
-	@python3 -m pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
+	@$(PYTHON) -m pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
 
 # Code quality commands
 lint:
 	@echo "🔍 Running linting checks..."
-	@python3 -m flake8 src/ tests/ --max-line-length=100 --ignore=E501,W503
+	@$(PYTHON) -m flake8 src/ tests/ --max-line-length=100 --ignore=E501,W503
 
 format:
 	@echo "🎨 Formatting code with black..."
-	@python3 -m black src/ tests/ --line-length=100
+	@$(PYTHON) -m black src/ tests/ --line-length=100
 
 check: lint test
 	@echo "✅ All quality checks passed!"
@@ -96,7 +101,7 @@ check: lint test
 # Build commands
 build:
 	@echo "🏗️ Building package..."
-	@python3 -m build
+	@$(PYTHON) -m build
 
 # Clean commands
 clean:

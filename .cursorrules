@@ -1,0 +1,258 @@
+# POE2 Master Overlay - Cursor Rules
+
+## Project Overview
+
+This is a GTK4-based game overlay for Path of Exile 2 on Linux. The project provides item price checking, build planning, campaign progression tracking, and other utilities while gaming.
+
+## Architecture & Design Principles
+
+### Core Architecture
+
+- **Modular Design**: Clear separation between core, UI, config, and utils modules
+- **Event-Driven**: Uses an event bus for inter-component communication
+- **GTK4 Native**: Built with GTK4 for modern Linux desktop integration
+- **Process Monitoring**: Automatically detects POE2 game process
+- **Hotkey Management**: Global keyboard shortcuts for overlay control
+
+### Key Components
+
+- **OverlayManager**: Main coordinator for overlay lifecycle
+- **ProcessMonitor**: Detects POE2 process and manages visibility
+- **HotkeyManager**: Handles global keyboard shortcuts
+- **EventBus**: Inter-component communication system
+- **ConfigManager**: Configuration loading, validation, and persistence
+- **MainWindow**: GTK4-based overlay window with drag support
+
+### Design Patterns
+
+- **Observer Pattern**: Event bus for loose coupling
+- **Factory Pattern**: Component creation and initialization
+- **Strategy Pattern**: Configurable behaviors (themes, hotkeys, etc.)
+- **Singleton Pattern**: Event bus and configuration instances
+
+## Code Style & Standards
+
+### Python Standards
+
+- **Python 3.8+**: Use modern Python features and type hints
+- **PEP 8**: Follow Python style guidelines
+- **Type Hints**: Use type annotations for function parameters and return values
+- **Docstrings**: Include docstrings for all public functions and classes
+- **Error Handling**: Use proper exception handling with logging
+
+### GTK4 Guidelines
+
+- **Modern GTK4**: Use GTK4 widgets and patterns, not legacy GTK3
+- **Wayland Support**: Ensure compatibility with both Wayland and X11
+- **CSS Theming**: Use CSS for styling when possible
+- **Signal Handling**: Properly connect to GTK4 signals
+- **Resource Management**: Clean up GTK4 resources properly
+
+### File Organization
+
+- **Module Structure**: Keep related functionality in appropriate modules
+- **Import Organization**: Group imports logically (standard library, third-party, local)
+- **Class Organization**: Public methods first, then protected, then private
+
+## Development Guidelines
+
+### Adding New Features
+
+1. **Plan the Architecture**: Consider how it fits into existing modules
+2. **Add Configuration**: Extend the configuration system if needed
+3. **Update Tests**: Add unit tests for new functionality
+4. **Documentation**: Update README and docstrings
+5. **Error Handling**: Include proper error handling and logging
+
+### UI Components
+
+- **Responsive Design**: Ensure UI works at different window sizes
+- **Accessibility**: Consider keyboard navigation and screen readers
+- **Theme Support**: Make components work with the theming system
+- **Internationalization**: Use gettext for user-facing strings
+
+### Configuration Management
+
+- **Validation**: Always validate configuration values
+- **Defaults**: Provide sensible defaults for all settings
+- **Migration**: Handle configuration file format changes gracefully
+- **Documentation**: Document all configuration options
+
+## Testing Requirements
+
+### Test Coverage
+
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test component interactions
+- **Edge Cases**: Test error conditions and boundary cases
+- **Performance**: Test with realistic data volumes
+
+### Test Structure
+
+- **Test Files**: Place tests in appropriate test directories
+- **Fixtures**: Use pytest fixtures for common test setup
+- **Mocking**: Mock external dependencies (APIs, file system)
+- **Assertions**: Use descriptive assertion messages
+
+## Performance Considerations
+
+### GTK4 Performance
+
+- **Efficient Rendering**: Minimize unnecessary redraws
+- **Memory Management**: Clean up GTK4 objects properly
+- **Background Processing**: Use threads for heavy operations
+- **Caching**: Cache frequently accessed data
+
+### API Integration
+
+- **Rate Limiting**: Respect API rate limits
+- **Caching**: Cache API responses appropriately
+- **Error Handling**: Handle API failures gracefully
+- **Retry Logic**: Implement retry mechanisms for transient failures
+
+## Security Guidelines
+
+### Input Validation
+
+- **Sanitize Inputs**: Validate all user inputs and configuration
+- **API Security**: Secure API key handling and requests
+- **File Operations**: Validate file paths and permissions
+- **Process Monitoring**: Secure process detection and management
+
+### Configuration Security
+
+- **Sensitive Data**: Don't log sensitive information
+- **File Permissions**: Use appropriate file permissions for config files
+- **Validation**: Validate all configuration values
+
+## Error Handling & Logging
+
+### Logging Strategy
+
+- **Structured Logging**: Use consistent log format and levels
+- **Context Information**: Include relevant context in log messages
+- **Performance Impact**: Minimize logging overhead in production
+- **Log Rotation**: Implement log file rotation and cleanup
+
+### Error Handling
+
+- **Graceful Degradation**: Handle errors without crashing the overlay
+- **User Feedback**: Provide meaningful error messages to users
+- **Recovery**: Implement automatic recovery when possible
+- **Debugging**: Include debug information for troubleshooting
+
+## Dependencies & External Libraries
+
+### Core Dependencies
+
+- **PyGObject**: GTK4 Python bindings (required)
+- **requests**: HTTP library for API calls
+- **psutil**: System and process utilities
+- **pynput**: Global hotkey support
+
+### Development Dependencies
+
+- **pytest**: Testing framework
+- **black**: Code formatter
+- **flake8**: Code linter
+- **mypy**: Type checking
+- **watchdog**: File watching for development
+
+### System Dependencies
+
+- **GTK4**: Modern GUI toolkit
+- **Python 3.8+**: Python runtime
+- **Linux**: Operating system
+
+## Build & Deployment
+
+### Development Setup
+
+- **Virtual Environment**: Use virtual environment for development
+- **Hot Reloading**: Development server with automatic restart
+- **Dependency Management**: Use requirements.txt and pyproject.toml
+- **Makefile**: Use Makefile for common development tasks
+
+### Installation
+
+- **System Dependencies**: Install GTK4 and Python bindings
+- **Python Package**: Install in development mode for development
+- **Configuration**: Generate default configuration on first run
+- **Permissions**: Ensure proper permissions for overlay functionality
+
+## Troubleshooting & Debugging
+
+### Common Issues
+
+- **GTK4 Compatibility**: Ensure GTK4 version compatibility
+- **Display Server**: Handle Wayland vs X11 differences
+- **Process Detection**: Debug POE2 process detection issues
+- **Hotkey Conflicts**: Resolve keyboard shortcut conflicts
+
+### Debug Tools
+
+- **Logging**: Use debug logging for troubleshooting
+- **GTK Inspector**: Use GTK Inspector for UI debugging
+- **Process Monitoring**: Monitor system processes and resources
+- **Configuration Validation**: Validate configuration files
+
+## Contributing Guidelines
+
+### Code Review
+
+- **Functionality**: Ensure new features work as intended
+- **Code Quality**: Follow project coding standards
+- **Testing**: Include appropriate tests
+- **Documentation**: Update relevant documentation
+
+### Pull Request Process
+
+1. **Feature Branch**: Create feature branch from main
+2. **Development**: Implement feature with tests
+3. **Quality Checks**: Run linting and tests
+4. **Documentation**: Update documentation as needed
+5. **Pull Request**: Submit PR with clear description
+
+## Future Considerations
+
+### Planned Features
+
+- **API Integration**: Real-time item price data
+- **Build Planner**: Character build planning tools
+- **Campaign Tracker**: Story progression tracking
+- **Plugin System**: Extensible overlay functionality
+
+### Technical Debt
+
+- **Code Coverage**: Maintain high test coverage
+- **Performance**: Monitor and optimize performance
+- **Dependencies**: Keep dependencies up to date
+- **Documentation**: Keep documentation current
+
+## AI Assistant Guidelines
+
+### When Working on This Project
+
+1. **Understand Context**: Read relevant code before making changes
+2. **Follow Patterns**: Use existing architectural patterns
+3. **GTK4 Focus**: Ensure all UI changes use GTK4
+4. **Testing**: Include tests for new functionality
+5. **Documentation**: Update documentation as needed
+6. **Error Handling**: Implement proper error handling
+7. **Performance**: Consider performance implications
+8. **Security**: Follow security guidelines
+
+### Code Generation
+
+- **Type Hints**: Always include type hints
+- **Docstrings**: Include comprehensive docstrings
+- **Error Handling**: Include proper exception handling
+- **Logging**: Add appropriate logging statements
+- **Tests**: Generate corresponding test files
+
+### Refactoring
+
+- **Maintain Architecture**: Preserve existing architectural patterns
+- **Update Tests**: Ensure tests continue to pass
+- **Update Documentation**: Keep documentation current
+- **Backward Compatibility**: Maintain compatibility when possible

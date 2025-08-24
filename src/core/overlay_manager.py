@@ -213,7 +213,9 @@ class OverlayManager:
             # Run the GTK4 main loop
             if self.gtk_app:
                 logger.info("Starting GTK4 main loop...")
-                self.gtk_app.run()
+                # For GTK4, we need to pass sys.argv to run() to ensure proper initialization
+                import sys
+                self.gtk_app.run(sys.argv)
             else:
                 logger.error("GTK4 application not initialized")
                 

@@ -1,427 +1,192 @@
 # POE2 Master Overlay
 
-A powerful game overlay for Path of Exile 2 on Linux, built with **GTK4** for modern Wayland support and optimal performance. This overlay provides item price checking, build planning, campaign progression tracking, and other utilities while gaming.
+A powerful, modern game overlay for Path of Exile 2 built with **Tauri** and **React**.
+
+![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Rust](https://img.shields.io/badge/rust-1.89.0+-orange.svg)
+![Node](https://img.shields.io/badge/node-24.2.0+-green.svg)
 
 ## 🚀 Features
 
-- **Search Functionality** - Look up item prices and information with real-time API integration
-- **Configurable Settings** - Customize appearance, behavior, and hotkeys through built-in settings
-- **Modern GTK4 Interface** - Native Linux desktop integration with CSS-based theming
-- **Wayland Support** - Full compatibility with modern display servers and X11 fallback
-- **Game Process Detection** - Automatically detects when POE2 is running and shows/hides overlay
-- **Global Hotkeys** - Toggle overlay with customizable keyboard shortcuts
-- **Draggable Interface** - Move overlay anywhere on screen with position memory
-- **Development Mode** - Hot reloading for rapid development and testing
+- **Native Performance**: Built with Tauri for optimal performance and small binary size
+- **Modern UI**: Beautiful, responsive interface built with React and Tailwind CSS
+- **Game Integration**: Automatic Path of Exile 2 process detection and monitoring
+- **Always-on-Top Overlay**: Stays visible over your game with transparency support
+- **Draggable Interface**: Move the overlay anywhere on your screen
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Dark Theme**: POE2-inspired color scheme optimized for gaming
 
-## 🛠️ Requirements
+## 🎯 Current Capabilities
 
-- **Linux** (Ubuntu 22.04+, Fedora 36+, Arch Linux, etc.)
-- **Python 3.8+**
-- **GTK4** with Python bindings (PyGObject)
-- **Wayland** or **X11** display server
+- **Process Monitoring**: Automatically detects when Path of Exile 2 is running
+- **Overlay Controls**: Show/hide, minimize, and move the overlay window
+- **Real-time Status**: Live updates of game process status
+- **Extensible Architecture**: Built for future feature additions
 
-## 📦 Installation
+## 🛠️ Technology Stack
 
-### Quick Install
+### Frontend
+- **React 19** with TypeScript
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
+- **Vite** for development and building
 
+### Backend
+- **Rust** with Tauri framework
+- **sysinfo** for system process monitoring
+- **tokio** for async operations
+
+## 📋 Prerequisites
+
+- **Rust**: 1.89.0 or higher
+- **Node.js**: 24.2.0 or higher  
+- **npm**: Latest version
+
+### System Dependencies (Linux)
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/poe2-master.git
-cd poe2-master
+# Ubuntu/Debian
+sudo apt update
+sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
 
-# Run the installation script
-chmod +x install.sh
-./install.sh
+# Arch Linux
+sudo pacman -S webkit2gtk base-devel curl wget openssl appmenu-gtk-module gtk3 libappindicator-gtk3 librsvg
+
+# Fedora
+sudo dnf install webkit2gtk3-devel.x86_64 openssl-devel curl wget libappindicator-gtk3-devel librsvg2-devel
 ```
 
-### Manual Installation
+## 🚀 Quick Start
 
-1. **Install system dependencies:**
-
-   **Ubuntu/Debian:**
-
+1. **Clone the repository**
    ```bash
-   sudo apt update
-   sudo apt install python3-gi gir1.2-gtk-4.0 python3-dev python3-pip
+   git clone https://github.com/yourusername/poe2-master.git
+   cd poe2-master
    ```
 
-   **Fedora:**
-
+2. **Install dependencies**
    ```bash
-   sudo dnf install python3-gobject gtk4-devel python3-devel python3-pip
+   npm install
    ```
 
-   **Arch Linux:**
-
+3. **Run in development mode**
    ```bash
-   sudo pacman -S python-gobject gtk4 python python-pip
+   npm run tauri:dev
    ```
 
-2. **Install Python dependencies:**
+4. **Build for production**
    ```bash
-   pip3 install -r requirements.txt
-   pip3 install -e .
+   npm run tauri:build
    ```
-
-## 🎮 Usage
-
-### Running the Overlay
-
-```bash
-# Run the main overlay
-python3 -m src
-
-# Run in development mode with hot reloading
-python3 -m src.dev_server
-
-# Using the Makefile
-make run          # Run the overlay
-make dev          # Start development server
-make run-debug    # Run with debug logging
-```
-
-### Controls
-
-- **Ctrl+Shift+O** - Toggle overlay visibility
-- **Ctrl+Shift+F** - Quick search
-- **Escape** - Hide overlay
-- **Ctrl+Shift+S** - Show settings dialog
-- **Ctrl+Shift+R** - Refresh data
-- **Mouse drag** - Move overlay around screen
-- **Ctrl+Shift+Arrow keys** - Fine-tune overlay position
-
-## 🔧 Configuration
-
-The overlay automatically creates a configuration file at `~/.config/poe2-master/config.json`. You can modify settings through the built-in settings dialog or edit the file directly.
-
-### Key Settings
-
-- **Window positioning** - Save and restore overlay location
-- **Transparency** - Adjust overlay opacity (0.1 - 1.0)
-- **Auto-show/hide** - Automatically show when POE2 starts
-- **Hotkeys** - Customize keyboard shortcuts
-- **API settings** - Configure rate limiting, caching, and timeouts
-- **Appearance** - Theme, fonts, colors, and animations
-- **Process detection** - POE2 executable names and check intervals
-
-### Configuration Structure
-
-```json
-{
-  "window": {
-    "width": 400,
-    "height": 300,
-    "transparency": 0.9,
-    "always_on_top": true,
-    "draggable": true
-  },
-  "hotkeys": {
-    "toggle_overlay": "<ctrl>+<shift>+o",
-    "quick_search": "<ctrl>+<shift>+f"
-  },
-  "api": {
-    "rate_limit_requests": 10,
-    "cache_ttl": 300
-  },
-  "search": {
-    "default_league": "Early Access",
-    "max_results": 10
-  }
-}
-```
-
-## 🏗️ Architecture
-
-The project uses a modular architecture with clear separation of concerns:
-
-- **Core** - Event bus, process monitoring, hotkey management, overlay coordination
-- **UI** - GTK4-based interface components (main window, search panel, results panel, settings)
-- **Config** - Configuration management, validation, and defaults
-- **Utils** - Logging, helpers, and validation utilities
-
-### Core Components
-
-- **OverlayManager** - Main coordinator for the overlay lifecycle
-- **ProcessMonitor** - Detects POE2 process and manages overlay visibility
-- **HotkeyManager** - Handles global keyboard shortcuts
-- **EventBus** - Inter-component communication system
-- **ConfigManager** - Configuration loading, validation, and persistence
-
-## 🧪 Development
-
-### Quick Start
-
-```bash
-# Setup development environment
-make setup-dev
-
-# Start development server with hot reloading
-make dev
-
-# Run the application
-make run
-
-# Run tests
-make test
-```
-
-### Development Tools
-
-#### Makefile Commands
-
-```bash
-# Development
-make dev         # Start development server with hot reloading
-make run         # Run the overlay application
-make run-debug   # Run with debug logging enabled
-
-# Installation
-make install     # Install production dependencies
-make install-dev # Install development dependencies
-make check-deps  # Check if all dependencies are installed
-
-# Testing
-make test        # Run all tests
-make test-unit   # Run unit tests only
-make test-cov    # Run tests with coverage report
-
-# Code Quality
-make lint        # Run linting checks
-make format      # Format code with black
-make check       # Run all quality checks
-
-# Build & Clean
-make build       # Build the package
-make clean       # Clean build artifacts and cache
-make distclean   # Deep clean (including venv)
-
-# Quick workflows
-make setup-dev   # Setup development environment
-make dev-workflow # Complete development cycle
-```
-
-#### Development Scripts
-
-```bash
-# Development server with hot reloading
-./dev.sh dev
-
-# Run the application
-./dev.sh run
-
-# Run tests
-./dev.sh test
-
-# Install dependencies
-./dev.sh install
-
-# Code quality checks
-./dev.sh check
-
-# Clean build artifacts
-./dev.sh clean
-```
-
-#### Quick Run Script
-
-```bash
-# Simple run script
-./run.sh
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-make test
-
-# Run specific test categories
-pytest tests/unit/
-pytest tests/integration/
-
-# Run with coverage
-make test-cov
-```
-
-### Code Quality
-
-```bash
-# Format code
-make format
-
-# Lint code
-make lint
-
-# Run all checks
-make check
-```
-
-### Development Cycle
-
-```bash
-# Complete development cycle (clean, check, run)
-make dev-workflow
-
-# Quick test and run
-make quick
-```
 
 ## 📁 Project Structure
 
 ```
 poe2-master/
-├── src/                    # Source code
-│   ├── core/              # Core functionality
-│   │   ├── overlay_manager.py    # Main overlay coordinator
-│   │   ├── process_monitor.py    # POE2 process detection
-│   │   ├── hotkey_manager.py     # Global hotkey handling
-│   │   └── event_bus.py          # Inter-component events
-│   ├── ui/                # GTK4 UI components
-│   │   ├── main_window.py        # Main overlay window
-│   │   ├── search_panel.py       # Search interface
-│   │   ├── results_panel.py      # Results display
-│   │   ├── settings_dialog.py    # Settings configuration
-│   │   └── themes.py             # CSS theming system
-│   ├── config/            # Configuration management
-│   │   ├── config_manager.py     # Config loading/validation
-│   │   └── defaults.py           # Default configuration
-│   └── utils/             # Utility functions
-│       ├── logger.py              # Logging setup
-│       ├── helpers.py             # Helper functions
-│       └── validators.py          # Data validation
-├── tests/                 # Test suite
-│   └── unit/             # Unit tests
-├── examples/              # Example configurations
-├── requirements.txt       # Python dependencies
-├── pyproject.toml         # Project configuration
-├── install.sh             # Installation script
-├── Makefile               # Development and build commands
-├── dev.sh                 # Development script with hot reloading
-├── run.sh                 # Quick run script
-└── config.dev.json        # Development configuration
+├── src/                    # React frontend source
+│   ├── components/         # React components (planned)
+│   ├── hooks/             # Custom React hooks (planned)
+│   ├── utils/             # Utility functions (planned)
+│   ├── App.tsx            # Main application component
+│   ├── main.tsx           # React entry point
+│   └── index.css          # Global styles
+├── src-tauri/             # Rust backend source
+│   ├── src/
+│   │   ├── main.rs        # Application entry point
+│   │   └── lib.rs         # Core application logic
+│   ├── Cargo.toml         # Rust dependencies
+│   └── tauri.conf.json    # Tauri configuration
+├── public/                # Static assets
+├── dist/                  # Built frontend (generated)
+└── README.md              # This file
 ```
 
-## 🔄 GTK4 Migration
+## 🎮 Usage
 
-This project has been fully migrated from **tkinter** to **GTK4** for:
+1. **Launch the overlay**
+   - Run the application using `npm run tauri:dev` or the built executable
+   - The overlay will appear as a small window on your screen
 
-- **Better Wayland support** - Native integration with modern Linux desktops
-- **Improved performance** - Hardware acceleration and modern rendering
-- **Better theming** - CSS-based styling and system theme integration
-- **Modern widgets** - Rich set of UI components and layouts
-- **Accessibility** - Better screen reader and keyboard navigation support
+2. **Game Detection**
+   - Start Path of Exile 2
+   - The overlay will automatically detect the game process
+   - Status indicator will change from red (offline) to green (online)
 
-### Migration Status
+3. **Overlay Controls**
+   - **Drag**: Click and drag the title bar to move the overlay
+   - **Minimize/Expand**: Use the eye icon to collapse/expand content
+   - **Minimize to Taskbar**: Use the minimize button
+   - **Close**: Use the X button to exit the application
 
-- ✅ **Main Window** - Fully converted to GTK4 with proper overlay behavior
-- ✅ **Search Panel** - Converted to GTK4 widgets with modern search interface
-- ✅ **Results Panel** - Converted to GTK4 widgets with responsive layout
-- ✅ **Settings Dialog** - Converted to GTK4 widgets with form validation
-- ✅ **Theme Manager** - Updated for GTK4 CSS theming system
-- ✅ **Overlay Manager** - Updated for GTK4 Application lifecycle
-- ✅ **Dependencies** - Updated requirements and installation scripts
+## 🔧 Configuration
 
-## 🧪 Testing
+The overlay behavior can be customized through the `src-tauri/tauri.conf.json` file:
 
-The project includes a comprehensive test suite:
+- **Window size**: Adjust `width`, `height`, `minWidth`, `minHeight`
+- **Position**: Set default `x`, `y` coordinates
+- **Transparency**: Toggle `transparent` property
+- **Always on top**: Control `alwaysOnTop` behavior
 
-- **Unit Tests** - Core functionality testing
-- **Integration Tests** - Component interaction testing
-- **Test Coverage** - Coverage reporting with pytest-cov
-- **Test Configuration** - pytest.ini with custom markers
+## 🚧 Development
 
-### Test Categories
+### Available Scripts
 
-- **Unit Tests** - Individual component testing
-- **Integration Tests** - Component interaction testing
-- **Slow Tests** - Performance and stress testing
+- `npm run dev` - Start Vite dev server
+- `npm run build` - Build the frontend
+- `npm run tauri:dev` - Run Tauri in development mode
+- `npm run tauri:build` - Build the complete application
+- `npm run tauri:info` - Show Tauri environment info
+- `npm run lint` - Run ESLint
+- `npm run clean` - Clean build artifacts
 
-## 📚 Dependencies
+### Adding Features
 
-### Core Dependencies
+1. **Frontend**: Add React components in `src/`
+2. **Backend**: Add Rust functions in `src-tauri/src/`
+3. **API**: Use `#[tauri::command]` for Rust functions callable from frontend
 
-- **requests** - HTTP library for API calls
-- **psutil** - System and process utilities
-- **pynput** - Global hotkey support
-- **PyGObject** - GTK4 Python bindings
+## 🔒 Security
 
-### Development Dependencies
-
-- **pytest** - Testing framework
-- **pytest-cov** - Coverage reporting
-- **black** - Code formatter
-- **flake8** - Code linter
-- **mypy** - Type checking
-- **watchdog** - File watching for hot reloading
-
-### System Dependencies
-
-- **GTK4** - Modern GUI toolkit
-- **Python 3.8+** - Python runtime
-- **Linux** - Operating system
-
-## 🚀 Performance Features
-
-- **Hardware Acceleration** - GTK4 rendering with GPU support
-- **Efficient Caching** - API response caching with configurable TTL
-- **Rate Limiting** - Configurable API request throttling
-- **Background Processing** - Non-blocking UI operations
-- **Memory Management** - Efficient resource usage and cleanup
-
-## 🔒 Security Features
-
-- **Input Validation** - Comprehensive data validation
-- **Rate Limiting** - API abuse prevention
-- **Secure Configuration** - Safe configuration file handling
-- **Process Isolation** - Secure process monitoring
+The application uses Tauri's security features:
+- No `eval()` or similar dangerous functions
+- Limited API access through capability system
+- Process monitoring with minimal permissions
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Install development dependencies (`make install-dev`)
-4. Make your changes and add tests
-5. Run the test suite (`make test`)
-6. Format and lint your code (`make format && make lint`)
-7. Commit your changes (`git commit -m 'Add amazing feature'`)
-8. Push to the branch (`git push origin feature/amazing-feature`)
-9. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-### Development Guidelines
-
-- Follow PEP 8 style guidelines
-- Add tests for new functionality
-- Update documentation as needed
-- Use type hints for function parameters
-- Handle errors gracefully with proper logging
-
-## 📄 License
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🛣️ Roadmap
 
-- **GTK4** team for the excellent toolkit
-- **Python** community for PyGObject bindings
-- **Path of Exile** community for inspiration and feedback
+- [ ] Item search and price checking
+- [ ] Build calculator integration
+- [ ] Passive tree overlay
+- [ ] Flask timer tracking
+- [ ] DPS calculator
+- [ ] Map tracking features
+- [ ] Configuration UI
+- [ ] Hotkey support
+- [ ] Multi-monitor support
 
-## 📞 Support
+## ⚠️ Disclaimer
 
-- **Issues** - Report bugs and request features on GitHub
-- **Discussions** - Join community discussions
-- **Wiki** - Check the project wiki for detailed documentation
+This is a third-party tool and is not affiliated with or endorsed by Grinding Gear Games. Use at your own risk and in accordance with Path of Exile's Terms of Service.
 
-## 🔮 Roadmap
+## 📧 Support
 
-- [ ] **API Integration** - Real-time item price data
-- [ ] **Build Planner** - Character build planning tools
-- [ ] **Campaign Tracker** - Story progression tracking
-- [ ] **Plugin System** - Extensible overlay functionality
-- [ ] **Mobile Companion** - Mobile app integration
-- [ ] **Cloud Sync** - Configuration and data synchronization
+If you encounter issues or have questions:
+1. Check the [Issues](https://github.com/yourusername/poe2-master/issues) page
+2. Create a new issue with detailed information
+3. Include your system information (`npm run tauri:info`)
 
 ---
 
-**Happy gaming! 🎮⚔️**
-
-_Built with ❤️ for the Path of Exile 2 community_
+**Happy gaming, Exile!** 🎮

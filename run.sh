@@ -1,21 +1,18 @@
 #!/bin/bash
-# Launch script for POE2 Master Overlay
+# POE2 Master Overlay - Quick Run Script
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
-# Check if virtual environment exists
-if [ -d "venv" ]; then
-    echo "Activating virtual environment..."
-    source venv/bin/activate
+# Check if Python is available
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 is not installed or not in PATH"
+    exit 1
 fi
 
-# Check if package is installed
-if python -c "import poe2_master" 2>/dev/null; then
-    echo "Running POE2 Master Overlay (installed package)..."
-    python -m src "$@"
-else
-    echo "Running POE2 Master Overlay (development mode)..."
-    # Add src to Python path and run
-    PYTHONPATH="${SCRIPT_DIR}/src:${PYTHONPATH}" python -m src "$@"
+# Check if GTK4 bindings are available
+if ! python3 -c "import gi; gi.require_version('Gtk', '4.0')" 2>/dev/null; then
+    echo "❌ GTK4 bindings not available. Please install python3-gi and gir1.2-gtk-4.0"
+    exit 1
 fi
+
+# Run the overlay
+echo "🚀 Starting POE2 Master Overlay..."
+python3 -m src

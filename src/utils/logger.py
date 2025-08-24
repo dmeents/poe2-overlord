@@ -78,7 +78,7 @@ def setup_logging(
             _logger.addHandler(file_handler)
             
         except Exception as e:
-            print(f"Warning: Could not setup file logging to {log_file}: {e}")
+            _logger.warning(f"Could not setup file logging to {log_file}: {e}")
             
     # Syslog handler
     if log_to_syslog:
@@ -92,7 +92,7 @@ def setup_logging(
             _logger.addHandler(syslog_handler)
             
         except Exception as e:
-            print(f"Warning: Could not setup syslog logging: {e}")
+            _logger.warning(f"Could not setup syslog logging: {e}")
             
     # Prevent propagation to root logger
     _logger.propagate = False
@@ -141,7 +141,7 @@ def set_log_level(level: str) -> None:
         _logger.info(f"Log level changed to {level}")
         
     except Exception as e:
-        print(f"Error setting log level: {e}")
+        _logger.error(f"Error setting log level: {e}")
 
 
 def add_file_handler(log_file: str, level: str = "DEBUG") -> bool:
@@ -179,7 +179,7 @@ def add_file_handler(log_file: str, level: str = "DEBUG") -> bool:
         return True
         
     except Exception as e:
-        print(f"Error adding file handler: {e}")
+        _logger.error(f"Error adding file handler: {e}")
         return False
 
 
@@ -208,7 +208,7 @@ def remove_file_handler(log_file: str) -> bool:
         return False
         
     except Exception as e:
-        print(f"Error removing file handler: {e}")
+        _logger.error(f"Error removing file handler: {e}")
         return False
 
 
@@ -243,7 +243,7 @@ def cleanup_logs() -> None:
         _logger.info("Log rotation completed")
         
     except Exception as e:
-        print(f"Error during log cleanup: {e}")
+        _logger.error(f"Error during log cleanup: {e}")
 
 
 # Convenience functions for common logging operations

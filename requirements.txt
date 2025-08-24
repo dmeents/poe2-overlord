@@ -5,15 +5,20 @@ requests>=2.31.0         # HTTP library for API calls
 psutil>=5.9.0           # System and process utilities
 pynput>=1.7.6           # Global hotkey support
 
-# Development Dependencies (install with: pip install -e ".[dev]")
-# pytest>=7.4.0         # Testing framework
-# pytest-cov>=4.1.0     # Coverage reporting
-# black>=23.0.0         # Code formatter
-# flake8>=6.0.0         # Code linter
+# GTK4 Dependencies
+PyGObject>=3.42.0       # GTK4 Python bindings
+
+# Development Dependencies
+pytest>=7.4.0           # Testing framework
+pytest-cov>=4.1.0       # Coverage reporting
+black>=23.0.0           # Code formatter
+flake8>=6.0.0           # Code linter
+watchdog>=3.0.0         # File watching for hot reloading
+
+# Optional Development Dependencies
 # mypy>=1.5.0           # Type checking
 # pre-commit>=3.3.0     # Git hooks
 # tox>=4.6.0            # Testing automation
-# watchdog>=3.0.0       # File watching for hot reloading
 
 # Documentation Dependencies (install with: pip install -e ".[docs]")
 # sphinx>=7.0.0         # Documentation generator
@@ -22,12 +27,12 @@ pynput>=1.7.6           # Global hotkey support
 
 # System-specific dependencies for Linux overlay functionality
 # These may need to be installed via system package manager:
-# - python3-tk (tkinter GUI toolkit)
+# - python3-gi (GTK4 Python bindings)
+# - gir1.2-gtk-4.0 (GTK4 introspection data)
 # - python3-dev (Python development headers)
 # - xorg-dev (X11 development libraries) - for advanced window management
 
 # Optional Dependencies
-# tkinter is included with Python standard library
 # logging is included with Python standard library
 # threading is included with Python standard library
 # pathlib is included with Python standard library (Python 3.4+)

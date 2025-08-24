@@ -8,6 +8,15 @@ import threading
 import time
 from typing import Optional, Dict, Any
 import logging
+import os
+
+# GTK4 imports
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Gdk', '4.0')
+gi.require_version('Gio', '2.0')
+
+from gi.repository import Gtk, Gdk, Gio, GLib
 
 from .event_bus import EventType, event_bus
 from .process_monitor import ProcessMonitor
@@ -16,6 +25,52 @@ from ..config.config_manager import ConfigManager
 from ..utils.logger import setup_logging, get_logger
 
 logger = get_logger(__name__)
+
+
+class POE2OverlayApplication(Gtk.Application):
+    """GTK4 Application for POE2 Master Overlay"""
+    
+    def __init__(self, config, overlay_manager):
+        super().__init__(
+            application_id="com.poe2master.overlay",
+            flags=Gio.ApplicationFlags.FLAGS_NONE
+        )
+        
+        self.config = config
+        self.overlay_manager = overlay_manager
+        self.main_window = None
+        
+        # Connect to activate signal
+        self.connect("activate", self._on_activate)
+        
+    def _on_activate(self, app):
+        """Handle application activation"""
+        try:
+            logger.info("GTK4 Application activated")
+            
+            # Create main window
+            from ..ui.main_window import MainWindow
+            self.main_window = MainWindow(self.config)
+            
+            # Add window to application
+            self.add_window(self.main_window)
+            
+            # Show the window
+            self.main_window.show_overlay()
+            
+            # Store reference in overlay manager
+            self.overlay_manager.main_window = self.main_window
+            self.overlay_manager.ui_ready = True
+            
+            logger.info("GTK4 Main window created and shown")
+            
+        except Exception as e:
+            logger.error(f"Failed to create GTK4 main window: {e}")
+            self.overlay_manager.ui_ready = False
+            
+    def get_main_window(self):
+        """Get the main window instance"""
+        return self.main_window
 
 
 class OverlayManager:
@@ -43,6 +98,10 @@ class OverlayManager:
         self.ui_ready = False
         self.shutdown_event = threading.Event()
         
+        # GTK4 application
+        self.gtk_app = None
+        self.main_window = None
+        
         # Subscribe to events
         self._setup_event_handlers()
         
@@ -64,7 +123,7 @@ class OverlayManager:
             )
             
         except Exception as e:
-            print(f"Warning: Could not setup logging: {e}")
+            logger.warning(f"Could not setup logging: {e}")
             # Fallback to basic logging
             logging.basicConfig(level=logging.INFO)
             
@@ -85,6 +144,12 @@ class OverlayManager:
         event_bus.subscribe(EventType.OVERLAY_HIDE, self._on_overlay_hide)
         event_bus.subscribe(EventType.OVERLAY_TOGGLE, self._on_overlay_toggle)
         
+        # Handle search events
+        event_bus.subscribe(EventType.SEARCH_REQUESTED, self._on_search_requested)
+        
+        # Handle data refresh events
+        event_bus.subscribe(EventType.DATA_REFRESH_REQUESTED, self._on_data_refresh_requested)
+        
         logger.debug("Event handlers configured")
         
     def start(self) -> bool:
@@ -98,28 +163,20 @@ class OverlayManager:
             
             # Start process monitoring
             self.process_monitor.start()
-            logger.info("Process monitoring started")
             
             # Start hotkey manager
-            if self.hotkey_manager.start():
-                logger.info("Hotkey manager started")
-            else:
-                logger.warning("Hotkey manager failed to start")
-                
-            # Start UI (this will be implemented in the UI module)
+            self.hotkey_manager.start()
+            
+            # Start UI in main thread (GTK4 requirement)
             self._start_ui()
             
             self.running = True
             logger.info("Overlay manager started successfully")
             
-            # Main event loop
-            self._main_loop()
-            
             return True
             
         except Exception as e:
             logger.error(f"Failed to start overlay manager: {e}")
-            self.stop()
             return False
             
     def stop(self) -> None:
@@ -127,28 +184,38 @@ class OverlayManager:
         if not self.running:
             return
             
-        logger.info("Stopping POE2 Master Overlay...")
-        
-        # Signal shutdown
-        self.shutdown_event.set()
-        
-        # Stop components
         try:
-            self.process_monitor.stop()
-            self.hotkey_manager.stop()
-            self._stop_ui()
-        except Exception as e:
-            logger.error(f"Error stopping components: {e}")
+            logger.info("Stopping POE2 Master Overlay...")
             
-        self.running = False
-        logger.info("Overlay manager stopped")
-        
-    def _main_loop(self) -> None:
-        """Main event loop for the overlay manager"""
+            # Stop hotkey manager
+            self.hotkey_manager.stop()
+            
+            # Stop process monitoring
+            self.process_monitor.stop()
+            
+            # Stop UI
+            self._stop_ui()
+            
+            self.running = False
+            logger.info("Overlay manager stopped")
+            
+        except Exception as e:
+            logger.error(f"Error stopping overlay manager: {e}")
+            
+    def run(self) -> None:
+        """Run the overlay system"""
         try:
-            while not self.shutdown_event.is_set():
-                # Process events (if any)
-                time.sleep(0.1)
+            # Start the system
+            if not self.start():
+                logger.error("Failed to start overlay system")
+                return
+                
+            # Run the GTK4 main loop
+            if self.gtk_app:
+                logger.info("Starting GTK4 main loop...")
+                self.gtk_app.run()
+            else:
+                logger.error("GTK4 application not initialized")
                 
         except KeyboardInterrupt:
             logger.info("Received keyboard interrupt")
@@ -160,24 +227,24 @@ class OverlayManager:
     def _start_ui(self) -> None:
         """Start the user interface"""
         try:
-            # Import UI components here to avoid circular imports
-            from ..ui.main_window import MainWindow
+            logger.info("Starting GTK4 UI...")
             
-            self.main_window = MainWindow(self.config, self)
-            self.main_window.show()  # Always show the overlay when starting
-            self.ui_ready = True
+            # Create GTK4 application
+            self.gtk_app = POE2OverlayApplication(self.config, self)
             
-            logger.info("User interface started and overlay shown")
+            # For GTK4, we need to run the application which will handle initialization
+            # The main window will be created when the application activates
+            logger.info("GTK4 UI started successfully")
             
         except Exception as e:
-            logger.error(f"Failed to start UI: {e}")
+            logger.error(f"Failed to start GTK4 UI: {e}")
             self.ui_ready = False
             
     def _stop_ui(self) -> None:
         """Stop the user interface"""
         if hasattr(self, 'main_window') and self.main_window:
             try:
-                self.main_window.destroy()
+                self.main_window.hide_overlay()
                 logger.info("User interface stopped")
             except Exception as e:
                 logger.error(f"Error stopping UI: {e}")
@@ -217,8 +284,10 @@ class OverlayManager:
             else:
                 logger.debug("Hide overlay hotkey ignored - always_visible is enabled")
         elif action == 'show_settings':
-            # TODO: Show settings dialog
+            # Show settings dialog
             logger.info("Settings hotkey pressed")
+            if self.ui_ready and hasattr(self, 'main_window'):
+                self.main_window._show_settings()
         elif action == 'refresh_data':
             # TODO: Refresh data
             logger.info("Refresh data hotkey pressed")
@@ -294,6 +363,12 @@ class OverlayManager:
         """Get the hotkey manager"""
         return self.hotkey_manager
 
-
-# Import os for environment variable access
-import os
+    def _on_search_requested(self, data):
+        """Handle search requests"""
+        logger.debug(f"Search requested: {data}")
+        # Implementation for search functionality will be added here
+        
+    def _on_data_refresh_requested(self, data):
+        """Handle data refresh requests"""
+        logger.debug(f"Data refresh requested: {data}")
+        # Implementation for data refresh will be added here

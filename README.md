@@ -1,274 +1,188 @@
 # POE2 Master Overlay
 
-A powerful, modular game overlay for Path of Exile 2 on Linux, providing item price checking, build planning, campaign progression tracking, and other utilities while gaming.
+A powerful game overlay for Path of Exile 2 on Linux, built with **GTK4** for modern Wayland support and optimal performance.
 
-## ✨ Features
+## 🚀 Features
 
-- 🎯 **Automatic POE2 Detection**: Automatically shows/hides when POE2 is running
-- 💰 **Item Price Checking**: Search for item prices using POE2 trade API (mock data for now)
-- ⌨️ **Global Hotkeys**: Control overlay without Alt-tabbing from the game
-- 🎨 **Customizable Interface**: Transparent, always-on-top overlay with configurable appearance
-- 🔧 **Extensive Configuration**: Fully customizable settings via JSON config with hot-reloading
-- 💾 **Intelligent Caching**: Reduces API calls with smart caching system
-- 🚀 **Modular Architecture**: Plugin-based system for easy feature extension
-- 📊 **Comprehensive Logging**: Detailed logging with configurable levels and outputs
-- 🧪 **Full Test Coverage**: Unit and integration tests with pytest
-- 🔄 **Event-Driven System**: Loose coupling between components via event bus
+- **Search Functionality** - Look up item prices and information
+- **Configurable Settings** - Customize appearance and behavior
+- **Modern GTK4 Interface** - Native Linux desktop integration
+- **Wayland Support** - Full compatibility with modern display servers
+- **Game Process Detection** - Automatically detects when POE2 is running
+- **Global Hotkeys** - Toggle overlay with keyboard shortcuts
+- **Draggable Interface** - Move overlay anywhere on screen
 
-## 🏗️ Architecture
+## 🛠️ Requirements
 
-The overlay is built with a modern, modular architecture that promotes maintainability and extensibility:
+- **Linux** (Ubuntu 22.04+, Fedora 36+, Arch Linux, etc.)
+- **Python 3.8+**
+- **GTK4** with Python bindings
+- **Wayland** or **X11** display server
 
-```
-src/
-├── core/                    # Core system components
-│   ├── overlay_manager.py   # Main application coordinator
-│   ├── process_monitor.py   # POE2 process detection
-│   ├── hotkey_manager.py    # Global hotkey handling
-│   └── event_bus.py         # Event system for decoupling
-├── ui/                      # User interface components
-│   ├── main_window.py       # Main overlay window
-│   ├── search_panel.py      # Item search interface
-│   ├── results_panel.py     # Results display
-│   ├── settings_dialog.py   # Configuration UI
-│   └── themes.py            # UI theming system
-├── api/                     # API and data layer
-│   ├── base_client.py       # Abstract API client
-│   ├── poe2_client.py       # POE2-specific client
-│   ├── mock_client.py       # Mock data provider
-│   ├── rate_limiter.py      # Rate limiting logic
-│   └── cache_manager.py     # Caching system
-├── services/                # Business logic layer
-│   ├── item_service.py      # Item-related business logic
-│   ├── build_service.py     # Build planning logic
-│   ├── progression_service.py # Campaign tracking
-│   └── notification_service.py # User notifications
-├── config/                  # Configuration management
-│   ├── config_manager.py    # Enhanced config system
-│   ├── schema.py            # Configuration validation
-│   └── defaults.py          # Default configurations
-├── utils/                   # Utility modules
-│   ├── logger.py            # Logging system
-│   ├── validators.py        # Input validation
-│   └── helpers.py           # Common utilities
-└── plugins/                 # Plugin system
-    ├── base_plugin.py       # Plugin interface
-    ├── price_checker.py     # Item price checking
-    ├── build_planner.py     # Build planning
-    └── progression_tracker.py # Campaign tracking
-```
+## 📦 Installation
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.8 or higher
-- Linux with X11 (Wayland support limited)
-- tkinter (usually included with Python)
-
-### Installation
-
-#### Option 1: Development Installation (Recommended)
+### Quick Install
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/poe2-master.git
 cd poe2-master
 
-# Install in development mode with all dependencies
-make install-dev
-
-# Or manually:
-pip install -e ".[dev]"
+# Run the installation script
+chmod +x install.sh
+./install.sh
 ```
 
-#### Option 2: System Installation
+### Manual Installation
+
+1. **Install system dependencies:**
+
+   **Ubuntu/Debian:**
+
+   ```bash
+   sudo apt update
+   sudo apt install python3-gi gir1.2-gtk-4.0 python3-dev python3-pip
+   ```
+
+   **Fedora:**
+
+   ```bash
+   sudo dnf install python3-gobject gtk4-devel python3-devel python3-pip
+   ```
+
+   **Arch Linux:**
+
+   ```bash
+   sudo pacman -S python-gobject gtk4 python python-pip
+   ```
+
+2. **Install Python dependencies:**
+   ```bash
+   pip3 install -r requirements.txt
+   pip3 install -e .
+   ```
+
+## 🎮 Usage
+
+### Running the Overlay
 
 ```bash
-# Run the installer script
-./scripts/install.sh
-```
-
-#### Option 3: Package Installation
-
-```bash
-# Install from PyPI (when available)
-pip install poe2-master-overlay
-
-# Or build and install locally
-make package
-pip install dist/*.whl
-```
-
-## 🛠️ Development
-
-### Hot Reloading Development Server
-
-The project now includes a development server with hot reloading that automatically restarts the overlay when you make code changes:
-
-```bash
-# Start development server with hot reloading
-make dev
-
-# Or with verbose logging
-make dev-verbose
-
-# Or watch specific directories
-make dev-watch
-
-# Or use the development script directly
-./dev.sh
-
-# Or run the development server manually
-python3 src/dev_server.py --verbose
-```
-
-### Development Features
-
-- **🔥 Hot Reloading**: Automatically restarts the overlay when source code changes
-- **📁 File Watching**: Monitors `src/` directory for Python file changes
-- **⚡ Fast Restarts**: Intelligent restart cooldown prevents rapid restarts
-- **🔧 Development Config**: Separate development configuration with enhanced logging
-- **📊 Process Management**: Automatic process lifecycle management
-- **🚫 Ignored Patterns**: Skips watching build artifacts, cache files, and temporary files
-
-### Development Configuration
-
-Create a `config.dev.json` file for development-specific settings:
-
-```json
-{
-  "debug": {
-    "development_mode": true,
-    "enable_config_watching": true,
-    "log_level": "DEBUG"
-  },
-  "development": {
-    "hot_reload": true,
-    "watch_source_files": true,
-    "auto_restart_on_changes": true,
-    "restart_cooldown": 1.0,
-    "source_directories": ["src"],
-    "verbose_logging": true
-  }
-}
-```
-
-### Development Commands
-
-```bash
-# Code quality and testing
-make dev-cycle          # Format, lint, type-check, and test
-make format            # Format code with black
-make lint              # Run flake8 linting
-make type-check        # Run mypy type checking
-make test              # Run tests
-make test-cov          # Run tests with coverage
-
-# Development server
-make dev               # Start development server
-make dev-verbose       # Start with verbose logging
-make dev-watch         # Watch src and tests directories
-```
-
-## 🚀 Running the Overlay
-
-### Production Mode
-
-```bash
-# Run the overlay directly
-make run
-
-# Or using Python module
+# Run the main overlay
 python3 -m src
 
-# Or using the entry point (if installed)
-poe2-overlay
+# Run in development mode with hot reloading
+python3 -m src.dev_server
 ```
 
-### Development Mode with Hot Reloading
+### Controls
 
-```bash
-# Start development server with hot reloading
-make dev
-
-# Or use the development script
-./dev.sh
-
-# Or run manually with verbose logging
-python3 src/dev_server.py --verbose
-```
-
-The development server automatically restarts the overlay when you make code changes, making development much more efficient.
-
-## ⌨️ Controls
-
-| Hotkey         | Action                        |
-| -------------- | ----------------------------- |
-| `Ctrl+Shift+O` | Toggle overlay visibility     |
-| `Ctrl+Shift+F` | Quick search                  |
-| `Ctrl+Shift+,` | Show settings                 |
-| `Ctrl+Shift+R` | Refresh data                  |
-| `Escape`       | Hide overlay (when focused)   |
-| `Enter`        | Search for item in search box |
+- **Ctrl+Shift+O** - Toggle overlay visibility
+- **Ctrl+Shift+F** - Quick search
+- **Escape** - Hide overlay
+- **Mouse drag** - Move overlay around screen
+- **Ctrl+Shift+Arrow keys** - Fine-tune overlay position
 
 ## 🔧 Configuration
 
-The overlay uses a comprehensive configuration system with hot-reloading:
+The overlay automatically creates a configuration file at `~/.config/poe2-master/config.json`. You can modify settings through the built-in settings dialog or edit the file directly.
 
-### Configuration File Location
+### Key Settings
 
-- **User config**: `~/.config/poe2-master/config.json`
-- **Default config**: Built into the application
-- **Environment variables**: `POE2_LOG_LEVEL`, `POE2_LOG_FILE`, etc.
+- **Window positioning** - Save and restore overlay location
+- **Transparency** - Adjust overlay opacity
+- **Auto-show/hide** - Automatically show when POE2 starts
+- **Hotkeys** - Customize keyboard shortcuts
+- **API settings** - Configure rate limiting and caching
 
-### Key Configuration Sections
+## 🏗️ Architecture
 
-```json
-{
-  "window": {
-    "width": 400,
-    "height": 300,
-    "transparency": 0.9,
-    "auto_show_on_poe2_start": true
-  },
-  "hotkeys": {
-    "toggle_overlay": "<ctrl>+<shift>+o"
-  },
-  "api": {
-    "rate_limit_requests": 10,
-    "rate_limit_window": 60,
-    "cache_ttl": 300
-  },
-  "search": {
-    "max_results": 10,
-    "default_league": "Early Access"
-  },
-  "appearance": {
-    "theme": "dark",
-    "font_family": "Arial",
-    "font_size": 10
-  }
-}
-```
+The project uses a modular architecture with clear separation of concerns:
 
-### Hot-Reloading
+- **Core** - Event bus, process monitoring, hotkey management
+- **UI** - GTK4-based interface components
+- **Config** - Configuration management and validation
+- **Services** - Business logic and API integration
 
-Configuration changes are automatically detected and applied without restarting the overlay.
+## 🧪 Development
 
-## 🧪 Testing and Quality
-
-### Setting Up Development Environment
+### Quick Start
 
 ```bash
 # Install development dependencies
 make install-dev
 
-# Setup pre-commit hooks
-make setup-dev
+# Start development server with hot reloading
+make dev
 
-# Verify installation
-make check-env
+# Run the application
+make run
+
+# Run tests
+make test
+```
+
+### Development Tools
+
+#### Makefile Commands
+
+```bash
+# Development
+make dev         # Start development server with hot reloading
+make run         # Run the overlay application
+make run-debug   # Run with debug logging enabled
+
+# Installation
+make install     # Install production dependencies
+make install-dev # Install development dependencies
+make check-deps  # Check if all dependencies are installed
+
+# Testing
+make test        # Run all tests
+make test-unit   # Run unit tests only
+make test-cov    # Run tests with coverage report
+
+# Code Quality
+make lint        # Run linting checks
+make format      # Format code with black
+make check       # Run all quality checks
+
+# Build & Clean
+make build       # Build the package
+make clean       # Clean build artifacts and cache
+make distclean   # Deep clean (including venv)
+
+# Quick workflows
+make setup-dev   # Setup development environment
+make dev-workflow # Complete development cycle
+```
+
+#### Development Scripts
+
+```bash
+# Development server with hot reloading
+./dev.sh dev
+
+# Run the application
+./dev.sh run
+
+# Run tests
+./dev.sh test
+
+# Install dependencies
+./dev.sh install
+
+# Code quality checks
+./dev.sh check
+
+# Clean build artifacts
+./dev.sh clean
+```
+
+#### Quick Run Script
+
+```bash
+# Simple run script
+./run.sh
 ```
 
 ### Running Tests
@@ -277,13 +191,12 @@ make check-env
 # Run all tests
 make test
 
-# Run tests with coverage
-make test-cov
-
 # Run specific test categories
-pytest tests/unit/          # Unit tests only
-pytest tests/integration/   # Integration tests only
-pytest -m "not slow"        # Exclude slow tests
+pytest tests/unit/
+pytest tests/integration/
+
+# Run with coverage
+make test-cov
 ```
 
 ### Code Quality
@@ -295,176 +208,67 @@ make format
 # Lint code
 make lint
 
-# Type checking
-make type-check
-
-# Run all quality checks
-make dev-cycle
+# Run all checks
+make check
 ```
 
-### Building and Packaging
+### Development Cycle
 
 ```bash
-# Build package
-make build
+# Complete development cycle (clean, check, run)
+make dev-workflow
 
-# Create distribution
-make package
-
-# Clean build artifacts
-make clean
+# Quick test and run
+make quick
 ```
 
-## 🔌 Plugin System
+## 📁 Project Structure
 
-The overlay supports a plugin architecture for easy feature extension:
-
-### Creating a Plugin
-
-```python
-from src.plugins.base_plugin import BasePlugin
-
-class MyCustomPlugin(BasePlugin):
-    def __init__(self):
-        super().__init__("my_custom_plugin")
-
-    def initialize(self):
-        """Initialize the plugin"""
-        pass
-
-    def cleanup(self):
-        """Cleanup plugin resources"""
-        pass
+```
+poe2-master/
+├── src/                    # Source code
+│   ├── core/              # Core functionality
+│   ├── ui/                # GTK4 UI components
+│   ├── config/            # Configuration management
+│   └── services/          # Business logic
+├── tests/                 # Test suite
+├── examples/              # Example configurations
+├── requirements.txt       # Python dependencies
+├── pyproject.toml         # Project configuration
+├── install.sh             # Installation script
+├── Makefile               # Development and build commands
+├── dev.sh                 # Development script with hot reloading
+├── run.sh                 # Quick run script
+└── config.dev.json        # Development configuration
 ```
 
-### Plugin Configuration
+## 🔄 GTK4 Migration
 
-```json
-{
-  "plugins": {
-    "auto_load": true,
-    "enabled_plugins": ["price_checker", "build_planner", "my_custom_plugin"]
-  }
-}
-```
+This project has been fully migrated from **tkinter** to **GTK4** for:
 
-## 📊 Logging
+- **Better Wayland support** - Native integration with modern Linux desktops
+- **Improved performance** - Hardware acceleration and modern rendering
+- **Better theming** - CSS-based styling and system theme integration
+- **Modern widgets** - Rich set of UI components and layouts
+- **Accessibility** - Better screen reader and keyboard navigation support
 
-The overlay includes a comprehensive logging system:
+### Migration Status
 
-### Log Levels
-
-- **DEBUG**: Detailed debugging information
-- **INFO**: General information messages
-- **WARNING**: Warning messages
-- **ERROR**: Error messages
-- **CRITICAL**: Critical error messages
-
-### Log Outputs
-
-- **Console**: Real-time logging during development
-- **File**: Rotating log files with configurable size limits
-- **Syslog**: System logging integration
-
-### Environment Variables
-
-```bash
-export POE2_LOG_LEVEL=DEBUG
-export POE2_LOG_FILE=/path/to/logfile.log
-export POE2_LOG_SYSLOG=true
-```
-
-## 🚀 Roadmap
-
-### Phase 1 (Current) ✅
-
-- [x] Modular architecture implementation
-- [x] Event-driven component system
-- [x] Enhanced configuration management
-- [x] Comprehensive logging system
-- [x] Plugin system foundation
-- [x] Full test coverage setup
-
-### Phase 2 (When POE2 API is Available)
-
-- [ ] Real POE2 trade API integration
-- [ ] Currency conversion
-- [ ] Advanced search filters
-- [ ] Whisper message copying
-- [ ] Price alerts
-
-### Phase 3 (Advanced Features)
-
-- [ ] Build planning integration
-- [ ] Stash tab organization
-- [ ] Atlas progression tracking
-- [ ] League mechanics tracking
-- [ ] DPS calculator integration
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Overlay Not Appearing
-
-1. Check if POE2 is detected: Look at status in overlay
-2. Try manual toggle with `Ctrl+Shift+O`
-3. Check X11 vs Wayland: `echo $XDG_SESSION_TYPE`
-4. Verify permissions for global hotkeys
-
-#### Hotkeys Not Working
-
-1. Ensure `pynput` is installed: `pip install pynput`
-2. Check for permission issues
-3. Verify hotkey configuration in config file
-
-#### Configuration Issues
-
-1. Check configuration file syntax: `~/.config/poe2-master/config.json`
-2. Reset to defaults: Use settings dialog or delete config file
-3. Verify file permissions
-
-### Debug Mode
-
-```bash
-# Enable debug logging
-export POE2_LOG_LEVEL=DEBUG
-
-# Run with verbose output
-python -m src --verbose
-```
-
-### Log Files
-
-Check log files for detailed error information:
-
-- **User logs**: `~/.local/share/poe2-master/logs/`
-- **System logs**: `/var/log/syslog` (if syslog enabled)
+- ✅ **Main Window** - Fully converted to GTK4
+- ✅ **Search Panel** - Converted to GTK4 widgets
+- ✅ **Results Panel** - Converted to GTK4 widgets
+- ✅ **Settings Dialog** - Converted to GTK4 widgets
+- ✅ **Theme Manager** - Updated for GTK4 CSS theming
+- ✅ **Overlay Manager** - Updated for GTK4 Application
+- ✅ **Dependencies** - Updated requirements and installation
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass: `make test`
-6. Run code quality checks: `make dev-cycle`
-7. Commit your changes: `git commit -m 'Add amazing feature'`
-8. Push to the branch: `git push origin feature/amazing-feature`
-9. Open a Pull Request
-
-### Code Style
-
-We use several tools to maintain code quality:
-
-- **Black**: Code formatting
-- **Flake8**: Linting
-- **MyPy**: Type checking
-- **Pre-commit**: Git hooks
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
@@ -472,34 +276,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Path of Exile 2 by Grinding Gear Games
-- Python tkinter for GUI framework
-- pynput for global hotkey support
-- psutil for process monitoring
-- All contributors and testers
+- **GTK4** team for the excellent toolkit
+- **Python** community for PyGObject bindings
+- **Path of Exile** community for inspiration
 
 ## 📞 Support
 
-If you encounter issues:
-
-1. Check the troubleshooting section above
-2. Look for similar issues in the [GitHub issues](https://github.com/yourusername/poe2-master/issues)
-3. Create a new issue with:
-   - Your Linux distribution and version
-   - Python version
-   - Steps to reproduce the problem
-   - Any error messages
-   - Log files (if available)
-
-## 📚 Documentation
-
-- [API Reference](docs/api.md)
-- [Plugin Development](docs/plugins.md)
-- [Development Guide](docs/development.md)
-- [Deployment Guide](docs/deployment.md)
+- **Issues** - Report bugs and request features on GitHub
+- **Discussions** - Join community discussions
+- **Wiki** - Check the project wiki for detailed documentation
 
 ---
 
-**Note**: This overlay currently uses mock data for testing. Real POE2 API integration will be added once the official API becomes available.
-
-Happy gaming! 🎮
+**Happy gaming! 🎮⚔️**

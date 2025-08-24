@@ -20,7 +20,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "auto_hide_on_poe2_exit": False,
         "minimize_to_tray": False,
         "start_minimized": False,
-        "always_visible": True  # New setting to keep overlay always visible
+        "always_visible": True,  # New setting to keep overlay always visible
+        "draggable": True,  # Enable/disable dragging
+        "drag_sensitivity": 1.0,  # Drag sensitivity multiplier
+        "save_position": True  # Save position after dragging
     },
     
     # Hotkeys
@@ -28,7 +31,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "toggle_overlay": "<ctrl>+<shift>+o",
         "quick_search": "<ctrl>+<shift>+f",
         "hide_overlay": "<escape>",
-        "show_settings": "<ctrl>+<shift>+,",
+        "show_settings": "<ctrl>+<shift>+s",
         "refresh_data": "<ctrl>+<shift>+r"
     },
     
@@ -118,18 +121,6 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "reduce_animations": False
     },
     
-    # Plugins
-    "plugins": {
-        "auto_load": True,
-        "enabled_plugins": [
-            "price_checker",
-            "build_planner",
-            "progression_tracker"
-        ],
-        "plugin_directory": "plugins",
-        "plugin_timeout": 30.0
-    },
-    
     # Notifications
     "notifications": {
         "enable_desktop_notifications": True,
@@ -162,7 +153,10 @@ CONFIG_SCHEMA = {
                 "always_on_top": {"type": "boolean"},
                 "auto_show_on_poe2_start": {"type": "boolean"},
                 "auto_hide_on_poe2_exit": {"type": "boolean"},
-                "always_visible": {"type": "boolean"}
+                "always_visible": {"type": "boolean"},
+                "draggable": {"type": "boolean"},
+                "drag_sensitivity": {"type": "number", "minimum": 0.1, "maximum": 5.0},
+                "save_position": {"type": "boolean"}
             },
             "required": ["width", "height", "transparency"]
         },

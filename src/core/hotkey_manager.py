@@ -71,7 +71,8 @@ class HotkeyManager:
         default_hotkeys = {
             'toggle_overlay': '<ctrl>+<shift>+o',
             'quick_search': '<ctrl>+<shift>+f',
-            'hide_overlay': '<escape>'
+            'hide_overlay': '<escape>',
+            'show_settings': '<ctrl>+<shift>+s'
         }
         
         for action, hotkey in default_hotkeys.items():

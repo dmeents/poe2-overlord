@@ -18,7 +18,8 @@
     "_description": "Global hotkey bindings",
     "toggle_overlay": "<ctrl>+<shift>+o",
     "quick_search": "<ctrl>+<shift>+f",
-    "hide_overlay": "<escape>"
+    "hide_overlay": "<escape>",
+    "show_settings": "<ctrl>+<shift>+s"
   },
   
   "api": {

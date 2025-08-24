@@ -23,22 +23,30 @@ class EventType(Enum):
     OVERLAY_SHOW = "overlay_show"
     OVERLAY_HIDE = "overlay_hide"
     OVERLAY_TOGGLE = "overlay_toggle"
+    OVERLAY_MOVE = "overlay_move"
+    OVERLAY_RESIZE = "overlay_resize"
     
     # Search events
     SEARCH_STARTED = "search_started"
     SEARCH_COMPLETED = "search_completed"
     SEARCH_FAILED = "search_failed"
+    SEARCH_REQUESTED = "search_requested"
     
     # Configuration events
     CONFIG_CHANGED = "config_changed"
-    CONFIG_LOADED = "config_loaded"
+    CONFIG_RELOADED = "config_reloaded"
     
     # Hotkey events
     HOTKEY_TRIGGERED = "hotkey_triggered"
     
-    # Plugin events
-    PLUGIN_LOADED = "plugin_loaded"
-    PLUGIN_UNLOADED = "plugin_unloaded"
+    # Data events
+    DATA_REFRESH_REQUESTED = "data_refresh_requested"
+    DATA_REFRESH_COMPLETED = "data_refresh_completed"
+    
+    # Development events
+    DEV_SERVER_STARTED = "dev_server_started"
+    DEV_SERVER_STOPPED = "dev_server_stopped"
+    HOT_RELOAD_TRIGGERED = "hot_reload_triggered"
 
 
 @dataclass

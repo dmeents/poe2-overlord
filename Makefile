@@ -1,164 +1,144 @@
-.PHONY: help install install-dev clean test test-cov lint format type-check docs build package run install-local uninstall
+# POE2 Master Overlay - Makefile
+# Provides convenient commands for development, testing, and building
+
+.PHONY: help install dev test clean build run install-dev lint format check-deps
 
 # Default target
 help:
-	@echo "POE2 Master Overlay - Development Commands"
-	@echo ""
-	@echo "Installation:"
-	@echo "  install          Install the package in development mode"
-	@echo "  install-dev      Install with development dependencies"
-	@echo "  install-local    Install the package locally"
+	@echo "POE2 Master Overlay - Available Commands:"
 	@echo ""
 	@echo "Development:"
-	@echo "  test             Run tests"
-	@echo "  test-cov         Run tests with coverage"
-	@echo "  lint             Run linting checks"
-	@echo "  format           Format code with black"
-	@echo "  type-check       Run type checking with mypy"
-	@echo "  docs             Build documentation"
+	@echo "  dev         - Start development server with hot reloading"
+	@echo "  run         - Run the overlay application"
+	@echo "  run-debug   - Run with debug logging enabled"
 	@echo ""
-	@echo "Building:"
-	@echo "  build            Build the package"
-	@echo "  package          Create distribution packages"
+	@echo "Installation:"
+	@echo "  install     - Install production dependencies"
+	@echo "  install-dev - Install development dependencies"
+	@echo "  check-deps  - Check if all dependencies are installed"
 	@echo ""
-	@echo "Running:"
-	@echo "  run              Run the overlay application"
+	@echo "Testing:"
+	@echo "  test        - Run all tests"
+	@echo "  test-unit   - Run unit tests only"
+	@echo "  test-cov    - Run tests with coverage report"
 	@echo ""
-	@echo "Cleanup:"
-	@echo "  clean            Clean build artifacts"
-	@echo "  uninstall        Uninstall the package"
+	@echo "Code Quality:"
+	@echo "  lint        - Run linting checks"
+	@echo "  format      - Format code with black"
+	@echo "  check       - Run all quality checks"
+	@echo ""
+	@echo "Build & Clean:"
+	@echo "  build       - Build the package"
+	@echo "  clean       - Clean build artifacts and cache"
+	@echo "  distclean   - Deep clean (including venv)"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  docs        - Generate documentation"
+	@echo "  readme      - Update README with current status"
+	@echo ""
 
-# Installation
+# Development commands
+dev:
+	@echo "🚀 Starting development server with hot reloading..."
+	@python3 -m src.dev_server
+
+run:
+	@echo "🎯 Running POE2 Master Overlay..."
+	@python3 -m src
+
+run-debug:
+	@echo "🐛 Running POE2 Master Overlay with debug logging..."
+	@POE2_DEBUG=1 python3 -m src
+
+# Installation commands
 install:
-	pip install -e .
+	@echo "📦 Installing production dependencies..."
+	@pip install -r requirements.txt
 
 install-dev:
-	pip install -e ".[dev]"
+	@echo "🔧 Installing development dependencies..."
+	@pip install -r requirements.txt
+	@pip install -e .
 
-install-local:
-	pip install .
+check-deps:
+	@echo "🔍 Checking dependencies..."
+	@python3 -c "import gi; gi.require_version('Gtk', '4.0'); print('✅ GTK4 bindings available')"
+	@python3 -c "import watchdog; print('✅ Watchdog available')"
+	@python3 -c "import psutil; print('✅ psutil available')"
+	@python3 -c "import pynput; print('✅ pynput available')"
+	@echo "✅ All dependencies are available"
 
-uninstall:
-	pip uninstall poe2-master-overlay -y
-
-# Development
+# Testing commands
 test:
-	pytest tests/
+	@echo "🧪 Running all tests..."
+	@python3 -m pytest tests/ -v
+
+test-unit:
+	@echo "🧪 Running unit tests..."
+	@python3 -m pytest tests/unit/ -v
 
 test-cov:
-	pytest tests/ --cov=poe2_master --cov-report=term-missing --cov-report=html
+	@echo "🧪 Running tests with coverage..."
+	@python3 -m pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
 
+# Code quality commands
 lint:
-	flake8 src/ tests/
-	black --check src/ tests/
+	@echo "🔍 Running linting checks..."
+	@python3 -m flake8 src/ tests/ --max-line-length=100 --ignore=E501,W503
 
 format:
-	black src/ tests/
+	@echo "🎨 Formatting code with black..."
+	@python3 -m black src/ tests/ --line-length=100
 
-type-check:
-	mypy src/
+check: lint test
+	@echo "✅ All quality checks passed!"
 
-docs:
-	cd docs && make html
-
-# Development mode with hot reloading
-dev:
-	python3 src/dev_server.py
-
-dev-verbose:
-	python3 src/dev_server.py --verbose
-
-dev-watch:
-	python3 src/dev_server.py --source-dirs src tests
-
-# Building
+# Build commands
 build:
-	python -m build
+	@echo "🏗️ Building package..."
+	@python3 -m build
 
-package: build
-	@echo "Package built in dist/ directory"
-
-# Running
-run:
-	python -m src
-
-# Cleanup
+# Clean commands
 clean:
-	rm -rf build/
-	rm -rf dist/
-	rm -rf *.egg-info/
-	rm -rf .pytest_cache/
-	rm -rf .coverage
-	rm -rf htmlcov/
-	rm -rf .mypy_cache/
-	find . -type d -name __pycache__ -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
+	@echo "🧹 Cleaning build artifacts and cache..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	@find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".coverage" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
 
-# Development environment setup
-setup-dev: install-dev
-	pre-commit install
+distclean: clean
+	@echo "🧹 Deep cleaning (including virtual environment)..."
+	@rm -rf venv/ 2>/dev/null || true
+	@rm -rf .venv/ 2>/dev/null || true
 
-# Quick development cycle
-dev-cycle: format lint type-check test
+# Documentation commands
+docs:
+	@echo "📚 Generating documentation..."
+	@echo "Documentation generation not yet implemented"
 
-# Docker development (if needed)
-docker-build:
-	docker build -t poe2-master-overlay .
+readme:
+	@echo "📝 Updating README..."
+	@echo "README update not yet implemented"
 
-docker-run:
-	docker run -it --rm poe2-master-overlay
+# Quick development setup
+setup-dev: install-dev check-deps
+	@echo "✅ Development environment setup complete!"
+	@echo "Run 'make dev' to start the development server"
 
-# System integration
-install-system:
-	sudo ./scripts/install.sh
+# Production setup
+setup-prod: install check-deps
+	@echo "✅ Production environment setup complete!"
+	@echo "Run 'make run' to start the overlay"
 
-uninstall-system:
-	sudo ./scripts/uninstall.sh
+# Default development workflow
+dev-workflow: clean check run
+	@echo "✅ Development workflow complete!"
 
-# Database operations (if applicable)
-db-migrate:
-	@echo "Database migration not implemented yet"
-
-db-reset:
-	@echo "Database reset not implemented yet"
-
-# Performance profiling
-profile:
-	python -m cProfile -o profile.stats -m poe2_master
-
-profile-view:
-	python -c "import pstats; p = pstats.Stats('profile.stats'); p.sort_stats('cumulative').print_stats(20)"
-
-# Security checks
-security-check:
-	bandit -r src/
-	safety check
-
-# Dependency management
-update-deps:
-	pip install --upgrade pip
-	pip install --upgrade -r requirements.txt
-
-freeze-deps:
-	pip freeze > requirements.lock
-
-# Git operations
-git-hooks:
-	pre-commit install
-
-# Release preparation
-release-check: clean test lint type-check security-check
-	@echo "Release checks completed successfully"
-
-release: release-check package
-	@echo "Release package created in dist/ directory"
-
-# Helpers
-check-env:
-	@echo "Python version: $(shell python --version)"
-	@echo "Pip version: $(shell pip --version)"
-	@echo "Current directory: $(shell pwd)"
-	@echo "Virtual environment: $(shell echo $$VIRTUAL_ENV)"
-
-# Default target
-.DEFAULT_GOAL := help
+# Quick test and run
+quick: test run
+	@echo "✅ Quick test and run complete!"

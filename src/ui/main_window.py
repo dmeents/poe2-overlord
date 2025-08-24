@@ -1,422 +1,530 @@
+#!/usr/bin/env python3
 """
-Main Window for POE2 Master Overlay
+Main Window for POE2 Master Overlay using GTK4
 
-The primary overlay window that contains all UI components.
+This module provides the main overlay window with proper Wayland support,
+draggable functionality, and modern GTK4 UI components.
 """
 
-import tkinter as tk
-from tkinter import ttk
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Gdk', '4.0')
+gi.require_version('Gio', '2.0')
+
+from gi.repository import Gtk, Gdk, Gio, GLib
 from typing import Optional
 import logging
+import os
 
 from ..core.event_bus import EventType, event_bus
-from ..config.config_manager import ConfigManager
-from ..core.overlay_manager import OverlayManager
-
-logger = logging.getLogger(__name__)
 
 
-class MainWindow:
-    """Main overlay window"""
+class MainWindow(Gtk.ApplicationWindow):
+    """Main overlay window using GTK4 for proper Wayland support"""
     
-    def __init__(self, config: ConfigManager, overlay_manager: OverlayManager):
-        """
-        Initialize the main window
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
-        Args:
-            config: Configuration manager
-            overlay_manager: Main overlay manager
-        """
         self.config = config
-        self.overlay_manager = overlay_manager
-        self.root: Optional[tk.Tk] = None
-        self.is_visible = False
+        self.logger = logging.getLogger(__name__)
         
-        # UI Components
-        self.main_frame: Optional[ttk.Frame] = None
-        self.status_label: Optional[ttk.Label] = None
-        self.search_panel: Optional['SearchPanel'] = None
-        self.results_panel: Optional['ResultsPanel'] = None
+        # Window state
+        self.is_dragging = False
+        self.drag_start_x = 0
+        self.drag_start_y = 0
+        self.drag_start_window_x = 0
+        self.drag_start_window_y = 0
         
-        # Setup UI
+        # Setup the window
+        self._setup_window()
         self._setup_ui()
-        self._setup_event_handlers()
+        self._setup_drag_events()
+        self._setup_keyboard_shortcuts()
+        self._restore_window_position()
         
-        logger.info("Main window initialized")
-        
-    def _setup_ui(self):
-        """Initialize the overlay UI"""
-        try:
-            self.root = tk.Tk()
-            self.root.title("POE2 Master Overlay")
-            
-            # Configure overlay window properties
-            self._configure_window_properties()
-            
-            # Create main frame
-            self.main_frame = ttk.Frame(self.root, padding="10")
-            self.main_frame.pack(fill=tk.BOTH, expand=True)
-            
-            # Create UI components
-            self._create_title()
-            self._create_status_display()
-            self._create_search_panel()
-            self._create_results_panel()
-            self._create_control_buttons()
-            
-            # Ensure overlay is visible and on top
-            self.root.deiconify()
-            self.root.lift()
-            self.root.focus_force()
-            self.is_visible = True
-            
-            # Force update and redraw
-            self.root.update()
-            self.root.update_idletasks()
-            
-            logger.info("Main window UI setup completed successfully")
-            
-        except Exception as e:
-            logger.error(f"Failed to setup UI: {e}")
-            if hasattr(self, 'root') and self.root:
-                self.root.destroy()
-            raise
-        
-    def _configure_window_properties(self):
-        """Configure window properties for overlay behavior"""
-        try:
-            # Remove window decorations
-            self.root.overrideredirect(True)
-            
-            # Always on top
-            self.root.wm_attributes("-topmost", True)
-            
-            # Transparency
-            transparency = self.config.get('window.transparency', 0.9)
-            self.root.wm_attributes("-alpha", transparency)
-            
-            # Size and position
-            width = self.config.get('window.width', 400)
-            height = self.config.get('window.height', 300)
-            self.root.geometry(f"{width}x{height}")
-            
-            # Position overlay in top-right corner with fallback
-            try:
-                # Wait a moment for screen info to be available
-                self.root.update_idletasks()
-                
-                screen_width = self.root.winfo_screenwidth()
-                screen_height = self.root.winfo_screenheight()
-                
-                # Use default position if screen dimensions are invalid
-                if screen_width <= 0 or screen_height <= 0:
-                    logger.warning("Invalid screen dimensions, using default position")
-                    x_position = 100
-                    y_position = 100
-                else:
-                    x_position = self.config.get('window.x_position', screen_width - width - 20)
-                    y_position = self.config.get('window.y_position', 20)
-                    
-                    # Ensure window is on screen
-                    if x_position < 0:
-                        x_position = 20
-                    if y_position < 0:
-                        y_position = 20
-                    if x_position + width > screen_width:
-                        x_position = screen_width - width - 20
-                    if y_position + height > screen_height:
-                        y_position = screen_height - height - 20
-                
-                self.root.geometry(f"{width}x{height}+{x_position}+{y_position}")
-                
-            except Exception as e:
-                logger.warning(f"Could not set window position: {e}, using default")
-                # Fallback to center of screen
-                self.root.geometry(f"{width}x{height}+100+100")
-                x_position, y_position = 100, 100
-            
-            logger.debug(f"Window configured: {width}x{height} at ({x_position}, {y_position})")
-            
-        except Exception as e:
-            logger.error(f"Error configuring window properties: {e}")
-            # Fallback to basic configuration
-            self.root.geometry("400x300+100+100")
-        
-    def _create_title(self):
-        """Create the title section"""
-        title_label = ttk.Label(
-            self.main_frame, 
-            text="POE2 Master Overlay",
-            font=("Arial", 14, "bold")
-        )
-        title_label.pack(pady=(0, 10))
-        
-    def _create_status_display(self):
-        """Create the status display section"""
-        self.status_label = ttk.Label(
-            self.main_frame,
-            text="Status: Initializing...",
-            foreground="orange"
-        )
-        self.status_label.pack(pady=(0, 10))
-        
-    def _create_search_panel(self):
-        """Create the search panel"""
-        try:
-            from .search_panel import SearchPanel
-            self.search_panel = SearchPanel(self.main_frame, self.config)
-            self.search_panel.pack(fill=tk.X, pady=(0, 10))
-        except ImportError:
-            # Fallback to basic search if panel not available
-            self._create_basic_search()
-            
-    def _create_basic_search(self):
-        """Create a basic search interface as fallback"""
-        search_frame = ttk.LabelFrame(self.main_frame, text="Item Search", padding="5")
-        search_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        ttk.Label(search_frame, text="Item Name:").pack(anchor=tk.W)
-        self.search_entry = ttk.Entry(search_frame, width=40)
-        self.search_entry.pack(fill=tk.X, pady=(2, 5))
-        self.search_entry.bind("<Return>", self._on_search)
-        
-        search_btn = ttk.Button(
-            search_frame,
-            text="Search Prices",
-            command=self._on_search
-        )
-        search_btn.pack(pady=(0, 5))
-        
-    def _create_results_panel(self):
-        """Create the results panel"""
-        try:
-            from .results_panel import ResultsPanel
-            self.results_panel = ResultsPanel(self.main_frame, self.config)
-            self.results_panel.pack(fill=tk.BOTH, expand=True)
-        except ImportError:
-            # Fallback to basic results if panel not available
-            self._create_basic_results()
-            
-    def _create_basic_results(self):
-        """Create a basic results interface as fallback"""
-        results_frame = ttk.LabelFrame(self.main_frame, text="Results", padding="5")
-        results_frame.pack(fill=tk.BOTH, expand=True)
-        
-        text_frame = ttk.Frame(results_frame)
-        text_frame.pack(fill=tk.BOTH, expand=True)
-        
-        self.results_text = tk.Text(
-            text_frame,
-            height=8,
-            wrap=tk.WORD,
-            font=("Consolas", 10)
-        )
-        
-        scrollbar = ttk.Scrollbar(text_frame, orient=tk.VERTICAL, command=self.results_text.yview)
-        self.results_text.configure(yscrollcommand=scrollbar.set)
-        
-        self.results_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-    def _create_control_buttons(self):
-        """Create control buttons"""
-        control_frame = ttk.Frame(self.main_frame)
-        control_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        # Toggle button - text changes based on always_visible setting
-        always_visible = self.config.get('window.always_visible', True)
-        toggle_text = "Always Visible" if always_visible else "Hide Overlay"
-        toggle_btn = ttk.Button(
-            control_frame,
-            text=toggle_text,
-            command=self._toggle_overlay
-        )
-        toggle_btn.pack(side=tk.LEFT, padx=(0, 5))
-        
-        # Settings button
-        settings_btn = ttk.Button(
-            control_frame,
-            text="Settings",
-            command=self._show_settings
-        )
-        settings_btn.pack(side=tk.LEFT, padx=(0, 5))
-        
-        # Exit button
-        exit_btn = ttk.Button(
-            control_frame,
-            text="Exit",
-            command=self._quit_application
-        )
-        exit_btn.pack(side=tk.RIGHT)
-        
-    def _setup_event_handlers(self):
-        """Setup event handlers"""
-        # Subscribe to events
-        event_bus.subscribe(EventType.POE2_STARTED, self._on_poe2_started)
-        event_bus.subscribe(EventType.POE2_STOPPED, self._on_poe2_stopped)
-        event_bus.subscribe(EventType.OVERLAY_SHOW, self._on_overlay_show)
-        event_bus.subscribe(EventType.OVERLAY_HIDE, self._on_overlay_hide)
+        # Connect to event bus
         event_bus.subscribe(EventType.OVERLAY_TOGGLE, self._on_overlay_toggle)
         
-    def _on_search(self, event=None):
-        """Handle search requests"""
-        if hasattr(self, 'search_entry'):
-            item_name = self.search_entry.get().strip()
-            if item_name:
-                logger.info(f"Search requested for: {item_name}")
-                # TODO: Implement search functionality
-                self._display_search_results(f"Search results for: {item_name}")
+        self.logger.info("GTK4 Main window initialized successfully")
+        
+    def _setup_window(self):
+        """Configure window properties for overlay behavior"""
+        try:
+            # Detect display server
+            wayland_display = os.environ.get('WAYLAND_DISPLAY')
+            xdg_desktop = os.environ.get('XDG_CURRENT_DESKTOP', '')
+            
+            self.logger.debug(f"Display server: {'Wayland' if wayland_display else 'X11'}")
+            self.logger.debug(f"Desktop environment: {xdg_desktop}")
+            
+            # Set window properties
+            self.set_title("POE2 Master Overlay")
+            self.set_default_size(400, 300)
+            
+            # Configure for overlay behavior
+            if wayland_display:
+                self.logger.debug("Wayland detected - using GTK4 overlay configuration")
+                self._configure_wayland_window()
+            else:
+                self.logger.debug("X11 detected - using GTK4 overlay configuration")
+                self._configure_x11_window()
                 
-    def _display_search_results(self, results: str):
-        """Display search results"""
-        if hasattr(self, 'results_text'):
-            self.results_text.delete(1.0, tk.END)
-            self.results_text.insert(tk.END, results)
+            # Always on top (GTK4 method)
+            self.set_keep_above(True)
             
-    def _toggle_overlay(self):
-        """Toggle overlay visibility"""
-        # If always_visible is enabled, only allow showing
-        if self.config.get('window.always_visible', True):
-            if not self.is_visible:
-                self.show()
-            # Don't allow hiding when always_visible is enabled
-            return
+            # Skip taskbar (GTK4 method)
+            self.set_skip_taskbar_hint(True)
             
-        if self.is_visible:
-            self.hide()
-        else:
-            self.show()
+            # Set window type hint for overlay (GTK4 method)
+            self.set_type_hint(Gdk.WindowTypeHint.UTILITY)
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up GTK4 window: {e}")
+            
+    def _configure_wayland_window(self):
+        """Configure window specifically for Wayland"""
+        try:
+            # Wayland-friendly settings
+            self.set_decorated(False)  # No decorations for overlay
+            self.set_resizable(False)  # Fixed size overlay
+            
+            # Set window class for Wayland (GTK4 method)
+            self.set_wmclass("poe2-overlay", "POE2 Master Overlay")
+            
+        except Exception as e:
+            self.logger.error(f"Error configuring for Wayland: {e}")
+            
+    def _configure_x11_window(self):
+        """Configure window specifically for X11"""
+        try:
+            # X11-friendly settings
+            self.set_decorated(False)
+            self.set_resizable(False)
+            
+        except Exception as e:
+            self.logger.error(f"Error configuring for X11: {e}")
+            
+    def _setup_ui(self):
+        """Create the main UI components"""
+        try:
+            # Main container
+            self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            self.main_box.set_margin_start(10)
+            self.main_box.set_margin_end(10)
+            self.main_box.set_margin_top(10)
+            self.main_box.set_margin_bottom(10)
+            
+            # Title section
+            self._create_title()
+            
+            # Control buttons
+            self._create_control_buttons()
+            
+            # Search panel
+            self._create_search_panel()
+            
+            # Results panel
+            self._create_results_panel()
+            
+            # Status bar
+            self._create_status_bar()
+            
+            # Set the main container
+            self.set_child(self.main_box)
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up GTK4 UI: {e}")
+            
+    def _create_title(self):
+        """Create the title section with drag indicator"""
+        try:
+            # Title box
+            title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            
+            # Main title
+            title_label = Gtk.Label(label="POE2 Master Overlay")
+            title_label.set_hexpand(True)
+            title_label.set_halign(Gtk.Align.START)
+            
+            # Drag indicator
+            drag_label = Gtk.Label(label="⋮⋮")
+            drag_label.set_tooltip_text("Drag to move overlay")
+            drag_label.set_css_classes(["drag-indicator"])
+            
+            # Add to title box
+            title_box.append(title_label)
+            title_box.append(drag_label)
+            
+            # Add to main box
+            self.main_box.append(title_box)
+            
+            # Store references
+            self.title_label = title_label
+            self.drag_label = drag_label
+            
+        except Exception as e:
+            self.logger.error(f"Error creating title: {e}")
+            
+    def _create_control_buttons(self):
+        """Create control buttons"""
+        try:
+            button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            
+            # Settings button
+            settings_button = Gtk.Button(label="Settings")
+            settings_button.connect("clicked", self._on_settings_clicked)
+            settings_button.set_css_classes(["settings-button"])
+            button_box.append(settings_button)
+            
+            # Reset position button
+            reset_button = Gtk.Button(label="Reset Position")
+            reset_button.connect("clicked", self._on_reset_position_clicked)
+            reset_button.set_css_classes(["reset-button"])
+            button_box.append(reset_button)
+            
+            # Add to main box
+            self.main_box.append(button_box)
+            
+        except Exception as e:
+            self.logger.error(f"Error creating control buttons: {e}")
+            
+    def _create_search_panel(self):
+        """Create search panel using GTK4 components"""
+        try:
+            from .search_panel import SearchPanel
+            self.search_panel = SearchPanel(self.config)
+            self.main_box.append(self.search_panel)
+        except Exception as e:
+            self.logger.error(f"Error creating search panel: {e}")
+            # Fallback to label
+            search_label = Gtk.Label(label="Search Panel")
+            search_label.set_css_classes(["search-panel"])
+            self.main_box.append(search_label)
+            
+    def _create_results_panel(self):
+        """Create results panel using GTK4 components"""
+        try:
+            from .results_panel import ResultsPanel
+            self.results_panel = ResultsPanel(self.config)
+            self.main_box.append(self.results_panel)
+            
+        except Exception as e:
+            self.logger.error(f"Error creating results panel: {e}")
+            # Fallback to label
+            results_label = Gtk.Label(label="📊 Results Panel (GTK4)")
+            results_label.set_css_classes(["results-panel"])
+            self.main_box.append(results_label)
+            
+    def _create_status_bar(self):
+        """Create status bar"""
+        try:
+            self.status_label = Gtk.Label(label="Status: Ready")
+            self.status_label.set_css_classes(["status-bar"])
+            self.main_box.append(self.status_label)
+            
+        except Exception as e:
+            self.logger.error(f"Error creating status bar: {e}")
+            
+    def _setup_drag_events(self):
+        """Setup mouse drag events for moving the window"""
+        try:
+            # Create event controllers for GTK4
+            click_controller = Gtk.GestureClick()
+            click_controller.connect("pressed", self._on_button_press)
+            click_controller.connect("released", self._on_button_release)
+            
+            motion_controller = Gtk.EventControllerMotion()
+            motion_controller.connect("motion", self._on_motion)
+            
+            # Add controllers to the window
+            self.add_controller(click_controller)
+            self.add_controller(motion_controller)
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up drag events: {e}")
+            
+    def _on_button_press(self, gesture, n_press, x, y):
+        """Handle mouse button press for dragging"""
+        try:
+            # Get the button number (1 = left, 2 = middle, 3 = right)
+            button = gesture.get_current_button()
+            
+            if button == 1:  # Left mouse button
+                self.is_dragging = True
+                
+                # Get current window position using GTK4 API
+                current_x, current_y = self._get_window_position()
+                self.drag_start_window_x = current_x
+                self.drag_start_window_y = current_y
+                
+                # Get pointer position relative to window
+                self.drag_start_x = x
+                self.drag_start_y = y
+                
+                # Change cursor to indicate dragging
+                self.get_native().get_surface().set_cursor(Gdk.Cursor.new_from_name("move"))
+                
+        except Exception as e:
+            self.logger.error(f"Error in button press: {e}")
+            
+    def _on_motion(self, controller, x, y):
+        """Handle mouse motion for dragging"""
+        try:
+            if self.is_dragging:
+                # Calculate new position
+                delta_x = x - self.drag_start_x
+                delta_y = y - self.drag_start_y
+                
+                new_x = self.drag_start_window_x + delta_x
+                new_y = self.drag_start_window_y + delta_y
+                
+                # Move window using GTK4 method
+                self._set_window_position(new_x, new_y)
+                
+        except Exception as e:
+            self.logger.error(f"Error in motion: {e}")
+            
+    def _on_button_release(self, gesture, n_press, x, y):
+        """Handle mouse button release"""
+        try:
+            if self.is_dragging:
+                self.is_dragging = False
+                
+                # Reset cursor
+                self.get_native().get_surface().set_cursor(None)
+                
+                # Save new position
+                self._save_window_position()
+                
+        except Exception as e:
+            self.logger.error(f"Error in button release: {e}")
+            
+    def _get_window_position(self):
+        """Get current window position using GTK4 API"""
+        try:
+            # Method 1: Try to get position from native window
+            native = self.get_native()
+            if native:
+                surface = native.get_surface()
+                if surface:
+                    try:
+                        # This might not work on Wayland
+                        position = surface.get_position()
+                        return position
+                    except Exception as e:
+                        self.logger.debug(f"Surface.get_position() failed: {e}")
+                else:
+                    self.logger.debug("No surface available")
+            else:
+                self.logger.debug("No native window available")
+                
+            # Method 2: Try alternative approach
+            try:
+                # Get allocation (position relative to parent)
+                allocation = self.get_allocation()
+                return allocation.x, allocation.y
+            except Exception as e:
+                self.logger.debug(f"get_allocation() failed: {e}")
+                
+            # Fallback to default position
+            self.logger.debug("Using fallback position (100, 100)")
+            return 100, 100
+            
+        except Exception as e:
+            self.logger.error(f"Error getting window position: {e}")
+            return 100, 100
+            
+    def _set_window_position(self, x, y):
+        """Set window position using GTK4 API"""
+        try:
+            # Method 1: Try to move the native window surface
+            native = self.get_native()
+            if native:
+                surface = native.get_surface()
+                if surface:
+                    try:
+                        surface.move(int(x), int(y))
+                        return
+                    except Exception as e:
+                        self.logger.debug(f"Surface.move() failed: {e}")
+                else:
+                    self.logger.debug("No surface available")
+            else:
+                self.logger.debug("No native window available")
+                
+            # Method 2: Try using window manager hints (may not work on Wayland)
+            try:
+                self.set_default_size(400, 300)  # Ensure size is set
+                self.logger.debug("Window positioning may not work on Wayland due to security restrictions")
+            except Exception as e:
+                self.logger.debug(f"Window manager approach failed: {e}")
+                
+        except Exception as e:
+            self.logger.error(f"Error setting window position: {e}")
+            
+    def _setup_keyboard_shortcuts(self):
+        """Setup keyboard shortcuts for window movement"""
+        try:
+            # Create keyboard controller
+            key_controller = Gtk.EventControllerKey()
+            key_controller.connect("key-pressed", self._on_key_pressed)
+            self.add_controller(key_controller)
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up keyboard shortcuts: {e}")
+            
+    def _on_key_pressed(self, controller, keyval, keycode, state):
+        """Handle keyboard shortcuts"""
+        try:
+            # Check for Ctrl+Shift combinations
+            if state & Gdk.ModifierType.CONTROL_MASK and state & Gdk.ModifierType.SHIFT_MASK:
+                if keyval == Gdk.KEY_Left:
+                    self._move_window(-10, 0)
+                elif keyval == Gdk.KEY_Right:
+                    self._move_window(10, 0)
+                elif keyval == Gdk.KEY_Up:
+                    self._move_window(0, -10)
+                elif keyval == Gdk.KEY_Down:
+                    self._move_window(0, 10)
+                elif keyval == Gdk.KEY_Home:
+                    self._reset_window_position()
+                    
+        except Exception as e:
+            self.logger.error(f"Error in key press: {e}")
+            
+    def _move_window(self, delta_x, delta_y):
+        """Move window by specified delta"""
+        try:
+            current_x, current_y = self._get_window_position()
+            new_x = current_x + delta_x
+            new_y = current_y + delta_y
+            
+            # Use GTK4 move method
+            self._set_window_position(new_x, new_y)
+            self._save_window_position()
+            
+        except Exception as e:
+            self.logger.error(f"Error moving window: {e}")
+            
+    def _reset_window_position(self):
+        """Reset window to default position"""
+        try:
+            # Get screen dimensions using GTK4 API
+            display = Gdk.Display.get_default()
+            if display:
+                monitor = display.get_monitor_at_surface(self.get_native().get_surface())
+                if monitor:
+                    geometry = monitor.get_geometry()
+                    
+                    # Calculate default position (top-right)
+                    window_width, window_height = self.get_default_size()
+                    default_x = geometry.x + geometry.width - window_width - 20
+                    default_y = geometry.y + 20
+                    
+                    # Use GTK4 move method
+                    self._set_window_position(default_x, default_y)
+                    self._save_window_position()
+                    
+                else:
+                    self.logger.debug("Could not get monitor geometry, using fallback position")
+                    self._set_window_position(100, 100)
+            else:
+                self.logger.debug("Could not get display, using fallback position")
+                self._set_window_position(100, 100)
+                
+        except Exception as e:
+            self.logger.error(f"Error resetting position: {e}")
+            # Fallback to safe position
+            try:
+                self._set_window_position(100, 100)
+            except:
+                pass
+            
+    def _save_window_position(self):
+        """Save current window position to config"""
+        try:
+            x, y = self._get_window_position()
+            self.config.set('window.x_position', x)
+            self.config.set('window.y_position', y)
+            self.config.save()
+            
+        except Exception as e:
+            self.logger.error(f"Error saving position: {e}")
+            
+    def _restore_window_position(self):
+        """Restore window position from config"""
+        try:
+            x = self.config.get('window.x_position')
+            y = self.config.get('window.y_position')
+            
+            if x is not None and y is not None:
+                # Use GTK4 move method
+                self._set_window_position(x, y)
+            else:
+                self._reset_window_position()
+                
+        except Exception as e:
+            self.logger.error(f"Error restoring position: {e}")
+            self._reset_window_position()
+            
+    def _on_settings_clicked(self, button):
+        """Handle settings button click"""
+        self.logger.info("GTK4 settings button clicked")
+        
+        try:
+            from .settings_dialog import SettingsDialog
+            settings_dialog = SettingsDialog(self, self.config)
+            settings_dialog.show()
+        except Exception as e:
+            self.logger.error(f"Error showing settings dialog: {e}")
+        
+        if hasattr(self, 'status_label'):
+            self.status_label.set_text("Settings Clicked! ✓")
+            GLib.timeout_add_seconds(2, lambda: self.status_label.set_text("Status: Ready"))
             
     def _show_settings(self):
-        """Show settings dialog"""
-        logger.info("Settings dialog requested")
-        # TODO: Implement settings dialog
-        
-    def _quit_application(self):
-        """Quit the application"""
-        logger.info("Application quit requested")
-        if self.root:
-            self.root.quit()
+        """Show the settings dialog"""
+        try:
+            from .settings_dialog import SettingsDialog
+            settings_dialog = SettingsDialog(self, self.config)
+            settings_dialog.show()
+        except Exception as e:
+            self.logger.error(f"Error showing settings dialog: {e}")
             
-    def _on_poe2_started(self, event):
-        """Handle POE2 started event"""
-        self._update_status("POE2 Detected ✓", "green")
+    def _on_reset_position_clicked(self, button):
+        """Handle reset position button click"""
+        self.logger.info("GTK4 reset position button clicked")
         
-    def _on_poe2_stopped(self, event):
-        """Handle POE2 stopped event"""
-        self._update_status("POE2 Not Running", "red")
-        # Keep overlay visible even when POE2 stops
-        # self.hide()  # Commented out to keep overlay always visible
+        self._reset_window_position()
         
-    def _on_overlay_show(self, event):
-        """Handle overlay show event"""
-        self.show()
-        
-    def _on_overlay_hide(self, event):
-        """Handle overlay hide event"""
-        self.hide()
-        
-    def _on_overlay_toggle(self, event):
+        if hasattr(self, 'status_label'):
+            self.status_label.set_text("Position Reset! ✓")
+            GLib.timeout_add_seconds(2, lambda: self.status_label.set_text("Status: Ready"))
+            
+    def _on_overlay_toggle(self, data):
         """Handle overlay toggle event"""
-        self._toggle_overlay()
-        
-    def _update_status(self, text: str, color: str):
-        """Update the status label"""
-        if self.status_label:
-            self.status_label.config(text=f"Status: {text}", foreground=color)
-            
-    def show(self):
-        """Show the overlay"""
         try:
-            if not self.is_visible and self.root:
-                self.root.deiconify()
-                self.root.lift()
-                self.root.focus_force()
-                self.is_visible = True
-                
-                # Force update and redraw
-                self.root.update()
-                self.root.update_idletasks()
-                
-                logger.debug("Overlay shown successfully")
-                
-            # Ensure overlay stays visible if configured
-            if self.config.get('window.always_visible', True):
-                self.root.after(100, self._ensure_visible)
+            if data.get('visible', False):
+                self.show()
+            else:
+                self.hide()
                 
         except Exception as e:
-            logger.error(f"Error showing overlay: {e}")
+            self.logger.error(f"Error in overlay toggle: {e}")
             
-    def force_show(self):
-        """Force the overlay to be visible regardless of state"""
+    def show_overlay(self):
+        """Show the overlay window"""
         try:
-            if self.root:
-                # Ensure window exists and is configured
-                self.root.deiconify()
-                self.root.lift()
-                self.root.focus_force()
-                self.is_visible = True
-                
-                # Force update and redraw
-                self.root.update()
-                self.root.update_idletasks()
-                
-                # Ensure it's on top
-                self.root.wm_attributes("-topmost", True)
-                
-                logger.info("Overlay forced to show")
-                
+            self.show()
+            self.present()
+            
         except Exception as e:
-            logger.error(f"Error forcing overlay to show: {e}")
+            self.logger.error(f"Error showing overlay: {e}")
             
-    def _ensure_visible(self):
-        """Ensure the overlay stays visible"""
-        if self.config.get('window.always_visible', True) and self.root and not self.is_visible:
-            self.root.deiconify()
-            self.root.lift()
-            self.is_visible = True
-            logger.debug("Overlay visibility restored")
+    def hide_overlay(self):
+        """Hide the overlay window"""
+        try:
+            self.hide()
             
-    def hide(self):
-        """Hide the overlay"""
-        # Don't hide if always_visible is enabled
-        if self.config.get('window.always_visible', True):
-            logger.debug("Hide request ignored - always_visible is enabled")
-            return
-            
-        if self.is_visible and self.root:
-            self.root.withdraw()
-            self.is_visible = False
-            logger.debug("Overlay hidden")
-            
-    def is_visible(self) -> bool:
-        """Check if overlay is visible"""
-        return self.is_visible
-        
-    def destroy(self):
-        """Destroy the window"""
-        if self.root:
-            self.root.destroy()
-            logger.info("Main window destroyed")
-            
-    def update_config(self):
-        """Update UI based on configuration changes"""
-        if self.root:
-            # Update transparency
-            transparency = self.config.get('window.transparency', 0.9)
-            self.root.wm_attributes("-alpha", transparency)
-            
-            # Update size and position
-            width = self.config.get('window.width', 400)
-            height = self.config.get('window.height', 300)
-            self.root.geometry(f"{width}x{height}")
-            
-            logger.debug("UI configuration updated")
-            
-    def get_status(self) -> dict:
-        """Get current window status"""
-        return {
-            'visible': self.is_visible,
-            'geometry': self.root.geometry() if self.root else None,
-            'transparency': self.config.get('window.transparency', 0.9)
-        }
+        except Exception as e:
+            self.logger.error(f"Error hiding overlay: {e}")

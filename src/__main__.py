@@ -24,7 +24,9 @@ def main():
         
         # Create and start the overlay
         overlay = create_overlay()
-        overlay.start()
+        
+        # For GTK4, we need to call run() which handles the main loop
+        overlay.run()
         
         return 0
         

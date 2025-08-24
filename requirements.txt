@@ -1,0 +1,38 @@
+# POE2 Master Overlay Requirements
+
+# Core Dependencies
+requests>=2.31.0         # HTTP library for API calls
+psutil>=5.9.0           # System and process utilities
+pynput>=1.7.6           # Global hotkey support
+
+# Development Dependencies (install with: pip install -e ".[dev]")
+# pytest>=7.4.0         # Testing framework
+# pytest-cov>=4.1.0     # Coverage reporting
+# black>=23.0.0         # Code formatter
+# flake8>=6.0.0         # Code linter
+# mypy>=1.5.0           # Type checking
+# pre-commit>=3.3.0     # Git hooks
+# tox>=4.6.0            # Testing automation
+
+# Documentation Dependencies (install with: pip install -e ".[docs]")
+# sphinx>=7.0.0         # Documentation generator
+# sphinx-rtd-theme>=1.3.0  # Read the Docs theme
+# myst-parser>=2.0.0    # Markdown parser
+
+# System-specific dependencies for Linux overlay functionality
+# These may need to be installed via system package manager:
+# - python3-tk (tkinter GUI toolkit)
+# - python3-dev (Python development headers)
+# - xorg-dev (X11 development libraries) - for advanced window management
+
+# Optional Dependencies
+# tkinter is included with Python standard library
+# logging is included with Python standard library
+# threading is included with Python standard library
+# pathlib is included with Python standard library (Python 3.4+)
+# dataclasses is included with Python standard library (Python 3.7+)
+# typing is included with Python standard library (Python 3.5+)
+# json is included with Python standard library
+# os is included with Python standard library
+# time is included with Python standard library
+# sys is included with Python standard library

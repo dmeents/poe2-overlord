@@ -100,18 +100,106 @@ make package
 pip install dist/*.whl
 ```
 
-### Running the Overlay
+## 🛠️ Development
+
+### Hot Reloading Development Server
+
+The project now includes a development server with hot reloading that automatically restarts the overlay when you make code changes:
 
 ```bash
-# Development mode
+# Start development server with hot reloading
+make dev
+
+# Or with verbose logging
+make dev-verbose
+
+# Or watch specific directories
+make dev-watch
+
+# Or use the development script directly
+./dev.sh
+
+# Or run the development server manually
+python3 src/dev_server.py --verbose
+```
+
+### Development Features
+
+- **🔥 Hot Reloading**: Automatically restarts the overlay when source code changes
+- **📁 File Watching**: Monitors `src/` directory for Python file changes
+- **⚡ Fast Restarts**: Intelligent restart cooldown prevents rapid restarts
+- **🔧 Development Config**: Separate development configuration with enhanced logging
+- **📊 Process Management**: Automatic process lifecycle management
+- **🚫 Ignored Patterns**: Skips watching build artifacts, cache files, and temporary files
+
+### Development Configuration
+
+Create a `config.dev.json` file for development-specific settings:
+
+```json
+{
+  "debug": {
+    "development_mode": true,
+    "enable_config_watching": true,
+    "log_level": "DEBUG"
+  },
+  "development": {
+    "hot_reload": true,
+    "watch_source_files": true,
+    "auto_restart_on_changes": true,
+    "restart_cooldown": 1.0,
+    "source_directories": ["src"],
+    "verbose_logging": true
+  }
+}
+```
+
+### Development Commands
+
+```bash
+# Code quality and testing
+make dev-cycle          # Format, lint, type-check, and test
+make format            # Format code with black
+make lint              # Run flake8 linting
+make type-check        # Run mypy type checking
+make test              # Run tests
+make test-cov          # Run tests with coverage
+
+# Development server
+make dev               # Start development server
+make dev-verbose       # Start with verbose logging
+make dev-watch         # Watch src and tests directories
+```
+
+## 🚀 Running the Overlay
+
+### Production Mode
+
+```bash
+# Run the overlay directly
 make run
 
-# Or directly
-python -m src
+# Or using Python module
+python3 -m src
 
-# Or using the entry point
+# Or using the entry point (if installed)
 poe2-overlay
 ```
+
+### Development Mode with Hot Reloading
+
+```bash
+# Start development server with hot reloading
+make dev
+
+# Or use the development script
+./dev.sh
+
+# Or run manually with verbose logging
+python3 src/dev_server.py --verbose
+```
+
+The development server automatically restarts the overlay when you make code changes, making development much more efficient.
 
 ## ⌨️ Controls
 
@@ -168,7 +256,7 @@ The overlay uses a comprehensive configuration system with hot-reloading:
 
 Configuration changes are automatically detected and applied without restarting the overlay.
 
-## 🧪 Development
+## 🧪 Testing and Quality
 
 ### Setting Up Development Environment
 

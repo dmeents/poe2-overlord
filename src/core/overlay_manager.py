@@ -164,10 +164,10 @@ class OverlayManager:
             from ..ui.main_window import MainWindow
             
             self.main_window = MainWindow(self.config, self)
-            self.main_window.show()
+            self.main_window.show()  # Always show the overlay when starting
             self.ui_ready = True
             
-            logger.info("User interface started")
+            logger.info("User interface started and overlay shown")
             
         except Exception as e:
             logger.error(f"Failed to start UI: {e}")
@@ -196,9 +196,9 @@ class OverlayManager:
         """Handle POE2 process stopped event"""
         logger.info("POE2 process stopped")
         
-        # Auto-hide overlay if configured
-        if self.config.get('window.auto_hide_on_poe2_exit', False):
-            event_bus.publish_simple(EventType.OVERLAY_HIDE, source="OverlayManager")
+        # Don't auto-hide overlay - keep it always visible
+        # if self.config.get('window.auto_hide_on_poe2_exit', False):
+        #     event_bus.publish_simple(EventType.OVERLAY_HIDE, source="OverlayManager")
             
     def _on_hotkey_triggered(self, event) -> None:
         """Handle hotkey events"""
@@ -211,7 +211,11 @@ class OverlayManager:
             # TODO: Implement quick search
             logger.info("Quick search hotkey pressed")
         elif action == 'hide_overlay':
-            event_bus.publish_simple(EventType.OVERLAY_HIDE, source="OverlayManager")
+            # Don't hide if always_visible is enabled
+            if not self.config.get('window.always_visible', True):
+                event_bus.publish_simple(EventType.OVERLAY_HIDE, source="OverlayManager")
+            else:
+                logger.debug("Hide overlay hotkey ignored - always_visible is enabled")
         elif action == 'show_settings':
             # TODO: Show settings dialog
             logger.info("Settings hotkey pressed")
@@ -233,6 +237,11 @@ class OverlayManager:
             
     def _on_overlay_hide(self, event) -> None:
         """Handle overlay hide event"""
+        # Don't hide if always_visible is enabled
+        if self.config.get('window.always_visible', True):
+            logger.debug("Overlay hide request ignored - always_visible is enabled")
+            return
+            
         if self.ui_ready and hasattr(self, 'main_window'):
             self.main_window.hide()
             

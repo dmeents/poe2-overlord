@@ -23,6 +23,12 @@ def create_overlay():
     from .core.overlay_manager import OverlayManager
     return OverlayManager()
 
+def start_dev_server():
+    """Start the development server with hot reloading"""
+    from .dev_server import DevServer
+    server = DevServer()
+    return server.start()
+
 __all__ = [
     'OverlayManager',
     'ProcessMonitor', 
@@ -30,6 +36,7 @@ __all__ = [
     'EventBus',
     'get_logger',
     'create_overlay',
+    'start_dev_server',
     '__version__',
     '__author__',
     '__description__'

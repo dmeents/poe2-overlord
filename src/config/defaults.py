@@ -19,7 +19,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "auto_show_on_poe2_start": True,
         "auto_hide_on_poe2_exit": False,
         "minimize_to_tray": False,
-        "start_minimized": False
+        "start_minimized": False,
+        "always_visible": True  # New setting to keep overlay always visible
     },
     
     # Hotkeys
@@ -87,7 +88,25 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "log_api_requests": False,
         "show_mock_data_warning": True,
         "enable_profiling": False,
-        "log_to_syslog": False
+        "log_to_syslog": False,
+        "enable_config_watching": False,
+        "development_mode": False
+    },
+    
+    # Development Settings
+    "development": {
+        "hot_reload": True,
+        "watch_source_files": True,
+        "auto_restart_on_changes": True,
+        "restart_cooldown": 2.0,
+        "source_directories": ["src"],
+        "ignored_patterns": [
+            "__pycache__", "*.pyc", "*.pyo", "*.pyd",
+            ".git", ".svn", ".hg", ".DS_Store", "Thumbs.db",
+            "*.swp", "*.swo", "*~", ".pytest_cache", ".coverage",
+            "build", "dist", "*.egg-info"
+        ],
+        "verbose_logging": False
     },
     
     # Performance
@@ -142,7 +161,8 @@ CONFIG_SCHEMA = {
                 "transparency": {"type": "number", "minimum": 0.1, "maximum": 1.0},
                 "always_on_top": {"type": "boolean"},
                 "auto_show_on_poe2_start": {"type": "boolean"},
-                "auto_hide_on_poe2_exit": {"type": "boolean"}
+                "auto_hide_on_poe2_exit": {"type": "boolean"},
+                "always_visible": {"type": "boolean"}
             },
             "required": ["width", "height", "transparency"]
         },
@@ -158,6 +178,23 @@ CONFIG_SCHEMA = {
             "type": "object",
             "properties": {
                 "max_results": {"type": "integer", "minimum": 1, "maximum": 100}
+            }
+        },
+        "debug": {
+            "type": "object",
+            "properties": {
+                "enable_logging": {"type": "boolean"},
+                "log_level": {"type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR"]},
+                "development_mode": {"type": "boolean"}
+            }
+        },
+        "development": {
+            "type": "object",
+            "properties": {
+                "hot_reload": {"type": "boolean"},
+                "watch_source_files": {"type": "boolean"},
+                "auto_restart_on_changes": {"type": "boolean"},
+                "restart_cooldown": {"type": "number", "minimum": 0.5, "maximum": 10.0}
             }
         }
     }

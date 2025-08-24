@@ -46,49 +46,101 @@ class MainWindow:
         
     def _setup_ui(self):
         """Initialize the overlay UI"""
-        self.root = tk.Tk()
-        self.root.title("POE2 Master Overlay")
-        
-        # Configure overlay window properties
-        self._configure_window_properties()
-        
-        # Create main frame
-        self.main_frame = ttk.Frame(self.root, padding="10")
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Create UI components
-        self._create_title()
-        self._create_status_display()
-        self._create_search_panel()
-        self._create_results_panel()
-        self._create_control_buttons()
-        
-        # Initially hide the overlay
-        self.root.withdraw()
-        self.is_visible = False
+        try:
+            self.root = tk.Tk()
+            self.root.title("POE2 Master Overlay")
+            
+            # Configure overlay window properties
+            self._configure_window_properties()
+            
+            # Create main frame
+            self.main_frame = ttk.Frame(self.root, padding="10")
+            self.main_frame.pack(fill=tk.BOTH, expand=True)
+            
+            # Create UI components
+            self._create_title()
+            self._create_status_display()
+            self._create_search_panel()
+            self._create_results_panel()
+            self._create_control_buttons()
+            
+            # Ensure overlay is visible and on top
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+            self.is_visible = True
+            
+            # Force update and redraw
+            self.root.update()
+            self.root.update_idletasks()
+            
+            logger.info("Main window UI setup completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to setup UI: {e}")
+            if hasattr(self, 'root') and self.root:
+                self.root.destroy()
+            raise
         
     def _configure_window_properties(self):
         """Configure window properties for overlay behavior"""
-        # Remove window decorations
-        self.root.overrideredirect(True)
-        
-        # Always on top
-        self.root.wm_attributes("-topmost", True)
-        
-        # Transparency
-        transparency = self.config.get('window.transparency', 0.9)
-        self.root.wm_attributes("-alpha", transparency)
-        
-        # Size and position
-        width = self.config.get('window.width', 400)
-        height = self.config.get('window.height', 300)
-        self.root.geometry(f"{width}x{height}")
-        
-        # Position overlay in top-right corner
-        screen_width = self.root.winfo_screenwidth()
-        x_position = self.config.get('window.x_position', screen_width - width - 20)
-        y_position = self.config.get('window.y_position', 20)
-        self.root.geometry(f"{width}x{height}+{x_position}+{y_position}")
+        try:
+            # Remove window decorations
+            self.root.overrideredirect(True)
+            
+            # Always on top
+            self.root.wm_attributes("-topmost", True)
+            
+            # Transparency
+            transparency = self.config.get('window.transparency', 0.9)
+            self.root.wm_attributes("-alpha", transparency)
+            
+            # Size and position
+            width = self.config.get('window.width', 400)
+            height = self.config.get('window.height', 300)
+            self.root.geometry(f"{width}x{height}")
+            
+            # Position overlay in top-right corner with fallback
+            try:
+                # Wait a moment for screen info to be available
+                self.root.update_idletasks()
+                
+                screen_width = self.root.winfo_screenwidth()
+                screen_height = self.root.winfo_screenheight()
+                
+                # Use default position if screen dimensions are invalid
+                if screen_width <= 0 or screen_height <= 0:
+                    logger.warning("Invalid screen dimensions, using default position")
+                    x_position = 100
+                    y_position = 100
+                else:
+                    x_position = self.config.get('window.x_position', screen_width - width - 20)
+                    y_position = self.config.get('window.y_position', 20)
+                    
+                    # Ensure window is on screen
+                    if x_position < 0:
+                        x_position = 20
+                    if y_position < 0:
+                        y_position = 20
+                    if x_position + width > screen_width:
+                        x_position = screen_width - width - 20
+                    if y_position + height > screen_height:
+                        y_position = screen_height - height - 20
+                
+                self.root.geometry(f"{width}x{height}+{x_position}+{y_position}")
+                
+            except Exception as e:
+                logger.warning(f"Could not set window position: {e}, using default")
+                # Fallback to center of screen
+                self.root.geometry(f"{width}x{height}+100+100")
+                x_position, y_position = 100, 100
+            
+            logger.debug(f"Window configured: {width}x{height} at ({x_position}, {y_position})")
+            
+        except Exception as e:
+            logger.error(f"Error configuring window properties: {e}")
+            # Fallback to basic configuration
+            self.root.geometry("400x300+100+100")
         
     def _create_title(self):
         """Create the title section"""
@@ -171,10 +223,12 @@ class MainWindow:
         control_frame = ttk.Frame(self.main_frame)
         control_frame.pack(fill=tk.X, pady=(10, 0))
         
-        # Toggle button
+        # Toggle button - text changes based on always_visible setting
+        always_visible = self.config.get('window.always_visible', True)
+        toggle_text = "Always Visible" if always_visible else "Hide Overlay"
         toggle_btn = ttk.Button(
             control_frame,
-            text="Hide Overlay",
+            text=toggle_text,
             command=self._toggle_overlay
         )
         toggle_btn.pack(side=tk.LEFT, padx=(0, 5))
@@ -221,6 +275,13 @@ class MainWindow:
             
     def _toggle_overlay(self):
         """Toggle overlay visibility"""
+        # If always_visible is enabled, only allow showing
+        if self.config.get('window.always_visible', True):
+            if not self.is_visible:
+                self.show()
+            # Don't allow hiding when always_visible is enabled
+            return
+            
         if self.is_visible:
             self.hide()
         else:
@@ -244,6 +305,8 @@ class MainWindow:
     def _on_poe2_stopped(self, event):
         """Handle POE2 stopped event"""
         self._update_status("POE2 Not Running", "red")
+        # Keep overlay visible even when POE2 stops
+        # self.hide()  # Commented out to keep overlay always visible
         
     def _on_overlay_show(self, event):
         """Handle overlay show event"""
@@ -264,14 +327,63 @@ class MainWindow:
             
     def show(self):
         """Show the overlay"""
-        if not self.is_visible and self.root:
+        try:
+            if not self.is_visible and self.root:
+                self.root.deiconify()
+                self.root.lift()
+                self.root.focus_force()
+                self.is_visible = True
+                
+                # Force update and redraw
+                self.root.update()
+                self.root.update_idletasks()
+                
+                logger.debug("Overlay shown successfully")
+                
+            # Ensure overlay stays visible if configured
+            if self.config.get('window.always_visible', True):
+                self.root.after(100, self._ensure_visible)
+                
+        except Exception as e:
+            logger.error(f"Error showing overlay: {e}")
+            
+    def force_show(self):
+        """Force the overlay to be visible regardless of state"""
+        try:
+            if self.root:
+                # Ensure window exists and is configured
+                self.root.deiconify()
+                self.root.lift()
+                self.root.focus_force()
+                self.is_visible = True
+                
+                # Force update and redraw
+                self.root.update()
+                self.root.update_idletasks()
+                
+                # Ensure it's on top
+                self.root.wm_attributes("-topmost", True)
+                
+                logger.info("Overlay forced to show")
+                
+        except Exception as e:
+            logger.error(f"Error forcing overlay to show: {e}")
+            
+    def _ensure_visible(self):
+        """Ensure the overlay stays visible"""
+        if self.config.get('window.always_visible', True) and self.root and not self.is_visible:
             self.root.deiconify()
             self.root.lift()
             self.is_visible = True
-            logger.debug("Overlay shown")
+            logger.debug("Overlay visibility restored")
             
     def hide(self):
         """Hide the overlay"""
+        # Don't hide if always_visible is enabled
+        if self.config.get('window.always_visible', True):
+            logger.debug("Hide request ignored - always_visible is enabled")
+            return
+            
         if self.is_visible and self.root:
             self.root.withdraw()
             self.is_visible = False

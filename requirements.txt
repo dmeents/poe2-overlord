@@ -13,6 +13,7 @@ pynput>=1.7.6           # Global hotkey support
 # mypy>=1.5.0           # Type checking
 # pre-commit>=3.3.0     # Git hooks
 # tox>=4.6.0            # Testing automation
+# watchdog>=3.0.0       # File watching for hot reloading
 
 # Documentation Dependencies (install with: pip install -e ".[docs]")
 # sphinx>=7.0.0         # Documentation generator

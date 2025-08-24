@@ -1,0 +1,19 @@
+{
+  "debug": {
+    "development_mode": true,
+    "enable_config_watching": true,
+    "log_level": "DEBUG"
+  },
+  "development": {
+    "hot_reload": true,
+    "watch_source_files": true,
+    "auto_restart_on_changes": true,
+    "restart_cooldown": 1.0,
+    "source_directories": ["src"],
+    "verbose_logging": true
+  },
+  "window": {
+    "always_visible": true,
+    "transparency": 0.95
+  }
+}

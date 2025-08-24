@@ -61,6 +61,16 @@ type-check:
 docs:
 	cd docs && make html
 
+# Development mode with hot reloading
+dev:
+	python3 src/dev_server.py
+
+dev-verbose:
+	python3 src/dev_server.py --verbose
+
+dev-watch:
+	python3 src/dev_server.py --source-dirs src tests
+
 # Building
 build:
 	python -m build

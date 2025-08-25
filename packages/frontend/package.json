@@ -1,9 +1,9 @@
 {
-  "name": "@poe2-master/frontend",
+  "name": "@poe2-overlord/frontend",
   "private": true,
   "version": "0.1.0",
   "description": "A powerful game overlay for Path of Exile 2 built with Tauri and React",
-  "author": "POE2 Master Team",
+  "author": "POE2 Overlord Team",
   "license": "MIT",
   "type": "module",
   "scripts": {

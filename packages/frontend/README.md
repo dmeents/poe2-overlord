@@ -1,6 +1,6 @@
-# POE2 Master Frontend
+# POE2 Overlord Frontend
 
-A modern, modular React frontend for the POE2 Master overlay application built with Tauri.
+A modern, modular React frontend for the POE2 Overlord overlay application built with Tauri.
 
 ## Architecture
 

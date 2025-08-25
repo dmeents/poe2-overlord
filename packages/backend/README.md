@@ -1,31 +1,40 @@
-# Backend Package
+# POE2 Overlord Backend
 
-This package contains the Rust backend for the POE2 Master Tauri application, organized in a modular architecture for better maintainability and separation of concerns.
+This package contains the Rust backend for the POE2 Overlord Tauri application, organized in a modular architecture for better maintainability and separation of concerns.
 
 ## Architecture
 
 The backend is organized into the following modules:
 
 ### `models/`
+
 Contains data structures and types used throughout the application:
+
 - `ProcessInfo` - Information about running processes
 - `OverlayState` - State of the overlay window
 
 ### `services/`
+
 Contains business logic and core functionality:
+
 - `ProcessMonitor` - Handles process detection and monitoring
 - `WindowManager` - Manages window operations and overlay behavior
 
 ### `commands/`
+
 Contains Tauri command handlers that expose functionality to the frontend:
+
 - `process_commands.rs` - Process-related commands
 - `window_commands.rs` - Window management commands
 
 ### `handlers/`
+
 Contains application setup and event handling:
+
 - `setup.rs` - Application initialization and configuration
 
 ### `lib.rs`
+
 Main library entry point that orchestrates all modules and provides the `run()` function.
 
 ## Key Features

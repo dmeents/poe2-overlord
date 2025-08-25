@@ -1,7 +1,7 @@
 export const APP_CONFIG = {
   VERSION: "v0.1.0",
   TECHNOLOGY: "Tauri + React",
-  TITLE: "POE2 Master",
+  TITLE: "POE2 Overlord",
 } as const;
 
 export const POE2_CONFIG = {

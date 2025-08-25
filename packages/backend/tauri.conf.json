@@ -1,19 +1,19 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "POE2 Master Overlay",
+  "productName": "POE2 Overlord",
   "version": "0.1.0",
-  "identifier": "com.poe2master.overlay",
+  "identifier": "com.poe2overlord.overlay",
   "build": {
     "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "yarn workspace @poe2-master/frontend dev",
-    "beforeBuildCommand": "yarn workspace @poe2-master/frontend build"
+    "beforeDevCommand": "yarn workspace @poe2-overlord/frontend dev",
+    "beforeBuildCommand": "yarn workspace @poe2-overlord/frontend build"
   },
   "app": {
     "windows": [
       {
         "label": "main",
-        "title": "POE2 Master Overlay",
+        "title": "POE2 Overlord",
         "width": 420,
         "height": 300,
         "minWidth": 300,

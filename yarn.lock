@@ -694,15 +694,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@poe2-master/backend@workspace:packages/backend":
+"@poe2-overlord/backend@workspace:packages/backend":
   version: 0.0.0-use.local
-  resolution: "@poe2-master/backend@workspace:packages/backend"
+  resolution: "@poe2-overlord/backend@workspace:packages/backend"
   languageName: unknown
   linkType: soft
 
-"@poe2-master/frontend@workspace:packages/frontend":
+"@poe2-overlord/frontend@workspace:packages/frontend":
   version: 0.0.0-use.local
-  resolution: "@poe2-master/frontend@workspace:packages/frontend"
+  resolution: "@poe2-overlord/frontend@workspace:packages/frontend"
   dependencies:
     "@eslint/js": "npm:^9.33.0"
     "@tailwindcss/postcss": "npm:^4.1.12"
@@ -730,9 +730,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@poe2-master/shared@workspace:packages/shared":
+"@poe2-overlord/shared@workspace:packages/shared":
   version: 0.0.0-use.local
-  resolution: "@poe2-master/shared@workspace:packages/shared"
+  resolution: "@poe2-overlord/shared@workspace:packages/shared"
   languageName: unknown
   linkType: soft
 
@@ -2920,9 +2920,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"poe2-master@workspace:.":
+"poe2-overlord@workspace:.":
   version: 0.0.0-use.local
-  resolution: "poe2-master@workspace:."
+  resolution: "poe2-overlord@workspace:."
   dependencies:
     "@tauri-apps/cli": "npm:^2.0.0"
   languageName: unknown

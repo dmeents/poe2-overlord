@@ -1,4 +1,4 @@
-# POE2 Master Overlay
+# POE2 Overlord
 
 A powerful, modern game overlay for Path of Exile 2 built with **Tauri** and **React**.
 
@@ -27,12 +27,14 @@ A powerful, modern game overlay for Path of Exile 2 built with **Tauri** and **R
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **React 19** with TypeScript
 - **Tailwind CSS** for styling
 - **Lucide React** for icons
 - **Vite** for development and building
 
 ### Backend
+
 - **Rust** with Tauri framework
 - **sysinfo** for system process monitoring
 - **tokio** for async operations
@@ -40,10 +42,11 @@ A powerful, modern game overlay for Path of Exile 2 built with **Tauri** and **R
 ## 📋 Prerequisites
 
 - **Rust**: 1.89.0 or higher
-- **Node.js**: 24.2.0 or higher  
+- **Node.js**: 24.2.0 or higher
 - **npm**: Latest version
 
 ### System Dependencies (Linux)
+
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -59,17 +62,20 @@ sudo dnf install webkit2gtk3-devel.x86_64 openssl-devel curl wget libappindicato
 ## 🚀 Quick Start
 
 1. **Clone the repository**
+
    ```bash
-   git clone https://github.com/yourusername/poe2-master.git
-   cd poe2-master
+   git clone https://github.com/yourusername/poe2-overlord.git
+   cd poe2-overlord
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Run in development mode**
+
    ```bash
    npm run tauri:dev
    ```
@@ -82,7 +88,7 @@ sudo dnf install webkit2gtk3-devel.x86_64 openssl-devel curl wget libappindicato
 ## 📁 Project Structure
 
 ```
-poe2-master/
+poe2-overlord/
 ├── src/                    # React frontend source
 │   ├── components/         # React components (planned)
 │   ├── hooks/             # Custom React hooks (planned)
@@ -104,10 +110,12 @@ poe2-master/
 ## 🎮 Usage
 
 1. **Launch the overlay**
+
    - Run the application using `npm run tauri:dev` or the built executable
    - The overlay will appear as a small window on your screen
 
 2. **Game Detection**
+
    - Start Path of Exile 2
    - The overlay will automatically detect the game process
    - Status indicator will change from red (offline) to green (online)
@@ -148,6 +156,7 @@ The overlay behavior can be customized through the `src-tauri/tauri.conf.json` f
 ## 🔒 Security
 
 The application uses Tauri's security features:
+
 - No `eval()` or similar dangerous functions
 - Limited API access through capability system
 - Process monitoring with minimal permissions
@@ -183,7 +192,8 @@ This is a third-party tool and is not affiliated with or endorsed by Grinding Ge
 ## 📧 Support
 
 If you encounter issues or have questions:
-1. Check the [Issues](https://github.com/yourusername/poe2-master/issues) page
+
+1. Check the [Issues](https://github.com/yourusername/poe2-overlord/issues) page
 2. Create a new issue with detailed information
 3. Include your system information (`npm run tauri:info`)
 

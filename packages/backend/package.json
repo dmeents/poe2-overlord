@@ -3,5 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "description": "Rust backend for POE2 Overlord",
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "format": "cargo fmt",
+    "format:check": "cargo fmt -- --check",
+    "format:write": "cargo fmt --write-mode=overwrite"
+  }
 }

@@ -1,0 +1,17 @@
+# Rustfmt configuration for POE2 Overlord backend
+# This file configures the official Rust formatter
+
+# Maximum line length
+max_width = 100
+
+# Reorder imports
+reorder_imports = true
+
+# Remove nested parentheses
+remove_nested_parens = true
+
+# Use field init shorthand
+use_field_init_shorthand = true
+
+# Use try shorthand
+use_try_shorthand = true

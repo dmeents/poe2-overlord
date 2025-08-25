@@ -1,14 +1,14 @@
 // Module declarations
-pub mod models;
-pub mod services;
 pub mod commands;
 pub mod handlers;
+pub mod models;
+pub mod services;
 
 // Re-export commonly used items
-pub use models::*;
-pub use services::*;
 pub use commands::*;
 pub use handlers::*;
+pub use models::*;
+pub use services::*;
 
 pub fn run() {
     tauri::Builder::default()
@@ -21,9 +21,7 @@ pub fn run() {
             get_window_position,
             set_always_on_top
         ])
-        .setup(|app| {
-            setup_app(app)
-        })
+        .setup(|app| setup_app(app))
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

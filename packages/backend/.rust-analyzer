@@ -1,0 +1,18 @@
+{
+  "cargo": {
+    "extraEnv": {
+      "RUSTUP_TOOLCHAIN": "stable-x86_64-unknown-linux-gnu"
+    },
+    "buildScripts": {
+      "enable": true
+    },
+    "sysroot": "/home/david-meents/.rustup/toolchains/stable-x86_64-unknown-linux-gnu",
+    "sysrootSrc": "/home/david-meents/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library"
+  },
+  "rustfmt": {
+    "extraArgs": []
+  },
+  "procMacro": {
+    "enable": true
+  }
+}

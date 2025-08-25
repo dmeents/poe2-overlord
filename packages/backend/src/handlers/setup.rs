@@ -1,7 +1,7 @@
-use tauri::{App, Manager, WebviewWindow, Emitter};
-use log;
-use tokio::time::{Duration, interval};
 use crate::services::ProcessMonitor;
+use log;
+use tauri::{App, Emitter, Manager, WebviewWindow};
+use tokio::time::{interval, Duration};
 
 pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     // Setup logging
@@ -12,18 +12,18 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 .build(),
         )?;
     }
-    
+
     // Get main window and configure it for overlay behavior
     if let Some(main_window) = app.get_webview_window("main") {
         log::info!("Configuring main window for overlay behavior");
-        
+
         // Configure overlay properties
         crate::services::WindowManager::configure_overlay_window(&main_window)?;
-        
+
         // Start process monitoring in the background
         start_process_monitoring(main_window);
     }
-    
+
     Ok(())
 }
 

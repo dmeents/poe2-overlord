@@ -3,6 +3,12 @@ use sysinfo::System;
 
 pub struct ProcessMonitor;
 
+impl Default for ProcessMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ProcessMonitor {
     pub fn new() -> Self {
         Self
@@ -11,10 +17,10 @@ impl ProcessMonitor {
     pub fn check_poe2_process() -> Result<ProcessInfo, String> {
         let mut system = System::new_all();
         system.refresh_all();
-        
+
         // Look for Path of Exile 2 process (adjust process name as needed)
-        let poe2_processes = ["pathofexile_x64steam.exe", "pathofexile_x64.exe", "pathofexile.exe", "poe2"];
-        
+        let poe2_processes = ["pathofexile"];
+
         for (pid, process) in system.processes() {
             // Convert process name to string and make it lowercase for comparison
             let process_name_str = process.name().to_string_lossy().to_lowercase();
@@ -28,7 +34,7 @@ impl ProcessMonitor {
                 }
             }
         }
-        
+
         Ok(ProcessInfo {
             name: "Not Found".to_string(),
             pid: 0,

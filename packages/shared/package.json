@@ -1,7 +1,0 @@
-{
-  "name": "@poe2-overlord/shared",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Shared types and utilities for POE2 Overlord",
-  "type": "module"
-}

@@ -1,49 +1,54 @@
 # POE2 Overlord
 
-A powerful, modern game overlay for Path of Exile 2 built with **Tauri** and **React**.
+A powerful, modern game overlay for Path of Exile 2 built with **Tauri 2** and **React 19**.
 
 ![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Rust](https://img.shields.io/badge/rust-1.89.0+-orange.svg)
-![Node](https://img.shields.io/badge/node-24.2.0+-green.svg)
+![Rust](https://img.shields.io/badge/rust-1.77.2+-orange.svg)
+![Node](https://img.shields.io/badge/node-18.0+-green.svg)
+![Tauri](https://img.shields.io/badge/tauri-2.8.3-purple.svg)
 
 ## 🚀 Features
 
-- **Native Performance**: Built with Tauri for optimal performance and small binary size
-- **Modern UI**: Beautiful, responsive interface built with React and Tailwind CSS
+- **Native Performance**: Built with Tauri 2 for optimal performance and small binary size
+- **Modern UI**: Beautiful, responsive interface built with React 19 and Tailwind CSS 4
 - **Game Integration**: Automatic Path of Exile 2 process detection and monitoring
 - **Always-on-Top Overlay**: Stays visible over your game with transparency support
 - **Draggable Interface**: Move the overlay anywhere on your screen
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Dark Theme**: POE2-inspired color scheme optimized for gaming
+- **Monorepo Architecture**: Clean separation between frontend and backend
 
 ## 🎯 Current Capabilities
 
 - **Process Monitoring**: Automatically detects when Path of Exile 2 is running
 - **Overlay Controls**: Show/hide, minimize, and move the overlay window
-- **Real-time Status**: Live updates of game process status
+- **Real-time Status**: Live updates of game process status with refresh capability
+- **Window Management**: Full window control including minimize, close, and positioning
 - **Extensible Architecture**: Built for future feature additions
 
 ## 🛠️ Technology Stack
 
 ### Frontend
 
-- **React 19** with TypeScript
-- **Tailwind CSS** for styling
+- **React 19** with TypeScript 5.8
+- **Tailwind CSS 4** for styling
 - **Lucide React** for icons
-- **Vite** for development and building
+- **Vite 7** for development and building
+- **ESLint 9** for code quality
 
 ### Backend
 
-- **Rust** with Tauri framework
+- **Rust 1.77.2** with Tauri 2.8.3 framework
 - **sysinfo** for system process monitoring
 - **tokio** for async operations
+- **serde** for serialization
 
 ## 📋 Prerequisites
 
-- **Rust**: 1.89.0 or higher
-- **Node.js**: 24.2.0 or higher
-- **npm**: Latest version
+- **Rust**: 1.77.2 or higher
+- **Node.js**: 18.0 or higher
+- **Yarn**: Latest version (workspaces support required)
 
 ### System Dependencies (Linux)
 
@@ -71,47 +76,54 @@ sudo dnf install webkit2gtk3-devel.x86_64 openssl-devel curl wget libappindicato
 2. **Install dependencies**
 
    ```bash
-   npm install
+   yarn install
    ```
 
 3. **Run in development mode**
 
    ```bash
-   npm run tauri:dev
+   yarn tauri:dev
    ```
 
 4. **Build for production**
    ```bash
-   npm run tauri:build
+   yarn build:all
    ```
 
 ## 📁 Project Structure
 
 ```
 poe2-overlord/
-├── src/                    # React frontend source
-│   ├── components/         # React components (planned)
-│   ├── hooks/             # Custom React hooks (planned)
-│   ├── utils/             # Utility functions (planned)
-│   ├── App.tsx            # Main application component
-│   ├── main.tsx           # React entry point
-│   └── index.css          # Global styles
-├── src-tauri/             # Rust backend source
-│   ├── src/
-│   │   ├── main.rs        # Application entry point
-│   │   └── lib.rs         # Core application logic
-│   ├── Cargo.toml         # Rust dependencies
-│   └── tauri.conf.json    # Tauri configuration
-├── public/                # Static assets
-├── dist/                  # Built frontend (generated)
-└── README.md              # This file
+├── packages/
+│   ├── frontend/           # React frontend application
+│   │   ├── src/
+│   │   │   ├── components/ # Reusable UI components
+│   │   │   ├── hooks/      # Custom React hooks
+│   │   │   ├── types/      # TypeScript type definitions
+│   │   │   ├── utils/      # Utility functions
+│   │   │   ├── App.tsx     # Main application component
+│   │   │   └── main.tsx    # React entry point
+│   │   ├── package.json    # Frontend dependencies
+│   │   └── vite.config.ts  # Vite configuration
+│   └── backend/            # Rust backend application
+│       ├── src/
+│       │   ├── commands/   # Tauri command handlers
+│       │   ├── handlers/   # Application setup
+│       │   ├── models/     # Data structures
+│       │   ├── services/   # Business logic
+│       │   ├── lib.rs      # Core application logic
+│       │   └── main.rs     # Application entry point
+│       ├── Cargo.toml      # Rust dependencies
+│       └── tauri.conf.json # Tauri configuration
+├── package.json             # Root workspace configuration
+└── README.md               # This file
 ```
 
 ## 🎮 Usage
 
 1. **Launch the overlay**
 
-   - Run the application using `npm run tauri:dev` or the built executable
+   - Run the application using `yarn tauri:dev` or the built executable
    - The overlay will appear as a small window on your screen
 
 2. **Game Detection**
@@ -128,7 +140,7 @@ poe2-overlord/
 
 ## 🔧 Configuration
 
-The overlay behavior can be customized through the `src-tauri/tauri.conf.json` file:
+The overlay behavior can be customized through the `packages/backend/tauri.conf.json` file:
 
 - **Window size**: Adjust `width`, `height`, `minWidth`, `minHeight`
 - **Position**: Set default `x`, `y` coordinates
@@ -139,35 +151,46 @@ The overlay behavior can be customized through the `src-tauri/tauri.conf.json` f
 
 ### Available Scripts
 
-- `npm run dev` - Start Vite dev server
-- `npm run build` - Build the frontend
-- `npm run tauri:dev` - Run Tauri in development mode
-- `npm run tauri:build` - Build the complete application
-- `npm run tauri:info` - Show Tauri environment info
-- `npm run lint` - Run ESLint
-- `npm run clean` - Clean build artifacts
+- `yarn dev` - Start Vite dev server (frontend only)
+- `yarn build` - Build the frontend
+- `yarn tauri:dev` - Run Tauri in development mode
+- `yarn tauri:build` - Build the complete application
+- `yarn tauri:info` - Show Tauri environment info
+- `yarn lint` - Run ESLint
+- `yarn clean` - Clean build artifacts
+- `yarn format:all` - Format both frontend and backend code
+- `yarn build:all` - Build both frontend and backend
 
 ### Adding Features
 
-1. **Frontend**: Add React components in `src/`
-2. **Backend**: Add Rust functions in `src-tauri/src/`
+1. **Frontend**: Add React components in `packages/frontend/src/`
+2. **Backend**: Add Rust functions in `packages/backend/src/`
 3. **API**: Use `#[tauri::command]` for Rust functions callable from frontend
+
+### Development Workflow
+
+1. **Frontend Development**: Use `yarn dev` for hot reloading
+2. **Backend Development**: Use `yarn tauri:dev` for full-stack development
+3. **Code Formatting**: Use `yarn format:all` to format both frontend and backend
+4. **Building**: Use `yarn build:all` for production builds
 
 ## 🔒 Security
 
-The application uses Tauri's security features:
+The application uses Tauri 2's enhanced security features:
 
 - No `eval()` or similar dangerous functions
 - Limited API access through capability system
 - Process monitoring with minimal permissions
+- CSP (Content Security Policy) support
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
 3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+4. Test thoroughly with `yarn tauri:dev`
+5. Format code with `yarn format:all`
+6. Submit a pull request
 
 ## 📝 License
 
@@ -184,6 +207,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Configuration UI
 - [ ] Hotkey support
 - [ ] Multi-monitor support
+- [ ] Plugin system for extensibility
 
 ## ⚠️ Disclaimer
 
@@ -195,7 +219,7 @@ If you encounter issues or have questions:
 
 1. Check the [Issues](https://github.com/yourusername/poe2-overlord/issues) page
 2. Create a new issue with detailed information
-3. Include your system information (`npm run tauri:info`)
+3. Include your system information (`yarn tauri:info`)
 
 ---
 

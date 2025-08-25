@@ -1,71 +1,65 @@
+import { AlertCircle, Settings } from "lucide-react";
 import React from "react";
-import { Settings } from "lucide-react";
-import { AlertCircle } from "lucide-react";
 import {
   Button,
   Footer,
   InfoPanel,
   ProcessStatus,
   QuickActions,
-  TitleBar,
 } from "./components";
-import { usePoe2Process, useWindowControls } from "./hooks";
+import { usePoe2Process } from "./hooks";
 import { APP_CONFIG } from "./utils";
 
 function App() {
   const { processInfo, poe2Running, checkPoe2Process } = usePoe2Process();
-  const { isMinimized, toggleMinimize, minimizeWindow, closeWindow } =
-    useWindowControls();
-
-  const windowControls = {
-    isMinimized,
-    onToggleMinimize: toggleMinimize,
-    onMinimize: minimizeWindow,
-    onClose: closeWindow,
-  };
 
   return (
     <div className="w-full h-full flex flex-col font-mono bg-gray-900">
-      {/* Main Overlay Container */}
-      <div className="bg-gray-900/95 fade-in m-2 flex-1 flex flex-col text-white rounded-lg">
-        {/* Title Bar */}
-        <TitleBar
-          poe2Running={poe2Running}
-          processInfo={processInfo}
-          windowControls={windowControls}
-        />
+      {/* Main Container */}
+      <div className="bg-gray-900 flex-1 flex flex-col text-white">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800">
+          <div className="flex items-center gap-2">
+            <h1 className="text-white text-lg font-bold m-0">
+              {APP_CONFIG.TITLE}
+            </h1>
+            {poe2Running && processInfo && (
+              <span className="text-gray-400 text-sm">
+                PID: {processInfo.pid}
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* Content Area */}
-        {!isMinimized && (
-          <div className="flex-1 p-3 flex flex-col gap-3">
-            {/* Process Status */}
-            <ProcessStatus
-              poe2Running={poe2Running}
-              processInfo={processInfo}
-              onRefresh={checkPoe2Process}
-            />
+        <div className="flex-1 p-6 flex flex-col gap-6">
+          {/* Process Status */}
+          <ProcessStatus
+            poe2Running={poe2Running}
+            processInfo={processInfo}
+            onRefresh={checkPoe2Process}
+          />
 
-            {/* Quick Actions */}
-            <QuickActions />
+          {/* Quick Actions */}
+          <QuickActions />
 
-            {/* Info Panel */}
-            <InfoPanel
-              title="Overlay Ready"
-              description="The overlay is now active and monitoring for Path of Exile 2. Use the controls above to interact with game data and settings."
-              icon={<AlertCircle size={16} />}
-            />
+          {/* Info Panel */}
+          <InfoPanel
+            title="Application Ready"
+            description="POE2 Overlord is now running as a normal desktop application. Use the controls above to interact with game data and settings."
+            icon={<AlertCircle size={16} />}
+          />
 
-            {/* Settings Button */}
-            <Button
-              variant="primary"
-              size="md"
-              className="w-full flex items-center justify-center gap-2"
-            >
-              <Settings size={16} />
-              <span>Settings</span>
-            </Button>
-          </div>
-        )}
+          {/* Settings Button */}
+          <Button
+            variant="primary"
+            size="md"
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <Settings size={16} />
+            <span>Settings</span>
+          </Button>
+        </div>
 
         {/* Footer */}
         <Footer

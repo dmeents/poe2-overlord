@@ -1,128 +1,28 @@
 @import "tailwindcss";
 
-/* Custom CSS for POE2 Overlay */
-:root {
-  font-family: "JetBrains Mono", "Consolas", "Monaco", system-ui, monospace;
-  line-height: 1.5;
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
+/* Ensure window background is visible */
 html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-  background: transparent;
-  user-select: none;
-}
-
+body,
 #root {
+  background: #111827; /* gray-900 */
   height: 100%;
   width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* Custom scrollbar for dark theme */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(42, 42, 42, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.6);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.8);
-}
-
-/* Custom focus styles */
-.focus-visible:focus-visible {
-  outline: 2px solid #d4af37;
-  outline-offset: 2px;
-}
-
-/* Draggable area styling */
-.draggable {
-  cursor: move;
-  user-select: none;
-}
-
-.draggable:hover {
-  cursor: grab;
-}
-
-.draggable:active {
-  cursor: grabbing;
-}
-
-/* Glass effect for overlay panels */
-.glass-effect {
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(64, 64, 64, 0.3);
-  border-radius: 8px;
-}
-
-/* Animation classes */
+/* Fade in animation */
 .fade-in {
   animation: fadeIn 0.3s ease-in-out;
-}
-
-.slide-up {
-  animation: slideUp 0.3s ease-out;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
     transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Status indicators */
-.status-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-}
-
-.status-dot.online {
-  background-color: #28a745;
-  animation: pulse 2s infinite;
-}
-
-.status-dot.offline {
-  background-color: #dc3545;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
   }
 }

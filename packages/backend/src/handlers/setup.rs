@@ -13,12 +13,9 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         )?;
     }
 
-    // Get main window and configure it for overlay behavior
+    // Get main window and start process monitoring
     if let Some(main_window) = app.get_webview_window("main") {
-        log::info!("Configuring main window for overlay behavior");
-
-        // Configure overlay properties
-        crate::services::WindowManager::configure_overlay_window(&main_window)?;
+        log::info!("Starting POE2 process monitoring");
 
         // Start process monitoring in the background
         start_process_monitoring(main_window);

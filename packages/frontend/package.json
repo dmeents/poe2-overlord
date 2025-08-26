@@ -22,6 +22,7 @@
     "pre-commit": "npm run format && npm run lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@tanstack/react-router": "^1.131.27",
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-fs": "^2.4.2",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@tailwindcss/postcss": "^4.1.12",
+    "@tailwindcss/vite": "4.1.11",
     "@tanstack/router-plugin": "^1.131.27",
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.10",

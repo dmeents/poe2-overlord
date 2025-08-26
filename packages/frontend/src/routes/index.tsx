@@ -18,15 +18,15 @@ function Index() {
   const { processInfo, poe2Running, checkPoe2Process } = usePoe2Process();
 
   return (
-    <div className='w-full h-full flex flex-col font-mono bg-gray-900'>
-      <div className='bg-gray-900 flex-1 flex flex-col text-white'>
-        <div className='flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800'>
+    <div className='w-full h-full flex flex-col font-mono bg-900'>
+      <div className='bg-[var(--color-bg-900)] flex-1 flex flex-col text-[var(--color-text-100)]'>
+        <div className='flex items-center justify-between p-4 border-b border-[var(--color-border-600)] bg-[var(--color-bg-800)]'>
           <div className='flex items-center gap-2'>
-            <h1 className='text-white text-lg font-bold m-0'>
+            <h1 className='text-[var(--color-text-100)] text-lg font-bold m-0'>
               {APP_CONFIG.TITLE}
             </h1>
             {poe2Running && processInfo && (
-              <span className='text-gray-400 text-sm'>
+              <span className='text-[var(--color-text-400)] text-sm'>
                 PID: {processInfo.pid}
               </span>
             )}

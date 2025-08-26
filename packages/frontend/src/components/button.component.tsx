@@ -16,15 +16,15 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'inline-flex items-center justify-center font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--color-bg-900)] disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses = {
     primary:
-      'bg-gray-700 border border-gray-600 text-white font-mono text-sm hover:bg-amber-500 hover:text-black hover:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-700 disabled:hover:text-white disabled:hover:border-gray-600',
+      'bg-[var(--color-primary-600)] border border-[var(--color-primary-500)] text-[var(--color-text-inverted)] font-mono text-sm hover:bg-[var(--color-primary-500)] hover:border-[var(--color-primary-400)] focus:ring-[var(--color-primary-400)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--color-primary-600)] disabled:hover:border-[var(--color-primary-500)]',
     secondary:
-      'bg-gray-700 border border-gray-500 text-white hover:bg-gray-800 hover:border-gray-600',
+      'bg-[var(--color-bg-700)] border border-[var(--color-border-600)] text-[var(--color-text-100)] hover:bg-[var(--color-bg-600)] hover:border-[var(--color-border-500)] hover:text-[var(--color-text-50)]',
     ghost:
-      'bg-transparent border border-transparent text-gray-300 hover:text-white hover:bg-gray-800',
+      'bg-transparent border border-transparent text-[var(--color-text-300)] hover:text-[var(--color-text-100)] hover:bg-[var(--color-bg-700)]',
   };
 
   const sizeClasses = {

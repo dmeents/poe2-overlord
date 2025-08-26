@@ -108,7 +108,6 @@ All components follow these principles:
 ### Styling Guidelines
 
 - Use Tailwind utility classes for styling
-- Follow the established color palette in `tailwind.config.js`
 - Maintain consistent spacing using Tailwind's scale
 - Use the `cn()` utility for conditional class names
 - Keep components responsive and accessible

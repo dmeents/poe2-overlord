@@ -5,10 +5,10 @@
   "description": "A powerful game overlay for Path of Exile 2 built with Tauri and React",
   "author": "POE2 Overlord Team",
   "license": "MIT",
-  "type": "module",
   "workspaces": [
     "packages/*"
   ],
+  "packageManager": "yarn@4.9.3",
   "scripts": {
     "build": "tauri build --config packages/backend/tauri.conf.json",
     "dev": "tauri dev --config packages/backend/tauri.conf.json",

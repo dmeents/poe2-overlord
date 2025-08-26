@@ -10,14 +10,18 @@ export const ProcessStatus: React.FC<ProcessStatusProps> = ({
   onRefresh,
 }) => {
   return (
-    <div className='bg-gray-800 rounded-md p-3 border border-gray-600'>
+    <div className='bg-[var(--color-bg-700)] rounded-md p-3 border border-[var(--color-border-600)]'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
           <Activity
             size={16}
-            className={poe2Running ? 'text-green-500' : 'text-red-500'}
+            className={
+              poe2Running ? 'text-[var(--color-primary-400)]' : 'text-red-500'
+            }
           />
-          <span className='text-white text-sm'>{POE2_CONFIG.PROCESS_NAME}</span>
+          <span className='text-[var(--color-text-100)] text-sm'>
+            {POE2_CONFIG.PROCESS_NAME}
+          </span>
         </div>
         <div className='flex items-center gap-2'>
           <span
@@ -25,8 +29,8 @@ export const ProcessStatus: React.FC<ProcessStatusProps> = ({
             text-xs px-2 py-1 rounded
             ${
               poe2Running
-                ? 'bg-green-500/20 text-green-500'
-                : 'bg-red-500/20 text-red-500'
+                ? 'bg-[var(--color-primary-500)]/20 text-[var(--color-primary-400)]'
+                : 'bg-red-500/20 text-red-400'
             }
           `}
           >
@@ -44,7 +48,7 @@ export const ProcessStatus: React.FC<ProcessStatusProps> = ({
       </div>
 
       {processInfo && (
-        <div className='mt-2 text-gray-400 text-xs'>
+        <div className='mt-2 text-[var(--color-text-400)] text-xs'>
           Process: {processInfo.name}
         </div>
       )}

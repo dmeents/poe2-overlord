@@ -1,63 +1,68 @@
-import {
-  Button,
-  Footer,
-  InfoPanel,
-  ProcessStatus,
-  QuickActions,
-} from '@/components';
-import { usePoe2Process } from '@/hooks';
-import { APP_CONFIG } from '@/utils';
+import { FooterComponent } from '@/components/footer.component';
+import { InfoPanel } from '@/components/info-panel.component';
+import { ProcessStatusComponent } from '@/components/process-status.component';
+import { QuickActionsComponent } from '@/components/quick-actions.component';
+import { usePoe2Process } from '@/hooks/usePoe2Process';
 import { createFileRoute } from '@tanstack/react-router';
-import { AlertCircle, Settings } from 'lucide-react';
+import { Activity, Info, Search, Target } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: Index,
 });
 
-function Index() {
-  const { processInfo, poe2Running, checkPoe2Process } = usePoe2Process();
+export default function Index() {
+  const { poe2Running, processInfo, checkPoe2Process } = usePoe2Process();
+
+  const quickActions = [
+    {
+      icon: <Search size={16} />,
+      label: 'Search',
+      onClick: () => console.log('Search clicked'),
+    },
+    {
+      icon: <Target size={16} />,
+      label: 'Track',
+      onClick: () => console.log('Track clicked'),
+    },
+  ];
+
+  const infoPanels = [
+    {
+      title: 'Process Monitor',
+      description:
+        'Real-time monitoring of Path of Exile 2 process status and resource usage.',
+      icon: <Activity size={16} />,
+    },
+    {
+      title: 'Game Overlay',
+      description:
+        'Built with Tauri and React for optimal performance and cross-platform compatibility.',
+      icon: <Info size={16} />,
+    },
+  ];
 
   return (
-    <div className='w-full h-full flex flex-col font-mono bg-900'>
-      <div className='bg-[var(--color-bg-900)] flex-1 flex flex-col text-[var(--color-text-100)]'>
-        <div className='flex items-center justify-between p-4 border-b border-[var(--color-border-600)] bg-[var(--color-bg-800)]'>
-          <div className='flex items-center gap-2'>
-            <h1 className='text-[var(--color-text-100)] text-lg font-bold m-0'>
-              {APP_CONFIG.TITLE}
-            </h1>
-            {poe2Running && processInfo && (
-              <span className='text-[var(--color-text-400)] text-sm'>
-                PID: {processInfo.pid}
-              </span>
-            )}
+    <div>
+      <div>
+        <div>
+          <div>
+            <h1>POE2 Overlord</h1>
+          </div>
+          <div>
+            <span>Process Status: {poe2Running ? 'Running' : 'Not Found'}</span>
           </div>
         </div>
-        <div className='flex-1 p-6 flex flex-col gap-6'>
-          <ProcessStatus
-            poe2Running={poe2Running}
-            processInfo={processInfo}
-            onRefresh={checkPoe2Process}
-          />
-          <QuickActions />
-          <InfoPanel
-            title='Application Ready'
-            description='POE2 Overlord is now running as a normal desktop application. Use the controls above to interact with game data and settings.'
-            icon={<AlertCircle size={16} />}
-          />
-          <Button
-            variant='primary'
-            size='md'
-            className='w-full flex items-center justify-center gap-2'
-          >
-            <Settings size={16} />
-            <span>Settings</span>
-          </Button>
-        </div>
-        <Footer
-          version={APP_CONFIG.VERSION}
-          technology={APP_CONFIG.TECHNOLOGY}
-        />
       </div>
+      <div>
+        <ProcessStatusComponent
+          processInfo={processInfo}
+          onRefresh={checkPoe2Process}
+        />
+        <InfoPanel {...infoPanels[0]} />
+        <QuickActionsComponent actions={quickActions} />
+        <InfoPanel {...infoPanels[1]} />
+      </div>
+      <FooterComponent />
     </div>
   );
 }

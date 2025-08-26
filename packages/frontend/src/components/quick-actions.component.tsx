@@ -1,35 +1,21 @@
-import { Search, Target } from 'lucide-react';
-import React from 'react';
-import { Button } from './button.component.tsx';
+import type { QuickActionProps } from '@/types';
 
-const defaultActions = [
-  {
-    icon: <Search size={16} />,
-    label: 'Search',
-    onClick: () => console.log('Search clicked'),
-  },
-  {
-    icon: <Target size={16} />,
-    label: 'Track',
-    onClick: () => console.log('Track clicked'),
-  },
-];
+interface QuickActionsComponentProps {
+  actions: QuickActionProps[];
+}
 
-export const QuickActions: React.FC = () => {
+export function QuickActionsComponent({ actions }: QuickActionsComponentProps) {
   return (
-    <div className='grid grid-cols-2 gap-2'>
-      {defaultActions.map((action, index) => (
-        <Button
-          key={index}
-          variant='primary'
-          size='md'
-          onClick={action.onClick}
-          className='flex items-center justify-center gap-2'
-        >
-          {action.icon}
-          <span>{action.label}</span>
-        </Button>
-      ))}
+    <div>
+      <h3>Quick Actions</h3>
+      <div>
+        {actions.map((action, index) => (
+          <button key={index} onClick={action.onClick} title={action.label}>
+            {action.icon}
+            <span>{action.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
-};
+}

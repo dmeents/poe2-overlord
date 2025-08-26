@@ -4,106 +4,27 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Roboto', sans-serif;
-
-    /* Primary: Coral/Pink */
-    --color-primary-50: #fff5f7;
-    --color-primary-100: #ffe0e7;
-    --color-primary-200: #ffb3c2;
-    --color-primary-300: #ff7a9e;
-    --color-primary-400: #ff4d85;
-    --color-primary-500: #ff2566;
-    --color-primary-600: #e31b5c;
-    --color-primary-700: #c11548;
-    --color-primary-800: #9a123a;
-    --color-primary-900: #7a0d2c;
-
-    /* Secondary: Blue */
-    --color-secondary-50: #f3f8fd;
-    --color-secondary-100: #e0f0fb;
-    --color-secondary-200: #b8def6;
-    --color-secondary-300: #8ac7ec;
-    --color-secondary-400: #5db0e3;
-    --color-secondary-500: #3996ce;
-    --color-secondary-600: #277bb0;
-    --color-secondary-700: #236a97;
-    --color-secondary-800: #20597c;
-    --color-secondary-900: #1a425a;
-
-    /* Tertiary: Purple */
-    --color-tertiary-50: #f7f3fd;
-    --color-tertiary-100: #ede0fb;
-    --color-tertiary-200: #d6b8f6;
-    --color-tertiary-300: #b88aec;
-    --color-tertiary-400: #9a5de3;
-    --color-tertiary-500: #7a39ce;
-    --color-tertiary-600: #5c27b0;
-    --color-tertiary-700: #4a2397;
-    --color-tertiary-800: #3a207c;
-    --color-tertiary-900: #2c1a5a;
-
-    /* Backgrounds: Neutral dark greys */
-    --color-bg-50: #18191c;
-    --color-bg-100: #202124;
-    --color-bg-200: #232427;
-    --color-bg-300: #26272a;
-    --color-bg-400: #292a2d;
-    --color-bg-500: #2c2d30;
-    --color-bg-600: #323336;
-    --color-bg-700: #393a3d;
-    --color-bg-800: #414245;
-    --color-bg-900: #18181b;
-
-    /* Borders: Neutral dark greys */
-    --color-border-50: #232427;
-    --color-border-100: #26272a;
-    --color-border-200: #292a2d;
-    --color-border-300: #2c2d30;
-    --color-border-400: #323336;
-    --color-border-500: #393a3d;
-    --color-border-600: #414245;
-    --color-border-700: #494a4d;
-    --color-border-800: #202124;
-    --color-border-900: #e4e6eb;
-
-    /* Text: Soft off-white and greys */
-    --color-text-50: #f5f6fa;
-    --color-text-100: #e4e6eb;
-    --color-text-200: #cfd2da;
-    --color-text-300: #b0b3ba;
-    --color-text-400: #8a8d9a;
-    --color-text-500: #6b6e7f;
-    --color-text-600: #5a5d6b;
-    --color-text-700: #414245;
-    --color-text-800: #292a2d;
-    --color-text-900: #18181b;
-    --color-text-inverted: #ffffff;
-
-    /* Custom Shadows (slightly stronger for dark mode) */
-    --shadow-xs: 0 1.5px 3px 0 rgba(16, 30, 54, 0.1);
-    --shadow-sm: 0 3px 12px 0 rgba(16, 30, 54, 0.16);
-    --shadow-md: 0 6px 24px 0 rgba(16, 30, 54, 0.2);
-    --shadow-lg: 0 12px 48px 0 rgba(16, 30, 54, 0.24);
+  --font-sans: 'Roboto', sans-serif;
 }
 
 /* Ensure window background is visible */
 html,
 body,
 #root {
-    background: var(--color-bg-900);
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+  background: #0f0f0f;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /* Status Dot Component Styles */
 .status-dot.online {
-    background-color: var(--color-primary-400);
-    box-shadow: 0 0 8px var(--color-primary-400);
+  background-color: #f43f5e;
+  box-shadow: 0 0 8px #f43f5e;
 }
 
 .status-dot.offline {
-    background-color: var(--color-text-600);
-    box-shadow: 0 0 4px var(--color-text-600);
+  background-color: #6b7280;
+  box-shadow: 0 0 4px #6b7280;
 }

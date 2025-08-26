@@ -1,31 +1,12 @@
-import { cn } from '@/utils';
-import React from 'react';
-
 interface StatusDotProps {
   isOnline: boolean;
   size?: 'sm' | 'md' | 'lg';
-  className?: string;
 }
 
-export const StatusDot: React.FC<StatusDotProps> = ({
-  isOnline,
-  size = 'md',
-  className,
-}) => {
-  const sizeClasses = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4',
-  };
-
+export function StatusDot({ isOnline, size = 'md' }: StatusDotProps) {
   return (
-    <div
-      className={cn(
-        'rounded-full',
-        sizeClasses[size],
-        isOnline ? 'status-dot online' : 'status-dot offline',
-        className
-      )}
-    />
+    <div>
+      <div data-online={isOnline} data-size={size}></div>
+    </div>
   );
-};
+}

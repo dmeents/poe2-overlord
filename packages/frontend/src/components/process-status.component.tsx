@@ -1,57 +1,30 @@
-import type { ProcessStatusProps } from '@/types';
-import { POE2_CONFIG } from '@/utils';
-import { Activity } from 'lucide-react';
-import React from 'react';
-import { Button } from './button.component.tsx';
+import type { ProcessInfo } from '@/types';
+import { StatusDot } from './status-dot.component';
 
-export const ProcessStatus: React.FC<ProcessStatusProps> = ({
-  poe2Running,
+interface ProcessStatusComponentProps {
+  processInfo: ProcessInfo | null;
+  onRefresh: () => void;
+}
+
+export function ProcessStatusComponent({
   processInfo,
   onRefresh,
-}) => {
+}: ProcessStatusComponentProps) {
   return (
-    <div className='bg-[var(--color-bg-700)] rounded-md p-3 border border-[var(--color-border-600)]'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <Activity
-            size={16}
-            className={
-              poe2Running ? 'text-[var(--color-primary-400)]' : 'text-red-500'
-            }
-          />
-          <span className='text-[var(--color-text-100)] text-sm'>
-            {POE2_CONFIG.PROCESS_NAME}
-          </span>
+    <div>
+      <div>
+        <div>
+          <StatusDot isOnline={processInfo?.running || false} />
+          <span>Path of Exile 2</span>
         </div>
-        <div className='flex items-center gap-2'>
-          <span
-            className={`
-            text-xs px-2 py-1 rounded
-            ${
-              poe2Running
-                ? 'bg-[var(--color-primary-500)]/20 text-[var(--color-primary-400)]'
-                : 'bg-red-500/20 text-red-400'
-            }
-          `}
-          >
-            {poe2Running ? 'Running' : 'Not Found'}
-          </span>
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={onRefresh}
-            title='Refresh Process Status'
-          >
-            Refresh
-          </Button>
+        <div>
+          <span>{processInfo?.running ? 'Running' : 'Stopped'}</span>
         </div>
       </div>
-
-      {processInfo && (
-        <div className='mt-2 text-[var(--color-text-400)] text-xs'>
-          Process: {processInfo.name}
-        </div>
-      )}
+      <div>
+        <span>PID: {processInfo?.pid || 'N/A'}</span>
+        <span>Name: {processInfo?.name || 'N/A'}</span>
+      </div>
     </div>
   );
-};
+}

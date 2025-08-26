@@ -1,7 +1,7 @@
-import { listen } from "@tauri-apps/api/event";
-import { useEffect, useState } from "react";
-import type { ProcessInfo } from "../types";
-import { POE2_CONFIG, tauriUtils } from "../utils";
+import { listen } from '@tauri-apps/api/event';
+import { useEffect, useState } from 'react';
+import type { ProcessInfo } from '../types';
+import { POE2_CONFIG, tauriUtils } from '../utils';
 
 export const usePoe2Process = () => {
   const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);
@@ -10,7 +10,7 @@ export const usePoe2Process = () => {
 
   useEffect(() => {
     // Listen for POE2 process status updates from Rust backend
-    const unsubscribe = listen<ProcessInfo>(POE2_CONFIG.EVENT_NAME, (event) => {
+    const unsubscribe = listen<ProcessInfo>(POE2_CONFIG.EVENT_NAME, event => {
       setProcessInfo(event.payload);
       setPoe2Running(event.payload.running);
     });
@@ -19,7 +19,7 @@ export const usePoe2Process = () => {
     checkPoe2Process();
 
     return () => {
-      unsubscribe.then((fn) => fn());
+      unsubscribe.then(fn => fn());
     };
   }, []);
 
@@ -30,7 +30,7 @@ export const usePoe2Process = () => {
       setProcessInfo(info);
       setPoe2Running(info.running);
     } catch (error) {
-      console.error("Failed to check POE2 process:", error);
+      console.error('Failed to check POE2 process:', error);
     } finally {
       setIsLoading(false);
     }

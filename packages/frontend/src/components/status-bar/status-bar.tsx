@@ -11,22 +11,25 @@ export const StatusBar = () => {
   const isOnline = processInfo?.running || false;
 
   return (
-    <div className='w-full py-1 px-4 border-b bg-zinc-950 border-zinc-950 flex justify-end gap-2'>
-      <div
-        title={isOnline ? 'POE2 is running' : 'POE2 is stopped'}
-        className='cursor-pointer'
-      >
-        <StatusIndicator
-          status={isOnline}
-          icon={<ComputerDesktopIcon />}
-          size='sm'
-        />
-      </div>
-      <div title='POE2 servers are down' className='cursor-pointer'>
-        <StatusIndicator status={false} icon={<ServerIcon />} size='sm' />
-      </div>
-      <div title='Logged out of POE2' className='cursor-pointer'>
-        <StatusIndicator status={false} icon={<UserIcon />} size='sm' />
+    <div className='w-full py-1 px-4 border-b bg-zinc-950 border-zinc-950 flex justify-between gap-2'>
+      <div className='text-xs text-zinc-400'>No active character</div>
+      <div className='flex items-center gap-2'>
+        <div
+          title={isOnline ? 'POE2 is running' : 'POE2 is stopped'}
+          className='cursor-pointer'
+        >
+          <StatusIndicator
+            status={isOnline}
+            icon={<ComputerDesktopIcon />}
+            size='sm'
+          />
+        </div>
+        <div title='POE2 servers are down' className='cursor-pointer'>
+          <StatusIndicator status={false} icon={<ServerIcon />} size='sm' />
+        </div>
+        <div title='Logged out of POE2' className='cursor-pointer'>
+          <StatusIndicator status={false} icon={<UserIcon />} size='sm' />
+        </div>
       </div>
     </div>
   );

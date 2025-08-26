@@ -19,7 +19,7 @@ export const StatusIndicator = ({
     lg: 'w-6 h-6',
   };
 
-  const statusClasses = status ? 'text-green-500' : 'text-red-500';
+  const statusClasses = status ? 'text-green-800' : 'text-red-800';
 
   return (
     <div

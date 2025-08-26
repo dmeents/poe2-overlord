@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { useEffect, useState } from "react";
 import type { ProcessInfo } from "../types";
-import { tauriUtils, POE2_CONFIG } from "../utils";
+import { POE2_CONFIG, tauriUtils } from "../utils";
 
 export const usePoe2Process = () => {
   const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);

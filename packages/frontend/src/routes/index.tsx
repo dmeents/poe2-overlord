@@ -1,3 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, Settings } from "lucide-react";
 import React from "react";
 import {
@@ -6,18 +7,20 @@ import {
   InfoPanel,
   ProcessStatus,
   QuickActions,
-} from "./components";
-import { usePoe2Process } from "./hooks";
-import { APP_CONFIG } from "./utils";
+} from "../components";
+import { usePoe2Process } from "../hooks";
+import { APP_CONFIG } from "../utils";
 
-function App() {
+export const Route = createFileRoute("/")({
+  component: Index,
+});
+
+function Index() {
   const { processInfo, poe2Running, checkPoe2Process } = usePoe2Process();
 
   return (
     <div className="w-full h-full flex flex-col font-mono bg-gray-900">
-      {/* Main Container */}
       <div className="bg-gray-900 flex-1 flex flex-col text-white">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800">
           <div className="flex items-center gap-2">
             <h1 className="text-white text-lg font-bold m-0">
@@ -30,27 +33,18 @@ function App() {
             )}
           </div>
         </div>
-
-        {/* Content Area */}
         <div className="flex-1 p-6 flex flex-col gap-6">
-          {/* Process Status */}
           <ProcessStatus
             poe2Running={poe2Running}
             processInfo={processInfo}
             onRefresh={checkPoe2Process}
           />
-
-          {/* Quick Actions */}
           <QuickActions />
-
-          {/* Info Panel */}
           <InfoPanel
             title="Application Ready"
             description="POE2 Overlord is now running as a normal desktop application. Use the controls above to interact with game data and settings."
             icon={<AlertCircle size={16} />}
           />
-
-          {/* Settings Button */}
           <Button
             variant="primary"
             size="md"
@@ -60,8 +54,6 @@ function App() {
             <span>Settings</span>
           </Button>
         </div>
-
-        {/* Footer */}
         <Footer
           version={APP_CONFIG.VERSION}
           technology={APP_CONFIG.TECHNOLOGY}
@@ -70,5 +62,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

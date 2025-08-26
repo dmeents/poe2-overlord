@@ -6,15 +6,18 @@ const appWindow = getCurrentWindow();
 
 export const WindowTitle = () => {
   return (
-    <div data-tauri-drag-region className='titlebar'>
+    <div
+      data-tauri-drag-region
+      className='px-[16px] h-[30px] bg-zinc-950 select-none grid grid-cols-[auto_max-content] fixed top-0 left-0 right-0'
+    >
       <div data-tauri-drag-region></div>
-      <div className='controls'>
+      <div className='flex items-center gap-2'>
         <Button
           title='minimize'
           variant='ghost'
           size='sm'
           onClick={() => appWindow.minimize()}
-          className='w-8 h-8 p-0'
+          className='w-5 h-5 p-0 text-zinc-500'
         >
           <MinusIcon className='w-4 h-4' />
         </Button>
@@ -23,7 +26,7 @@ export const WindowTitle = () => {
           variant='ghost'
           size='sm'
           onClick={() => appWindow.toggleMaximize()}
-          className='w-8 h-8 p-0'
+          className='w-5 h-5 p-0 text-zinc-500'
         >
           <WindowIcon className='w-4 h-4' />
         </Button>
@@ -32,7 +35,7 @@ export const WindowTitle = () => {
           variant='ghost'
           size='sm'
           onClick={() => appWindow.close()}
-          className='w-8 h-8 p-0'
+          className='w-5 h-5 p-0 text-zinc-500'
         >
           <XMarkIcon className='w-4 h-4' />
         </Button>

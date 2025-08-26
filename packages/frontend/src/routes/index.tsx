@@ -10,7 +10,7 @@ export const Route = createFileRoute('/')({
   component: Index,
 });
 
-export default function Index() {
+function Index() {
   const { poe2Running, processInfo, checkPoe2Process } = usePoe2Process();
 
   const quickActions = [

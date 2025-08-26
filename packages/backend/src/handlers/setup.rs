@@ -1,4 +1,4 @@
-use crate::services::ProcessMonitor;
+use crate::services::{ProcessMonitor, ConfigService};
 use log;
 use tauri::{App, Emitter, Manager, WebviewWindow};
 use tokio::time::{interval, Duration};
@@ -12,6 +12,10 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                 .build(),
         )?;
     }
+
+    // Initialize configuration service
+    let config_service = ConfigService::new(&app.handle());
+    app.manage(config_service);
 
     // Get main window and start process monitoring
     if let Some(main_window) = app.get_webview_window("main") {

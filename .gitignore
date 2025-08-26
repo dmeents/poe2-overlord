@@ -32,6 +32,10 @@ src-tauri/gen/
 **/Cargo.lock
 **/gen/schemas
 
+# TanStack Router
+**/routeTree.gen.ts
+**/routes/.cache/
+
 # Python (legacy)
 __pycache__/
 *.py[cod]

@@ -1,6 +1,7 @@
-export { Button } from './button.component.tsx';
-export { FooterComponent } from './footer.component.tsx';
-export { InfoPanel } from './info-panel.component.tsx';
-export { ProcessStatusComponent } from './process-status.component.tsx';
-export { QuickActionsComponent } from './quick-actions.component.tsx';
-export { StatusDot } from './status-dot.component.tsx';
+export { Button } from './button.tsx';
+export { Footer } from './footer.tsx';
+export { InfoPanel } from './info-panel.tsx';
+export { ProcessStatus } from './process-status.tsx';
+export { QuickActions } from './quick-actions.tsx';
+export { StatusDot } from './status-dot.tsx';
+export { WindowTitle } from './window-title.tsx';

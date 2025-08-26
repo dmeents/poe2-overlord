@@ -4,7 +4,7 @@ interface QuickActionsComponentProps {
   actions: QuickActionProps[];
 }
 
-export function QuickActionsComponent({ actions }: QuickActionsComponentProps) {
+export function QuickActions({ actions }: QuickActionsComponentProps) {
   return (
     <div>
       <h3>Quick Actions</h3>

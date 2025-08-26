@@ -1,7 +1,7 @@
-import { FooterComponent } from '@/components/footer.component';
-import { InfoPanel } from '@/components/info-panel.component';
-import { ProcessStatusComponent } from '@/components/process-status.component';
-import { QuickActionsComponent } from '@/components/quick-actions.component';
+import { Footer } from '@/components/footer.tsx';
+import { InfoPanel } from '@/components/info-panel.tsx';
+import { ProcessStatus } from '@/components/process-status.tsx';
+import { QuickActions } from '@/components/quick-actions.tsx';
 import { usePoe2Process } from '@/hooks/usePoe2Process';
 import { createFileRoute } from '@tanstack/react-router';
 import { Activity, Info, Search, Target } from 'lucide-react';
@@ -54,15 +54,12 @@ function Index() {
         </div>
       </div>
       <div>
-        <ProcessStatusComponent
-          processInfo={processInfo}
-          onRefresh={checkPoe2Process}
-        />
+        <ProcessStatus processInfo={processInfo} onRefresh={checkPoe2Process} />
         <InfoPanel {...infoPanels[0]} />
-        <QuickActionsComponent actions={quickActions} />
+        <QuickActions actions={quickActions} />
         <InfoPanel {...infoPanels[1]} />
       </div>
-      <FooterComponent />
+      <Footer />
     </div>
   );
 }

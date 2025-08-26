@@ -1,4 +1,4 @@
-export function FooterComponent() {
+export function Footer() {
   return (
     <div>
       <div>

@@ -1,15 +1,12 @@
 import type { ProcessInfo } from '@/types';
-import { StatusDot } from './status-dot.component';
+import { StatusDot } from './status-dot.tsx';
 
 interface ProcessStatusComponentProps {
   processInfo: ProcessInfo | null;
   onRefresh: () => void;
 }
 
-export function ProcessStatusComponent({
-  processInfo,
-  onRefresh,
-}: ProcessStatusComponentProps) {
+export function ProcessStatus({ processInfo }: ProcessStatusComponentProps) {
   return (
     <div>
       <div>

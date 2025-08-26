@@ -10,21 +10,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "yarn workspace @poe2-overlord/frontend dev",
-    "build": "yarn workspace @poe2-overlord/frontend build",
-    "lint": "yarn workspace @poe2-overlord/frontend lint",
-    "preview": "yarn workspace @poe2-overlord/frontend preview",
-    "tauri": "tauri --config packages/backend/tauri.conf.json",
-    "tauri:dev": "tauri dev --config packages/backend/tauri.conf.json",
-    "tauri:build": "tauri build --config packages/backend/tauri.conf.json",
-    "tauri:info": "tauri info",
-    "clean": "yarn workspace @poe2-overlord/frontend clean",
-    "format": "yarn workspace @poe2-overlord/frontend format",
+    "build": "tauri build --config packages/backend/tauri.conf.json",
+    "dev": "tauri dev --config packages/backend/tauri.conf.json",
+    "format": "yarn format:ts && yarn format:rust",
     "format:rust": "yarn workspace @poe2-overlord/backend format",
     "format:rust:check": "yarn workspace @poe2-overlord/backend format:check",
-    "format:all": "yarn format && yarn format:rust",
-    "install:all": "yarn install",
-    "build:all": "yarn build && yarn tauri:build"
+    "format:ts": "yarn workspace @poe2-overlord/frontend format",
+    "install:all": "yarn install && cd packages/backend && cargo fetch && cd ../../",
+    "lint": "yarn lint:ts && yarn lint:rust",
+    "lint:rust": "yarn workspace @poe2-overlord/backend lint",
+    "lint:ts": "yarn workspace @poe2-overlord/frontend lint"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0"

@@ -1,6 +1,6 @@
+import { cn } from '@/utils';
 import type { ButtonHTMLAttributes } from 'react';
 import React from 'react';
-import { cn } from '../utils';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';

@@ -1,5 +1,5 @@
+import type { FooterProps } from '@/types';
 import React from 'react';
-import type { FooterProps } from '../types';
 
 export const Footer: React.FC<FooterProps> = ({ version, technology }) => {
   return (

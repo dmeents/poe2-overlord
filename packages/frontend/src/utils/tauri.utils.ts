@@ -1,5 +1,5 @@
+import type { ProcessInfo } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
-import type { ProcessInfo } from '../types';
 import { POE2_CONFIG } from './constants';
 
 export const tauriUtils = {

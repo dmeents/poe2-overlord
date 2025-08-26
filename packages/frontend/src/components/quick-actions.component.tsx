@@ -1,6 +1,6 @@
-import React from 'react';
 import { Search, Target } from 'lucide-react';
-import { Button } from './Button';
+import React from 'react';
+import { Button } from './button.component.tsx';
 
 const defaultActions = [
   {

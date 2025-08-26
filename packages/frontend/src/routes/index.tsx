@@ -1,15 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { AlertCircle, Settings } from 'lucide-react';
-import React from 'react';
 import {
   Button,
   Footer,
   InfoPanel,
   ProcessStatus,
   QuickActions,
-} from '../components';
-import { usePoe2Process } from '../hooks';
-import { APP_CONFIG } from '../utils';
+} from '@/components';
+import { usePoe2Process } from '@/hooks';
+import { APP_CONFIG } from '@/utils';
+import { createFileRoute } from '@tanstack/react-router';
+import { AlertCircle, Settings } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: Index,

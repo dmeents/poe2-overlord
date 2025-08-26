@@ -1,5 +1,5 @@
+import type { InfoPanelProps } from '@/types';
 import React from 'react';
-import type { InfoPanelProps } from '../types';
 
 export const InfoPanel: React.FC<InfoPanelProps> = ({
   title,

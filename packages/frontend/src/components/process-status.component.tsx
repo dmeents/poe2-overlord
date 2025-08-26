@@ -1,8 +1,8 @@
-import React from 'react';
+import type { ProcessStatusProps } from '@/types';
+import { POE2_CONFIG } from '@/utils';
 import { Activity } from 'lucide-react';
-import { Button } from './Button';
-import { POE2_CONFIG } from '../utils';
-import type { ProcessStatusProps } from '../types';
+import React from 'react';
+import { Button } from './button.component.tsx';
 
 export const ProcessStatus: React.FC<ProcessStatusProps> = ({
   poe2Running,

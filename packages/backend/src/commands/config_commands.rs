@@ -75,3 +75,23 @@ pub async fn reset_config_to_defaults(
         .update_config(AppConfig::default())
         .map_err(|e| e.to_string())
 }
+
+/// Get the OS-specific default POE client log path
+#[tauri::command]
+pub async fn get_default_poe_client_log_path(
+    _app_handle: AppHandle,
+    config_service: State<'_, ConfigService>,
+) -> Result<String, String> {
+    Ok(config_service.get_default_poe_client_log_path())
+}
+
+/// Reset the POE client log path to the OS-specific default
+#[tauri::command]
+pub async fn reset_poe_client_log_path_to_default(
+    _app_handle: AppHandle,
+    config_service: State<'_, ConfigService>,
+) -> Result<(), String> {
+    config_service
+        .reset_poe_client_log_path_to_default()
+        .map_err(|e| e.to_string())
+}

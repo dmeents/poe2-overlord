@@ -17,7 +17,8 @@ fn test_config_creation_and_defaults() {
 
     // Test default values
     let config = config_service.get_config();
-    assert_eq!(config.poe_client_log_path, "");
+    // The poe_client_log_path should now be the OS-specific default, not empty
+    assert!(!config.poe_client_log_path.is_empty());
     assert_eq!(config.log_level, "info");
 }
 
@@ -183,4 +184,31 @@ fn test_config_thread_safety() {
     // Both should return the same default config
     assert_eq!(config1.poe_client_log_path, config2.poe_client_log_path);
     assert_eq!(config1.log_level, config2.log_level);
+}
+
+#[test]
+fn test_os_specific_default_paths() {
+    let temp_dir = tempdir().unwrap();
+    let config_path = temp_dir.path().join("config.json");
+
+    let config_service = ConfigService {
+        config: Mutex::new(AppConfig::default()),
+        config_path: config_path.clone(),
+    };
+
+    // Test that the default path is OS-specific and not empty
+    let default_path = config_service.get_default_poe_client_log_path();
+    assert!(!default_path.is_empty());
+    
+    // Test that the default path contains "Path of Exile"
+    assert!(default_path.contains("Path of Exile"));
+    
+    // Test that resetting to default works
+    config_service.set_poe_client_log_path("/custom/path".to_string()).unwrap();
+    assert_eq!(config_service.get_poe_client_log_path(), "/custom/path");
+    
+    config_service.reset_poe_client_log_path_to_default().unwrap();
+    let reset_path = config_service.get_poe_client_log_path();
+    assert!(!reset_path.is_empty());
+    assert!(reset_path.contains("Path of Exile"));
 }

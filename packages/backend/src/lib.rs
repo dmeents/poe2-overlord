@@ -3,6 +3,7 @@ pub mod commands;
 pub mod handlers;
 pub mod models;
 pub mod services;
+pub mod utils;
 
 // Re-export commonly used items
 pub use commands::*;
@@ -22,7 +23,9 @@ pub fn run() {
             set_poe_client_log_path,
             get_log_level,
             set_log_level,
-            reset_config_to_defaults
+            reset_config_to_defaults,
+            get_default_poe_client_log_path,
+            reset_poe_client_log_path_to_default
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

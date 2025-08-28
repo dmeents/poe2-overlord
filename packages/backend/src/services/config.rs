@@ -107,7 +107,15 @@ impl ConfigService {
 
     /// Get the POE client log path
     pub fn get_poe_client_log_path(&self) -> String {
-        self.config.lock().unwrap().poe_client_log_path.clone()
+        let config = self.config.lock().unwrap();
+        let path = &config.poe_client_log_path;
+        
+        // If the path is empty, return the OS-specific default
+        if path.is_empty() {
+            crate::utils::PoeClientLogPaths::get_default_path_string()
+        } else {
+            path.clone()
+        }
     }
 
     /// Set the POE client log path
@@ -127,5 +135,16 @@ impl ConfigService {
         self.update_field(|config| {
             config.log_level = level;
         })
+    }
+
+    /// Get the OS-specific default POE client log path
+    pub fn get_default_poe_client_log_path(&self) -> String {
+        crate::utils::PoeClientLogPaths::get_default_path_string()
+    }
+
+    /// Reset the POE client log path to the OS-specific default
+    pub fn reset_poe_client_log_path_to_default(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let default_path = self.get_default_poe_client_log_path();
+        self.set_poe_client_log_path(default_path)
     }
 }

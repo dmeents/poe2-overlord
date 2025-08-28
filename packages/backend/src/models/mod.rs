@@ -26,7 +26,7 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            poe_client_log_path: String::new(),
+            poe_client_log_path: crate::utils::PoeClientLogPaths::get_default_path_string(),
             log_level: "info".to_string(),
         }
     }

@@ -75,4 +75,22 @@ export const tauriUtils = {
       throw error;
     }
   },
+
+  async getDefaultPoeClientLogPath(): Promise<string> {
+    try {
+      return await invoke<string>('get_default_poe_client_log_path');
+    } catch (error) {
+      console.error('Failed to get default POE client log path:', error);
+      throw error;
+    }
+  },
+
+  async resetPoeClientLogPathToDefault(): Promise<void> {
+    try {
+      await invoke('reset_poe_client_log_path_to_default');
+    } catch (error) {
+      console.error('Failed to reset POE client log path to default:', error);
+      throw error;
+    }
+  },
 };

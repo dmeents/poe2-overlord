@@ -2,6 +2,7 @@ use crate::services::{ConfigService, LogMonitorService, ProcessMonitor, SceneCha
 use log;
 use std::sync::Arc;
 use tauri::{App, Emitter, Manager, WebviewWindow};
+use tokio::runtime::Runtime;
 use tokio::time::{interval, Duration};
 
 pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
@@ -33,10 +34,10 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(main_window) = app.get_webview_window("main") {
         log::info!("Starting POE2 process monitoring");
 
-        // Start process monitoring in the background
+        // Start process monitoring in the background using a dedicated runtime
         start_process_monitoring(main_window.clone(), log_monitor_arc.clone());
 
-        // Start log event emission in the background
+        // Start log event emission in the background using a dedicated runtime
         start_log_event_emission(main_window, log_monitor_arc);
     } else {
         log::warn!("Main window not found during setup");
@@ -47,9 +48,10 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn start_process_monitoring(window: WebviewWindow, log_monitor: Arc<LogMonitorService>) {
+    // Create a dedicated runtime for this background task
     std::thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let rt = Runtime::new().expect("Failed to create Tokio runtime");
+        rt.block_on(async move {
             let mut interval = interval(Duration::from_secs(5));
             let mut was_poe_running = false;
 
@@ -89,9 +91,10 @@ fn start_process_monitoring(window: WebviewWindow, log_monitor: Arc<LogMonitorSe
 }
 
 fn start_log_event_emission(window: WebviewWindow, log_monitor: Arc<LogMonitorService>) {
+    // Create a dedicated runtime for this background task
     std::thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        let rt = Runtime::new().expect("Failed to create Tokio runtime");
+        rt.block_on(async move {
             let mut event_receiver = log_monitor.subscribe();
 
             log::info!("Log event emission started, listening for scene changes");

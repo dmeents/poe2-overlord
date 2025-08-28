@@ -1,3 +1,4 @@
+use crate::errors::{AppError, AppResult};
 use crate::services::config::ConfigService;
 use log::{debug, error, info, warn};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
@@ -6,20 +7,8 @@ use std::io::{self, BufRead, BufReader, Seek};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
-use thiserror::Error;
 use tokio::sync::broadcast;
 use tokio::time;
-
-/// Errors that can occur during log monitoring
-#[derive(Error, Debug)]
-pub enum LogMonitorError {
-    #[error("Failed to open log file: {0}")]
-    FileOpen(#[from] io::Error),
-    #[error("Failed to watch file: {0}")]
-    WatchError(#[from] notify::Error),
-    #[error("Log file not found: {0}")]
-    FileNotFound(String),
-}
 
 /// Zone change event
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -136,14 +125,18 @@ impl LogMonitorService {
 
     /// Get the event receiver for subscribing to zone change events (legacy compatibility)
     pub fn subscribe_zones(&self) -> broadcast::Receiver<ZoneChangeEvent> {
-        let (zone_sender, zone_receiver) = broadcast::channel(1000);
+        let (zone_sender, zone_receiver) = broadcast::channel(100);
         let mut scene_receiver = self.event_sender.subscribe();
 
-        // Spawn a task to filter zone events
+        // Spawn a task to filter zone events with better resource management
         tokio::spawn(async move {
             while let Ok(event) = scene_receiver.recv().await {
                 if let SceneChangeEvent::Zone(zone_event) = event {
-                    let _ = zone_sender.send(zone_event);
+                    // Use send to avoid blocking if receiver is slow
+                    if zone_sender.send(zone_event).is_err() {
+                        // Receiver is not keeping up, skip this event
+                        break;
+                    }
                 }
             }
         });
@@ -153,14 +146,18 @@ impl LogMonitorService {
 
     /// Get the event receiver for subscribing to act change events
     pub fn subscribe_acts(&self) -> broadcast::Receiver<ActChangeEvent> {
-        let (act_sender, act_receiver) = broadcast::channel(1000);
+        let (act_sender, act_receiver) = broadcast::channel(100);
         let mut scene_receiver = self.event_sender.subscribe();
 
-        // Spawn a task to filter act events
+        // Spawn a task to filter act events with better resource management
         tokio::spawn(async move {
             while let Ok(event) = scene_receiver.recv().await {
                 if let SceneChangeEvent::Act(act_event) = event {
-                    let _ = act_sender.send(act_event);
+                    // Use send to avoid blocking if receiver is slow
+                    if act_sender.send(act_event).is_err() {
+                        // Receiver is not keeping up, skip this event
+                        break;
+                    }
                 }
             }
         });
@@ -169,7 +166,7 @@ impl LogMonitorService {
     }
 
     /// Start monitoring the log file
-    pub async fn start_monitoring(&self) -> Result<(), LogMonitorError> {
+    pub async fn start_monitoring(&self) -> AppResult<()> {
         let mut is_running = self.is_running.write().await;
         if *is_running {
             warn!("Log monitoring is already running");
@@ -200,7 +197,7 @@ impl LogMonitorService {
     }
 
     /// Stop monitoring the log file
-    pub async fn stop_monitoring(&self) -> Result<(), LogMonitorError> {
+    pub async fn stop_monitoring(&self) -> AppResult<()> {
         let mut is_running = self.is_running.write().await;
         if !*is_running {
             warn!("Log monitoring is not running");
@@ -218,31 +215,32 @@ impl LogMonitorService {
     }
 
     /// Get current log file size
-    pub fn get_log_file_size(&self) -> Result<u64, LogMonitorError> {
+    pub fn get_log_file_size(&self) -> AppResult<u64> {
         let log_path = self.config_service.get_poe_client_log_path();
         let path = Path::new(&log_path);
 
         if !path.exists() {
-            return Err(LogMonitorError::FileNotFound(log_path));
+            return Err(AppError::LogMonitor(format!("Log file not found: {}", log_path)));
         }
 
-        let metadata = fs::metadata(path).map_err(|e| LogMonitorError::FileOpen(e))?;
+        let metadata = fs::metadata(path)
+            .map_err(|e| AppError::FileSystem(format!("Failed to get file metadata: {}", e)))?;
         Ok(metadata.len())
     }
 
     /// Read the last N lines from the log file
-    pub fn read_last_lines(&self, count: usize) -> Result<Vec<String>, LogMonitorError> {
+    pub fn read_last_lines(&self, count: usize) -> AppResult<Vec<String>> {
         let log_path = self.config_service.get_poe_client_log_path();
         let path = Path::new(&log_path);
 
         if !path.exists() {
-            return Err(LogMonitorError::FileNotFound(log_path));
+            return Err(AppError::LogMonitor(format!("Log file not found: {}", log_path)));
         }
 
         let file = OpenOptions::new()
             .read(true)
             .open(path)
-            .map_err(|e| LogMonitorError::FileOpen(e))?;
+            .map_err(|e| AppError::FileSystem(format!("Failed to open log file: {}", e)))?;
 
         let reader = BufReader::new(file);
         let lines: Vec<String> = reader.lines().filter_map(|line| line.ok()).collect();
@@ -256,17 +254,26 @@ impl LogMonitorService {
         Ok(lines[start..].to_vec())
     }
 
-    /// Main monitoring loop
+    /// Main monitoring loop that watches for file changes and processes new content
+    /// 
+    /// This function implements a polling-based approach combined with file system events:
+    /// 1. Sets up a file watcher to detect when the log file is modified
+    /// 2. Polls the file every 100ms to check for new content
+    /// 3. When new content is detected, processes only the new lines
+    /// 4. Parses each line for scene change events and broadcasts them
+    /// 
+    /// The polling approach ensures we don't miss events while the file watcher
+    /// provides immediate notification of file modifications.
     async fn monitor_log_file(
         log_path: &str,
         event_sender: broadcast::Sender<SceneChangeEvent>,
         parser: SceneChangeParser,
         is_running: &Arc<tokio::sync::RwLock<bool>>,
-    ) -> Result<(), LogMonitorError> {
+    ) -> AppResult<()> {
         let path = Path::new(log_path);
 
         if !path.exists() {
-            return Err(LogMonitorError::FileNotFound(log_path.to_string()));
+            return Err(AppError::LogMonitor(format!("Log file not found: {}", log_path)));
         }
 
         // Get initial file size and position
@@ -319,33 +326,37 @@ impl LogMonitorService {
         Ok(())
     }
 
-    /// Get the current size of a file
-    fn get_file_size(path: &Path) -> Result<u64, LogMonitorError> {
-        let metadata = fs::metadata(path).map_err(|e| LogMonitorError::FileOpen(e))?;
-        Ok(metadata.len())
-    }
-
-    /// Process new lines from the log file
+    /// Process new lines from the log file starting from the last known position
+    /// 
+    /// This function:
+    /// 1. Opens the log file and seeks to the last known position
+    /// 2. Reads all new lines from that position to the end of file
+    /// 3. Parses each line for scene change events using the provided parser
+    /// 4. Broadcasts any detected events to all subscribers
+    /// 5. Updates the last position to the current file size
+    /// 
+    /// This approach ensures we only process new content and don't duplicate events.
     async fn process_new_lines(
         path: &Path,
         last_position: &mut u64,
         parser: &SceneChangeParser,
         event_sender: &broadcast::Sender<SceneChangeEvent>,
-    ) -> Result<(), LogMonitorError> {
+    ) -> AppResult<()> {
         let file = OpenOptions::new()
             .read(true)
             .open(path)
-            .map_err(|e| LogMonitorError::FileOpen(e))?;
+            .map_err(|e| AppError::FileSystem(format!("Failed to open log file: {}", e)))?;
 
         let mut reader = BufReader::new(file);
 
         // Seek to last known position
         reader
             .seek(io::SeekFrom::Start(*last_position))
-            .map_err(|e| LogMonitorError::FileOpen(e))?;
+            .map_err(|e| AppError::FileSystem(format!("Failed to seek in log file: {}", e)))?;
 
         for line in reader.lines() {
-            let line = line.map_err(|e| LogMonitorError::FileOpen(e))?;
+            let line = line
+                .map_err(|e| AppError::FileSystem(format!("Failed to read line: {}", e)))?;
 
             // Try to parse the line for scene changes
             if let Some(event) = parser.parse_line(&line) {
@@ -360,5 +371,12 @@ impl LogMonitorService {
         *last_position = Self::get_file_size(path)?;
 
         Ok(())
+    }
+
+    /// Get the current size of a file
+    fn get_file_size(path: &Path) -> AppResult<u64> {
+        let metadata = fs::metadata(path)
+            .map_err(|e| AppError::FileSystem(format!("Failed to get file metadata: {}", e)))?;
+        Ok(metadata.len())
     }
 }

@@ -1,7 +1,11 @@
+use crate::errors::AppResult;
 use crate::models::ProcessInfo;
+use std::collections::HashSet;
 use sysinfo::System;
 
-pub struct ProcessMonitor;
+pub struct ProcessMonitor {
+    process_names: HashSet<String>,
+}
 
 impl Default for ProcessMonitor {
     fn default() -> Self {
@@ -11,27 +15,48 @@ impl Default for ProcessMonitor {
 
 impl ProcessMonitor {
     pub fn new() -> Self {
-        Self
+        let mut process_names = HashSet::new();
+        process_names.insert("pathofexile".to_string());
+        process_names.insert("pathofexile2".to_string());
+        process_names.insert("poe2".to_string());
+        
+        Self { process_names }
     }
 
-    pub fn check_poe2_process() -> Result<ProcessInfo, String> {
+    /// Add a process name to monitor
+    pub fn add_process_name(&mut self, name: String) {
+        self.process_names.insert(name.to_lowercase());
+    }
+
+    /// Remove a process name from monitoring
+    pub fn remove_process_name(&mut self, name: &str) {
+        self.process_names.remove(&name.to_lowercase());
+    }
+
+    /// Get all monitored process names
+    pub fn get_process_names(&self) -> Vec<String> {
+        self.process_names.iter().cloned().collect()
+    }
+
+    pub fn check_poe2_process() -> AppResult<ProcessInfo> {
+        let monitor = Self::new();
+        monitor.check_processes()
+    }
+
+    /// Check for any of the monitored processes
+    pub fn check_processes(&self) -> AppResult<ProcessInfo> {
         let mut system = System::new_all();
         system.refresh_all();
 
-        // Look for Path of Exile 2 process (adjust process name as needed)
-        let poe2_processes = ["pathofexile"];
-
         for (pid, process) in system.processes() {
-            // Convert process name to string and make it lowercase for comparison
             let process_name_str = process.name().to_string_lossy().to_lowercase();
-            for poe2_name in &poe2_processes {
-                if process_name_str.contains(poe2_name) {
-                    return Ok(ProcessInfo {
-                        name: process.name().to_string_lossy().to_string(),
-                        pid: pid.as_u32(),
-                        running: true,
-                    });
-                }
+            
+            if self.process_names.iter().any(|name| process_name_str.contains(name)) {
+                return Ok(ProcessInfo {
+                    name: process.name().to_string_lossy().to_string(),
+                    pid: pid.as_u32(),
+                    running: true,
+                });
             }
         }
 

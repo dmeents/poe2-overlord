@@ -28,18 +28,3 @@ pub fn get_os_name() -> &'static str {
         OperatingSystem::Unknown => "Unknown",
     }
 }
-
-/// Check if the current OS is Windows
-pub fn is_windows() -> bool {
-    detect_os() == OperatingSystem::Windows
-}
-
-/// Check if the current OS is macOS
-pub fn is_macos() -> bool {
-    detect_os() == OperatingSystem::MacOs
-}
-
-/// Check if the current OS is Linux
-pub fn is_linux() -> bool {
-    detect_os() == OperatingSystem::Linux
-}

@@ -1,5 +1,6 @@
 // Module declarations
 pub mod commands;
+pub mod errors;
 pub mod handlers;
 pub mod models;
 pub mod services;
@@ -7,6 +8,7 @@ pub mod utils;
 
 // Re-export commonly used items
 pub use commands::*;
+pub use errors::*;
 pub use handlers::*;
 pub use models::*;
 pub use services::*;

@@ -1,17 +1,15 @@
 use app_lib::models::AppConfig;
-use app_lib::services::ConfigService;
-use std::fs;
-use std::sync::Mutex;
-use tempfile::tempdir;
+use app_lib::services::config::ConfigService;
+use std::sync::{Arc, RwLock};
 
 #[test]
 fn test_config_creation_and_defaults() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     // Create a mock config service with a test path
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -24,11 +22,11 @@ fn test_config_creation_and_defaults() {
 
 #[test]
 fn test_config_save_and_load() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -46,7 +44,7 @@ fn test_config_save_and_load() {
 
     // Create new service and load
     let new_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -62,11 +60,11 @@ fn test_config_save_and_load() {
 
 #[test]
 fn test_config_field_updates() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -88,11 +86,11 @@ fn test_config_field_updates() {
 
 #[test]
 fn test_config_update_field_closure() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -110,11 +108,11 @@ fn test_config_update_field_closure() {
 
 #[test]
 fn test_config_persistence() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -124,7 +122,7 @@ fn test_config_persistence() {
         .unwrap();
 
     // Verify file content
-    let content = fs::read_to_string(&config_path).unwrap();
+    let content = std::fs::read_to_string(&config_path).unwrap();
     let saved_config: AppConfig = serde_json::from_str(&content).unwrap();
 
     assert_eq!(saved_config.poe_client_log_path, "/persistent/path");
@@ -133,17 +131,17 @@ fn test_config_persistence() {
 
 #[test]
 fn test_config_error_handling() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
     // Test with invalid JSON (this should not happen in normal operation)
     // but we can test the error handling by creating a corrupted file
-    fs::write(&config_path, "{ invalid json }").unwrap();
+    std::fs::write(&config_path, "{ invalid json }").unwrap();
 
     // The service should handle this gracefully
     let _result = config_service.load_config();
@@ -154,7 +152,7 @@ fn test_config_error_handling() {
 
 #[test]
 fn test_config_thread_safety() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     // Test that multiple threads can access the config safely
@@ -162,13 +160,13 @@ fn test_config_thread_safety() {
 
     // Create a shared config service
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
     // Test concurrent reads (which should be safe)
     let config_service_clone = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 
@@ -188,11 +186,11 @@ fn test_config_thread_safety() {
 
 #[test]
 fn test_os_specific_default_paths() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempfile::tempdir().unwrap();
     let config_path = temp_dir.path().join("config.json");
 
     let config_service = ConfigService {
-        config: Mutex::new(AppConfig::default()),
+        config: Arc::new(RwLock::new(AppConfig::default())),
         config_path: config_path.clone(),
     };
 

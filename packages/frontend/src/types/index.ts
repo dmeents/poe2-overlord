@@ -6,6 +6,11 @@ export interface ProcessInfo {
   running: boolean;
 }
 
+export interface ZoneChangeEvent {
+  zone_name: string;
+  timestamp: string;
+}
+
 export interface ProcessStatusProps {
   poe2Running: boolean;
   processInfo: ProcessInfo | null;

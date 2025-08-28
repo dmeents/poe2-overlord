@@ -25,7 +25,13 @@ pub fn run() {
             set_log_level,
             reset_config_to_defaults,
             get_default_poe_client_log_path,
-            reset_poe_client_log_path_to_default
+            reset_poe_client_log_path_to_default,
+            start_log_monitoring,
+            stop_log_monitoring,
+            is_log_monitoring_active,
+            get_log_file_size,
+            read_last_log_lines,
+            subscribe_to_log_events
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

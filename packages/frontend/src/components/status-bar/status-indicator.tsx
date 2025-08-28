@@ -25,9 +25,8 @@ export const StatusIndicator = ({
     <div
       className={`
         ${sizeClasses[size]} 
-        transition-all duration-200 ease-in-out
         ${statusClasses}
-        ${status ? 'animate-pulse' : ''}
+        ${!status ? 'animate-pulse' : ''}
         ${className}
       `}
     >

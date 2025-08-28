@@ -1,10 +1,10 @@
-use app_lib::utils::{OperatingSystem, detect_os, get_os_name, is_windows, is_macos, is_linux};
+use app_lib::utils::{detect_os, get_os_name, is_linux, is_macos, is_windows, OperatingSystem};
 
 #[test]
 fn test_os_detection() {
     let os = detect_os();
     assert_ne!(os, OperatingSystem::Unknown);
-    
+
     // At least one of these should be true
     assert!(is_windows() || is_macos() || is_linux());
 }
@@ -41,21 +41,21 @@ fn test_os_enum_variants() {
 #[test]
 fn test_os_checker_functions() {
     let current_os = detect_os();
-    
+
     // Only one OS checker should return true
     let windows_check = is_windows();
     let macos_check = is_macos();
     let linux_check = is_linux();
-    
+
     // Count how many are true
     let true_count = [windows_check, macos_check, linux_check]
         .iter()
         .filter(|&&x| x)
         .count();
-    
+
     // Exactly one should be true
     assert_eq!(true_count, 1, "Exactly one OS checker should return true");
-    
+
     // The detected OS should match the checker function
     match current_os {
         OperatingSystem::Windows => assert!(windows_check),
@@ -74,7 +74,7 @@ fn test_os_checker_functions() {
 fn test_os_name_consistency() {
     let detected_os = detect_os();
     let os_name = get_os_name();
-    
+
     // Verify that the OS name matches the detected OS
     match detected_os {
         OperatingSystem::Windows => assert_eq!(os_name, "Windows"),

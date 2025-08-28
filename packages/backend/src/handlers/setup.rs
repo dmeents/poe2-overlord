@@ -1,4 +1,4 @@
-use crate::services::{ConfigService, LogMonitorService, ProcessMonitor};
+use crate::services::{ConfigService, LogMonitorService, ProcessMonitor, SceneChangeEvent};
 use log;
 use std::sync::Arc;
 use tauri::{App, Emitter, Manager, WebviewWindow};
@@ -14,27 +14,35 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         )?;
     }
 
+    log::info!("Starting application setup...");
+
     // Initialize configuration service
+    log::info!("Initializing ConfigService...");
     let config_service = ConfigService::new(&app.handle());
-    let config_service_arc = Arc::new(config_service);
-    app.manage(config_service_arc.clone());
+    app.manage(config_service.clone());
+    log::info!("ConfigService managed successfully");
 
     // Initialize log monitor service
-    let log_monitor_service = LogMonitorService::new(config_service_arc);
+    log::info!("Initializing LogMonitorService...");
+    let log_monitor_service = LogMonitorService::new(Arc::new(config_service));
     let log_monitor_arc = Arc::new(log_monitor_service);
     app.manage(log_monitor_arc.clone());
+    log::info!("LogMonitorService managed successfully");
 
     // Get main window and start process monitoring
     if let Some(main_window) = app.get_webview_window("main") {
         log::info!("Starting POE2 process monitoring");
 
         // Start process monitoring in the background
-        start_process_monitoring(main_window.clone(), Arc::clone(&log_monitor_arc));
+        start_process_monitoring(main_window.clone(), log_monitor_arc.clone());
 
         // Start log event emission in the background
         start_log_event_emission(main_window, log_monitor_arc);
+    } else {
+        log::warn!("Main window not found during setup");
     }
 
+    log::info!("Application setup completed successfully");
     Ok(())
 }
 
@@ -86,17 +94,30 @@ fn start_log_event_emission(window: WebviewWindow, log_monitor: Arc<LogMonitorSe
         rt.block_on(async {
             let mut event_receiver = log_monitor.subscribe();
 
-            log::info!("Log event emission started, listening for zone changes");
+            log::info!("Log event emission started, listening for scene changes");
 
-            // Listen for zone change events and emit them to the frontend
+            // Listen for scene change events and emit them to the frontend
             while let Ok(event) = event_receiver.recv().await {
-                let _ = window.emit(
-                    "log-zone-change",
-                    serde_json::json!({
-                        "zone_name": event.zone_name,
-                        "timestamp": event.timestamp
-                    }),
-                );
+                match event {
+                    SceneChangeEvent::Zone(zone_event) => {
+                        let _ = window.emit(
+                            "log-zone-change",
+                            serde_json::json!({
+                                "zone_name": zone_event.zone_name,
+                                "timestamp": zone_event.timestamp
+                            }),
+                        );
+                    }
+                    SceneChangeEvent::Act(act_event) => {
+                        let _ = window.emit(
+                            "log-act-change",
+                            serde_json::json!({
+                                "act_name": act_event.act_name,
+                                "timestamp": act_event.timestamp
+                            }),
+                        );
+                    }
+                }
             }
         });
     });

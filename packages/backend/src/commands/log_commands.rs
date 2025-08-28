@@ -1,10 +1,10 @@
 use crate::services::LogMonitorService;
 use log::info;
 use std::sync::Arc;
-use tauri::{command, State};
+use tauri::State;
 
 /// Start monitoring the POE client log file
-#[command]
+#[tauri::command]
 pub async fn start_log_monitoring(
     log_monitor: State<'_, Arc<LogMonitorService>>,
 ) -> Result<(), String> {
@@ -19,7 +19,7 @@ pub async fn start_log_monitoring(
 }
 
 /// Stop monitoring the POE client log file
-#[command]
+#[tauri::command]
 pub async fn stop_log_monitoring(
     log_monitor: State<'_, Arc<LogMonitorService>>,
 ) -> Result<(), String> {
@@ -34,7 +34,7 @@ pub async fn stop_log_monitoring(
 }
 
 /// Check if log monitoring is currently active
-#[command]
+#[tauri::command]
 pub async fn is_log_monitoring_active(
     log_monitor: State<'_, Arc<LogMonitorService>>,
 ) -> Result<bool, String> {
@@ -42,7 +42,7 @@ pub async fn is_log_monitoring_active(
 }
 
 /// Get the current size of the log file
-#[command]
+#[tauri::command]
 pub fn get_log_file_size(log_monitor: State<'_, Arc<LogMonitorService>>) -> Result<u64, String> {
     log_monitor
         .get_log_file_size()
@@ -50,7 +50,7 @@ pub fn get_log_file_size(log_monitor: State<'_, Arc<LogMonitorService>>) -> Resu
 }
 
 /// Read the last N lines from the log file
-#[command]
+#[tauri::command]
 pub fn read_last_log_lines(
     count: usize,
     log_monitor: State<'_, Arc<LogMonitorService>>,
@@ -61,7 +61,7 @@ pub fn read_last_log_lines(
 }
 
 /// Subscribe to log events (this will be handled by the frontend through events)
-#[command]
+#[tauri::command]
 pub fn subscribe_to_log_events(
     _log_monitor: State<'_, Arc<LogMonitorService>>,
 ) -> Result<(), String> {

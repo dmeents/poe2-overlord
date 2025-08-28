@@ -17,6 +17,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             check_poe2_process,
+            test_config_service,
             get_config,
             update_config,
             get_poe_client_log_path,

@@ -1,14 +1,16 @@
 use crate::models::AppConfig;
-use log::{info, warn};
+use log::{error, info, warn};
 use serde_json;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::sync::Mutex;
 use tauri::AppHandle;
 
 /// Configuration service that manages application settings
+#[derive(Clone)]
 pub struct ConfigService {
-    pub config: Mutex<AppConfig>,
+    pub config: Arc<Mutex<AppConfig>>,
     pub config_path: PathBuf,
 }
 
@@ -30,13 +32,17 @@ impl ConfigService {
         let config_path = config_dir.join("config.json");
 
         let service = Self {
-            config: Mutex::new(AppConfig::default()),
+            config: Arc::new(Mutex::new(AppConfig::default())),
             config_path,
         };
 
         // Load existing configuration or create default
         if let Err(e) = service.load_config() {
             warn!("Failed to load config, using defaults: {}", e);
+            // Try to save the default config to ensure we have a working file
+            if let Err(save_err) = service.save_config() {
+                error!("Failed to save default config: {}", save_err);
+            }
         }
 
         service
@@ -50,8 +56,24 @@ impl ConfigService {
             return Ok(());
         }
 
-        let content = fs::read_to_string(&self.config_path)?;
-        let config: AppConfig = serde_json::from_str(&content)?;
+        let content = match fs::read_to_string(&self.config_path) {
+            Ok(content) => content,
+            Err(e) => {
+                error!("Failed to read config file: {}", e);
+                return Err(Box::new(e));
+            }
+        };
+
+        let config: AppConfig = match serde_json::from_str(&content) {
+            Ok(config) => config,
+            Err(e) => {
+                error!("Failed to parse config file JSON: {}", e);
+                error!("Config file content: {}", content);
+                // If JSON parsing fails, try to backup the corrupted file and create a new one
+                self.backup_corrupted_config(&content)?;
+                return Err(Box::new(e));
+            }
+        };
 
         {
             let mut current_config = self.config.lock().unwrap();
@@ -65,11 +87,32 @@ impl ConfigService {
         Ok(())
     }
 
+    /// Backup corrupted config file and create a new one with defaults
+    fn backup_corrupted_config(&self, content: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let backup_path = self.config_path.with_extension("json.bak");
+        warn!("Backing up corrupted config to {:?}", backup_path);
+
+        // Write the corrupted content to backup file
+        fs::write(&backup_path, content)?;
+
+        // Create a new config file with defaults
+        let default_config = AppConfig::default();
+        let json_content = serde_json::to_string_pretty(&default_config)?;
+        fs::write(&self.config_path, json_content)?;
+
+        info!("Created new config file with defaults after backup");
+        Ok(())
+    }
+
     /// Save current configuration to file
     pub fn save_config(&self) -> Result<(), Box<dyn std::error::Error>> {
         let config = self.config.lock().unwrap();
         let content = serde_json::to_string_pretty(&*config)?;
-        fs::write(&self.config_path, content)?;
+
+        // Write to a temporary file first, then rename to ensure atomic write
+        let temp_path = self.config_path.with_extension("tmp");
+        fs::write(&temp_path, content)?;
+        fs::rename(&temp_path, &self.config_path)?;
 
         info!("Configuration saved successfully to {:?}", self.config_path);
         Ok(())
@@ -109,7 +152,7 @@ impl ConfigService {
     pub fn get_poe_client_log_path(&self) -> String {
         let config = self.config.lock().unwrap();
         let path = &config.poe_client_log_path;
-        
+
         // If the path is empty, return the OS-specific default
         if path.is_empty() {
             crate::utils::PoeClientLogPaths::get_default_path_string()

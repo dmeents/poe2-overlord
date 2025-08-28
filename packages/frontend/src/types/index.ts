@@ -11,6 +11,36 @@ export interface ZoneChangeEvent {
   timestamp: string;
 }
 
+export interface ActChangeEvent {
+  act_name: string;
+  timestamp: string;
+}
+
+export interface SceneChangeEvent {
+  type: 'Zone' | 'Act';
+  zone_name?: string;
+  act_name?: string;
+  timestamp: string;
+}
+
+// Legacy compatibility - create SceneChangeEvent from ZoneChangeEvent
+export const createZoneSceneEvent = (
+  event: ZoneChangeEvent
+): SceneChangeEvent => ({
+  type: 'Zone',
+  zone_name: event.zone_name,
+  timestamp: event.timestamp,
+});
+
+// Legacy compatibility - create SceneChangeEvent from ActChangeEvent
+export const createActSceneEvent = (
+  event: ActChangeEvent
+): SceneChangeEvent => ({
+  type: 'Act',
+  act_name: event.act_name,
+  timestamp: event.timestamp,
+});
+
 export interface ProcessStatusProps {
   poe2Running: boolean;
   processInfo: ProcessInfo | null;

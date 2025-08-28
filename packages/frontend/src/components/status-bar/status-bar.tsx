@@ -1,5 +1,6 @@
 import { usePoe2Process, useZoneMonitoring } from '@/hooks';
 import {
+  ChartBarIcon,
   CogIcon,
   ComputerDesktopIcon,
   ServerIcon,
@@ -11,12 +12,16 @@ import { StatusIndicator } from './status-indicator';
 
 export const StatusBar = () => {
   const { processInfo } = usePoe2Process();
-  const { currentZone, isMonitoring } = useZoneMonitoring();
+  const { currentZone, currentAct, isMonitoring } = useZoneMonitoring();
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;
 
   const handleSettingsClick = () => {
     navigate({ to: '/settings' });
+  };
+
+  const handleActivityClick = () => {
+    navigate({ to: '/activity' });
   };
 
   const getZoneDisplayText = () => {
@@ -25,7 +30,14 @@ export const StatusBar = () => {
     }
 
     if (currentZone) {
+      if (currentAct) {
+        return `${currentAct} - ${currentZone}`;
+      }
       return `Current Zone: ${currentZone}`;
+    }
+
+    if (currentAct) {
+      return `Current Act: ${currentAct}`;
     }
 
     return 'Character active - monitoring zones...';
@@ -47,6 +59,11 @@ export const StatusBar = () => {
         </div>
         <div title='Logged out of POE2'>
           <StatusIndicator status={false} icon={<UserIcon />} size='sm' />
+        </div>
+        <div title='Activity Monitor'>
+          <Button variant='icon' size='xs' onClick={handleActivityClick}>
+            <ChartBarIcon />
+          </Button>
         </div>
         <div title='Settings'>
           <Button variant='icon' size='xs' onClick={handleSettingsClick}>

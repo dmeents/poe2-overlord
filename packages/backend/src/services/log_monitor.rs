@@ -28,37 +28,90 @@ pub struct ZoneChangeEvent {
     pub timestamp: String,
 }
 
-/// Zone change parser for detecting "[SCENE] Set Source [Zone Name]" patterns
-#[derive(Clone)]
-pub struct ZoneChangeParser;
+/// Act change event
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ActChangeEvent {
+    pub act_name: String,
+    pub timestamp: String,
+}
 
-impl ZoneChangeParser {
-    pub fn parse_line(&self, line: &str) -> Option<ZoneChangeEvent> {
+/// Combined scene change event that can represent either a zone or act change
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")]
+pub enum SceneChangeEvent {
+    Zone(ZoneChangeEvent),
+    Act(ActChangeEvent),
+}
+
+/// Scene change parser for detecting "[SCENE] Set Source [Zone/Act Name]" patterns
+#[derive(Clone)]
+pub struct SceneChangeParser;
+
+impl SceneChangeParser {
+    /// Parse a log line and return a scene change event if valid
+    pub fn parse_line(&self, line: &str) -> Option<SceneChangeEvent> {
         if line.contains("[SCENE] Set Source [") && line.contains("]") {
-            // Extract zone name from "[SCENE] Set Source [Zone Name]"
+            // Extract content from "[SCENE] Set Source [Content]"
             let prefix = "[SCENE] Set Source [";
             if let Some(start) = line.find(prefix) {
-                let zone_start = start + prefix.len();
-                if let Some(end) = line[zone_start..].find("]") {
-                    let zone_name = line[zone_start..zone_start + end].trim();
-                    if !zone_name.is_empty() {
-                        return Some(ZoneChangeEvent {
-                            zone_name: zone_name.to_string(),
+                let content_start = start + prefix.len();
+                if let Some(end) = line[content_start..].find("]") {
+                    let content = line[content_start..content_start + end].trim();
+
+                    // Skip null or empty content
+                    if content.is_empty() || content == "(null)" || content.to_lowercase() == "null"
+                    {
+                        return None;
+                    }
+
+                    // Determine if this is an Act or a Zone
+                    if self.is_act_content(&content) {
+                        return Some(SceneChangeEvent::Act(ActChangeEvent {
+                            act_name: content.to_string(),
                             timestamp: chrono::Utc::now().to_rfc3339(),
-                        });
+                        }));
+                    } else {
+                        return Some(SceneChangeEvent::Zone(ZoneChangeEvent {
+                            zone_name: content.to_string(),
+                            timestamp: chrono::Utc::now().to_rfc3339(),
+                        }));
                     }
                 }
             }
         }
         None
     }
+
+    /// Determine if the content represents an Act
+    fn is_act_content(&self, content: &str) -> bool {
+        let lower_content = content.to_lowercase();
+        lower_content.starts_with("act ")
+            || lower_content == "prologue"
+            || lower_content == "epilogue"
+            || lower_content.contains("act")
+    }
 }
 
-/// Service for monitoring and parsing the POE client log file for zone changes
+/// Legacy zone change parser for backward compatibility
+#[derive(Clone)]
+pub struct ZoneChangeParser;
+
+impl ZoneChangeParser {
+    pub fn parse_line(&self, line: &str) -> Option<ZoneChangeEvent> {
+        let scene_parser = SceneChangeParser;
+        if let Some(SceneChangeEvent::Zone(zone_event)) = scene_parser.parse_line(line) {
+            Some(zone_event)
+        } else {
+            None
+        }
+    }
+}
+
+/// Log monitor service that watches POE client log files for zone changes
 pub struct LogMonitorService {
     config_service: Arc<ConfigService>,
-    parser: ZoneChangeParser,
-    event_sender: broadcast::Sender<ZoneChangeEvent>,
+    parser: SceneChangeParser,
+    event_sender: broadcast::Sender<SceneChangeEvent>,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
 
@@ -70,15 +123,49 @@ impl LogMonitorService {
 
         Self {
             config_service,
-            parser: ZoneChangeParser,
+            parser: SceneChangeParser,
             event_sender,
             is_running,
         }
     }
 
-    /// Get the event receiver for subscribing to zone change events
-    pub fn subscribe(&self) -> broadcast::Receiver<ZoneChangeEvent> {
+    /// Get the event receiver for subscribing to scene change events
+    pub fn subscribe(&self) -> broadcast::Receiver<SceneChangeEvent> {
         self.event_sender.subscribe()
+    }
+
+    /// Get the event receiver for subscribing to zone change events (legacy compatibility)
+    pub fn subscribe_zones(&self) -> broadcast::Receiver<ZoneChangeEvent> {
+        let (zone_sender, zone_receiver) = broadcast::channel(1000);
+        let mut scene_receiver = self.event_sender.subscribe();
+
+        // Spawn a task to filter zone events
+        tokio::spawn(async move {
+            while let Ok(event) = scene_receiver.recv().await {
+                if let SceneChangeEvent::Zone(zone_event) = event {
+                    let _ = zone_sender.send(zone_event);
+                }
+            }
+        });
+
+        zone_receiver
+    }
+
+    /// Get the event receiver for subscribing to act change events
+    pub fn subscribe_acts(&self) -> broadcast::Receiver<ActChangeEvent> {
+        let (act_sender, act_receiver) = broadcast::channel(1000);
+        let mut scene_receiver = self.event_sender.subscribe();
+
+        // Spawn a task to filter act events
+        tokio::spawn(async move {
+            while let Ok(event) = scene_receiver.recv().await {
+                if let SceneChangeEvent::Act(act_event) = event {
+                    let _ = act_sender.send(act_event);
+                }
+            }
+        });
+
+        act_receiver
     }
 
     /// Start monitoring the log file
@@ -172,8 +259,8 @@ impl LogMonitorService {
     /// Main monitoring loop
     async fn monitor_log_file(
         log_path: &str,
-        event_sender: broadcast::Sender<ZoneChangeEvent>,
-        parser: ZoneChangeParser,
+        event_sender: broadcast::Sender<SceneChangeEvent>,
+        parser: SceneChangeParser,
         is_running: &Arc<tokio::sync::RwLock<bool>>,
     ) -> Result<(), LogMonitorError> {
         let path = Path::new(log_path);
@@ -242,8 +329,8 @@ impl LogMonitorService {
     async fn process_new_lines(
         path: &Path,
         last_position: &mut u64,
-        parser: &ZoneChangeParser,
-        event_sender: &broadcast::Sender<ZoneChangeEvent>,
+        parser: &SceneChangeParser,
+        event_sender: &broadcast::Sender<SceneChangeEvent>,
     ) -> Result<(), LogMonitorError> {
         let file = OpenOptions::new()
             .read(true)
@@ -260,11 +347,11 @@ impl LogMonitorService {
         for line in reader.lines() {
             let line = line.map_err(|e| LogMonitorError::FileOpen(e))?;
 
-            // Try to parse the line for zone changes
+            // Try to parse the line for scene changes
             if let Some(event) = parser.parse_line(&line) {
                 // Send event to subscribers
                 if let Err(e) = event_sender.send(event) {
-                    debug!("Failed to send zone change event: {}", e);
+                    debug!("Failed to send scene change event: {}", e);
                 }
             }
         }

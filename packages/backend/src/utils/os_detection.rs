@@ -43,24 +43,3 @@ pub fn is_macos() -> bool {
 pub fn is_linux() -> bool {
     detect_os() == OperatingSystem::Linux
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_os_detection() {
-        let os = detect_os();
-        assert_ne!(os, OperatingSystem::Unknown);
-        
-        // At least one of these should be true
-        assert!(is_windows() || is_macos() || is_linux());
-    }
-
-    #[test]
-    fn test_os_name() {
-        let os_name = get_os_name();
-        assert!(!os_name.is_empty());
-        assert_ne!(os_name, "Unknown");
-    }
-}

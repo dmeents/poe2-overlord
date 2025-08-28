@@ -19,8 +19,6 @@ pub struct OverlayState {
 pub struct AppConfig {
     /// Path to the POE client.txt file
     pub poe_client_log_path: String,
-    /// Whether to auto-start monitoring on app launch
-    pub auto_start_monitoring: bool,
     /// Log level for the application
     pub log_level: String,
 }
@@ -29,7 +27,6 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             poe_client_log_path: String::new(),
-            auto_start_monitoring: false,
             log_level: "info".to_string(),
         }
     }

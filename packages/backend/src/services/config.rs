@@ -117,21 +117,6 @@ impl ConfigService {
         })
     }
 
-    /// Get auto-start monitoring setting
-    pub fn get_auto_start_monitoring(&self) -> bool {
-        self.config.lock().unwrap().auto_start_monitoring
-    }
-
-    /// Set auto-start monitoring setting
-    pub fn set_auto_start_monitoring(
-        &self,
-        enabled: bool,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.update_field(|config| {
-            config.auto_start_monitoring = enabled;
-        })
-    }
-
     /// Get log level
     pub fn get_log_level(&self) -> String {
         self.config.lock().unwrap().log_level.clone()

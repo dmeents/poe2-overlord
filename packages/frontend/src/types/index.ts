@@ -31,6 +31,5 @@ export interface FooterProps {
 
 export interface AppConfig {
   poe_client_log_path: string;
-  auto_start_monitoring: boolean;
   log_level: string;
 }

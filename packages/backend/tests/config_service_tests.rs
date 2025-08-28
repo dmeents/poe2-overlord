@@ -18,7 +18,6 @@ fn test_config_creation_and_defaults() {
     // Test default values
     let config = config_service.get_config();
     assert_eq!(config.poe_client_log_path, "");
-    assert_eq!(config.auto_start_monitoring, false);
     assert_eq!(config.log_level, "info");
 }
 
@@ -35,7 +34,6 @@ fn test_config_save_and_load() {
     // Create a custom config
     let custom_config = AppConfig {
         poe_client_log_path: "/path/to/client.txt".to_string(),
-        auto_start_monitoring: true,
         log_level: "debug".to_string(),
     };
 
@@ -57,10 +55,6 @@ fn test_config_save_and_load() {
     assert_eq!(
         loaded_config.poe_client_log_path,
         custom_config.poe_client_log_path
-    );
-    assert_eq!(
-        loaded_config.auto_start_monitoring,
-        custom_config.auto_start_monitoring
     );
     assert_eq!(loaded_config.log_level, custom_config.log_level);
 }
@@ -84,9 +78,6 @@ fn test_config_field_updates() {
         "/new/path/to/client.txt"
     );
 
-    config_service.set_auto_start_monitoring(true).unwrap();
-    assert_eq!(config_service.get_auto_start_monitoring(), true);
-
     config_service.set_log_level("warn".to_string()).unwrap();
     assert_eq!(config_service.get_log_level(), "warn");
 
@@ -108,13 +99,11 @@ fn test_config_update_field_closure() {
     config_service
         .update_field(|config| {
             config.poe_client_log_path = "/closure/path".to_string();
-            config.auto_start_monitoring = true;
         })
         .unwrap();
 
     let config = config_service.get_config();
     assert_eq!(config.poe_client_log_path, "/closure/path");
-    assert_eq!(config.auto_start_monitoring, true);
     assert_eq!(config.log_level, "info"); // Should remain default
 }
 
@@ -132,14 +121,12 @@ fn test_config_persistence() {
     config_service
         .set_poe_client_log_path("/persistent/path".to_string())
         .unwrap();
-    config_service.set_auto_start_monitoring(true).unwrap();
 
     // Verify file content
     let content = fs::read_to_string(&config_path).unwrap();
     let saved_config: AppConfig = serde_json::from_str(&content).unwrap();
 
     assert_eq!(saved_config.poe_client_log_path, "/persistent/path");
-    assert_eq!(saved_config.auto_start_monitoring, true);
     assert_eq!(saved_config.log_level, "info");
 }
 
@@ -195,6 +182,5 @@ fn test_config_thread_safety() {
 
     // Both should return the same default config
     assert_eq!(config1.poe_client_log_path, config2.poe_client_log_path);
-    assert_eq!(config1.auto_start_monitoring, config2.auto_start_monitoring);
     assert_eq!(config1.log_level, config2.log_level);
 }

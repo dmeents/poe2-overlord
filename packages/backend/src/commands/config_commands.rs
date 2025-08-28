@@ -44,27 +44,6 @@ pub async fn set_poe_client_log_path(
         .map_err(|e| e.to_string())
 }
 
-/// Get the auto-start monitoring setting
-#[tauri::command]
-pub async fn get_auto_start_monitoring(
-    _app_handle: AppHandle,
-    config_service: State<'_, ConfigService>,
-) -> Result<bool, String> {
-    Ok(config_service.get_auto_start_monitoring())
-}
-
-/// Set the auto-start monitoring setting
-#[tauri::command]
-pub async fn set_auto_start_monitoring(
-    _app_handle: AppHandle,
-    config_service: State<'_, ConfigService>,
-    enabled: bool,
-) -> Result<(), String> {
-    config_service
-        .set_auto_start_monitoring(enabled)
-        .map_err(|e| e.to_string())
-}
-
 /// Get the log level setting
 #[tauri::command]
 pub async fn get_log_level(

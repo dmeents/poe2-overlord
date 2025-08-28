@@ -20,8 +20,6 @@ pub fn run() {
             update_config,
             get_poe_client_log_path,
             set_poe_client_log_path,
-            get_auto_start_monitoring,
-            set_auto_start_monitoring,
             get_log_level,
             set_log_level,
             reset_config_to_defaults

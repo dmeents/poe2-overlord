@@ -1,4 +1,4 @@
-import type { ProcessInfo, AppConfig } from '@/types';
+import type { AppConfig, ProcessInfo } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
 import { POE2_CONFIG } from './constants';
 
@@ -45,24 +45,6 @@ export const tauriUtils = {
       await invoke('set_poe_client_log_path', { path });
     } catch (error) {
       console.error('Failed to set POE client log path:', error);
-      throw error;
-    }
-  },
-
-  async getAutoStartMonitoring(): Promise<boolean> {
-    try {
-      return await invoke<boolean>('get_auto_start_monitoring');
-    } catch (error) {
-      console.error('Failed to get auto-start monitoring setting:', error);
-      throw error;
-    }
-  },
-
-  async setAutoStartMonitoring(enabled: boolean): Promise<void> {
-    try {
-      await invoke('set_auto_start_monitoring', { enabled });
-    } catch (error) {
-      console.error('Failed to set auto-start monitoring setting:', error);
       throw error;
     }
   },

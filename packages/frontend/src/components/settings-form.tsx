@@ -2,13 +2,7 @@ import { LoadingSpinner, Tooltip } from '@/components';
 import type { AppConfig } from '@/types';
 import { tauriUtils } from '@/utils/tauri';
 import { useEffect, useState } from 'react';
-import {
-  AlertMessage,
-  CheckboxInput,
-  FormField,
-  SelectInput,
-  TextInput,
-} from './form';
+import { AlertMessage, FormField, SelectInput, TextInput } from './form';
 
 interface SettingsFormProps {
   onConfigUpdate?: (config: AppConfig) => void;
@@ -17,7 +11,6 @@ interface SettingsFormProps {
 export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   const [config, setConfig] = useState<AppConfig>({
     poe_client_log_path: '',
-    auto_start_monitoring: false,
     log_level: 'info',
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -136,36 +129,6 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         <AlertMessage type='error' message={error || ''} />
         <AlertMessage type='success' message={success || ''} />
       </div>
-
-      {/* Auto-start Monitoring */}
-      <CheckboxInput
-        id='auto-start-monitoring'
-        checked={config.auto_start_monitoring}
-        onChange={checked =>
-          handleInputChange('auto_start_monitoring', checked)
-        }
-        label={
-          <Tooltip
-            content={
-              <div>
-                <p>
-                  <strong>Auto-start Monitoring:</strong> When enabled, the
-                  application will automatically start monitoring the POE2
-                  process as soon as it launches, without requiring manual
-                  intervention.
-                </p>
-                <p className='mt-2 text-zinc-300'>
-                  This is useful if you want the application to begin monitoring
-                  immediately when you start it, rather than having to manually
-                  click the start button each time.
-                </p>
-              </div>
-            }
-          >
-            Auto-start monitoring on app launch
-          </Tooltip>
-        }
-      />
 
       {/* POE Client Log Path */}
       <FormField

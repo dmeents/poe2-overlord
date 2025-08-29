@@ -1,13 +1,11 @@
+use crate::models::{events::SceneChangeEvent, LocationType, TimeTrackingEvent};
 use crate::services::{
-    config::ConfigService,
-    log_monitor::LogMonitorService,
-    process_monitor::ProcessMonitor,
+    config::ConfigService, log_monitor::LogMonitorService, process_monitor::ProcessMonitor,
     time_tracking::TimeTrackingService,
 };
-use crate::models::{events::SceneChangeEvent, LocationType, TimeTrackingEvent};
 use log::{debug, error, info, warn};
 use std::sync::Arc;
-use tauri::{Manager, Emitter};
+use tauri::{Emitter, Manager};
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Setup logging
@@ -97,6 +95,9 @@ fn start_process_monitoring(
                             if let Err(e) = log_monitor.start_monitoring().await {
                                 error!("Failed to start log monitoring: {}", e);
                             }
+                            
+                            // Set POE process start time for time tracking
+                            time_tracking.set_poe_process_start_time();
                         } else if !is_poe_running && was_poe_running {
                             // POE process just stopped, stop log monitoring
                             info!("POE2 process stopped, stopping log monitoring");
@@ -105,12 +106,13 @@ fn start_process_monitoring(
                             }
 
                             // End all active time tracking sessions when game exits
-                            info!(
-                                "POE2 process stopped, ending all active time tracking sessions"
-                            );
+                            info!("POE2 process stopped, ending all active time tracking sessions");
                             if let Err(e) = time_tracking.end_all_active_sessions().await {
                                 error!("Failed to end active time tracking sessions: {}", e);
                             }
+                            
+                            // Clear POE process start time for time tracking
+                            time_tracking.clear_poe_process_start_time();
                         }
 
                         was_poe_running = is_poe_running;
@@ -146,9 +148,29 @@ fn start_log_event_emission(
 
                 // Handle time tracking based on the event type
                 match &event {
+                    SceneChangeEvent::Hideout(hideout_event) => {
+                        debug!("Hideout change detected: {}", hideout_event.hideout_name);
+
+                        // End any active act session when entering a hideout
+                        if let Err(e) = time_tracking.end_sessions_by_type(&LocationType::Act).await
+                        {
+                            error!("Failed to end act sessions when entering hideout: {}", e);
+                        }
+
+                        // Start time tracking for the hideout
+                        if let Err(e) = time_tracking
+                            .start_session(
+                                hideout_event.hideout_name.clone(),
+                                LocationType::Hideout,
+                            )
+                            .await
+                        {
+                            error!("Failed to start hideout time tracking: {}", e);
+                        }
+                    }
                     SceneChangeEvent::Zone(zone_event) => {
                         debug!("Zone change detected: {}", zone_event.zone_name);
-                        
+
                         // Start time tracking for the new zone
                         if let Err(e) = time_tracking
                             .start_session(zone_event.zone_name.clone(), LocationType::Zone)
@@ -159,7 +181,7 @@ fn start_log_event_emission(
                     }
                     SceneChangeEvent::Act(act_event) => {
                         debug!("Act change detected: {}", act_event.act_name);
-                        
+
                         // Start time tracking for the new act
                         if let Err(e) = time_tracking
                             .start_session(act_event.act_name.clone(), LocationType::Act)

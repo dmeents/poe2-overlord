@@ -1,6 +1,6 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::{LocationSession, LocationStats, LocationType, TimeTrackingEvent};
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -18,6 +18,7 @@ pub struct TimeTrackingService {
     stats_cache: Arc<RwLock<HashMap<String, LocationStats>>>,
     event_sender: broadcast::Sender<TimeTrackingEvent>,
     data_file_path: PathBuf,
+    poe_process_start_time: Arc<RwLock<Option<DateTime<Utc>>>>,
 }
 
 impl TimeTrackingService {
@@ -45,6 +46,7 @@ impl TimeTrackingService {
             stats_cache: Arc::new(RwLock::new(HashMap::new())),
             event_sender,
             data_file_path,
+            poe_process_start_time: Arc::new(RwLock::new(None)),
         };
 
         // Load existing data
@@ -70,6 +72,17 @@ impl TimeTrackingService {
 
         // End any existing session for this location type
         self.end_sessions_by_type(&location_type).await?;
+
+        // Special case: hideout sessions should also end act and zone sessions
+        if location_type == LocationType::Hideout {
+            self.end_sessions_by_type(&LocationType::Act).await?;
+            self.end_sessions_by_type(&LocationType::Zone).await?;
+        }
+
+        // Special case: zone and act sessions should end hideout sessions
+        if location_type == LocationType::Zone || location_type == LocationType::Act {
+            self.end_sessions_by_type(&LocationType::Hideout).await?;
+        }
 
         let session = LocationSession {
             location_id: location_id.clone(),
@@ -156,8 +169,8 @@ impl TimeTrackingService {
         }
     }
 
-    /// End all sessions of a specific type (useful when changing acts)
-    async fn end_sessions_by_type(&self, location_type: &LocationType) -> AppResult<()> {
+    /// End all sessions of a specific type (useful when changing acts or entering hideouts)
+    pub async fn end_sessions_by_type(&self, location_type: &LocationType) -> AppResult<()> {
         let sessions_to_end: Vec<String> = {
             let active_sessions = self.active_sessions.read().unwrap();
             active_sessions
@@ -296,6 +309,7 @@ impl TimeTrackingService {
         let type_prefix = match location_type {
             LocationType::Zone => "zone",
             LocationType::Act => "act",
+            LocationType::Hideout => "hideout",
         };
         format!("{}:{}", type_prefix, name.to_lowercase().replace(" ", "_"))
     }
@@ -330,6 +344,113 @@ impl TimeTrackingService {
 
         debug!("Time tracking data saved successfully");
         Ok(())
+    }
+
+    /// Calculate total play time from all completed and active sessions
+    pub fn get_total_play_time(&self) -> u64 {
+        let completed = self.completed_sessions.read().unwrap();
+        let active = self.active_sessions.read().unwrap();
+
+        // Sum completed session durations
+        let completed_time: u64 = completed
+            .iter()
+            .filter_map(|session| session.duration_seconds)
+            .sum();
+
+        // Sum active session durations (calculated from entry time to now)
+        let active_time: u64 = active
+            .values()
+            .map(|session| {
+                let now = Utc::now();
+                let duration = now.signed_duration_since(session.entry_timestamp);
+                // Use milliseconds for more precision, then convert to seconds
+                (duration.num_milliseconds().max(0) / 1000) as u64
+            })
+            .sum();
+
+        completed_time + active_time
+    }
+
+    /// Set the POE process start time
+    pub fn set_poe_process_start_time(&self) {
+        let mut start_time = self.poe_process_start_time.write().unwrap();
+        *start_time = Some(Utc::now());
+        info!("POE process start time set to: {:?}", start_time);
+    }
+
+    /// Clear the POE process start time (when process stops)
+    pub fn clear_poe_process_start_time(&self) {
+        let mut start_time = self.poe_process_start_time.write().unwrap();
+        *start_time = None;
+        info!("POE process start time cleared");
+    }
+
+    /// Get the POE process start time
+    pub fn get_poe_process_start_time(&self) -> Option<DateTime<Utc>> {
+        let start_time = self.poe_process_start_time.read().unwrap();
+        *start_time
+    }
+
+    /// Calculate total play time since POE process started
+    pub fn get_total_play_time_since_process_start(&self) -> u64 {
+        let poe_start_time = self.get_poe_process_start_time();
+
+        // If no POE process start time is set, return 0
+        if poe_start_time.is_none() {
+            return 0;
+        }
+
+        let poe_start = poe_start_time.unwrap();
+        let completed = self.completed_sessions.read().unwrap();
+        let active = self.active_sessions.read().unwrap();
+
+        // Sum completed session durations that started after POE process start
+        let completed_time: u64 = completed
+            .iter()
+            .filter(|session| session.entry_timestamp >= poe_start)
+            .filter_map(|session| session.duration_seconds)
+            .sum();
+
+        // Sum active session durations that started after POE process start
+        let active_time: u64 = active
+            .values()
+            .filter(|session| session.entry_timestamp >= poe_start)
+            .map(|session| {
+                let now = Utc::now();
+                let duration = now.signed_duration_since(session.entry_timestamp);
+                // Use milliseconds for more precision, then convert to seconds
+                (duration.num_milliseconds().max(0) / 1000) as u64
+            })
+            .sum();
+
+        completed_time + active_time
+    }
+
+    /// Calculate total time spent in hideout
+    pub fn get_total_hideout_time(&self) -> u64 {
+        let completed = self.completed_sessions.read().unwrap();
+        let active = self.active_sessions.read().unwrap();
+
+        // Sum completed hideout session durations
+        let completed_time: u64 = completed
+            .iter()
+            .filter(|session| session.location_type == LocationType::Hideout)
+            .filter_map(|session| session.duration_seconds)
+            .sum();
+
+        // Add active hideout session time if any
+        let active_time: u64 = active
+            .values()
+            .filter(|session| session.location_type == LocationType::Hideout)
+            .map(|session| {
+                let now = Utc::now();
+                let duration = now.signed_duration_since(session.entry_timestamp);
+                // Use milliseconds for more precision, then convert to seconds
+                (duration.num_milliseconds().max(0) / 1000) as u64
+            })
+            .sum();
+
+        completed_time + active_time
     }
 
     /// Load time tracking data from file
@@ -426,6 +547,7 @@ impl std::fmt::Display for LocationType {
         match self {
             LocationType::Zone => write!(f, "Zone"),
             LocationType::Act => write!(f, "Act"),
+            LocationType::Hideout => write!(f, "Hideout"),
         }
     }
 }

@@ -77,6 +77,7 @@ pub async fn start_time_tracking_session(
     let location_type_enum = match location_type.to_lowercase().as_str() {
         "zone" => LocationType::Zone,
         "act" => LocationType::Act,
+        "hideout" => LocationType::Hideout,
         _ => return Err(format!("Invalid location type: {}", location_type)),
     };
 
@@ -150,6 +151,28 @@ pub async fn clear_all_time_tracking_data(
     Ok(())
 }
 
+/// Set the POE process start time
+#[tauri::command]
+pub async fn set_poe_process_start_time(
+    time_tracking: State<'_, Arc<TimeTrackingService>>,
+) -> Result<(), String> {
+    debug!("Setting POE process start time");
+    time_tracking.set_poe_process_start_time();
+    info!("POE process start time set successfully");
+    Ok(())
+}
+
+/// Clear the POE process start time
+#[tauri::command]
+pub async fn clear_poe_process_start_time(
+    time_tracking: State<'_, Arc<TimeTrackingService>>,
+) -> Result<(), String> {
+    debug!("Clearing POE process start time");
+    time_tracking.clear_poe_process_start_time();
+    info!("POE process start time cleared successfully");
+    Ok(())
+}
+
 /// Get time tracking summary (active sessions and recent stats)
 #[tauri::command]
 pub async fn get_time_tracking_summary(
@@ -160,16 +183,31 @@ pub async fn get_time_tracking_summary(
     let active_sessions = time_tracking.get_active_sessions();
     let all_stats = time_tracking.get_all_stats();
 
-    // Sort stats by total time (descending) and take top 10
-    let mut sorted_stats = all_stats;
+    // Filter out Hideouts and Acts, keeping only Zones for top locations calculation
+    let zone_stats: Vec<LocationStats> = all_stats
+        .into_iter()
+        .filter(|stat| stat.location_type == LocationType::Zone)
+        .collect();
+
+    // Sort zone stats by total time (descending) and take top 10
+    let mut sorted_stats = zone_stats;
     sorted_stats.sort_by(|a, b| b.total_time_seconds.cmp(&a.total_time_seconds));
     let top_stats = sorted_stats.into_iter().take(10).collect::<Vec<_>>();
+
+    // Calculate new metrics
+    let total_play_time = time_tracking.get_total_play_time();
+    let total_play_time_since_process_start =
+        time_tracking.get_total_play_time_since_process_start();
+    let total_hideout_time = time_tracking.get_total_hideout_time();
 
     let summary = serde_json::json!({
         "active_sessions": active_sessions,
         "top_locations": top_stats,
         "total_locations_tracked": top_stats.len(),
-        "total_active_sessions": active_sessions.len()
+        "total_active_sessions": active_sessions.len(),
+        "total_play_time_seconds": total_play_time,
+        "total_play_time_since_process_start_seconds": total_play_time_since_process_start,
+        "total_hideout_time_seconds": total_hideout_time
     });
 
     info!("Retrieved time tracking summary");

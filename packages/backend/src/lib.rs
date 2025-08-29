@@ -46,7 +46,9 @@ pub fn run() {
             end_all_active_sessions,
             has_stale_sessions,
             clear_all_time_tracking_data,
-            get_time_tracking_summary
+            get_time_tracking_summary,
+            set_poe_process_start_time,
+            clear_poe_process_start_time
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

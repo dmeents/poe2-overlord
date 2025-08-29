@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProcessInfo {
@@ -36,8 +36,8 @@ impl Default for AppConfig {
 /// Time tracking session for a specific location
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationSession {
-    pub location_id: String,        // Unique identifier for zone/act
-    pub location_name: String,      // Human-readable name
+    pub location_id: String,         // Unique identifier for zone/act
+    pub location_name: String,       // Human-readable name
     pub location_type: LocationType, // Zone or Act
     pub entry_timestamp: DateTime<Utc>,
     pub exit_timestamp: Option<DateTime<Utc>>, // None if currently active
@@ -48,6 +48,7 @@ pub struct LocationSession {
 pub enum LocationType {
     Zone,
     Act,
+    Hideout,
 }
 
 /// Aggregated statistics for a location

@@ -196,6 +196,15 @@ impl LogMonitorService {
                 if let Some(event) = parser.parse_line(line) {
                     // Check if this is actually a change before sending the event
                     let should_send = match &event {
+                        SceneChangeEvent::Hideout(hideout_event) => {
+                            // Use tokio::spawn_blocking for the async state update
+                            let state_manager = state_manager.clone();
+                            let hideout_name = hideout_event.hideout_name.clone();
+                            tokio::spawn(async move {
+                                state_manager.update_scene(&hideout_name).await;
+                            });
+                            true // We'll send the event, the state update happens asynchronously
+                        }
                         SceneChangeEvent::Zone(zone_event) => {
                             // Use tokio::spawn_blocking for the async state update
                             let state_manager = state_manager.clone();

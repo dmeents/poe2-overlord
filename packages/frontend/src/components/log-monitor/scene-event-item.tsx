@@ -1,8 +1,9 @@
-import type { SceneChangeEvent, getSceneEventName } from '@/types';
+import type { SceneChangeEvent } from '@/types';
+import { getSceneEventName } from '@/types';
 
 // Combined event type for unified display
 type SceneEvent = {
-  type: 'zone' | 'act';
+  type: 'zone' | 'act' | 'hideout';
   data: SceneChangeEvent;
   timestamp: string;
 };

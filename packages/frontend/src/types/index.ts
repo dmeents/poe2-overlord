@@ -16,10 +16,15 @@ export interface ActChangeEvent {
   timestamp: string;
 }
 
+export interface HideoutChangeEvent {
+  hideout_name: string;
+  timestamp: string;
+}
+
 export interface LocationSession {
   location_id: string;
   location_name: string;
-  location_type: 'Zone' | 'Act';
+  location_type: 'Zone' | 'Act' | 'Hideout';
   entry_timestamp: string;
   exit_timestamp?: string;
   duration_seconds?: number;
@@ -28,7 +33,7 @@ export interface LocationSession {
 export interface LocationStats {
   location_id: string;
   location_name: string;
-  location_type: 'Zone' | 'Act';
+  location_type: 'Zone' | 'Act' | 'Hideout';
   total_visits: number;
   total_time_seconds: number;
   average_session_seconds: number;
@@ -40,12 +45,16 @@ export interface TimeTrackingSummary {
   top_locations: LocationStats[];
   total_locations_tracked: number;
   total_active_sessions: number;
+  total_play_time_seconds: number;
+  total_play_time_since_process_start_seconds: number;
+  total_hideout_time_seconds: number;
 }
 
 // Updated to match the new backend SceneChangeEvent structure
 export type SceneChangeEvent =
   | { type: 'Zone'; Zone: ZoneChangeEvent }
-  | { type: 'Act'; Act: ActChangeEvent };
+  | { type: 'Act'; Act: ActChangeEvent }
+  | { type: 'Hideout'; Hideout: HideoutChangeEvent };
 
 // Helper functions to extract data from SceneChangeEvent
 export const getSceneEventName = (event: SceneChangeEvent): string => {
@@ -54,6 +63,8 @@ export const getSceneEventName = (event: SceneChangeEvent): string => {
       return event.Zone.zone_name;
     case 'Act':
       return event.Act.act_name;
+    case 'Hideout':
+      return event.Hideout.hideout_name;
   }
 };
 
@@ -63,6 +74,8 @@ export const getSceneEventTimestamp = (event: SceneChangeEvent): string => {
       return event.Zone.timestamp;
     case 'Act':
       return event.Act.timestamp;
+    case 'Hideout':
+      return event.Hideout.timestamp;
   }
 };
 
@@ -76,6 +89,12 @@ export const isActEvent = (
   event: SceneChangeEvent
 ): event is { type: 'Act'; Act: ActChangeEvent } => {
   return event.type === 'Act';
+};
+
+export const isHideoutEvent = (
+  event: SceneChangeEvent
+): event is { type: 'Hideout'; Hideout: HideoutChangeEvent } => {
+  return event.type === 'Hideout';
 };
 
 export interface ProcessStatusProps {

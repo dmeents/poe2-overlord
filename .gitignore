@@ -35,6 +35,7 @@ src-tauri/gen/
 # TanStack Router
 **/routeTree.gen.ts
 **/routes/.cache/
+**/.tanstack/tmp
 
 # Python (legacy)
 __pycache__/

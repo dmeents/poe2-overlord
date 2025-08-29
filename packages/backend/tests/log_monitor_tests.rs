@@ -7,15 +7,27 @@ async fn test_scene_change_parser() {
     let parser = SceneChangeParser;
 
     // Test valid zone change line
-    let line = "[SCENE] Set Source [Felled Hideout]";
+    let line = "[SCENE] Set Source [The Coast]";
     let event = parser.parse_line(line);
 
     assert!(event.is_some());
     if let Some(SceneChangeEvent::Zone(zone_event)) = event {
-        assert_eq!(zone_event.zone_name, "Felled Hideout");
+        assert_eq!(zone_event.zone_name, "The Coast");
         assert!(!zone_event.timestamp.is_empty());
     } else {
         panic!("Expected Zone event");
+    }
+
+    // Test valid hideout change line
+    let line = "[SCENE] Set Source [Felled Hideout]";
+    let event = parser.parse_line(line);
+
+    assert!(event.is_some());
+    if let Some(SceneChangeEvent::Hideout(hideout_event)) = event {
+        assert_eq!(hideout_event.hideout_name, "Felled Hideout");
+        assert!(!hideout_event.timestamp.is_empty());
+    } else {
+        panic!("Expected Hideout event");
     }
 
     // Test valid act change line

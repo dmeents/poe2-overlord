@@ -4,7 +4,7 @@ import { SceneEventItem } from './scene-event-item';
 
 // Combined event type for unified display
 type SceneEvent = {
-  type: 'zone' | 'act';
+  type: 'zone' | 'act' | 'hideout';
   data: SceneChangeEvent;
   timestamp: string;
 };

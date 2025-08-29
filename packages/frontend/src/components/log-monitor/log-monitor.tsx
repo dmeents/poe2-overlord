@@ -9,7 +9,7 @@ import { RecentLogLines } from './recent-log-lines';
 
 // Combined event type for unified display
 export type SceneEvent = {
-  type: 'zone' | 'act';
+  type: 'zone' | 'act' | 'hideout';
   data: SceneChangeEvent;
   timestamp: string;
 };
@@ -32,12 +32,14 @@ export function LogMonitor() {
       const sceneEvent = event.payload as SceneChangeEvent;
       setSceneEvents(prev => [
         {
-          type: sceneEvent.type.toLowerCase() as 'zone' | 'act',
+          type: sceneEvent.type.toLowerCase() as 'zone' | 'act' | 'hideout',
           data: sceneEvent,
           timestamp:
             sceneEvent.type === 'Zone'
               ? sceneEvent.Zone.timestamp
-              : sceneEvent.Act.timestamp,
+              : sceneEvent.type === 'Act'
+                ? sceneEvent.Act.timestamp
+                : sceneEvent.Hideout.timestamp,
         },
         ...prev,
       ]);

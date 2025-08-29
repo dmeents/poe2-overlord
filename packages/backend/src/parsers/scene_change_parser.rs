@@ -1,9 +1,11 @@
-use crate::models::events::{ActChangeEvent, SceneChangeEvent, ZoneChangeEvent};
+use crate::models::events::{
+    ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
+};
 
 /// Trait for parsing log lines into events
 pub trait LogParser {
     type Event;
-    
+
     /// Parse a log line and return an event if valid
     fn parse_line(&self, line: &str) -> Option<Self::Event>;
 }
@@ -34,8 +36,13 @@ impl LogParser for SceneChangeParser {
                         return None;
                     }
 
-                    // Determine if this is an Act or a Zone
-                    if self.is_act_content(&content) {
+                    // Determine if this is an Act, Zone, or Hideout
+                    if self.is_hideout_content(&content) {
+                        return Some(SceneChangeEvent::Hideout(HideoutChangeEvent {
+                            hideout_name: content.to_string(),
+                            timestamp: chrono::Utc::now().to_rfc3339(),
+                        }));
+                    } else if self.is_act_content(&content) {
                         return Some(SceneChangeEvent::Act(ActChangeEvent {
                             act_name: content.to_string(),
                             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -54,6 +61,12 @@ impl LogParser for SceneChangeParser {
 }
 
 impl SceneChangeParser {
+    /// Determine if the content represents a Hideout
+    fn is_hideout_content(&self, content: &str) -> bool {
+        let lower_content = content.to_lowercase();
+        lower_content.contains("hideout")
+    }
+
     /// Determine if the content represents an Act
     fn is_act_content(&self, content: &str) -> bool {
         let lower_content = content.to_lowercase();

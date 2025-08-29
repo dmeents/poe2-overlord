@@ -34,7 +34,16 @@ pub fn run() {
             is_log_monitoring_active,
             get_log_file_size,
             read_last_log_lines,
-            subscribe_to_log_events
+            subscribe_to_log_events,
+            // Time tracking commands
+            get_active_sessions,
+            get_completed_sessions,
+            get_all_location_stats,
+            get_location_stats,
+            start_time_tracking_session,
+            end_time_tracking_session,
+            clear_all_time_tracking_data,
+            get_time_tracking_summary
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

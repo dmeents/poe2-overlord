@@ -16,6 +16,32 @@ export interface ActChangeEvent {
   timestamp: string;
 }
 
+export interface LocationSession {
+  location_id: string;
+  location_name: string;
+  location_type: 'Zone' | 'Act';
+  entry_timestamp: string;
+  exit_timestamp?: string;
+  duration_seconds?: number;
+}
+
+export interface LocationStats {
+  location_id: string;
+  location_name: string;
+  location_type: 'Zone' | 'Act';
+  total_visits: number;
+  total_time_seconds: number;
+  average_session_seconds: number;
+  last_visited?: string;
+}
+
+export interface TimeTrackingSummary {
+  active_sessions: LocationSession[];
+  top_locations: LocationStats[];
+  total_locations_tracked: number;
+  total_active_sessions: number;
+}
+
 export interface SceneChangeEvent {
   type: 'Zone' | 'Act';
   zone_name?: string;

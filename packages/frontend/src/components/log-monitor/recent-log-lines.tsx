@@ -4,7 +4,7 @@ interface RecentLogLinesProps {
 
 export function RecentLogLines({ lastLines }: RecentLogLinesProps) {
   return (
-    <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+    <div className='bg-zinc-900/50 p-4 border border-zinc-800'>
       <h3 className='text-lg font-semibold text-white mb-3'>
         Recent Log Lines
       </h3>

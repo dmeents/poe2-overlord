@@ -43,6 +43,8 @@ pub fn run() {
             get_location_stats,
             start_time_tracking_session,
             end_time_tracking_session,
+            end_all_active_sessions,
+            has_stale_sessions,
             clear_all_time_tracking_data,
             get_time_tracking_summary
         ])

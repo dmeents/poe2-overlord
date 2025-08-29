@@ -52,16 +52,7 @@ export function TimeTrackingDashboard() {
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
       <div className='flex items-center justify-between'>
-        <div>
-          <h2 className='text-2xl font-bold text-white'>
-            Time Tracking Dashboard
-          </h2>
-          <p className='text-zinc-400 mt-1'>
-            Monitor your time spent in different game locations
-          </p>
-        </div>
         <div className='flex items-center gap-3'>
           <Button onClick={refreshData} variant='outline' size='sm'>
             Refresh

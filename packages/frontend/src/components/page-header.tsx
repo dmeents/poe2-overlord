@@ -24,7 +24,7 @@ export function PageHeader({
   };
 
   return (
-    <div className='w-full py-3 px-4 sm:px-6 lg:px-8'>
+    <div className='w-full py-6 px-4 sm:px-6 lg:px-8'>
       <div className='flex items-center justify-between mb-4'>
         <h1 className='text-3xl font-bold text-zinc-100 font-cusrive'>
           {title}

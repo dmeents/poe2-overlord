@@ -12,7 +12,7 @@ export function MonitoringStatus({
   logFileSize,
 }: MonitoringStatusProps) {
   return (
-    <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+    <div className='bg-zinc-900/50 p-4 border border-zinc-800'>
       <h3 className='text-lg font-semibold text-white mb-3'>
         Monitoring Status
       </h3>
@@ -20,7 +20,7 @@ export function MonitoringStatus({
         <div className='flex items-center justify-between'>
           <span className='text-zinc-300'>Status:</span>
           <span
-            className={`px-2 py-1 rounded text-sm font-medium ${
+            className={`px-2 py-1 text-sm font-medium ${
               isMonitoring
                 ? 'bg-green-900/50 text-green-300'
                 : 'bg-red-900/50 text-red-300'
@@ -32,7 +32,7 @@ export function MonitoringStatus({
         <div className='flex items-center justify-between'>
           <span className='text-zinc-300'>POE Process:</span>
           <span
-            className={`px-2 py-1 rounded text-sm font-medium ${
+            className={`px-2 py-1 text-sm font-medium ${
               poeProcessStatus?.running
                 ? 'bg-green-900/50 text-green-300'
                 : 'bg-red-900/50 text-red-300'

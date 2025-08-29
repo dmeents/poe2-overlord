@@ -21,7 +21,7 @@ export function ActivityLog({
   onClearEvents,
 }: ActivityLogProps) {
   return (
-    <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+    <div className='bg-zinc-900/50 p-4 border border-zinc-800'>
       <div className='flex items-center justify-between mb-4'>
         <h3 className='text-lg font-semibold text-white'>Activity Log</h3>
         <Button

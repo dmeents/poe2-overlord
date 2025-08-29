@@ -42,30 +42,41 @@ export interface TimeTrackingSummary {
   total_active_sessions: number;
 }
 
-export interface SceneChangeEvent {
-  type: 'Zone' | 'Act';
-  zone_name?: string;
-  act_name?: string;
-  timestamp: string;
-}
+// Updated to match the new backend SceneChangeEvent structure
+export type SceneChangeEvent =
+  | { type: 'Zone'; Zone: ZoneChangeEvent }
+  | { type: 'Act'; Act: ActChangeEvent };
 
-// Legacy compatibility - create SceneChangeEvent from ZoneChangeEvent
-export const createZoneSceneEvent = (
-  event: ZoneChangeEvent
-): SceneChangeEvent => ({
-  type: 'Zone',
-  zone_name: event.zone_name,
-  timestamp: event.timestamp,
-});
+// Helper functions to extract data from SceneChangeEvent
+export const getSceneEventName = (event: SceneChangeEvent): string => {
+  switch (event.type) {
+    case 'Zone':
+      return event.Zone.zone_name;
+    case 'Act':
+      return event.Act.act_name;
+  }
+};
 
-// Legacy compatibility - create SceneChangeEvent from ActChangeEvent
-export const createActSceneEvent = (
-  event: ActChangeEvent
-): SceneChangeEvent => ({
-  type: 'Act',
-  act_name: event.act_name,
-  timestamp: event.timestamp,
-});
+export const getSceneEventTimestamp = (event: SceneChangeEvent): string => {
+  switch (event.type) {
+    case 'Zone':
+      return event.Zone.timestamp;
+    case 'Act':
+      return event.Act.timestamp;
+  }
+};
+
+export const isZoneEvent = (
+  event: SceneChangeEvent
+): event is { type: 'Zone'; Zone: ZoneChangeEvent } => {
+  return event.type === 'Zone';
+};
+
+export const isActEvent = (
+  event: SceneChangeEvent
+): event is { type: 'Act'; Act: ActChangeEvent } => {
+  return event.type === 'Act';
+};
 
 export interface ProcessStatusProps {
   poe2Running: boolean;

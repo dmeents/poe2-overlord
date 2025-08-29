@@ -1,4 +1,4 @@
-import type { ActChangeEvent, ProcessInfo, ZoneChangeEvent } from '@/types';
+import type { ProcessInfo, SceneChangeEvent } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
@@ -10,7 +10,7 @@ import { RecentLogLines } from './recent-log-lines';
 // Combined event type for unified display
 export type SceneEvent = {
   type: 'zone' | 'act';
-  data: ZoneChangeEvent | ActChangeEvent;
+  data: SceneChangeEvent;
   timestamp: string;
 };
 
@@ -27,26 +27,17 @@ export function LogMonitor() {
     // Check initial monitoring status
     checkMonitoringStatus();
 
-    // Set up event listeners
-    const unlistenZone = listen('log-zone-change', event => {
-      const zoneEvent = event.payload as ZoneChangeEvent;
+    // Set up event listeners - now using unified scene change events
+    const unlistenScene = listen('log-scene-change', event => {
+      const sceneEvent = event.payload as SceneChangeEvent;
       setSceneEvents(prev => [
         {
-          type: 'zone',
-          data: zoneEvent,
-          timestamp: zoneEvent.timestamp,
-        },
-        ...prev,
-      ]);
-    });
-
-    const unlistenAct = listen('log-act-change', event => {
-      const actEvent = event.payload as ActChangeEvent;
-      setSceneEvents(prev => [
-        {
-          type: 'act',
-          data: actEvent,
-          timestamp: actEvent.timestamp,
+          type: sceneEvent.type.toLowerCase() as 'zone' | 'act',
+          data: sceneEvent,
+          timestamp:
+            sceneEvent.type === 'Zone'
+              ? sceneEvent.Zone.timestamp
+              : sceneEvent.Act.timestamp,
         },
         ...prev,
       ]);
@@ -60,8 +51,7 @@ export function LogMonitor() {
 
     // Cleanup listeners
     return () => {
-      unlistenZone.then(f => f());
-      unlistenAct.then(f => f());
+      unlistenScene.then(f => f());
       unlistenProcess.then(f => f());
     };
   }, []);

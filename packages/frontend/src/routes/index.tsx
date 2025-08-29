@@ -25,6 +25,11 @@ function Index() {
                 View Activity Monitor
               </Button>
             </Link>
+            <Link to='/time-tracking'>
+              <Button variant='primary' size='lg'>
+                Time Tracking Dashboard
+              </Button>
+            </Link>
             <Link to='/settings'>
               <Button variant='outline' size='lg'>
                 Settings

@@ -1,11 +1,11 @@
-import type { ActChangeEvent, ZoneChangeEvent } from '@/types';
+import type { SceneChangeEvent } from '@/types';
 import { Button } from '../button';
 import { SceneEventItem } from './scene-event-item';
 
 // Combined event type for unified display
 type SceneEvent = {
   type: 'zone' | 'act';
-  data: ZoneChangeEvent | ActChangeEvent;
+  data: SceneChangeEvent;
   timestamp: string;
 };
 

@@ -100,44 +100,42 @@ function ActivityMonitor() {
 
   return (
     <div className='min-h-screen'>
-      <div className='w-full py-3 px-4 sm:px-6 lg:px-8'>
-        <PageHeader
-          title='Activity Monitor'
-          subtitle='Monitor your Path of Exile 2 gameplay in real-time, track zone changes, act transitions, and character movements.'
-        />
+      <PageHeader
+        title='Activity Monitor'
+        subtitle='Monitor your Path of Exile 2 gameplay in real-time, track zone changes, act transitions, and character movements.'
+      />
 
-        {/* Content Container */}
-        <div className='shadow-lg border border-zinc-700 bg-zinc-900 p-6 w-full'>
-          <div className='space-y-6'>
-            {/* Header */}
-            <div className='flex items-center justify-between'>
-              <h2 className='text-xl font-semibold text-zinc-200'>
-                Scene Monitor
-              </h2>
-              <div className='flex items-center space-x-3'>
-                <Button onClick={refreshLogInfo} variant='secondary' size='sm'>
-                  Refresh
-                </Button>
-              </div>
+      {/* Content Container */}
+      <div className='shadow-lg border border-zinc-700 bg-zinc-900 p-6 w-full'>
+        <div className='space-y-6'>
+          {/* Header */}
+          <div className='flex items-center justify-between'>
+            <h2 className='text-xl font-semibold text-zinc-200'>
+              Scene Monitor
+            </h2>
+            <div className='flex items-center space-x-3'>
+              <Button onClick={refreshLogInfo} variant='secondary' size='sm'>
+                Refresh
+              </Button>
             </div>
-
-            {/* Status and Info */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <MonitoringStatus
-                isMonitoring={isMonitoring}
-                poeProcessStatus={poeProcessStatus}
-                logFileSize={logFileSize}
-              />
-              <RecentLogLines lastLines={lastLines} />
-            </div>
-
-            {/* Activity Log */}
-            <ActivityLog
-              sceneEvents={sceneEvents}
-              isMonitoring={isMonitoring}
-              onClearEvents={clearEvents}
-            />
           </div>
+
+          {/* Status and Info */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <MonitoringStatus
+              isMonitoring={isMonitoring}
+              poeProcessStatus={poeProcessStatus}
+              logFileSize={logFileSize}
+            />
+            <RecentLogLines lastLines={lastLines} />
+          </div>
+
+          {/* Activity Log */}
+          <ActivityLog
+            sceneEvents={sceneEvents}
+            isMonitoring={isMonitoring}
+            onClearEvents={clearEvents}
+          />
         </div>
       </div>
     </div>

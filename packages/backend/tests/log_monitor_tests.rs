@@ -1,4 +1,6 @@
-use app_lib::services::log_monitor::*;
+use app_lib::parsers::SceneChangeParser;
+use app_lib::parsers::scene_change_parser::LogParser;
+use app_lib::models::events::SceneChangeEvent;
 
 #[tokio::test]
 async fn test_scene_change_parser() {
@@ -98,9 +100,10 @@ async fn test_scene_change_parser_edge_cases() {
 async fn test_scene_change_parser_null_filtering() {
     let parser = SceneChangeParser;
 
-    // Test null zone filtering
+    // Test null/empty content filtering
     let null_test_cases = [
         "[SCENE] Set Source [(null)]",
+        "[SCENE] Set Source [undefined]",
         "[SCENE] Set Source [null]",
         "[SCENE] Set Source [NULL]",
         "[SCENE] Set Source []",
@@ -109,89 +112,55 @@ async fn test_scene_change_parser_null_filtering() {
 
     for line in null_test_cases {
         let event = parser.parse_line(line);
-        assert!(
-            event.is_none(),
-            "Should filter out null/empty content: {}",
-            line
-        );
+        assert!(event.is_none(), "Should not parse null/empty content: {}", line);
     }
 }
 
 #[tokio::test]
-async fn test_act_detection_logic() {
+async fn test_scene_change_parser_act_detection() {
     let parser = SceneChangeParser;
 
-    // Test act detection
-    let act_lines = [
+    // Test act detection logic
+    let act_test_cases = [
         "[SCENE] Set Source [Act 1]",
         "[SCENE] Set Source [Act 2]",
         "[SCENE] Set Source [Act 3]",
         "[SCENE] Set Source [Prologue]",
         "[SCENE] Set Source [Epilogue]",
-        "[SCENE] Set Source [Act 4]",
-        "[SCENE] Set Source [Act 5]",
+        "[SCENE] Set Source [atlas]",
+        "[SCENE] Set Source [Atlas]",
+        "[SCENE] Set Source [ACT 1]",
+        "[SCENE] Set Source [act 1]",
     ];
 
-    for line in act_lines {
+    for line in act_test_cases {
         let event = parser.parse_line(line);
-        assert!(event.is_some(), "Failed to parse act line: {}", line);
+        assert!(event.is_some(), "Failed to parse act: {}", line);
 
         if let Some(SceneChangeEvent::Act(_)) = event {
-            // This is correct
+            // This is an act event, which is what we expect
         } else {
             panic!("Expected Act event for: {}", line);
         }
     }
 
-    // Test zone detection (non-act content)
-    let zone_lines = [
-        "[SCENE] Set Source [Felled Hideout]",
+    // Test zone detection (should not be detected as acts)
+    let zone_test_cases = [
         "[SCENE] Set Source [Lioneye's Watch]",
         "[SCENE] Set Source [The Coast]",
         "[SCENE] Set Source [Tidal Island]",
         "[SCENE] Set Source [Submerged Passage]",
-        "[SCENE] Set Source [The Forest]",
-        "[SCENE] Set Source [The Prison]",
+        "[SCENE] Set Source [The Mud Flats]",
     ];
 
-    for line in zone_lines {
+    for line in zone_test_cases {
         let event = parser.parse_line(line);
-        assert!(event.is_some(), "Failed to parse zone line: {}", line);
+        assert!(event.is_some(), "Failed to parse zone: {}", line);
 
         if let Some(SceneChangeEvent::Zone(_)) = event {
-            // This is correct
+            // This is a zone event, which is what we expect
         } else {
             panic!("Expected Zone event for: {}", line);
         }
     }
-}
-
-#[tokio::test]
-async fn test_legacy_zone_change_parser() {
-    let parser = ZoneChangeParser;
-
-    // Test valid zone change line
-    let line = "[SCENE] Set Source [Felled Hideout]";
-    let event = parser.parse_line(line);
-
-    assert!(event.is_some());
-    if let Some(zone_event) = event {
-        assert_eq!(zone_event.zone_name, "Felled Hideout");
-        assert!(!zone_event.timestamp.is_empty());
-    }
-
-    // Test act line should not be parsed as zone
-    let line = "[SCENE] Set Source [Act 1]";
-    let event = parser.parse_line(line);
-    assert!(event.is_none());
-
-    // Test null line should not be parsed
-    let line = "[SCENE] Set Source [(null)]";
-    let event = parser.parse_line(line);
-    assert!(event.is_none());
-
-    // Test invalid line
-    let line = "Some other log line";
-    let event = parser.parse_line(line);
-    assert!(event.is_none());
 }

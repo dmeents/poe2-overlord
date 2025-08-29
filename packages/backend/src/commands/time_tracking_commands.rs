@@ -1,5 +1,5 @@
 use crate::models::{LocationSession, LocationStats, LocationType};
-use crate::services::TimeTrackingService;
+use crate::services::time_tracking::TimeTrackingService;
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
@@ -9,10 +9,7 @@ use tauri::State;
 pub async fn get_active_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<Vec<LocationSession>, String> {
-    debug!("Getting active time tracking sessions");
-
     let sessions = time_tracking.get_active_sessions();
-    info!("Retrieved {} active sessions", sessions.len());
 
     Ok(sessions)
 }

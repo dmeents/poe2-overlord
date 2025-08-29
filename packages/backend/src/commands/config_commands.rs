@@ -1,5 +1,5 @@
 use crate::models::AppConfig;
-use crate::services::ConfigService;
+use crate::services::config::ConfigService;
 use log::error;
 use tauri::State;
 

@@ -1,9 +1,9 @@
-import type { ActChangeEvent, ZoneChangeEvent } from '@/types';
+import type { SceneChangeEvent, getSceneEventName } from '@/types';
 
 // Combined event type for unified display
 type SceneEvent = {
   type: 'zone' | 'act';
-  data: ZoneChangeEvent | ActChangeEvent;
+  data: SceneChangeEvent;
   timestamp: string;
 };
 
@@ -22,7 +22,7 @@ export function SceneEventItem({ event }: SceneEventItemProps) {
   };
 
   if (event.type === 'zone') {
-    const zoneEvent = event.data as ZoneChangeEvent;
+    const zoneName = getSceneEventName(event.data);
     return (
       <div className='bg-zinc-800/30 border-l-4 border-blue-500 p-2 rounded-r'>
         <div className='flex items-center justify-between'>
@@ -31,11 +31,11 @@ export function SceneEventItem({ event }: SceneEventItemProps) {
             {formatTimestamp(event.timestamp)}
           </span>
         </div>
-        <div className='text-zinc-200 text-sm mt-1'>{zoneEvent.zone_name}</div>
+        <div className='text-zinc-200 text-sm mt-1'>{zoneName}</div>
       </div>
     );
   } else {
-    const actEvent = event.data as ActChangeEvent;
+    const actName = getSceneEventName(event.data);
     return (
       <div className='bg-zinc-800/30 border-l-4 border-blue-800 p-2 rounded-r'>
         <div className='flex items-center justify-between'>
@@ -44,7 +44,7 @@ export function SceneEventItem({ event }: SceneEventItemProps) {
             {formatTimestamp(event.timestamp)}
           </span>
         </div>
-        <div className='text-zinc-200 text-sm mt-1'>{actEvent.act_name}</div>
+        <div className='text-zinc-200 text-sm mt-1'>{actName}</div>
       </div>
     );
   }

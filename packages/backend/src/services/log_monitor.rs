@@ -2,7 +2,8 @@ use crate::errors::{AppError, AppResult};
 use crate::models::events::SceneChangeEvent;
 use crate::parsers::LogParserManager;
 use crate::services::{
-    event_broadcaster::EventBroadcaster, file_monitor::FileMonitor, state_manager::StateManager,
+    event_broadcaster::EventBroadcaster, file_monitor::FileMonitor,
+    player_location_manager::PlayerLocationManager,
 };
 use log::{error, info, warn};
 use std::sync::Arc;
@@ -13,7 +14,7 @@ use tokio::time;
 pub struct LogMonitorService {
     file_monitor: FileMonitor,
     event_broadcaster: EventBroadcaster,
-    state_manager: StateManager,
+    state_manager: PlayerLocationManager,
     parser_manager: LogParserManager,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
@@ -21,7 +22,7 @@ pub struct LogMonitorService {
 impl LogMonitorService {
     /// Create a new log monitor service
     pub fn new(log_path: String) -> Self {
-        let state_manager = StateManager::new();
+        let state_manager = PlayerLocationManager::new();
 
         Self {
             file_monitor: FileMonitor::new(log_path),
@@ -129,7 +130,7 @@ impl LogMonitorService {
     async fn monitor_log_file(
         file_monitor: FileMonitor,
         event_broadcaster: EventBroadcaster,
-        state_manager: StateManager,
+        state_manager: PlayerLocationManager,
         parser_manager: LogParserManager,
         is_running: &Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
@@ -186,7 +187,7 @@ impl LogMonitorService {
         last_position: &mut u64,
         parser_manager: &LogParserManager,
         event_broadcaster: &EventBroadcaster,
-        _state_manager: &StateManager,
+        _state_manager: &PlayerLocationManager,
     ) -> AppResult<()> {
         file_monitor
             .process_new_lines(last_position, |line| {
@@ -226,15 +227,6 @@ impl Clone for EventBroadcaster {
     fn clone(&self) -> Self {
         Self {
             scene_event_sender: self.scene_event_sender.clone(),
-        }
-    }
-}
-
-impl Clone for StateManager {
-    fn clone(&self) -> Self {
-        Self {
-            previous_scene: Arc::clone(&self.previous_scene),
-            previous_act: Arc::clone(&self.previous_act),
         }
     }
 }

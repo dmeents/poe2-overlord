@@ -1,6 +1,6 @@
 use crate::models::events::SceneChangeEvent;
 use crate::parsers::scene_change_parser::{LogParser, SceneChangeParser};
-use crate::services::state_manager::StateManager;
+use crate::services::player_location_manager::PlayerLocationManager;
 use log::debug;
 use std::sync::Arc;
 
@@ -8,12 +8,12 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct LogParserManager {
     scene_parser: SceneChangeParser,
-    state_manager: Arc<StateManager>,
+    state_manager: Arc<PlayerLocationManager>,
 }
 
 impl LogParserManager {
     /// Create a new parser manager with default configuration
-    pub fn new(state_manager: Arc<StateManager>) -> Self {
+    pub fn new(state_manager: Arc<PlayerLocationManager>) -> Self {
         Self {
             scene_parser: SceneChangeParser::new(),
             state_manager,

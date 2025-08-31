@@ -26,7 +26,7 @@ Business logic and core functionality services:
 - **`ProcessMonitor`** - Detects and monitors Path of Exile 2 processes
 - **`EventBroadcaster`** - Broadcasts events to multiple subscribers
 - **`FileMonitor`** - Monitors file changes for real-time updates
-- **`StateManager`** - Manages application state across services
+- **`PlayerLocationManager`** - Manages player location state (scene and act tracking)
 
 ### `commands/`
 Tauri 2 command handlers that expose functionality to the frontend:

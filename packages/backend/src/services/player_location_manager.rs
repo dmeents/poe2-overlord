@@ -2,14 +2,15 @@ use log::debug;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// State manager for tracking scene and act changes
-pub struct StateManager {
+/// Player location manager for tracking scene and act changes
+#[derive(Clone)]
+pub struct PlayerLocationManager {
     pub previous_scene: Arc<RwLock<Option<String>>>,
     pub previous_act: Arc<RwLock<Option<String>>>,
 }
 
-impl StateManager {
-    /// Create a new state manager
+impl PlayerLocationManager {
+    /// Create a new player location state manager
     pub fn new() -> Self {
         Self {
             previous_scene: Arc::new(RwLock::new(None)),
@@ -67,7 +68,7 @@ impl StateManager {
     }
 }
 
-impl Default for StateManager {
+impl Default for PlayerLocationManager {
     fn default() -> Self {
         Self::new()
     }

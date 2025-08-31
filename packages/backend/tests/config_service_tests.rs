@@ -197,15 +197,19 @@ fn test_os_specific_default_paths() {
     // Test that the default path is OS-specific and not empty
     let default_path = config_service.get_default_poe_client_log_path();
     assert!(!default_path.is_empty());
-    
+
     // Test that the default path contains "Path of Exile"
     assert!(default_path.contains("Path of Exile"));
-    
+
     // Test that resetting to default works
-    config_service.set_poe_client_log_path("/custom/path".to_string()).unwrap();
+    config_service
+        .set_poe_client_log_path("/custom/path".to_string())
+        .unwrap();
     assert_eq!(config_service.get_poe_client_log_path(), "/custom/path");
-    
-    config_service.reset_poe_client_log_path_to_default().unwrap();
+
+    config_service
+        .reset_poe_client_log_path_to_default()
+        .unwrap();
     let reset_path = config_service.get_poe_client_log_path();
     assert!(!reset_path.is_empty());
     assert!(reset_path.contains("Path of Exile"));

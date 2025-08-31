@@ -1,10 +1,8 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::events::SceneChangeEvent;
-use crate::parsers::scene_change_parser::LogParser;
-use crate::parsers::SceneChangeParser;
+use crate::parsers::LogParserManager;
 use crate::services::{
-    config::ConfigService, event_broadcaster::EventBroadcaster, file_monitor::FileMonitor,
-    state_manager::StateManager,
+    event_broadcaster::EventBroadcaster, file_monitor::FileMonitor, state_manager::StateManager,
 };
 use log::{error, info, warn};
 use std::sync::Arc;
@@ -16,20 +14,20 @@ pub struct LogMonitorService {
     file_monitor: FileMonitor,
     event_broadcaster: EventBroadcaster,
     state_manager: StateManager,
-    parser: SceneChangeParser,
+    parser_manager: LogParserManager,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
 
 impl LogMonitorService {
     /// Create a new log monitor service
-    pub fn new(config_service: Arc<ConfigService>) -> Self {
-        let log_path = config_service.get_poe_client_log_path();
+    pub fn new(log_path: String) -> Self {
+        let state_manager = StateManager::new();
 
         Self {
             file_monitor: FileMonitor::new(log_path),
             event_broadcaster: EventBroadcaster::new(),
-            state_manager: StateManager::new(),
-            parser: SceneChangeParser,
+            state_manager: state_manager.clone(),
+            parser_manager: LogParserManager::new(Arc::new(state_manager)),
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
         }
     }
@@ -67,7 +65,7 @@ impl LogMonitorService {
         let file_monitor = self.file_monitor.clone();
         let event_broadcaster = self.event_broadcaster.clone();
         let state_manager = self.state_manager.clone();
-        let parser = self.parser.clone();
+        let parser_manager = self.parser_manager.clone();
         let is_running = Arc::clone(&self.is_running);
 
         info!("Starting log file monitoring for scene changes");
@@ -77,7 +75,7 @@ impl LogMonitorService {
                 file_monitor,
                 event_broadcaster,
                 state_manager,
-                parser,
+                parser_manager,
                 &is_running,
             )
             .await
@@ -132,7 +130,7 @@ impl LogMonitorService {
         file_monitor: FileMonitor,
         event_broadcaster: EventBroadcaster,
         state_manager: StateManager,
-        parser: SceneChangeParser,
+        parser_manager: LogParserManager,
         is_running: &Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
         if !file_monitor.file_exists() {
@@ -167,7 +165,7 @@ impl LogMonitorService {
                             if let Err(e) = Self::process_new_lines(
                                 &file_monitor,
                                 &mut last_position,
-                                &parser,
+                                &parser_manager,
                                 &event_broadcaster,
                                 &state_manager,
                             ).await {
@@ -186,52 +184,28 @@ impl LogMonitorService {
     async fn process_new_lines(
         file_monitor: &FileMonitor,
         last_position: &mut u64,
-        parser: &SceneChangeParser,
+        parser_manager: &LogParserManager,
         event_broadcaster: &EventBroadcaster,
-        state_manager: &StateManager,
+        _state_manager: &StateManager,
     ) -> AppResult<()> {
         file_monitor
             .process_new_lines(last_position, |line| {
                 // Try to parse the line for scene changes
-                if let Some(event) = parser.parse_line(line) {
-                    // Check if this is actually a change before sending the event
-                    let should_send = match &event {
-                        SceneChangeEvent::Hideout(hideout_event) => {
-                            // Use tokio::spawn_blocking for the async state update
-                            let state_manager = state_manager.clone();
-                            let hideout_name = hideout_event.hideout_name.clone();
-                            tokio::spawn(async move {
-                                state_manager.update_scene(&hideout_name).await;
-                            });
-                            true // We'll send the event, the state update happens asynchronously
-                        }
-                        SceneChangeEvent::Zone(zone_event) => {
-                            // Use tokio::spawn_blocking for the async state update
-                            let state_manager = state_manager.clone();
-                            let zone_name = zone_event.zone_name.clone();
-                            tokio::spawn(async move {
-                                state_manager.update_scene(&zone_name).await;
-                            });
-                            true // We'll send the event, the state update happens asynchronously
-                        }
-                        SceneChangeEvent::Act(act_event) => {
-                            // Use tokio::spawn_blocking for the async state update
-                            let state_manager = state_manager.clone();
-                            let act_name = act_event.act_name.clone();
-                            tokio::spawn(async move {
-                                state_manager.update_act(&act_name).await;
-                            });
-                            true // We'll send the event, the state update happens asynchronously
-                        }
-                    };
+                // Note: parse_line is now async, so we need to handle this differently
+                // For now, we'll spawn a task to handle the async parsing
+                let parser_manager = parser_manager.clone();
+                let event_broadcaster = event_broadcaster.clone();
+                let line = line.to_string(); // Clone the line to avoid lifetime issues
 
-                    // Send event if there's an actual change
-                    if should_send {
+                tokio::spawn(async move {
+                    if let Some(event) = parser_manager.parse_line(&line).await {
+                        // The parser manager now only returns events for actual changes
+                        // so we can directly broadcast the event
                         if let Err(e) = event_broadcaster.broadcast_event(event) {
                             warn!("Failed to broadcast scene change event: {}", e);
                         }
                     }
-                }
+                });
             })
             .await?;
 

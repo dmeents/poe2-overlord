@@ -34,7 +34,8 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     // Initialize log monitor service
     info!("Initializing LogMonitorService...");
-    let log_monitor_service = LogMonitorService::new(Arc::new(config_service));
+    let log_path = config_service.get_poe_client_log_path();
+    let log_monitor_service = LogMonitorService::new(log_path);
     let log_monitor_arc = Arc::new(log_monitor_service);
     app.manage(log_monitor_arc.clone());
     info!("LogMonitorService managed successfully");
@@ -95,7 +96,7 @@ fn start_process_monitoring(
                             if let Err(e) = log_monitor.start_monitoring().await {
                                 error!("Failed to start log monitoring: {}", e);
                             }
-                            
+
                             // Set POE process start time for time tracking
                             time_tracking.set_poe_process_start_time();
                         } else if !is_poe_running && was_poe_running {
@@ -110,7 +111,7 @@ fn start_process_monitoring(
                             if let Err(e) = time_tracking.end_all_active_sessions().await {
                                 error!("Failed to end active time tracking sessions: {}", e);
                             }
-                            
+
                             // Clear POE process start time for time tracking
                             time_tracking.clear_poe_process_start_time();
                         }

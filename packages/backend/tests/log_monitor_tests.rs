@@ -4,7 +4,7 @@ use app_lib::models::events::SceneChangeEvent;
 
 #[tokio::test]
 async fn test_scene_change_parser() {
-    let parser = SceneChangeParser;
+    let parser = SceneChangeParser::new();
 
     // Test valid zone change line
     let line = "[SCENE] Set Source [The Coast]";
@@ -50,7 +50,7 @@ async fn test_scene_change_parser() {
 
 #[tokio::test]
 async fn test_scene_change_parser_edge_cases() {
-    let parser = SceneChangeParser;
+    let parser = SceneChangeParser::new();
 
     // Test with different zone names
     let zone_test_cases = [
@@ -77,8 +77,8 @@ async fn test_scene_change_parser_edge_cases() {
         "[SCENE] Set Source [Act 1]",
         "[SCENE] Set Source [Act 2]",
         "[SCENE] Set Source [Act 3]",
-        "[SCENE] Set Source [Prologue]",
-        "[SCENE] Set Source [Epilogue]",
+        "[SCENE] Set Source [Atlas]",
+        "[SCENE] Set Source [Interlude]",
     ];
 
     for line in act_test_cases {
@@ -110,7 +110,7 @@ async fn test_scene_change_parser_edge_cases() {
 
 #[tokio::test]
 async fn test_scene_change_parser_null_filtering() {
-    let parser = SceneChangeParser;
+    let parser = SceneChangeParser::new();
 
     // Test null/empty content filtering
     let null_test_cases = [
@@ -130,17 +130,17 @@ async fn test_scene_change_parser_null_filtering() {
 
 #[tokio::test]
 async fn test_scene_change_parser_act_detection() {
-    let parser = SceneChangeParser;
+    let parser = SceneChangeParser::new();
 
     // Test act detection logic
     let act_test_cases = [
         "[SCENE] Set Source [Act 1]",
         "[SCENE] Set Source [Act 2]",
         "[SCENE] Set Source [Act 3]",
-        "[SCENE] Set Source [Prologue]",
-        "[SCENE] Set Source [Epilogue]",
         "[SCENE] Set Source [atlas]",
         "[SCENE] Set Source [Atlas]",
+        "[SCENE] Set Source [interlude]",
+        "[SCENE] Set Source [Interlude]",
         "[SCENE] Set Source [ACT 1]",
         "[SCENE] Set Source [act 1]",
     ];

@@ -1,6 +1,7 @@
 use crate::models::events::{
     ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
 };
+use crate::parsers::config::{ParsersConfig, SceneTypeConfig};
 
 /// Trait for parsing log lines into events
 pub trait LogParser {
@@ -10,49 +11,64 @@ pub trait LogParser {
     fn parse_line(&self, line: &str) -> Option<Self::Event>;
 }
 
-/// Scene change parser for detecting "[SCENE] Set Source [Zone/Act Name]" patterns
+/// Scene change parser for detecting scene transition patterns
 #[derive(Clone)]
-pub struct SceneChangeParser;
+pub struct SceneChangeParser {
+    config: ParsersConfig,
+}
 
-impl LogParser for SceneChangeParser {
-    type Event = SceneChangeEvent;
+impl SceneChangeParser {
+    /// Create a new scene change parser with default configuration
+    pub fn new() -> Self {
+        Self {
+            config: ParsersConfig::default(),
+        }
+    }
 
-    /// Parse a log line and return a scene change event if valid
-    fn parse_line(&self, line: &str) -> Option<SceneChangeEvent> {
-        if line.contains("[SCENE] Set Source [") && line.contains("]") {
-            // Extract content from "[SCENE] Set Source [Content]"
-            let prefix = "[SCENE] Set Source [";
-            if let Some(start) = line.find(prefix) {
-                let content_start = start + prefix.len();
+    /// Check if a line should be parsed by this parser
+    pub fn should_parse(&self, line: &str) -> bool {
+        self.config.matches_patterns("scene_change", line)
+    }
+
+    /// Determine if the content represents a Hideout based on configuration
+    fn is_hideout_content(&self, content: &str, scene_config: &SceneTypeConfig) -> bool {
+        let lower_content = content.to_lowercase();
+        scene_config
+            .hideout
+            .iter()
+            .any(|keyword| lower_content.contains(keyword))
+    }
+
+    /// Determine if the content represents an Act based on configuration
+    fn is_act_content(&self, content: &str, scene_config: &SceneTypeConfig) -> bool {
+        let lower_content = content.to_lowercase();
+        scene_config
+            .act
+            .iter()
+            .any(|keyword| lower_content.contains(keyword))
+    }
+
+    /// Extract content from scene change patterns
+    fn extract_scene_content(&self, line: &str) -> Option<String> {
+        // Try each pattern from the configuration
+        for pattern in &self.config.scene_change.patterns {
+            if let Some(start) = line.find(pattern) {
+                let content_start = start + pattern.len();
                 if let Some(end) = line[content_start..].find("]") {
                     let content = line[content_start..content_start + end].trim();
 
                     // Skip null or empty content
                     if content.is_empty()
                         || content == "(null)"
+                        || content == "(undefined)"
                         || content == "undefined"
                         || content.to_lowercase() == "null"
+                        || content.to_lowercase() == "undefined"
                     {
-                        return None;
+                        continue;
                     }
 
-                    // Determine if this is an Act, Zone, or Hideout
-                    if self.is_hideout_content(&content) {
-                        return Some(SceneChangeEvent::Hideout(HideoutChangeEvent {
-                            hideout_name: content.to_string(),
-                            timestamp: chrono::Utc::now().to_rfc3339(),
-                        }));
-                    } else if self.is_act_content(&content) {
-                        return Some(SceneChangeEvent::Act(ActChangeEvent {
-                            act_name: content.to_string(),
-                            timestamp: chrono::Utc::now().to_rfc3339(),
-                        }));
-                    } else {
-                        return Some(SceneChangeEvent::Zone(ZoneChangeEvent {
-                            zone_name: content.to_string(),
-                            timestamp: chrono::Utc::now().to_rfc3339(),
-                        }));
-                    }
+                    return Some(content.to_string());
                 }
             }
         }
@@ -60,20 +76,44 @@ impl LogParser for SceneChangeParser {
     }
 }
 
-impl SceneChangeParser {
-    /// Determine if the content represents a Hideout
-    fn is_hideout_content(&self, content: &str) -> bool {
-        let lower_content = content.to_lowercase();
-        lower_content.contains("hideout")
-    }
+impl LogParser for SceneChangeParser {
+    type Event = SceneChangeEvent;
 
-    /// Determine if the content represents an Act
-    fn is_act_content(&self, content: &str) -> bool {
-        let lower_content = content.to_lowercase();
-        lower_content.starts_with("act ")
-            || lower_content == "atlas"
-            || lower_content == "prologue"
-            || lower_content == "epilogue"
-            || lower_content.contains("act")
+    /// Parse a log line and return a scene change event if valid
+    fn parse_line(&self, line: &str) -> Option<SceneChangeEvent> {
+        // Check if this line should be parsed by this parser
+        if !self.should_parse(line) {
+            return None;
+        }
+
+        // Extract the scene content
+        let content = self.extract_scene_content(line)?;
+
+        // Get scene type configuration
+        let scene_config = self.config.get_scene_type_config("scene_change")?;
+
+        // Determine if this is an Act, Zone, or Hideout
+        if self.is_hideout_content(&content, scene_config) {
+            Some(SceneChangeEvent::Hideout(HideoutChangeEvent {
+                hideout_name: content,
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            }))
+        } else if self.is_act_content(&content, scene_config) {
+            Some(SceneChangeEvent::Act(ActChangeEvent {
+                act_name: content,
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            }))
+        } else {
+            Some(SceneChangeEvent::Zone(ZoneChangeEvent {
+                zone_name: content,
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            }))
+        }
+    }
+}
+
+impl Default for SceneChangeParser {
+    fn default() -> Self {
+        Self::new()
     }
 }

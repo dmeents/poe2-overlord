@@ -6,7 +6,7 @@ use tempfile::TempDir;
 
 #[tokio::test]
 async fn test_hideout_detection() {
-    let parser = SceneChangeParser;
+    let parser = SceneChangeParser::new();
 
     // Test hideout detection
     let hideout_line = "[SCENE] Set Source [My Hideout]";

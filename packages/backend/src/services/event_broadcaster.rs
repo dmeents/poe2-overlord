@@ -1,18 +1,23 @@
-use crate::models::events::{ActChangeEvent, SceneChangeEvent, ZoneChangeEvent};
+use crate::models::events::{ActChangeEvent, SceneChangeEvent, ZoneChangeEvent, ServerConnectionEvent};
 use log::debug;
 use tokio::sync::broadcast;
 
 /// Event broadcaster that manages event channels and subscriptions
 pub struct EventBroadcaster {
     pub scene_event_sender: broadcast::Sender<SceneChangeEvent>,
+    pub server_event_sender: broadcast::Sender<ServerConnectionEvent>,
 }
 
 impl EventBroadcaster {
     /// Create a new event broadcaster
     pub fn new() -> Self {
         let (scene_event_sender, _) = broadcast::channel(1000);
+        let (server_event_sender, _) = broadcast::channel(100);
 
-        Self { scene_event_sender }
+        Self { 
+            scene_event_sender,
+            server_event_sender,
+        }
     }
 
     /// Get the event receiver for subscribing to scene change events
@@ -62,6 +67,11 @@ impl EventBroadcaster {
         act_receiver
     }
 
+    /// Get the event receiver for subscribing to server connection events
+    pub fn subscribe_server_events(&self) -> broadcast::Receiver<ServerConnectionEvent> {
+        self.server_event_sender.subscribe()
+    }
+
     /// Broadcast a scene change event to all subscribers
     pub fn broadcast_event(
         &self,
@@ -77,9 +87,29 @@ impl EventBroadcaster {
         result.map(|_| ())
     }
 
+    /// Broadcast a server connection event to all subscribers
+    pub fn broadcast_server_event(
+        &self,
+        event: ServerConnectionEvent,
+    ) -> Result<(), broadcast::error::SendError<ServerConnectionEvent>> {
+        let result = self.server_event_sender.send(event.clone());
+
+        if let Err(ref e) = result {
+            debug!("Failed to broadcast server connection event: {}", e);
+        }
+
+        // Convert the Result<usize, SendError> to Result<(), SendError>
+        result.map(|_| ())
+    }
+
     /// Get the number of active subscribers
     pub fn subscriber_count(&self) -> usize {
         self.scene_event_sender.receiver_count()
+    }
+
+    /// Get the number of active server event subscribers
+    pub fn server_subscriber_count(&self) -> usize {
+        self.server_event_sender.receiver_count()
     }
 }
 

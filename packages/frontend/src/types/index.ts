@@ -1,9 +1,9 @@
 import React from 'react';
 
 export interface ProcessInfo {
-  name: string;
-  pid: number;
   running: boolean;
+  pid?: number;
+  startTime?: string;
 }
 
 export interface ZoneChangeEvent {
@@ -123,4 +123,19 @@ export interface FooterProps {
 export interface AppConfig {
   poe_client_log_path: string;
   log_level: string;
+}
+
+export interface ServerConnectionEvent {
+  ip_address: string;
+  port: number;
+  timestamp: string;
+}
+
+export interface ServerStatus {
+  ip_address: string;
+  port: number;
+  is_online: boolean;
+  last_ping_ms: number | null;
+  last_seen: string;
+  last_checked: string;
 }

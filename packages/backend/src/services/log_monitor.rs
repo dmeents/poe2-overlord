@@ -1,20 +1,21 @@
-use crate::errors::{AppError, AppResult};
+use crate::errors::AppResult;
 use crate::models::events::SceneChangeEvent;
-use crate::parsers::LogParserManager;
+use crate::parsers::manager::LogParserManager;
 use crate::services::{
     event_broadcaster::EventBroadcaster, file_monitor::FileMonitor,
-    player_location_manager::PlayerLocationManager,
+    player_location_manager::PlayerLocationManager, server_status::ServerStatusManager,
 };
 use log::{error, info, warn};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
 
-/// Log monitor service that watches POE client log files for scene changes
+/// Log monitor service that watches POE client log files for scene changes and server connections
 pub struct LogMonitorService {
     file_monitor: FileMonitor,
     event_broadcaster: EventBroadcaster,
     state_manager: PlayerLocationManager,
+    server_manager: Arc<ServerStatusManager>,
     parser_manager: LogParserManager,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
@@ -23,11 +24,13 @@ impl LogMonitorService {
     /// Create a new log monitor service
     pub fn new(log_path: String) -> Self {
         let state_manager = PlayerLocationManager::new();
+        let server_manager = Arc::new(ServerStatusManager::new());
 
         Self {
             file_monitor: FileMonitor::new(log_path),
             event_broadcaster: EventBroadcaster::new(),
             state_manager: state_manager.clone(),
+            server_manager,
             parser_manager: LogParserManager::new(Arc::new(state_manager)),
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
         }
@@ -52,6 +55,11 @@ impl LogMonitorService {
         self.event_broadcaster.subscribe_acts()
     }
 
+    /// Get the server status manager
+    pub fn get_server_manager(&self) -> Arc<ServerStatusManager> {
+        Arc::clone(&self.server_manager)
+    }
+
     /// Start monitoring the log file
     pub async fn start_monitoring(&self) -> AppResult<()> {
         let mut is_running = self.is_running.write().await;
@@ -66,16 +74,23 @@ impl LogMonitorService {
         let file_monitor = self.file_monitor.clone();
         let event_broadcaster = self.event_broadcaster.clone();
         let state_manager = self.state_manager.clone();
+        let server_manager = Arc::clone(&self.server_manager);
         let parser_manager = self.parser_manager.clone();
         let is_running = Arc::clone(&self.is_running);
 
-        info!("Starting log file monitoring for scene changes");
+        info!("Starting log file monitoring for scene changes and server connections");
+
+        // Start server status monitoring
+        if let Err(e) = server_manager.start_monitoring().await {
+            warn!("Failed to start server monitoring: {}", e);
+        }
 
         tokio::spawn(async move {
             if let Err(e) = Self::monitor_log_file(
                 file_monitor,
                 event_broadcaster,
                 state_manager,
+                server_manager,
                 parser_manager,
                 &is_running,
             )
@@ -125,56 +140,46 @@ impl LogMonitorService {
     pub fn read_last_lines(&self, count: usize) -> AppResult<Vec<String>> {
         self.file_monitor.read_last_lines(count)
     }
+}
 
-    /// Main monitoring loop that watches for file changes and processes new content
+impl LogMonitorService {
+    /// Monitor the log file for changes and parse new lines
     async fn monitor_log_file(
         file_monitor: FileMonitor,
         event_broadcaster: EventBroadcaster,
         state_manager: PlayerLocationManager,
+        server_manager: Arc<ServerStatusManager>,
         parser_manager: LogParserManager,
         is_running: &Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
-        if !file_monitor.file_exists() {
-            return Err(AppError::LogMonitor(format!(
-                "Log file not found: {}",
-                file_monitor.get_log_path()
-            )));
-        }
-
-        // Get initial file size and position
         let mut last_position = file_monitor.get_log_file_size()?;
+        let mut check_interval = time::interval(Duration::from_millis(100));
 
-        // Create file system event watcher
-        let _watcher = file_monitor.create_watcher(|_event| {
-            // Note: We can't directly call async functions from this callback
-            // The actual processing will happen in the main loop
-        })?;
-
-        // Keep the watcher alive and process events
         loop {
-            tokio::select! {
-                _ = time::sleep(Duration::from_millis(100)) => {
-                    // Check if still running
-                    if !*is_running.read().await {
-                        break;
-                    }
+            check_interval.tick().await;
 
-                    // Check if file has new content
-                    if let Ok(current_size) = file_monitor.get_log_file_size() {
-                        if current_size > last_position {
-                            // File has new content, process it
-                            if let Err(e) = Self::process_new_lines(
-                                &file_monitor,
-                                &mut last_position,
-                                &parser_manager,
-                                &event_broadcaster,
-                                &state_manager,
-                            ).await {
-                                warn!("Failed to process new lines: {}", e);
-                            }
-                        }
-                    }
-                }
+            // Check if we should stop monitoring
+            if !*is_running.read().await {
+                info!("Log monitoring stopped, exiting monitor loop");
+                break;
+            }
+
+            // Check for new content in the log file
+            let current_size = file_monitor.get_log_file_size()?;
+            if current_size > last_position {
+                Self::process_new_lines(
+                    &file_monitor,
+                    &mut last_position,
+                    &parser_manager,
+                    &event_broadcaster,
+                    &state_manager,
+                    &server_manager,
+                )
+                .await?;
+            } else if current_size < last_position {
+                // File was truncated, reset position
+                warn!("Log file was truncated, resetting position");
+                last_position = current_size;
             }
         }
 
@@ -188,22 +193,36 @@ impl LogMonitorService {
         parser_manager: &LogParserManager,
         event_broadcaster: &EventBroadcaster,
         _state_manager: &PlayerLocationManager,
+        server_manager: &Arc<ServerStatusManager>,
     ) -> AppResult<()> {
         file_monitor
             .process_new_lines(last_position, |line| {
                 // Try to parse the line for scene changes
-                // Note: parse_line is now async, so we need to handle this differently
-                // For now, we'll spawn a task to handle the async parsing
                 let parser_manager = parser_manager.clone();
                 let event_broadcaster = event_broadcaster.clone();
+                let server_manager = Arc::clone(server_manager);
                 let line = line.to_string(); // Clone the line to avoid lifetime issues
 
                 tokio::spawn(async move {
+                    // Parse for scene changes
                     if let Some(event) = parser_manager.parse_line(&line).await {
                         // The parser manager now only returns events for actual changes
                         // so we can directly broadcast the event
                         if let Err(e) = event_broadcaster.broadcast_event(event) {
                             warn!("Failed to broadcast scene change event: {}", e);
+                        }
+                    }
+
+                    // Parse for server connections
+                    if let Some(event) = parser_manager.parse_server_connection(&line) {
+                        // Update server status manager
+                        if let Err(e) = server_manager.update_server_info(&event).await {
+                            warn!("Failed to update server info: {}", e);
+                        }
+
+                        // Broadcast server connection event to frontend
+                        if let Err(e) = event_broadcaster.broadcast_server_event(event) {
+                            warn!("Failed to broadcast server connection event: {}", e);
                         }
                     }
                 });
@@ -227,6 +246,7 @@ impl Clone for EventBroadcaster {
     fn clone(&self) -> Self {
         Self {
             scene_event_sender: self.scene_event_sender.clone(),
+            server_event_sender: self.server_event_sender.clone(),
         }
     }
 }

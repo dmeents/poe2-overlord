@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
-    "pre-commit": "npm run format && npm run lint"
+    "pre-commit": "npm run format && npm run lint",
+    "test": "echo 'Frontend tests not yet configured'"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

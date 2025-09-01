@@ -21,6 +21,14 @@ pub struct HideoutChangeEvent {
     pub timestamp: String,
 }
 
+/// Server connection event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerConnectionEvent {
+    pub ip_address: String,
+    pub port: u16,
+    pub timestamp: String,
+}
+
 /// Combined scene change event that can represent either a zone, act, or hideout change
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]

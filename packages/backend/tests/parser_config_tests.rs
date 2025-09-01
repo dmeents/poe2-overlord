@@ -1,7 +1,10 @@
 use app_lib::models::events::SceneChangeEvent;
-use app_lib::parsers::config::ParsersConfig;
-use app_lib::parsers::scene_change_parser::{LogParser, SceneChangeParser};
-use app_lib::parsers::LogParserManager;
+use app_lib::parsers::{
+    config::ParsersConfig,
+    manager::LogParserManager,
+    scene_change_parser::SceneChangeParser,
+    traits::LogParser,
+};
 use app_lib::services::player_location_manager::PlayerLocationManager;
 use std::sync::Arc;
 

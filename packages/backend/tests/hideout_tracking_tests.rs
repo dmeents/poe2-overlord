@@ -1,7 +1,7 @@
-use app_lib::models::events::SceneChangeEvent;
-use app_lib::models::LocationType;
-use app_lib::parsers::scene_change_parser::{LogParser, SceneChangeParser};
+use app_lib::models::{events::SceneChangeEvent, LocationType};
 use app_lib::services::time_tracking::TimeTrackingService;
+use app_lib::parsers::scene_change_parser::SceneChangeParser;
+use app_lib::parsers::traits::LogParser;
 use tempfile::TempDir;
 
 #[tokio::test]

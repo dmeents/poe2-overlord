@@ -1,5 +1,5 @@
-use app_lib::parsers::SceneChangeParser;
-use app_lib::parsers::scene_change_parser::LogParser;
+use app_lib::parsers::scene_change_parser::SceneChangeParser;
+use app_lib::parsers::traits::LogParser;
 use app_lib::models::events::SceneChangeEvent;
 
 #[tokio::test]

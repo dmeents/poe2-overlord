@@ -1,9 +1,11 @@
 use app_lib::parsers::{
     config::ParsersConfig,
     manager::LogParserManager,
-    scene_change_parser::{SceneChangeParser, LogParser},
+    scene_change_parser::SceneChangeParser,
+    server_connection_parser::ServerConnectionParser,
+    traits::LogParser,
 };
-use app_lib::models::events::SceneChangeEvent;
+use app_lib::models::events::{SceneChangeEvent, ServerConnectionEvent};
 use app_lib::services::player_location_manager::PlayerLocationManager;
 use std::sync::Arc;
 
@@ -98,6 +100,84 @@ fn test_scene_change_parser_location_type_detection() {
 }
 
 #[test]
+fn test_server_connection_parser_creation() {
+    let parser = ServerConnectionParser::new();
+    // Test that the parser can handle basic input
+    assert!(parser.should_parse("Connecting to instance server at 64.87.41.243:21360"));
+}
+
+#[test]
+fn test_server_connection_parser_should_parse() {
+    let parser = ServerConnectionParser::new();
+    
+    // Test valid server connection lines
+    assert!(parser.should_parse("2024-01-01 12:00:00 [INFO] Connecting to instance server at 64.87.41.243:21360"));
+    assert!(parser.should_parse("Connecting to instance server at 192.168.1.1:8080"));
+    assert!(parser.should_parse("Connecting to instance server at [::1]:21360"));
+    
+    // Test non-server connection lines
+    assert!(!parser.should_parse("2024-01-01 12:00:00 [INFO] Player moved"));
+    assert!(!parser.should_parse("Some other log message"));
+    assert!(!parser.should_parse("Connecting to something else"));
+}
+
+#[test]
+fn test_server_connection_parser_content_parsing() {
+    let parser = ServerConnectionParser::new();
+    
+    // Test parsing valid server connections
+    let event = parser.parse_line("Connecting to instance server at 64.87.41.243:21360");
+    assert!(event.is_some());
+    
+    let event = parser.parse_line("Connecting to instance server at 192.168.1.1:8080");
+    assert!(event.is_some());
+    
+    // Test parsing invalid lines
+    let event = parser.parse_line("Some other message");
+    assert!(event.is_none());
+    
+    let event = parser.parse_line("Connecting to instance server at");
+    assert!(event.is_none());
+    
+    let event = parser.parse_line("Connecting to instance server at :21360");
+    assert!(event.is_none());
+    
+    let event = parser.parse_line("Connecting to instance server at 64.87.41.243:");
+    assert!(event.is_none());
+}
+
+#[test]
+fn test_server_connection_parser_extract_server_info() {
+    let parser = ServerConnectionParser::new();
+    
+    // Test valid server info extraction
+    let event = parser.parse_line("Connecting to instance server at 64.87.41.243:21360");
+    if let Some(ServerConnectionEvent { ip_address, port, timestamp: _ }) = event {
+        assert_eq!(ip_address, "64.87.41.243");
+        assert_eq!(port, 21360);
+    } else {
+        panic!("Expected server connection event");
+    }
+    
+    let event = parser.parse_line("Connecting to instance server at 192.168.1.1:8080");
+    if let Some(ServerConnectionEvent { ip_address, port, timestamp: _ }) = event {
+        assert_eq!(ip_address, "192.168.1.1");
+        assert_eq!(port, 8080);
+    } else {
+        panic!("Expected server connection event");
+    }
+    
+    // Test IPv6 address
+    let event = parser.parse_line("Connecting to instance server at [::1]:21360");
+    if let Some(ServerConnectionEvent { ip_address, port, timestamp: _ }) = event {
+        assert_eq!(ip_address, "[::1]");
+        assert_eq!(port, 21360);
+    } else {
+        panic!("Expected server connection event");
+    }
+}
+
+#[test]
 fn test_parser_manager_creation() {
     let state_manager = PlayerLocationManager::new();
     let parser_manager = LogParserManager::new(Arc::new(state_manager));
@@ -105,6 +185,8 @@ fn test_parser_manager_creation() {
     // Verify that the parser manager was created successfully
     let active_parsers = parser_manager.get_active_parsers();
     assert!(!active_parsers.is_empty());
+    assert!(active_parsers.contains(&"scene_change"));
+    assert!(active_parsers.contains(&"server_connection"));
 }
 
 #[tokio::test]
@@ -112,13 +194,20 @@ async fn test_parser_manager_parse_line() {
     let state_manager = PlayerLocationManager::new();
     let parser_manager = LogParserManager::new(Arc::new(state_manager));
     
-    // Test parsing a valid scene change line
-    let result = parser_manager.parse_line("[SCENE] Set Source [Test Zone]").await;
-    assert!(result.is_some());
+    // Test scene change parsing
+    let event = parser_manager.parse_line("[SCENE] Set Source [Test Zone]").await;
+    assert!(event.is_some());
     
-    // Test parsing an invalid line
-    let result = parser_manager.parse_line("Some random log message").await;
-    assert!(result.is_none());
+    // Test server connection parsing
+    let event = parser_manager.parse_server_connection("Connecting to instance server at 64.87.41.243:21360");
+    assert!(event.is_some());
+    
+    // Test non-matching line
+    let event = parser_manager.parse_line("Some other message").await;
+    assert!(event.is_none());
+    
+    let event = parser_manager.parse_server_connection("Some other message");
+    assert!(event.is_none());
 }
 
 #[test]

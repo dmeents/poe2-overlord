@@ -1,5 +1,9 @@
-use crate::models::events::SceneChangeEvent;
-use crate::parsers::scene_change_parser::{LogParser, SceneChangeParser};
+use crate::models::events::{SceneChangeEvent, ServerConnectionEvent};
+use crate::parsers::{
+    scene_change_parser::SceneChangeParser,
+    server_connection_parser::ServerConnectionParser,
+    traits::LogParser,
+};
 use crate::services::player_location_manager::PlayerLocationManager;
 use log::debug;
 use std::sync::Arc;
@@ -8,6 +12,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct LogParserManager {
     scene_parser: SceneChangeParser,
+    server_parser: ServerConnectionParser,
     state_manager: Arc<PlayerLocationManager>,
 }
 
@@ -16,11 +21,12 @@ impl LogParserManager {
     pub fn new(state_manager: Arc<PlayerLocationManager>) -> Self {
         Self {
             scene_parser: SceneChangeParser::new(),
+            server_parser: ServerConnectionParser::new(),
             state_manager,
         }
     }
 
-    /// Parse a log line using all available parsers and only return events for actual changes
+    /// Parse a log line using all available parsers and return events for actual changes
     pub async fn parse_line(&self, line: &str) -> Option<SceneChangeEvent> {
         debug!("Parsing log line: {}", line.trim());
 
@@ -63,12 +69,34 @@ impl LogParserManager {
         None
     }
 
+    /// Parse a log line for server connection events
+    pub fn parse_server_connection(&self, line: &str) -> Option<ServerConnectionEvent> {
+        debug!("Parsing log line for server connection: {}", line.trim());
+
+        if self.server_parser.should_parse(line) {
+            debug!("Server connection parser matched line");
+            
+            if let Some(event) = self.server_parser.parse_line(line) {
+                debug!("Server connection parser successfully parsed event: {:?}", event);
+                return Some(event);
+            } else {
+                debug!("Server connection parser matched but failed to parse line");
+            }
+        }
+
+        debug!("Server connection parser did not match the line");
+        None
+    }
+
     /// Get a list of all active parser names
     pub fn get_active_parsers(&self) -> Vec<&str> {
         let mut parsers = Vec::new();
 
-        // Scene change parser is always active since it's hardcoded
+        // Add scene change parser
         parsers.push("scene_change");
+        
+        // Add server connection parser
+        parsers.push("server_connection");
 
         // Future parsers can be added here:
         // if self.config.combat_event.enabled { parsers.push("combat_event"); }

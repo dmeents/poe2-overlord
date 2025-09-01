@@ -48,7 +48,12 @@ pub fn run() {
             clear_all_time_tracking_data,
             get_time_tracking_summary,
             set_poe_process_start_time,
-            clear_poe_process_start_time
+            clear_poe_process_start_time,
+            // Server status commands
+            get_server_status,
+            get_last_known_server,
+            ping_server,
+            start_server_monitoring
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

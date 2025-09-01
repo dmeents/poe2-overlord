@@ -25,6 +25,8 @@ pub struct SceneTypeConfig {
 pub struct ParsersConfig {
     /// Scene change parser configuration
     pub scene_change: ParserConfig,
+    /// Server connection parser configuration
+    pub server_connection: ParserConfig,
     // Future parsers can be added here:
     // pub combat_event: ParserConfig,
     // pub trade_event: ParserConfig,
@@ -48,6 +50,12 @@ impl Default for ParsersConfig {
                     zone: vec!["*".to_string()], // Wildcard for any content
                 }),
             },
+            server_connection: ParserConfig {
+                patterns: vec![
+                    "Connecting to instance server at ".to_string(),
+                ],
+                scene_types: None, // Not needed for server connections
+            },
         }
     }
 }
@@ -58,6 +66,11 @@ impl ParsersConfig {
         match parser_name {
             "scene_change" => self
                 .scene_change
+                .patterns
+                .iter()
+                .any(|pattern| line.contains(pattern)),
+            "server_connection" => self
+                .server_connection
                 .patterns
                 .iter()
                 .any(|pattern| line.contains(pattern)),

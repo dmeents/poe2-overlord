@@ -2,14 +2,7 @@ use crate::models::events::{
     ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
 };
 use crate::parsers::config::{ParsersConfig, SceneTypeConfig};
-
-/// Trait for parsing log lines into events
-pub trait LogParser {
-    type Event;
-
-    /// Parse a log line and return an event if valid
-    fn parse_line(&self, line: &str) -> Option<Self::Event>;
-}
+use crate::parsers::traits::LogParser;
 
 /// Scene change parser for detecting scene transition patterns
 #[derive(Clone)]

@@ -19,7 +19,15 @@
     "install:all": "yarn install && cd packages/backend && cargo fetch && cd ../../",
     "lint": "yarn lint:ts && yarn lint:rust",
     "lint:rust": "yarn workspace @poe2-overlord/backend lint",
-    "lint:ts": "yarn workspace @poe2-overlord/frontend lint"
+    "lint:ts": "yarn workspace @poe2-overlord/frontend lint",
+    "test": "yarn test:backend && yarn test:frontend",
+    "test:backend": "yarn workspace @poe2-overlord/backend test",
+    "test:backend:verbose": "yarn workspace @poe2-overlord/backend test:verbose",
+    "test:backend:watch": "yarn workspace @poe2-overlord/backend test:watch",
+    "test:frontend": "yarn workspace @poe2-overlord/frontend test",
+    "check:backend": "yarn workspace @poe2-overlord/backend check",
+    "build:backend": "yarn workspace @poe2-overlord/backend build",
+    "clean:backend": "yarn workspace @poe2-overlord/backend clean"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0"

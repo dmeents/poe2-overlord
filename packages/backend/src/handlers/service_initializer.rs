@@ -1,5 +1,6 @@
 use crate::services::{
-    config::ConfigService, log_monitor::LogMonitorService, time_tracking::TimeTrackingService,
+    config::ConfigService, log_monitor::LogMonitorService, server_status::ServerStatusManager,
+    time_tracking::TimeTrackingService,
 };
 use log::info;
 use std::sync::Arc;
@@ -24,6 +25,13 @@ impl ServiceInitializer {
         app.manage(time_tracking_arc.clone());
         info!("TimeTrackingService managed successfully");
 
+        // Initialize server status manager
+        info!("Initializing ServerStatusManager...");
+        let server_status_manager = ServerStatusManager::new();
+        let server_status_arc = Arc::new(server_status_manager);
+        app.manage(server_status_arc.clone());
+        info!("ServerStatusManager managed successfully");
+
         // Initialize log monitor service
         info!("Initializing LogMonitorService...");
         let log_path = config_service.get_poe_client_log_path();
@@ -38,6 +46,7 @@ impl ServiceInitializer {
             config_service,
             log_monitor: log_monitor_arc,
             time_tracking: time_tracking_arc,
+            server_status: server_status_arc,
         })
     }
 }
@@ -46,4 +55,5 @@ pub struct ServiceInstances {
     pub config_service: ConfigService,
     pub log_monitor: Arc<LogMonitorService>,
     pub time_tracking: Arc<TimeTrackingService>,
+    pub server_status: Arc<ServerStatusManager>,
 }

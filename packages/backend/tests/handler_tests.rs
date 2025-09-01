@@ -80,6 +80,7 @@ fn test_service_instances_structure() {
         config_service,
         log_monitor: std::sync::Arc::new(log_monitor),
         time_tracking: std::sync::Arc::new(time_tracking),
+        server_status: std::sync::Arc::new(app_lib::services::server_status::ServerStatusManager::new()),
     };
 
     // If we get here without panicking, the structure is valid

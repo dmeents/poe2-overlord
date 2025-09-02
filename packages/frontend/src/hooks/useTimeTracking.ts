@@ -173,31 +173,6 @@ export function useTimeTracking() {
     setNotification(null);
   }, []);
 
-  // Check for stale sessions
-  const checkForStaleSessions = useCallback(async () => {
-    try {
-      setError(null);
-      const hasStale = await invoke<boolean>('has_stale_sessions');
-
-      if (hasStale) {
-        setNotification({
-          type: 'warning',
-          message:
-            'Found active sessions from a previous game session. Consider ending them or starting fresh.',
-        });
-      }
-
-      return hasStale;
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to check for stale sessions'
-      );
-      return false;
-    }
-  }, []);
-
   // Set up real-time event listeners
   useEffect(() => {
     const unlistenFns: (() => void)[] = [];
@@ -267,9 +242,7 @@ export function useTimeTracking() {
   // Initial data fetch
   useEffect(() => {
     refreshData();
-    // Check for stale sessions on mount
-    checkForStaleSessions();
-  }, [refreshData, checkForStaleSessions]);
+  }, [refreshData]);
 
   return {
     // Data
@@ -290,7 +263,6 @@ export function useTimeTracking() {
     endSession,
     endAllActiveSessions,
     clearNotification,
-    checkForStaleSessions,
 
     // Individual fetch functions
     fetchActiveSessions,

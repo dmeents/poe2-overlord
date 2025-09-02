@@ -5,7 +5,7 @@ use crate::services::{
     event_broadcaster::EventBroadcaster, file_monitor::FileMonitor,
     player_location_manager::PlayerLocationManager, server_status::ServerStatusManager,
 };
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
@@ -22,9 +22,8 @@ pub struct LogMonitorService {
 
 impl LogMonitorService {
     /// Create a new log monitor service
-    pub fn new(log_path: String) -> Self {
+    pub fn new(log_path: String, server_manager: Arc<ServerStatusManager>) -> Self {
         let state_manager = PlayerLocationManager::new();
-        let server_manager = Arc::new(ServerStatusManager::new());
 
         Self {
             file_monitor: FileMonitor::new(log_path),
@@ -80,10 +79,18 @@ impl LogMonitorService {
 
         info!("Starting log file monitoring for scene changes and server connections");
 
-        // Start server status monitoring
-        if let Err(e) = server_manager.start_monitoring().await {
-            warn!("Failed to start server monitoring: {}", e);
-        }
+        // Initialize server status (load from file and perform initial ping)
+        let server_manager_clone = Arc::clone(&self.server_manager);
+        tokio::spawn(async move {
+            if let Err(e) = server_manager_clone.load_status().await {
+                warn!("Failed to load server status: {}", e);
+            } else {
+                // Perform initial ping to check server status
+                if let Err(e) = server_manager_clone.ping_server().await {
+                    warn!("Failed to perform initial server ping: {}", e);
+                }
+            }
+        });
 
         tokio::spawn(async move {
             if let Err(e) = Self::monitor_log_file(
@@ -160,7 +167,7 @@ impl LogMonitorService {
 
             // Check if we should stop monitoring
             if !*is_running.read().await {
-                info!("Log monitoring stopped, exiting monitor loop");
+                debug!("Log monitoring stopped, exiting monitor loop");
                 break;
             }
 
@@ -215,14 +222,20 @@ impl LogMonitorService {
 
                     // Parse for server connections
                     if let Some(event) = parser_manager.parse_server_connection(&line) {
+                        debug!("Server connection event detected: {:?}", event);
+
                         // Update server status manager
                         if let Err(e) = server_manager.update_server_info(&event).await {
                             warn!("Failed to update server info: {}", e);
+                        } else {
+                            debug!("Successfully updated server status manager");
                         }
 
                         // Broadcast server connection event to frontend
                         if let Err(e) = event_broadcaster.broadcast_server_event(event) {
                             warn!("Failed to broadcast server connection event: {}", e);
+                        } else {
+                            debug!("Successfully broadcasted server connection event");
                         }
                     }
                 });

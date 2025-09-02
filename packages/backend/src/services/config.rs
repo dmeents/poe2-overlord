@@ -1,6 +1,6 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::AppConfig;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use serde_json;
 use std::fs;
 use std::path::PathBuf;
@@ -60,13 +60,12 @@ impl ConfigService {
         let content = fs::read_to_string(&self.config_path)
             .map_err(|e| AppError::FileSystem(format!("Failed to read config file: {}", e)))?;
 
-        let config: AppConfig = serde_json::from_str(&content)
-            .map_err(|e| {
-                error!("Failed to parse config file JSON: {}", e);
-                error!("Config file content: {}", content);
-                // If JSON parsing fails, create a new config file with defaults
-                AppError::Serialization(format!("Failed to parse config file: {}", e))
-            })?;
+        let config: AppConfig = serde_json::from_str(&content).map_err(|e| {
+            error!("Failed to parse config file JSON: {}", e);
+            error!("Config file content: {}", content);
+            // If JSON parsing fails, create a new config file with defaults
+            AppError::Serialization(format!("Failed to parse config file: {}", e))
+        })?;
 
         {
             let mut current_config = self.config.write().unwrap();
@@ -90,11 +89,11 @@ impl ConfigService {
         let temp_path = self.config_path.with_extension("tmp");
         fs::write(&temp_path, content)
             .map_err(|e| AppError::FileSystem(format!("Failed to write temp file: {}", e)))?;
-        
+
         fs::rename(&temp_path, &self.config_path)
             .map_err(|e| AppError::FileSystem(format!("Failed to rename temp file: {}", e)))?;
 
-        info!("Configuration saved successfully to {:?}", self.config_path);
+        debug!("Configuration saved successfully to {:?}", self.config_path);
         Ok(())
     }
 

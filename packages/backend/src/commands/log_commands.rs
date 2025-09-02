@@ -1,5 +1,5 @@
 use crate::services::LogMonitorService;
-use log::info;
+use log::debug;
 use std::sync::Arc;
 use tauri::State;
 
@@ -8,7 +8,7 @@ use tauri::State;
 pub async fn start_log_monitoring(
     log_monitor: State<'_, Arc<LogMonitorService>>,
 ) -> Result<(), String> {
-    info!("Starting log monitoring via Tauri command");
+    debug!("Starting log monitoring via Tauri command");
 
     log_monitor
         .start_monitoring()
@@ -23,7 +23,7 @@ pub async fn start_log_monitoring(
 pub async fn stop_log_monitoring(
     log_monitor: State<'_, Arc<LogMonitorService>>,
 ) -> Result<(), String> {
-    info!("Stopping log monitoring via Tauri command");
+    debug!("Stopping log monitoring via Tauri command");
 
     log_monitor
         .stop_monitoring()
@@ -67,6 +67,6 @@ pub fn subscribe_to_log_events(
 ) -> Result<(), String> {
     // This command is mainly for the frontend to know when to start listening
     // The actual event subscription happens through Tauri's event system
-    info!("Log event subscription requested");
+    debug!("Log event subscription requested");
     Ok(())
 }

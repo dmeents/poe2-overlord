@@ -1,6 +1,6 @@
 use crate::services::process_monitor::ProcessMonitor;
 use crate::services::{log_monitor::LogMonitorService, time_tracking::TimeTrackingService};
-use log::{error, info};
+use log::{error, info, debug};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
 
@@ -46,7 +46,7 @@ impl ProcessMonitorHandler {
                                 }
 
                                 // End all active time tracking sessions when game exits
-                                info!("POE2 process stopped, ending all active time tracking sessions");
+                                debug!("POE2 process stopped, ending all active time tracking sessions");
                                 if let Err(e) = time_tracking.end_all_active_sessions().await {
                                     error!("Failed to end active time tracking sessions: {}", e);
                                 }

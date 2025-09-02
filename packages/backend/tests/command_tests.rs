@@ -1,7 +1,7 @@
 use app_lib::models::{AppConfig, LocationType};
 use app_lib::services::{
     config::ConfigService, log_monitor::LogMonitorService, process_monitor::ProcessMonitor,
-    time_tracking::TimeTrackingService,
+    server_status::ServerStatusManager, time_tracking::TimeTrackingService,
 };
 use std::sync::{Arc, RwLock};
 use tempfile::TempDir;
@@ -209,7 +209,8 @@ fn test_time_tracking_service_stats() {
 #[tokio::test]
 async fn test_log_monitor_service_operations() {
     let _temp_dir = TempDir::new().unwrap();
-    let log_monitor = LogMonitorService::new("test.log".to_string());
+    let server_manager = Arc::new(ServerStatusManager::new());
+    let log_monitor = LogMonitorService::new("test.log".to_string(), server_manager);
 
     // Test starting monitoring
     let result = log_monitor.start_monitoring().await;
@@ -228,7 +229,8 @@ fn test_log_monitor_service_file_operations() {
     // Create a test log file
     std::fs::write(&log_file, "test content").unwrap();
 
-    let log_monitor = LogMonitorService::new(log_file.to_string_lossy().to_string());
+    let server_manager = Arc::new(ServerStatusManager::new());
+    let log_monitor = LogMonitorService::new(log_file.to_string_lossy().to_string(), server_manager);
 
     // Test getting log file size
     let size = log_monitor.get_log_file_size();
@@ -246,7 +248,8 @@ fn test_log_monitor_service_multiline_file() {
     let content = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5";
     std::fs::write(&log_file, content).unwrap();
 
-    let log_monitor = LogMonitorService::new(log_file.to_string_lossy().to_string());
+    let server_manager = Arc::new(ServerStatusManager::new());
+    let log_monitor = LogMonitorService::new(log_file.to_string_lossy().to_string(), server_manager);
 
     // Test that the service can be created with a multiline file
     let size = log_monitor.get_log_file_size();
@@ -334,7 +337,8 @@ fn test_service_integration() {
 
     let time_tracking =
         TimeTrackingService::with_data_directory(Some(temp_dir.path().to_path_buf()));
-    let _log_monitor = LogMonitorService::new("test.log".to_string());
+    let server_manager = Arc::new(ServerStatusManager::new());
+    let _log_monitor = LogMonitorService::new("test.log".to_string(), server_manager);
 
     // Verify all services can be created and used
     let config = config_service.get_config();

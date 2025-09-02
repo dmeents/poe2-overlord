@@ -1,23 +1,20 @@
 use crate::models::TimeTrackingEvent;
 use crate::services::time_tracking::TimeTrackingService;
-use log::info;
+use log::debug;
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
 
 pub struct TimeTrackingHandler;
 
 impl TimeTrackingHandler {
-    pub fn start_event_emission(
-        window: WebviewWindow,
-        time_tracking: Arc<TimeTrackingService>,
-    ) {
+    pub fn start_event_emission(window: WebviewWindow, time_tracking: Arc<TimeTrackingService>) {
         // Create a dedicated runtime for this background task
         std::thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
             rt.block_on(async move {
                 let mut event_receiver = time_tracking.subscribe();
 
-                info!("Time tracking event emission started");
+                debug!("Time tracking event emission started");
 
                 // Listen for time tracking events and emit them to the frontend
                 while let Ok(event) = event_receiver.recv().await {

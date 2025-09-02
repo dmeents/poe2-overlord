@@ -79,7 +79,7 @@ Utility functions and constants:
 - **Location Statistics**: Aggregates data for zones and acts with persistent storage
 - **Real-time Updates**: Broadcasts session events to frontend subscribers using Tokio broadcast channels
 - **Persistent Storage**: Saves tracking data to JSON files with proper error handling
-- **Stale Session Detection**: Identifies and handles abandoned sessions automatically
+
 
 ### ⚙️ Configuration Management
 - **Persistent Settings**: Stores configuration in user's config directory with JSON format
@@ -135,7 +135,7 @@ The backend provides comprehensive Tauri commands organized by functionality:
 - `clear_all_time_tracking_data()` - Reset all tracking data
 - `set_poe_process_start_time()` - Track when POE2 process started
 - `clear_poe_process_start_time()` - Clear process start time tracking
-- `has_stale_sessions()` - Check for abandoned sessions
+
 
 ### Process Commands
 - `check_poe2_process()` - Check if Path of Exile 2 is running with detailed status

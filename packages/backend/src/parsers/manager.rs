@@ -1,7 +1,6 @@
 use crate::models::events::{SceneChangeEvent, ServerConnectionEvent};
 use crate::parsers::{
-    scene_change_parser::SceneChangeParser,
-    server_connection_parser::ServerConnectionParser,
+    scene_change_parser::SceneChangeParser, server_connection_parser::ServerConnectionParser,
     traits::LogParser,
 };
 use crate::services::player_location_manager::PlayerLocationManager;
@@ -75,9 +74,12 @@ impl LogParserManager {
 
         if self.server_parser.should_parse(line) {
             debug!("Server connection parser matched line");
-            
+
             if let Some(event) = self.server_parser.parse_line(line) {
-                debug!("Server connection parser successfully parsed event: {:?}", event);
+                debug!(
+                    "Server connection parser successfully parsed event: {:?}",
+                    event
+                );
                 return Some(event);
             } else {
                 debug!("Server connection parser matched but failed to parse line");
@@ -94,7 +96,7 @@ impl LogParserManager {
 
         // Add scene change parser
         parsers.push("scene_change");
-        
+
         // Add server connection parser
         parsers.push("server_connection");
 

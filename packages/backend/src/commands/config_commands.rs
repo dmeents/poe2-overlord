@@ -1,6 +1,6 @@
 use crate::models::AppConfig;
 use crate::services::config::ConfigService;
-use log::error;
+use log::{debug, error, info, trace, warn};
 use tauri::State;
 
 /// Test command to verify ConfigService is accessible
@@ -61,10 +61,18 @@ pub async fn set_log_level(
     config_service: State<'_, ConfigService>,
     level: String,
 ) -> Result<(), String> {
-    config_service.set_log_level(level).map_err(|e| {
+    // Save the log level to config
+    config_service.set_log_level(level.clone()).map_err(|e| {
         error!("Failed to set log level: {}", e);
         format!("Failed to set log level: {}", e)
-    })
+    })?;
+
+    // Note: Log level changes require app restart due to Tauri's logging plugin
+    info!(
+        "Log level changed to: {} - restart the app to see the new level",
+        level
+    );
+    Ok(())
 }
 
 /// Reset configuration to defaults
@@ -99,4 +107,18 @@ pub async fn reset_poe_client_log_path_to_default(
             error!("Failed to reset POE client log path to default: {}", e);
             format!("Failed to reset POE client log path to default: {}", e)
         })
+}
+
+/// Test command to verify logging levels are working
+#[tauri::command]
+pub async fn test_logging_levels() -> Result<String, String> {
+    // Note: These logs will only appear if the current log level allows them
+    // Use this command to test if your log level setting is working
+    trace!("This is a TRACE level message");
+    debug!("This is a DEBUG level message");
+    info!("This is an INFO level message");
+    warn!("This is a WARN level message");
+    error!("This is an ERROR level message");
+
+    Ok("Logging test completed - check your terminal for messages".to_string())
 }

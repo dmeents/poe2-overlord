@@ -27,7 +27,6 @@ function TimeTrackingPage() {
     endSession,
     endAllActiveSessions,
     clearNotification,
-    checkForStaleSessions,
   } = useTimeTracking();
 
   const handleClearData = async () => {
@@ -79,14 +78,7 @@ function TimeTrackingPage() {
               <Button onClick={refreshData} variant='outline' size='sm'>
                 Refresh
               </Button>
-              <Button
-                onClick={checkForStaleSessions}
-                variant='outline'
-                size='sm'
-                className='text-blue-400 hover:text-blue-300'
-              >
-                Check Stale Sessions
-              </Button>
+
               {activeSessions.length > 0 && (
                 <Button
                   onClick={handleEndAllSessions}

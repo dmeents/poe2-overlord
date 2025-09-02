@@ -4,26 +4,23 @@ use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
 
-/// Get all active time tracking sessions
+/// Get current active sessions
 #[tauri::command]
 pub async fn get_active_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<Vec<LocationSession>, String> {
     let sessions = time_tracking.get_active_sessions();
-
+    debug!("Retrieved {} active sessions", sessions.len());
     Ok(sessions)
 }
 
-/// Get all completed time tracking sessions
+/// Get completed sessions
 #[tauri::command]
 pub async fn get_completed_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<Vec<LocationSession>, String> {
-    debug!("Getting completed time tracking sessions");
-
     let sessions = time_tracking.get_completed_sessions();
-    info!("Retrieved {} completed sessions", sessions.len());
-
+    debug!("Retrieved {} completed sessions", sessions.len());
     Ok(sessions)
 }
 
@@ -32,11 +29,8 @@ pub async fn get_completed_sessions(
 pub async fn get_all_location_stats(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<Vec<LocationStats>, String> {
-    debug!("Getting all location statistics");
-
     let stats = time_tracking.get_all_stats();
-    info!("Retrieved statistics for {} locations", stats.len());
-
+    debug!("Retrieved statistics for {} locations", stats.len());
     Ok(stats)
 }
 
@@ -46,62 +40,37 @@ pub async fn get_location_stats(
     location_id: String,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<Option<LocationStats>, String> {
-    debug!("Getting statistics for location: {}", location_id);
-
     let stats = time_tracking.get_location_stats(&location_id);
-
-    match stats {
-        Some(stats) => {
-            info!("Retrieved statistics for location: {}", location_id);
-            Ok(Some(stats))
-        }
-        None => {
-            debug!("No statistics found for location: {}", location_id);
-            Ok(None)
-        }
-    }
+    debug!("Retrieved statistics for location: {}", location_id);
+    Ok(stats)
 }
 
-/// Start a new time tracking session
+/// Start a time tracking session for a location
 #[tauri::command]
 pub async fn start_time_tracking_session(
     location_name: String,
-    location_type: String,
+    location_type: LocationType,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<(), String> {
-    debug!(
-        "Starting time tracking session for {}: {}",
-        location_type, location_name
-    );
-
-    let location_type_enum = match location_type.to_lowercase().as_str() {
-        "zone" => LocationType::Zone,
-        "act" => LocationType::Act,
-        "hideout" => LocationType::Hideout,
-        _ => return Err(format!("Invalid location type: {}", location_type)),
-    };
-
     time_tracking
-        .start_session(location_name, location_type_enum)
+        .start_session(location_name, location_type)
         .await
-        .map_err(|e| format!("Failed to start session: {}", e))?;
+        .map_err(|e| format!("Failed to start time tracking session: {}", e))?;
 
     info!("Successfully started time tracking session");
     Ok(())
 }
 
-/// End a time tracking session
+/// End a time tracking session for a location
 #[tauri::command]
 pub async fn end_time_tracking_session(
     location_id: String,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<(), String> {
-    debug!("Ending time tracking session for location: {}", location_id);
-
     time_tracking
         .end_session(&location_id)
         .await
-        .map_err(|e| format!("Failed to end session: {}", e))?;
+        .map_err(|e| format!("Failed to end time tracking session: {}", e))?;
 
     info!("Successfully ended time tracking session");
     Ok(())
@@ -112,8 +81,6 @@ pub async fn end_time_tracking_session(
 pub async fn end_all_active_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<(), String> {
-    debug!("Ending all active time tracking sessions");
-
     time_tracking
         .end_all_active_sessions()
         .await
@@ -123,42 +90,26 @@ pub async fn end_all_active_sessions(
     Ok(())
 }
 
-/// Check if there are any stale active sessions
-#[tauri::command]
-pub async fn has_stale_sessions(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<bool, String> {
-    debug!("Checking for stale active sessions");
-
-    let has_stale = time_tracking.has_stale_sessions();
-    info!("Stale sessions check result: {}", has_stale);
-
-    Ok(has_stale)
-}
-
 /// Clear all time tracking data
 #[tauri::command]
 pub async fn clear_all_time_tracking_data(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<(), String> {
-    debug!("Clearing all time tracking data");
-
     time_tracking
         .clear_all_data()
-        .map_err(|e| format!("Failed to clear data: {}", e))?;
+        .map_err(|e| format!("Failed to clear time tracking data: {}", e))?;
 
     info!("Successfully cleared all time tracking data");
     Ok(())
 }
 
-/// Set the POE process start time
+/// Set the POE process start time for time tracking
 #[tauri::command]
 pub async fn set_poe_process_start_time(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<(), String> {
-    debug!("Setting POE process start time");
     time_tracking.set_poe_process_start_time();
-    info!("POE process start time set successfully");
+    debug!("POE process start time set successfully");
     Ok(())
 }
 
@@ -167,9 +118,8 @@ pub async fn set_poe_process_start_time(
 pub async fn clear_poe_process_start_time(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> Result<(), String> {
-    debug!("Clearing POE process start time");
     time_tracking.clear_poe_process_start_time();
-    info!("POE process start time cleared successfully");
+    debug!("POE process start time cleared successfully");
     Ok(())
 }
 
@@ -210,6 +160,6 @@ pub async fn get_time_tracking_summary(
         "total_hideout_time_seconds": total_hideout_time
     });
 
-    info!("Retrieved time tracking summary");
+    debug!("Retrieved time tracking summary");
     Ok(summary)
 }

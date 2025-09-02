@@ -34,11 +34,7 @@ export const StatusBar = () => {
       if (currentAct) {
         return `${currentAct} - ${currentZone}`;
       }
-      return `Current Zone: ${currentZone}`;
-    }
-
-    if (currentAct) {
-      return `Current Act: ${currentAct}`;
+      return `${currentZone}`;
     }
 
     return 'Character active - monitoring zones...';
@@ -53,13 +49,12 @@ export const StatusBar = () => {
       const pingText = serverStatus.last_ping_ms
         ? ` (${serverStatus.last_ping_ms}ms)`
         : '';
-      return `POE2 server is online${pingText}`;
+
+      return `POE2 server is online${pingText}\nServer: ${serverStatus.ip_address}`;
     } else {
-      return 'POE2 server is offline';
+      return `POE2 server is offline\nLast known server: ${serverStatus.ip_address}`;
     }
   };
-
-  console.log('serverStatus', serverStatus);
 
   return (
     <div className='fixed bottom-0 w-full py-1 px-4 border-b bg-zinc-950 border-zinc-950 flex justify-between gap-2'>

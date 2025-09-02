@@ -21,6 +21,11 @@ export interface HideoutChangeEvent {
   timestamp: string;
 }
 
+export type SceneChangeEvent =
+  | { type: 'Zone'; zone_name: string; timestamp: string }
+  | { type: 'Act'; act_name: string; timestamp: string }
+  | { type: 'Hideout'; hideout_name: string; timestamp: string };
+
 export interface LocationSession {
   location_id: string;
   location_name: string;

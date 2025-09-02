@@ -1,4 +1,4 @@
-import type { ActChangeEvent, ZoneChangeEvent } from '@/types';
+import type { SceneChangeEvent } from '@/types';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
@@ -10,21 +10,31 @@ export const useZoneMonitoring = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
 
   useEffect(() => {
-    // Listen for zone change events
-    const unlistenZone = listen<ZoneChangeEvent>('log-zone-change', event => {
-      const { zone_name, timestamp } = event.payload;
-      setCurrentZone(zone_name);
-      setLastZoneChange(timestamp);
-      setIsMonitoring(true);
-    });
+    // Listen for unified scene change events
+    const unlistenScene = listen<SceneChangeEvent>(
+      'log-scene-change',
+      event => {
+        const sceneEvent = event.payload;
+        setIsMonitoring(true);
 
-    // Listen for act change events
-    const unlistenAct = listen<ActChangeEvent>('log-act-change', event => {
-      const { act_name, timestamp } = event.payload;
-      setCurrentAct(act_name);
-      setLastActChange(timestamp);
-      setIsMonitoring(true);
-    });
+        switch (sceneEvent.type) {
+          case 'Zone':
+            setCurrentZone(sceneEvent.zone_name);
+            setLastZoneChange(sceneEvent.timestamp);
+            break;
+          case 'Act':
+            setCurrentAct(sceneEvent.act_name);
+            setLastActChange(sceneEvent.timestamp);
+            break;
+          case 'Hideout':
+            // For hideouts, we might want to clear the current zone/act
+            // or handle it differently depending on requirements
+            setCurrentZone(sceneEvent.hideout_name);
+            setLastZoneChange(sceneEvent.timestamp);
+            break;
+        }
+      }
+    );
 
     // Listen for process status to know when monitoring is active
     const unlistenProcess = listen('poe2-process-status', event => {
@@ -42,8 +52,7 @@ export const useZoneMonitoring = () => {
 
     // Cleanup listeners
     return () => {
-      unlistenZone.then(f => f());
-      unlistenAct.then(f => f());
+      unlistenScene.then(f => f());
       unlistenProcess.then(f => f());
     };
   }, []);

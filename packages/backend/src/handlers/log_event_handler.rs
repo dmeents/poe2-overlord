@@ -1,6 +1,6 @@
 use crate::models::{events::SceneChangeEvent, LocationType};
 use crate::services::{log_monitor::LogMonitorService, time_tracking::TimeTrackingService};
-use log::{debug, error, info};
+use log::{debug, error};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
 
@@ -18,7 +18,7 @@ impl LogEventHandler {
             rt.block_on(async move {
                 let mut event_receiver = log_monitor.subscribe();
 
-                info!("Log event emission started, listening for scene changes");
+                debug!("Log event emission started, listening for scene changes");
 
                 // Listen for scene change events and emit them to the frontend
                 while let Ok(event) = event_receiver.recv().await {
@@ -49,10 +49,7 @@ impl LogEventHandler {
 
                 // Start time tracking for the hideout
                 if let Err(e) = time_tracking
-                    .start_session(
-                        hideout_event.hideout_name.clone(),
-                        LocationType::Hideout,
-                    )
+                    .start_session(hideout_event.hideout_name.clone(), LocationType::Hideout)
                     .await
                 {
                     error!("Failed to start hideout time tracking: {}", e);

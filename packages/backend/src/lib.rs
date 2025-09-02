@@ -21,6 +21,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             check_poe2_process,
             test_config_service,
+            test_logging_levels,
             get_config,
             update_config,
             get_poe_client_log_path,
@@ -44,7 +45,6 @@ pub fn run() {
             start_time_tracking_session,
             end_time_tracking_session,
             end_all_active_sessions,
-            has_stale_sessions,
             clear_all_time_tracking_data,
             get_time_tracking_summary,
             set_poe_process_start_time,
@@ -53,7 +53,6 @@ pub fn run() {
             get_server_status,
             get_last_known_server,
             ping_server,
-            start_server_monitoring
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

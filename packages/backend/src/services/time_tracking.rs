@@ -1,7 +1,7 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::{LocationSession, LocationStats, LocationType, TimeTrackingEvent};
 use chrono::{DateTime, Utc};
-use log::{debug, info, warn};
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
@@ -99,7 +99,7 @@ impl TimeTrackingService {
             active_sessions.insert(location_id.clone(), session.clone());
         }
 
-        info!(
+        debug!(
             "Started time tracking session for {}: {}",
             location_type.to_string(),
             location_name
@@ -139,7 +139,7 @@ impl TimeTrackingService {
                 completed.push(session.clone());
             }
 
-            info!(
+            debug!(
                 "Ended time tracking session for {}: {} (duration: {}s)",
                 session.location_type.to_string(),
                 session.location_name,
@@ -199,7 +199,7 @@ impl TimeTrackingService {
             return Ok(());
         }
 
-        info!(
+        debug!(
             "Ending {} active sessions due to game exit",
             sessions_to_end.len()
         );
@@ -217,13 +217,6 @@ impl TimeTrackingService {
         self.save_data()?;
 
         Ok(())
-    }
-
-    /// Check if there are any active sessions that might be stale
-    /// This is useful for detecting sessions from previous game runs
-    pub fn has_stale_sessions(&self) -> bool {
-        let active_sessions = self.active_sessions.read().unwrap();
-        !active_sessions.is_empty()
     }
 
     /// Get current active sessions
@@ -375,14 +368,14 @@ impl TimeTrackingService {
     pub fn set_poe_process_start_time(&self) {
         let mut start_time = self.poe_process_start_time.write().unwrap();
         *start_time = Some(Utc::now());
-        info!("POE process start time set to: {:?}", start_time);
+        debug!("POE process start time set to: {:?}", start_time);
     }
 
     /// Clear the POE process start time (when process stops)
     pub fn clear_poe_process_start_time(&self) {
         let mut start_time = self.poe_process_start_time.write().unwrap();
         *start_time = None;
-        info!("POE process start time cleared");
+        debug!("POE process start time cleared");
     }
 
     /// Get the POE process start time
@@ -482,7 +475,7 @@ impl TimeTrackingService {
             }
         }
 
-        info!("Time tracking data loaded successfully");
+        debug!("Time tracking data loaded successfully");
         Ok(())
     }
 
@@ -509,13 +502,13 @@ impl TimeTrackingService {
                 .map_err(|e| AppError::FileSystem(format!("Failed to remove data file: {}", e)))?;
         }
 
-        info!("All time tracking data cleared");
+        debug!("All time tracking data cleared");
         Ok(())
     }
 
     /// Handle application shutdown by ending all active sessions
     pub async fn shutdown(&self) -> AppResult<()> {
-        info!("Shutting down time tracking service, ending all active sessions");
+        debug!("Shutting down time tracking service, ending all active sessions");
 
         let active_sessions: Vec<String> = {
             let sessions = self.active_sessions.read().unwrap();

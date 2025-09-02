@@ -353,7 +353,8 @@ async fn test_server_status_manager_update_server_info() {
     assert_eq!(status.ip_address, "192.168.1.1");
     assert_eq!(status.port, 8080);
     assert!(status.is_online);
-    assert_eq!(status.last_seen, "2024-01-01T12:00:00Z");
+    // last_checked is set to current time, so we just verify it's not empty
+    assert!(!status.last_checked.is_empty());
 
     // Check last known server
     let last_known = manager.get_last_known_server().await;
@@ -400,20 +401,7 @@ async fn test_server_status_manager_ping_no_server() {
     assert!(ping_result.unwrap().is_none());
 }
 
-#[tokio::test]
-async fn test_server_status_manager_start_monitoring() {
-    let manager = ServerStatusManager::new();
 
-    // Start monitoring
-    let result = manager.start_monitoring().await;
-    assert!(result.is_ok());
-
-    // Give it a moment to start
-    sleep(Duration::from_millis(100)).await;
-
-    // The monitoring should be running in the background
-    // We can't easily test the background task, but we can verify it started without error
-}
 
 #[test]
 fn test_server_status_serialization() {
@@ -422,7 +410,7 @@ fn test_server_status_serialization() {
         port: 8080,
         is_online: true,
         last_ping_ms: Some(45),
-        last_seen: "2024-01-01T12:00:00Z".to_string(),
+
         last_checked: "2024-01-01T12:01:00Z".to_string(),
     };
 
@@ -439,6 +427,6 @@ fn test_server_status_serialization() {
     assert_eq!(deserialized.port, 8080);
     assert!(deserialized.is_online);
     assert_eq!(deserialized.last_ping_ms, Some(45));
-    assert_eq!(deserialized.last_seen, "2024-01-01T12:00:00Z");
+
     assert_eq!(deserialized.last_checked, "2024-01-01T12:01:00Z");
 }

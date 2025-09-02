@@ -73,8 +73,9 @@ fn test_service_instances_structure() {
     let time_tracking = app_lib::services::time_tracking::TimeTrackingService::with_data_directory(
         Some(temp_dir.path().to_path_buf()),
     );
+    let server_manager = std::sync::Arc::new(app_lib::services::server_status::ServerStatusManager::new());
     let log_monitor =
-        app_lib::services::log_monitor::LogMonitorService::new("test.log".to_string());
+        app_lib::services::log_monitor::LogMonitorService::new("test.log".to_string(), server_manager);
 
     let _instances = app_lib::handlers::service_initializer::ServiceInstances {
         config_service,

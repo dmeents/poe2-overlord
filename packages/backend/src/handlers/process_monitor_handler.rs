@@ -8,7 +8,7 @@ use tauri::{Emitter, WebviewWindow};
 pub struct ProcessMonitorHandler;
 
 impl ProcessMonitorHandler {
-    pub fn start_monitoring(
+    pub async fn start_monitoring(
         window: WebviewWindow,
         log_monitor: Arc<LogMonitorService>,
         time_tracking: Arc<TimeTrackingService>,
@@ -66,6 +66,6 @@ impl ProcessMonitorHandler {
             }
         });
         
-        task_manager.register_task("process_monitoring".to_string(), handle);
+        task_manager.register_task("process_monitoring".to_string(), handle).await;
     }
 }

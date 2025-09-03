@@ -11,7 +11,7 @@ use tauri::{Emitter, WebviewWindow};
 pub struct LogEventHandler;
 
 impl LogEventHandler {
-    pub fn start_event_emission(
+    pub async fn start_event_emission(
         window: WebviewWindow,
         log_monitor: Arc<LogMonitorService>,
         time_tracking: Arc<TimeTrackingService>,
@@ -42,7 +42,9 @@ impl LogEventHandler {
             },
         );
 
-        task_manager_clone.register_task("log_event_emission".to_string(), handle);
+        task_manager_clone
+            .register_task("log_event_emission".to_string(), handle)
+            .await;
 
         // Start server event emission
         let window_clone = window.clone();
@@ -54,11 +56,12 @@ impl LogEventHandler {
             log_monitor_clone,
             runtime_manager_clone,
             task_manager_clone,
-        );
+        )
+        .await;
     }
 
     /// Start server event emission to frontend
-    fn start_server_event_emission(
+    async fn start_server_event_emission(
         window: WebviewWindow,
         log_monitor: Arc<LogMonitorService>,
         runtime_manager: Arc<RuntimeManager>,
@@ -86,7 +89,9 @@ impl LogEventHandler {
             },
         );
 
-        task_manager.register_task("server_event_emission".to_string(), handle);
+        task_manager
+            .register_task("server_event_emission".to_string(), handle)
+            .await;
     }
 
     async fn handle_scene_change_event(

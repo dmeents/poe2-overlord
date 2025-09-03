@@ -63,30 +63,71 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         info!("Starting background services");
 
         // Start process monitoring
-        ProcessMonitorHandler::start_monitoring(
-            main_window.clone(),
-            services.log_monitor.clone(),
-            services.time_tracking.clone(),
-            runtime_manager.clone(),
-            task_manager.clone(),
+        let window_clone = main_window.clone();
+        let log_monitor_clone = services.log_monitor.clone();
+        let time_tracking_clone = services.time_tracking.clone();
+        let runtime_manager_clone = runtime_manager.clone();
+        let task_manager_clone = task_manager.clone();
+
+        let _process_handle = runtime_manager.spawn_background_task(
+            "process_monitoring_setup".to_string(),
+            move || async move {
+                ProcessMonitorHandler::start_monitoring(
+                    window_clone,
+                    log_monitor_clone,
+                    time_tracking_clone,
+                    runtime_manager_clone,
+                    task_manager_clone,
+                )
+                .await;
+            },
         );
+        // Note: We can't await here in a sync function, but the task will still run
+        // The task manager will handle the task lifecycle
 
         // Start log event emission
-        LogEventHandler::start_event_emission(
-            main_window.clone(),
-            services.log_monitor.clone(),
-            services.time_tracking.clone(),
-            runtime_manager.clone(),
-            task_manager.clone(),
+        let window_clone = main_window.clone();
+        let log_monitor_clone = services.log_monitor.clone();
+        let time_tracking_clone = services.time_tracking.clone();
+        let runtime_manager_clone = runtime_manager.clone();
+        let task_manager_clone = task_manager.clone();
+
+        let _log_handle = runtime_manager.spawn_background_task(
+            "log_event_emission_setup".to_string(),
+            move || async move {
+                LogEventHandler::start_event_emission(
+                    window_clone,
+                    log_monitor_clone,
+                    time_tracking_clone,
+                    runtime_manager_clone,
+                    task_manager_clone,
+                )
+                .await;
+            },
         );
+        // Note: We can't await here in a sync function, but the task will still run
+        // The task manager will handle the task lifecycle
 
         // Start time tracking event emission
-        TimeTrackingHandler::start_event_emission(
-            main_window.clone(),
-            services.time_tracking.clone(),
-            runtime_manager.clone(),
-            task_manager.clone(),
+        let window_clone = main_window.clone();
+        let time_tracking_clone = services.time_tracking.clone();
+        let runtime_manager_clone = runtime_manager.clone();
+        let task_manager_clone = task_manager.clone();
+
+        let _time_tracking_handle = runtime_manager.spawn_background_task(
+            "time_tracking_setup".to_string(),
+            move || async move {
+                TimeTrackingHandler::start_event_emission(
+                    window_clone,
+                    time_tracking_clone,
+                    runtime_manager_clone,
+                    task_manager_clone,
+                )
+                .await;
+            },
         );
+        // Note: We can't await here in a sync function, but the task will still run
+        // The task manager will handle the task lifecycle
 
         info!("Background services started successfully");
     } else {

@@ -11,7 +11,7 @@ use tauri::WebviewWindow;
 pub struct TimeTrackingHandler;
 
 impl TimeTrackingHandler {
-    pub fn start_event_emission(
+    pub async fn start_event_emission(
         window: WebviewWindow,
         time_tracking: Arc<TimeTrackingService>,
         runtime_manager: Arc<RuntimeManager>,
@@ -31,7 +31,7 @@ impl TimeTrackingHandler {
             },
         );
 
-        task_manager.register_task("time_tracking_event_emission".to_string(), handle);
+        task_manager.register_task("time_tracking_event_emission".to_string(), handle).await;
     }
 
     fn emit_time_tracking_event(window: &WebviewWindow, event: &TimeTrackingEvent) {

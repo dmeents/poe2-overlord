@@ -39,8 +39,12 @@ impl RuntimeManager {
         self.runtime.handle().clone()
     }
 
-    pub fn shutdown(&self) {
+    pub async fn shutdown(&self) {
         info!("Shutting down shared Tokio runtime...");
+        
+        // Wait for a short time to allow tasks to complete gracefully
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        
         // The runtime will be dropped when the Arc goes out of scope
         debug!("Shared Tokio runtime shutdown completed");
     }

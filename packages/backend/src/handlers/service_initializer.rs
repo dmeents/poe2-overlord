@@ -1,5 +1,7 @@
 use crate::services::{
-    config::ConfigService, log_monitor::LogMonitorService, server_status::ServerStatusManager,
+    config::ConfigService,
+    log_monitor::LogMonitorService,
+    server_status::ServerStatusManager,
     time_tracking::TimeTrackingService,
 };
 use log::{debug, info};
@@ -31,7 +33,6 @@ impl ServiceInitializer {
         debug!("Initializing ServerStatusManager...");
         let server_status_manager = ServerStatusManager::new();
         let server_status_arc = Arc::new(server_status_manager);
-
         app.manage(server_status_arc.clone());
         debug!("ServerStatusManager managed successfully");
 

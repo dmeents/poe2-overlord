@@ -5,6 +5,7 @@ use app_lib::services::{
 };
 use std::sync::{Arc, RwLock};
 use tempfile::TempDir;
+use app_lib::commands::{CommandResponse, CommandResult};
 
 #[test]
 fn test_config_service_functionality() {

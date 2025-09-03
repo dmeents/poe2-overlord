@@ -1,4 +1,6 @@
 use crate::services::server_status::{ServerStatus, ServerStatusManager};
+use crate::services::process_monitor::ProcessMonitor;
+use crate::commands::{CommandResult, to_command_result};
 use log::{debug, error};
 use std::sync::Arc;
 use tauri::State;
@@ -7,7 +9,7 @@ use tauri::State;
 #[tauri::command]
 pub async fn get_server_status(
     server_manager: State<'_, Arc<ServerStatusManager>>,
-) -> Result<Option<ServerStatus>, String> {
+) -> CommandResult<Option<ServerStatus>> {
     debug!("Getting server status via Tauri command");
 
     match server_manager.get_server_status().await {
@@ -29,7 +31,7 @@ pub async fn get_server_status(
 #[tauri::command]
 pub async fn get_last_known_server(
     server_manager: State<'_, Arc<ServerStatusManager>>,
-) -> Result<Option<(String, u16)>, String> {
+) -> CommandResult<Option<(String, u16)>> {
     debug!("Getting last known server via Tauri command");
 
     match server_manager.get_last_known_server().await {
@@ -48,7 +50,7 @@ pub async fn get_last_known_server(
 #[tauri::command]
 pub async fn ping_server(
     server_manager: State<'_, Arc<ServerStatusManager>>,
-) -> Result<Option<u64>, String> {
+) -> CommandResult<Option<u64>> {
     debug!("Pinging server via Tauri command");
 
     match server_manager.ping_server().await {
@@ -65,4 +67,15 @@ pub async fn ping_server(
             Err(format!("Failed to ping server: {}", e))
         }
     }
+}
+
+/// Check POE2 process status
+#[tauri::command]
+pub async fn check_poe2_process() -> CommandResult<crate::models::ProcessInfo> {
+    debug!("Checking POE2 process status via Tauri command");
+    
+    to_command_result(ProcessMonitor::check_poe2_process().map_err(|e| {
+        error!("Failed to check POE2 process: {}", e);
+        crate::errors::AppError::ProcessMonitor(format!("Failed to check POE2 process: {}", e))
+    }))
 }

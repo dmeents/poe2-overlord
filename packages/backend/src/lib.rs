@@ -11,7 +11,12 @@ pub mod utils;
 pub use commands::*;
 pub use errors::*;
 pub use handlers::*;
-pub use models::*;
+// Import specific models to avoid naming conflicts with services
+pub use models::{
+    ActChangeEvent, AppConfig, HideoutChangeEvent, LocationSession, LocationStats, LocationType,
+    OverlayState, ProcessInfo, SceneChangeEvent, ServerConnectionEvent, TimeTrackingEvent,
+    ZoneChangeEvent,
+};
 pub use services::*;
 
 pub fn run() {

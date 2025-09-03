@@ -1,5 +1,6 @@
 use crate::models::{LocationSession, LocationStats, LocationType};
 use crate::services::time_tracking::TimeTrackingService;
+use crate::commands::{CommandResult, to_command_result};
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
@@ -8,7 +9,7 @@ use tauri::State;
 #[tauri::command]
 pub async fn get_active_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<Vec<LocationSession>, String> {
+) -> CommandResult<Vec<LocationSession>> {
     let sessions = time_tracking.get_active_sessions();
     debug!("Retrieved {} active sessions", sessions.len());
     Ok(sessions)
@@ -18,7 +19,7 @@ pub async fn get_active_sessions(
 #[tauri::command]
 pub async fn get_completed_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<Vec<LocationSession>, String> {
+) -> CommandResult<Vec<LocationSession>> {
     let sessions = time_tracking.get_completed_sessions();
     debug!("Retrieved {} completed sessions", sessions.len());
     Ok(sessions)
@@ -28,7 +29,7 @@ pub async fn get_completed_sessions(
 #[tauri::command]
 pub async fn get_all_location_stats(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<Vec<LocationStats>, String> {
+) -> CommandResult<Vec<LocationStats>> {
     let stats = time_tracking.get_all_stats();
     debug!("Retrieved statistics for {} locations", stats.len());
     Ok(stats)
@@ -39,7 +40,7 @@ pub async fn get_all_location_stats(
 pub async fn get_location_stats(
     location_id: String,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<Option<LocationStats>, String> {
+) -> CommandResult<Option<LocationStats>> {
     let stats = time_tracking.get_location_stats(&location_id);
     debug!("Retrieved statistics for location: {}", location_id);
     Ok(stats)
@@ -51,11 +52,11 @@ pub async fn start_time_tracking_session(
     location_name: String,
     location_type: LocationType,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<(), String> {
-    time_tracking
+) -> CommandResult<()> {
+    to_command_result(time_tracking
         .start_session(location_name, location_type)
         .await
-        .map_err(|e| format!("Failed to start time tracking session: {}", e))?;
+        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to start time tracking session: {}", e))))?;
 
     info!("Successfully started time tracking session");
     Ok(())
@@ -66,11 +67,11 @@ pub async fn start_time_tracking_session(
 pub async fn end_time_tracking_session(
     location_id: String,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<(), String> {
-    time_tracking
+) -> CommandResult<()> {
+    to_command_result(time_tracking
         .end_session(&location_id)
         .await
-        .map_err(|e| format!("Failed to end time tracking session: {}", e))?;
+        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to end time tracking session: {}", e))))?;
 
     info!("Successfully ended time tracking session");
     Ok(())
@@ -80,11 +81,11 @@ pub async fn end_time_tracking_session(
 #[tauri::command]
 pub async fn end_all_active_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<(), String> {
-    time_tracking
+) -> CommandResult<()> {
+    to_command_result(time_tracking
         .end_all_active_sessions()
         .await
-        .map_err(|e| format!("Failed to end all active sessions: {}", e))?;
+        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to end all active sessions: {}", e))))?;
 
     info!("Successfully ended all active time tracking sessions");
     Ok(())
@@ -94,10 +95,10 @@ pub async fn end_all_active_sessions(
 #[tauri::command]
 pub async fn clear_all_time_tracking_data(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<(), String> {
-    time_tracking
+) -> CommandResult<()> {
+    to_command_result(time_tracking
         .clear_all_data()
-        .map_err(|e| format!("Failed to clear time tracking data: {}", e))?;
+        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to clear time tracking data: {}", e))))?;
 
     info!("Successfully cleared all time tracking data");
     Ok(())
@@ -107,7 +108,7 @@ pub async fn clear_all_time_tracking_data(
 #[tauri::command]
 pub async fn set_poe_process_start_time(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<(), String> {
+) -> CommandResult<()> {
     time_tracking.set_poe_process_start_time();
     debug!("POE process start time set successfully");
     Ok(())
@@ -117,7 +118,7 @@ pub async fn set_poe_process_start_time(
 #[tauri::command]
 pub async fn clear_poe_process_start_time(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<(), String> {
+) -> CommandResult<()> {
     time_tracking.clear_poe_process_start_time();
     debug!("POE process start time cleared successfully");
     Ok(())
@@ -127,7 +128,7 @@ pub async fn clear_poe_process_start_time(
 #[tauri::command]
 pub async fn get_time_tracking_summary(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> Result<serde_json::Value, String> {
+) -> CommandResult<serde_json::Value> {
     debug!("Getting time tracking summary");
 
     let active_sessions = time_tracking.get_active_sessions();

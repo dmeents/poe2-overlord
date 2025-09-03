@@ -212,7 +212,7 @@ impl LogMonitorService {
 
                 tokio::spawn(async move {
                     // Parse for scene changes
-                    if let Some(event) = parser_manager.parse_line(&line).await {
+                    if let Ok(Some(event)) = parser_manager.parse_line(&line).await {
                         // The parser manager now only returns events for actual changes
                         // so we can directly broadcast the event
                         if let Err(e) = event_broadcaster.broadcast_event(event) {
@@ -221,7 +221,7 @@ impl LogMonitorService {
                     }
 
                     // Parse for server connections
-                    if let Some(event) = parser_manager.parse_server_connection(&line) {
+                    if let Ok(Some(event)) = parser_manager.parse_server_connection(&line) {
                         debug!("Server connection event detected: {:?}", event);
 
                         // Update server status manager

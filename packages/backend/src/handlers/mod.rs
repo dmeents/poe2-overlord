@@ -1,14 +1,20 @@
+pub mod event_utils;
 pub mod log_event_handler;
 pub mod process_monitor_handler;
+pub mod runtime_manager;
 pub mod service_initializer;
+pub mod task_manager;
 pub mod time_tracking_handler;
 
 use log::{info, warn};
+use std::sync::Arc;
 use tauri::Manager;
 
 use crate::handlers::log_event_handler::LogEventHandler;
 use crate::handlers::process_monitor_handler::ProcessMonitorHandler;
+use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::service_initializer::ServiceInitializer;
+use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -45,6 +51,13 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         log_level, level_filter
     );
 
+    // Initialize shared runtime manager and task manager
+    let runtime_manager = Arc::new(RuntimeManager::new()?);
+    let task_manager = Arc::new(TaskManager::new());
+    
+    app.manage(runtime_manager.clone());
+    app.manage(task_manager.clone());
+
     // Get main window and start background services
     if let Some(main_window) = app.get_webview_window("main") {
         info!("Starting background services");
@@ -54,6 +67,8 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             main_window.clone(),
             services.log_monitor.clone(),
             services.time_tracking.clone(),
+            runtime_manager.clone(),
+            task_manager.clone(),
         );
 
         // Start log event emission
@@ -61,16 +76,20 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             main_window.clone(),
             services.log_monitor.clone(),
             services.time_tracking.clone(),
+            runtime_manager.clone(),
+            task_manager.clone(),
         );
 
         // Start time tracking event emission
         TimeTrackingHandler::start_event_emission(
             main_window.clone(),
             services.time_tracking.clone(),
+            runtime_manager.clone(),
+            task_manager.clone(),
         );
 
-        // Note: Async service initialization will happen in background tasks
-        // where the Tokio runtime is available
+        info!("Background services started successfully");
+        
     } else {
         warn!("Main window not found during setup");
     }

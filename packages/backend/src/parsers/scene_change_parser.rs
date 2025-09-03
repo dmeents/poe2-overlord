@@ -2,7 +2,9 @@ use crate::models::events::{
     ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
 };
 use crate::parsers::config::{ParsersConfig, SceneTypeConfig};
+use crate::parsers::errors::ParseError;
 use crate::parsers::traits::LogParser;
+use crate::parsers::utils::extract_content_with_patterns;
 
 /// Scene change parser for detecting scene transition patterns
 #[derive(Clone)]
@@ -18,9 +20,9 @@ impl SceneChangeParser {
         }
     }
 
-    /// Check if a line should be parsed by this parser
-    pub fn should_parse(&self, line: &str) -> bool {
-        self.config.matches_patterns("scene_change", line)
+    /// Create a new scene change parser with custom configuration
+    pub fn with_config(config: ParsersConfig) -> Self {
+        Self { config }
     }
 
     /// Determine if the content represents a Hideout based on configuration
@@ -42,41 +44,28 @@ impl SceneChangeParser {
     }
 
     /// Extract content from scene change patterns
-    fn extract_scene_content(&self, line: &str) -> Option<String> {
-        // Try each pattern from the configuration
-        for pattern in &self.config.scene_change.patterns {
-            if let Some(start) = line.find(pattern) {
-                let content_start = start + pattern.len();
-                if let Some(end) = line[content_start..].find("]") {
-                    let content = line[content_start..content_start + end].trim();
+    fn extract_scene_content(&self, line: &str) -> Result<String, ParseError> {
+        let content =
+            extract_content_with_patterns(line, &self.config.scene_change.patterns, '[', ']')?;
 
-                    // Skip null or empty content
-                    if content.is_empty()
-                        || content == "(null)"
-                        || content == "(undefined)"
-                        || content == "undefined"
-                        || content.to_lowercase() == "null"
-                        || content.to_lowercase() == "undefined"
-                    {
-                        continue;
-                    }
-
-                    return Some(content.to_string());
-                }
-            }
-        }
-        None
+        Ok(content.into_owned())
     }
 }
 
 impl LogParser for SceneChangeParser {
     type Event = SceneChangeEvent;
 
+    fn should_parse(&self, line: &str) -> bool {
+        self.config
+            .matches_patterns("scene_change", line)
+            .unwrap_or(false)
+    }
+
     /// Parse a log line and return a scene change event if valid
-    fn parse_line(&self, line: &str) -> Option<SceneChangeEvent> {
+    fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {
         // Check if this line should be parsed by this parser
         if !self.should_parse(line) {
-            return None;
+            return Err(ParseError::no_pattern_match("scene_change"));
         }
 
         // Extract the scene content
@@ -86,22 +75,28 @@ impl LogParser for SceneChangeParser {
         let scene_config = self.config.get_scene_type_config("scene_change")?;
 
         // Determine if this is an Act, Zone, or Hideout
-        if self.is_hideout_content(&content, scene_config) {
-            Some(SceneChangeEvent::Hideout(HideoutChangeEvent {
+        let event = if self.is_hideout_content(&content, scene_config) {
+            SceneChangeEvent::Hideout(HideoutChangeEvent {
                 hideout_name: content,
                 timestamp: chrono::Utc::now().to_rfc3339(),
-            }))
+            })
         } else if self.is_act_content(&content, scene_config) {
-            Some(SceneChangeEvent::Act(ActChangeEvent {
+            SceneChangeEvent::Act(ActChangeEvent {
                 act_name: content,
                 timestamp: chrono::Utc::now().to_rfc3339(),
-            }))
+            })
         } else {
-            Some(SceneChangeEvent::Zone(ZoneChangeEvent {
+            SceneChangeEvent::Zone(ZoneChangeEvent {
                 zone_name: content,
                 timestamp: chrono::Utc::now().to_rfc3339(),
-            }))
-        }
+            })
+        };
+
+        Ok(event)
+    }
+
+    fn parser_name(&self) -> &'static str {
+        "scene_change"
     }
 }
 

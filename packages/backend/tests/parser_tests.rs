@@ -236,15 +236,14 @@ fn test_parser_config_matches_patterns() {
 }
 
 #[test]
-fn test_parser_config_get_scene_type_config() {
+fn test_parser_config_scene_types() {
     let config = ParsersConfig::default();
     
-    // Test getting valid scene type config
-    let scene_config = config.get_scene_type_config("scene_change");
+    // Test scene type configuration
+    let scene_config = config.get_scene_type_config("scene_change").unwrap();
     assert!(scene_config.is_some());
     
-    // Test getting invalid scene type config
-    let scene_config = config.get_scene_type_config("nonexistent");
+    let scene_config = config.get_scene_type_config("server_connection").unwrap();
     assert!(scene_config.is_none());
 }
 

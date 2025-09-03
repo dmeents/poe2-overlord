@@ -1,8 +1,13 @@
+use crate::handlers::{
+    event_utils::emit_scene_change_event,
+    runtime_manager::RuntimeManager,
+    task_manager::TaskManager,
+};
 use crate::models::{events::SceneChangeEvent, LocationType};
 use crate::services::{log_monitor::LogMonitorService, time_tracking::TimeTrackingService};
 use log::{debug, error};
 use std::sync::Arc;
-use tauri::{Emitter, WebviewWindow};
+use tauri::WebviewWindow;
 
 pub struct LogEventHandler;
 
@@ -11,27 +16,25 @@ impl LogEventHandler {
         window: WebviewWindow,
         log_monitor: Arc<LogMonitorService>,
         time_tracking: Arc<TimeTrackingService>,
+        runtime_manager: Arc<RuntimeManager>,
+        task_manager: Arc<TaskManager>,
     ) {
-        // Create a dedicated runtime for this background task
-        std::thread::spawn(move || {
-            let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
-            rt.block_on(async move {
-                let mut event_receiver = log_monitor.subscribe();
+        let handle = runtime_manager.spawn_background_task("log_event_emission".to_string(), move || async move {
+            let mut event_receiver = log_monitor.subscribe();
 
-                debug!("Log event emission started, listening for scene changes");
+            debug!("Log event emission started, listening for scene changes");
 
-                // Listen for scene change events and emit them to the frontend
-                while let Ok(event) = event_receiver.recv().await {
-                    // Emit the unified scene change event to the frontend
-                    if let Err(e) = window.emit("log-scene-change", &event) {
-                        error!("Failed to emit scene change event: {}", e);
-                    }
+            // Listen for scene change events and emit them to the frontend
+            while let Ok(event) = event_receiver.recv().await {
+                // Emit the unified scene change event to the frontend
+                emit_scene_change_event(&window, &event);
 
-                    // Handle time tracking based on the event type
-                    Self::handle_scene_change_event(&event, &time_tracking).await;
-                }
-            });
+                // Handle time tracking based on the event type
+                Self::handle_scene_change_event(&event, &time_tracking).await;
+            }
         });
+        
+        task_manager.register_task("log_event_emission".to_string(), handle);
     }
 
     async fn handle_scene_change_event(

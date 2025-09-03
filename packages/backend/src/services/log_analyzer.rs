@@ -1,8 +1,10 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::events::LogEvent;
+use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParserManager, ParserResult};
 use crate::services::{
-    event_dispatcher::EventDispatcher, location_tracker::LocationTracker,
+    event_dispatcher::EventDispatcher,
+    location_tracker::{LocationTracker, SceneTypeConfig},
     server_monitor::ServerMonitor,
 };
 use log::{debug, error, info, warn};
@@ -26,14 +28,24 @@ pub struct LogAnalyzer {
 impl LogAnalyzer {
     /// Create a new log analyzer
     pub fn new(log_path: String, server_manager: Arc<ServerMonitor>) -> Self {
-        let state_manager = LocationTracker::new();
+        let parser_manager = LogParserManager::new();
+
+        // Get the scene type configuration from the parser (single source of truth)
+        let parser_config = ParsersConfig::default();
+        let scene_config = SceneTypeConfig {
+            hideout_keywords: parser_config.hideout_keywords().clone(),
+            act_keywords: parser_config.act_keywords().clone(),
+            zone_keywords: parser_config.zone_keywords().clone(),
+        };
+
+        let state_manager = LocationTracker::with_config(scene_config);
 
         Self {
             log_path,
             event_broadcaster: EventDispatcher::new(),
             state_manager: state_manager.clone(),
             server_manager,
-            parser_manager: LogParserManager::new(),
+            parser_manager,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
         }
     }

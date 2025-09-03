@@ -4,7 +4,7 @@ pub mod parsers;
 pub mod utils;
 
 // Re-export main types for backward compatibility
-pub use config::{ParserConfig, ParsersConfig, SceneTypeConfig};
+pub use config::{ParserConfig, ParsersConfig};
 pub use core::{LogParser, LogParserManager, ParseError, ParserFactory, ParserResult, ParserType};
 pub use parsers::{SceneChangeParser, ServerConnectionParser};
 pub use utils::{

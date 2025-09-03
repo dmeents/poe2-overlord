@@ -33,7 +33,7 @@ export const StatusIndicator = ({
       className={`
         ${sizeClasses[size]} 
         ${statusClasses}
-        ${status === 'error' ? 'animate-pulse' : ''}
+        ${status !== 'success' ? 'animate-pulse' : ''}
         ${className}
       `}
     >

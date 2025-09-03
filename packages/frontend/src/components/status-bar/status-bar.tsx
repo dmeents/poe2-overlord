@@ -3,7 +3,7 @@ import {
   ChartBarIcon,
   CogIcon,
   ComputerDesktopIcon,
-  ServerIcon,
+  DocumentTextIcon,
   UserIcon,
 } from '@heroicons/react/16/solid';
 import { useNavigate } from '@tanstack/react-router';
@@ -56,8 +56,7 @@ export const StatusBar = () => {
 
   return (
     <div className='fixed bottom-0 w-full py-1 px-4 border-b bg-zinc-950 border-zinc-950 flex justify-between gap-2'>
-      <div className='text-xs text-zinc-400'>{getZoneDisplayText()}</div>
-      <div className='flex items-center gap-2'>
+      <div className='text-xs text-zinc-400 flex items-center gap-2'>
         <div title={isOnline ? 'POE2 is running' : 'POE2 is stopped'}>
           <StatusIndicator
             status={isOnline ? 'success' : 'error'}
@@ -74,16 +73,19 @@ export const StatusBar = () => {
                   ? 'success'
                   : 'error'
             }
-            icon={<ServerIcon />}
+            icon={<ChartBarIcon />}
             size='sm'
           />
         </div>
         <div title='Logged out of POE2'>
           <StatusIndicator status='error' icon={<UserIcon />} size='sm' />
         </div>
+        {getZoneDisplayText()}
+      </div>
+      <div className='flex items-center gap-2'>
         <div title='Activity Monitor'>
           <Button variant='icon' size='xs' onClick={handleActivityClick}>
-            <ChartBarIcon />
+            <DocumentTextIcon />
           </Button>
         </div>
         <div title='Settings'>

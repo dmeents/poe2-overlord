@@ -2,7 +2,7 @@ use crate::models::events::{
     ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
 };
 use crate::models::scene_type::SceneType;
-use crate::parsers::config::scene_types::SceneTypeConfig;
+use crate::parsers::config::ParsersConfig;
 use log::debug;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,6 +14,14 @@ struct LocationState {
     act: Option<String>,
 }
 
+/// Scene type configuration for location tracking
+#[derive(Debug, Clone)]
+pub struct SceneTypeConfig {
+    pub hideout_keywords: Vec<String>,
+    pub act_keywords: Vec<String>,
+    pub zone_keywords: Vec<String>,
+}
+
 /// Location tracker for tracking scene and act changes
 #[derive(Clone)]
 pub struct LocationTracker {
@@ -23,8 +31,15 @@ pub struct LocationTracker {
 
 impl LocationTracker {
     /// Create a new location tracker with default configuration
+    /// Uses the same scene type configuration as the parser system
     pub fn new() -> Self {
-        Self::with_config(SceneTypeConfig::default())
+        let parser_config = ParsersConfig::default();
+        let scene_config = SceneTypeConfig {
+            hideout_keywords: parser_config.hideout_keywords().clone(),
+            act_keywords: parser_config.act_keywords().clone(),
+            zone_keywords: parser_config.zone_keywords().clone(),
+        };
+        Self::with_config(scene_config)
     }
 
     /// Create a new location tracker with custom scene type configuration
@@ -161,7 +176,7 @@ impl LocationTracker {
     /// Check if the content represents a hideout based on configuration
     fn is_hideout_content(&self, lower_content: &str) -> bool {
         self.scene_config
-            .hideout
+            .hideout_keywords
             .iter()
             .any(|keyword| lower_content.contains(keyword))
     }
@@ -169,7 +184,7 @@ impl LocationTracker {
     /// Check if the content represents an act based on configuration
     fn is_act_content(&self, lower_content: &str) -> bool {
         self.scene_config
-            .act
+            .act_keywords
             .iter()
             .any(|keyword| lower_content.contains(keyword))
     }

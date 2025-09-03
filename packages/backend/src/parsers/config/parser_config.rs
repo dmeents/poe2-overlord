@@ -1,4 +1,3 @@
-use crate::parsers::config::scene_types::SceneTypeConfig;
 use crate::parsers::core::ParseError;
 use serde::{Deserialize, Serialize};
 
@@ -7,8 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct ParserConfig {
     /// Patterns to match for this parser
     pub patterns: Vec<String>,
-    /// Configuration for scene type detection
-    pub scene_types: Option<SceneTypeConfig>,
     /// Whether this parser is enabled
     #[serde(default = "default_enabled")]
     pub enabled: bool,
@@ -19,11 +16,14 @@ pub struct ParserConfig {
 pub struct ParsersConfig {
     /// Scene change parser configuration
     pub scene_change: ParserConfig,
+
     /// Server connection parser configuration
     pub server_connection: ParserConfig,
-    // Future parsers can be added here:
-    // pub combat_event: ParserConfig,
-    // pub trade_event: ParserConfig,
+
+    // Scene type detection keywords - single source of truth
+    pub hideout_keywords: Vec<String>,
+    pub act_keywords: Vec<String>,
+    pub zone_keywords: Vec<String>,
 }
 
 fn default_enabled() -> bool {
@@ -38,22 +38,23 @@ impl Default for ParsersConfig {
                     "[SCENE] Set Source [".to_string(),
                     "[SCENE] Load Source [".to_string(),
                 ],
-                scene_types: Some(SceneTypeConfig {
-                    hideout: vec!["hideout".to_string(), "sanctuary".to_string()],
-                    act: vec![
-                        "act ".to_string(),
-                        "atlas".to_string(),
-                        "interlude".to_string(),
-                    ],
-                    zone: vec!["*".to_string()], // Wildcard for any content
-                }),
                 enabled: true,
             },
             server_connection: ParserConfig {
                 patterns: vec!["Connecting to instance server at ".to_string()],
-                scene_types: None, // Not needed for server connections
                 enabled: true,
             },
+
+            // Single source of truth for scene type keywords
+            hideout_keywords: vec!["hideout".to_string()],
+
+            zone_keywords: vec!["*".to_string()], // Wildcard for any content
+
+            act_keywords: vec![
+                "act".to_string(),
+                "atlas".to_string(),
+                "interlude".to_string(),
+            ],
         }
     }
 }
@@ -70,15 +71,19 @@ impl ParsersConfig {
         Ok(config.patterns.iter().any(|pattern| line.contains(pattern)))
     }
 
-    /// Get scene type configuration for a parser
-    pub fn get_scene_type_config(&self, parser_name: &str) -> Result<&SceneTypeConfig, ParseError> {
-        let config = self.get_parser_config(parser_name)?;
-        config.scene_types.as_ref().ok_or_else(|| {
-            ParseError::configuration_error(&format!(
-                "No scene type config for parser: {}",
-                parser_name
-            ))
-        })
+    /// Get hideout keywords
+    pub fn hideout_keywords(&self) -> &Vec<String> {
+        &self.hideout_keywords
+    }
+
+    /// Get act keywords
+    pub fn act_keywords(&self) -> &Vec<String> {
+        &self.act_keywords
+    }
+
+    /// Get zone keywords
+    pub fn zone_keywords(&self) -> &Vec<String> {
+        &self.zone_keywords
     }
 
     /// Get parser configuration by name

@@ -1,16 +1,14 @@
 use app_lib::models::scene_type::SceneType;
-use app_lib::parsers::config::SceneTypeConfig;
-use app_lib::services::location_tracker::LocationTracker;
+use app_lib::parsers::config::ParsersConfig;
+use app_lib::services::location_tracker::{LocationTracker, SceneTypeConfig};
 
 fn create_test_config() -> SceneTypeConfig {
+    // Use the same config as the parser system for consistency
+    let parser_config = ParsersConfig::default();
     SceneTypeConfig {
-        hideout: vec!["hideout".to_string(), "sanctuary".to_string()],
-        act: vec![
-            "act ".to_string(),
-            "atlas".to_string(),
-            "interlude".to_string(),
-        ],
-        zone: vec!["*".to_string()],
+        hideout_keywords: parser_config.hideout_keywords().clone(),
+        act_keywords: parser_config.act_keywords().clone(),
+        zone_keywords: parser_config.zone_keywords().clone(),
     }
 }
 

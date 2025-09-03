@@ -1,6 +1,6 @@
 use crate::commands::{to_command_result, CommandResult};
 use crate::models::{LocationStats, LocationType, TimeTrackingData, TimeTrackingSummary};
-use crate::services::time_tracking::TimeTrackingService;
+use crate::services::session_tracker::SessionTracker;
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
@@ -8,7 +8,7 @@ use tauri::State;
 /// Get all time tracking data in a single call
 #[tauri::command]
 pub async fn get_time_tracking_data(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
+    time_tracking: State<'_, Arc<SessionTracker>>,
 ) -> CommandResult<TimeTrackingData> {
     debug!("Getting unified time tracking data");
 
@@ -59,7 +59,7 @@ pub async fn get_time_tracking_data(
 pub async fn start_time_tracking_session(
     location_name: String,
     location_type: LocationType,
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
+    time_tracking: State<'_, Arc<SessionTracker>>,
 ) -> CommandResult<()> {
     to_command_result(
         time_tracking
@@ -81,7 +81,7 @@ pub async fn start_time_tracking_session(
 #[tauri::command]
 pub async fn end_time_tracking_session(
     location_id: String,
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
+    time_tracking: State<'_, Arc<SessionTracker>>,
 ) -> CommandResult<()> {
     to_command_result(time_tracking.end_session(&location_id).await.map_err(|e| {
         crate::errors::AppError::Internal(format!("Failed to end time tracking session: {}", e))
@@ -94,7 +94,7 @@ pub async fn end_time_tracking_session(
 /// End all active time tracking sessions
 #[tauri::command]
 pub async fn end_all_active_sessions(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
+    time_tracking: State<'_, Arc<SessionTracker>>,
 ) -> CommandResult<()> {
     to_command_result(time_tracking.end_all_active_sessions().await.map_err(|e| {
         crate::errors::AppError::Internal(format!("Failed to end all active sessions: {}", e))
@@ -107,7 +107,7 @@ pub async fn end_all_active_sessions(
 /// Clear all time tracking data
 #[tauri::command]
 pub async fn clear_all_time_tracking_data(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
+    time_tracking: State<'_, Arc<SessionTracker>>,
 ) -> CommandResult<()> {
     to_command_result(time_tracking.clear_all_data().await.map_err(|e| {
         crate::errors::AppError::Internal(format!("Failed to clear time tracking data: {}", e))

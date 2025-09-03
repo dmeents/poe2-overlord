@@ -9,20 +9,20 @@ impl PoeClientLogPaths {
     pub fn get_path_for_os(os: &crate::utils::os_detection::OperatingSystem) -> PathBuf {
         match os {
             crate::utils::os_detection::OperatingSystem::Windows => {
-                // Windows: C:\Program Files (x86)\Grinding Gear Games\Path of Exile\logs\Client.txt
+                // Windows: C:\Program Files (x86)\Grinding Gear Games\Path of Exile 2\logs\Client.txt
                 PathBuf::from("C:\\Program Files (x86)")
                     .join("Grinding Gear Games")
-                    .join("Path of Exile")
+                    .join("Path of Exile 2")
                     .join("logs")
                     .join("Client.txt")
             }
             crate::utils::os_detection::OperatingSystem::MacOs => {
-                // macOS: ~/Library/Application Support/Path of Exile/logs/Client.txt
+                // macOS: ~/Library/Application Support/Path of Exile 2/logs/Client.txt
                 let home = std::env::var("HOME").unwrap_or_else(|_| "/Users/default".to_string());
                 PathBuf::from(home)
                     .join("Library")
                     .join("Application Support")
-                    .join("Path of Exile")
+                    .join("Path of Exile 2")
                     .join("logs")
                     .join("Client.txt")
             }

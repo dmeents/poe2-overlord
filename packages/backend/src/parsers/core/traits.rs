@@ -1,4 +1,4 @@
-use crate::parsers::errors::ParseError;
+use crate::parsers::core::ParseError;
 
 /// Common trait for parsing log lines into events
 pub trait LogParser {

@@ -60,7 +60,9 @@ export function LogMonitor() {
 
   const checkMonitoringStatus = async () => {
     try {
+      console.log('Checking monitoring status...');
       const status = await invoke<boolean>('is_log_monitoring_active');
+      console.log('Monitoring status:', status);
       setIsMonitoring(status);
     } catch (error) {
       console.error('Failed to check monitoring status:', error);

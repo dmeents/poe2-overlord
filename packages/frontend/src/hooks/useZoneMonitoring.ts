@@ -37,7 +37,7 @@ export const useZoneMonitoring = () => {
     );
 
     // Listen for process status to know when monitoring is active
-    const unlistenProcess = listen('poe2-process-status', event => {
+    const unlistenProcess = listen('game-process-status', event => {
       const processInfo = event.payload as { running: boolean };
       setIsMonitoring(processInfo.running);
 

@@ -1,68 +1,47 @@
 use crate::errors::AppResult;
-use crate::models::events::SceneChangeEvent;
-use crate::parsers::manager::LogParserManager;
+use crate::models::events::LogEvent;
+use crate::parsers::core::{LogParserManager, ParserResult};
 use crate::services::{
-    event_broadcaster::EventBroadcaster, file_monitor::FileMonitor,
-    player_location_manager::PlayerLocationManager, server_status::ServerStatusManager,
+    event_dispatcher::EventDispatcher, location_tracker::LocationTracker,
+    log_file_watcher::LogFileWatcher, server_monitor::ServerMonitor,
 };
 use log::{debug, error, info, warn};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
 
-/// Log monitor service that watches POE client log files for scene changes and server connections
-pub struct LogMonitorService {
-    file_monitor: FileMonitor,
-    event_broadcaster: EventBroadcaster,
-    state_manager: PlayerLocationManager,
-    server_manager: Arc<ServerStatusManager>,
+/// Log analyzer that watches POE client log files for scene changes and server connections
+pub struct LogAnalyzer {
+    file_monitor: LogFileWatcher,
+    event_broadcaster: EventDispatcher,
+    state_manager: LocationTracker,
+    server_manager: Arc<ServerMonitor>,
     parser_manager: LogParserManager,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
 
-impl LogMonitorService {
-    /// Create a new log monitor service
-    pub fn new(log_path: String, server_manager: Arc<ServerStatusManager>) -> Self {
-        let state_manager = PlayerLocationManager::new();
+impl LogAnalyzer {
+    /// Create a new log analyzer
+    pub fn new(log_path: String, server_manager: Arc<ServerMonitor>) -> Self {
+        let state_manager = LocationTracker::new();
 
         Self {
-            file_monitor: FileMonitor::new(log_path),
-            event_broadcaster: EventBroadcaster::new(),
+            file_monitor: LogFileWatcher::new(log_path),
+            event_broadcaster: EventDispatcher::new(),
             state_manager: state_manager.clone(),
             server_manager,
-            parser_manager: LogParserManager::new(Arc::new(state_manager)),
+            parser_manager: LogParserManager::new(),
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
         }
     }
 
-    /// Get the event receiver for subscribing to scene change events
-    pub fn subscribe(&self) -> tokio::sync::broadcast::Receiver<SceneChangeEvent> {
+    /// Get the event receiver for subscribing to all log events
+    pub fn subscribe(&self) -> tokio::sync::broadcast::Receiver<LogEvent> {
         self.event_broadcaster.subscribe()
     }
 
-    /// Get the event receiver for subscribing to zone change events
-    pub fn subscribe_zones(
-        &self,
-    ) -> tokio::sync::broadcast::Receiver<crate::models::events::ZoneChangeEvent> {
-        self.event_broadcaster.subscribe_zones()
-    }
-
-    /// Get the event receiver for subscribing to act change events
-    pub fn subscribe_acts(
-        &self,
-    ) -> tokio::sync::broadcast::Receiver<crate::models::events::ActChangeEvent> {
-        self.event_broadcaster.subscribe_acts()
-    }
-
-    /// Get the event receiver for subscribing to server connection events
-    pub fn subscribe_server_events(
-        &self,
-    ) -> tokio::sync::broadcast::Receiver<crate::models::events::ServerConnectionEvent> {
-        self.event_broadcaster.subscribe_server_events()
-    }
-
-    /// Get the server status manager
-    pub fn get_server_manager(&self) -> Arc<ServerStatusManager> {
+    /// Get the server monitor
+    pub fn get_server_manager(&self) -> Arc<ServerMonitor> {
         Arc::clone(&self.server_manager)
     }
 
@@ -164,13 +143,13 @@ impl LogMonitorService {
     }
 }
 
-impl LogMonitorService {
+impl LogAnalyzer {
     /// Monitor the log file for changes and parse new lines
     async fn monitor_log_file(
-        file_monitor: FileMonitor,
-        event_broadcaster: EventBroadcaster,
-        state_manager: PlayerLocationManager,
-        server_manager: Arc<ServerStatusManager>,
+        file_monitor: LogFileWatcher,
+        event_broadcaster: EventDispatcher,
+        state_manager: LocationTracker,
+        server_manager: Arc<ServerMonitor>,
         parser_manager: LogParserManager,
         is_running: &Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
@@ -210,12 +189,12 @@ impl LogMonitorService {
 
     /// Process new lines from the log file starting from the last known position
     async fn process_new_lines(
-        file_monitor: &FileMonitor,
+        file_monitor: &LogFileWatcher,
         last_position: &mut u64,
         parser_manager: &LogParserManager,
-        event_broadcaster: &EventBroadcaster,
-        _state_manager: &PlayerLocationManager,
-        server_manager: &Arc<ServerStatusManager>,
+        event_broadcaster: &EventDispatcher,
+        state_manager: &LocationTracker,
+        server_manager: &Arc<ServerMonitor>,
     ) -> AppResult<()> {
         file_monitor
             .process_new_lines(last_position, |line| {
@@ -223,6 +202,7 @@ impl LogMonitorService {
                 let parser_manager = parser_manager.clone();
                 let event_broadcaster = event_broadcaster.clone();
                 let server_manager = Arc::clone(server_manager);
+                let state_manager = state_manager.clone();
                 let line = line.to_string();
 
                 // Use spawn_blocking for CPU-bound parsing work
@@ -230,10 +210,11 @@ impl LogMonitorService {
                     // Process the line in a blocking context
                     tokio::runtime::Handle::current().block_on(async {
                         Self::process_single_line(
-                            &parser_manager,
-                            &event_broadcaster,
-                            &server_manager,
-                            &line,
+                            parser_manager,
+                            event_broadcaster,
+                            state_manager,
+                            server_manager,
+                            line,
                         )
                         .await;
                     });
@@ -246,43 +227,68 @@ impl LogMonitorService {
 
     /// Process a single log line for both scene changes and server connections
     async fn process_single_line(
-        parser_manager: &LogParserManager,
-        event_broadcaster: &EventBroadcaster,
-        server_manager: &Arc<ServerStatusManager>,
-        line: &str,
+        parser_manager: LogParserManager,
+        event_broadcaster: EventDispatcher,
+        state_manager: LocationTracker,
+        server_manager: Arc<ServerMonitor>,
+        line: String,
     ) {
-        // Parse for scene changes
-        if let Ok(Some(event)) = parser_manager.parse_line(line).await {
-            // The parser manager now only returns events for actual changes
-            // so we can directly broadcast the event
-            if let Err(e) = event_broadcaster.broadcast_event(event) {
-                warn!("Failed to broadcast scene change event: {}", e);
-            }
-        }
+        debug!("Processing log line: {}", line.trim());
 
-        // Parse for server connections
-        if let Ok(Some(event)) = parser_manager.parse_server_connection(line) {
-            debug!("Server connection event detected: {:?}", event);
+        // Parse the line using the unified parser
+        if let Ok(Some(result)) = parser_manager.parse_line(&line) {
+            match result {
+                ParserResult::SceneChange(event) => {
+                    debug!("Scene change event parsed successfully: {:?}", event);
 
-            // Update server status manager
-            if let Err(e) = server_manager.update_server_info(&event).await {
-                warn!("Failed to update server info: {}", e);
-            } else {
-                debug!("Successfully updated server status manager");
-            }
+                    // Validate that this is an actual scene change using the location tracker
+                    if let Some(validated_event) =
+                        state_manager.validate_scene_change_event(event).await
+                    {
+                        debug!(
+                            "Scene change validated as actual change: {:?}",
+                            validated_event
+                        );
+                        // Broadcast as unified log event
+                        if let Err(e) = event_broadcaster
+                            .broadcast_event(LogEvent::SceneChange(validated_event))
+                        {
+                            warn!("Failed to broadcast scene change event: {}", e);
+                        } else {
+                            debug!("Scene change event broadcast successfully");
+                        }
+                    } else {
+                        debug!("Scene change event was not an actual change, skipping broadcast");
+                    }
+                }
+                ParserResult::ServerConnection(event) => {
+                    debug!("Server connection event detected: {:?}", event);
 
-            // Broadcast server connection event to frontend
-            if let Err(e) = event_broadcaster.broadcast_server_event(event) {
-                warn!("Failed to broadcast server connection event: {}", e);
-            } else {
-                debug!("Successfully broadcasted server connection event");
+                    // Update server status manager
+                    if let Err(e) = server_manager.update_server_info(&event).await {
+                        warn!("Failed to update server info: {}", e);
+                    } else {
+                        debug!("Successfully updated server status manager");
+                    }
+
+                    // Broadcast as unified log event
+                    if let Err(e) =
+                        event_broadcaster.broadcast_event(LogEvent::ServerConnection(event))
+                    {
+                        warn!("Failed to broadcast server connection event: {}", e);
+                    } else {
+                        debug!("Successfully broadcasted server connection event");
+                    }
+                }
             }
+        } else {
+            debug!("No events parsed from line");
         }
     }
 }
 
 // Implement Clone for the components we need to move into async tasks
-impl Clone for FileMonitor {
+impl Clone for LogFileWatcher {
     fn clone(&self) -> Self {
         Self {
             log_path: self.log_path.clone(),
@@ -290,11 +296,10 @@ impl Clone for FileMonitor {
     }
 }
 
-impl Clone for EventBroadcaster {
+impl Clone for EventDispatcher {
     fn clone(&self) -> Self {
         Self {
-            scene_event_sender: self.scene_event_sender.clone(),
-            server_event_sender: self.server_event_sender.clone(),
+            unified_event_sender: self.unified_event_sender.clone(),
             ping_event_sender: self.ping_event_sender.clone(),
         }
     }

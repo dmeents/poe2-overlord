@@ -23,10 +23,10 @@ Business logic and core functionality services:
 - **`ConfigService`** - Manages application configuration with JSON persistence
 - **`LogMonitorService`** - Monitors POE2 client log files for scene changes
 - **`TimeTrackingService`** - Tracks time spent in different game locations
-- **`ProcessMonitor`** - Detects and monitors Path of Exile 2 processes
+- **`GameProcessMonitor`** - Detects and monitors Path of Exile 2 game processes
 - **`EventBroadcaster`** - Broadcasts events to multiple subscribers using Tokio channels
 - **`FileMonitor`** - Monitors file changes for real-time updates
-- **`PlayerLocationManager`** - Manages player location state (scene and act tracking)
+- **`PlayerLocation`** - Manages player location state (scene and act tracking)
 
 ### `commands/`
 Tauri 2 command handlers that expose functionality to the frontend:
@@ -49,7 +49,7 @@ Application setup and event handling:
 
 - **`service_initializer.rs`** - Application initialization and service setup
 - **`log_event_handler.rs`** - Handles log monitoring events
-- **`process_monitor_handler.rs`** - Manages process monitoring events
+- **`game_process_handler.rs`** - Manages game process monitoring events
 - **`time_tracking_handler.rs`** - Handles time tracking events
 - **`mod.rs`** - Handler module organization
 
@@ -71,7 +71,7 @@ Utility functions and constants:
 ### 🎮 Game Monitoring
 - **Real-time Log Monitoring**: Watches POE2 client log files for scene changes using notify crate
 - **Scene Change Detection**: Automatically detects zone and act transitions with intelligent parsing
-- **Process Monitoring**: Tracks Path of Exile 2 process status using sysinfo with async operations
+- **Game Process Monitoring**: Tracks Path of Exile 2 game process status using sysinfo with async operations
 - **File Change Events**: Real-time file system monitoring for immediate log updates
 
 ### ⏱️ Time Tracking
@@ -137,8 +137,8 @@ The backend provides comprehensive Tauri commands organized by functionality:
 - `clear_poe_process_start_time()` - Clear process start time tracking
 
 
-### Process Commands
-- `check_poe2_process()` - Check if Path of Exile 2 is running with detailed status
+### Game Process Commands
+- `check_game_process()` - Check if Path of Exile 2 game is running with detailed status
 
 ## Dependencies
 
@@ -230,7 +230,7 @@ Run tests with: `cargo test`
 ## Security Features
 
 - **Capability System**: Limited API access through Tauri 2's capability system
-- **Process Monitoring**: Minimal permissions required for process detection
+- **Game Process Monitoring**: Minimal permissions required for game process detection
 - **File System Access**: Controlled access to log files and configuration directories
 - **CSP Support**: Content Security Policy configuration available
 - **Sandboxed Execution**: Tauri 2 provides application sandboxing
@@ -252,7 +252,7 @@ The backend is designed to work seamlessly across different operating systems:
 ### Common Issues
 - **Log File Not Found**: Ensure POE2 client log path is correctly configured and accessible
 - **Permission Errors**: Check file system permissions for log files and config directories
-- **Process Detection**: Verify sysinfo has appropriate permissions for process monitoring
+- **Game Process Detection**: Verify sysinfo has appropriate permissions for game process monitoring
 - **File Watching Issues**: Ensure the file system supports the notify crate's watching capabilities
 
 ### Debug Mode

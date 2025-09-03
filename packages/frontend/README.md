@@ -46,7 +46,7 @@ src/
 │   ├── window-title.tsx # Window title management
 │   └── index.ts        # Component exports for clean imports
 ├── hooks/              # Custom React hooks
-│   ├── usePoe2Process.ts # POE2 process management and monitoring
+│   ├── useGameProcess.ts # Game process management and monitoring
 │   ├── useTimeTracking.ts # Time tracking state management
 │   ├── useZoneMonitoring.ts # Zone monitoring and event handling
 │   └── index.ts        # Hook exports
@@ -97,7 +97,7 @@ All components follow these principles:
 - **Custom Hooks**: Local state managed through custom hooks with proper cleanup
 - **Tauri Integration**: Backend communication through custom utilities and command wrappers
 - **Event Handling**: Proper cleanup of event listeners and async operations
-- **Process Monitoring**: Real-time updates of POE2 process status
+- **Game Process Monitoring**: Real-time updates of Path of Exile 2 game process status
 - **Route-based State**: State management tied to specific routes for better organization
 
 ## Available Components
@@ -205,7 +205,7 @@ The frontend communicates with the Rust backend through:
 
 - **Tauri Commands**: Direct function calls to Rust backend through custom utilities
 - **Event System**: Real-time updates from backend services via subscriptions
-- **Process Monitoring**: Live status updates of POE2 process
+- **Game Process Monitoring**: Live status updates of Path of Exile 2 game process
 - **Window Management**: Control overlay positioning and behavior
 - **File Monitoring**: Real-time log file monitoring and updates
 

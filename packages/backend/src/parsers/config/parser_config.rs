@@ -1,4 +1,5 @@
-use crate::parsers::errors::ParseError;
+use crate::parsers::config::scene_types::SceneTypeConfig;
+use crate::parsers::core::ParseError;
 use serde::{Deserialize, Serialize};
 
 /// Configuration for a specific parser
@@ -11,17 +12,6 @@ pub struct ParserConfig {
     /// Whether this parser is enabled
     #[serde(default = "default_enabled")]
     pub enabled: bool,
-}
-
-/// Configuration for detecting different types of scenes
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SceneTypeConfig {
-    /// Keywords that indicate a hideout
-    pub hideout: Vec<String>,
-    /// Keywords that indicate an act
-    pub act: Vec<String>,
-    /// Keywords that indicate a zone (default fallback)
-    pub zone: Vec<String>,
 }
 
 /// Main configuration for all parsers

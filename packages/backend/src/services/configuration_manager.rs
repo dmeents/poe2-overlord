@@ -13,15 +13,15 @@ const CONFIG_DIR_NAME: &str = "poe2-overlord";
 const CONFIG_FILE_NAME: &str = "config.json";
 const TEMP_FILE_EXTENSION: &str = "tmp";
 
-/// Configuration service that manages application settings
+/// Configuration manager that manages application settings
 #[derive(Clone)]
-pub struct ConfigService {
+pub struct ConfigurationManager {
     pub config: Arc<RwLock<AppConfig>>,
     pub config_path: PathBuf,
 }
 
-impl ConfigService {
-    /// Create a new configuration service
+impl ConfigurationManager {
+    /// Create a new configuration manager
     pub fn new(_app_handle: &AppHandle) -> Self {
         // Use standard config directory for the current user
         let config_dir = dirs::config_dir()

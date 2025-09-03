@@ -1,6 +1,6 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::events::ServerConnectionEvent;
-use crate::services::event_broadcaster::EventBroadcaster;
+use crate::services::event_dispatcher::EventDispatcher;
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -21,16 +21,16 @@ pub struct ServerStatus {
     pub timestamp: String,
 }
 
-/// Simplified server status manager
-pub struct ServerStatusManager {
+/// Server monitor for tracking server status and connectivity
+pub struct ServerMonitor {
     status: Arc<RwLock<Option<ServerStatus>>>,
     status_file_path: PathBuf,
-    event_broadcaster: Arc<EventBroadcaster>,
+    event_broadcaster: Arc<EventDispatcher>,
 }
 
-impl ServerStatusManager {
-    /// Create a new server status manager
-    pub fn new(event_broadcaster: Arc<EventBroadcaster>) -> Self {
+impl ServerMonitor {
+    /// Create a new server monitor
+    pub fn new(event_broadcaster: Arc<EventDispatcher>) -> Self {
         let status_file_path = Self::get_status_file_path();
         let status = Arc::new(RwLock::new(None));
 
@@ -172,7 +172,7 @@ impl ServerStatusManager {
                 timestamp: chrono::Utc::now().to_rfc3339(),
             };
 
-            // Broadcast the ping event (we'll need to add this to EventBroadcaster)
+            // Broadcast the ping event (we'll need to add this to EventDispatcher)
             if let Err(e) = self.event_broadcaster.broadcast_ping_event(ping_event) {
                 warn!("Failed to broadcast ping event: {}", e);
             }

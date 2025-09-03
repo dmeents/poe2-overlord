@@ -1,13 +1,13 @@
 import type { AppConfig, ProcessInfo } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
-import { POE2_CONFIG } from './constants';
+import { GAME_CONFIG } from './constants';
 
 export const tauriUtils = {
-  async checkPoe2Process(): Promise<ProcessInfo> {
+  async checkGameProcess(): Promise<ProcessInfo> {
     try {
-      return await invoke<ProcessInfo>(POE2_CONFIG.COMMAND_NAME);
+      return await invoke<ProcessInfo>(GAME_CONFIG.COMMAND_NAME);
     } catch (error) {
-      console.error('Failed to check POE2 process:', error);
+      console.error('Failed to check game process:', error);
       throw error;
     }
   },

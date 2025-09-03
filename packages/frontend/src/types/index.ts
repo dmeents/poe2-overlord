@@ -110,7 +110,7 @@ export const isHideoutEvent = (
 };
 
 export interface ProcessStatusProps {
-  poe2Running: boolean;
+  gameRunning: boolean;
   processInfo: ProcessInfo | null;
   onRefresh: () => void;
 }

@@ -1,8 +1,8 @@
 use crate::models::events::ServerConnectionEvent;
 use crate::parsers::config::ParsersConfig;
-use crate::parsers::traits::LogParser;
-use crate::parsers::errors::ParseError;
-use crate::parsers::utils::{extract_content_with_patterns, parse_ip_port};
+use crate::parsers::core::{LogParser, ParseError};
+use crate::parsers::utils::extract_content_by_patterns;
+use crate::utils::parse_ip_port;
 use log::debug;
 
 /// Server connection parser for detecting server connection patterns
@@ -29,10 +29,10 @@ impl ServerConnectionParser {
         debug!("Extracting server info from line: {}", line.trim());
 
         // Extract the server info part after the pattern
-        let server_info = extract_content_with_patterns(
+        let server_info = extract_content_by_patterns(
             line,
             &self.config.server_connection.patterns,
-            ' ', // Space delimiter
+            ' ',  // Space delimiter
             '\n', // Newline delimiter (or end of string)
         )?;
 
@@ -45,7 +45,8 @@ impl LogParser for ServerConnectionParser {
     type Event = ServerConnectionEvent;
 
     fn should_parse(&self, line: &str) -> bool {
-        self.config.matches_patterns("server_connection", line)
+        self.config
+            .matches_patterns("server_connection", line)
             .unwrap_or(false)
     }
 
@@ -64,17 +65,17 @@ impl LogParser for ServerConnectionParser {
 
         // Extract server information
         let (ip_address, port) = self.extract_server_info(line)?;
-        
+
         let event = ServerConnectionEvent {
             ip_address,
             port,
             timestamp: chrono::Utc::now().to_rfc3339(),
         };
-        
+
         debug!("Successfully created server connection event: {:?}", event);
         Ok(event)
     }
-    
+
     fn parser_name(&self) -> &'static str {
         "server_connection"
     }

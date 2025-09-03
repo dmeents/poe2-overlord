@@ -1,7 +1,7 @@
 use crate::errors::{AppError, AppResult};
-use crate::models::{LocationSession, LocationStats, LocationType, TimeTrackingEvent};
+use crate::models::{events::SceneChangeEvent, LocationSession, LocationStats, LocationType, TimeTrackingEvent};
 use chrono::{DateTime, Utc};
-use log::{debug, warn};
+use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
@@ -17,8 +17,8 @@ const DATA_FILE_NAME: &str = "time_tracking.json";
 const TEMP_FILE_EXTENSION: &str = "tmp";
 const MIN_SESSION_DURATION_SECONDS: i64 = 1;
 
-/// Service for tracking time spent in different game locations (zones and acts)
-pub struct TimeTrackingService {
+/// Session tracker for tracking time spent in different game locations (zones and acts)
+pub struct SessionTracker {
     active_sessions: Arc<RwLock<HashMap<String, LocationSession>>>,
     completed_sessions: Arc<RwLock<Vec<LocationSession>>>,
     stats_cache: Arc<RwLock<HashMap<String, LocationStats>>>,
@@ -27,13 +27,13 @@ pub struct TimeTrackingService {
     poe_process_start_time: Arc<RwLock<Option<DateTime<Utc>>>>,
 }
 
-impl TimeTrackingService {
-    /// Create a new time tracking service
+impl SessionTracker {
+    /// Create a new session tracker
     pub fn new() -> Self {
         Self::with_data_directory(None)
     }
 
-    /// Create a new time tracking service with a custom data directory (mainly for testing)
+    /// Create a new session tracker with a custom data directory (mainly for testing)
     pub fn with_data_directory(custom_dir: Option<PathBuf>) -> Self {
         let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
 
@@ -66,6 +66,50 @@ impl TimeTrackingService {
     /// Get the event receiver for subscribing to time tracking events
     pub fn subscribe(&self) -> broadcast::Receiver<TimeTrackingEvent> {
         self.event_sender.subscribe()
+    }
+
+    /// Handle a scene change event for time tracking
+    pub async fn handle_scene_change(&self, event: &SceneChangeEvent) {
+        match event {
+            SceneChangeEvent::Hideout(hideout_event) => {
+                debug!("Hideout change detected: {}", hideout_event.hideout_name);
+
+                // End any active act session when entering a hideout
+                if let Err(e) = self.end_sessions_by_type(&LocationType::Act).await {
+                    error!("Failed to end act sessions when entering hideout: {}", e);
+                }
+
+                // Start time tracking for the hideout
+                if let Err(e) = self
+                    .start_session(hideout_event.hideout_name.clone(), LocationType::Hideout)
+                    .await
+                {
+                    error!("Failed to start hideout time tracking: {}", e);
+                }
+            }
+            SceneChangeEvent::Zone(zone_event) => {
+                debug!("Zone change detected: {}", zone_event.zone_name);
+
+                // Start time tracking for the new zone
+                if let Err(e) = self
+                    .start_session(zone_event.zone_name.clone(), LocationType::Zone)
+                    .await
+                {
+                    error!("Failed to start zone time tracking: {}", e);
+                }
+            }
+            SceneChangeEvent::Act(act_event) => {
+                debug!("Act change detected: {}", act_event.act_name);
+
+                // Start time tracking for the new act
+                if let Err(e) = self
+                    .start_session(act_event.act_name.clone(), LocationType::Act)
+                    .await
+                {
+                    error!("Failed to start act time tracking: {}", e);
+                }
+            }
+        }
     }
 
     /// Start a new session for a location

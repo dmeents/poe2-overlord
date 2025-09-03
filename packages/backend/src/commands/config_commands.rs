@@ -1,22 +1,24 @@
 use crate::commands::{to_command_result, CommandResult};
 use crate::models::AppConfig;
-use crate::services::config::ConfigService;
-use crate::services::process_monitor::ProcessMonitor;
+use crate::services::configuration_manager::ConfigurationManager;
+use crate::services::process_detector::ProcessDetector;
 use log::error;
 use tauri::State;
 
-/// Check POE2 process status
+/// Check game process status
 #[tauri::command]
-pub async fn check_poe2_process() -> CommandResult<crate::models::ProcessInfo> {
-    to_command_result(ProcessMonitor::check_poe2_process().map_err(|e| {
-        error!("Failed to check POE2 process: {}", e);
-        crate::errors::AppError::ProcessMonitor(format!("Failed to check POE2 process: {}", e))
+pub async fn check_game_process() -> CommandResult<crate::models::ProcessInfo> {
+    to_command_result(ProcessDetector::check_game_process().map_err(|e| {
+        error!("Failed to check game process: {}", e);
+        crate::errors::AppError::ProcessMonitor(format!("Failed to check game process: {}", e))
     }))
 }
 
 /// Get the current application configuration
 #[tauri::command]
-pub async fn get_config(config_service: State<'_, ConfigService>) -> CommandResult<AppConfig> {
+pub async fn get_config(
+    config_service: State<'_, ConfigurationManager>,
+) -> CommandResult<AppConfig> {
     Ok(config_service.get_config())
 }
 
@@ -29,7 +31,7 @@ pub async fn get_default_config() -> CommandResult<AppConfig> {
 /// Update the entire application configuration
 #[tauri::command]
 pub async fn update_config(
-    config_service: State<'_, ConfigService>,
+    config_service: State<'_, ConfigurationManager>,
     new_config: AppConfig,
 ) -> CommandResult<()> {
     to_command_result(config_service.update_config(new_config).map_err(|e| {
@@ -41,7 +43,7 @@ pub async fn update_config(
 /// Reset configuration to defaults
 #[tauri::command]
 pub async fn reset_config_to_defaults(
-    config_service: State<'_, ConfigService>,
+    config_service: State<'_, ConfigurationManager>,
 ) -> CommandResult<()> {
     to_command_result(
         config_service

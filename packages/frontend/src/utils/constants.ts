@@ -4,8 +4,8 @@ export const APP_CONFIG = {
   TITLE: 'POE2 Overlord',
 } as const;
 
-export const POE2_CONFIG = {
+export const GAME_CONFIG = {
   PROCESS_NAME: 'Path of Exile 2',
-  EVENT_NAME: 'poe2-process-status',
-  COMMAND_NAME: 'check_poe2_process',
+  EVENT_NAME: 'game-process-status',
+  COMMAND_NAME: 'check_game_process',
 } as const;

@@ -1,4 +1,4 @@
-import { usePoe2Process, useServerStatus, useZoneMonitoring } from '@/hooks';
+import { useGameProcess, useServerStatus, useZoneMonitoring } from '@/hooks';
 import {
   ChartBarIcon,
   CogIcon,
@@ -11,7 +11,7 @@ import { Button } from '../button';
 import { StatusIndicator } from './status-indicator';
 
 export const StatusBar = () => {
-  const { processInfo } = usePoe2Process();
+  const { processInfo } = useGameProcess();
   const { currentZone, currentAct, isMonitoring } = useZoneMonitoring();
   const { serverStatus } = useServerStatus();
   const navigate = useNavigate();

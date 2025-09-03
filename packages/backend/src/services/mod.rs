@@ -1,10 +1,10 @@
-pub mod config;
-pub mod event_broadcaster;
-pub mod file_monitor;
-pub mod log_monitor;
-pub mod player_location_manager;
-pub mod process_monitor;
-pub mod server_status;
-pub mod time_tracking;
+pub mod configuration_manager;
+pub mod event_dispatcher;
+pub mod location_tracker;
+pub mod log_analyzer;
+pub mod log_file_watcher;
+pub mod process_detector;
+pub mod server_monitor;
+pub mod session_tracker;
 
-pub use log_monitor::LogMonitorService;
+pub use log_analyzer::LogAnalyzer;

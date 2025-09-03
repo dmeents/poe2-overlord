@@ -3,13 +3,13 @@ use std::fs::{self, OpenOptions};
 use std::io::{self, BufRead, BufReader, Seek};
 use std::path::Path;
 
-/// File monitor that watches for file changes and provides file I/O operations
-pub struct FileMonitor {
+/// Log file watcher that watches for file changes and provides file I/O operations
+pub struct LogFileWatcher {
     pub log_path: String,
 }
 
-impl FileMonitor {
-    /// Create a new file monitor for the specified log path
+impl LogFileWatcher {
+    /// Create a new log file watcher for the specified log path
     pub fn new(log_path: String) -> Self {
         Self { log_path }
     }

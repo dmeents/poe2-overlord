@@ -1,6 +1,6 @@
 use crate::services::{
-    config::ConfigService, event_broadcaster::EventBroadcaster, log_monitor::LogMonitorService,
-    server_status::ServerStatusManager, time_tracking::TimeTrackingService,
+    configuration_manager::ConfigurationManager, event_dispatcher::EventDispatcher,
+    log_analyzer::LogAnalyzer, server_monitor::ServerMonitor, session_tracker::SessionTracker,
 };
 use log::{debug, info};
 use std::sync::Arc;
@@ -14,39 +14,39 @@ impl ServiceInitializer {
     ) -> Result<ServiceInstances, Box<dyn std::error::Error>> {
         info!("Starting service initialization...");
 
-        // Initialize configuration service
-        debug!("Initializing ConfigService...");
-        let config_service = ConfigService::new(&app.handle());
+        // Initialize configuration manager
+        debug!("Initializing ConfigurationManager...");
+        let config_service = ConfigurationManager::new(&app.handle());
         app.manage(config_service.clone());
-        debug!("ConfigService managed successfully");
+        debug!("ConfigurationManager managed successfully");
 
-        // Initialize event broadcaster
-        debug!("Initializing EventBroadcaster...");
-        let event_broadcaster = Arc::new(EventBroadcaster::new());
+        // Initialize event dispatcher
+        debug!("Initializing EventDispatcher...");
+        let event_broadcaster = Arc::new(EventDispatcher::new());
         app.manage(event_broadcaster.clone());
-        debug!("EventBroadcaster managed successfully");
+        debug!("EventDispatcher managed successfully");
 
-        // Initialize time tracking service
-        debug!("Initializing TimeTrackingService...");
-        let time_tracking_service = TimeTrackingService::new();
+        // Initialize session tracker
+        debug!("Initializing SessionTracker...");
+        let time_tracking_service = SessionTracker::new();
         let time_tracking_arc = Arc::new(time_tracking_service);
         app.manage(time_tracking_arc.clone());
-        debug!("TimeTrackingService managed successfully");
+        debug!("SessionTracker managed successfully");
 
-        // Initialize server status manager
-        debug!("Initializing ServerStatusManager...");
-        let server_status_manager = ServerStatusManager::new(event_broadcaster.clone());
+        // Initialize server monitor
+        debug!("Initializing ServerMonitor...");
+        let server_status_manager = ServerMonitor::new(event_broadcaster.clone());
         let server_status_arc = Arc::new(server_status_manager);
         app.manage(server_status_arc.clone());
-        debug!("ServerStatusManager managed successfully");
+        debug!("ServerMonitor managed successfully");
 
-        // Initialize log monitor service
-        debug!("Initializing LogMonitorService...");
+        // Initialize log analyzer
+        debug!("Initializing LogAnalyzer...");
         let log_path = config_service.get_poe_client_log_path();
-        let log_monitor_service = LogMonitorService::new(log_path, server_status_arc.clone());
+        let log_monitor_service = LogAnalyzer::new(log_path, server_status_arc.clone());
         let log_monitor_arc = Arc::new(log_monitor_service);
         app.manage(log_monitor_arc.clone());
-        debug!("LogMonitorService managed successfully");
+        debug!("LogAnalyzer managed successfully");
 
         info!("Service initialization completed successfully");
 
@@ -62,9 +62,9 @@ impl ServiceInitializer {
 
 #[derive(Clone)]
 pub struct ServiceInstances {
-    pub config_service: ConfigService,
-    pub event_broadcaster: Arc<EventBroadcaster>,
-    pub log_monitor: Arc<LogMonitorService>,
-    pub time_tracking: Arc<TimeTrackingService>,
-    pub server_status: Arc<ServerStatusManager>,
+    pub config_service: ConfigurationManager,
+    pub event_broadcaster: Arc<EventDispatcher>,
+    pub log_monitor: Arc<LogAnalyzer>,
+    pub time_tracking: Arc<SessionTracker>,
+    pub server_status: Arc<ServerMonitor>,
 }

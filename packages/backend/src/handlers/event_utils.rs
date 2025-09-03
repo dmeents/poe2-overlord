@@ -1,6 +1,6 @@
 use log::error;
 use serde::Serialize;
-use tauri::WebviewWindow;
+use tauri::{Emitter, WebviewWindow};
 
 /// Trait for types that can emit events
 pub trait EventEmitter {
@@ -9,7 +9,7 @@ pub trait EventEmitter {
 
 impl EventEmitter for WebviewWindow {
     fn emit<T: Serialize>(&self, event: &str, payload: &T) -> Result<(), String> {
-        tauri::WebviewWindow::emit(self, event, payload).map_err(|e| e.to_string())
+        Emitter::emit(self, event, payload).map_err(|e| e.to_string())
     }
 }
 

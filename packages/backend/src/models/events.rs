@@ -38,6 +38,14 @@ pub enum SceneChangeEvent {
     Hideout(HideoutChangeEvent),
 }
 
+/// Unified log event that can represent either a scene change or server connection
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "event_type")]
+pub enum LogEvent {
+    SceneChange(SceneChangeEvent),
+    ServerConnection(ServerConnectionEvent),
+}
+
 impl SceneChangeEvent {
     /// Get the name of the scene (zone, act, or hideout)
     pub fn get_name(&self) -> &str {

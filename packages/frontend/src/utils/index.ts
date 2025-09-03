@@ -1,4 +1,4 @@
-export { APP_CONFIG, POE2_CONFIG } from './constants';
+export { APP_CONFIG, GAME_CONFIG } from './constants';
 export { cn } from './tailwind.ts';
 export { tauriUtils } from './tauri.ts';
 

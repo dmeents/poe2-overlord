@@ -31,6 +31,27 @@ pub struct LocationStats {
     pub last_visited: Option<DateTime<Utc>>,
 }
 
+/// Unified time tracking data containing all information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeTrackingData {
+    pub active_sessions: Vec<LocationSession>,
+    pub completed_sessions: Vec<LocationSession>,
+    pub all_location_stats: Vec<LocationStats>,
+    pub summary: TimeTrackingSummary,
+}
+
+/// Time tracking summary with aggregated metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeTrackingSummary {
+    pub active_sessions: Vec<LocationSession>,
+    pub top_locations: Vec<LocationStats>,
+    pub total_locations_tracked: usize,
+    pub total_active_sessions: usize,
+    pub total_play_time_seconds: u64,
+    pub total_play_time_since_process_start_seconds: u64,
+    pub total_hideout_time_seconds: u64,
+}
+
 /// Time tracking events for real-time updates
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TimeTrackingEvent {

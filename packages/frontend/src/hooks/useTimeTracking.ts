@@ -1,19 +1,11 @@
-import type {
-  LocationSession,
-  LocationStats,
-  TimeTrackingSummary,
-} from '@/types';
+import type { TimeTrackingData } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 
 export function useTimeTracking() {
-  const [activeSessions, setActiveSessions] = useState<LocationSession[]>([]);
-  const [completedSessions, setCompletedSessions] = useState<LocationSession[]>(
-    []
-  );
-  const [allStats, setAllStats] = useState<LocationStats[]>([]);
-  const [summary, setSummary] = useState<TimeTrackingSummary | null>(null);
+  const [timeTrackingData, setTimeTrackingData] =
+    useState<TimeTrackingData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
@@ -21,92 +13,40 @@ export function useTimeTracking() {
     message: string;
   } | null>(null);
 
-  // Fetch active sessions
-  const fetchActiveSessions = useCallback(async () => {
+  // Fetch all time tracking data in a single call
+  const fetchTimeTrackingData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const sessions = await invoke<LocationSession[]>('get_active_sessions');
-      setActiveSessions(sessions);
+      const data = await invoke<TimeTrackingData>('get_time_tracking_data');
+      setTimeTrackingData(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to fetch active sessions'
+        err instanceof Error
+          ? err.message
+          : 'Failed to fetch time tracking data'
       );
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Fetch completed sessions
-  const fetchCompletedSessions = useCallback(async () => {
-    try {
-      setError(null);
-      const sessions = await invoke<LocationSession[]>(
-        'get_completed_sessions'
-      );
-      setCompletedSessions(sessions);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to fetch completed sessions'
-      );
-    }
-  }, []);
-
-  // Fetch all location statistics
-  const fetchAllStats = useCallback(async () => {
-    try {
-      setError(null);
-      const stats = await invoke<LocationStats[]>('get_all_location_stats');
-      setAllStats(stats);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to fetch location statistics'
-      );
-    }
-  }, []);
-
-  // Fetch time tracking summary
-  const fetchSummary = useCallback(async () => {
-    try {
-      setError(null);
-      const summaryData = await invoke<TimeTrackingSummary>(
-        'get_time_tracking_summary'
-      );
-      setSummary(summaryData);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to fetch time tracking summary'
-      );
-    }
-  }, []);
-
   // Refresh all data
   const refreshData = useCallback(async () => {
-    await Promise.all([
-      fetchActiveSessions(),
-      fetchCompletedSessions(),
-      fetchAllStats(),
-      fetchSummary(),
-    ]);
-  }, [
-    fetchActiveSessions,
-    fetchCompletedSessions,
-    fetchAllStats,
-    fetchSummary,
-  ]);
+    await fetchTimeTrackingData();
+  }, [fetchTimeTrackingData]);
 
   // Clear all time tracking data
   const clearAllData = useCallback(async () => {
     try {
       setError(null);
       await invoke('clear_all_time_tracking_data');
-      await refreshData();
+      setNotification({
+        type: 'success',
+        message: 'All time tracking data cleared successfully',
+      });
+      // Refresh data after clearing
+      await fetchTimeTrackingData();
     } catch (err) {
       setError(
         err instanceof Error
@@ -114,18 +54,23 @@ export function useTimeTracking() {
           : 'Failed to clear time tracking data'
       );
     }
-  }, [refreshData]);
+  }, [fetchTimeTrackingData]);
 
   // Start a time tracking session
   const startSession = useCallback(
-    async (locationName: string, locationType: 'Zone' | 'Act') => {
+    async (locationName: string, locationType: 'Zone' | 'Act' | 'Hideout') => {
       try {
         setError(null);
         await invoke('start_time_tracking_session', {
           locationName,
-          locationType: locationType.toLowerCase(),
+          locationType,
         });
-        await fetchActiveSessions();
+        setNotification({
+          type: 'success',
+          message: `Started tracking session for ${locationName}`,
+        });
+        // Refresh data after starting session
+        await fetchTimeTrackingData();
       } catch (err) {
         setError(
           err instanceof Error
@@ -134,7 +79,7 @@ export function useTimeTracking() {
         );
       }
     },
-    [fetchActiveSessions]
+    [fetchTimeTrackingData]
   );
 
   // End a time tracking session
@@ -143,7 +88,12 @@ export function useTimeTracking() {
       try {
         setError(null);
         await invoke('end_time_tracking_session', { locationId });
-        await refreshData();
+        setNotification({
+          type: 'success',
+          message: 'Time tracking session ended successfully',
+        });
+        // Refresh data after ending session
+        await fetchTimeTrackingData();
       } catch (err) {
         setError(
           err instanceof Error
@@ -152,80 +102,43 @@ export function useTimeTracking() {
         );
       }
     },
-    [refreshData]
+    [fetchTimeTrackingData]
   );
 
-  // End all active time tracking sessions
+  // End all active sessions
   const endAllActiveSessions = useCallback(async () => {
     try {
       setError(null);
       await invoke('end_all_active_sessions');
-      await refreshData();
+      setNotification({
+        type: 'success',
+        message: 'All active sessions ended successfully',
+      });
+      // Refresh data after ending sessions
+      await fetchTimeTrackingData();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to end all active sessions'
       );
     }
-  }, [refreshData]);
+  }, [fetchTimeTrackingData]);
 
-  // Clear notification
-  const clearNotification = useCallback(() => {
-    setNotification(null);
-  }, []);
-
-  // Set up real-time event listeners
+  // Set up real-time event listeners for time tracking updates
   useEffect(() => {
     const unlistenFns: (() => void)[] = [];
 
     const setupListeners = async () => {
       try {
-        // Listen for session started events
-        const unlistenSessionStarted = await listen(
-          'time-tracking-session-started',
-          () => {
-            fetchActiveSessions();
-          }
-        );
-        unlistenFns.push(unlistenSessionStarted);
-
-        // Listen for session ended events
-        const unlistenSessionEnded = await listen(
-          'time-tracking-session-ended',
-          () => {
-            refreshData();
-          }
-        );
-        unlistenFns.push(unlistenSessionEnded);
-
-        // Listen for stats updated events
-        const unlistenStatsUpdated = await listen(
-          'time-tracking-stats-updated',
-          () => {
-            fetchAllStats();
-            fetchSummary();
-          }
-        );
-        unlistenFns.push(unlistenStatsUpdated);
-
-        // Listen for POE2 process status changes
-        const unlistenProcessStatus = await listen(
-          'poe2-process-status',
+        // Listen for time tracking events
+        const unlistenTimeTracking = await listen(
+          'time-tracking-event',
           event => {
-            const processInfo = event.payload as { running: boolean };
-
-            // If POE2 process stopped and we had active sessions, show notification
-            if (!processInfo.running && activeSessions.length > 0) {
-              setNotification({
-                type: 'info',
-                message: `POE2 process exited. All active time tracking sessions have been automatically ended.`,
-              });
-
-              // Clear notification after 5 seconds
-              setTimeout(() => setNotification(null), 5000);
-            }
+            console.log('Time tracking event received:', event);
+            // Refresh data when time tracking events occur
+            fetchTimeTrackingData();
           }
         );
-        unlistenFns.push(unlistenProcessStatus);
+        unlistenFns.push(unlistenTimeTracking);
       } catch (err) {
         console.error('Failed to set up time tracking event listeners:', err);
       }
@@ -233,23 +146,34 @@ export function useTimeTracking() {
 
     setupListeners();
 
-    // Cleanup function
+    // Cleanup listeners
     return () => {
       unlistenFns.forEach(unlisten => unlisten());
     };
-  }, [fetchActiveSessions, fetchAllStats, fetchSummary, refreshData]);
+  }, [fetchTimeTrackingData]);
 
-  // Initial data fetch
+  // Initial load
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    fetchTimeTrackingData();
+  }, [fetchTimeTrackingData]);
+
+  // Clear notification after 5 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   return {
-    // Data
-    activeSessions,
-    completedSessions,
-    allStats,
-    summary,
+    // Data from unified endpoint
+    timeTrackingData,
+    activeSessions: timeTrackingData?.active_sessions ?? [],
+    completedSessions: timeTrackingData?.completed_sessions ?? [],
+    allStats: timeTrackingData?.all_location_stats ?? [],
+    summary: timeTrackingData?.summary ?? null,
 
     // State
     isLoading,
@@ -257,17 +181,11 @@ export function useTimeTracking() {
     notification,
 
     // Actions
+    fetchTimeTrackingData,
     refreshData,
     clearAllData,
     startSession,
     endSession,
     endAllActiveSessions,
-    clearNotification,
-
-    // Individual fetch functions
-    fetchActiveSessions,
-    fetchCompletedSessions,
-    fetchAllStats,
-    fetchSummary,
   };
 }

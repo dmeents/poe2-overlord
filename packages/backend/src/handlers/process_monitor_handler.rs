@@ -39,7 +39,7 @@ impl ProcessMonitorHandler {
                             }
 
                             // Set POE process start time for time tracking
-                            time_tracking.set_poe_process_start_time();
+                            time_tracking.set_poe_process_start_time().await;
                         } else if !is_poe_running && was_poe_running {
                             // POE process just stopped, stop log monitoring
                             info!("POE2 process stopped, stopping log monitoring");
@@ -54,7 +54,7 @@ impl ProcessMonitorHandler {
                             }
 
                             // Clear POE process start time for time tracking
-                            time_tracking.clear_poe_process_start_time();
+                            time_tracking.clear_poe_process_start_time().await;
                         }
 
                         was_poe_running = is_poe_running;

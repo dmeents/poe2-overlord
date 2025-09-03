@@ -1,4 +1,7 @@
-use crate::models::events::{ActChangeEvent, SceneChangeEvent, ZoneChangeEvent, ServerConnectionEvent};
+use crate::models::events::{
+    ActChangeEvent, SceneChangeEvent, ServerConnectionEvent, ZoneChangeEvent,
+};
+use crate::services::server_status::ServerStatus;
 use log::debug;
 use tokio::sync::broadcast;
 
@@ -6,6 +9,7 @@ use tokio::sync::broadcast;
 pub struct EventBroadcaster {
     pub scene_event_sender: broadcast::Sender<SceneChangeEvent>,
     pub server_event_sender: broadcast::Sender<ServerConnectionEvent>,
+    pub ping_event_sender: broadcast::Sender<ServerStatus>,
 }
 
 impl EventBroadcaster {
@@ -13,10 +17,12 @@ impl EventBroadcaster {
     pub fn new() -> Self {
         let (scene_event_sender, _) = broadcast::channel(1000);
         let (server_event_sender, _) = broadcast::channel(100);
+        let (ping_event_sender, _) = broadcast::channel(100);
 
-        Self { 
+        Self {
             scene_event_sender,
             server_event_sender,
+            ping_event_sender,
         }
     }
 
@@ -72,6 +78,11 @@ impl EventBroadcaster {
         self.server_event_sender.subscribe()
     }
 
+    /// Get the event receiver for subscribing to server ping events
+    pub fn subscribe_ping_events(&self) -> broadcast::Receiver<ServerStatus> {
+        self.ping_event_sender.subscribe()
+    }
+
     /// Broadcast a scene change event to all subscribers
     pub fn broadcast_event(
         &self,
@@ -102,6 +113,21 @@ impl EventBroadcaster {
         result.map(|_| ())
     }
 
+    /// Broadcast a server ping event to all subscribers
+    pub fn broadcast_ping_event(
+        &self,
+        event: ServerStatus,
+    ) -> Result<(), broadcast::error::SendError<ServerStatus>> {
+        let result = self.ping_event_sender.send(event.clone());
+
+        if let Err(ref e) = result {
+            debug!("Failed to broadcast ping event: {}", e);
+        }
+
+        // Convert the Result<usize, SendError> to Result<(), SendError>
+        result.map(|_| ())
+    }
+
     /// Get the number of active subscribers
     pub fn subscriber_count(&self) -> usize {
         self.scene_event_sender.receiver_count()
@@ -110,6 +136,11 @@ impl EventBroadcaster {
     /// Get the number of active server event subscribers
     pub fn server_subscriber_count(&self) -> usize {
         self.server_event_sender.receiver_count()
+    }
+
+    /// Get the number of active ping event subscribers
+    pub fn ping_subscriber_count(&self) -> usize {
+        self.ping_event_sender.receiver_count()
     }
 }
 

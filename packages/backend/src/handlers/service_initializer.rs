@@ -1,8 +1,6 @@
 use crate::services::{
-    config::ConfigService,
-    log_monitor::LogMonitorService,
-    server_status::ServerStatusManager,
-    time_tracking::TimeTrackingService,
+    config::ConfigService, event_broadcaster::EventBroadcaster, log_monitor::LogMonitorService,
+    server_status::ServerStatusManager, time_tracking::TimeTrackingService,
 };
 use log::{debug, info};
 use std::sync::Arc;
@@ -22,6 +20,12 @@ impl ServiceInitializer {
         app.manage(config_service.clone());
         debug!("ConfigService managed successfully");
 
+        // Initialize event broadcaster
+        debug!("Initializing EventBroadcaster...");
+        let event_broadcaster = Arc::new(EventBroadcaster::new());
+        app.manage(event_broadcaster.clone());
+        debug!("EventBroadcaster managed successfully");
+
         // Initialize time tracking service
         debug!("Initializing TimeTrackingService...");
         let time_tracking_service = TimeTrackingService::new();
@@ -31,7 +35,7 @@ impl ServiceInitializer {
 
         // Initialize server status manager
         debug!("Initializing ServerStatusManager...");
-        let server_status_manager = ServerStatusManager::new();
+        let server_status_manager = ServerStatusManager::new(event_broadcaster.clone());
         let server_status_arc = Arc::new(server_status_manager);
         app.manage(server_status_arc.clone());
         debug!("ServerStatusManager managed successfully");
@@ -48,6 +52,7 @@ impl ServiceInitializer {
 
         Ok(ServiceInstances {
             config_service,
+            event_broadcaster,
             log_monitor: log_monitor_arc,
             time_tracking: time_tracking_arc,
             server_status: server_status_arc,
@@ -58,6 +63,7 @@ impl ServiceInitializer {
 #[derive(Clone)]
 pub struct ServiceInstances {
     pub config_service: ConfigService,
+    pub event_broadcaster: Arc<EventBroadcaster>,
     pub log_monitor: Arc<LogMonitorService>,
     pub time_tracking: Arc<TimeTrackingService>,
     pub server_status: Arc<ServerStatusManager>,

@@ -55,6 +55,13 @@ export interface TimeTrackingSummary {
   total_hideout_time_seconds: number;
 }
 
+export interface TimeTrackingData {
+  active_sessions: LocationSession[];
+  completed_sessions: LocationSession[];
+  all_location_stats: LocationStats[];
+  summary: TimeTrackingSummary;
+}
+
 // Updated to match the new backend SceneChangeEvent structure
 export type SceneChangeEvent =
   | { type: 'Zone'; Zone: ZoneChangeEvent }

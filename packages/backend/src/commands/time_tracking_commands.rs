@@ -1,49 +1,57 @@
-use crate::models::{LocationSession, LocationStats, LocationType};
+use crate::commands::{to_command_result, CommandResult};
+use crate::models::{LocationStats, LocationType, TimeTrackingData, TimeTrackingSummary};
 use crate::services::time_tracking::TimeTrackingService;
-use crate::commands::{CommandResult, to_command_result};
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
 
-/// Get current active sessions
+/// Get all time tracking data in a single call
 #[tauri::command]
-pub async fn get_active_sessions(
+pub async fn get_time_tracking_data(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<Vec<LocationSession>> {
-    let sessions = time_tracking.get_active_sessions();
-    debug!("Retrieved {} active sessions", sessions.len());
-    Ok(sessions)
-}
+) -> CommandResult<TimeTrackingData> {
+    debug!("Getting unified time tracking data");
 
-/// Get completed sessions
-#[tauri::command]
-pub async fn get_completed_sessions(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<Vec<LocationSession>> {
-    let sessions = time_tracking.get_completed_sessions();
-    debug!("Retrieved {} completed sessions", sessions.len());
-    Ok(sessions)
-}
+    let active_sessions = time_tracking.get_active_sessions().await;
+    let completed_sessions = time_tracking.get_completed_sessions().await;
+    let all_location_stats = time_tracking.get_all_stats().await;
 
-/// Get statistics for all locations
-#[tauri::command]
-pub async fn get_all_location_stats(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<Vec<LocationStats>> {
-    let stats = time_tracking.get_all_stats();
-    debug!("Retrieved statistics for {} locations", stats.len());
-    Ok(stats)
-}
+    // Create summary with top locations
+    let zone_stats: Vec<LocationStats> = all_location_stats
+        .iter()
+        .filter(|stat| stat.location_type == LocationType::Zone)
+        .cloned()
+        .collect();
 
-/// Get statistics for a specific location
-#[tauri::command]
-pub async fn get_location_stats(
-    location_id: String,
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<Option<LocationStats>> {
-    let stats = time_tracking.get_location_stats(&location_id);
-    debug!("Retrieved statistics for location: {}", location_id);
-    Ok(stats)
+    let mut sorted_stats = zone_stats;
+    sorted_stats.sort_by(|a, b| b.total_time_seconds.cmp(&a.total_time_seconds));
+    let top_stats = sorted_stats.into_iter().take(10).collect::<Vec<_>>();
+
+    let total_play_time = time_tracking.get_total_play_time().await;
+    let total_play_time_since_process_start = time_tracking
+        .get_total_play_time_since_process_start()
+        .await;
+    let total_hideout_time = time_tracking.get_total_hideout_time().await;
+
+    let summary = TimeTrackingSummary {
+        active_sessions: active_sessions.clone(),
+        top_locations: top_stats,
+        total_locations_tracked: all_location_stats.len(),
+        total_active_sessions: active_sessions.len(),
+        total_play_time_seconds: total_play_time,
+        total_play_time_since_process_start_seconds: total_play_time_since_process_start,
+        total_hideout_time_seconds: total_hideout_time,
+    };
+
+    let data = TimeTrackingData {
+        active_sessions,
+        completed_sessions,
+        all_location_stats,
+        summary,
+    };
+
+    debug!("Retrieved unified time tracking data");
+    Ok(data)
 }
 
 /// Start a time tracking session for a location
@@ -53,10 +61,17 @@ pub async fn start_time_tracking_session(
     location_type: LocationType,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> CommandResult<()> {
-    to_command_result(time_tracking
-        .start_session(location_name, location_type)
-        .await
-        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to start time tracking session: {}", e))))?;
+    to_command_result(
+        time_tracking
+            .start_session(location_name, location_type)
+            .await
+            .map_err(|e| {
+                crate::errors::AppError::Internal(format!(
+                    "Failed to start time tracking session: {}",
+                    e
+                ))
+            }),
+    )?;
 
     info!("Successfully started time tracking session");
     Ok(())
@@ -68,10 +83,9 @@ pub async fn end_time_tracking_session(
     location_id: String,
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> CommandResult<()> {
-    to_command_result(time_tracking
-        .end_session(&location_id)
-        .await
-        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to end time tracking session: {}", e))))?;
+    to_command_result(time_tracking.end_session(&location_id).await.map_err(|e| {
+        crate::errors::AppError::Internal(format!("Failed to end time tracking session: {}", e))
+    }))?;
 
     info!("Successfully ended time tracking session");
     Ok(())
@@ -82,10 +96,9 @@ pub async fn end_time_tracking_session(
 pub async fn end_all_active_sessions(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> CommandResult<()> {
-    to_command_result(time_tracking
-        .end_all_active_sessions()
-        .await
-        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to end all active sessions: {}", e))))?;
+    to_command_result(time_tracking.end_all_active_sessions().await.map_err(|e| {
+        crate::errors::AppError::Internal(format!("Failed to end all active sessions: {}", e))
+    }))?;
 
     info!("Successfully ended all active time tracking sessions");
     Ok(())
@@ -96,71 +109,10 @@ pub async fn end_all_active_sessions(
 pub async fn clear_all_time_tracking_data(
     time_tracking: State<'_, Arc<TimeTrackingService>>,
 ) -> CommandResult<()> {
-    to_command_result(time_tracking
-        .clear_all_data()
-        .map_err(|e| crate::errors::AppError::Internal(format!("Failed to clear time tracking data: {}", e))))?;
+    to_command_result(time_tracking.clear_all_data().await.map_err(|e| {
+        crate::errors::AppError::Internal(format!("Failed to clear time tracking data: {}", e))
+    }))?;
 
     info!("Successfully cleared all time tracking data");
     Ok(())
-}
-
-/// Set the POE process start time for time tracking
-#[tauri::command]
-pub async fn set_poe_process_start_time(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<()> {
-    time_tracking.set_poe_process_start_time();
-    debug!("POE process start time set successfully");
-    Ok(())
-}
-
-/// Clear the POE process start time
-#[tauri::command]
-pub async fn clear_poe_process_start_time(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<()> {
-    time_tracking.clear_poe_process_start_time();
-    debug!("POE process start time cleared successfully");
-    Ok(())
-}
-
-/// Get time tracking summary (active sessions and recent stats)
-#[tauri::command]
-pub async fn get_time_tracking_summary(
-    time_tracking: State<'_, Arc<TimeTrackingService>>,
-) -> CommandResult<serde_json::Value> {
-    debug!("Getting time tracking summary");
-
-    let active_sessions = time_tracking.get_active_sessions();
-    let all_stats = time_tracking.get_all_stats();
-
-    // Filter out Hideouts and Acts, keeping only Zones for top locations calculation
-    let zone_stats: Vec<LocationStats> = all_stats
-        .into_iter()
-        .filter(|stat| stat.location_type == LocationType::Zone)
-        .collect();
-
-    // Sort zone stats by total time (descending) and take top 10
-    let mut sorted_stats = zone_stats;
-    sorted_stats.sort_by(|a, b| b.total_time_seconds.cmp(&a.total_time_seconds));
-    let top_stats = sorted_stats.into_iter().take(10).collect::<Vec<_>>();
-
-    // Calculate new metrics
-    let total_play_time = time_tracking.get_total_play_time();
-    let total_play_time_since_process_start =
-        time_tracking.get_total_play_time_since_process_start();
-    let total_hideout_time = time_tracking.get_total_hideout_time();
-
-    let summary = serde_json::json!({
-        "active_sessions": active_sessions,
-        "top_locations": top_stats,
-        "total_locations_tracked": top_stats.len(),
-        "total_active_sessions": active_sessions.len(),
-        "total_play_time_seconds": total_play_time,
-        "total_play_time_since_process_start_seconds": total_play_time_since_process_start,
-        "total_hideout_time_seconds": total_hideout_time
-    });
-
-    debug!("Retrieved time tracking summary");
-    Ok(summary)
 }

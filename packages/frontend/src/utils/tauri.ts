@@ -22,47 +22,20 @@ export const tauriUtils = {
     }
   },
 
+  async getDefaultConfig(): Promise<AppConfig> {
+    try {
+      return await invoke<AppConfig>('get_default_config');
+    } catch (error) {
+      console.error('Failed to get default config:', error);
+      throw error;
+    }
+  },
+
   async updateConfig(config: AppConfig): Promise<void> {
     try {
       await invoke('update_config', { newConfig: config });
     } catch (error) {
       console.error('Failed to update config:', error);
-      throw error;
-    }
-  },
-
-  async getPoeClientLogPath(): Promise<string> {
-    try {
-      return await invoke<string>('get_poe_client_log_path');
-    } catch (error) {
-      console.error('Failed to get POE client log path:', error);
-      throw error;
-    }
-  },
-
-  async setPoeClientLogPath(path: string): Promise<void> {
-    try {
-      await invoke('set_poe_client_log_path', { path });
-    } catch (error) {
-      console.error('Failed to set POE client log path:', error);
-      throw error;
-    }
-  },
-
-  async getLogLevel(): Promise<string> {
-    try {
-      return await invoke<string>('get_log_level');
-    } catch (error) {
-      console.error('Failed to get log level:', error);
-      throw error;
-    }
-  },
-
-  async setLogLevel(level: string): Promise<void> {
-    try {
-      await invoke('set_log_level', { level });
-    } catch (error) {
-      console.error('Failed to set log level:', error);
       throw error;
     }
   },
@@ -76,9 +49,53 @@ export const tauriUtils = {
     }
   },
 
+  // Helper methods for common config operations
+  async getPoeClientLogPath(): Promise<string> {
+    try {
+      const config = await this.getConfig();
+      return config.poe_client_log_path;
+    } catch (error) {
+      console.error('Failed to get POE client log path:', error);
+      throw error;
+    }
+  },
+
+  async setPoeClientLogPath(path: string): Promise<void> {
+    try {
+      const config = await this.getConfig();
+      const updatedConfig = { ...config, poe_client_log_path: path };
+      await this.updateConfig(updatedConfig);
+    } catch (error) {
+      console.error('Failed to set POE client log path:', error);
+      throw error;
+    }
+  },
+
+  async getLogLevel(): Promise<string> {
+    try {
+      const config = await this.getConfig();
+      return config.log_level;
+    } catch (error) {
+      console.error('Failed to get log level:', error);
+      throw error;
+    }
+  },
+
+  async setLogLevel(level: string): Promise<void> {
+    try {
+      const config = await this.getConfig();
+      const updatedConfig = { ...config, log_level: level };
+      await this.updateConfig(updatedConfig);
+    } catch (error) {
+      console.error('Failed to set log level:', error);
+      throw error;
+    }
+  },
+
   async getDefaultPoeClientLogPath(): Promise<string> {
     try {
-      return await invoke<string>('get_default_poe_client_log_path');
+      const defaultConfig = await this.getDefaultConfig();
+      return defaultConfig.poe_client_log_path;
     } catch (error) {
       console.error('Failed to get default POE client log path:', error);
       throw error;
@@ -87,7 +104,13 @@ export const tauriUtils = {
 
   async resetPoeClientLogPathToDefault(): Promise<void> {
     try {
-      await invoke('reset_poe_client_log_path_to_default');
+      const config = await this.getConfig();
+      const defaultConfig = await this.getDefaultConfig();
+      const updatedConfig = {
+        ...config,
+        poe_client_log_path: defaultConfig.poe_client_log_path,
+      };
+      await this.updateConfig(updatedConfig);
     } catch (error) {
       console.error('Failed to reset POE client log path to default:', error);
       throw error;

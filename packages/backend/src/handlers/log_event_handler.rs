@@ -1,13 +1,12 @@
 use crate::handlers::{
-    event_utils::emit_scene_change_event,
-    runtime_manager::RuntimeManager,
+    event_utils::emit_scene_change_event, runtime_manager::RuntimeManager,
     task_manager::TaskManager,
 };
 use crate::models::{events::SceneChangeEvent, LocationType};
 use crate::services::{log_monitor::LogMonitorService, time_tracking::TimeTrackingService};
 use log::{debug, error};
 use std::sync::Arc;
-use tauri::WebviewWindow;
+use tauri::{Emitter, WebviewWindow};
 
 pub struct LogEventHandler;
 
@@ -19,22 +18,75 @@ impl LogEventHandler {
         runtime_manager: Arc<RuntimeManager>,
         task_manager: Arc<TaskManager>,
     ) {
-        let handle = runtime_manager.spawn_background_task("log_event_emission".to_string(), move || async move {
-            let mut event_receiver = log_monitor.subscribe();
+        let window_clone = window.clone();
+        let log_monitor_clone = log_monitor.clone();
+        let time_tracking_clone = time_tracking.clone();
+        let runtime_manager_clone = runtime_manager.clone();
+        let task_manager_clone = task_manager.clone();
 
-            debug!("Log event emission started, listening for scene changes");
+        let handle = runtime_manager_clone.spawn_background_task(
+            "log_event_emission".to_string(),
+            move || async move {
+                let mut event_receiver = log_monitor_clone.subscribe();
 
-            // Listen for scene change events and emit them to the frontend
-            while let Ok(event) = event_receiver.recv().await {
-                // Emit the unified scene change event to the frontend
-                emit_scene_change_event(&window, &event);
+                debug!("Log event emission started, listening for scene changes");
 
-                // Handle time tracking based on the event type
-                Self::handle_scene_change_event(&event, &time_tracking).await;
-            }
-        });
-        
-        task_manager.register_task("log_event_emission".to_string(), handle);
+                // Listen for scene change events and emit them to the frontend
+                while let Ok(event) = event_receiver.recv().await {
+                    // Emit the unified scene change event to the frontend
+                    emit_scene_change_event(&window_clone, &event);
+
+                    // Handle time tracking based on the event type
+                    Self::handle_scene_change_event(&event, &time_tracking_clone).await;
+                }
+            },
+        );
+
+        task_manager_clone.register_task("log_event_emission".to_string(), handle);
+
+        // Start server event emission
+        let window_clone = window.clone();
+        let log_monitor_clone = log_monitor.clone();
+        let runtime_manager_clone = runtime_manager.clone();
+        let task_manager_clone = task_manager.clone();
+        Self::start_server_event_emission(
+            window_clone,
+            log_monitor_clone,
+            runtime_manager_clone,
+            task_manager_clone,
+        );
+    }
+
+    /// Start server event emission to frontend
+    fn start_server_event_emission(
+        window: WebviewWindow,
+        log_monitor: Arc<LogMonitorService>,
+        runtime_manager: Arc<RuntimeManager>,
+        task_manager: Arc<TaskManager>,
+    ) {
+        let handle = runtime_manager.spawn_background_task(
+            "server_event_emission".to_string(),
+            move || async move {
+                let mut server_event_receiver = log_monitor.subscribe_server_events();
+
+                debug!("Server event emission started, listening for server connection events");
+
+                // Listen for server connection events and emit them to the frontend
+                while let Ok(event) = server_event_receiver.recv().await {
+                    debug!("Emitting server connection event to frontend: {:?}", event);
+
+                    // Emit server connection event to frontend with complete server status
+                    if let Err(e) = window.emit("server-status-updated", &event) {
+                        error!(
+                            "Failed to emit server status updated event to frontend: {}",
+                            e
+                        );
+                    }
+                }
+            },
+        );
+
+        task_manager.register_task("server_event_emission".to_string(), handle);
     }
 
     async fn handle_scene_change_event(

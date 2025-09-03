@@ -10,4 +10,7 @@ pub mod time_tracking;
 pub use config::AppConfig;
 pub use events::*;
 pub use process::*;
-pub use time_tracking::{LocationSession, LocationStats, LocationType, TimeTrackingEvent};
+pub use time_tracking::{
+    LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
+    TimeTrackingSummary,
+};

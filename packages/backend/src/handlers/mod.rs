@@ -54,7 +54,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     // Initialize shared runtime manager and task manager
     let runtime_manager = Arc::new(RuntimeManager::new()?);
     let task_manager = Arc::new(TaskManager::new());
-    
+
     app.manage(runtime_manager.clone());
     app.manage(task_manager.clone());
 
@@ -89,7 +89,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         );
 
         info!("Background services started successfully");
-        
     } else {
         warn!("Main window not found during setup");
     }

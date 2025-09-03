@@ -31,9 +31,7 @@ export const StatusBar = () => {
     }
 
     if (currentZone) {
-      if (currentAct) {
-        return `${currentAct} - ${currentZone}`;
-      }
+      if (currentAct) return `${currentAct} - ${currentZone}`;
       return `${currentZone}`;
     }
 

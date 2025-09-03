@@ -54,6 +54,13 @@ impl LogMonitorService {
         self.event_broadcaster.subscribe_acts()
     }
 
+    /// Get the event receiver for subscribing to server connection events
+    pub fn subscribe_server_events(
+        &self,
+    ) -> tokio::sync::broadcast::Receiver<crate::models::events::ServerConnectionEvent> {
+        self.event_broadcaster.subscribe_server_events()
+    }
+
     /// Get the server status manager
     pub fn get_server_manager(&self) -> Arc<ServerStatusManager> {
         Arc::clone(&self.server_manager)
@@ -70,42 +77,23 @@ impl LogMonitorService {
         *is_running = true;
         drop(is_running);
 
-        let file_monitor = self.file_monitor.clone();
-        let event_broadcaster = self.event_broadcaster.clone();
-        let state_manager = self.state_manager.clone();
-        let server_manager = Arc::clone(&self.server_manager);
-        let parser_manager = self.parser_manager.clone();
-        let is_running = Arc::clone(&self.is_running);
-
         info!("Starting log file monitoring for scene changes and server connections");
 
-        // Initialize server status (load from file and perform initial ping)
-        let server_manager_clone = Arc::clone(&self.server_manager);
+        // Initialize server status background tasks (load status and start ping monitoring)
+        // This is safe to do here since the Tokio runtime is now available
+        let server_manager = Arc::clone(&self.server_manager);
         tokio::spawn(async move {
-            if let Err(e) = server_manager_clone.load_status().await {
+            // Load existing server status from file
+            if let Err(e) = server_manager.load_status().await {
                 warn!("Failed to load server status: {}", e);
-            } else {
-                // Perform initial ping to check server status
-                if let Err(e) = server_manager_clone.ping_server().await {
-                    warn!("Failed to perform initial server ping: {}", e);
-                }
             }
+
+            // Start periodic ping monitoring in the background
+            server_manager.start_periodic_ping().await;
         });
 
-        tokio::spawn(async move {
-            if let Err(e) = Self::monitor_log_file(
-                file_monitor,
-                event_broadcaster,
-                state_manager,
-                server_manager,
-                parser_manager,
-                &is_running,
-            )
-            .await
-            {
-                error!("Log monitoring failed: {}", e);
-            }
-        });
+        // Start the main monitoring loop
+        self.start_monitoring_loop().await;
 
         Ok(())
     }
@@ -146,6 +134,33 @@ impl LogMonitorService {
     /// Read the last N lines from the log file
     pub fn read_last_lines(&self, count: usize) -> AppResult<Vec<String>> {
         self.file_monitor.read_last_lines(count)
+    }
+
+    // Private helper methods
+
+    /// Start the main monitoring loop
+    async fn start_monitoring_loop(&self) {
+        let file_monitor = self.file_monitor.clone();
+        let event_broadcaster = self.event_broadcaster.clone();
+        let state_manager = self.state_manager.clone();
+        let server_manager = Arc::clone(&self.server_manager);
+        let parser_manager = self.parser_manager.clone();
+        let is_running = Arc::clone(&self.is_running);
+
+        tokio::spawn(async move {
+            if let Err(e) = Self::monitor_log_file(
+                file_monitor,
+                event_broadcaster,
+                state_manager,
+                server_manager,
+                parser_manager,
+                &is_running,
+            )
+            .await
+            {
+                error!("Log monitoring failed: {}", e);
+            }
+        });
     }
 }
 
@@ -204,45 +219,65 @@ impl LogMonitorService {
     ) -> AppResult<()> {
         file_monitor
             .process_new_lines(last_position, |line| {
-                // Try to parse the line for scene changes
+                // Process the line asynchronously without spawning a new task for each line
                 let parser_manager = parser_manager.clone();
                 let event_broadcaster = event_broadcaster.clone();
                 let server_manager = Arc::clone(server_manager);
-                let line = line.to_string(); // Clone the line to avoid lifetime issues
+                let line = line.to_string();
 
-                tokio::spawn(async move {
-                    // Parse for scene changes
-                    if let Ok(Some(event)) = parser_manager.parse_line(&line).await {
-                        // The parser manager now only returns events for actual changes
-                        // so we can directly broadcast the event
-                        if let Err(e) = event_broadcaster.broadcast_event(event) {
-                            warn!("Failed to broadcast scene change event: {}", e);
-                        }
-                    }
-
-                    // Parse for server connections
-                    if let Ok(Some(event)) = parser_manager.parse_server_connection(&line) {
-                        debug!("Server connection event detected: {:?}", event);
-
-                        // Update server status manager
-                        if let Err(e) = server_manager.update_server_info(&event).await {
-                            warn!("Failed to update server info: {}", e);
-                        } else {
-                            debug!("Successfully updated server status manager");
-                        }
-
-                        // Broadcast server connection event to frontend
-                        if let Err(e) = event_broadcaster.broadcast_server_event(event) {
-                            warn!("Failed to broadcast server connection event: {}", e);
-                        } else {
-                            debug!("Successfully broadcasted server connection event");
-                        }
-                    }
+                // Use spawn_blocking for CPU-bound parsing work
+                tokio::task::spawn_blocking(move || {
+                    // Process the line in a blocking context
+                    tokio::runtime::Handle::current().block_on(async {
+                        Self::process_single_line(
+                            &parser_manager,
+                            &event_broadcaster,
+                            &server_manager,
+                            &line,
+                        )
+                        .await;
+                    });
                 });
             })
             .await?;
 
         Ok(())
+    }
+
+    /// Process a single log line for both scene changes and server connections
+    async fn process_single_line(
+        parser_manager: &LogParserManager,
+        event_broadcaster: &EventBroadcaster,
+        server_manager: &Arc<ServerStatusManager>,
+        line: &str,
+    ) {
+        // Parse for scene changes
+        if let Ok(Some(event)) = parser_manager.parse_line(line).await {
+            // The parser manager now only returns events for actual changes
+            // so we can directly broadcast the event
+            if let Err(e) = event_broadcaster.broadcast_event(event) {
+                warn!("Failed to broadcast scene change event: {}", e);
+            }
+        }
+
+        // Parse for server connections
+        if let Ok(Some(event)) = parser_manager.parse_server_connection(line) {
+            debug!("Server connection event detected: {:?}", event);
+
+            // Update server status manager
+            if let Err(e) = server_manager.update_server_info(&event).await {
+                warn!("Failed to update server info: {}", e);
+            } else {
+                debug!("Successfully updated server status manager");
+            }
+
+            // Broadcast server connection event to frontend
+            if let Err(e) = event_broadcaster.broadcast_server_event(event) {
+                warn!("Failed to broadcast server connection event: {}", e);
+            } else {
+                debug!("Successfully broadcasted server connection event");
+            }
+        }
     }
 }
 
@@ -260,6 +295,7 @@ impl Clone for EventBroadcaster {
         Self {
             scene_event_sender: self.scene_event_sender.clone(),
             server_event_sender: self.server_event_sender.clone(),
+            ping_event_sender: self.ping_event_sender.clone(),
         }
     }
 }

@@ -8,6 +8,11 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use tauri::AppHandle;
 
+/// Configuration constants
+const CONFIG_DIR_NAME: &str = "poe2-overlord";
+const CONFIG_FILE_NAME: &str = "config.json";
+const TEMP_FILE_EXTENSION: &str = "tmp";
+
 /// Configuration service that manages application settings
 #[derive(Clone)]
 pub struct ConfigService {
@@ -21,7 +26,7 @@ impl ConfigService {
         // Use standard config directory for the current user
         let config_dir = dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
-            .join("poe2-overlord");
+            .join(CONFIG_DIR_NAME);
 
         // Ensure config directory exists
         if !config_dir.exists() {
@@ -30,7 +35,7 @@ impl ConfigService {
             }
         }
 
-        let config_path = config_dir.join("config.json");
+        let config_path = config_dir.join(CONFIG_FILE_NAME);
 
         let service = Self {
             config: Arc::new(RwLock::new(AppConfig::default())),
@@ -86,7 +91,7 @@ impl ConfigService {
             .map_err(|e| AppError::Serialization(format!("Failed to serialize config: {}", e)))?;
 
         // Write to a temporary file first, then rename to ensure atomic write
-        let temp_path = self.config_path.with_extension("tmp");
+        let temp_path = self.config_path.with_extension(TEMP_FILE_EXTENSION);
         fs::write(&temp_path, content)
             .map_err(|e| AppError::FileSystem(format!("Failed to write temp file: {}", e)))?;
 

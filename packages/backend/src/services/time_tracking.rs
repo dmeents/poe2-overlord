@@ -8,8 +8,14 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::RwLock;
+use tokio::sync::RwLock;
 use tokio::sync::broadcast;
+
+/// Time tracking constants
+const EVENT_CHANNEL_SIZE: usize = 100;
+const DATA_FILE_NAME: &str = "time_tracking.json";
+const TEMP_FILE_EXTENSION: &str = "tmp";
+const MIN_SESSION_DURATION_SECONDS: i64 = 1;
 
 /// Service for tracking time spent in different game locations (zones and acts)
 pub struct TimeTrackingService {
@@ -29,7 +35,7 @@ impl TimeTrackingService {
 
     /// Create a new time tracking service with a custom data directory (mainly for testing)
     pub fn with_data_directory(custom_dir: Option<PathBuf>) -> Self {
-        let (event_sender, _) = broadcast::channel(100);
+        let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
 
         // Use custom directory if provided, otherwise use system config directory
         let config_dir = custom_dir.unwrap_or_else(|| {
@@ -38,7 +44,7 @@ impl TimeTrackingService {
                 .join("poe2-overlord")
         });
 
-        let data_file_path = config_dir.join("time_tracking.json");
+        let data_file_path = config_dir.join(DATA_FILE_NAME);
 
         let service = Self {
             active_sessions: Arc::new(RwLock::new(HashMap::new())),
@@ -95,7 +101,7 @@ impl TimeTrackingService {
 
         // Store the active session
         {
-            let mut active_sessions = self.active_sessions.write().unwrap();
+            let mut active_sessions = self.active_sessions.write().await;
             active_sessions.insert(location_id.clone(), session.clone());
         }
 
@@ -122,20 +128,20 @@ impl TimeTrackingService {
     /// End a session for a specific location
     pub async fn end_session(&self, location_id: &str) -> AppResult<()> {
         let session = {
-            let mut active_sessions = self.active_sessions.write().unwrap();
+            let mut active_sessions = self.active_sessions.write().await;
             active_sessions.remove(location_id)
         };
 
         if let Some(mut session) = session {
             let exit_time = Utc::now();
-            let duration = (exit_time - session.entry_timestamp).num_seconds().max(1) as u64;
+            let duration = (exit_time - session.entry_timestamp).num_seconds().max(MIN_SESSION_DURATION_SECONDS) as u64;
 
             session.exit_timestamp = Some(exit_time);
             session.duration_seconds = Some(duration);
 
             // Move to completed sessions
             {
-                let mut completed = self.completed_sessions.write().unwrap();
+                let mut completed = self.completed_sessions.write().await;
                 completed.push(session.clone());
             }
 
@@ -172,7 +178,7 @@ impl TimeTrackingService {
     /// End all sessions of a specific type (useful when changing acts or entering hideouts)
     pub async fn end_sessions_by_type(&self, location_type: &LocationType) -> AppResult<()> {
         let sessions_to_end: Vec<String> = {
-            let active_sessions = self.active_sessions.read().unwrap();
+            let active_sessions = self.active_sessions.read().await;
             active_sessions
                 .iter()
                 .filter(|(_, session)| session.location_type == *location_type)
@@ -190,7 +196,7 @@ impl TimeTrackingService {
     /// End all active sessions (useful when game process exits)
     pub async fn end_all_active_sessions(&self) -> AppResult<()> {
         let sessions_to_end: Vec<String> = {
-            let active_sessions = self.active_sessions.read().unwrap();
+            let active_sessions = self.active_sessions.read().await;
             active_sessions.keys().cloned().collect()
         };
 
@@ -220,36 +226,35 @@ impl TimeTrackingService {
     }
 
     /// Get current active sessions
-    pub fn get_active_sessions(&self) -> Vec<LocationSession> {
-        self.active_sessions
-            .read()
-            .unwrap()
-            .values()
-            .cloned()
-            .collect()
+    pub async fn get_active_sessions(&self) -> Vec<LocationSession> {
+        let active_sessions = self.active_sessions.read().await;
+        active_sessions.values().cloned().collect()
     }
 
     /// Get completed sessions
-    pub fn get_completed_sessions(&self) -> Vec<LocationSession> {
-        self.completed_sessions.read().unwrap().clone()
+    pub async fn get_completed_sessions(&self) -> Vec<LocationSession> {
+        let completed_sessions = self.completed_sessions.read().await;
+        completed_sessions.clone()
     }
 
     /// Get statistics for all locations
-    pub fn get_all_stats(&self) -> Vec<LocationStats> {
-        self.stats_cache.read().unwrap().values().cloned().collect()
+    pub async fn get_all_stats(&self) -> Vec<LocationStats> {
+        let stats_cache = self.stats_cache.read().await;
+        stats_cache.values().cloned().collect()
     }
 
     /// Get statistics for a specific location
-    pub fn get_location_stats(&self, location_id: &str) -> Option<LocationStats> {
-        self.stats_cache.read().unwrap().get(location_id).cloned()
+    pub async fn get_location_stats(&self, location_id: &str) -> Option<LocationStats> {
+        let stats_cache = self.stats_cache.read().await;
+        stats_cache.get(location_id).cloned()
     }
 
     /// Update statistics for a specific location
     async fn update_stats_for_location(&self, location_id: &str) -> AppResult<()> {
-        let mut stats_cache = self.stats_cache.write().unwrap();
+        let mut stats_cache = self.stats_cache.write().await;
 
         // Calculate stats from completed sessions
-        let completed_sessions = self.completed_sessions.read().unwrap();
+        let completed_sessions = self.completed_sessions.read().await;
         let location_sessions: Vec<&LocationSession> = completed_sessions
             .iter()
             .filter(|session| session.location_id == location_id)
@@ -310,8 +315,8 @@ impl TimeTrackingService {
     /// Save time tracking data to file
     fn save_data(&self) -> AppResult<()> {
         let data = TimeTrackingData {
-            completed_sessions: self.get_completed_sessions(),
-            stats: self.get_all_stats(),
+            completed_sessions: self.get_completed_sessions_sync(),
+            stats: self.get_all_stats_sync(),
         };
 
         let content = serde_json::to_string_pretty(&data).map_err(|e| {
@@ -328,7 +333,7 @@ impl TimeTrackingService {
         }
 
         // Write to a temporary file first, then rename to ensure atomic write
-        let temp_path = self.data_file_path.with_extension("tmp");
+        let temp_path = self.data_file_path.with_extension(TEMP_FILE_EXTENSION);
         fs::write(&temp_path, content)
             .map_err(|e| AppError::FileSystem(format!("Failed to write temp file: {}", e)))?;
 
@@ -340,9 +345,9 @@ impl TimeTrackingService {
     }
 
     /// Calculate total play time from all completed and active sessions
-    pub fn get_total_play_time(&self) -> u64 {
-        let completed = self.completed_sessions.read().unwrap();
-        let active = self.active_sessions.read().unwrap();
+    pub async fn get_total_play_time(&self) -> u64 {
+        let completed = self.completed_sessions.read().await;
+        let active = self.active_sessions.read().await;
 
         // Sum completed session durations
         let completed_time: u64 = completed
@@ -365,28 +370,28 @@ impl TimeTrackingService {
     }
 
     /// Set the POE process start time
-    pub fn set_poe_process_start_time(&self) {
-        let mut start_time = self.poe_process_start_time.write().unwrap();
+    pub async fn set_poe_process_start_time(&self) {
+        let mut start_time = self.poe_process_start_time.write().await;
         *start_time = Some(Utc::now());
         debug!("POE process start time set to: {:?}", start_time);
     }
 
     /// Clear the POE process start time (when process stops)
-    pub fn clear_poe_process_start_time(&self) {
-        let mut start_time = self.poe_process_start_time.write().unwrap();
+    pub async fn clear_poe_process_start_time(&self) {
+        let mut start_time = self.poe_process_start_time.write().await;
         *start_time = None;
         debug!("POE process start time cleared");
     }
 
     /// Get the POE process start time
-    pub fn get_poe_process_start_time(&self) -> Option<DateTime<Utc>> {
-        let start_time = self.poe_process_start_time.read().unwrap();
+    pub async fn get_poe_process_start_time(&self) -> Option<DateTime<Utc>> {
+        let start_time = self.poe_process_start_time.read().await;
         *start_time
     }
 
     /// Calculate total play time since POE process started
-    pub fn get_total_play_time_since_process_start(&self) -> u64 {
-        let poe_start_time = self.get_poe_process_start_time();
+    pub async fn get_total_play_time_since_process_start(&self) -> u64 {
+        let poe_start_time = self.get_poe_process_start_time().await;
 
         // If no POE process start time is set, return 0
         if poe_start_time.is_none() {
@@ -394,8 +399,8 @@ impl TimeTrackingService {
         }
 
         let poe_start = poe_start_time.unwrap();
-        let completed = self.completed_sessions.read().unwrap();
-        let active = self.active_sessions.read().unwrap();
+        let completed = self.completed_sessions.read().await;
+        let active = self.active_sessions.read().await;
 
         // Sum completed session durations that started after POE process start
         let completed_time: u64 = completed
@@ -420,9 +425,9 @@ impl TimeTrackingService {
     }
 
     /// Calculate total time spent in hideout
-    pub fn get_total_hideout_time(&self) -> u64 {
-        let completed = self.completed_sessions.read().unwrap();
-        let active = self.active_sessions.read().unwrap();
+    pub async fn get_total_hideout_time(&self) -> u64 {
+        let completed = self.completed_sessions.read().await;
+        let active = self.active_sessions.read().await;
 
         // Sum completed hideout session durations
         let completed_time: u64 = completed
@@ -463,13 +468,13 @@ impl TimeTrackingService {
 
         // Restore completed sessions
         {
-            let mut completed = self.completed_sessions.write().unwrap();
+            let mut completed = self.completed_sessions.blocking_write();
             *completed = data.completed_sessions;
         }
 
         // Restore stats cache
         {
-            let mut stats_cache = self.stats_cache.write().unwrap();
+            let mut stats_cache = self.stats_cache.blocking_write();
             for stats in data.stats {
                 stats_cache.insert(stats.location_id.clone(), stats);
             }
@@ -480,19 +485,19 @@ impl TimeTrackingService {
     }
 
     /// Clear all time tracking data
-    pub fn clear_all_data(&self) -> AppResult<()> {
+    pub async fn clear_all_data(&self) -> AppResult<()> {
         {
-            let mut active = self.active_sessions.write().unwrap();
+            let mut active = self.active_sessions.write().await;
             active.clear();
         }
 
         {
-            let mut completed = self.completed_sessions.write().unwrap();
+            let mut completed = self.completed_sessions.write().await;
             completed.clear();
         }
 
         {
-            let mut stats = self.stats_cache.write().unwrap();
+            let mut stats = self.stats_cache.write().await;
             stats.clear();
         }
 
@@ -511,7 +516,7 @@ impl TimeTrackingService {
         debug!("Shutting down time tracking service, ending all active sessions");
 
         let active_sessions: Vec<String> = {
-            let sessions = self.active_sessions.read().unwrap();
+            let sessions = self.active_sessions.read().await;
             sessions.keys().cloned().collect()
         };
 
@@ -525,6 +530,18 @@ impl TimeTrackingService {
         }
 
         Ok(())
+    }
+
+    // Helper methods for internal use
+
+    /// Get completed sessions synchronously (for internal use)
+    fn get_completed_sessions_sync(&self) -> Vec<LocationSession> {
+        self.completed_sessions.blocking_read().clone()
+    }
+
+    /// Get all stats synchronously (for internal use)
+    fn get_all_stats_sync(&self) -> Vec<LocationStats> {
+        self.stats_cache.blocking_read().values().cloned().collect()
     }
 }
 

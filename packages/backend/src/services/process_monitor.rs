@@ -2,6 +2,7 @@ use crate::errors::AppResult;
 use crate::models::ProcessInfo;
 use sysinfo::System;
 
+/// Process monitor for checking POE2 process status
 pub struct ProcessMonitor;
 
 impl ProcessMonitor {
@@ -10,13 +11,16 @@ impl ProcessMonitor {
         let mut system = System::new_all();
         system.refresh_all();
 
+        // Define POE2 process names to search for
+        let poe2_process_names = ["pathofexile2", "poe2", "pathofexile"];
+
         // Check for POE2 process names
         for (pid, process) in system.processes() {
             let process_name = process.name().to_string_lossy().to_lowercase();
 
-            if process_name.contains("pathofexile2")
-                || process_name.contains("poe2")
-                || process_name.contains("pathofexile")
+            if poe2_process_names
+                .iter()
+                .any(|name| process_name.contains(name))
             {
                 return Ok(ProcessInfo {
                     name: process.name().to_string_lossy().to_string(),

@@ -1,6 +1,4 @@
 use crate::errors::{AppError, AppResult};
-use log::debug;
-use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::fs::{self, OpenOptions};
 use std::io::{self, BufRead, BufReader, Seek};
 use std::path::Path;
@@ -60,38 +58,6 @@ impl FileMonitor {
         Ok(lines[start..].to_vec())
     }
 
-    /// Create a file system event watcher
-    pub fn create_watcher<F>(&self, callback: F) -> AppResult<RecommendedWatcher>
-    where
-        F: Fn(Event) + Send + 'static,
-    {
-        let path = Path::new(&self.log_path);
-        
-        if !path.exists() {
-            return Err(AppError::LogMonitor(format!(
-                "Log file not found: {}",
-                self.log_path
-            )));
-        }
-
-        let mut watcher = RecommendedWatcher::new(
-            move |res: Result<Event, _>| {
-                if let Ok(event) = res {
-                    if let EventKind::Modify(_) = event.kind {
-                        debug!("Log file modified, processing changes");
-                        callback(event);
-                    }
-                }
-            },
-            Config::default(),
-        )?;
-
-        // Watch the file for changes
-        watcher.watch(path, RecursiveMode::NonRecursive)?;
-
-        Ok(watcher)
-    }
-
     /// Process new lines from the log file starting from the last known position
     pub async fn process_new_lines<F>(
         &self,
@@ -122,16 +88,9 @@ impl FileMonitor {
         }
 
         // Update position to current file size
-        *last_position = self.get_file_size(path)?;
+        *last_position = self.get_log_file_size()?;
 
         Ok(())
-    }
-
-    /// Get the current size of a file
-    fn get_file_size(&self, path: &Path) -> AppResult<u64> {
-        let metadata = fs::metadata(path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to get file metadata: {}", e)))?;
-        Ok(metadata.len())
     }
 
     /// Check if the log file exists

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 export interface ServerStatus {
   ip_address: string;
   port: number;
+  is_online: boolean;
+  latency_ms: number | null;
   timestamp: string;
 }
 

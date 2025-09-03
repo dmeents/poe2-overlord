@@ -1,4 +1,5 @@
 import type { SceneChangeEvent } from '@/types';
+import { getSceneEventTimestamp } from '@/types';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
@@ -17,20 +18,22 @@ export const useZoneMonitoring = () => {
         const sceneEvent = event.payload;
         setIsMonitoring(true);
 
+        const timestamp = getSceneEventTimestamp(sceneEvent);
+
         switch (sceneEvent.type) {
           case 'Zone':
             setCurrentZone(sceneEvent.zone_name);
-            setLastZoneChange(sceneEvent.timestamp);
+            setLastZoneChange(timestamp);
             break;
           case 'Act':
             setCurrentAct(sceneEvent.act_name);
-            setLastActChange(sceneEvent.timestamp);
+            setLastActChange(timestamp);
             break;
           case 'Hideout':
             // For hideouts, we might want to clear the current zone/act
             // or handle it differently depending on requirements
             setCurrentZone(sceneEvent.hideout_name);
-            setLastZoneChange(sceneEvent.timestamp);
+            setLastZoneChange(timestamp);
             break;
         }
       }

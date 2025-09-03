@@ -215,6 +215,7 @@ impl ServerMonitor {
     pub async fn start_periodic_ping(&self) {
         let server_manager = Arc::clone(&self.status);
         let event_broadcaster = Arc::clone(&self.event_broadcaster);
+        let status_file_path = self.status_file_path.clone();
 
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(30)); // Ping every 30 seconds
@@ -245,7 +246,25 @@ impl ServerMonitor {
                         s.latency_ms = latency_ms;
                         s.timestamp = chrono::Utc::now().to_rfc3339();
                     }
+                    let status_to_save = status.clone();
                     drop(status);
+
+                    // Save status to file
+                    if let Some(ref status) = status_to_save {
+                        if let Some(parent) = status_file_path.parent() {
+                            if let Err(e) = fs::create_dir_all(parent).await {
+                                warn!("Failed to create directory for status file: {}", e);
+                            }
+                        }
+
+                        if let Ok(json) = serde_json::to_string_pretty(status) {
+                            if let Err(e) = fs::write(&status_file_path, json).await {
+                                warn!("Failed to save server status to file: {}", e);
+                            } else {
+                                debug!("Server status saved to file during periodic ping");
+                            }
+                        }
+                    }
 
                     // Emit ping event to frontend
                     let ping_event = ServerStatus {

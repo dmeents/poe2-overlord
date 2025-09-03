@@ -1,10 +1,10 @@
 # POE2 Overlord Frontend
 
-A modern, modular React 19 frontend for the POE2 Overlord overlay application built with Tauri 2, featuring a comprehensive routing system and component library.
+A modern, modular React 19 frontend for the POE2 Overlord overlay application built with Tauri 2, featuring a comprehensive routing system, component library, and real-time game monitoring capabilities.
 
 ## Architecture
 
-The frontend has been completely refactored with modern React patterns, TanStack Router for navigation, and a clear separation of concerns:
+The frontend has been completely refactored with modern React patterns, TanStack Router for type-safe navigation, and a clear separation of concerns with comprehensive state management:
 
 ### Directory Structure
 
@@ -64,13 +64,15 @@ src/
 
 ### Key Features
 
-- **Modern Routing**: TanStack Router for type-safe, performant navigation with code splitting
-- **Modular Components**: Each UI element is a separate, reusable component with clear interfaces
-- **Custom Hooks**: Business logic is separated into custom hooks for reusability and testing
-- **Type Safety**: Full TypeScript support with proper interfaces and type definitions
-- **Utility Functions**: Centralized utilities for common operations and Tauri integration
-- **Constants**: Application configuration centralized in constants file
-- **React 19**: Uses latest React features and modern patterns including hooks and concurrent features
+- **Modern Routing**: TanStack Router for type-safe, performant navigation with automatic code splitting
+- **Modular Components**: Each UI element is a separate, reusable component with clear interfaces and proper TypeScript typing
+- **Custom Hooks**: Business logic is separated into custom hooks for reusability, testing, and state management
+- **Type Safety**: Full TypeScript support with proper interfaces, type definitions, and compile-time validation
+- **Real-time Updates**: Live updates from backend services using Tauri's event system
+- **Utility Functions**: Centralized utilities for common operations, Tauri integration, and data formatting
+- **Constants**: Application configuration centralized in constants file with type safety
+- **React 19**: Uses latest React features and modern patterns including hooks, concurrent features, and improved performance
+- **Tailwind CSS 4**: Latest version with improved performance and utility-first CSS framework
 
 ### Component Design
 
@@ -94,11 +96,14 @@ All components follow these principles:
 
 ### State Management
 
-- **Custom Hooks**: Local state managed through custom hooks with proper cleanup
-- **Tauri Integration**: Backend communication through custom utilities and command wrappers
-- **Event Handling**: Proper cleanup of event listeners and async operations
-- **Game Process Monitoring**: Real-time updates of Path of Exile 2 game process status
-- **Route-based State**: State management tied to specific routes for better organization
+- **Custom Hooks**: Local state managed through custom hooks with proper cleanup and lifecycle management
+- **Tauri Integration**: Backend communication through custom utilities and command wrappers with error handling
+- **Event Handling**: Proper cleanup of event listeners and async operations with React 19 patterns
+- **Game Process Monitoring**: Real-time updates of Path of Exile 2 game process status with live status indicators
+- **Time Tracking State**: Comprehensive time tracking state management with session handling and statistics
+- **Zone Monitoring**: Real-time zone and scene change monitoring with event subscriptions
+- **Route-based State**: State management tied to specific routes for better organization and performance
+- **Error Boundaries**: Proper error handling and fallback states throughout the application
 
 ## Available Components
 
@@ -125,19 +130,19 @@ All components follow these principles:
 
 ### Log Monitoring Components
 
-- **Log Monitor**: Main log monitoring container
-- **Activity Log**: Activity log display with filtering
-- **Monitoring Status**: Real-time monitoring status
-- **Recent Log Lines**: Recent log entries with formatting
-- **Scene Event Item**: Individual scene change event display
+- **Log Monitor**: Main log monitoring container with real-time updates
+- **Activity Log**: Activity log display with filtering and search capabilities
+- **Monitoring Status**: Real-time monitoring status with connection indicators
+- **Recent Log Lines**: Recent log entries with formatting and timestamp display
+- **Scene Event Item**: Individual scene change event display with type-specific styling
 
 ### Time Tracking Components
 
-- **Active Sessions**: Currently active time tracking sessions
-- **Location Stats**: Statistics for different game locations
-- **Session History**: Historical session data
-- **Stat Card**: Statistics display cards
-- **Time Display**: Time formatting utilities
+- **Active Sessions**: Currently active time tracking sessions with real-time updates
+- **Location Stats**: Statistics for different game locations with aggregated data
+- **Session History**: Historical session data with filtering and search
+- **Stat Card**: Statistics display cards with formatted time and visit counts
+- **Time Display**: Time formatting utilities with human-readable formats
 
 ## Development
 
@@ -180,13 +185,25 @@ All components follow these principles:
 
 ## Dependencies
 
-- **React 19**: Latest React with modern features and improved performance
-- **TypeScript 5.8**: Full type safety and modern TypeScript features
-- **TanStack Router**: Type-safe routing with code splitting and performance optimizations
-- **Tailwind CSS 4**: Latest version with improved performance and features
-- **Heroicons**: Modern icon library with consistent design
-- **Tauri API 2.8**: Desktop application framework integration
-- **clsx + tailwind-merge**: Class name utilities for conditional styling
+### Core Framework
+
+- **React 19**: Latest React with modern features, improved performance, and concurrent features
+- **TypeScript 5.8**: Full type safety and modern TypeScript features with strict configuration
+- **TanStack Router**: Type-safe routing with automatic code splitting and performance optimizations
+- **Tauri API 2.8**: Desktop application framework integration with command and event support
+
+### Styling & UI
+
+- **Tailwind CSS 4**: Latest version with improved performance, features, and utility-first approach
+- **Heroicons**: Modern icon library with consistent design and React components
+- **clsx + tailwind-merge**: Class name utilities for conditional styling and class merging
+
+### Development Tools
+
+- **Vite 7**: Fast development server and build tool with HMR support
+- **ESLint 9**: Code quality and consistency with modern configuration
+- **Prettier**: Code formatting with consistent style
+- **@tanstack/router-plugin**: Vite plugin for TanStack Router integration
 
 ## Development Scripts
 
@@ -201,45 +218,70 @@ All components follow these principles:
 
 ## Integration with Backend
 
-The frontend communicates with the Rust backend through:
+The frontend communicates with the Rust backend through a comprehensive integration layer:
 
-- **Tauri Commands**: Direct function calls to Rust backend through custom utilities
-- **Event System**: Real-time updates from backend services via subscriptions
-- **Game Process Monitoring**: Live status updates of Path of Exile 2 game process
-- **Window Management**: Control overlay positioning and behavior
-- **File Monitoring**: Real-time log file monitoring and updates
+### Tauri Commands
+
+- **Direct Function Calls**: Rust backend functions called through custom utilities with proper error handling
+- **Type-safe Commands**: All commands are properly typed with TypeScript interfaces
+- **Error Handling**: Comprehensive error handling with user-friendly error messages
+- **Async Operations**: Proper handling of async operations with loading states
+
+### Event System
+
+- **Real-time Updates**: Live updates from backend services via Tauri event subscriptions
+- **Event Types**: Support for log events, time tracking events, and server status events
+- **Event Filtering**: Frontend can filter and process specific event types
+- **Event Cleanup**: Proper cleanup of event listeners and subscriptions
+
+### Specific Integrations
+
+- **Game Process Monitoring**: Live status updates of Path of Exile 2 game process with real-time indicators
+- **Time Tracking**: Real-time time tracking updates with session management
+- **Log Monitoring**: Live log file monitoring with scene change detection
+- **Configuration Management**: Dynamic configuration updates with validation
+- **Server Status**: Real-time server status monitoring with ping information
 
 ## Performance Considerations
 
-- **React 19**: Improved rendering performance and concurrent features
-- **Code Splitting**: TanStack Router provides automatic route-based code splitting
-- **Tailwind CSS 4**: Improved CSS generation and optimization
-- **Bundle Optimization**: Vite provides efficient bundling and tree shaking
-- **Lazy Loading**: Components are loaded on-demand for optimal performance
-- **Type Safety**: TanStack Router provides compile-time route validation
+- **React 19**: Improved rendering performance, concurrent features, and automatic batching
+- **Code Splitting**: TanStack Router provides automatic route-based code splitting for optimal bundle sizes
+- **Tailwind CSS 4**: Improved CSS generation, optimization, and reduced bundle size
+- **Bundle Optimization**: Vite provides efficient bundling, tree shaking, and modern ES modules
+- **Lazy Loading**: Components and routes are loaded on-demand for optimal performance
+- **Type Safety**: TanStack Router provides compile-time route validation and type safety
+- **Event Optimization**: Efficient event handling with proper cleanup and minimal re-renders
+- **State Management**: Optimized state management with proper memoization and dependency arrays
 
 ## Routing System
 
-The application uses TanStack Router for type-safe navigation:
+The application uses TanStack Router for type-safe navigation with comprehensive features:
 
-- **Route-based Code Splitting**: Automatic code splitting for better performance
-- **Type-safe Navigation**: Compile-time route validation and parameter typing
-- **Nested Routes**: Support for complex routing hierarchies
-- **Route Guards**: Protection for authenticated or protected routes
-- **Search Params**: Type-safe handling of URL search parameters
+- **Route-based Code Splitting**: Automatic code splitting for better performance and smaller bundle sizes
+- **Type-safe Navigation**: Compile-time route validation, parameter typing, and search parameter validation
+- **Nested Routes**: Support for complex routing hierarchies with proper layout management
+- **Route Guards**: Protection for authenticated or protected routes with proper redirects
+- **Search Params**: Type-safe handling of URL search parameters with validation
+- **Route Preloading**: Automatic route preloading for improved user experience
+- **Route Transitions**: Smooth transitions between routes with loading states
+- **Generated Route Tree**: Auto-generated route tree for type safety and performance
 
 ## Error Handling
 
-- **Error Boundaries**: Proper error handling at component and route levels
-- **Form Validation**: Client-side validation with user-friendly error messages
-- **Network Errors**: Graceful handling of Tauri command failures
-- **Loading States**: Proper loading states for async operations
-- **Fallback UI**: Fallback components for error scenarios
+- **Error Boundaries**: Proper error handling at component and route levels with fallback UI
+- **Form Validation**: Client-side validation with user-friendly error messages and real-time feedback
+- **Network Errors**: Graceful handling of Tauri command failures with retry mechanisms
+- **Loading States**: Proper loading states for async operations with skeleton screens
+- **Fallback UI**: Fallback components for error scenarios with recovery options
+- **Error Logging**: Comprehensive error logging for debugging and monitoring
+- **User Feedback**: Clear error messages and success notifications for user actions
 
 ## Accessibility
 
-- **ARIA Labels**: Proper accessibility attributes for screen readers
-- **Keyboard Navigation**: Full keyboard navigation support
-- **Color Contrast**: High contrast design for better visibility
-- **Semantic HTML**: Proper HTML semantics for better accessibility
-- **Focus Management**: Proper focus handling and management
+- **ARIA Labels**: Proper accessibility attributes for screen readers and assistive technologies
+- **Keyboard Navigation**: Full keyboard navigation support with proper tab order and shortcuts
+- **Color Contrast**: High contrast design for better visibility and readability
+- **Semantic HTML**: Proper HTML semantics for better accessibility and SEO
+- **Focus Management**: Proper focus handling and management with visible focus indicators
+- **Screen Reader Support**: Comprehensive screen reader support with proper announcements
+- **Responsive Design**: Accessible design across different screen sizes and devices

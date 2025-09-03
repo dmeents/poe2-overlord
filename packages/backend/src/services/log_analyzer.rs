@@ -1,18 +1,21 @@
-use crate::errors::AppResult;
+use crate::errors::{AppError, AppResult};
 use crate::models::events::LogEvent;
 use crate::parsers::core::{LogParserManager, ParserResult};
 use crate::services::{
     event_dispatcher::EventDispatcher, location_tracker::LocationTracker,
-    log_file_watcher::LogFileWatcher, server_monitor::ServerMonitor,
+    server_monitor::ServerMonitor,
 };
 use log::{debug, error, info, warn};
+use std::fs::{self, OpenOptions};
+use std::io::{self, BufRead, BufReader, Seek};
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
 
 /// Log analyzer that watches POE client log files for scene changes and server connections
 pub struct LogAnalyzer {
-    file_monitor: LogFileWatcher,
+    log_path: String,
     event_broadcaster: EventDispatcher,
     state_manager: LocationTracker,
     server_manager: Arc<ServerMonitor>,
@@ -26,7 +29,7 @@ impl LogAnalyzer {
         let state_manager = LocationTracker::new();
 
         Self {
-            file_monitor: LogFileWatcher::new(log_path),
+            log_path,
             event_broadcaster: EventDispatcher::new(),
             state_manager: state_manager.clone(),
             server_manager,
@@ -38,11 +41,6 @@ impl LogAnalyzer {
     /// Get the event receiver for subscribing to all log events
     pub fn subscribe(&self) -> tokio::sync::broadcast::Receiver<LogEvent> {
         self.event_broadcaster.subscribe()
-    }
-
-    /// Get the server monitor
-    pub fn get_server_manager(&self) -> Arc<ServerMonitor> {
-        Arc::clone(&self.server_manager)
     }
 
     /// Start monitoring the log file
@@ -95,31 +93,31 @@ impl LogAnalyzer {
         *self.is_running.read().await
     }
 
-    /// Reset the previous scene and act tracking
-    pub async fn reset_tracking(&self) {
-        self.state_manager.reset_tracking().await;
-    }
-
-    /// Get the current scene and act being tracked
-    pub async fn get_current_scene_and_act(&self) -> (Option<String>, Option<String>) {
-        self.state_manager.get_current_scene_and_act().await
-    }
-
     /// Get current log file size
     pub fn get_log_file_size(&self) -> AppResult<u64> {
-        self.file_monitor.get_log_file_size()
+        Self::get_file_size(&self.log_path)
     }
 
     /// Read the last N lines from the log file
     pub fn read_last_lines(&self, count: usize) -> AppResult<Vec<String>> {
-        self.file_monitor.read_last_lines(count)
+        Self::read_file_lines(&self.log_path, count)
+    }
+
+    /// Check if the log file exists
+    pub fn file_exists(&self) -> bool {
+        Path::new(&self.log_path).exists()
+    }
+
+    /// Get the log path
+    pub fn get_log_path(&self) -> &str {
+        &self.log_path
     }
 
     // Private helper methods
 
     /// Start the main monitoring loop
     async fn start_monitoring_loop(&self) {
-        let file_monitor = self.file_monitor.clone();
+        let log_path = self.log_path.clone();
         let event_broadcaster = self.event_broadcaster.clone();
         let state_manager = self.state_manager.clone();
         let server_manager = Arc::clone(&self.server_manager);
@@ -128,12 +126,12 @@ impl LogAnalyzer {
 
         tokio::spawn(async move {
             if let Err(e) = Self::monitor_log_file(
-                file_monitor,
+                log_path,
                 event_broadcaster,
                 state_manager,
                 server_manager,
                 parser_manager,
-                &is_running,
+                is_running,
             )
             .await
             {
@@ -141,19 +139,17 @@ impl LogAnalyzer {
             }
         });
     }
-}
 
-impl LogAnalyzer {
     /// Monitor the log file for changes and parse new lines
     async fn monitor_log_file(
-        file_monitor: LogFileWatcher,
+        log_path: String,
         event_broadcaster: EventDispatcher,
         state_manager: LocationTracker,
         server_manager: Arc<ServerMonitor>,
         parser_manager: LogParserManager,
-        is_running: &Arc<tokio::sync::RwLock<bool>>,
+        is_running: Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
-        let mut last_position = file_monitor.get_log_file_size()?;
+        let mut last_position = Self::get_file_size(&log_path)?;
         let mut check_interval = time::interval(Duration::from_millis(100));
 
         loop {
@@ -166,10 +162,10 @@ impl LogAnalyzer {
             }
 
             // Check for new content in the log file
-            let current_size = file_monitor.get_log_file_size()?;
+            let current_size = Self::get_file_size(&log_path)?;
             if current_size > last_position {
                 Self::process_new_lines(
-                    &file_monitor,
+                    &log_path,
                     &mut last_position,
                     &parser_manager,
                     &event_broadcaster,
@@ -187,40 +183,116 @@ impl LogAnalyzer {
         Ok(())
     }
 
+    /// Get file size helper method
+    fn get_file_size(log_path: &str) -> AppResult<u64> {
+        let path = Path::new(log_path);
+
+        if !path.exists() {
+            return Err(AppError::LogMonitor(format!(
+                "Log file not found: {}",
+                log_path
+            )));
+        }
+
+        let metadata = fs::metadata(path)
+            .map_err(|e| AppError::FileSystem(format!("Failed to get file metadata: {}", e)))?;
+        Ok(metadata.len())
+    }
+
+    /// Read file lines helper method
+    fn read_file_lines(log_path: &str, count: usize) -> AppResult<Vec<String>> {
+        let path = Path::new(log_path);
+
+        if !path.exists() {
+            return Err(AppError::LogMonitor(format!(
+                "Log file not found: {}",
+                log_path
+            )));
+        }
+
+        let file = OpenOptions::new()
+            .read(true)
+            .open(path)
+            .map_err(|e| AppError::FileSystem(format!("Failed to open log file: {}", e)))?;
+
+        let reader = BufReader::new(file);
+        let lines: Vec<String> = reader.lines().filter_map(|line| line.ok()).collect();
+
+        let start = if lines.len() > count {
+            lines.len() - count
+        } else {
+            0
+        };
+
+        Ok(lines[start..].to_vec())
+    }
+
+    /// Open file for reading helper method
+    fn open_file_for_reading(log_path: &str) -> AppResult<BufReader<std::fs::File>> {
+        let path = Path::new(log_path);
+
+        if !path.exists() {
+            return Err(AppError::LogMonitor(format!(
+                "Log file not found: {}",
+                log_path
+            )));
+        }
+
+        let file = OpenOptions::new()
+            .read(true)
+            .open(path)
+            .map_err(|e| AppError::FileSystem(format!("Failed to open log file: {}", e)))?;
+
+        Ok(BufReader::new(file))
+    }
+
     /// Process new lines from the log file starting from the last known position
     async fn process_new_lines(
-        file_monitor: &LogFileWatcher,
+        log_path: &str,
         last_position: &mut u64,
         parser_manager: &LogParserManager,
         event_broadcaster: &EventDispatcher,
         state_manager: &LocationTracker,
         server_manager: &Arc<ServerMonitor>,
     ) -> AppResult<()> {
-        file_monitor
-            .process_new_lines(last_position, |line| {
-                // Process the line asynchronously without spawning a new task for each line
-                let parser_manager = parser_manager.clone();
-                let event_broadcaster = event_broadcaster.clone();
-                let server_manager = Arc::clone(server_manager);
-                let state_manager = state_manager.clone();
-                let line = line.to_string();
+        let mut reader = Self::open_file_for_reading(log_path)?;
 
-                // Use spawn_blocking for CPU-bound parsing work
-                tokio::task::spawn_blocking(move || {
-                    // Process the line in a blocking context
-                    tokio::runtime::Handle::current().block_on(async {
-                        Self::process_single_line(
-                            parser_manager,
-                            event_broadcaster,
-                            state_manager,
-                            server_manager,
-                            line,
-                        )
-                        .await;
-                    });
-                });
-            })
-            .await?;
+        // Seek to last known position
+        reader
+            .seek(io::SeekFrom::Start(*last_position))
+            .map_err(|e| AppError::FileSystem(format!("Failed to seek in log file: {}", e)))?;
+
+        // Collect all new lines first
+        let mut new_lines = Vec::new();
+        for line in reader.lines() {
+            let line =
+                line.map_err(|e| AppError::FileSystem(format!("Failed to read line: {}", e)))?;
+            new_lines.push(line);
+        }
+
+        // Process all lines in a single async task
+        if !new_lines.is_empty() {
+            let parser_manager = parser_manager.clone();
+            let event_broadcaster = event_broadcaster.clone();
+            let server_manager = Arc::clone(server_manager);
+            let state_manager = state_manager.clone();
+
+            tokio::spawn(async move {
+                for line in new_lines {
+                    Self::process_single_line(
+                        parser_manager.clone(),
+                        event_broadcaster.clone(),
+                        state_manager.clone(),
+                        Arc::clone(&server_manager),
+                        line,
+                    )
+                    .await;
+                }
+            });
+        }
+
+        // Update position to current file size
+        *last_position = Self::get_file_size(log_path)?;
 
         Ok(())
     }
@@ -233,42 +305,26 @@ impl LogAnalyzer {
         server_manager: Arc<ServerMonitor>,
         line: String,
     ) {
-        debug!("Processing log line: {}", line.trim());
-
         // Parse the line using the unified parser
         if let Ok(Some(result)) = parser_manager.parse_line(&line) {
             match result {
-                ParserResult::SceneChange(event) => {
-                    debug!("Scene change event parsed successfully: {:?}", event);
-
-                    // Validate that this is an actual scene change using the location tracker
+                ParserResult::SceneChange(content) => {
+                    // Process the raw content through the location tracker (business logic layer)
                     if let Some(validated_event) =
-                        state_manager.validate_scene_change_event(event).await
+                        state_manager.process_scene_content(&content).await
                     {
-                        debug!(
-                            "Scene change validated as actual change: {:?}",
-                            validated_event
-                        );
                         // Broadcast as unified log event
                         if let Err(e) = event_broadcaster
                             .broadcast_event(LogEvent::SceneChange(validated_event))
                         {
                             warn!("Failed to broadcast scene change event: {}", e);
-                        } else {
-                            debug!("Scene change event broadcast successfully");
                         }
-                    } else {
-                        debug!("Scene change event was not an actual change, skipping broadcast");
                     }
                 }
                 ParserResult::ServerConnection(event) => {
-                    debug!("Server connection event detected: {:?}", event);
-
                     // Update server status manager
                     if let Err(e) = server_manager.update_server_info(&event).await {
                         warn!("Failed to update server info: {}", e);
-                    } else {
-                        debug!("Successfully updated server status manager");
                     }
 
                     // Broadcast as unified log event
@@ -276,26 +332,14 @@ impl LogAnalyzer {
                         event_broadcaster.broadcast_event(LogEvent::ServerConnection(event))
                     {
                         warn!("Failed to broadcast server connection event: {}", e);
-                    } else {
-                        debug!("Successfully broadcasted server connection event");
                     }
                 }
             }
-        } else {
-            debug!("No events parsed from line");
         }
     }
 }
 
 // Implement Clone for the components we need to move into async tasks
-impl Clone for LogFileWatcher {
-    fn clone(&self) -> Self {
-        Self {
-            log_path: self.log_path.clone(),
-        }
-    }
-}
-
 impl Clone for EventDispatcher {
     fn clone(&self) -> Self {
         Self {

@@ -21,6 +21,7 @@ export interface HideoutChangeEvent {
   timestamp: string;
 }
 
+// Updated to match the actual backend SceneChangeEvent serialization format
 export type SceneChangeEvent =
   | { type: 'Zone'; zone_name: string; timestamp: string }
   | { type: 'Act'; act_name: string; timestamp: string }
@@ -62,50 +63,44 @@ export interface TimeTrackingData {
   summary: TimeTrackingSummary;
 }
 
-// Updated to match the new backend SceneChangeEvent structure
-export type SceneChangeEvent =
-  | { type: 'Zone'; Zone: ZoneChangeEvent }
-  | { type: 'Act'; Act: ActChangeEvent }
-  | { type: 'Hideout'; Hideout: HideoutChangeEvent };
-
 // Helper functions to extract data from SceneChangeEvent
 export const getSceneEventName = (event: SceneChangeEvent): string => {
   switch (event.type) {
     case 'Zone':
-      return event.Zone.zone_name;
+      return event.zone_name;
     case 'Act':
-      return event.Act.act_name;
+      return event.act_name;
     case 'Hideout':
-      return event.Hideout.hideout_name;
+      return event.hideout_name;
   }
 };
 
 export const getSceneEventTimestamp = (event: SceneChangeEvent): string => {
   switch (event.type) {
     case 'Zone':
-      return event.Zone.timestamp;
+      return event.timestamp;
     case 'Act':
-      return event.Act.timestamp;
+      return event.timestamp;
     case 'Hideout':
-      return event.Hideout.timestamp;
+      return event.timestamp;
   }
 };
 
 export const isZoneEvent = (
   event: SceneChangeEvent
-): event is { type: 'Zone'; Zone: ZoneChangeEvent } => {
+): event is { type: 'Zone'; zone_name: string; timestamp: string } => {
   return event.type === 'Zone';
 };
 
 export const isActEvent = (
   event: SceneChangeEvent
-): event is { type: 'Act'; Act: ActChangeEvent } => {
+): event is { type: 'Act'; act_name: string; timestamp: string } => {
   return event.type === 'Act';
 };
 
 export const isHideoutEvent = (
   event: SceneChangeEvent
-): event is { type: 'Hideout'; Hideout: HideoutChangeEvent } => {
+): event is { type: 'Hideout'; hideout_name: string; timestamp: string } => {
   return event.type === 'Hideout';
 };
 
@@ -147,7 +142,6 @@ export interface ServerStatus {
   ip_address: string;
   port: number;
   is_online: boolean;
-  last_ping_ms: number | null;
-  last_seen: string;
-  last_checked: string;
+  latency_ms: number | null;
+  timestamp: string;
 }

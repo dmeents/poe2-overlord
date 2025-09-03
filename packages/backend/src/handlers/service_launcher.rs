@@ -4,10 +4,13 @@ use tauri::WebviewWindow;
 
 use crate::handlers::game_process_handler::GameProcessHandler;
 use crate::handlers::log_event_handler::LogEventHandler;
+use crate::handlers::ping_event_handler::PingEventHandler;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
-use crate::services::{log_analyzer::LogAnalyzer, session_tracker::SessionTracker};
+use crate::services::{
+    event_dispatcher::EventDispatcher, log_analyzer::LogAnalyzer, session_tracker::SessionTracker,
+};
 
 /// Helper function to start process monitoring with only required services
 pub fn start_game_process_monitoring(
@@ -82,6 +85,32 @@ pub fn start_time_tracking_emission(
             TimeTrackingHandler::start_event_emission(
                 window_clone,
                 time_tracking_clone,
+                runtime_manager_clone,
+                task_manager_clone,
+            )
+            .await;
+        },
+    );
+}
+
+/// Helper function to start ping event emission
+pub fn start_ping_event_emission(
+    window: WebviewWindow,
+    event_dispatcher: Arc<EventDispatcher>,
+    runtime_manager: Arc<RuntimeManager>,
+    task_manager: Arc<TaskManager>,
+) {
+    let window_clone = window.clone();
+    let event_dispatcher_clone = event_dispatcher.clone();
+    let runtime_manager_clone = runtime_manager.clone();
+    let task_manager_clone = task_manager.clone();
+
+    let _handle = runtime_manager.spawn_background_task(
+        "ping_event_emission_setup".to_string(),
+        move || async move {
+            PingEventHandler::start_event_emission(
+                window_clone,
+                event_dispatcher_clone,
                 runtime_manager_clone,
                 task_manager_clone,
             )

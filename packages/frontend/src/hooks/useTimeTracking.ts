@@ -130,15 +130,32 @@ export function useTimeTracking() {
     const setupListeners = async () => {
       try {
         // Listen for time tracking events
-        const unlistenTimeTracking = await listen(
-          'time-tracking-event',
+        const unlistenSessionStarted = await listen(
+          'time-tracking-session-started',
           event => {
-            console.log('Time tracking event received:', event);
-            // Refresh data when time tracking events occur
+            console.log('Time tracking session started event received:', event);
             fetchTimeTrackingData();
           }
         );
-        unlistenFns.push(unlistenTimeTracking);
+        unlistenFns.push(unlistenSessionStarted);
+
+        const unlistenSessionEnded = await listen(
+          'time-tracking-session-ended',
+          event => {
+            console.log('Time tracking session ended event received:', event);
+            fetchTimeTrackingData();
+          }
+        );
+        unlistenFns.push(unlistenSessionEnded);
+
+        const unlistenStatsUpdated = await listen(
+          'time-tracking-stats-updated',
+          event => {
+            console.log('Time tracking stats updated event received:', event);
+            fetchTimeTrackingData();
+          }
+        );
+        unlistenFns.push(unlistenStatsUpdated);
       } catch (err) {
         console.error('Failed to set up time tracking event listeners:', err);
       }
@@ -187,5 +204,6 @@ export function useTimeTracking() {
     startSession,
     endSession,
     endAllActiveSessions,
+    clearNotification: () => setNotification(null),
   };
 }

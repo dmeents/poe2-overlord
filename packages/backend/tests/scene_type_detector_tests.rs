@@ -1,7 +1,6 @@
-use app_lib::parsers::{
-    config::SceneTypeConfig,
-    scene_type_detector::{SceneType, SceneTypeDetector},
-};
+use app_lib::models::scene_type::SceneType;
+use app_lib::parsers::config::SceneTypeConfig;
+use app_lib::services::location_tracker::LocationTracker;
 
 fn create_test_config() -> SceneTypeConfig {
     SceneTypeConfig {
@@ -17,41 +16,41 @@ fn create_test_config() -> SceneTypeConfig {
 
 #[test]
 fn test_detect_hideout() {
-    let detector = SceneTypeDetector::new(create_test_config());
+    let tracker = LocationTracker::with_config(create_test_config());
 
-    assert_eq!(detector.detect_scene_type("My Hideout"), SceneType::Hideout);
-    assert_eq!(detector.detect_scene_type("Sanctuary"), SceneType::Hideout);
+    assert_eq!(tracker.detect_scene_type("My Hideout"), SceneType::Hideout);
+    assert_eq!(tracker.detect_scene_type("Sanctuary"), SceneType::Hideout);
     assert_eq!(
-        detector.detect_scene_type("player_hideout"),
+        tracker.detect_scene_type("player_hideout"),
         SceneType::Hideout
     );
 }
 
 #[test]
 fn test_detect_act() {
-    let detector = SceneTypeDetector::new(create_test_config());
+    let tracker = LocationTracker::with_config(create_test_config());
 
-    assert_eq!(detector.detect_scene_type("Act 1"), SceneType::Act);
-    assert_eq!(detector.detect_scene_type("Atlas"), SceneType::Act);
-    assert_eq!(detector.detect_scene_type("Interlude"), SceneType::Act);
+    assert_eq!(tracker.detect_scene_type("Act 1"), SceneType::Act);
+    assert_eq!(tracker.detect_scene_type("Atlas"), SceneType::Act);
+    assert_eq!(tracker.detect_scene_type("Interlude"), SceneType::Act);
 }
 
 #[test]
 fn test_detect_zone() {
-    let detector = SceneTypeDetector::new(create_test_config());
+    let tracker = LocationTracker::with_config(create_test_config());
 
-    assert_eq!(detector.detect_scene_type("Forest"), SceneType::Zone);
-    assert_eq!(detector.detect_scene_type("Town Square"), SceneType::Zone);
+    assert_eq!(tracker.detect_scene_type("Forest"), SceneType::Zone);
+    assert_eq!(tracker.detect_scene_type("Town Square"), SceneType::Zone);
     assert_eq!(
-        detector.detect_scene_type("Dungeon Level 1"),
+        tracker.detect_scene_type("Dungeon Level 1"),
         SceneType::Zone
     );
 }
 
 #[test]
 fn test_create_hideout_event() {
-    let detector = SceneTypeDetector::new(create_test_config());
-    let event = detector.create_scene_change_event("My Hideout");
+    let tracker = LocationTracker::with_config(create_test_config());
+    let event = tracker.create_scene_change_event("My Hideout");
 
     match event {
         app_lib::models::events::SceneChangeEvent::Hideout(hideout_event) => {
@@ -64,8 +63,8 @@ fn test_create_hideout_event() {
 
 #[test]
 fn test_create_act_event() {
-    let detector = SceneTypeDetector::new(create_test_config());
-    let event = detector.create_scene_change_event("Act 1");
+    let tracker = LocationTracker::with_config(create_test_config());
+    let event = tracker.create_scene_change_event("Act 1");
 
     match event {
         app_lib::models::events::SceneChangeEvent::Act(act_event) => {
@@ -78,8 +77,8 @@ fn test_create_act_event() {
 
 #[test]
 fn test_create_zone_event() {
-    let detector = SceneTypeDetector::new(create_test_config());
-    let event = detector.create_scene_change_event("Forest");
+    let tracker = LocationTracker::with_config(create_test_config());
+    let event = tracker.create_scene_change_event("Forest");
 
     match event {
         app_lib::models::events::SceneChangeEvent::Zone(zone_event) => {

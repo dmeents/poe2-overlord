@@ -1,4 +1,5 @@
 import type { ProcessInfo, SceneChangeEvent } from '@/types';
+import { getSceneEventTimestamp } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
@@ -34,18 +35,13 @@ export function LogMonitor() {
         {
           type: sceneEvent.type.toLowerCase() as 'zone' | 'act' | 'hideout',
           data: sceneEvent,
-          timestamp:
-            sceneEvent.type === 'Zone'
-              ? sceneEvent.Zone.timestamp
-              : sceneEvent.type === 'Act'
-                ? sceneEvent.Act.timestamp
-                : sceneEvent.Hideout.timestamp,
+          timestamp: getSceneEventTimestamp(sceneEvent),
         },
         ...prev,
       ]);
     });
 
-    const unlistenProcess = listen('poe2-process-status', event => {
+    const unlistenProcess = listen('game-process-status', event => {
       const processInfo = event.payload as ProcessInfo;
       setPoeProcessStatus(processInfo);
       setIsMonitoring(processInfo.running);

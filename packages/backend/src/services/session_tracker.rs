@@ -1,5 +1,7 @@
 use crate::errors::{AppError, AppResult};
-use crate::models::{events::SceneChangeEvent, LocationSession, LocationStats, LocationType, TimeTrackingEvent};
+use crate::models::{
+    events::SceneChangeEvent, LocationSession, LocationStats, LocationType, TimeTrackingEvent,
+};
 use chrono::{DateTime, Utc};
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
@@ -8,8 +10,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tokio::sync::broadcast;
+use tokio::sync::RwLock;
 
 /// Time tracking constants
 const EVENT_CHANNEL_SIZE: usize = 100;
@@ -178,7 +180,9 @@ impl SessionTracker {
 
         if let Some(mut session) = session {
             let exit_time = Utc::now();
-            let duration = (exit_time - session.entry_timestamp).num_seconds().max(MIN_SESSION_DURATION_SECONDS) as u64;
+            let duration = (exit_time - session.entry_timestamp)
+                .num_seconds()
+                .max(MIN_SESSION_DURATION_SECONDS) as u64;
 
             session.exit_timestamp = Some(exit_time);
             session.duration_seconds = Some(duration);
@@ -208,7 +212,7 @@ impl SessionTracker {
             self.update_stats_for_location(location_id).await?;
 
             // Save data
-            self.save_data()?;
+            self.save_data().await?;
 
             Ok(())
         } else {
@@ -264,7 +268,7 @@ impl SessionTracker {
         }
 
         // Save data after ending all sessions
-        self.save_data()?;
+        self.save_data().await?;
 
         Ok(())
     }
@@ -357,10 +361,10 @@ impl SessionTracker {
     }
 
     /// Save time tracking data to file
-    fn save_data(&self) -> AppResult<()> {
+    async fn save_data(&self) -> AppResult<()> {
         let data = TimeTrackingData {
-            completed_sessions: self.get_completed_sessions_sync(),
-            stats: self.get_all_stats_sync(),
+            completed_sessions: self.get_completed_sessions().await,
+            stats: self.get_all_stats().await,
         };
 
         let content = serde_json::to_string_pretty(&data).map_err(|e| {
@@ -577,16 +581,6 @@ impl SessionTracker {
     }
 
     // Helper methods for internal use
-
-    /// Get completed sessions synchronously (for internal use)
-    fn get_completed_sessions_sync(&self) -> Vec<LocationSession> {
-        self.completed_sessions.blocking_read().clone()
-    }
-
-    /// Get all stats synchronously (for internal use)
-    fn get_all_stats_sync(&self) -> Vec<LocationStats> {
-        self.stats_cache.blocking_read().values().cloned().collect()
-    }
 }
 
 /// Internal data structure for persistence

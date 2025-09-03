@@ -1,4 +1,8 @@
-use crate::models::events::SceneChangeEvent;
+use crate::models::events::{
+    ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
+};
+use crate::models::scene_type::SceneType;
+use crate::parsers::config::scene_types::SceneTypeConfig;
 use log::debug;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,16 +18,23 @@ struct LocationState {
 #[derive(Clone)]
 pub struct LocationTracker {
     state: Arc<RwLock<LocationState>>,
+    scene_config: SceneTypeConfig,
 }
 
 impl LocationTracker {
-    /// Create a new location tracker
+    /// Create a new location tracker with default configuration
     pub fn new() -> Self {
+        Self::with_config(SceneTypeConfig::default())
+    }
+
+    /// Create a new location tracker with custom scene type configuration
+    pub fn with_config(scene_config: SceneTypeConfig) -> Self {
         Self {
             state: Arc::new(RwLock::new(LocationState {
                 scene: None,
                 act: None,
             })),
+            scene_config,
         }
     }
 
@@ -86,6 +97,81 @@ impl LocationTracker {
     /// Get the current act name synchronously (for internal use)
     pub fn get_current_act_sync(&self) -> Option<String> {
         self.state.blocking_read().act.clone()
+    }
+
+    /// Determine the scene type based on the content (business logic moved from parser layer)
+    pub fn detect_scene_type(&self, content: &str) -> SceneType {
+        let lower_content = content.to_lowercase();
+
+        // Check for hideout keywords first (most specific)
+        if self.is_hideout_content(&lower_content) {
+            return SceneType::Hideout;
+        }
+
+        // Check for act keywords
+        if self.is_act_content(&lower_content) {
+            return SceneType::Act;
+        }
+
+        // Default to zone (fallback)
+        SceneType::Zone
+    }
+
+    /// Create a scene change event based on the detected scene type
+    pub fn create_scene_change_event(&self, content: &str) -> SceneChangeEvent {
+        let scene_type = self.detect_scene_type(content);
+        let timestamp = chrono::Utc::now().to_rfc3339();
+
+        match scene_type {
+            SceneType::Hideout => SceneChangeEvent::Hideout(HideoutChangeEvent {
+                hideout_name: content.to_string(),
+                timestamp,
+            }),
+            SceneType::Act => SceneChangeEvent::Act(ActChangeEvent {
+                act_name: content.to_string(),
+                timestamp,
+            }),
+            SceneType::Zone => SceneChangeEvent::Zone(ZoneChangeEvent {
+                zone_name: content.to_string(),
+                timestamp,
+            }),
+        }
+    }
+
+    /// Process raw scene content and return a validated scene change event if it represents an actual change
+    pub async fn process_scene_content(&self, content: &str) -> Option<SceneChangeEvent> {
+        let event = self.create_scene_change_event(content);
+        let result = self.validate_scene_change_event(event).await;
+
+        match &result {
+            Some(validated_event) => {
+                debug!(
+                    "Scene change validated as actual change: {:?}",
+                    validated_event
+                );
+            }
+            None => {
+                debug!("Scene change content was not an actual change, skipping broadcast");
+            }
+        }
+
+        result
+    }
+
+    /// Check if the content represents a hideout based on configuration
+    fn is_hideout_content(&self, lower_content: &str) -> bool {
+        self.scene_config
+            .hideout
+            .iter()
+            .any(|keyword| lower_content.contains(keyword))
+    }
+
+    /// Check if the content represents an act based on configuration
+    fn is_act_content(&self, lower_content: &str) -> bool {
+        self.scene_config
+            .act
+            .iter()
+            .any(|keyword| lower_content.contains(keyword))
     }
 
     /// Validate a scene change event and return it only if it represents an actual change

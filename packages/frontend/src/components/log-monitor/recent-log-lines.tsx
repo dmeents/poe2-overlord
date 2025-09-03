@@ -1,13 +1,19 @@
+import { Button } from '../button';
+
 interface RecentLogLinesProps {
   lastLines: string[];
+  onRefresh: () => void;
 }
 
-export function RecentLogLines({ lastLines }: RecentLogLinesProps) {
+export function RecentLogLines({ lastLines, onRefresh }: RecentLogLinesProps) {
   return (
     <div className='bg-zinc-900/50 p-4 border border-zinc-800'>
-      <h3 className='text-lg font-semibold text-white mb-3'>
-        Recent Log Lines
-      </h3>
+      <div className='flex items-center justify-between mb-3'>
+        <h3 className='text-lg font-semibold text-white'>Recent Log Lines</h3>
+        <Button onClick={onRefresh} variant='outline' size='sm'>
+          Refresh
+        </Button>
+      </div>
       <div className='space-y-1 max-h-32 overflow-y-auto'>
         {lastLines.length > 0 ? (
           lastLines.map((line, index) => (

@@ -40,12 +40,12 @@ export const StatusBar = () => {
 
   const getServerStatusTooltip = () => {
     if (!serverStatus) {
-      return 'No server information available';
+      return 'Attempting to connect to POE2 server...';
     }
 
     if (serverStatus.is_online) {
-      const pingText = serverStatus.last_ping_ms
-        ? ` (${serverStatus.last_ping_ms}ms)`
+      const pingText = serverStatus.latency_ms
+        ? ` (${serverStatus.latency_ms}ms)`
         : '';
 
       return `POE2 server is online${pingText}\nServer: ${serverStatus.ip_address}`;
@@ -60,20 +60,26 @@ export const StatusBar = () => {
       <div className='flex items-center gap-2'>
         <div title={isOnline ? 'POE2 is running' : 'POE2 is stopped'}>
           <StatusIndicator
-            status={isOnline}
+            status={isOnline ? 'success' : 'error'}
             icon={<ComputerDesktopIcon />}
             size='sm'
           />
         </div>
         <div title={getServerStatusTooltip()}>
           <StatusIndicator
-            status={serverStatus?.is_online || false}
+            status={
+              !serverStatus
+                ? 'info'
+                : serverStatus.is_online
+                  ? 'success'
+                  : 'error'
+            }
             icon={<ServerIcon />}
             size='sm'
           />
         </div>
         <div title='Logged out of POE2'>
-          <StatusIndicator status={false} icon={<UserIcon />} size='sm' />
+          <StatusIndicator status='error' icon={<UserIcon />} size='sm' />
         </div>
         <div title='Activity Monitor'>
           <Button variant='icon' size='xs' onClick={handleActivityClick}>

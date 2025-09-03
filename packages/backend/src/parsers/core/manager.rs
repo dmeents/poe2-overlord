@@ -1,6 +1,6 @@
-use crate::models::events::{SceneChangeEvent, ServerConnectionEvent};
+use crate::models::events::ServerConnectionEvent;
 use crate::parsers::config::ParsersConfig;
-use crate::parsers::core::{ParseError, ParserFactory, LogParser};
+use crate::parsers::core::{LogParser, ParseError, ParserFactory};
 use crate::parsers::parsers::{SceneChangeParser, ServerConnectionParser};
 use log::debug;
 
@@ -44,7 +44,7 @@ impl ParserType {
 /// Enum to represent different parser results
 #[derive(Debug)]
 pub enum ParserResult {
-    SceneChange(SceneChangeEvent),
+    SceneChange(String), // Now returns raw content instead of SceneChangeEvent
     ServerConnection(ServerConnectionEvent),
 }
 
@@ -71,8 +71,6 @@ impl LogParserManager {
     /// Parse a log line using all available parsers and return the first matching event
     /// Returns the first event that any parser successfully parses from the line
     pub fn parse_line(&self, line: &str) -> Result<Option<ParserResult>, ParseError> {
-        debug!("Parsing log line: {}", line.trim());
-
         for parser in &self.parsers {
             if parser.should_parse(line) {
                 debug!("Parser '{}' matched line", parser.parser_name());
@@ -84,6 +82,17 @@ impl LogParserManager {
                             parser.parser_name(),
                             result
                         );
+
+                        // Add specific logging based on parser result type
+                        match &result {
+                            ParserResult::SceneChange(content) => {
+                                debug!("Scene change content parsed successfully: {}", content);
+                            }
+                            ParserResult::ServerConnection(event) => {
+                                debug!("Server connection event detected: {:?}", event);
+                            }
+                        }
+
                         return Ok(Some(result));
                     }
                     Err(e) => {
@@ -97,7 +106,6 @@ impl LogParserManager {
             }
         }
 
-        debug!("No parsers matched the line");
         Ok(None)
     }
 

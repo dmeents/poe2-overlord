@@ -2,6 +2,7 @@
 pub mod config;
 pub mod events;
 pub mod process;
+pub mod scene_type;
 pub mod time_tracking;
 
 // Re-export commonly used types for convenience

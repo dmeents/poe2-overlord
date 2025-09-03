@@ -97,3 +97,21 @@ fn test_location_type_hash() {
     assert_eq!(map.get(&LocationType::Act), Some(&"act_value"));
     assert_eq!(map.get(&LocationType::Hideout), Some(&"hideout_value"));
 }
+
+#[test]
+fn test_scene_change_event_serialization() {
+    let zone_event = app_lib::models::events::ZoneChangeEvent {
+        zone_name: "Test Zone".to_string(),
+        timestamp: "2024-01-01T00:00:00Z".to_string(),
+    };
+
+    let event = SceneChangeEvent::Zone(zone_event);
+
+    let json = serde_json::to_string(&event).unwrap();
+    println!("Serialized SceneChangeEvent::Zone: {}", json);
+
+    // The actual structure is: {"type":"Zone","zone_name":"Test Zone","timestamp":"2024-01-01T00:00:00Z"}
+    assert!(json.contains("\"type\":\"Zone\""));
+    assert!(json.contains("\"zone_name\":\"Test Zone\""));
+    assert!(json.contains("\"timestamp\":\"2024-01-01T00:00:00Z\""));
+}

@@ -1,7 +1,5 @@
-use crate::models::events::SceneChangeEvent;
 use crate::parsers::config::ParsersConfig;
-use crate::parsers::core::{ParseError, LogParser};
-use crate::parsers::detection::SceneTypeDetector;
+use crate::parsers::core::{LogParser, ParseError};
 use crate::parsers::utils::extract_content_by_patterns;
 
 /// Scene change parser for detecting scene transition patterns
@@ -33,7 +31,7 @@ impl SceneChangeParser {
 }
 
 impl LogParser for SceneChangeParser {
-    type Event = SceneChangeEvent;
+    type Event = String; // Now returns raw content instead of SceneChangeEvent
 
     fn should_parse(&self, line: &str) -> bool {
         self.config
@@ -41,18 +39,14 @@ impl LogParser for SceneChangeParser {
             .unwrap_or(false)
     }
 
-    /// Parse a log line and return a scene change event if valid
+    /// Parse a log line and return the extracted scene content
     fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {
         if !self.should_parse(line) {
             return Err(ParseError::no_pattern_match("scene_change"));
         }
 
         let content = self.extract_scene_content(line)?;
-        let scene_config = self.config.get_scene_type_config("scene_change")?;
-        let detector = SceneTypeDetector::new(scene_config.clone());
-        let event = detector.create_scene_change_event(&content);
-
-        Ok(event)
+        Ok(content)
     }
 
     fn parser_name(&self) -> &'static str {

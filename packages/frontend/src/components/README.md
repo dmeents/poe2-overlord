@@ -81,18 +81,18 @@ import { StatusBar } from '@/components';
 
 ### StatusIndicator
 
-A status indicator component for showing binary states with icons.
+A status indicator component for showing different states with icons.
 
 ```tsx
 import { StatusIndicator } from '@/components';
 import { ComputerDesktopIcon } from '@heroicons/react/16/solid';
 
-<StatusIndicator status={isOnline} icon={<ComputerDesktopIcon />} size='sm' />;
+<StatusIndicator status='success' icon={<ComputerDesktopIcon />} size='sm' />;
 ```
 
 **Props**:
 
-- `status`: Boolean indicating the state
+- `status`: Status type (`success`, `warning`, `error`, `info`)
 - `icon`: Icon element to display
 - `size`: Size variant (`sm`, `md`, `lg`)
 - `className`: Additional CSS classes

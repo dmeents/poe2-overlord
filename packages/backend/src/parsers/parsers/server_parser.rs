@@ -1,7 +1,6 @@
 use crate::models::events::ServerConnectionEvent;
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParser, ParseError};
-use crate::parsers::utils::extract_content_by_patterns;
 use crate::utils::parse_ip_port;
 use log::debug;
 
@@ -28,16 +27,20 @@ impl ServerConnectionParser {
     fn extract_server_info(&self, line: &str) -> Result<(String, u16), ParseError> {
         debug!("Extracting server info from line: {}", line.trim());
 
-        // Extract the server info part after the pattern
-        let server_info = extract_content_by_patterns(
-            line,
-            &self.config.server_connection.patterns,
-            ' ',  // Space delimiter
-            '\n', // Newline delimiter (or end of string)
-        )?;
+        // Find the pattern and extract everything after it until end of line
+        for pattern in &self.config.server_connection.patterns {
+            if let Some(start) = line.find(pattern) {
+                let content_start = start + pattern.len();
+                let server_info = line[content_start..].trim();
 
-        // Parse IP:PORT format
-        parse_ip_port(&server_info)
+                if !server_info.is_empty() {
+                    debug!("Extracted server info: '{}'", server_info);
+                    return parse_ip_port(server_info);
+                }
+            }
+        }
+
+        Err(ParseError::content_extraction_failed(line))
     }
 }
 

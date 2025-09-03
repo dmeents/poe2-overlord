@@ -1,10 +1,10 @@
 # POE2 Overlord Backend
 
-This package contains the Rust backend for the POE2 Overlord Tauri 2 application, providing comprehensive game monitoring, time tracking, and configuration management capabilities for Path of Exile 2.
+This package contains the Rust backend for the POE2 Overlord Tauri 2 application, providing comprehensive game monitoring, time tracking, server status monitoring, and configuration management capabilities for Path of Exile 2.
 
 ## Architecture Overview
 
-The backend has been completely refactored into a modern, modular, event-driven architecture with clear separation of concerns:
+The backend has been completely refactored into a modern, modular, event-driven architecture with clear separation of concerns and comprehensive error handling:
 
 ### `models/`
 Core data structures and types used throughout the application:
@@ -20,38 +20,50 @@ Core data structures and types used throughout the application:
 ### `services/`
 Business logic and core functionality services:
 
-- **`ConfigService`** - Manages application configuration with JSON persistence
-- **`LogMonitorService`** - Monitors POE2 client log files for scene changes
-- **`TimeTrackingService`** - Tracks time spent in different game locations
-- **`GameProcessMonitor`** - Detects and monitors Path of Exile 2 game processes
-- **`EventBroadcaster`** - Broadcasts events to multiple subscribers using Tokio channels
-- **`FileMonitor`** - Monitors file changes for real-time updates
-- **`PlayerLocation`** - Manages player location state (scene and act tracking)
+- **`ConfigurationManager`** - Manages application configuration with JSON persistence and validation
+- **`LogAnalyzer`** - Comprehensive log file analysis and monitoring with real-time updates
+- **`SessionTracker`** - Advanced time tracking for game locations with persistent storage
+- **`ServerMonitor`** - Real-time server status monitoring with ping tracking
+- **`EventDispatcher`** - Event broadcasting system using Tokio broadcast channels
+- **`LogFileWatcher`** - File system monitoring for real-time log file updates
+- **`LocationTracker`** - Player location state management (scene and act tracking)
+- **`ProcessDetector`** - Game process detection and monitoring with async operations
 
 ### `commands/`
 Tauri 2 command handlers that expose functionality to the frontend:
 
-- **`config_commands.rs`** - Configuration management commands
-- **`log_commands.rs`** - Log monitoring and file operations
-- **`process_commands.rs`** - Process detection and monitoring
-- **`time_tracking_commands.rs`** - Time tracking session management
-- **`helpers.rs`** - Shared utility functions for commands
+- **`config_commands.rs`** - Configuration management commands with validation
+- **`log_commands.rs`** - Log monitoring, file operations, and event subscriptions
+- **`time_tracking_commands.rs`** - Time tracking session management and statistics
+- **`command_utils.rs`** - Shared utility functions and error handling for commands
+- **`helpers.rs`** - Common helper functions used across commands
 
 ### `parsers/`
-Specialized parsers for different data formats:
+Specialized parsers for different data formats with modular architecture:
 
-- **`SceneChangeParser`** - Parses POE2 log lines for scene transitions
-- **`LogParser` trait** - Extensible interface for log parsing
-- **`ConfigParser`** - Handles configuration file parsing and validation
+- **`core/`** - Core parsing infrastructure with factory pattern and manager
+  - **`LogParserManager`** - Manages multiple parsers with type-safe registration
+  - **`ParserFactory`** - Factory for creating parser instances
+  - **`LogParser` trait** - Extensible interface for log parsing
+- **`parsers/`** - Specific parser implementations
+  - **`SceneChangeParser`** - Parses POE2 log lines for scene transitions (zones, acts, hideouts)
+  - **`ServerConnectionParser`** - Parses server connection events and status
+- **`detection/`** - Scene type detection and classification
+- **`config/`** - Configuration parsing and validation
+- **`events/`** - Event factory for creating typed events
+- **`utils/`** - Parsing utilities for pattern matching and content extraction
 
 ### `handlers/`
-Application setup and event handling:
+Application setup, event handling, and runtime management:
 
-- **`service_initializer.rs`** - Application initialization and service setup
-- **`log_event_handler.rs`** - Handles log monitoring events
+- **`service_initializer.rs`** - Application initialization and service setup with dependency injection
+- **`service_launcher.rs`** - Background service launcher for async operations
+- **`runtime_manager.rs`** - Tokio runtime management and task coordination
+- **`task_manager.rs`** - Background task management and lifecycle control
+- **`log_event_handler.rs`** - Handles log monitoring events and real-time updates
 - **`game_process_handler.rs`** - Manages game process monitoring events
-- **`time_tracking_handler.rs`** - Handles time tracking events
-- **`mod.rs`** - Handler module organization
+- **`time_tracking_handler.rs`** - Handles time tracking events and session management
+- **`event_utils.rs`** - Event handling utilities and helpers
 
 ### `errors/`
 Comprehensive error handling system:
@@ -61,45 +73,58 @@ Comprehensive error handling system:
 - **`Error variants`** - Specific error types for different failure scenarios
 
 ### `utils/`
-Utility functions and constants:
+Utility functions, constants, and cross-platform utilities:
 
 - **`constants.rs`** - Application constants and configuration values
 - **`os_detection.rs`** - Cross-platform OS detection utilities
+- **`network.rs`** - Network utilities for server monitoring and ping operations
+- **`validation.rs`** - Input validation and sanitization utilities
 
 ## Key Features
 
 ### 🎮 Game Monitoring
-- **Real-time Log Monitoring**: Watches POE2 client log files for scene changes using notify crate
-- **Scene Change Detection**: Automatically detects zone and act transitions with intelligent parsing
+- **Real-time Log Monitoring**: Watches POE2 client log files for scene changes using notify crate with async operations
+- **Scene Change Detection**: Automatically detects zone, act, and hideout transitions with intelligent parsing
 - **Game Process Monitoring**: Tracks Path of Exile 2 game process status using sysinfo with async operations
 - **File Change Events**: Real-time file system monitoring for immediate log updates
+- **Server Connection Tracking**: Monitors server connections and tracks connection events
+- **Server Status Monitoring**: Real-time server ping monitoring with status tracking
 
 ### ⏱️ Time Tracking
-- **Session Management**: Tracks time spent in different game locations with proper state management
-- **Location Statistics**: Aggregates data for zones and acts with persistent storage
+- **Session Management**: Tracks time spent in different game locations (zones, acts, hideouts) with proper state management
+- **Location Statistics**: Aggregates data for zones, acts, and hideouts with persistent storage
 - **Real-time Updates**: Broadcasts session events to frontend subscribers using Tokio broadcast channels
-- **Persistent Storage**: Saves tracking data to JSON files with proper error handling
+- **Persistent Storage**: Saves tracking data to JSON files with proper error handling and atomic writes
+- **Session History**: Maintains complete history of completed sessions with detailed statistics
+- **Process Integration**: Tracks time since POE2 process start for comprehensive play time analysis
 
 
 ### ⚙️ Configuration Management
-- **Persistent Settings**: Stores configuration in user's config directory with JSON format
-- **Dynamic Updates**: Supports runtime configuration changes with validation
+- **Persistent Settings**: Stores configuration in user's config directory with JSON format and atomic writes
+- **Dynamic Updates**: Supports runtime configuration changes with validation and error handling
 - **Cross-platform Paths**: Automatically detects appropriate config locations for each OS
 - **Default Values**: Provides sensible defaults for all settings with fallback mechanisms
-- **Path Validation**: Ensures configured paths exist and are accessible
+- **Path Validation**: Ensures configured paths exist and are accessible with comprehensive error reporting
+- **Log Level Control**: Runtime log level adjustment with immediate effect
+- **Auto-detection**: Automatic detection of default POE2 client log paths for each platform
 
 ### 📡 Event System
-- **Broadcast Channels**: Efficient event distribution to multiple subscribers using Tokio
+- **Broadcast Channels**: Efficient event distribution to multiple subscribers using Tokio broadcast channels
 - **Real-time Updates**: Immediate notification of game state changes with minimal latency
 - **Type-safe Events**: Strongly typed event structures with Serde serialization
 - **Event Subscriptions**: Frontend can subscribe to specific event types for targeted updates
+- **Event Filtering**: Support for filtering events by type and content
+- **Event Persistence**: Optional event persistence for debugging and analysis
+- **Multiple Event Types**: Support for log events, time tracking events, and server status events
 
 ### 🔒 Security & Performance
-- **Capability System**: Limited API access through Tauri 2's capability system
-- **Async Architecture**: Non-blocking operations using Tokio runtime for optimal performance
+- **Capability System**: Limited API access through Tauri 2's capability system with fine-grained permissions
+- **Async Architecture**: Non-blocking operations using Tokio runtime for optimal performance and scalability
 - **Memory Safety**: Rust's ownership system ensures thread safety and prevents data races
 - **Cross-platform**: Native performance on Windows, macOS, and Linux with platform-specific optimizations
-- **Resource Management**: Proper cleanup of file watchers, event listeners, and async tasks
+- **Resource Management**: Proper cleanup of file watchers, event listeners, and async tasks with lifecycle management
+- **Error Handling**: Comprehensive error handling with proper error propagation and user-friendly messages
+- **Input Validation**: All inputs are validated and sanitized before processing
 
 ## Available Commands
 
@@ -107,45 +132,31 @@ The backend provides comprehensive Tauri commands organized by functionality:
 
 ### Configuration Commands
 - `get_config()` - Retrieve current application configuration
+- `get_default_config()` - Get default configuration values
 - `update_config(config)` - Update application settings with validation
 - `reset_config_to_defaults()` - Restore default configuration
-- `get_poe_client_log_path()` - Get current log file path
-- `set_poe_client_log_path(path)` - Set custom log file path with validation
-- `get_log_level()` / `set_log_level(level)` - Manage logging verbosity
-- `get_default_poe_client_log_path()` - Get OS-specific default log path
-- `reset_poe_client_log_path_to_default()` - Reset to default log path
 
 ### Log Monitoring Commands
-- `start_log_monitoring()` - Begin monitoring POE2 client logs with file watching
-- `stop_log_monitoring()` - Stop log monitoring and cleanup resources
-- `is_log_monitoring_active()` - Check monitoring status
-- `get_log_file_size()` - Get current log file size
-- `read_last_log_lines(count)` - Read recent log entries
-- `subscribe_to_log_events()` - Subscribe to real-time log events
+- `is_log_monitoring_active()` - Check if log monitoring is currently active
+- `get_log_file_size()` - Get current log file size in bytes
+- `read_last_log_lines(count)` - Read recent log entries from the file
 
 ### Time Tracking Commands
-- `start_time_tracking_session(location, type)` - Begin tracking a location
+- `get_time_tracking_data()` - Get comprehensive time tracking data including active sessions, completed sessions, and statistics
+- `start_time_tracking_session(location, type)` - Begin tracking a location (zone, act, or hideout)
 - `end_time_tracking_session(location_id)` - End an active session
 - `end_all_active_sessions()` - End all active sessions (e.g., when game closes)
-- `get_active_sessions()` - List currently active sessions
-- `get_completed_sessions()` - Retrieve completed session history
-- `get_location_stats(location_id)` - Get statistics for a specific location
-- `get_all_location_stats()` - Retrieve all location statistics
-- `get_time_tracking_summary()` - Get overall tracking summary
 - `clear_all_time_tracking_data()` - Reset all tracking data
-- `set_poe_process_start_time()` - Track when POE2 process started
-- `clear_poe_process_start_time()` - Clear process start time tracking
-
 
 ### Game Process Commands
-- `check_game_process()` - Check if Path of Exile 2 game is running with detailed status
+- `check_game_process()` - Check if Path of Exile 2 game is running with detailed status including PID and start time
 
 ## Dependencies
 
 ### Core Framework
 - **tauri**: 2.8.3 - Cross-platform desktop app framework with capability system
-- **tauri-plugin-log**: 2.6.0 - Logging infrastructure
-- **tauri-plugin-shell**: 2.3.0 - Shell command execution
+- **tauri-plugin-log**: 2.6.0 - Logging infrastructure for development
+- **tauri-plugin-shell**: 2.3.0 - Shell command execution capabilities
 - **tauri-plugin-process**: 2.3.0 - Process management capabilities
 - **tauri-plugin-window-state**: 2.4.0 - Window state management
 
@@ -156,7 +167,7 @@ The backend provides comprehensive Tauri commands organized by functionality:
 ### Data & Serialization
 - **serde**: 1.0 - Serialization/deserialization with derive support
 - **serde_json**: 1.0 - JSON serialization/deserialization
-- **chrono**: 0.4 - Date and time handling with Serde support
+- **chrono**: 0.4 - Date and time handling with Serde support and timezone support
 
 ### File System & Monitoring
 - **notify**: 6.1 - Cross-platform file system event monitoring with async support
@@ -165,6 +176,12 @@ The backend provides comprehensive Tauri commands organized by functionality:
 ### Error Handling & Logging
 - **thiserror**: 1.0 - Custom error type definitions with derive macros
 - **log**: 0.4 - Logging infrastructure
+
+### Development Dependencies
+- **tempfile**: 3.8 - Temporary file creation for testing
+- **tokio-test**: 0.4 - Testing utilities for async code
+- **mockall**: 0.12 - Mocking framework for testing
+- **anyhow**: 1.0 - Error handling utilities for testing
 
 ## Development Workflow
 
@@ -195,17 +212,26 @@ The backend provides comprehensive Tauri commands organized by functionality:
 
 ### Testing Strategy
 
-The backend includes comprehensive testing with dedicated test files:
+The backend includes comprehensive testing with dedicated test files in the `tests/` directory:
 
-- **`config_service_tests.rs`** - Configuration service functionality
-- **`log_monitor_tests.rs`** - Log monitoring and parsing
-- **`time_tracking_tests.rs`** - Time tracking service operations
-- **`os_detection_tests.rs`** - Cross-platform utilities
-- **`constants_tests.rs`** - Application constants validation
-- **`hideout_tracking_tests.rs`** - Hideout-specific tracking logic
-- **`parser_config_tests.rs`** - Configuration parsing validation
+- **`concurrency_tests.rs`** - Concurrency and async operation testing
+- **`model_tests.rs`** - Data model and serialization testing
+- **`scene_type_detector_tests.rs`** - Scene type detection and classification testing
+- **`serialization_tests.rs`** - Serialization and deserialization testing
+- **`system_tests.rs`** - System integration and end-to-end testing
+- **`utility_tests.rs`** - Utility function and helper testing
 
-Run tests with: `cargo test`
+#### Running Tests
+- **All tests**: `cargo test`
+- **Specific test file**: `cargo test --test test_file_name`
+- **Verbose output**: `cargo test --verbose`
+- **Watch mode**: `cargo watch -x test`
+
+#### Test Coverage
+- **Unit tests**: Individual function and method testing
+- **Integration tests**: Service integration and interaction testing
+- **Async tests**: Tokio-based async operation testing
+- **Mock testing**: Using mockall for isolated component testing
 
 ## Configuration
 

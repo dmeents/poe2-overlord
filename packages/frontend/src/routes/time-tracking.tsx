@@ -23,31 +23,9 @@ function TimeTrackingPage() {
     error,
     notification,
     refreshData,
-    clearAllData,
     endSession,
-    endAllActiveSessions,
     clearNotification,
   } = useTimeTracking();
-
-  const handleClearData = async () => {
-    if (
-      confirm(
-        'Are you sure you want to clear all time tracking data? This action cannot be undone.'
-      )
-    ) {
-      await clearAllData();
-    }
-  };
-
-  const handleEndAllSessions = async () => {
-    if (
-      confirm(
-        'Are you sure you want to end all active time tracking sessions? This will mark all current sessions as completed.'
-      )
-    ) {
-      await endAllActiveSessions();
-    }
-  };
 
   if (isLoading && !summary) {
     return (
@@ -77,25 +55,6 @@ function TimeTrackingPage() {
             <div className='flex items-center gap-3'>
               <Button onClick={refreshData} variant='outline' size='sm'>
                 Refresh
-              </Button>
-
-              {activeSessions.length > 0 && (
-                <Button
-                  onClick={handleEndAllSessions}
-                  variant='outline'
-                  size='sm'
-                  className='text-yellow-400 hover:text-yellow-300'
-                >
-                  End All Sessions
-                </Button>
-              )}
-              <Button
-                onClick={handleClearData}
-                variant='outline'
-                size='sm'
-                className='text-red-400 hover:text-red-300'
-              >
-                Clear All Data
               </Button>
             </div>
           </div>

@@ -9,13 +9,14 @@ use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
 use crate::services::{
-    event_dispatcher::EventDispatcher, log_analyzer::LogAnalyzer, session_tracker::SessionTracker,
+    character_session_tracker::CharacterSessionTracker, event_dispatcher::EventDispatcher,
+    log_analyzer::LogAnalyzer,
 };
 
 /// Helper function to start process monitoring with only required services
 pub fn start_game_process_monitoring(
     window: WebviewWindow,
-    time_tracking: Arc<SessionTracker>,
+    time_tracking: Arc<CharacterSessionTracker>,
     runtime_manager: Arc<RuntimeManager>,
     task_manager: Arc<TaskManager>,
 ) {
@@ -42,7 +43,7 @@ pub fn start_game_process_monitoring(
 pub fn start_log_event_emission(
     window: WebviewWindow,
     log_monitor: Arc<LogAnalyzer>,
-    time_tracking: Arc<SessionTracker>,
+    time_tracking: Arc<CharacterSessionTracker>,
     runtime_manager: Arc<RuntimeManager>,
     task_manager: Arc<TaskManager>,
 ) {
@@ -70,7 +71,7 @@ pub fn start_log_event_emission(
 /// Helper function to start time tracking event emission with only required services
 pub fn start_time_tracking_emission(
     window: WebviewWindow,
-    time_tracking: Arc<SessionTracker>,
+    time_tracking: Arc<CharacterSessionTracker>,
     runtime_manager: Arc<RuntimeManager>,
     task_manager: Arc<TaskManager>,
 ) {

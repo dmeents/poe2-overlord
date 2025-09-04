@@ -1,6 +1,7 @@
 use crate::services::{
+    character_manager::CharacterManager, character_session_tracker::CharacterSessionTracker,
     configuration_manager::ConfigurationManager, event_dispatcher::EventDispatcher,
-    log_analyzer::LogAnalyzer, server_monitor::ServerMonitor, session_tracker::SessionTracker,
+    log_analyzer::LogAnalyzer, server_monitor::ServerMonitor,
 };
 use log::{debug, info};
 use std::sync::Arc;
@@ -26,12 +27,22 @@ impl ServiceInitializer {
         app.manage(event_broadcaster.clone());
         debug!("EventDispatcher managed successfully");
 
-        // Initialize session tracker
-        debug!("Initializing SessionTracker...");
-        let time_tracking_service = SessionTracker::new();
-        let time_tracking_arc = Arc::new(time_tracking_service);
-        app.manage(time_tracking_arc.clone());
-        debug!("SessionTracker managed successfully");
+        // Initialize character manager
+        debug!("Initializing CharacterManager...");
+        let character_service = CharacterManager::new();
+        let character_arc = Arc::new(character_service);
+        app.manage(character_arc.clone());
+        debug!("CharacterManager managed successfully");
+
+        // Initialize character session tracker
+        debug!("Initializing CharacterSessionTracker...");
+        let character_session_service =
+            CharacterSessionTracker::with_character_manager(character_arc.clone());
+        let character_session_arc = Arc::new(character_session_service);
+        app.manage(character_session_arc.clone());
+        debug!("CharacterSessionTracker managed successfully");
+
+        // Note: SessionTracker removed in favor of CharacterSessionTracker
 
         // Initialize server monitor
         debug!("Initializing ServerMonitor...");
@@ -53,8 +64,9 @@ impl ServiceInitializer {
         Ok(ServiceInstances {
             config_service,
             event_broadcaster,
+            character_manager: character_arc,
+            character_session_tracker: character_session_arc,
             log_monitor: log_monitor_arc,
-            time_tracking: time_tracking_arc,
             server_status: server_status_arc,
         })
     }
@@ -64,7 +76,8 @@ impl ServiceInitializer {
 pub struct ServiceInstances {
     pub config_service: ConfigurationManager,
     pub event_broadcaster: Arc<EventDispatcher>,
+    pub character_manager: Arc<CharacterManager>,
+    pub character_session_tracker: Arc<CharacterSessionTracker>,
     pub log_monitor: Arc<LogAnalyzer>,
-    pub time_tracking: Arc<SessionTracker>,
     pub server_status: Arc<ServerMonitor>,
 }

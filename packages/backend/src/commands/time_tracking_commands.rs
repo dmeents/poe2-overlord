@@ -34,6 +34,7 @@ pub async fn get_time_tracking_data(
     let total_hideout_time = time_tracking.get_total_hideout_time().await;
 
     let summary = TimeTrackingSummary {
+        character_id: "global".to_string(), // Legacy global tracking
         active_sessions: active_sessions.clone(),
         top_locations: top_stats,
         total_locations_tracked: all_location_stats.len(),
@@ -44,6 +45,7 @@ pub async fn get_time_tracking_data(
     };
 
     let data = TimeTrackingData {
+        character_id: "global".to_string(), // Legacy global tracking
         active_sessions,
         completed_sessions,
         all_location_stats,

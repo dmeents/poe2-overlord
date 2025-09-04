@@ -2,10 +2,11 @@ import { Button } from '@/components/button';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
 import { ActiveSessions } from '@/components/time-tracking/active-sessions';
+import { CharacterSelector } from '@/components/time-tracking/character-selector';
 import { LocationStats } from '@/components/time-tracking/location-stats';
 import { SessionHistory } from '@/components/time-tracking/session-history';
 import { StatCard } from '@/components/time-tracking/stat-card';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { useCharacterTimeTracking } from '@/hooks/useCharacterTimeTracking';
 import { formatDuration } from '@/utils';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -15,6 +16,8 @@ export const Route = createFileRoute('/time-tracking')({
 
 function TimeTrackingPage() {
   const {
+    activeCharacter,
+    hasActiveCharacter,
     activeSessions,
     completedSessions,
     allStats,
@@ -25,7 +28,7 @@ function TimeTrackingPage() {
     refreshData,
     endSession,
     clearNotification,
-  } = useTimeTracking();
+  } = useCharacterTimeTracking();
 
   if (isLoading && !summary) {
     return (
@@ -51,6 +54,12 @@ function TimeTrackingPage() {
       />
       <div className='container mx-auto px-6 py-8'>
         <div className='space-y-6'>
+          {/* Character Selector */}
+          <CharacterSelector
+            activeCharacter={activeCharacter}
+            hasActiveCharacter={hasActiveCharacter}
+          />
+
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <Button onClick={refreshData} variant='outline' size='sm'>
@@ -90,7 +99,7 @@ function TimeTrackingPage() {
           )}
 
           {/* Summary Cards */}
-          {summary && (
+          {hasActiveCharacter && summary && (
             <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
               <StatCard
                 value={formatDuration(summary.total_play_time_seconds)}
@@ -118,24 +127,27 @@ function TimeTrackingPage() {
           )}
 
           {/* Main Content Grid */}
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-            {/* Left Column */}
-            <div className='space-y-6'>
-              <LocationStats stats={allStats} />
-            </div>
+          {hasActiveCharacter && (
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+              {/* Left Column */}
+              <div className='space-y-6'>
+                <LocationStats stats={allStats} />
+              </div>
 
-            {/* Right Column */}
-            <div className='space-y-6'>
-              <ActiveSessions
-                sessions={activeSessions}
-                onEndSession={endSession}
-              />
-              <SessionHistory sessions={completedSessions} />
+              {/* Right Column */}
+              <div className='space-y-6'>
+                <ActiveSessions
+                  sessions={activeSessions}
+                  onEndSession={endSession}
+                />
+                <SessionHistory sessions={completedSessions} />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Empty State */}
           {!isLoading &&
+            hasActiveCharacter &&
             activeSessions.length === 0 &&
             completedSessions.length === 0 && (
               <div className='text-center py-12'>
@@ -158,8 +170,8 @@ function TimeTrackingPage() {
                   No Time Tracking Data
                 </h3>
                 <p className='text-zinc-500'>
-                  Start playing Path of Exile 2 to begin tracking your time in
-                  different locations.
+                  Start playing Path of Exile 2 with {activeCharacter?.name} to
+                  begin tracking your time in different locations.
                 </p>
               </div>
             )}

@@ -28,6 +28,7 @@ export type SceneChangeEvent =
   | { type: 'Hideout'; hideout_name: string; timestamp: string };
 
 export interface LocationSession {
+  character_id: string;
   location_id: string;
   location_name: string;
   location_type: 'Zone' | 'Act' | 'Hideout';
@@ -37,6 +38,7 @@ export interface LocationSession {
 }
 
 export interface LocationStats {
+  character_id: string;
   location_id: string;
   location_name: string;
   location_type: 'Zone' | 'Act' | 'Hideout';
@@ -47,6 +49,7 @@ export interface LocationStats {
 }
 
 export interface TimeTrackingSummary {
+  character_id: string;
   active_sessions: LocationSession[];
   top_locations: LocationStats[];
   total_locations_tracked: number;
@@ -57,6 +60,7 @@ export interface TimeTrackingSummary {
 }
 
 export interface TimeTrackingData {
+  character_id: string;
   active_sessions: LocationSession[];
   completed_sessions: LocationSession[];
   all_location_stats: LocationStats[];
@@ -144,4 +148,71 @@ export interface ServerStatus {
   is_online: boolean;
   latency_ms: number | null;
   timestamp: string;
+}
+
+// Character-related types
+export type CharacterClass =
+  | 'Warrior'
+  | 'Sorceress'
+  | 'Ranger'
+  | 'Huntress'
+  | 'Monk'
+  | 'Mercenary'
+  | 'Witch';
+
+export type Ascendency =
+  // Warrior ascendencies
+  | 'Titan'
+  | 'Warbringer'
+  | 'Smith of Katava'
+  // Sorceress ascendencies
+  | 'Stormweaver'
+  | 'Chronomancer'
+  // Ranger ascendencies
+  | 'Deadeye'
+  | 'Pathfinder'
+  // Huntress ascendencies
+  | 'Ritualist'
+  | 'Amazon'
+  // Monk ascendencies
+  | 'Invoker'
+  | 'Acolyte of Chayula'
+  // Mercenary ascendencies
+  | 'Gemling Legionnaire'
+  | 'Tactitian'
+  | 'Witchhunter'
+  // Witch ascendencies
+  | 'Blood Mage'
+  | 'Infernalist'
+  | 'Lich';
+
+export type League = 'Standard' | 'Third Edict';
+
+export interface Character {
+  id: string;
+  name: string;
+  class: CharacterClass;
+  ascendency: Ascendency;
+  league: League;
+  hardcore: boolean;
+  solo_self_found: boolean;
+  created_at: string;
+  last_played?: string;
+  is_active: boolean;
+  last_known_location?: LocationSession;
+}
+
+export interface CharacterData {
+  characters: Character[];
+  active_character_id?: string;
+}
+
+// Helper type for character creation
+export interface CreateCharacterRequest {
+  name: string;
+  class: CharacterClass;
+  ascendency: Ascendency;
+  league: League;
+  hardcore: boolean;
+  solo_self_found: boolean;
 }

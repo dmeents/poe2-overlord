@@ -20,6 +20,11 @@ function Index() {
           </p>
 
           <div className='flex justify-center space-x-4'>
+            <Link to='/characters'>
+              <Button variant='primary' size='lg'>
+                Manage Characters
+              </Button>
+            </Link>
             <Link to='/activity'>
               <Button variant='primary' size='lg'>
                 View Activity Monitor
@@ -40,6 +45,16 @@ function Index() {
           <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto'>
             <div className='bg-zinc-900/50 p-6 rounded-lg border border-zinc-800'>
               <h3 className='text-lg font-semibold text-white mb-3'>
+                Character Management
+              </h3>
+              <p className='text-zinc-300 text-sm'>
+                Create and manage multiple characters with individual time
+                tracking, class selection, and league support.
+              </p>
+            </div>
+
+            <div className='bg-zinc-900/50 p-6 rounded-lg border border-zinc-800'>
+              <h3 className='text-lg font-semibold text-white mb-3'>
                 Real-time Monitoring
               </h3>
               <p className='text-zinc-300 text-sm'>
@@ -55,16 +70,6 @@ function Index() {
               <p className='text-zinc-300 text-sm'>
                 Automatically detect when POE2 is running and start monitoring
                 your game session.
-              </p>
-            </div>
-
-            <div className='bg-zinc-900/50 p-6 rounded-lg border border-zinc-800'>
-              <h3 className='text-lg font-semibold text-white mb-3'>
-                Activity History
-              </h3>
-              <p className='text-zinc-300 text-sm'>
-                View detailed logs of all your adventures and track your
-                progress through the game world.
               </p>
             </div>
           </div>

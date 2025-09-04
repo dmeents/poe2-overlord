@@ -1,6 +1,6 @@
 use crate::handlers::{runtime_manager::RuntimeManager, task_manager::TaskManager};
 use crate::services::process_detector::ProcessDetector;
-use crate::services::session_tracker::SessionTracker;
+use crate::services::character_session_tracker::CharacterSessionTracker;
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
@@ -10,7 +10,7 @@ pub struct GameProcessHandler;
 impl GameProcessHandler {
     pub async fn start_monitoring(
         window: WebviewWindow,
-        time_tracking: Arc<SessionTracker>,
+        time_tracking: Arc<CharacterSessionTracker>,
         runtime_manager: Arc<RuntimeManager>,
         task_manager: Arc<TaskManager>,
     ) {
@@ -36,7 +36,7 @@ impl GameProcessHandler {
                             info!("POE2 process stopped");
                             debug!("POE2 process stopped, ending all active time tracking sessions");
 
-                            if let Err(e) = time_tracking.end_all_active_sessions().await {
+                            if let Err(e) = time_tracking.end_all_active_sessions_global().await {
                                 error!("Failed to end active time tracking sessions: {}", e);
                             }
 

@@ -137,6 +137,7 @@ impl SessionTracker {
         }
 
         let session = LocationSession {
+            character_id: "global".to_string(), // Legacy global tracking
             location_id: location_id.clone(),
             location_name: location_name.clone(),
             location_type: location_type.clone(),
@@ -327,6 +328,7 @@ impl SessionTracker {
                 .max();
 
             let stats = LocationStats {
+                character_id: "global".to_string(), // Legacy global tracking
                 location_id: location_id.to_string(),
                 location_name: first_session.location_name.clone(),
                 location_type: first_session.location_type.clone(),

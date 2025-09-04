@@ -13,9 +13,9 @@ pub use errors::*;
 pub use handlers::*;
 // Import specific models to avoid naming conflicts with services
 pub use models::{
-    ActChangeEvent, AppConfig, HideoutChangeEvent, LocationSession, LocationStats, LocationType,
-    OverlayState, ProcessInfo, SceneChangeEvent, ServerConnectionEvent, TimeTrackingEvent,
-    ZoneChangeEvent,
+    ActChangeEvent, AppConfig, Ascendency, Character, CharacterClass, CharacterData,
+    HideoutChangeEvent, League, LocationSession, LocationStats, LocationType, OverlayState,
+    ProcessInfo, SceneChangeEvent, ServerConnectionEvent, TimeTrackingEvent, ZoneChangeEvent,
 };
 pub use services::*;
 
@@ -32,12 +32,39 @@ pub fn run() {
             is_log_monitoring_active,
             get_log_file_size,
             read_last_log_lines,
-            // Time tracking commands
-            get_time_tracking_data,
-            start_time_tracking_session,
-            end_time_tracking_session,
-            end_all_active_sessions,
-            clear_all_time_tracking_data,
+            // Note: Old time tracking commands removed in favor of character-aware commands
+            // Character commands
+            create_character,
+            update_character,
+            get_all_characters,
+            get_character,
+            get_active_character,
+            set_active_character,
+            remove_character,
+            get_characters_by_last_played,
+            get_characters_by_class,
+            get_characters_by_league,
+            is_character_name_available,
+            get_available_character_classes,
+            get_available_leagues,
+            get_available_ascendencies_for_class,
+            update_character_last_played,
+            get_character_count,
+            has_characters,
+            clear_all_character_data,
+            // Character time tracking commands
+            get_character_time_tracking_data,
+            start_character_time_tracking_session,
+            end_character_time_tracking_session,
+            end_all_character_active_sessions,
+            clear_character_time_tracking_data,
+            get_character_active_sessions,
+            get_character_completed_sessions,
+            get_character_last_known_location,
+            get_character_location_stats,
+            get_character_total_play_time,
+            get_character_total_play_time_since_process_start,
+            get_character_total_hideout_time,
         ])
         .setup(|app| setup_app(app))
         .run(tauri::generate_context!())

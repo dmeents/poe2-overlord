@@ -3,7 +3,7 @@ use crate::handlers::{
     task_manager::TaskManager,
 };
 use crate::models::TimeTrackingEvent;
-use crate::services::session_tracker::SessionTracker;
+use crate::services::character_session_tracker::CharacterSessionTracker;
 use log::debug;
 use std::sync::Arc;
 use tauri::WebviewWindow;
@@ -13,7 +13,7 @@ pub struct TimeTrackingHandler;
 impl TimeTrackingHandler {
     pub async fn start_event_emission(
         window: WebviewWindow,
-        time_tracking: Arc<SessionTracker>,
+        time_tracking: Arc<CharacterSessionTracker>,
         runtime_manager: Arc<RuntimeManager>,
         task_manager: Arc<TaskManager>,
     ) {

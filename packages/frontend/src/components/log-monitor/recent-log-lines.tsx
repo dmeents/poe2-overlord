@@ -14,11 +14,11 @@ export function RecentLogLines({ lastLines, onRefresh }: RecentLogLinesProps) {
           Refresh
         </Button>
       </div>
-      <div className='space-y-1 max-h-32 overflow-y-auto'>
+      <div className='space-y-1 max-h-32 overflow-auto'>
         {lastLines.length > 0 ? (
           lastLines.map((line, index) => (
             <div key={index} className='text-sm text-zinc-300 font-mono'>
-              {line.length > 60 ? `${line.substring(0, 60)}...` : line}
+              {line}
             </div>
           ))
         ) : (

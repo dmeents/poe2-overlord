@@ -72,7 +72,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         // Start process monitoring
         start_game_process_monitoring(
             main_window.clone(),
-            services.time_tracking.clone(),
+            services.character_session_tracker.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );
@@ -81,7 +81,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         start_log_event_emission(
             main_window.clone(),
             services.log_monitor.clone(),
-            services.time_tracking.clone(),
+            services.character_session_tracker.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );
@@ -89,7 +89,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         // Start time tracking event emission
         start_time_tracking_emission(
             main_window.clone(),
-            services.time_tracking.clone(),
+            services.character_session_tracker.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

@@ -190,36 +190,41 @@ impl LocationTracker {
     }
 
     /// Validate a scene change event and return it only if it represents an actual change
-    /// Returns Some(event) if the scene/act actually changed, None if it's the same as before
+    /// Returns Some(event) if the scene actually changed, or always returns act events
+    /// Act events are always returned to maintain session continuity even when the act hasn't changed
     pub async fn validate_scene_change_event(
         &self,
         event: SceneChangeEvent,
     ) -> Option<SceneChangeEvent> {
-        let is_change = match &event {
+        match &event {
             SceneChangeEvent::Hideout(hideout_event) => {
                 debug!("Validating hideout change: {}", hideout_event.hideout_name);
                 let result = self.update_scene(&hideout_event.hideout_name).await;
                 debug!("Hideout change validation result: {}", result);
-                result
+                if result {
+                    Some(event)
+                } else {
+                    None
+                }
             }
             SceneChangeEvent::Zone(zone_event) => {
                 debug!("Validating zone change: {}", zone_event.zone_name);
                 let result = self.update_scene(&zone_event.zone_name).await;
                 debug!("Zone change validation result: {}", result);
-                result
+                if result {
+                    Some(event)
+                } else {
+                    None
+                }
             }
             SceneChangeEvent::Act(act_event) => {
-                debug!("Validating act change: {}", act_event.act_name);
-                let result = self.update_act(&act_event.act_name).await;
-                debug!("Act change validation result: {}", result);
-                result
+                debug!("Processing act event: {}", act_event.act_name);
+                // Always update act state for tracking purposes
+                let _ = self.update_act(&act_event.act_name).await;
+                debug!("Act event always returned for session continuity");
+                // Always return act events, regardless of whether the act changed
+                Some(event)
             }
-        };
-
-        if is_change {
-            Some(event)
-        } else {
-            None
         }
     }
 }

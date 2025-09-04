@@ -3,7 +3,9 @@ use crate::handlers::{
     task_manager::TaskManager,
 };
 use crate::models::events::LogEvent;
-use crate::services::{log_analyzer::LogAnalyzer, session_tracker::SessionTracker};
+use crate::services::{
+    character_session_tracker::CharacterSessionTracker, log_analyzer::LogAnalyzer,
+};
 use log::{debug, error};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
@@ -14,7 +16,7 @@ impl LogEventHandler {
     pub async fn start_event_emission(
         window: WebviewWindow,
         log_monitor: Arc<LogAnalyzer>,
-        time_tracking: Arc<SessionTracker>,
+        time_tracking: Arc<CharacterSessionTracker>,
         runtime_manager: Arc<RuntimeManager>,
         task_manager: Arc<TaskManager>,
     ) {
@@ -36,8 +38,10 @@ impl LogEventHandler {
                             // Emit to frontend
                             emit_scene_change_event(&window, &scene_event);
 
-                            // Handle time tracking
-                            time_tracking.handle_scene_change(&scene_event).await;
+                            // Handle time tracking for active character (if any)
+                            time_tracking
+                                .handle_scene_change_for_active_character(&scene_event)
+                                .await;
                         }
                         LogEvent::ServerConnection(server_event) => {
                             debug!("Routing server connection event to services");

@@ -101,7 +101,7 @@ export function LogMonitor() {
           poeProcessStatus={poeProcessStatus}
           logFileSize={logFileSize}
         />
-        <RecentLogLines lastLines={lastLines} />
+        <RecentLogLines lastLines={lastLines} onRefresh={refreshLogInfo} />
       </div>
 
       {/* Activity Log */}

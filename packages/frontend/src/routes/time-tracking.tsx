@@ -1,6 +1,7 @@
 import { Button } from '@/components/button';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
+import { ActTimeChart } from '@/components/time-tracking/act-time-chart';
 import { ActiveSessions } from '@/components/time-tracking/active-sessions';
 import { CharacterSelector } from '@/components/time-tracking/character-selector';
 import { LocationStats } from '@/components/time-tracking/location-stats';
@@ -54,7 +55,6 @@ function TimeTrackingPage() {
       />
       <div className='container mx-auto px-6 py-8'>
         <div className='space-y-6'>
-          {/* Character Selector */}
           <CharacterSelector
             activeCharacter={activeCharacter}
             hasActiveCharacter={hasActiveCharacter}
@@ -67,15 +67,11 @@ function TimeTrackingPage() {
               </Button>
             </div>
           </div>
-
-          {/* Error Display */}
           {error && (
             <div className='bg-red-900/20 border border-red-800 text-red-300 px-4 py-3 rounded-lg'>
               <strong>Error:</strong> {error}
             </div>
           )}
-
-          {/* Notification Display */}
           {notification && (
             <div
               className={`px-4 py-3 rounded-lg border ${
@@ -97,8 +93,6 @@ function TimeTrackingPage() {
               </div>
             </div>
           )}
-
-          {/* Summary Cards */}
           {hasActiveCharacter && summary && (
             <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
               <StatCard
@@ -125,16 +119,12 @@ function TimeTrackingPage() {
               />
             </div>
           )}
-
-          {/* Main Content Grid */}
+          <ActTimeChart stats={allStats} />
           {hasActiveCharacter && (
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-              {/* Left Column */}
               <div className='space-y-6'>
                 <LocationStats stats={allStats} />
               </div>
-
-              {/* Right Column */}
               <div className='space-y-6'>
                 <ActiveSessions
                   sessions={activeSessions}
@@ -144,8 +134,6 @@ function TimeTrackingPage() {
               </div>
             </div>
           )}
-
-          {/* Empty State */}
           {!isLoading &&
             hasActiveCharacter &&
             activeSessions.length === 0 &&

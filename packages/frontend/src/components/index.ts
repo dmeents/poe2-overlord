@@ -4,6 +4,7 @@ export * from './danger-section';
 export * from './form';
 export * from './loading-spinner';
 export * from './log-monitor';
+export * from './modal';
 export * from './page-header';
 export * from './settings-form';
 export * from './status-bar';

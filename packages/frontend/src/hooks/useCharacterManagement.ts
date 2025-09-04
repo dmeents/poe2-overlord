@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useState } from 'react';
-import type { CharacterFormData } from '../components/character-management/character-form';
+import type { CharacterFormData } from '../components/character-management/character-form-modal';
 import type { Character, LocationSession } from '../types';
 
 export function useCharacterManagement() {

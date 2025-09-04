@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import {
+  CharacterFormModal,
   CharacterList,
-  CharacterModal,
   DeleteCharacterModal,
 } from '../components/character-management';
-import type { CharacterFormData } from '../components/character-management/character-form';
+import type { CharacterFormData } from '../components/character-management/character-form-modal';
 import { AlertMessage } from '../components/form/alert-message';
 import { PageHeader } from '../components/page-header';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
@@ -154,7 +154,7 @@ function CharactersPage() {
         />
 
         {/* Create Character Modal */}
-        <CharacterModal
+        <CharacterFormModal
           isOpen={showCreateModal}
           onSubmit={handleCreateCharacter}
           onClose={() => setShowCreateModal(false)}
@@ -162,7 +162,7 @@ function CharactersPage() {
         />
 
         {/* Edit Character Modal */}
-        <CharacterModal
+        <CharacterFormModal
           isOpen={!!editingCharacter}
           character={editingCharacter || undefined}
           onSubmit={handleUpdateCharacter}

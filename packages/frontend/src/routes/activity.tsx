@@ -1,4 +1,4 @@
-import type { Character, ProcessInfo, SceneChangeEvent } from '@/types';
+import type { SceneChangeEvent } from '@/types';
 import { getSceneEventTimestamp } from '@/types';
 import { createFileRoute } from '@tanstack/react-router';
 import { invoke } from '@tauri-apps/api/core';
@@ -9,6 +9,9 @@ import { ActivityLog } from '../components/log-monitor/activity-log';
 import { MonitoringStatus } from '../components/log-monitor/monitoring-status';
 import { RecentLogLines } from '../components/log-monitor/recent-log-lines';
 import { PageHeader } from '../components/page-header';
+import { useCharacterQuery } from '../hooks/useCharacterQuery';
+import { useGameProcessQuery } from '../hooks/useGameProcessQuery';
+import { useMonitoringQuery } from '../hooks/useMonitoringQuery';
 
 // Combined event type for unified display
 type SceneEvent = {
@@ -22,25 +25,18 @@ export const Route = createFileRoute('/activity')({
 });
 
 function ActivityMonitor() {
-  const [isMonitoring, setIsMonitoring] = useState(false);
+  // Use persistent hooks for state that should survive route changes
+  const { activeCharacter } = useCharacterQuery();
+  const { processInfo: poeProcessStatus } = useGameProcessQuery();
+  const { isMonitoring } = useMonitoringQuery();
+
+  // Local state for UI-specific data that doesn't need persistence
   const [sceneEvents, setSceneEvents] = useState<SceneEvent[]>([]);
   const [logFileSize, setLogFileSize] = useState<number>(0);
   const [lastLines, setLastLines] = useState<string[]>([]);
-  const [poeProcessStatus, setPoeProcessStatus] = useState<ProcessInfo | null>(
-    null
-  );
-  const [activeCharacter, setActiveCharacter] = useState<Character | null>(
-    null
-  );
 
   useEffect(() => {
-    // Check initial monitoring status
-    checkMonitoringStatus();
-
-    // Load active character
-    loadActiveCharacter();
-
-    // Set up event listeners - now using unified scene change events
+    // Set up event listeners for scene changes (UI-specific data)
     const unlistenScene = listen('log-scene-change', event => {
       const sceneEvent = event.payload as SceneChangeEvent;
       setSceneEvents(prev => [
@@ -53,36 +49,13 @@ function ActivityMonitor() {
       ]);
     });
 
-    const unlistenProcess = listen('game-process-status', event => {
-      const processInfo = event.payload as ProcessInfo;
-      setPoeProcessStatus(processInfo);
-      setIsMonitoring(processInfo.running);
-    });
-
     // Cleanup listeners
     return () => {
       unlistenScene.then(f => f());
-      unlistenProcess.then(f => f());
     };
   }, []);
 
-  const checkMonitoringStatus = async () => {
-    try {
-      const status = await invoke<boolean>('is_log_monitoring_active');
-      setIsMonitoring(status);
-    } catch (error) {
-      console.error('Failed to check monitoring status:', error);
-    }
-  };
-
-  const loadActiveCharacter = async () => {
-    try {
-      const character = await invoke<Character | null>('get_active_character');
-      setActiveCharacter(character);
-    } catch (error) {
-      console.error('Failed to load active character:', error);
-    }
-  };
+  // These functions are no longer needed since we're using persistent hooks
 
   const refreshLogInfo = async () => {
     try {

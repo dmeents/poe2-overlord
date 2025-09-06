@@ -63,9 +63,9 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
               />
             </svg>
           </div>
-          <p className='text-sm'>No ACT data available</p>
+          <p className='text-sm'>No Act data available</p>
           <p className='text-xs text-zinc-600 mt-1'>
-            Play through different ACTs to see time distribution
+            Play through different Acts to see time distribution
           </p>
         </div>
       </div>

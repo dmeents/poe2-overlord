@@ -52,6 +52,11 @@ pub fn run() {
             get_character_count,
             has_characters,
             clear_all_character_data,
+            // Character level and death count commands
+            get_character_level,
+            get_character_death_count,
+            update_character_level,
+            increment_character_deaths,
             // Character time tracking commands
             get_character_time_tracking_data,
             start_character_time_tracking_session,

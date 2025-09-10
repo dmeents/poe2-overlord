@@ -20,6 +20,12 @@ pub struct ParsersConfig {
     /// Server connection parser configuration
     pub server_connection: ParserConfig,
 
+    /// Character level parser configuration
+    pub character_level: ParserConfig,
+
+    /// Character death parser configuration
+    pub character_death: ParserConfig,
+
     // Scene type detection keywords - single source of truth
     pub hideout_keywords: Vec<String>,
     pub act_keywords: Vec<String>,
@@ -42,6 +48,14 @@ impl Default for ParsersConfig {
             },
             server_connection: ParserConfig {
                 patterns: vec!["Connecting to instance server at ".to_string()],
+                enabled: true,
+            },
+            character_level: ParserConfig {
+                patterns: vec!["is now level".to_string()],
+                enabled: true,
+            },
+            character_death: ParserConfig {
+                patterns: vec!["has been slain".to_string()],
                 enabled: true,
             },
 
@@ -91,6 +105,8 @@ impl ParsersConfig {
         match parser_name {
             "scene_change" => Ok(&self.scene_change),
             "server_connection" => Ok(&self.server_connection),
+            "character_level" => Ok(&self.character_level),
+            "character_death" => Ok(&self.character_death),
             _ => Err(ParseError::unsupported_parser_type(parser_name)),
         }
     }

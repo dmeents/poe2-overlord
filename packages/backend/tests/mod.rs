@@ -1,4 +1,5 @@
 // Simple unit tests only
+pub mod character_parser_tests;
 pub mod concurrency_tests;
 pub mod extraction_tests;
 pub mod model_tests;

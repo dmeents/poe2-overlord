@@ -54,6 +54,28 @@ impl LogEventHandler {
                                 );
                             }
                         }
+                        LogEvent::CharacterLevelUp(level_up_event) => {
+                            debug!("Routing character level-up event to services");
+
+                            // Emit to frontend
+                            if let Err(e) = window.emit("character-level-updated", &level_up_event) {
+                                error!(
+                                    "Failed to emit character level-up event to frontend: {}",
+                                    e
+                                );
+                            }
+                        }
+                        LogEvent::CharacterDeath(death_event) => {
+                            debug!("Routing character death event to services");
+
+                            // Emit to frontend
+                            if let Err(e) = window.emit("character-death-updated", &death_event) {
+                                error!(
+                                    "Failed to emit character death event to frontend: {}",
+                                    e
+                                );
+                            }
+                        }
                     }
                 }
 

@@ -146,6 +146,18 @@ function CharacterCard({
             <span>{character.league}</span>
           </div>
 
+          <div className='flex items-center gap-4 mt-1 text-sm text-zinc-300'>
+            <span className='font-medium'>Level {character.level}</span>
+            {character.death_count > 0 && (
+              <>
+                <span>•</span>
+                <span className='text-red-400'>
+                  {character.death_count} death{character.death_count !== 1 ? 's' : ''}
+                </span>
+              </>
+            )}
+          </div>
+
           <div className='flex items-center gap-4 mt-2 text-xs text-zinc-500'>
             <span>Created: {formatDate(character.created_at)}</span>
             {character.last_played && (

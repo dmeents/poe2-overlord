@@ -151,6 +151,8 @@ impl CharacterManager {
             created_at: Utc::now(),
             last_played: None,
             is_active: false,
+            level: 1,
+            death_count: 0,
         };
 
         // If this is the first character, make it active
@@ -432,5 +434,93 @@ impl CharacterManager {
     pub async fn has_characters(&self) -> bool {
         let character_data = self.character_data.read().await;
         !character_data.characters.is_empty()
+    }
+
+    /// Update a character's level (system-managed)
+    pub async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()> {
+        let mut character_data = self.character_data.write().await;
+
+        if let Some(character) = character_data
+            .characters
+            .iter_mut()
+            .find(|c| c.id == character_id)
+        {
+            character.level = new_level;
+            character.last_played = Some(Utc::now());
+        } else {
+            return Err(AppError::Internal(format!(
+                "Character with ID '{}' not found",
+                character_id
+            )));
+        }
+
+        // Save the updated data
+        drop(character_data);
+        self.save_character_data().await?;
+
+        debug!("Updated character {} level to {}", character_id, new_level);
+        Ok(())
+    }
+
+    /// Increment a character's death count (system-managed)
+    pub async fn increment_character_deaths(&self, character_id: &str) -> AppResult<()> {
+        let mut character_data = self.character_data.write().await;
+
+        if let Some(character) = character_data
+            .characters
+            .iter_mut()
+            .find(|c| c.id == character_id)
+        {
+            character.death_count += 1;
+            character.last_played = Some(Utc::now());
+        } else {
+            return Err(AppError::Internal(format!(
+                "Character with ID '{}' not found",
+                character_id
+            )));
+        }
+
+        // Save the updated data
+        drop(character_data);
+        self.save_character_data().await?;
+
+        debug!("Incremented character {} death count", character_id);
+        Ok(())
+    }
+
+    /// Get a character's current level
+    pub async fn get_character_level(&self, character_id: &str) -> AppResult<u32> {
+        let character_data = self.character_data.read().await;
+
+        if let Some(character) = character_data
+            .characters
+            .iter()
+            .find(|c| c.id == character_id)
+        {
+            Ok(character.level)
+        } else {
+            Err(AppError::Internal(format!(
+                "Character with ID '{}' not found",
+                character_id
+            )))
+        }
+    }
+
+    /// Get a character's death count
+    pub async fn get_character_death_count(&self, character_id: &str) -> AppResult<u32> {
+        let character_data = self.character_data.read().await;
+
+        if let Some(character) = character_data
+            .characters
+            .iter()
+            .find(|c| c.id == character_id)
+        {
+            Ok(character.death_count)
+        } else {
+            Err(AppError::Internal(format!(
+                "Character with ID '{}' not found",
+                character_id
+            )))
+        }
     }
 }

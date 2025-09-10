@@ -29,6 +29,22 @@ pub struct ServerConnectionEvent {
     pub timestamp: String,
 }
 
+/// Character level-up event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CharacterLevelUpEvent {
+    pub character_name: String,
+    pub character_class: String,
+    pub new_level: u32,
+    pub timestamp: String,
+}
+
+/// Character death event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CharacterDeathEvent {
+    pub character_name: String,
+    pub timestamp: String,
+}
+
 /// Combined scene change event that can represent either a zone, act, or hideout change
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -38,12 +54,14 @@ pub enum SceneChangeEvent {
     Hideout(HideoutChangeEvent),
 }
 
-/// Unified log event that can represent either a scene change or server connection
+/// Unified log event that can represent either a scene change, server connection, character level-up, or character death
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "event_type")]
 pub enum LogEvent {
     SceneChange(SceneChangeEvent),
     ServerConnection(ServerConnectionEvent),
+    CharacterLevelUp(CharacterLevelUpEvent),
+    CharacterDeath(CharacterDeathEvent),
 }
 
 impl SceneChangeEvent {

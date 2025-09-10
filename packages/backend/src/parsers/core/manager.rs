@@ -1,7 +1,7 @@
 use crate::models::events::ServerConnectionEvent;
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParser, ParseError, ParserFactory};
-use crate::parsers::parsers::{SceneChangeParser, ServerConnectionParser};
+use crate::parsers::parsers::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 use log::debug;
 
 /// Enum to represent different parser types
@@ -9,6 +9,8 @@ use log::debug;
 pub enum ParserType {
     SceneChange(SceneChangeParser),
     ServerConnection(ServerConnectionParser),
+    CharacterLevel(CharacterLevelParser),
+    CharacterDeath(CharacterDeathParser),
 }
 
 impl ParserType {
@@ -17,6 +19,8 @@ impl ParserType {
         match self {
             ParserType::SceneChange(parser) => parser.parser_name(),
             ParserType::ServerConnection(parser) => parser.parser_name(),
+            ParserType::CharacterLevel(parser) => parser.parser_name(),
+            ParserType::CharacterDeath(parser) => parser.parser_name(),
         }
     }
 
@@ -25,6 +29,8 @@ impl ParserType {
         match self {
             ParserType::SceneChange(parser) => parser.should_parse(line),
             ParserType::ServerConnection(parser) => parser.should_parse(line),
+            ParserType::CharacterLevel(parser) => parser.should_parse(line),
+            ParserType::CharacterDeath(parser) => parser.should_parse(line),
         }
     }
 
@@ -37,6 +43,12 @@ impl ParserType {
             ParserType::ServerConnection(parser) => parser
                 .parse_line(line)
                 .map(|event| ParserResult::ServerConnection(event)),
+            ParserType::CharacterLevel(parser) => parser
+                .parse_line(line)
+                .map(|event| ParserResult::CharacterLevel(event)),
+            ParserType::CharacterDeath(parser) => parser
+                .parse_line(line)
+                .map(|event| ParserResult::CharacterDeath(event)),
         }
     }
 }
@@ -46,6 +58,8 @@ impl ParserType {
 pub enum ParserResult {
     SceneChange(String), // Now returns raw content instead of SceneChangeEvent
     ServerConnection(ServerConnectionEvent),
+    CharacterLevel((String, String, u32)), // (character_name, character_class, level)
+    CharacterDeath(String), // character_name
 }
 
 /// Manager for all log parsers
@@ -90,6 +104,12 @@ impl LogParserManager {
                             }
                             ParserResult::ServerConnection(event) => {
                                 debug!("Server connection event detected: {:?}", event);
+                            }
+                            ParserResult::CharacterLevel((name, class, level)) => {
+                                debug!("Character level-up detected: {} ({}) -> level {}", name, class, level);
+                            }
+                            ParserResult::CharacterDeath(name) => {
+                                debug!("Character death detected: {} has been slain", name);
                             }
                         }
 

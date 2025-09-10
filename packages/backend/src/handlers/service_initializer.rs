@@ -54,7 +54,7 @@ impl ServiceInitializer {
         // Initialize log analyzer
         debug!("Initializing LogAnalyzer...");
         let log_path = config_service.get_poe_client_log_path();
-        let log_monitor_service = LogAnalyzer::new(log_path, server_status_arc.clone());
+        let log_monitor_service = LogAnalyzer::new(log_path, server_status_arc.clone(), character_arc.clone());
         let log_monitor_arc = Arc::new(log_monitor_service);
         app.manage(log_monitor_arc.clone());
         debug!("LogAnalyzer managed successfully");

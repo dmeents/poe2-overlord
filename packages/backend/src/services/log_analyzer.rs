@@ -15,19 +15,24 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
 
-/// Log analyzer that watches POE client log files for scene changes and server connections
+/// Log analyzer that watches POE client log files for scene changes, server connections, and character level-ups
 pub struct LogAnalyzer {
     log_path: String,
     event_broadcaster: EventDispatcher,
     state_manager: LocationTracker,
     server_manager: Arc<ServerMonitor>,
+    character_manager: Arc<crate::services::character_manager::CharacterManager>,
     parser_manager: LogParserManager,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
 
 impl LogAnalyzer {
     /// Create a new log analyzer
-    pub fn new(log_path: String, server_manager: Arc<ServerMonitor>) -> Self {
+    pub fn new(
+        log_path: String, 
+        server_manager: Arc<ServerMonitor>,
+        character_manager: Arc<crate::services::character_manager::CharacterManager>,
+    ) -> Self {
         let parser_manager = LogParserManager::new();
 
         // Get the scene type configuration from the parser (single source of truth)
@@ -45,6 +50,7 @@ impl LogAnalyzer {
             event_broadcaster: EventDispatcher::new(),
             state_manager: state_manager.clone(),
             server_manager,
+            character_manager,
             parser_manager,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
         }
@@ -133,6 +139,7 @@ impl LogAnalyzer {
         let event_broadcaster = self.event_broadcaster.clone();
         let state_manager = self.state_manager.clone();
         let server_manager = Arc::clone(&self.server_manager);
+        let character_manager = Arc::clone(&self.character_manager);
         let parser_manager = self.parser_manager.clone();
         let is_running = Arc::clone(&self.is_running);
 
@@ -142,6 +149,7 @@ impl LogAnalyzer {
                 event_broadcaster,
                 state_manager,
                 server_manager,
+                character_manager,
                 parser_manager,
                 is_running,
             )
@@ -158,6 +166,7 @@ impl LogAnalyzer {
         event_broadcaster: EventDispatcher,
         state_manager: LocationTracker,
         server_manager: Arc<ServerMonitor>,
+        character_manager: Arc<crate::services::character_manager::CharacterManager>,
         parser_manager: LogParserManager,
         is_running: Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
@@ -183,6 +192,7 @@ impl LogAnalyzer {
                     &event_broadcaster,
                     &state_manager,
                     &server_manager,
+                    &character_manager,
                 )
                 .await?;
             } else if current_size < last_position {
@@ -266,6 +276,7 @@ impl LogAnalyzer {
         event_broadcaster: &EventDispatcher,
         state_manager: &LocationTracker,
         server_manager: &Arc<ServerMonitor>,
+        character_manager: &Arc<crate::services::character_manager::CharacterManager>,
     ) -> AppResult<()> {
         let mut reader = Self::open_file_for_reading(log_path)?;
 
@@ -288,6 +299,7 @@ impl LogAnalyzer {
             let event_broadcaster = event_broadcaster.clone();
             let server_manager = Arc::clone(server_manager);
             let state_manager = state_manager.clone();
+            let character_manager = Arc::clone(character_manager);
 
             tokio::spawn(async move {
                 for line in new_lines {
@@ -296,6 +308,7 @@ impl LogAnalyzer {
                         event_broadcaster.clone(),
                         state_manager.clone(),
                         Arc::clone(&server_manager),
+                        Arc::clone(&character_manager),
                         line,
                     )
                     .await;
@@ -309,12 +322,13 @@ impl LogAnalyzer {
         Ok(())
     }
 
-    /// Process a single log line for both scene changes and server connections
+    /// Process a single log line for scene changes, server connections, and character level-ups
     async fn process_single_line(
         parser_manager: LogParserManager,
         event_broadcaster: EventDispatcher,
         state_manager: LocationTracker,
         server_manager: Arc<ServerMonitor>,
+        character_manager: Arc<crate::services::character_manager::CharacterManager>,
         line: String,
     ) {
         // Parse the line using the unified parser
@@ -344,6 +358,84 @@ impl LogAnalyzer {
                         event_broadcaster.broadcast_event(LogEvent::ServerConnection(event))
                     {
                         warn!("Failed to broadcast server connection event: {}", e);
+                    }
+                }
+                ParserResult::CharacterLevel((character_name, character_class, new_level)) => {
+                    // Check if this level-up is for the active character
+                    if let Some(active_character) = character_manager.get_active_character().await {
+                        // Verify the character name and class match
+                        if active_character.name == character_name && 
+                           active_character.class.to_string() == character_class {
+                            
+                            // Update the character's level
+                            if let Err(e) = character_manager.update_character_level(
+                                &active_character.id, 
+                                new_level
+                            ).await {
+                                warn!("Failed to update character level: {}", e);
+                            } else {
+                                // Create and broadcast the level-up event
+                                let level_up_event = crate::models::events::CharacterLevelUpEvent {
+                                    character_name: character_name.clone(),
+                                    character_class: character_class.clone(),
+                                    new_level,
+                                    timestamp: chrono::Utc::now().to_rfc3339(),
+                                };
+
+                                if let Err(e) = event_broadcaster
+                                    .broadcast_event(LogEvent::CharacterLevelUp(level_up_event))
+                                {
+                                    warn!("Failed to broadcast character level-up event: {}", e);
+                                }
+                            }
+                        } else {
+                            debug!(
+                                "Level-up detected for inactive character: {} ({}) -> level {}",
+                                character_name, character_class, new_level
+                            );
+                        }
+                    } else {
+                        debug!(
+                            "Level-up detected but no active character: {} ({}) -> level {}",
+                            character_name, character_class, new_level
+                        );
+                    }
+                }
+                ParserResult::CharacterDeath(character_name) => {
+                    // Check if this death is for the active character
+                    if let Some(active_character) = character_manager.get_active_character().await {
+                        // Verify the character name matches
+                        if active_character.name == character_name {
+                            
+                            // Increment the character's death count
+                            if let Err(e) = character_manager.increment_character_deaths(
+                                &active_character.id
+                            ).await {
+                                warn!("Failed to increment character death count: {}", e);
+                            } else {
+                                // Create and broadcast the death event
+                                let death_event = crate::models::events::CharacterDeathEvent {
+                                    character_name: character_name.clone(),
+                                    timestamp: chrono::Utc::now().to_rfc3339(),
+                                };
+
+                                if let Err(e) = event_broadcaster
+                                    .broadcast_event(LogEvent::CharacterDeath(death_event))
+                                {
+                                    warn!("Failed to broadcast character death event: {}", e);
+                                }
+                            }
+                        } else {
+                            debug!(
+                                "Death detected for inactive character: {} has been slain",
+                                character_name
+                            );
+                        }
+                    } else {
+                        debug!(
+                            "Death detected but no active character: {} has been slain",
+                            character_name
+                        );
                     }
                 }
             }

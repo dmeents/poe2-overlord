@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Core character structure for Path of Exile 2
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -24,6 +25,12 @@ pub struct Character {
     pub last_played: Option<DateTime<Utc>>,
     /// Currently selected character
     pub is_active: bool,
+    /// Current character level (system-managed, read-only in UI)
+    #[serde(default = "default_level")]
+    pub level: u32,
+    /// Number of times character has died (system-managed, read-only in UI)
+    #[serde(default = "default_death_count")]
+    pub death_count: u32,
 }
 
 /// POE2 character classes with proper display names
@@ -197,4 +204,28 @@ pub fn get_all_character_classes() -> Vec<CharacterClass> {
 /// Helper function to get all available leagues
 pub fn get_all_leagues() -> Vec<League> {
     vec![League::Standard, League::ThirdEdict]
+}
+
+/// Default level for new characters
+fn default_level() -> u32 {
+    1
+}
+
+/// Default death count for new characters
+fn default_death_count() -> u32 {
+    0
+}
+
+impl fmt::Display for CharacterClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CharacterClass::Warrior => write!(f, "Warrior"),
+            CharacterClass::Sorceress => write!(f, "Sorceress"),
+            CharacterClass::Ranger => write!(f, "Ranger"),
+            CharacterClass::Huntress => write!(f, "Huntress"),
+            CharacterClass::Monk => write!(f, "Monk"),
+            CharacterClass::Mercenary => write!(f, "Mercenary"),
+            CharacterClass::Witch => write!(f, "Witch"),
+        }
+    }
 }

@@ -50,6 +50,8 @@ export interface Character {
   last_played?: string;
   is_active: boolean;
   last_known_location?: LocationSession;
+  level: number;
+  death_count: number;
 }
 
 export interface CharacterData {

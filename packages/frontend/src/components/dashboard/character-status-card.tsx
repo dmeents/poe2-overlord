@@ -76,6 +76,16 @@ export function CharacterStatusCard({
             {activeCharacter.class} • {activeCharacter.ascendency} •{' '}
             {activeCharacter.league}
           </p>
+          <div className='flex items-center gap-3 mt-1'>
+            <span className='text-lg font-bold text-blue-400'>
+              Level {activeCharacter.level}
+            </span>
+            {activeCharacter.death_count > 0 && (
+              <span className='text-sm text-red-400'>
+                {activeCharacter.death_count} death{activeCharacter.death_count !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Current Location */}

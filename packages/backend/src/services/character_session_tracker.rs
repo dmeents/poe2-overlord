@@ -246,7 +246,26 @@ impl CharacterSessionTracker {
         let location_id = self.generate_location_id(&location_name, &location_type);
         let entry_timestamp = Utc::now();
 
+        // End any existing session for this location type for this character
+        self.end_sessions_by_type(character_id, &location_type)
+            .await?;
+
+        // Special case: hideout sessions should also end act and zone sessions
+        if location_type == LocationType::Hideout {
+            self.end_sessions_by_type(character_id, &LocationType::Act)
+                .await?;
+            self.end_sessions_by_type(character_id, &LocationType::Zone)
+                .await?;
+        }
+
+        // Special case: zone and act sessions should end hideout sessions
+        if location_type == LocationType::Zone || location_type == LocationType::Act {
+            self.end_sessions_by_type(character_id, &LocationType::Hideout)
+                .await?;
+        }
+
         // Validate no overlap with existing sessions of the same type for this character
+        // This validation happens after ending existing sessions to avoid race conditions
         {
             let active_sessions = self.active_sessions.read().await;
             if let Some(character_sessions) = active_sessions.get(character_id) {
@@ -267,24 +286,6 @@ impl CharacterSessionTracker {
                     ValidationResult::Valid => {}
                 }
             }
-        }
-
-        // End any existing session for this location type for this character
-        self.end_sessions_by_type(character_id, &location_type)
-            .await?;
-
-        // Special case: hideout sessions should also end act and zone sessions
-        if location_type == LocationType::Hideout {
-            self.end_sessions_by_type(character_id, &LocationType::Act)
-                .await?;
-            self.end_sessions_by_type(character_id, &LocationType::Zone)
-                .await?;
-        }
-
-        // Special case: zone and act sessions should end hideout sessions
-        if location_type == LocationType::Zone || location_type == LocationType::Act {
-            self.end_sessions_by_type(character_id, &LocationType::Hideout)
-                .await?;
         }
 
         let session = LocationSession {

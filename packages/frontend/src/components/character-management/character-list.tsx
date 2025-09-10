@@ -1,5 +1,6 @@
 import type { Character } from '../../types';
 import { Button } from '../button';
+import { formatDuration } from '../../utils';
 
 interface CharacterListProps {
   characters: Character[];
@@ -8,6 +9,7 @@ interface CharacterListProps {
   onEditCharacter: (character: Character) => void;
   onDeleteCharacter: (characterId: string) => void;
   onCreateCharacter: () => void;
+  getPlayTime: (characterId: string) => number;
 }
 
 export function CharacterList({
@@ -17,6 +19,7 @@ export function CharacterList({
   onEditCharacter,
   onDeleteCharacter,
   onCreateCharacter,
+  getPlayTime,
 }: CharacterListProps) {
   if (characters.length === 0) {
     return (
@@ -65,6 +68,7 @@ export function CharacterList({
             onSelect={() => onSelectCharacter(character.id)}
             onEdit={() => onEditCharacter(character)}
             onDelete={() => onDeleteCharacter(character.id)}
+            totalPlayTime={getPlayTime(character.id)}
           />
         ))}
       </div>
@@ -78,6 +82,7 @@ interface CharacterCardProps {
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  totalPlayTime: number;
 }
 
 function CharacterCard({
@@ -86,6 +91,7 @@ function CharacterCard({
   onSelect,
   onEdit,
   onDelete,
+  totalPlayTime,
 }: CharacterCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -156,6 +162,10 @@ function CharacterCard({
                 </span>
               </>
             )}
+            <span>•</span>
+            <span className='text-zinc-500'>
+              Play time: {formatDuration(totalPlayTime)}
+            </span>
           </div>
 
           {(character.hardcore || character.solo_self_found) && (

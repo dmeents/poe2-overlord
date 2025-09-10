@@ -9,6 +9,7 @@ import type { CharacterFormData } from '../components/character-management/chara
 import { AlertMessage } from '../components/form/alert-message';
 import { PageHeader } from '../components/page-header';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
+import { useCharacterTotalPlayTime } from '../hooks/useCharacterTotalPlayTime';
 import type { Character } from '../types';
 
 export const Route = createFileRoute('/characters')({
@@ -26,6 +27,8 @@ function CharactersPage() {
     setActiveCharacterId,
     deleteCharacter,
   } = useCharacterManagement();
+
+  const { getPlayTime } = useCharacterTotalPlayTime(characters);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(
@@ -151,6 +154,7 @@ function CharactersPage() {
           onEditCharacter={handleEditCharacter}
           onDeleteCharacter={handleDeleteCharacter}
           onCreateCharacter={() => setShowCreateModal(true)}
+          getPlayTime={getPlayTime}
         />
 
         {/* Create Character Modal */}

@@ -30,7 +30,9 @@ export function RecentActivityPanel({
   }
 
   const recentSessions =
-    timeTrackingData?.completed_sessions?.slice(0, 3) || [];
+    timeTrackingData?.completed_sessions
+      ?.sort((a, b) => new Date(b.entry_timestamp).getTime() - new Date(a.entry_timestamp).getTime())
+      ?.slice(0, 5) || [];
 
   return (
     <div

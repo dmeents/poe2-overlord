@@ -2,6 +2,10 @@ use crate::errors::{AppError, AppResult};
 use crate::models::{
     events::SceneChangeEvent, LocationSession, LocationStats, LocationType, TimeTrackingEvent,
 };
+use crate::utils::time_calculations::{
+    calculate_active_session_duration_seconds, calculate_session_duration_seconds,
+    validate_no_session_overlap, validate_session_data, ValidationResult,
+};
 use chrono::{DateTime, Utc};
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
@@ -16,7 +20,6 @@ use tokio::sync::RwLock;
 /// Character-aware session tracking constants
 const EVENT_CHANNEL_SIZE: usize = 100;
 const TEMP_FILE_EXTENSION: &str = "tmp";
-const MIN_SESSION_DURATION_SECONDS: i64 = 1;
 
 /// Character-aware session tracker for tracking time spent in different game locations
 /// All operations are scoped to a specific character
@@ -241,6 +244,30 @@ impl CharacterSessionTracker {
         location_type: LocationType,
     ) -> AppResult<()> {
         let location_id = self.generate_location_id(&location_name, &location_type);
+        let entry_timestamp = Utc::now();
+
+        // Validate no overlap with existing sessions of the same type for this character
+        {
+            let active_sessions = self.active_sessions.read().await;
+            if let Some(character_sessions) = active_sessions.get(character_id) {
+                let existing_sessions: Vec<(DateTime<Utc>, Option<DateTime<Utc>>)> = character_sessions
+                    .values()
+                    .filter(|session| session.location_type == location_type)
+                    .map(|session| (session.entry_timestamp, session.exit_timestamp))
+                    .collect();
+
+                match validate_no_session_overlap(entry_timestamp, None, &existing_sessions) {
+                    ValidationResult::Error(msg) => {
+                        error!("Session overlap validation failed for character {}: {}", character_id, msg);
+                        return Err(AppError::LogMonitor(msg));
+                    }
+                    ValidationResult::Warning(msg) => {
+                        warn!("Session overlap validation warning for character {}: {}", character_id, msg);
+                    }
+                    ValidationResult::Valid => {}
+                }
+            }
+        }
 
         // End any existing session for this location type for this character
         self.end_sessions_by_type(character_id, &location_type)
@@ -265,7 +292,7 @@ impl CharacterSessionTracker {
             location_id: location_id.clone(),
             location_name: location_name.clone(),
             location_type: location_type.clone(),
-            entry_timestamp: Utc::now(),
+            entry_timestamp,
             exit_timestamp: None,
             duration_seconds: None,
         };
@@ -314,11 +341,22 @@ impl CharacterSessionTracker {
 
         if let Some(mut session) = session {
             let now = Utc::now();
+            let duration = calculate_session_duration_seconds(session.entry_timestamp, now);
+
+            // Validate session data before updating
+            match validate_session_data(session.entry_timestamp, Some(now), Some(duration)) {
+                ValidationResult::Error(msg) => {
+                    error!("Session data validation failed for character {}: {}", character_id, msg);
+                    return Err(AppError::LogMonitor(msg));
+                }
+                ValidationResult::Warning(msg) => {
+                    warn!("Session data validation warning for character {}: {}", character_id, msg);
+                }
+                ValidationResult::Valid => {}
+            }
+
             session.exit_timestamp = Some(now);
-            session.duration_seconds = Some(
-                (now.timestamp() - session.entry_timestamp.timestamp())
-                    .max(MIN_SESSION_DURATION_SECONDS) as u64,
-            );
+            session.duration_seconds = Some(duration);
 
             // Add to completed sessions
             {
@@ -533,10 +571,7 @@ impl CharacterSessionTracker {
             let active_time: u64 = active_sessions
                 .iter()
                 .filter(|s| s.entry_timestamp >= start_time)
-                .map(|s| {
-                    let now = Utc::now();
-                    (now.timestamp() - s.entry_timestamp.timestamp()).max(0) as u64
-                })
+                .map(|s| calculate_active_session_duration_seconds(s.entry_timestamp))
                 .sum();
 
             completed_time + active_time

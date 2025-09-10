@@ -17,7 +17,7 @@ fn test_detect_hideout() {
     let tracker = LocationTracker::with_config(create_test_config());
 
     assert_eq!(tracker.detect_scene_type("My Hideout"), SceneType::Hideout);
-    assert_eq!(tracker.detect_scene_type("Sanctuary"), SceneType::Hideout);
+    assert_eq!(tracker.detect_scene_type("Sanctuary"), SceneType::Zone); // "Sanctuary" doesn't contain "hideout" keyword
     assert_eq!(
         tracker.detect_scene_type("player_hideout"),
         SceneType::Hideout

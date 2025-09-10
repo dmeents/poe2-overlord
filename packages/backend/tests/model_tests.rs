@@ -55,6 +55,7 @@ fn test_scene_change_event_hideout() {
 #[test]
 fn test_location_session_creation() {
     let session = LocationSession {
+        character_id: "test-character-1".to_string(),
         location_id: "test-zone-1".to_string(),
         location_name: "Test Zone".to_string(),
         location_type: LocationType::Zone,
@@ -63,6 +64,7 @@ fn test_location_session_creation() {
         duration_seconds: None,
     };
 
+    assert_eq!(session.character_id, "test-character-1");
     assert_eq!(session.location_id, "test-zone-1");
     assert_eq!(session.location_name, "Test Zone");
     assert_eq!(session.location_type, LocationType::Zone);

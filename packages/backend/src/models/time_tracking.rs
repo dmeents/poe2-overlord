@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Time tracking session for a specific location
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,6 +19,16 @@ pub enum LocationType {
     Zone,
     Act,
     Hideout,
+}
+
+impl fmt::Display for LocationType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LocationType::Zone => write!(f, "Zone"),
+            LocationType::Act => write!(f, "Act"),
+            LocationType::Hideout => write!(f, "Hideout"),
+        }
+    }
 }
 
 /// Aggregated statistics for a location

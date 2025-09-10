@@ -4,7 +4,6 @@ pub mod command_utils;
 pub mod config_commands;
 pub mod helpers;
 pub mod log_commands;
-pub mod time_tracking_commands;
 
 pub use character_commands::*;
 pub use character_time_tracking_commands::*;
@@ -12,7 +11,6 @@ pub use command_utils::*;
 pub use config_commands::*;
 pub use helpers::*;
 pub use log_commands::*;
-pub use time_tracking_commands::*;
 
 // Re-export common types for commands
 pub use crate::errors::AppError;

@@ -8,7 +8,7 @@ pub mod service_launcher;
 pub mod task_manager;
 pub mod time_tracking_handler;
 
-use log::{info, warn};
+use log::{debug, info, warn};
 use std::sync::Arc;
 use tauri::Manager;
 
@@ -51,6 +51,17 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         "Logging configured with level: {} ({:?})",
         log_level, level_filter
     );
+
+    // Load existing character time tracking data
+    debug!("Loading existing character time tracking data...");
+    let character_session_tracker = services.character_session_tracker.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = character_session_tracker.load_all_character_data().await {
+            warn!("Failed to load existing character time tracking data: {}", e);
+        } else {
+            info!("Successfully loaded existing character time tracking data");
+        }
+    });
 
     let runtime_manager = Arc::new(RuntimeManager::new()?);
     let task_manager = Arc::new(TaskManager::new());

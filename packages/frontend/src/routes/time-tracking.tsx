@@ -2,7 +2,6 @@ import { Button } from '@/components/button';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
 import { ActTimeChart } from '@/components/time-tracking/act-time-chart';
-import { ActiveSessions } from '@/components/time-tracking/active-sessions';
 import { CharacterSelector } from '@/components/time-tracking/character-selector';
 import { LocationStats } from '@/components/time-tracking/location-stats';
 import { SessionHistory } from '@/components/time-tracking/session-history';
@@ -27,7 +26,6 @@ function TimeTrackingPage() {
     error,
     notification,
     refreshData,
-    endSession,
     clearNotification,
   } = useCharacterTimeTracking();
 
@@ -126,10 +124,6 @@ function TimeTrackingPage() {
                 <LocationStats stats={allStats} />
               </div>
               <div className='space-y-6'>
-                <ActiveSessions
-                  sessions={activeSessions}
-                  onEndSession={endSession}
-                />
                 <SessionHistory sessions={completedSessions} />
               </div>
             </div>

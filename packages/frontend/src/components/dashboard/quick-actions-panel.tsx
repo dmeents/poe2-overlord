@@ -11,17 +11,12 @@ export function QuickActionsPanel({ className = '' }: QuickActionsPanelProps) {
   const {
     activeCharacter,
     activeSessions,
-    startSession,
-    endSession,
-    endAllActiveSessions,
     isLoading,
   } = useCharacterTimeTracking();
 
   const { characters } = useCharacterManagement();
 
   const hasActiveSessions = activeSessions.length > 0;
-  const canStartSession = activeCharacter && !hasActiveSessions;
-  const canEndSession = hasActiveSessions;
 
   if (isLoading) {
     return (
@@ -44,45 +39,6 @@ export function QuickActionsPanel({ className = '' }: QuickActionsPanelProps) {
       <h3 className='text-lg font-semibold text-white mb-4'>Quick Actions</h3>
 
       <div className='space-y-3'>
-        {/* Session Management */}
-        {activeCharacter && (
-          <div className='space-y-2'>
-            {canStartSession && (
-              <Button
-                variant='primary'
-                size='sm'
-                onClick={startSession}
-                className='w-full'
-              >
-                Start Session
-              </Button>
-            )}
-
-            {canEndSession && (
-              <div className='space-y-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={endSession}
-                  className='w-full'
-                >
-                  End Current Session
-                </Button>
-                {activeSessions.length > 1 && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={endAllActiveSessions}
-                    className='w-full text-orange-400 border-orange-400 hover:bg-orange-400 hover:text-white'
-                  >
-                    End All Sessions ({activeSessions.length})
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Character Management */}
         <div className='pt-2 border-t border-zinc-700 space-y-2'>
           <Link to='/characters' className='block'>

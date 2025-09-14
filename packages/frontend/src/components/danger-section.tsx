@@ -1,17 +1,23 @@
 import { Button } from '@/components/button';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { useCharacterTimeTracking } from '@/hooks/useCharacterTimeTracking';
 import { useState } from 'react';
 
 export function DangerSection() {
-  const { clearAllData } = useTimeTracking();
+  const { activeCharacter, clearAllData } = useCharacterTimeTracking();
   const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleClearAllData = async () => {
+    if (!activeCharacter) {
+      setError('No active character selected. Please select a character first.');
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+
     if (
       !confirm(
-        'Are you sure you want to clear all time tracking data? This action cannot be undone and will permanently delete all your time tracking history, active sessions, and statistics.'
+        `Are you sure you want to clear all time tracking data for ${activeCharacter.name}? This action cannot be undone and will permanently delete all time tracking history, active sessions, and statistics for this character.`
       )
     ) {
       return;
@@ -44,7 +50,7 @@ export function DangerSection() {
       setSuccess(null);
 
       await clearAllData();
-      setSuccess('All time tracking data has been cleared successfully.');
+      setSuccess(`All time tracking data for ${activeCharacter.name} has been cleared successfully.`);
 
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);
@@ -80,10 +86,10 @@ export function DangerSection() {
         <div className='flex items-start justify-between'>
           <div className='flex-1'>
             <h3 className='text-lg font-medium text-red-400 mb-2'>
-              Clear All Time Tracking Data
+              Clear Character Time Tracking Data
             </h3>
             <p className='text-zinc-400 text-sm mb-3'>
-              Permanently delete all time tracking data including:
+              Permanently delete all time tracking data for the active character including:
             </p>
             <ul className='text-zinc-400 text-sm list-disc list-inside space-y-1 mb-4'>
               <li>All active and completed sessions</li>
@@ -98,12 +104,12 @@ export function DangerSection() {
           <div className='ml-6'>
             <Button
               onClick={handleClearAllData}
-              disabled={isClearing}
+              disabled={isClearing || !activeCharacter}
               variant='outline'
               size='sm'
               className='text-red-400 hover:text-red-300 border-red-600 hover:border-red-500 hover:bg-red-950/20'
             >
-              {isClearing ? 'Clearing...' : 'Clear All Data'}
+              {isClearing ? 'Clearing...' : 'Clear Character Data'}
             </Button>
           </div>
         </div>

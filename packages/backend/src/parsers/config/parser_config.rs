@@ -129,6 +129,14 @@ impl ParsersConfig {
             parsers.push("server_connection");
         }
 
+        if self.character_level.enabled {
+            parsers.push("character_level");
+        }
+
+        if self.character_death.enabled {
+            parsers.push("character_death");
+        }
+
         parsers
     }
 }

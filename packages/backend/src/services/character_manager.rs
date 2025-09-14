@@ -488,39 +488,4 @@ impl CharacterManager {
         Ok(())
     }
 
-    /// Get a character's current level
-    pub async fn get_character_level(&self, character_id: &str) -> AppResult<u32> {
-        let character_data = self.character_data.read().await;
-
-        if let Some(character) = character_data
-            .characters
-            .iter()
-            .find(|c| c.id == character_id)
-        {
-            Ok(character.level)
-        } else {
-            Err(AppError::Internal(format!(
-                "Character with ID '{}' not found",
-                character_id
-            )))
-        }
-    }
-
-    /// Get a character's death count
-    pub async fn get_character_death_count(&self, character_id: &str) -> AppResult<u32> {
-        let character_data = self.character_data.read().await;
-
-        if let Some(character) = character_data
-            .characters
-            .iter()
-            .find(|c| c.id == character_id)
-        {
-            Ok(character.death_count)
-        } else {
-            Err(AppError::Internal(format!(
-                "Character with ID '{}' not found",
-                character_id
-            )))
-        }
-    }
 }

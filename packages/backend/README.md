@@ -142,11 +142,8 @@ The backend provides comprehensive Tauri commands organized by functionality:
 - `read_last_log_lines(count)` - Read recent log entries from the file
 
 ### Time Tracking Commands
-- `get_time_tracking_data()` - Get comprehensive time tracking data including active sessions, completed sessions, and statistics
-- `start_time_tracking_session(location, type)` - Begin tracking a location (zone, act, or hideout)
-- `end_time_tracking_session(location_id)` - End an active session
-- `end_all_active_sessions()` - End all active sessions (e.g., when game closes)
-- `clear_all_time_tracking_data()` - Reset all tracking data
+- `get_character_time_tracking_data(character_id)` - Get comprehensive time tracking data for a specific character including active sessions, completed sessions, and statistics
+- `clear_character_time_tracking_data(character_id)` - Reset all tracking data for a specific character
 
 ### Game Process Commands
 - `check_game_process()` - Check if Path of Exile 2 game is running with detailed status including PID and start time

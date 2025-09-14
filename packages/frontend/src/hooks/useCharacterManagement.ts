@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import type { CharacterFormData } from '../components/character-management/character-form-modal';
 import type { Character, LocationSession } from '../types';
@@ -187,6 +188,71 @@ export function useCharacterManagement() {
     loadCharacters();
     loadActiveCharacter();
   }, [loadCharacters, loadActiveCharacter]);
+
+  // Set up real-time event listeners for character updates
+  useEffect(() => {
+    const unlistenFns: (() => void)[] = [];
+
+    const setupListeners = async () => {
+      try {
+        // Listen for character level-up events
+        const unlistenLevelUp = await listen('character-level-updated', (event) => {
+          console.log('Character level-up event received:', event.payload);
+          const { character_name, new_level } = event.payload as { character_name: string; new_level: number };
+          
+          // Update the character in the characters list by name
+          setCharacters(prevCharacters => 
+            prevCharacters.map(char => 
+              char.name === character_name 
+                ? { ...char, level: new_level }
+                : char
+            )
+          );
+
+          // Update active character if it's the same character
+          setActiveCharacter(prevActive => 
+            prevActive && prevActive.name === character_name 
+              ? { ...prevActive, level: new_level }
+              : prevActive
+          );
+        });
+        unlistenFns.push(unlistenLevelUp);
+
+        // Listen for character death events
+        const unlistenDeath = await listen('character-death-updated', (event) => {
+          console.log('Character death event received:', event.payload);
+          const { character_name } = event.payload as { character_name: string };
+          
+          // Update the character in the characters list by name (increment death count)
+          setCharacters(prevCharacters => 
+            prevCharacters.map(char => 
+              char.name === character_name 
+                ? { ...char, death_count: char.death_count + 1 }
+                : char
+            )
+          );
+
+          // Update active character if it's the same character
+          setActiveCharacter(prevActive => 
+            prevActive && prevActive.name === character_name 
+              ? { ...prevActive, death_count: prevActive.death_count + 1 }
+              : prevActive
+          );
+        });
+        unlistenFns.push(unlistenDeath);
+
+      } catch (err) {
+        console.error('Failed to set up character event listeners:', err);
+      }
+    };
+
+    setupListeners();
+
+    // Cleanup listeners
+    return () => {
+      unlistenFns.forEach(unlisten => unlisten());
+    };
+  }, []);
 
   return {
     characters,

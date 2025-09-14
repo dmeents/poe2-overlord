@@ -5,5 +5,4 @@ export { useCharacterTotalPlayTime } from './useCharacterTotalPlayTime';
 export { useGameProcess } from './useGameProcess';
 export { useMonitoringQuery } from './useMonitoringQuery';
 export { useServerStatus } from './useServerStatus';
-export { useTimeTracking } from './useTimeTracking';
 export { useZoneMonitoring } from './useZoneMonitoring';

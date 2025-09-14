@@ -85,93 +85,6 @@ export function useCharacterTimeTracking() {
     }
   }, [activeCharacter, fetchTimeTrackingData]);
 
-  // Start a time tracking session for active character
-  const startSession = useCallback(
-    async (locationName: string, locationType: 'Zone' | 'Act' | 'Hideout') => {
-      if (!activeCharacter) {
-        setError('No active character selected');
-        return;
-      }
-
-      try {
-        setError(null);
-        await invoke('start_character_time_tracking_session', {
-          characterId: activeCharacter.id,
-          locationName,
-          locationType,
-        });
-        setNotification({
-          type: 'success',
-          message: `Started tracking session for ${locationName}`,
-        });
-        // Refresh data after starting session
-        await fetchTimeTrackingData();
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to start time tracking session'
-        );
-      }
-    },
-    [activeCharacter, fetchTimeTrackingData]
-  );
-
-  // End a time tracking session for active character
-  const endSession = useCallback(
-    async (locationId: string) => {
-      if (!activeCharacter) {
-        setError('No active character selected');
-        return;
-      }
-
-      try {
-        setError(null);
-        await invoke('end_character_time_tracking_session', {
-          characterId: activeCharacter.id,
-          locationId,
-        });
-        setNotification({
-          type: 'success',
-          message: 'Time tracking session ended successfully',
-        });
-        // Refresh data after ending session
-        await fetchTimeTrackingData();
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to end time tracking session'
-        );
-      }
-    },
-    [activeCharacter, fetchTimeTrackingData]
-  );
-
-  // End all active sessions for active character
-  const endAllActiveSessions = useCallback(async () => {
-    if (!activeCharacter) {
-      setError('No active character selected');
-      return;
-    }
-
-    try {
-      setError(null);
-      await invoke('end_all_character_active_sessions', {
-        characterId: activeCharacter.id,
-      });
-      setNotification({
-        type: 'success',
-        message: 'All active sessions ended successfully',
-      });
-      // Refresh data after ending sessions
-      await fetchTimeTrackingData();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to end all active sessions'
-      );
-    }
-  }, [activeCharacter, fetchTimeTrackingData]);
 
   // Set up real-time event listeners for time tracking updates
   useEffect(() => {
@@ -261,9 +174,6 @@ export function useCharacterTimeTracking() {
     fetchTimeTrackingData,
     refreshData,
     clearAllData,
-    startSession,
-    endSession,
-    endAllActiveSessions,
     clearNotification: () => setNotification(null),
   };
 }

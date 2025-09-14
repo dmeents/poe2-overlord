@@ -34,7 +34,8 @@ impl CharacterDeathParser {
         // This will match patterns like:
         // - "Lylunin has been slain."
         // - "MyCharacter has been slain."
-        Regex::new(r"^(.+?)\s+has\s+been\s+slain\.$")
+        // The pattern matches the message part after [INFO Client X] :
+        Regex::new(r"\[INFO Client \d+\]\s*:\s*(\S.*?)\s+has\s+been\s+slain\.$")
             .expect("Failed to compile character death regex")
     }
 

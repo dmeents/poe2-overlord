@@ -316,47 +316,6 @@ pub async fn clear_all_character_data(
     Ok(())
 }
 
-/// Get a character's current level
-#[tauri::command]
-pub async fn get_character_level(
-    character_id: String,
-    character_manager: State<'_, Arc<CharacterManager>>,
-) -> CommandResult<u32> {
-    debug!("Getting character level for ID: {}", character_id);
-
-    let level = to_command_result(
-        character_manager
-            .get_character_level(&character_id)
-            .await
-            .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to get character level: {}", e))
-            }),
-    )?;
-
-    debug!("Character {} level: {}", character_id, level);
-    Ok(level)
-}
-
-/// Get a character's death count
-#[tauri::command]
-pub async fn get_character_death_count(
-    character_id: String,
-    character_manager: State<'_, Arc<CharacterManager>>,
-) -> CommandResult<u32> {
-    debug!("Getting character death count for ID: {}", character_id);
-
-    let death_count = to_command_result(
-        character_manager
-            .get_character_death_count(&character_id)
-            .await
-            .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to get character death count: {}", e))
-            }),
-    )?;
-
-    debug!("Character {} death count: {}", character_id, death_count);
-    Ok(death_count)
-}
 
 /// Update a character's level (system-managed, for testing purposes)
 #[tauri::command]

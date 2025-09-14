@@ -79,6 +79,26 @@ impl CharacterSessionTracker {
         service
     }
 
+    /// Load all existing character time tracking data
+    pub async fn load_all_character_data(&self) -> AppResult<()> {
+        if let Some(ref character_manager) = self.character_manager {
+            let characters = character_manager.get_all_characters().await;
+            let character_count = characters.len();
+            
+            for character in &characters {
+                if let Err(e) = self.load_character_data(&character.id).await {
+                    warn!("Failed to load time tracking data for character {}: {}", character.name, e);
+                }
+            }
+            
+            debug!("Loaded time tracking data for {} characters", character_count);
+        } else {
+            warn!("No character manager available, cannot load character time tracking data");
+        }
+        
+        Ok(())
+    }
+
     /// Get the event receiver for subscribing to time tracking events
     pub fn subscribe(&self) -> broadcast::Receiver<TimeTrackingEvent> {
         self.event_sender.subscribe()

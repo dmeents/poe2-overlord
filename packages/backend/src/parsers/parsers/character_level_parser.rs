@@ -1,8 +1,8 @@
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParser, ParseError};
+use crate::models::character::CharacterClass;
 use log::debug;
 use regex::Regex;
-use std::collections::HashMap;
 
 /// Character level parser for detecting level-up patterns
 /// Matches patterns like "Lylunin (Sorceress) is now level 2"
@@ -35,18 +35,19 @@ impl CharacterLevelParser {
         // This will match patterns like:
         // - "Lylunin (Sorceress) is now level 2"
         // - "MyCharacter (Warrior) is now level 15"
-        Regex::new(r"^(.+?)\s+\((.+?)\)\s+is\s+now\s+level\s+(\d+)$")
+        // The pattern matches the message part after [INFO Client X] :
+        Regex::new(r"\[INFO Client \d+\]\s*:\s*(\S.*?)\s+\((.+?)\)\s+is\s+now\s+level\s+(\d+)$")
             .expect("Failed to compile character level regex")
     }
 
     /// Extract character information from a level-up log line
-    fn extract_character_info(&self, line: &str) -> Result<(String, String, u32), ParseError> {
+    fn extract_character_info(&self, line: &str) -> Result<(String, CharacterClass, u32), ParseError> {
         debug!("Attempting to extract character info from: {}", line.trim());
 
         if let Some(captures) = self.level_regex.captures(line.trim()) {
             if captures.len() == 4 {
                 let character_name = captures.get(1).unwrap().as_str().trim().to_string();
-                let character_class = captures.get(2).unwrap().as_str().trim().to_string();
+                let character_class_str = captures.get(2).unwrap().as_str().trim();
                 let level_str = captures.get(3).unwrap().as_str().trim();
                 
                 let level = level_str.parse::<u32>().map_err(|_| {
@@ -56,9 +57,11 @@ impl CharacterLevelParser {
                     ))
                 })?;
 
+                let character_class = self.parse_character_class(character_class_str)?;
+
                 debug!(
                     "Extracted character info: name='{}', class='{}', level={}",
-                    character_name, character_class, level
+                    character_name, character_class_str, level
                 );
 
                 Ok((character_name, character_class, level))
@@ -74,20 +77,27 @@ impl CharacterLevelParser {
         }
     }
 
-    /// Validate that the extracted character class is valid
-    fn validate_character_class(&self, class: &str) -> bool {
-        // Map of valid character classes (case-insensitive)
-        let valid_classes: HashMap<&str, bool> = [
-            "warrior", "sorceress", "ranger", "huntress", 
-            "monk", "mercenary", "witch"
-        ].iter().map(|&class| (class, true)).collect();
-
-        valid_classes.contains_key(&class.to_lowercase().as_str())
+    /// Parse a character class string into a CharacterClass enum
+    fn parse_character_class(&self, class_str: &str) -> Result<CharacterClass, ParseError> {
+        match class_str.to_lowercase().as_str() {
+            "warrior" => Ok(CharacterClass::Warrior),
+            "sorceress" => Ok(CharacterClass::Sorceress),
+            "ranger" => Ok(CharacterClass::Ranger),
+            "huntress" => Ok(CharacterClass::Huntress),
+            "monk" => Ok(CharacterClass::Monk),
+            "mercenary" => Ok(CharacterClass::Mercenary),
+            "witch" => Ok(CharacterClass::Witch),
+            _ => Err(ParseError::content_extraction_failed(&format!(
+                "Invalid character class: '{}'",
+                class_str
+            ))),
+        }
     }
+
 }
 
 impl LogParser for CharacterLevelParser {
-    type Event = (String, String, u32); // (character_name, character_class, level)
+    type Event = (String, CharacterClass, u32); // (character_name, character_class, level)
 
     fn should_parse(&self, line: &str) -> bool {
         // Check if the line contains the level-up pattern
@@ -111,14 +121,6 @@ impl LogParser for CharacterLevelParser {
 
         // Extract character information
         let (character_name, character_class, level) = self.extract_character_info(line)?;
-
-        // Validate character class
-        if !self.validate_character_class(&character_class) {
-            return Err(ParseError::content_extraction_failed(&format!(
-                "Invalid character class: '{}'",
-                character_class
-            )));
-        }
 
         // Validate level (reasonable range)
         if level < 1 || level > 100 {

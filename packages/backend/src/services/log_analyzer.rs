@@ -365,7 +365,7 @@ impl LogAnalyzer {
                     if let Some(active_character) = character_manager.get_active_character().await {
                         // Verify the character name and class match
                         if active_character.name == character_name && 
-                           active_character.class.to_string() == character_class {
+                           active_character.class == character_class {
                             
                             // Update the character's level
                             if let Err(e) = character_manager.update_character_level(
@@ -377,7 +377,7 @@ impl LogAnalyzer {
                                 // Create and broadcast the level-up event
                                 let level_up_event = crate::models::events::CharacterLevelUpEvent {
                                     character_name: character_name.clone(),
-                                    character_class: character_class.clone(),
+                                    character_class: character_class.to_string(),
                                     new_level,
                                     timestamp: chrono::Utc::now().to_rfc3339(),
                                 };

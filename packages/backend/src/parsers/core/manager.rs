@@ -1,4 +1,5 @@
 use crate::models::events::ServerConnectionEvent;
+use crate::models::character::CharacterClass;
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParser, ParseError, ParserFactory};
 use crate::parsers::parsers::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
@@ -58,7 +59,7 @@ impl ParserType {
 pub enum ParserResult {
     SceneChange(String), // Now returns raw content instead of SceneChangeEvent
     ServerConnection(ServerConnectionEvent),
-    CharacterLevel((String, String, u32)), // (character_name, character_class, level)
+    CharacterLevel((String, CharacterClass, u32)), // (character_name, character_class, level)
     CharacterDeath(String), // character_name
 }
 

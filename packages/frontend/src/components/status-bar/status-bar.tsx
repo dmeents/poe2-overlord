@@ -1,4 +1,5 @@
-import { useGameProcess, useServerStatus, useZoneMonitoring } from '@/hooks';
+import { useCharacterManagement, useGameProcess, useServerStatus, useZoneMonitoring } from '@/hooks';
+import type { ServerStatus } from '@/types';
 import {
   ChartBarIcon,
   CogIcon,
@@ -14,6 +15,7 @@ export const StatusBar = () => {
   const { processInfo } = useGameProcess();
   const { currentZone, currentAct, isMonitoring } = useZoneMonitoring();
   const { serverStatus } = useServerStatus();
+  const { activeCharacter } = useCharacterManagement();
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;
 
@@ -26,16 +28,14 @@ export const StatusBar = () => {
   };
 
   const getZoneDisplayText = () => {
-    if (!isMonitoring || !isOnline) {
-      return 'No active character';
-    }
+    const characterName = activeCharacter?.name || 'No active character';
 
     if (currentZone) {
-      if (currentAct) return `${currentAct} - ${currentZone}`;
-      return `${currentZone}`;
+      if (currentAct) return `${characterName} - ${currentAct} - ${currentZone}`;
+      return `${characterName} - ${currentZone}`;
     }
 
-    return 'Character active - monitoring zones...';
+    return `${characterName}`;
   };
 
   const getServerStatusTooltip = () => {
@@ -43,14 +43,15 @@ export const StatusBar = () => {
       return 'Attempting to connect to POE2 server...';
     }
 
-    if (serverStatus.is_online) {
-      const pingText = serverStatus.latency_ms
-        ? ` (${serverStatus.latency_ms}ms)`
+    const status = serverStatus as ServerStatus;
+    if (status.is_online) {
+      const pingText = status.latency_ms
+        ? ` (${status.latency_ms}ms)`
         : '';
 
-      return `POE2 server is online${pingText}\nServer: ${serverStatus.ip_address}`;
+      return `POE2 server is online${pingText}\nServer: ${status.ip_address}`;
     } else {
-      return `POE2 server is offline\nLast known server: ${serverStatus.ip_address}`;
+      return `POE2 server is offline\nLast known server: ${status.ip_address}`;
     }
   };
 
@@ -69,7 +70,7 @@ export const StatusBar = () => {
             status={
               !serverStatus
                 ? 'info'
-                : serverStatus.is_online
+                : (serverStatus as ServerStatus).is_online
                   ? 'success'
                   : 'error'
             }

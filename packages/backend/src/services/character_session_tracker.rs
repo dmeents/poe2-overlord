@@ -2,10 +2,12 @@ use crate::errors::{AppError, AppResult};
 use crate::models::{
     events::SceneChangeEvent, LocationSession, LocationStats, LocationType, TimeTrackingEvent,
 };
+use crate::services::traits::TimeTrackingService;
 use crate::utils::time_calculations::{
     calculate_active_session_duration_seconds, calculate_session_duration_seconds,
     validate_no_session_overlap, validate_session_data, ValidationResult,
 };
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
@@ -32,6 +34,12 @@ pub struct CharacterSessionTracker {
     data_directory: PathBuf, // Base directory for character-specific data files
     poe_process_start_time: Arc<RwLock<Option<DateTime<Utc>>>>,
     character_manager: Option<Arc<crate::services::character_manager::CharacterManager>>, // Optional character manager for active character lookup
+}
+
+impl Default for CharacterSessionTracker {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CharacterSessionTracker {
@@ -66,7 +74,7 @@ impl CharacterSessionTracker {
                 .join("poe2-overlord")
         });
 
-        let service = Self {
+        Self {
             active_sessions: Arc::new(RwLock::new(HashMap::new())),
             completed_sessions: Arc::new(RwLock::new(HashMap::new())),
             stats_cache: Arc::new(RwLock::new(HashMap::new())),
@@ -74,9 +82,7 @@ impl CharacterSessionTracker {
             data_directory,
             poe_process_start_time: Arc::new(RwLock::new(None)),
             character_manager,
-        };
-
-        service
+        }
     }
 
     /// Load all existing character time tracking data
@@ -84,18 +90,24 @@ impl CharacterSessionTracker {
         if let Some(ref character_manager) = self.character_manager {
             let characters = character_manager.get_all_characters().await;
             let character_count = characters.len();
-            
+
             for character in &characters {
                 if let Err(e) = self.load_character_data(&character.id).await {
-                    warn!("Failed to load time tracking data for character {}: {}", character.name, e);
+                    warn!(
+                        "Failed to load time tracking data for character {}: {}",
+                        character.name, e
+                    );
                 }
             }
-            
-            debug!("Loaded time tracking data for {} characters", character_count);
+
+            debug!(
+                "Loaded time tracking data for {} characters",
+                character_count
+            );
         } else {
             warn!("No character manager available, cannot load character time tracking data");
         }
-        
+
         Ok(())
     }
 
@@ -123,11 +135,11 @@ impl CharacterSessionTracker {
         }
 
         let content = fs::read_to_string(&data_file_path).map_err(|e| {
-            AppError::FileSystem(format!("Failed to read time tracking data file: {}", e))
+            AppError::file_system_error("Failed to read time tracking data file: {}", &e.to_string())
         })?;
 
         let data: CharacterTimeTrackingData = serde_json::from_str(&content).map_err(|e| {
-            AppError::Serialization(format!("Failed to parse time tracking data: {}", e))
+            AppError::serialization_error("Failed to parse time tracking data: {}", &e.to_string())
         })?;
 
         // Restore completed sessions
@@ -177,16 +189,16 @@ impl CharacterSessionTracker {
         };
 
         let content = serde_json::to_string_pretty(&data).map_err(|e| {
-            AppError::Serialization(format!("Failed to serialize time tracking data: {}", e))
+            AppError::serialization_error("Failed to serialize time tracking data: {}", &e.to_string())
         })?;
 
         // Write to a temporary file first, then rename to ensure atomic write
         let temp_path = data_file_path.with_extension(TEMP_FILE_EXTENSION);
         fs::write(&temp_path, content)
-            .map_err(|e| AppError::FileSystem(format!("Failed to write temp file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("Failed to write temp file: {}", &e.to_string()))?;
 
         fs::rename(&temp_path, &data_file_path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to rename temp file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("Failed to rename temp file: {}", &e.to_string()))?;
 
         debug!(
             "Time tracking data saved successfully for character {}",
@@ -289,19 +301,26 @@ impl CharacterSessionTracker {
         {
             let active_sessions = self.active_sessions.read().await;
             if let Some(character_sessions) = active_sessions.get(character_id) {
-                let existing_sessions: Vec<(DateTime<Utc>, Option<DateTime<Utc>>)> = character_sessions
-                    .values()
-                    .filter(|session| session.location_type == location_type)
-                    .map(|session| (session.entry_timestamp, session.exit_timestamp))
-                    .collect();
+                let existing_sessions: Vec<(DateTime<Utc>, Option<DateTime<Utc>>)> =
+                    character_sessions
+                        .values()
+                        .filter(|session| session.location_type == location_type)
+                        .map(|session| (session.entry_timestamp, session.exit_timestamp))
+                        .collect();
 
                 match validate_no_session_overlap(entry_timestamp, None, &existing_sessions) {
                     ValidationResult::Error(msg) => {
-                        error!("Session overlap validation failed for character {}: {}", character_id, msg);
-                        return Err(AppError::LogMonitor(msg));
+                        error!(
+                            "Session overlap validation failed for character {}: {}",
+                            character_id, msg
+                        );
+                        return Err(AppError::log_monitor_error(&msg));
                     }
                     ValidationResult::Warning(msg) => {
-                        warn!("Session overlap validation warning for character {}: {}", character_id, msg);
+                        warn!(
+                            "Session overlap validation warning for character {}: {}",
+                            character_id, msg
+                        );
                     }
                     ValidationResult::Valid => {}
                 }
@@ -329,9 +348,7 @@ impl CharacterSessionTracker {
 
         debug!(
             "Started time tracking session for character {} in {}: {}",
-            character_id,
-            location_type.to_string(),
-            location_name
+            character_id, location_type, location_name
         );
 
         // Broadcast session started event
@@ -367,11 +384,17 @@ impl CharacterSessionTracker {
             // Validate session data before updating
             match validate_session_data(session.entry_timestamp, Some(now), Some(duration)) {
                 ValidationResult::Error(msg) => {
-                    error!("Session data validation failed for character {}: {}", character_id, msg);
-                    return Err(AppError::LogMonitor(msg));
+                    error!(
+                        "Session data validation failed for character {}: {}",
+                        character_id, msg
+                    );
+                    return Err(AppError::log_monitor_error(&msg));
                 }
                 ValidationResult::Warning(msg) => {
-                    warn!("Session data validation warning for character {}: {}", character_id, msg);
+                    warn!(
+                        "Session data validation warning for character {}: {}",
+                        character_id, msg
+                    );
                 }
                 ValidationResult::Valid => {}
             }
@@ -390,9 +413,7 @@ impl CharacterSessionTracker {
 
             debug!(
                 "Ended time tracking session for character {} in {}: {}",
-                character_id,
-                session.location_type.to_string(),
-                session.location_name
+                character_id, session.location_type, session.location_name
             );
 
             // Broadcast session ended event
@@ -632,7 +653,7 @@ impl CharacterSessionTracker {
         let data_file_path = self.get_character_data_path(character_id);
         if data_file_path.exists() {
             fs::remove_file(&data_file_path)
-                .map_err(|e| AppError::FileSystem(format!("Failed to remove data file: {}", e)))?;
+                .map_err(|e| AppError::file_system_error("Failed to remove data file: {}", &e.to_string()))?;
         }
 
         debug!(
@@ -698,6 +719,54 @@ impl CharacterSessionTracker {
 
         debug!("Character session tracker shutdown completed");
         Ok(())
+    }
+}
+
+#[async_trait]
+impl TimeTrackingService for CharacterSessionTracker {
+    async fn start_session(
+        &self,
+        character_id: &str,
+        location_name: String,
+        location_type: crate::models::LocationType,
+    ) -> AppResult<()> {
+        self.start_session(character_id, location_name, location_type).await
+    }
+
+    async fn end_session(&self, character_id: &str, location_id: &str) -> AppResult<()> {
+        self.end_session(character_id, location_id).await
+    }
+
+    async fn get_active_sessions(&self, character_id: &str) -> Vec<LocationSession> {
+        self.get_active_sessions(character_id).await
+    }
+
+    async fn get_completed_sessions(&self, character_id: &str) -> Vec<LocationSession> {
+        self.get_completed_sessions(character_id).await
+    }
+
+    async fn get_all_stats(&self, character_id: &str) -> Vec<LocationStats> {
+        self.get_all_stats(character_id).await
+    }
+
+    async fn get_total_play_time(&self, character_id: &str) -> u64 {
+        self.get_total_play_time(character_id).await
+    }
+
+    async fn clear_character_data(&self, character_id: &str) -> AppResult<()> {
+        self.clear_character_data(character_id).await
+    }
+
+    async fn load_all_character_data(&self) -> AppResult<()> {
+        self.load_all_character_data().await
+    }
+
+    async fn save_all_character_data(&self) -> AppResult<()> {
+        self.save_all_character_data().await
+    }
+
+    fn subscribe_to_events(&self) -> broadcast::Receiver<TimeTrackingEvent> {
+        self.event_sender.subscribe()
     }
 }
 

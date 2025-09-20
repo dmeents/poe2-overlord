@@ -6,13 +6,16 @@ use crate::services::{
     event_dispatcher::EventDispatcher,
     location_tracker::{LocationTracker, SceneTypeConfig},
     server_monitor::ServerMonitor,
+    traits::LogAnalysisService,
 };
+use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::fs::{self, OpenOptions};
 use std::io::{self, BufRead, BufReader, Seek};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::broadcast;
 use tokio::time;
 
 /// Log analyzer that watches POE client log files for scene changes, server connections, and character level-ups
@@ -29,7 +32,7 @@ pub struct LogAnalyzer {
 impl LogAnalyzer {
     /// Create a new log analyzer
     pub fn new(
-        log_path: String, 
+        log_path: String,
         server_manager: Arc<ServerMonitor>,
         character_manager: Arc<crate::services::character_manager::CharacterManager>,
     ) -> Self {
@@ -210,14 +213,15 @@ impl LogAnalyzer {
         let path = Path::new(log_path);
 
         if !path.exists() {
-            return Err(AppError::LogMonitor(format!(
+            return Err(AppError::log_monitor_error(&format!(
                 "Log file not found: {}",
                 log_path
             )));
         }
 
-        let metadata = fs::metadata(path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to get file metadata: {}", e)))?;
+        let metadata = fs::metadata(path).map_err(|e| {
+            AppError::file_system_error("Failed to get file metadata: {}", &e.to_string())
+        })?;
         Ok(metadata.len())
     }
 
@@ -226,19 +230,18 @@ impl LogAnalyzer {
         let path = Path::new(log_path);
 
         if !path.exists() {
-            return Err(AppError::LogMonitor(format!(
+            return Err(AppError::log_monitor_error(&format!(
                 "Log file not found: {}",
                 log_path
             )));
         }
 
-        let file = OpenOptions::new()
-            .read(true)
-            .open(path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to open log file: {}", e)))?;
+        let file = OpenOptions::new().read(true).open(path).map_err(|e| {
+            AppError::file_system_error("Failed to open log file: {}", &e.to_string())
+        })?;
 
         let reader = BufReader::new(file);
-        let lines: Vec<String> = reader.lines().filter_map(|line| line.ok()).collect();
+        let lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
 
         let start = if lines.len() > count {
             lines.len() - count
@@ -254,16 +257,15 @@ impl LogAnalyzer {
         let path = Path::new(log_path);
 
         if !path.exists() {
-            return Err(AppError::LogMonitor(format!(
+            return Err(AppError::log_monitor_error(&format!(
                 "Log file not found: {}",
                 log_path
             )));
         }
 
-        let file = OpenOptions::new()
-            .read(true)
-            .open(path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to open log file: {}", e)))?;
+        let file = OpenOptions::new().read(true).open(path).map_err(|e| {
+            AppError::file_system_error("Failed to open log file: {}", &e.to_string())
+        })?;
 
         Ok(BufReader::new(file))
     }
@@ -283,13 +285,16 @@ impl LogAnalyzer {
         // Seek to last known position
         reader
             .seek(io::SeekFrom::Start(*last_position))
-            .map_err(|e| AppError::FileSystem(format!("Failed to seek in log file: {}", e)))?;
+            .map_err(|e| {
+                AppError::file_system_error("Failed to seek in log file: {}", &e.to_string())
+            })?;
 
         // Collect all new lines first
         let mut new_lines = Vec::new();
         for line in reader.lines() {
-            let line =
-                line.map_err(|e| AppError::FileSystem(format!("Failed to read line: {}", e)))?;
+            let line = line.map_err(|e| {
+                AppError::file_system_error("Failed to read line: {}", &e.to_string())
+            })?;
             new_lines.push(line);
         }
 
@@ -364,14 +369,14 @@ impl LogAnalyzer {
                     // Check if this level-up is for the active character
                     if let Some(active_character) = character_manager.get_active_character().await {
                         // Verify the character name and class match
-                        if active_character.name == character_name && 
-                           active_character.class == character_class {
-                            
+                        if active_character.name == character_name
+                            && active_character.class == character_class
+                        {
                             // Update the character's level
-                            if let Err(e) = character_manager.update_character_level(
-                                &active_character.id, 
-                                new_level
-                            ).await {
+                            if let Err(e) = character_manager
+                                .update_character_level(&active_character.id, new_level)
+                                .await
+                            {
                                 warn!("Failed to update character level: {}", e);
                             } else {
                                 // Create and broadcast the level-up event
@@ -406,11 +411,11 @@ impl LogAnalyzer {
                     if let Some(active_character) = character_manager.get_active_character().await {
                         // Verify the character name matches
                         if active_character.name == character_name {
-                            
                             // Increment the character's death count
-                            if let Err(e) = character_manager.increment_character_deaths(
-                                &active_character.id
-                            ).await {
+                            if let Err(e) = character_manager
+                                .increment_character_deaths(&active_character.id)
+                                .await
+                            {
                                 warn!("Failed to increment character death count: {}", e);
                             } else {
                                 // Create and broadcast the death event
@@ -440,6 +445,29 @@ impl LogAnalyzer {
                 }
             }
         }
+    }
+}
+
+#[async_trait]
+impl LogAnalysisService for LogAnalyzer {
+    async fn start_monitoring(&self) -> AppResult<()> {
+        self.start_monitoring().await
+    }
+
+    async fn stop_monitoring(&self) -> AppResult<()> {
+        self.stop_monitoring().await
+    }
+
+    async fn get_log_file_size(&self) -> AppResult<u64> {
+        self.get_log_file_size()
+    }
+
+    async fn read_log_lines(&self, start_line: usize, count: usize) -> AppResult<Vec<String>> {
+        self.read_log_lines(start_line, count).await
+    }
+
+    fn subscribe_to_events(&self) -> broadcast::Receiver<LogEvent> {
+        self.subscribe()
     }
 }
 

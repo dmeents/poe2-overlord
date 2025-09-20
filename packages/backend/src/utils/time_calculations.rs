@@ -126,10 +126,10 @@ pub fn validate_no_session_overlap(
     new_exit: Option<DateTime<Utc>>,
     existing_sessions: &[(DateTime<Utc>, Option<DateTime<Utc>>)],
 ) -> ValidationResult {
-    let new_exit = new_exit.unwrap_or_else(|| Utc::now());
+    let new_exit = new_exit.unwrap_or_else(Utc::now);
     
     for (existing_entry, existing_exit) in existing_sessions {
-        let existing_exit = existing_exit.unwrap_or_else(|| Utc::now());
+        let existing_exit = existing_exit.unwrap_or_else(Utc::now);
         
         // Check for overlap: new session starts before existing ends AND new session ends after existing starts
         if new_entry < existing_exit && new_exit > *existing_entry {

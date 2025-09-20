@@ -26,5 +26,5 @@ fn test_logging_macros() {
     log::error!("Error message");
 
     // All logging calls should complete without panicking
-    assert!(true);
+    // This test verifies that logging doesn't panic
 }

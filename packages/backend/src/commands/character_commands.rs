@@ -31,10 +31,7 @@ pub async fn create_character(
                 hardcore,
                 solo_self_found,
             )
-            .await
-            .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to create character: {}", e))
-            }),
+            .await,
     )?;
 
     info!("Successfully created character: {}", name);
@@ -84,14 +81,7 @@ pub async fn set_active_character(
 ) -> CommandResult<()> {
     debug!("Setting active character: {}", character_id);
 
-    to_command_result(
-        character_manager
-            .set_active_character(&character_id)
-            .await
-            .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to set active character: {}", e))
-            }),
-    )?;
+    to_command_result(character_manager.set_active_character(&character_id).await)?;
 
     info!("Successfully set active character: {}", character_id);
     Ok(())
@@ -110,7 +100,7 @@ pub async fn remove_character(
             .remove_character(&character_id)
             .await
             .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to remove character: {}", e))
+                crate::errors::AppError::internal_error("Failed to remove character: {}", &e.to_string())
             }),
     )?;
 
@@ -219,34 +209,21 @@ pub async fn get_available_ascendencies_for_class(
 #[tauri::command]
 pub async fn update_character(
     character_id: String,
-    name: String,
-    class: CharacterClass,
-    ascendency: crate::models::Ascendency,
-    league: League,
-    hardcore: bool,
-    solo_self_found: bool,
+    params: crate::models::CharacterUpdateParams,
     character_manager: State<'_, Arc<CharacterManager>>,
 ) -> CommandResult<Character> {
-    debug!("Updating character: {} (ID: {})", name, character_id);
+    debug!("Updating character: {} (ID: {})", params.name, character_id);
 
     let character = to_command_result(
         character_manager
-            .update_character(
-                &character_id,
-                name.clone(),
-                class,
-                ascendency,
-                league,
-                hardcore,
-                solo_self_found,
-            )
+            .update_character(&character_id, params.clone())
             .await
             .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to update character: {}", e))
+                crate::errors::AppError::internal_error("Failed to update character: {}", &e.to_string())
             }),
     )?;
 
-    info!("Successfully updated character: {}", name);
+    info!("Successfully updated character: {}", params.name);
     Ok(character)
 }
 
@@ -263,10 +240,10 @@ pub async fn update_character_last_played(
             .update_last_played(&character_id)
             .await
             .map_err(|e| {
-                crate::errors::AppError::Internal(format!(
-                    "Failed to update character last played: {}",
-                    e
-                ))
+                crate::errors::AppError::internal_error(
+                    "update_character_last_played",
+                    &e.to_string()
+                )
             }),
     )?;
 
@@ -309,7 +286,7 @@ pub async fn clear_all_character_data(
     debug!("Clearing all character data");
 
     to_command_result(character_manager.clear_all_data().await.map_err(|e| {
-        crate::errors::AppError::Internal(format!("Failed to clear character data: {}", e))
+        crate::errors::AppError::internal_error("Failed to clear character data: {}", &e.to_string())
     }))?;
 
     info!("Successfully cleared all character data");
@@ -331,7 +308,7 @@ pub async fn update_character_level(
             .update_character_level(&character_id, new_level)
             .await
             .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to update character level: {}", e))
+                crate::errors::AppError::internal_error("Failed to update character level: {}", &e.to_string())
             }),
     )?;
 
@@ -352,7 +329,7 @@ pub async fn increment_character_deaths(
             .increment_character_deaths(&character_id)
             .await
             .map_err(|e| {
-                crate::errors::AppError::Internal(format!("Failed to increment character deaths: {}", e))
+                crate::errors::AppError::internal_error("Failed to increment character deaths: {}", &e.to_string())
             }),
     )?;
 

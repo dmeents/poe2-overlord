@@ -17,7 +17,7 @@ impl ServiceInitializer {
 
         // Initialize configuration manager
         debug!("Initializing ConfigurationManager...");
-        let config_service = ConfigurationManager::new(&app.handle());
+        let config_service = ConfigurationManager::new(app.handle());
         app.manage(config_service.clone());
         debug!("ConfigurationManager managed successfully");
 

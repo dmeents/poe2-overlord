@@ -1,6 +1,6 @@
-use crate::models::character::CharacterClass;
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParser, ParseError};
+use crate::models::character::CharacterClass;
 use log::debug;
 use regex::Regex;
 
@@ -41,10 +41,7 @@ impl CharacterLevelParser {
     }
 
     /// Extract character information from a level-up log line
-    fn extract_character_info(
-        &self,
-        line: &str,
-    ) -> Result<(String, CharacterClass, u32), ParseError> {
+    fn extract_character_info(&self, line: &str) -> Result<(String, CharacterClass, u32), ParseError> {
         debug!("Attempting to extract character info from: {}", line.trim());
 
         if let Some(captures) = self.level_regex.captures(line.trim()) {
@@ -52,7 +49,7 @@ impl CharacterLevelParser {
                 let character_name = captures.get(1).unwrap().as_str().trim().to_string();
                 let character_class_str = captures.get(2).unwrap().as_str().trim();
                 let level_str = captures.get(3).unwrap().as_str().trim();
-
+                
                 let level = level_str.parse::<u32>().map_err(|_| {
                     ParseError::content_extraction_failed(&format!(
                         "Failed to parse level '{}' as number",
@@ -70,12 +67,12 @@ impl CharacterLevelParser {
                 Ok((character_name, character_class, level))
             } else {
                 Err(ParseError::content_extraction_failed(
-                    "Regex matched but wrong number of capture groups",
+                    "Regex matched but wrong number of capture groups"
                 ))
             }
         } else {
             Err(ParseError::content_extraction_failed(
-                "Line does not match character level-up pattern",
+                "Line does not match character level-up pattern"
             ))
         }
     }
@@ -96,6 +93,7 @@ impl CharacterLevelParser {
             ))),
         }
     }
+
 }
 
 impl LogParser for CharacterLevelParser {

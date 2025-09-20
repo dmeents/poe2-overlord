@@ -1,5 +1,5 @@
 use app_lib::parsers::core::LogParser;
-use app_lib::parsers::parsers::ServerConnectionParser;
+use app_lib::parsers::specific_parsers::ServerConnectionParser;
 
 #[test]
 fn test_server_connection_parser_with_ip_port() {

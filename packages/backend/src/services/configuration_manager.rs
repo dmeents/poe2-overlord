@@ -1,5 +1,6 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::AppConfig;
+use crate::services::traits::ConfigurationService;
 use log::{debug, error, info, warn};
 use serde_json;
 use std::fs;
@@ -63,13 +64,13 @@ impl ConfigurationManager {
         }
 
         let content = fs::read_to_string(&self.config_path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to read config file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("read_config_file", &e.to_string()))?;
 
         let config: AppConfig = serde_json::from_str(&content).map_err(|e| {
             error!("Failed to parse config file JSON: {}", e);
             error!("Config file content: {}", content);
             // If JSON parsing fails, create a new config file with defaults
-            AppError::Serialization(format!("Failed to parse config file: {}", e))
+            AppError::serialization_error("parse_config_file", &e.to_string())
         })?;
 
         {
@@ -88,15 +89,15 @@ impl ConfigurationManager {
     pub fn save_config(&self) -> AppResult<()> {
         let config = self.config.read().unwrap();
         let content = serde_json::to_string_pretty(&*config)
-            .map_err(|e| AppError::Serialization(format!("Failed to serialize config: {}", e)))?;
+            .map_err(|e| AppError::serialization_error("serialize_config", &e.to_string()))?;
 
         // Write to a temporary file first, then rename to ensure atomic write
         let temp_path = self.config_path.with_extension(TEMP_FILE_EXTENSION);
         fs::write(&temp_path, content)
-            .map_err(|e| AppError::FileSystem(format!("Failed to write temp file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("write_temp_file", &e.to_string()))?;
 
         fs::rename(&temp_path, &self.config_path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to rename temp file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("rename_temp_file", &e.to_string()))?;
 
         debug!("Configuration saved successfully to {:?}", self.config_path);
         Ok(())
@@ -125,7 +126,7 @@ impl ConfigurationManager {
     {
         {
             let mut config = self.config.write().unwrap();
-            updater(&mut *config);
+            updater(&mut config);
         }
 
         self.save_config()?;
@@ -173,5 +174,27 @@ impl ConfigurationManager {
     pub fn reset_poe_client_log_path_to_default(&self) -> AppResult<()> {
         let default_path = self.get_default_poe_client_log_path();
         self.set_poe_client_log_path(default_path)
+    }
+}
+
+impl ConfigurationService for ConfigurationManager {
+    fn get_config(&self) -> AppConfig {
+        self.get_config()
+    }
+
+    fn update_config(&self, config: AppConfig) -> AppResult<()> {
+        self.update_config(config)
+    }
+
+    fn reset_to_defaults(&self) -> AppResult<()> {
+        self.update_config(AppConfig::default())
+    }
+
+    fn load_config(&self) -> AppResult<()> {
+        self.load_config()
+    }
+
+    fn save_config(&self) -> AppResult<()> {
+        self.save_config()
     }
 }

@@ -11,7 +11,8 @@ pub mod time_tracking;
 // with the services module
 pub use character::{
     get_all_character_classes, get_all_leagues, get_ascendencies_for_class,
-    is_valid_ascendency_for_class, Ascendency, Character, CharacterClass, CharacterData, League,
+    is_valid_ascendency_for_class, Ascendency, Character, CharacterClass, CharacterData,
+    CharacterUpdateParams, League,
 };
 pub use config::AppConfig;
 pub use events::*;

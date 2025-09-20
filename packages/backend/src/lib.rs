@@ -14,8 +14,9 @@ pub use handlers::*;
 // Import specific models to avoid naming conflicts with services
 pub use models::{
     ActChangeEvent, AppConfig, Ascendency, Character, CharacterClass, CharacterData,
-    HideoutChangeEvent, League, LocationSession, LocationStats, LocationType, OverlayState,
-    ProcessInfo, SceneChangeEvent, ServerConnectionEvent, TimeTrackingEvent, ZoneChangeEvent,
+    CharacterUpdateParams, HideoutChangeEvent, League, LocationSession, LocationStats,
+    LocationType, OverlayState, ProcessInfo, SceneChangeEvent, ServerConnectionEvent,
+    TimeTrackingEvent, ZoneChangeEvent,
 };
 pub use services::*;
 

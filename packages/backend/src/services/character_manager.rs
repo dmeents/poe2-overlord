@@ -1,7 +1,10 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::character::{
     is_valid_ascendency_for_class, Character, CharacterClass, CharacterData, League,
+    CharacterUpdateParams,
 };
+use crate::services::traits::CharacterService;
+use async_trait::async_trait;
 use chrono::Utc;
 use log::{debug, info, warn};
 use serde_json;
@@ -22,6 +25,12 @@ pub struct CharacterManager {
     character_data: Arc<RwLock<CharacterData>>,
     /// Path to the character data file
     data_file_path: PathBuf,
+}
+
+impl Default for CharacterManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CharacterManager {
@@ -69,11 +78,11 @@ impl CharacterManager {
         }
 
         let content = fs::read_to_string(&self.data_file_path).map_err(|e| {
-            AppError::FileSystem(format!("Failed to read character data file: {}", e))
+            AppError::file_system_error("Failed to read character data file: {}", &e.to_string())
         })?;
 
         let data: CharacterData = serde_json::from_str(&content).map_err(|e| {
-            AppError::Serialization(format!("Failed to parse character data: {}", e))
+            AppError::serialization_error("Failed to parse character data: {}", &e.to_string())
         })?;
 
         {
@@ -92,17 +101,16 @@ impl CharacterManager {
             character_data.clone()
         };
 
-        let content = serde_json::to_string_pretty(&data).map_err(|e| {
-            AppError::Serialization(format!("Failed to serialize character data: {}", e))
-        })?;
+        let content = serde_json::to_string_pretty(&data)
+            .map_err(|e| AppError::serialization_error("serialize_character_data", &e.to_string()))?;
 
         // Write to a temporary file first, then rename to ensure atomic write
         let temp_path = self.data_file_path.with_extension(TEMP_FILE_EXTENSION);
         fs::write(&temp_path, content)
-            .map_err(|e| AppError::FileSystem(format!("Failed to write temp file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("write_temp_file", &e.to_string()))?;
 
         fs::rename(&temp_path, &self.data_file_path)
-            .map_err(|e| AppError::FileSystem(format!("Failed to rename temp file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("rename_temp_file", &e.to_string()))?;
 
         debug!(
             "Character data saved successfully to {:?}",
@@ -123,20 +131,20 @@ impl CharacterManager {
     ) -> AppResult<Character> {
         // Validate that the ascendency belongs to the class
         if !is_valid_ascendency_for_class(&ascendency, &class) {
-            return Err(AppError::Internal(format!(
-                "Ascendency '{:?}' is not valid for class '{:?}'",
-                ascendency, class
-            )));
+            return Err(AppError::validation_error(
+                "ascendency",
+                &format!("Ascendency '{:?}' is not valid for class '{:?}'", ascendency, class),
+            ));
         }
 
         let mut character_data = self.character_data.write().await;
 
         // Check for duplicate names
         if character_data.characters.iter().any(|c| c.name == name) {
-            return Err(AppError::Internal(format!(
-                "Character with name '{}' already exists",
-                name
-            )));
+            return Err(AppError::character_management_error(
+                "create_character",
+                &format!("Character with name '{}' already exists", name),
+            ));
         }
 
         // Create the new character
@@ -208,10 +216,10 @@ impl CharacterManager {
             .iter()
             .any(|c| c.id == character_id)
         {
-            return Err(AppError::Internal(format!(
-                "Character with ID '{}' not found",
-                character_id
-            )));
+            return Err(AppError::character_management_error(
+                "remove_character",
+                &format!("Character with ID '{}' not found", character_id),
+            ));
         }
 
         // Deactivate all characters
@@ -248,7 +256,7 @@ impl CharacterManager {
             .iter()
             .position(|c| c.id == character_id)
             .ok_or_else(|| {
-                AppError::Internal(format!("Character with ID '{}' not found", character_id))
+                AppError::internal_error("Character with ID '{}' not found", &character_id.to_string())
             })?;
 
         let character = character_data.characters.remove(index);
@@ -326,19 +334,14 @@ impl CharacterManager {
     pub async fn update_character(
         &self,
         character_id: &str,
-        name: String,
-        class: CharacterClass,
-        ascendency: crate::models::Ascendency,
-        league: League,
-        hardcore: bool,
-        solo_self_found: bool,
+        params: crate::models::CharacterUpdateParams,
     ) -> AppResult<Character> {
         // Validate that the ascendency belongs to the class
-        if !is_valid_ascendency_for_class(&ascendency, &class) {
-            return Err(AppError::Internal(format!(
-                "Ascendency '{:?}' is not valid for class '{:?}'",
-                ascendency, class
-            )));
+        if !is_valid_ascendency_for_class(&params.ascendency, &params.class) {
+            return Err(AppError::validation_error(
+                "ascendency",
+                &format!("Ascendency '{:?}' is not valid for class '{:?}'", params.ascendency, params.class),
+            ));
         }
 
         let mut character_data = self.character_data.write().await;
@@ -347,12 +350,12 @@ impl CharacterManager {
         if character_data
             .characters
             .iter()
-            .any(|c| c.id != character_id && c.name == name)
+            .any(|c| c.id != character_id && c.name == params.name)
         {
-            return Err(AppError::Internal(format!(
-                "Character with name '{}' already exists",
-                name
-            )));
+            return Err(AppError::character_management_error(
+                "update_character",
+                &format!("Character with name '{}' already exists", params.name),
+            ));
         }
 
         // Find the character to update
@@ -361,16 +364,19 @@ impl CharacterManager {
             .iter_mut()
             .find(|c| c.id == character_id)
             .ok_or_else(|| {
-                AppError::Internal(format!("Character with ID '{}' not found", character_id))
+                AppError::character_management_error(
+                    "update_character",
+                    &format!("Character with ID '{}' not found", character_id),
+                )
             })?;
 
         // Update the character
-        character.name = name.clone();
-        character.class = class;
-        character.ascendency = ascendency;
-        character.league = league;
-        character.hardcore = hardcore;
-        character.solo_self_found = solo_self_found;
+        character.name = params.name.clone();
+        character.class = params.class;
+        character.ascendency = params.ascendency;
+        character.league = params.league;
+        character.hardcore = params.hardcore;
+        character.solo_self_found = params.solo_self_found;
 
         let updated_character = character.clone();
 
@@ -378,7 +384,7 @@ impl CharacterManager {
         drop(character_data);
         self.save_character_data().await?;
 
-        info!("Updated character: {}", name);
+        info!("Updated character: {}", params.name);
         Ok(updated_character)
     }
 
@@ -393,10 +399,10 @@ impl CharacterManager {
         {
             character.last_played = Some(Utc::now());
         } else {
-            return Err(AppError::Internal(format!(
-                "Character with ID '{}' not found",
-                character_id
-            )));
+            return Err(AppError::character_management_error(
+                "operation",
+                &format!("Character with ID '{}' not found", character_id),
+            ));
         }
 
         // Save the updated data
@@ -417,7 +423,7 @@ impl CharacterManager {
         // Remove data file
         if self.data_file_path.exists() {
             fs::remove_file(&self.data_file_path)
-                .map_err(|e| AppError::FileSystem(format!("Failed to remove data file: {}", e)))?;
+                .map_err(|e| AppError::file_system_error("Failed to remove data file: {}", &e.to_string()))?;
         }
 
         debug!("All character data cleared");
@@ -448,10 +454,10 @@ impl CharacterManager {
             character.level = new_level;
             character.last_played = Some(Utc::now());
         } else {
-            return Err(AppError::Internal(format!(
-                "Character with ID '{}' not found",
-                character_id
-            )));
+            return Err(AppError::character_management_error(
+                "operation",
+                &format!("Character with ID '{}' not found", character_id),
+            ));
         }
 
         // Save the updated data
@@ -474,10 +480,10 @@ impl CharacterManager {
             character.death_count += 1;
             character.last_played = Some(Utc::now());
         } else {
-            return Err(AppError::Internal(format!(
-                "Character with ID '{}' not found",
-                character_id
-            )));
+            return Err(AppError::character_management_error(
+                "operation",
+                &format!("Character with ID '{}' not found", character_id),
+            ));
         }
 
         // Save the updated data
@@ -487,5 +493,59 @@ impl CharacterManager {
         debug!("Incremented character {} death count", character_id);
         Ok(())
     }
+}
 
+#[async_trait]
+impl CharacterService for CharacterManager {
+    async fn create_character(
+        &self,
+        name: String,
+        class: crate::models::CharacterClass,
+        ascendency: crate::models::Ascendency,
+        league: crate::models::League,
+        hardcore: bool,
+        solo_self_found: bool,
+    ) -> AppResult<Character> {
+        self.create_character(name, class, ascendency, league, hardcore, solo_self_found).await
+    }
+
+    async fn get_all_characters(&self) -> Vec<Character> {
+        self.get_all_characters().await
+    }
+
+    async fn get_character(&self, character_id: &str) -> Option<Character> {
+        self.get_character(character_id).await
+    }
+
+    async fn update_character(&self, character_id: &str, params: CharacterUpdateParams) -> AppResult<Character> {
+        self.update_character(character_id, params).await
+    }
+
+    async fn remove_character(&self, character_id: &str) -> AppResult<Character> {
+        self.remove_character(character_id).await
+    }
+
+    async fn set_active_character(&self, character_id: &str) -> AppResult<()> {
+        self.set_active_character(character_id).await
+    }
+
+    async fn get_active_character(&self) -> Option<Character> {
+        self.get_active_character().await
+    }
+
+    async fn update_last_played(&self, character_id: &str) -> AppResult<()> {
+        self.update_last_played(character_id).await
+    }
+
+    async fn clear_all_characters(&self) -> AppResult<()> {
+        self.clear_all_characters().await
+    }
+
+    async fn update_character_level(&self, character_id: &str, level: u32) -> AppResult<()> {
+        self.update_character_level(character_id, level).await
+    }
+
+    async fn increment_character_deaths(&self, character_id: &str) -> AppResult<()> {
+        self.increment_character_deaths(character_id).await
+    }
 }

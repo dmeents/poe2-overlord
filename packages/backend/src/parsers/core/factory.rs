@@ -1,6 +1,6 @@
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::ParserType;
-use crate::parsers::parsers::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
+use crate::parsers::specific_parsers::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 
 /// Factory for creating parser instances
 pub struct ParserFactory;

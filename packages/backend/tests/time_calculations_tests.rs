@@ -43,7 +43,7 @@ fn test_calculate_active_session_duration() {
     let duration = calculate_active_session_duration_seconds(entry);
     
     // Should be approximately 120 seconds (allowing for small timing differences)
-    assert!(duration >= 119 && duration <= 121);
+    assert!((119..=121).contains(&duration));
 }
 
 #[test]

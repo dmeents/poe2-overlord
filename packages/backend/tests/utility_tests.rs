@@ -37,9 +37,18 @@ fn test_option_handling() {
 
     assert!(some_value.is_some());
     assert!(none_value.is_none());
-    assert_eq!(some_value.unwrap(), 42);
-    assert_eq!(some_value.unwrap_or(0), 42);
-    assert_eq!(none_value.unwrap_or(0), 0);
+    assert_eq!(some_value, Some(42));
+    
+    // Test pattern matching instead of unwrap_or to avoid clippy warnings
+    match some_value {
+        Some(value) => assert_eq!(value, 42),
+        None => panic!("Expected Some value"),
+    }
+    
+    match none_value {
+        Some(_) => panic!("Expected None value"),
+        None => { /* Expected - None value is correct */ }
+    }
 }
 
 #[test]
@@ -49,8 +58,8 @@ fn test_result_handling() {
 
     assert!(ok_result.is_ok());
     assert!(err_result.is_err());
-    assert_eq!(ok_result.unwrap(), 42);
-    assert_eq!(err_result.unwrap_err(), "error message");
+    assert_eq!(ok_result, Ok(42));
+    assert_eq!(err_result, Err("error message"));
 }
 
 #[test]

@@ -33,6 +33,23 @@ pub struct Character {
     pub death_count: u32,
 }
 
+/// Parameters for updating a character's information
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CharacterUpdateParams {
+    /// Character name
+    pub name: String,
+    /// POE2 class
+    pub class: CharacterClass,
+    /// Character ascendency (subclass)
+    pub ascendency: Ascendency,
+    /// League the character is in
+    pub league: League,
+    /// Hardcore mode flag
+    pub hardcore: bool,
+    /// Solo Self Found mode flag
+    pub solo_self_found: bool,
+}
+
 /// POE2 character classes with proper display names
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CharacterClass {
@@ -114,7 +131,7 @@ pub enum League {
 }
 
 /// Container for character data (used by services)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CharacterData {
     /// All characters
     pub characters: Vec<Character>,
@@ -179,14 +196,6 @@ pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
     }
 }
 
-impl Default for CharacterData {
-    fn default() -> Self {
-        Self {
-            characters: Vec::new(),
-            active_character_id: None,
-        }
-    }
-}
 
 /// Helper function to get all available character classes
 pub fn get_all_character_classes() -> Vec<CharacterClass> {

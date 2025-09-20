@@ -82,10 +82,10 @@ pub async fn clear_character_time_tracking_data(
             .clear_character_data(&character_id)
             .await
             .map_err(|e| {
-                crate::errors::AppError::Internal(format!(
-                    "Failed to clear time tracking data: {}",
-                    e
-                ))
+                crate::errors::AppError::time_tracking_error(
+                    "clear_character_data",
+                    &e.to_string()
+                )
             }),
     )?;
 

@@ -2,7 +2,7 @@ use crate::models::events::ServerConnectionEvent;
 use crate::models::character::CharacterClass;
 use crate::parsers::config::ParsersConfig;
 use crate::parsers::core::{LogParser, ParseError, ParserFactory};
-use crate::parsers::parsers::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
+use crate::parsers::specific_parsers::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 use log::debug;
 
 /// Enum to represent different parser types
@@ -40,16 +40,16 @@ impl ParserType {
         match self {
             ParserType::SceneChange(parser) => parser
                 .parse_line(line)
-                .map(|event| ParserResult::SceneChange(event)),
+                .map(ParserResult::SceneChange),
             ParserType::ServerConnection(parser) => parser
                 .parse_line(line)
-                .map(|event| ParserResult::ServerConnection(event)),
+                .map(ParserResult::ServerConnection),
             ParserType::CharacterLevel(parser) => parser
                 .parse_line(line)
-                .map(|event| ParserResult::CharacterLevel(event)),
+                .map(ParserResult::CharacterLevel),
             ParserType::CharacterDeath(parser) => parser
                 .parse_line(line)
-                .map(|event| ParserResult::CharacterDeath(event)),
+                .map(ParserResult::CharacterDeath),
         }
     }
 }

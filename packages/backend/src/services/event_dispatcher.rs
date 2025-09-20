@@ -1,5 +1,6 @@
 use crate::models::events::LogEvent;
 use crate::services::server_monitor::ServerStatus;
+use crate::services::traits::EventService;
 use log::debug;
 use tokio::sync::broadcast;
 
@@ -83,5 +84,29 @@ impl EventDispatcher {
 impl Default for EventDispatcher {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl EventService for EventDispatcher {
+    fn subscribe_to_log_events(&self) -> broadcast::Receiver<LogEvent> {
+        self.subscribe()
+    }
+
+    fn subscribe_to_ping_events(&self) -> broadcast::Receiver<ServerStatus> {
+        self.subscribe_ping_events()
+    }
+
+    fn broadcast_log_event(
+        &self,
+        event: LogEvent,
+    ) -> Result<(), broadcast::error::SendError<LogEvent>> {
+        self.broadcast_event(event)
+    }
+
+    fn broadcast_ping_event(
+        &self,
+        event: ServerStatus,
+    ) -> Result<(), broadcast::error::SendError<ServerStatus>> {
+        self.broadcast_ping_event(event)
     }
 }

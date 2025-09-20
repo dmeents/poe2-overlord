@@ -5,6 +5,7 @@ pub mod ping_event_handler;
 pub mod runtime_manager;
 pub mod service_initializer;
 pub mod service_launcher;
+pub mod service_registry_initializer;
 pub mod task_manager;
 pub mod time_tracking_handler;
 

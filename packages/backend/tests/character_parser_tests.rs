@@ -1,5 +1,5 @@
 use app_lib::parsers::core::LogParser;
-use app_lib::parsers::parsers::{CharacterLevelParser, CharacterDeathParser};
+use app_lib::parsers::specific_parsers::{CharacterLevelParser, CharacterDeathParser};
 use app_lib::models::character::CharacterClass;
 
 #[test]

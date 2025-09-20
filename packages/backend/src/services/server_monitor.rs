@@ -1,6 +1,8 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::events::ServerConnectionEvent;
 use crate::services::event_dispatcher::EventDispatcher;
+use crate::services::traits::ServerMonitoringService;
+use async_trait::async_trait;
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -58,10 +60,10 @@ impl ServerMonitor {
 
         let contents = fs::read_to_string(&self.status_file_path)
             .await
-            .map_err(|e| AppError::FileSystem(format!("Failed to read status file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("Failed to read status file: {}", &e.to_string()))?;
 
         let loaded_status: ServerStatus = serde_json::from_str(&contents)
-            .map_err(|e| AppError::Serialization(format!("Failed to parse status file: {}", e)))?;
+            .map_err(|e| AppError::serialization_error("Failed to parse status file: {}", &e.to_string()))?;
 
         let mut status = self.status.write().await;
         *status = Some(loaded_status.clone());
@@ -197,15 +199,15 @@ impl ServerMonitor {
         if let Some(parent) = self.status_file_path.parent() {
             fs::create_dir_all(parent)
                 .await
-                .map_err(|e| AppError::FileSystem(format!("Failed to create directory: {}", e)))?;
+                .map_err(|e| AppError::file_system_error("Failed to create directory: {}", &e.to_string()))?;
         }
 
         let json = serde_json::to_string_pretty(status)
-            .map_err(|e| AppError::Serialization(format!("Failed to serialize status: {}", e)))?;
+            .map_err(|e| AppError::serialization_error("Failed to serialize status: {}", &e.to_string()))?;
 
         fs::write(&self.status_file_path, json)
             .await
-            .map_err(|e| AppError::FileSystem(format!("Failed to write status file: {}", e)))?;
+            .map_err(|e| AppError::file_system_error("Failed to write status file: {}", &e.to_string()))?;
 
         debug!("Server status saved to file");
         Ok(())
@@ -281,5 +283,24 @@ impl ServerMonitor {
                 }
             }
         });
+    }
+}
+
+#[async_trait]
+impl ServerMonitoringService for ServerMonitor {
+    async fn get_current_status(&self) -> ServerStatus {
+        self.get_current_status().await
+    }
+
+    async fn update_status(&self, status: ServerStatus) -> AppResult<()> {
+        self.update_status(status).await
+    }
+
+    async fn save_status(&self) -> AppResult<()> {
+        self.save_status().await
+    }
+
+    async fn load_status(&self) -> AppResult<()> {
+        self.load_status().await
     }
 }

@@ -3,6 +3,7 @@ import type { AppConfig } from '@/types';
 import { tauriUtils } from '@/utils/tauri';
 import { useEffect, useState } from 'react';
 import { AlertMessage, FormField, SelectInput, TextInput } from './form';
+import { Button } from './button';
 
 interface SettingsFormProps {
   onConfigUpdate?: (config: AppConfig) => void;
@@ -231,30 +232,33 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       </FormField>
 
       {/* Action Buttons */}
-      <div className='flex space-x-3 pt-6'>
-        <button
+      <div className='flex gap-3 pt-6'>
+        <Button
           onClick={handleSave}
           disabled={isSaving}
-          className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
+          variant='primary'
+          size='md'
         >
           {isSaving ? 'Saving...' : 'Save Configuration'}
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={handleReset}
           disabled={isSaving}
-          className='px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
+          variant='secondary'
+          size='md'
         >
           Reset to Defaults
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={loadConfig}
           disabled={isSaving}
-          className='px-4 py-2 border border-gray-600 text-gray-300 rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
+          variant='outline'
+          size='md'
         >
           Reload
-        </button>
+        </Button>
       </div>
     </div>
   );

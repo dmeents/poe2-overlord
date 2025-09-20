@@ -2,7 +2,6 @@ import { Button } from '@/components/button';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
 import { ActTimeChart } from '@/components/time-tracking/act-time-chart';
-import { CharacterSelector } from '@/components/time-tracking/character-selector';
 import { LocationStats } from '@/components/time-tracking/location-stats';
 import { SessionHistory } from '@/components/time-tracking/session-history';
 import { StatCard } from '@/components/time-tracking/stat-card';
@@ -53,11 +52,6 @@ function TimeTrackingPage() {
       />
       <div className='container mx-auto px-6 py-8'>
         <div className='space-y-6'>
-          <CharacterSelector
-            activeCharacter={activeCharacter}
-            hasActiveCharacter={hasActiveCharacter}
-          />
-
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <Button onClick={refreshData} variant='outline' size='sm'>

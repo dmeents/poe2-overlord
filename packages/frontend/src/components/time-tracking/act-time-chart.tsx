@@ -25,18 +25,30 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
       visits: stat.total_visits,
       averageSessionSeconds: stat.average_session_seconds,
     }))
-    .sort((a, b) => b.totalTimeSeconds - a.totalTimeSeconds);
+    .sort((a, b) => {
+      // Extract act numbers for chronological sorting
+      const getActNumber = (name: string) => {
+        const match = name.match(/Act (\d+)/i);
+        return match ? parseInt(match[1], 10) : 0;
+      };
+      return getActNumber(a.name) - getActNumber(b.name);
+    });
 
-  // Calculate total time for percentage calculations
+  // Calculate total time for display purposes
   const totalActTime = actData.reduce(
     (sum, act) => sum + act.totalTimeSeconds,
     0
   );
 
-  // Update percentages
+  // Find the act with the most playtime to use as the basis
+  const maxActTime = actData.length > 0 
+    ? Math.max(...actData.map(act => act.totalTimeSeconds)) 
+    : 0;
+
+  // Update percentages based on the act with the most playtime
   actData.forEach(act => {
     act.percentage =
-      totalActTime > 0 ? (act.totalTimeSeconds / totalActTime) * 100 : 0;
+      maxActTime > 0 ? (act.totalTimeSeconds / maxActTime) * 100 : 0;
   });
 
   if (actData.length === 0) {
@@ -114,9 +126,6 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
                 <span className='text-zinc-300 font-mono'>
                   {formatDuration(act.totalTimeSeconds)}
                 </span>
-                <span className='text-zinc-500 min-w-[3rem] text-right'>
-                  {act.percentage.toFixed(1)}%
-                </span>
               </div>
             </div>
 
@@ -131,11 +140,10 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
 
               {/* Hover tooltip */}
               <div className='absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none'>
-                <div className='absolute top-0 left-0 transform -translate-y-full -translate-x-1/2 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white whitespace-nowrap z-10'>
+                <div className='absolute top-0 left-1/2 transform -translate-y-full -translate-x-1/2 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white whitespace-nowrap z-10'>
                   <div className='font-medium'>{act.name}</div>
                   <div className='text-zinc-300'>
-                    {formatDuration(act.totalTimeSeconds)} (
-                    {act.percentage.toFixed(1)}%)
+                    {formatDuration(act.totalTimeSeconds)}
                   </div>
                   <div className='text-zinc-400'>
                     {act.visits} visits • Avg:{' '}
@@ -145,40 +153,10 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
               </div>
             </div>
 
-            {/* Additional Stats */}
-            <div className='flex items-center justify-between mt-1 text-xs text-zinc-500'>
-              <span>{act.visits} visits</span>
-              <span>
-                Avg: {formatDuration(Math.round(act.averageSessionSeconds))}
-              </span>
-            </div>
           </div>
         ))}
       </div>
 
-      {/* Summary Stats */}
-      {actData.length > 1 && (
-        <div className='mt-4 pt-4 border-t border-zinc-800'>
-          <div className='grid grid-cols-2 gap-4 text-sm'>
-            <div>
-              <span className='text-zinc-500 block text-xs uppercase tracking-wide'>
-                Most Time
-              </span>
-              <span className='text-white font-medium'>
-                {actData[0]?.name || 'N/A'}
-              </span>
-            </div>
-            <div>
-              <span className='text-zinc-500 block text-xs uppercase tracking-wide'>
-                Least Time
-              </span>
-              <span className='text-white font-medium'>
-                {actData[actData.length - 1]?.name || 'N/A'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

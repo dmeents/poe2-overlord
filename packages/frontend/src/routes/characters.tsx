@@ -130,22 +130,6 @@ function CharactersPage() {
           </div>
         )}
 
-        {activeCharacter && (
-          <div className='mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg'>
-            <div className='flex items-center gap-3'>
-              <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
-              <div>
-                <p className='text-sm text-blue-400 font-medium'>
-                  Active Character
-                </p>
-                <p className='text-white font-semibold'>
-                  {activeCharacter.name} - {activeCharacter.class} (
-                  {activeCharacter.ascendency})
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <CharacterList
           characters={characters}

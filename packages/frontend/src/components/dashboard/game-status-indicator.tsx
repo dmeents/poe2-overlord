@@ -1,6 +1,6 @@
 import { useGameProcess } from '../../hooks/useGameProcess';
 import { useServerStatus } from '../../hooks/useServerStatus';
-import { useZoneMonitoring } from '../../hooks/useZoneMonitoring';
+import type { ServerStatus } from '../../hooks/useServerStatus';
 
 interface GameStatusIndicatorProps {
   className?: string;
@@ -15,7 +15,7 @@ export function GameStatusIndicator({
     isLoading: processLoading,
   } = useGameProcess();
   const { serverStatus, isLoading: serverLoading } = useServerStatus();
-  const { isMonitoring } = useZoneMonitoring();
+  const typedServerStatus = serverStatus as ServerStatus | null;
 
   return (
     <div
@@ -38,11 +38,10 @@ export function GameStatusIndicator({
           {processInfo && (
             <div className='text-zinc-400 text-xs space-y-1'>
               <p>PID: {processInfo.pid}</p>
-              <p>Window: {processInfo.window_title || 'No window detected'}</p>
-              {processInfo.last_seen && (
+              {processInfo.startTime && (
                 <p>
-                  Last seen:{' '}
-                  {new Date(processInfo.last_seen).toLocaleTimeString()}
+                  Started:{' '}
+                  {new Date(processInfo.startTime).toLocaleTimeString()}
                 </p>
               )}
             </div>
@@ -58,23 +57,23 @@ export function GameStatusIndicator({
           <div className='flex items-center gap-2 mb-2'>
             <div
               className={`w-2 h-2 rounded-full ${
-                serverStatus?.is_online ? 'bg-green-500' : 'bg-red-500'
+                typedServerStatus?.is_online ? 'bg-green-500' : 'bg-red-500'
               }`}
             ></div>
             <span className='text-white text-sm font-medium'>
-              {serverStatus?.is_online ? 'Server Online' : 'Server Offline'}
+              {typedServerStatus?.is_online ? 'Server Online' : 'Server Offline'}
             </span>
           </div>
 
-          {serverStatus && (
+          {typedServerStatus && (
             <div className='text-zinc-400 text-xs space-y-1'>
-              <p>IP: {serverStatus.ip_address}</p>
-              {serverStatus.latency_ms !== null && (
-                <p>Latency: {serverStatus.latency_ms}ms</p>
+              <p>IP: {typedServerStatus.ip_address}</p>
+              {typedServerStatus.latency_ms !== null && (
+                <p>Latency: {typedServerStatus.latency_ms}ms</p>
               )}
               <p>
                 Last update:{' '}
-                {new Date(serverStatus.timestamp).toLocaleTimeString()}
+                {new Date(typedServerStatus.timestamp).toLocaleTimeString()}
               </p>
             </div>
           )}
@@ -82,25 +81,6 @@ export function GameStatusIndicator({
           {serverLoading && (
             <p className='text-zinc-400 text-xs'>Checking server...</p>
           )}
-        </div>
-
-        {/* Zone Monitoring Status */}
-        <div className='pt-2 border-t border-zinc-700'>
-          <div className='flex items-center gap-2 mb-2'>
-            <div
-              className={`w-2 h-2 rounded-full ${isMonitoring ? 'bg-green-500' : 'bg-gray-500'}`}
-            ></div>
-            <span className='text-white text-sm font-medium'>
-              {isMonitoring
-                ? 'Zone Monitoring Active'
-                : 'Zone Monitoring Inactive'}
-            </span>
-          </div>
-          <p className='text-zinc-400 text-xs'>
-            {isMonitoring
-              ? 'Tracking zone and act changes in real-time'
-              : 'Zone monitoring is not active'}
-          </p>
         </div>
       </div>
     </div>

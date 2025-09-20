@@ -17,36 +17,38 @@ function RouteComponent() {
   };
 
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-screen bg-zinc-900 text-white'>
       <PageHeader
         title='Settings'
         subtitle='Configure your POE2 Overlord application preferences and monitoring settings.'
       />
-      <div className='my-3 mx-4 sm:mx-6 lg:mx-8 space-y-6'>
-        {/* System Settings */}
-        <div className='shadow-lg border border-zinc-700 bg-zinc-900 p-6'>
-          <div className='mb-6 pb-4 border-b border-zinc-700'>
-            <h2 className='text-xl font-semibold text-zinc-200 mb-2'>
-              System Settings
-            </h2>
-            <p className='text-zinc-400 text-sm'>
-              Core application configuration and process monitoring preferences.
-            </p>
+      <div className='max-w-7xl mx-auto px-6'>
+        <div className='space-y-6'>
+          {/* System Settings */}
+          <div className='bg-zinc-900/50 p-6 rounded-lg border border-zinc-800'>
+            <div className='mb-6 pb-4 border-b border-zinc-700'>
+              <h2 className='text-xl font-semibold text-white mb-2'>
+                System Settings
+              </h2>
+              <p className='text-zinc-300 text-sm'>
+                Core application configuration and process monitoring preferences.
+              </p>
+            </div>
+            <SettingsForm onConfigUpdate={handleConfigUpdate} />
           </div>
-          <SettingsForm onConfigUpdate={handleConfigUpdate} />
-        </div>
 
-        {/* Danger Section */}
-        <div className='shadow-lg border border-zinc-700 bg-zinc-900 p-6'>
-          <div className='mb-6 pb-4 border-b  border-zinc-700'>
-            <h2 className='text-xl font-semibold text-red-400 mb-2'>
-              Danger Zone
-            </h2>
-            <p className='text-zinc-400 text-sm'>
-              Irreversible actions that will permanently delete data.
-            </p>
+          {/* Danger Section */}
+          <div className='bg-zinc-900/50 p-6 rounded-lg border border-zinc-800'>
+            <div className='mb-6 pb-4 border-b border-zinc-700'>
+              <h2 className='text-xl font-semibold text-red-400 mb-2'>
+                Danger Zone
+              </h2>
+              <p className='text-zinc-300 text-sm'>
+                Irreversible actions that will permanently delete data.
+              </p>
+            </div>
+            <DangerSection />
           </div>
-          <DangerSection />
         </div>
       </div>
     </div>

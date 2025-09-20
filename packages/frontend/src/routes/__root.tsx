@@ -7,7 +7,9 @@ export const Route = createRootRoute({
     <div className='bg-zinc-900 h-screen overflow-hidden'>
       <WindowTitle />
       <div className='h-full mt-[30px] overflow-auto font-sans'>
-        <Outlet />
+        <div className='mb-16'>
+          <Outlet />
+        </div>
         <StatusBar />
       </div>
     </div>

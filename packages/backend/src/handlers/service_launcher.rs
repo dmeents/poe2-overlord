@@ -8,8 +8,9 @@ use crate::handlers::ping_event_handler::PingEventHandler;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
+use crate::domain::time_tracking::CharacterSessionTracker;
 use crate::services::{
-    character_session_tracker::CharacterSessionTracker, event_dispatcher::EventDispatcher,
+    event_dispatcher::EventDispatcher,
     log_analyzer::LogAnalyzer,
 };
 

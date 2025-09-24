@@ -3,9 +3,8 @@ use crate::handlers::{
     task_manager::TaskManager,
 };
 use crate::models::events::LogEvent;
-use crate::services::{
-    character_session_tracker::CharacterSessionTracker, log_analyzer::LogAnalyzer,
-};
+use crate::domain::time_tracking::CharacterSessionTracker;
+use crate::services::log_analyzer::LogAnalyzer;
 use log::{debug, error};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};

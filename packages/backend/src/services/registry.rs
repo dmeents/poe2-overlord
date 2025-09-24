@@ -1,12 +1,12 @@
+use crate::domain::character::service::CharacterService;
+use crate::domain::time_tracking::CharacterSessionTracker;
 use crate::services::{
-    character_manager::CharacterManager,
-    character_session_tracker::CharacterSessionTracker,
     configuration_manager::ConfigurationManager,
     event_dispatcher::EventDispatcher,
     log_analyzer::LogAnalyzer,
     server_monitor::ServerMonitor,
     traits::{
-        CharacterService, ConfigurationService, EventService, LogAnalysisService,
+        CharacterService as CharacterServiceTrait, ConfigurationService, EventService, LogAnalysisService,
         ServerMonitoringService, ServiceRegistry, TimeTrackingService,
     },
 };
@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 /// Service registry implementation that manages all service dependencies
 pub struct ServiceRegistryImpl {
-    character_service: Arc<dyn CharacterService>,
+    character_service: Arc<dyn CharacterServiceTrait>,
     time_tracking_service: Arc<dyn TimeTrackingService>,
     configuration_service: Arc<dyn ConfigurationService>,
     event_service: Arc<dyn EventService>,
@@ -30,7 +30,7 @@ impl ServiceRegistryImpl {
         let event_service = Arc::new(EventDispatcher::new());
 
         // Initialize character service (no dependencies)
-        let character_service = Arc::new(CharacterManager::new());
+        let character_service = Arc::new(CharacterService::new());
 
         // Initialize server monitoring service (depends on event service)
         let server_monitoring_service = Arc::new(ServerMonitor::new(event_service.clone()));
@@ -59,7 +59,7 @@ impl ServiceRegistryImpl {
 
     /// Create a new service registry with custom services (useful for testing)
     pub fn with_services(
-        character_service: Arc<dyn CharacterService>,
+        character_service: Arc<dyn CharacterServiceTrait>,
         time_tracking_service: Arc<dyn TimeTrackingService>,
         configuration_service: Arc<dyn ConfigurationService>,
         event_service: Arc<dyn EventService>,
@@ -78,7 +78,7 @@ impl ServiceRegistryImpl {
 }
 
 impl ServiceRegistry for ServiceRegistryImpl {
-    fn get_character_service(&self) -> Arc<dyn CharacterService> {
+    fn get_character_service(&self) -> Arc<dyn CharacterServiceTrait> {
         self.character_service.clone()
     }
 

@@ -1,5 +1,6 @@
+use crate::domain::character::service::CharacterService;
+use crate::domain::time_tracking::CharacterSessionTracker;
 use crate::services::{
-    character_manager::CharacterManager, character_session_tracker::CharacterSessionTracker,
     configuration_manager::ConfigurationManager, event_dispatcher::EventDispatcher,
     log_analyzer::LogAnalyzer, server_monitor::ServerMonitor,
 };
@@ -27,12 +28,12 @@ impl ServiceInitializer {
         app.manage(event_broadcaster.clone());
         debug!("EventDispatcher managed successfully");
 
-        // Initialize character manager
-        debug!("Initializing CharacterManager...");
-        let character_service = CharacterManager::new();
+        // Initialize character service
+        debug!("Initializing CharacterService...");
+        let character_service = CharacterService::new();
         let character_arc = Arc::new(character_service);
         app.manage(character_arc.clone());
-        debug!("CharacterManager managed successfully");
+        debug!("CharacterService managed successfully");
 
         // Initialize character session tracker
         debug!("Initializing CharacterSessionTracker...");
@@ -64,7 +65,7 @@ impl ServiceInitializer {
         Ok(ServiceInstances {
             config_service,
             event_broadcaster,
-            character_manager: character_arc,
+            character_service: character_arc,
             character_session_tracker: character_session_arc,
             log_monitor: log_monitor_arc,
             server_status: server_status_arc,
@@ -76,7 +77,7 @@ impl ServiceInitializer {
 pub struct ServiceInstances {
     pub config_service: ConfigurationManager,
     pub event_broadcaster: Arc<EventDispatcher>,
-    pub character_manager: Arc<CharacterManager>,
+    pub character_service: Arc<CharacterService>,
     pub character_session_tracker: Arc<CharacterSessionTracker>,
     pub log_monitor: Arc<LogAnalyzer>,
     pub server_status: Arc<ServerMonitor>,

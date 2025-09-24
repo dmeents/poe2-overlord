@@ -3,7 +3,7 @@ use crate::handlers::{
     task_manager::TaskManager,
 };
 use crate::models::TimeTrackingEvent;
-use crate::services::character_session_tracker::CharacterSessionTracker;
+use crate::domain::time_tracking::CharacterSessionTracker;
 use log::debug;
 use std::sync::Arc;
 use tauri::WebviewWindow;

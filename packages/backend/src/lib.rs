@@ -1,7 +1,9 @@
 // Module declarations
 pub mod commands;
+pub mod domain;
 pub mod errors;
 pub mod handlers;
+pub mod infrastructure;
 pub mod models;
 pub mod parsers;
 pub mod services;
@@ -9,15 +11,22 @@ pub mod utils;
 
 // Re-export commonly used items
 pub use commands::*;
+pub use domain::character::commands::*;
+pub use domain::time_tracking::commands::*;
 pub use errors::*;
 pub use handlers::*;
 // Import specific models to avoid naming conflicts with services
 pub use models::{
-    ActChangeEvent, AppConfig, Ascendency, Character, CharacterClass, CharacterData,
-    CharacterUpdateParams, HideoutChangeEvent, League, LocationSession, LocationStats,
-    LocationType, OverlayState, ProcessInfo, SceneChangeEvent, ServerConnectionEvent,
-    TimeTrackingEvent, ZoneChangeEvent,
+    ActChangeEvent, AppConfig, HideoutChangeEvent, LocationSession, LocationStats, LocationType,
+    OverlayState, ProcessInfo, SceneChangeEvent, ServerConnectionEvent, TimeTrackingEvent,
+    ZoneChangeEvent,
 };
+// Import character models from domain
+pub use domain::character::{
+    Ascendency, Character, CharacterClass, CharacterData, CharacterUpdateParams, League,
+};
+// Import time tracking from domain
+pub use domain::time_tracking::CharacterSessionTracker;
 pub use services::*;
 
 pub fn run() {

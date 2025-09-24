@@ -1,4 +1,4 @@
-use crate::parsers::core::ParseError;
+use crate::infrastructure::parsing::ParseError;
 use serde::{Deserialize, Serialize};
 
 /// Configuration for a specific parser

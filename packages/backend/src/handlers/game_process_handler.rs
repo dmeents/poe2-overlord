@@ -1,6 +1,6 @@
 use crate::handlers::{runtime_manager::RuntimeManager, task_manager::TaskManager};
 use crate::services::process_detector::ProcessDetector;
-use crate::services::character_session_tracker::CharacterSessionTracker;
+use crate::domain::time_tracking::CharacterSessionTracker;
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};

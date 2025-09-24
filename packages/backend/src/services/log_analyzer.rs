@@ -1,7 +1,7 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::events::LogEvent;
 use crate::parsers::config::ParsersConfig;
-use crate::parsers::core::{LogParserManager, ParserResult};
+use crate::infrastructure::parsing::{LogParserManager, ParserResult};
 use crate::services::{
     event_dispatcher::EventDispatcher,
     location_tracker::{LocationTracker, SceneTypeConfig},
@@ -24,7 +24,7 @@ pub struct LogAnalyzer {
     event_broadcaster: EventDispatcher,
     state_manager: LocationTracker,
     server_manager: Arc<ServerMonitor>,
-    character_manager: Arc<crate::services::character_manager::CharacterManager>,
+    character_service: Arc<crate::domain::character::service::CharacterService>,
     parser_manager: LogParserManager,
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
@@ -34,7 +34,7 @@ impl LogAnalyzer {
     pub fn new(
         log_path: String,
         server_manager: Arc<ServerMonitor>,
-        character_manager: Arc<crate::services::character_manager::CharacterManager>,
+        character_service: Arc<crate::domain::character::service::CharacterService>,
     ) -> Self {
         let parser_manager = LogParserManager::new();
 
@@ -53,7 +53,7 @@ impl LogAnalyzer {
             event_broadcaster: EventDispatcher::new(),
             state_manager: state_manager.clone(),
             server_manager,
-            character_manager,
+            character_service,
             parser_manager,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
         }
@@ -142,7 +142,7 @@ impl LogAnalyzer {
         let event_broadcaster = self.event_broadcaster.clone();
         let state_manager = self.state_manager.clone();
         let server_manager = Arc::clone(&self.server_manager);
-        let character_manager = Arc::clone(&self.character_manager);
+        let character_service = Arc::clone(&self.character_service);
         let parser_manager = self.parser_manager.clone();
         let is_running = Arc::clone(&self.is_running);
 
@@ -152,7 +152,7 @@ impl LogAnalyzer {
                 event_broadcaster,
                 state_manager,
                 server_manager,
-                character_manager,
+                character_service,
                 parser_manager,
                 is_running,
             )
@@ -169,7 +169,7 @@ impl LogAnalyzer {
         event_broadcaster: EventDispatcher,
         state_manager: LocationTracker,
         server_manager: Arc<ServerMonitor>,
-        character_manager: Arc<crate::services::character_manager::CharacterManager>,
+        character_service: Arc<crate::domain::character::service::CharacterService>,
         parser_manager: LogParserManager,
         is_running: Arc<tokio::sync::RwLock<bool>>,
     ) -> AppResult<()> {
@@ -195,7 +195,7 @@ impl LogAnalyzer {
                     &event_broadcaster,
                     &state_manager,
                     &server_manager,
-                    &character_manager,
+                    &character_service,
                 )
                 .await?;
             } else if current_size < last_position {
@@ -278,7 +278,7 @@ impl LogAnalyzer {
         event_broadcaster: &EventDispatcher,
         state_manager: &LocationTracker,
         server_manager: &Arc<ServerMonitor>,
-        character_manager: &Arc<crate::services::character_manager::CharacterManager>,
+        character_service: &Arc<crate::domain::character::service::CharacterService>,
     ) -> AppResult<()> {
         let mut reader = Self::open_file_for_reading(log_path)?;
 
@@ -304,7 +304,7 @@ impl LogAnalyzer {
             let event_broadcaster = event_broadcaster.clone();
             let server_manager = Arc::clone(server_manager);
             let state_manager = state_manager.clone();
-            let character_manager = Arc::clone(character_manager);
+            let character_service = Arc::clone(character_service);
 
             tokio::spawn(async move {
                 for line in new_lines {
@@ -313,7 +313,7 @@ impl LogAnalyzer {
                         event_broadcaster.clone(),
                         state_manager.clone(),
                         Arc::clone(&server_manager),
-                        Arc::clone(&character_manager),
+                        Arc::clone(&character_service),
                         line,
                     )
                     .await;
@@ -333,7 +333,7 @@ impl LogAnalyzer {
         event_broadcaster: EventDispatcher,
         state_manager: LocationTracker,
         server_manager: Arc<ServerMonitor>,
-        character_manager: Arc<crate::services::character_manager::CharacterManager>,
+        character_service: Arc<crate::domain::character::service::CharacterService>,
         line: String,
     ) {
         // Parse the line using the unified parser
@@ -367,13 +367,13 @@ impl LogAnalyzer {
                 }
                 ParserResult::CharacterLevel((character_name, character_class, new_level)) => {
                     // Check if this level-up is for the active character
-                    if let Some(active_character) = character_manager.get_active_character().await {
+                    if let Some(active_character) = character_service.get_active_character().await {
                         // Verify the character name and class match
                         if active_character.name == character_name
                             && active_character.class == character_class
                         {
                             // Update the character's level
-                            if let Err(e) = character_manager
+                            if let Err(e) = character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await
                             {
@@ -408,11 +408,11 @@ impl LogAnalyzer {
                 }
                 ParserResult::CharacterDeath(character_name) => {
                     // Check if this death is for the active character
-                    if let Some(active_character) = character_manager.get_active_character().await {
+                    if let Some(active_character) = character_service.get_active_character().await {
                         // Verify the character name matches
                         if active_character.name == character_name {
                             // Increment the character's death count
-                            if let Err(e) = character_manager
+                            if let Err(e) = character_service
                                 .increment_character_deaths(&active_character.id)
                                 .await
                             {

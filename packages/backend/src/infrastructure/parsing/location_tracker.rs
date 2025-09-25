@@ -1,8 +1,8 @@
-use crate::models::events::{
+use crate::domain::log_analysis::models::{
     ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent,
 };
-use crate::models::scene_type::SceneType;
-use crate::parsers::config::ParsersConfig;
+use crate::domain::location_tracking::models::SceneType;
+use crate::infrastructure::parsing::ParsersConfig;
 use log::debug;
 use std::sync::Arc;
 use tokio::sync::RwLock;

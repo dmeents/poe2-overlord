@@ -1,6 +1,21 @@
-use crate::models::scene_type::SceneType;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+// ============================================================================
+// Scene Type Definition
+// ============================================================================
+
+/// Represents the different types of scenes that can be detected
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum SceneType {
+    Hideout,
+    Act,
+    Zone,
+}
+
+// ============================================================================
+// Location Tracking Models
+// ============================================================================
 
 /// Location state for tracking current scene and act
 #[derive(Debug, Clone, Serialize, Deserialize)]

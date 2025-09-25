@@ -17,6 +17,7 @@ use log::{debug, error, info, warn};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
+use tauri::{Emitter, WebviewWindow};
 use tokio::sync::{broadcast, RwLock};
 use tokio::time;
 
@@ -181,6 +182,29 @@ impl ServerMonitoringServiceImpl {
 
         debug!("Updated server info: {}:{}", ip_address, port);
         Ok(())
+    }
+
+    /// Start frontend event emission for this service
+    pub async fn start_frontend_event_emission(&self, window: WebviewWindow) {
+        let mut status_receiver = self.subscribe_to_status_changes();
+        let window_clone = window.clone();
+        
+        tokio::spawn(async move {
+            debug!("Server monitoring frontend event emission started");
+            
+            while let Ok(status) = status_receiver.recv().await {
+                Self::emit_server_status_event(&window_clone, &status);
+            }
+            
+            debug!("Server monitoring frontend event emission stopped");
+        });
+    }
+
+    /// Emit server status events to the frontend
+    fn emit_server_status_event(window: &WebviewWindow, status: &ServerStatus) {
+        if let Err(e) = window.emit("server-status-updated", status) {
+            warn!("Failed to emit server status event: {}", e);
+        }
     }
 }
 

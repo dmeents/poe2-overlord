@@ -144,7 +144,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         let valid_log_levels = ["trace", "debug", "info", "warn", "warning", "error"];
         if !valid_log_levels.contains(&level.to_lowercase().as_str()) {
             return Err(AppError::validation_error(
-                "log_level",
+                "validate_log_level",
                 &format!(
                     "Invalid log level '{}'. Valid levels are: {}",
                     level,
@@ -158,7 +158,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     async fn ensure_valid_poe_path(&self, path: &str) -> AppResult<()> {
         if path.trim().is_empty() {
             return Err(AppError::validation_error(
-                "poe_client_log_path",
+                "validate_poe_path",
                 "POE client log path cannot be empty",
             ));
         }

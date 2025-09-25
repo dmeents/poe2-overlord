@@ -1,4 +1,4 @@
-use crate::commands::{to_command_result, CommandResult};
+use crate::infrastructure::tauri::{to_command_result, CommandResult};
 use crate::domain::time_tracking::{
     models::{LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingSummary},
     traits::TimeTrackingService,

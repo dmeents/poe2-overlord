@@ -1,24 +1,20 @@
 // Module declarations
-pub mod commands;
+pub mod application;
 pub mod domain;
 pub mod errors;
-pub mod handlers;
 pub mod infrastructure;
-pub mod models;
-pub mod parsers;
-pub mod services;
-pub mod utils;
 
 // Re-export commonly used items
-pub use commands::*;
+pub use application::setup_app;
 pub use domain::character::commands::*;
+pub use domain::configuration::commands::*;
+pub use domain::log_analysis::commands::*;
 pub use domain::time_tracking::commands::*;
 pub use errors::*;
-pub use handlers::*;
-// Import specific models to avoid naming conflicts with services
-pub use models::{
-    ActChangeEvent, HideoutChangeEvent, OverlayState, ProcessInfo, SceneChangeEvent,
-    ServerConnectionEvent, ZoneChangeEvent,
+// Import specific models from domain modules
+pub use domain::game_monitoring::models::{OverlayState, ProcessInfo};
+pub use domain::log_analysis::models::{
+    ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ServerConnectionEvent, ZoneChangeEvent,
 };
 // Import character models from domain
 pub use domain::character::{
@@ -42,10 +38,13 @@ pub use domain::game_monitoring::{
 // Export infrastructure components
 pub use infrastructure::monitoring::ServerMonitor;
 pub use infrastructure::parsing::{LocationTracker, LogAnalyzer, SceneTypeConfig};
+pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};
 pub use infrastructure::tauri::{EventDispatcher, EventService};
-// Export service registry
-pub use services::registry::ServiceRegistryImpl;
-pub use services::traits::ServiceRegistry;
+pub use infrastructure::time::{
+    calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,
+    calculate_session_duration_seconds, validate_duration, validate_no_session_overlap,
+    validate_session_data, validate_timestamp_order, ValidationResult,
+};
 
 pub fn run() {
     tauri::Builder::default()

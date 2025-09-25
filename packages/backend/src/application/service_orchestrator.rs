@@ -1,16 +1,13 @@
 use log::{error, info};
 use std::sync::Arc;
-use tauri::WebviewWindow;
+use tauri::{Emitter, WebviewWindow};
 
 use crate::domain::game_monitoring::traits::GameMonitoringService;
+use crate::domain::server_monitoring::traits::ServerMonitoringService;
 use crate::domain::time_tracking::traits::TimeTrackingService;
-use crate::handlers::ping_event_handler::PingEventHandler;
-use crate::handlers::runtime_manager::RuntimeManager;
-use crate::handlers::task_manager::TaskManager;
-use crate::handlers::time_tracking_handler::TimeTrackingHandler;
-// GameMonitoringHandler removed - domain service now handles its own background monitoring
-use crate::infrastructure::tauri::EventDispatcher;
+use crate::infrastructure::monitoring::ServerMonitor;
 use crate::infrastructure::parsing::LogAnalyzer;
+use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
 /// Helper function to automatically start process monitoring on application startup
 /// Game monitoring is always running when the application is running
@@ -38,52 +35,38 @@ pub fn start_game_process_monitoring(
 pub fn start_time_tracking_emission(
     window: WebviewWindow,
     time_tracking: Arc<dyn TimeTrackingService>,
-    runtime_manager: Arc<RuntimeManager>,
-    task_manager: Arc<TaskManager>,
+    _runtime_manager: Arc<RuntimeManager>,
+    _task_manager: Arc<TaskManager>,
 ) {
-    let window_clone = window.clone();
+    // Direct service call instead of handler
     let time_tracking_clone = time_tracking.clone();
-    let runtime_manager_clone = runtime_manager.clone();
-    let task_manager_clone = task_manager.clone();
-
-    let _handle = runtime_manager.spawn_background_task(
-        "time_tracking_setup".to_string(),
-        move || async move {
-            TimeTrackingHandler::start_event_emission(
-                window_clone,
-                time_tracking_clone,
-                runtime_manager_clone,
-                task_manager_clone,
-            )
+    tokio::spawn(async move {
+        time_tracking_clone
+            .start_frontend_event_emission(window)
             .await;
-        },
-    );
+    });
 }
 
 /// Helper function to start ping event emission
 pub fn start_ping_event_emission(
     window: WebviewWindow,
-    event_dispatcher: Arc<EventDispatcher>,
-    runtime_manager: Arc<RuntimeManager>,
-    task_manager: Arc<TaskManager>,
+    server_monitor: Arc<ServerMonitor>,
+    _runtime_manager: Arc<RuntimeManager>,
+    _task_manager: Arc<TaskManager>,
 ) {
+    // Use infrastructure ServerMonitor for now
     let window_clone = window.clone();
-    let event_dispatcher_clone = event_dispatcher.clone();
-    let runtime_manager_clone = runtime_manager.clone();
-    let task_manager_clone = task_manager.clone();
+    let server_monitor_clone = server_monitor.clone();
 
-    let _handle = runtime_manager.spawn_background_task(
-        "ping_event_emission_setup".to_string(),
-        move || async move {
-            PingEventHandler::start_event_emission(
-                window_clone,
-                event_dispatcher_clone,
-                runtime_manager_clone,
-                task_manager_clone,
-            )
-            .await;
-        },
-    );
+    tokio::spawn(async move {
+        let mut status_receiver = server_monitor_clone.subscribe_to_status_changes();
+
+        while let Ok(status) = status_receiver.recv().await {
+            if let Err(e) = window_clone.emit("server-status-updated", &status) {
+                log::warn!("Failed to emit server status event: {}", e);
+            }
+        }
+    });
 }
 
 /// Helper function to start log monitoring immediately on application startup

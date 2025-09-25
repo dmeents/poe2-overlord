@@ -1,5 +1,5 @@
 use crate::domain::server_monitoring::models::ServerStatus;
-use crate::models::events::LogEvent;
+use crate::domain::log_analysis::models::LogEvent;
 use log::debug;
 use tokio::sync::broadcast;
 

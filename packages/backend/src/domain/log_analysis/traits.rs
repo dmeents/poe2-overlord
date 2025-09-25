@@ -1,8 +1,8 @@
+use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::log_analysis::models::{
     LogAnalysisConfig, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
 };
 use crate::errors::AppResult;
-use crate::models::events::LogEvent;
 use async_trait::async_trait;
 use tokio::sync::broadcast;
 

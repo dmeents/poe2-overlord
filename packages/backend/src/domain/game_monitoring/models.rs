@@ -1,6 +1,29 @@
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
+// ============================================================================
+// Process Information Models
+// ============================================================================
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProcessInfo {
+    pub name: String,
+    pub pid: u32,
+    pub running: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OverlayState {
+    pub visible: bool,
+    pub position: (i32, i32),
+    pub size: (u32, u32),
+    pub always_on_top: bool,
+}
+
+// ============================================================================
+// Game Monitoring Models
+// ============================================================================
+
 /// Domain model representing the status of the Path of Exile 2 game process
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GameProcessStatus {

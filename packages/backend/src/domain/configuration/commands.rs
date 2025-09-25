@@ -1,4 +1,4 @@
-use crate::commands::{to_command_result, CommandResult};
+use crate::infrastructure::tauri::{to_command_result, CommandResult};
 use crate::domain::configuration::models::{
     AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
 };
@@ -21,7 +21,7 @@ pub async fn get_config(
 
     let config = to_command_result(config_service.get_config().await.map_err(|e| {
         error!("Failed to get config: {}", e);
-        crate::errors::AppError::config_error(&format!("Failed to get configuration: {}", e))
+        crate::errors::AppError::config_error("get_config", &format!("Failed to get configuration: {}", e))
     }))?;
 
     debug!("Successfully retrieved configuration");
@@ -45,7 +45,7 @@ pub async fn update_config(
 
     to_command_result(config_service.update_config(new_config).await.map_err(|e| {
         error!("Failed to update config: {}", e);
-        crate::errors::AppError::config_error(&format!("Failed to update configuration: {}", e))
+        crate::errors::AppError::config_error("update_config", &format!("Failed to update configuration: {}", e))
     }))?;
 
     info!("Configuration updated successfully");
@@ -61,7 +61,7 @@ pub async fn reset_config_to_defaults(
 
     to_command_result(config_service.reset_to_defaults().await.map_err(|e| {
         error!("Failed to reset config to defaults: {}", e);
-        crate::errors::AppError::config_error(&format!(
+          crate::errors::AppError::config_error("reset_to_defaults", &format!(
             "Failed to reset configuration to defaults: {}",
             e
         ))
@@ -80,7 +80,7 @@ pub async fn get_poe_client_log_path(
 
     let path = to_command_result(config_service.get_poe_client_log_path().await.map_err(|e| {
         error!("Failed to get POE client log path: {}", e);
-        crate::errors::AppError::config_error(&format!("Failed to get POE client log path: {}", e))
+        crate::errors::AppError::config_error("get_poe_client_log_path", &format!("Failed to get POE client log path: {}", e))
     }))?;
 
     debug!("POE client log path: {}", path);
@@ -101,7 +101,7 @@ pub async fn set_poe_client_log_path(
             .await
             .map_err(|e| {
                 error!("Failed to set POE client log path: {}", e);
-                crate::errors::AppError::config_error(&format!(
+                  crate::errors::AppError::config_error("set_poe_client_log_path", &format!(
                     "Failed to set POE client log path: {}",
                     e
                 ))
@@ -137,7 +137,7 @@ pub async fn reset_poe_client_log_path_to_default(
             .await
             .map_err(|e| {
                 error!("Failed to reset POE client log path to default: {}", e);
-                crate::errors::AppError::config_error(&format!(
+                  crate::errors::AppError::config_error("reset_poe_client_log_path_to_default", &format!(
                     "Failed to reset POE client log path to default: {}",
                     e
                 ))
@@ -157,7 +157,7 @@ pub async fn get_log_level(
 
     let log_level = to_command_result(config_service.get_log_level().await.map_err(|e| {
         error!("Failed to get log level: {}", e);
-        crate::errors::AppError::config_error(&format!("Failed to get log level: {}", e))
+        crate::errors::AppError::config_error("get_log_level", &format!("Failed to get log level: {}", e))
     }))?;
 
     debug!("Current log level: {}", log_level);
@@ -178,7 +178,7 @@ pub async fn set_log_level(
             .await
             .map_err(|e| {
                 error!("Failed to set log level: {}", e);
-                crate::errors::AppError::config_error(&format!("Failed to set log level: {}", e))
+                crate::errors::AppError::config_error("set_log_level", &format!("Failed to set log level: {}", e))
             }),
     )?;
 
@@ -195,7 +195,7 @@ pub async fn get_config_file_info(
 
     let file_info = to_command_result(config_service.get_file_info().await.map_err(|e| {
         error!("Failed to get config file info: {}", e);
-        crate::errors::AppError::config_error(&format!(
+          crate::errors::AppError::config_error("get_config_file_info", &format!(
             "Failed to get configuration file information: {}",
             e
         ))
@@ -214,7 +214,7 @@ pub async fn validate_config(
 
     let config = to_command_result(config_service.get_config().await.map_err(|e| {
         error!("Failed to get config for validation: {}", e);
-        crate::errors::AppError::config_error(&format!(
+          crate::errors::AppError::config_error("get_config_for_validation", &format!(
             "Failed to get configuration for validation: {}",
             e
         ))
@@ -223,7 +223,7 @@ pub async fn validate_config(
     let validation_result =
         to_command_result(config_service.validate_config(&config).await.map_err(|e| {
             error!("Failed to validate config: {}", e);
-            crate::errors::AppError::config_error(&format!(
+              crate::errors::AppError::config_error("validate_config", &format!(
                 "Failed to validate configuration: {}",
                 e
             ))

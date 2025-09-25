@@ -4,6 +4,7 @@ use crate::domain::time_tracking::{
 };
 use crate::errors::AppResult;
 use async_trait::async_trait;
+use tauri::WebviewWindow;
 use tokio::sync::broadcast;
 
 /// Trait for publishing time tracking domain events
@@ -77,6 +78,9 @@ pub trait TimeTrackingService: Send + Sync {
 
     /// End all active sessions globally (when game process stops)
     async fn end_all_active_sessions_global(&self) -> AppResult<()>;
+
+    /// Start frontend event emission for this service
+    async fn start_frontend_event_emission(&self, window: WebviewWindow);
 }
 
 /// Trait for time tracking data persistence and management

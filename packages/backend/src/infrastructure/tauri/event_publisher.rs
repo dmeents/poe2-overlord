@@ -2,7 +2,7 @@ use crate::domain::game_monitoring::{
     events::GameMonitoringEvent, models::GameProcessStatus, traits::GameMonitoringEventPublisher,
 };
 use crate::errors::AppResult;
-use crate::models::events::LogEvent;
+use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
 use log::error;
 use tauri::{Emitter, WebviewWindow};
@@ -119,7 +119,7 @@ impl TauriGameMonitoringEventPublisher {
     async fn emit_game_process_status(&self, status: &GameProcessStatus) -> AppResult<()> {
         if let Err(e) = self.window.emit("game-process-status", status) {
             error!("Failed to emit game process status: {}", e);
-            return Err(crate::errors::AppError::event_emission_error(&format!(
+              return Err(crate::errors::AppError::event_emission_error("emit_game_process_status", &format!(
                 "Failed to emit game process status: {}",
                 e
             )));

@@ -1,6 +1,6 @@
-use crate::models::events::ServerConnectionEvent;
+use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::domain::character::models::CharacterClass;
-use crate::parsers::config::ParsersConfig;
+use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
 use crate::infrastructure::parsing::patterns::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 use log::debug;

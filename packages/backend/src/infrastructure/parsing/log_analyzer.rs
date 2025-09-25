@@ -1,5 +1,5 @@
 use crate::errors::{AppError, AppResult};
-use crate::models::events::LogEvent;
+use crate::domain::log_analysis::models::LogEvent;
 use crate::infrastructure::parsing::{LogParserManager, ParserResult};
 use crate::infrastructure::tauri::EventDispatcher;
 use crate::infrastructure::monitoring::ServerMonitor;
@@ -246,12 +246,12 @@ impl LogAnalyzer {
                 debug!("Scene change detected: {}", scene_content);
                 
                 // Create a basic zone change event from the content
-                let zone_change_event = crate::models::events::ZoneChangeEvent {
+                let zone_change_event = crate::domain::log_analysis::models::ZoneChangeEvent {
                     zone_name: scene_content,
                     timestamp: chrono::Utc::now().to_rfc3339(),
                 };
                 
-                let scene_change_event = crate::models::events::SceneChangeEvent::Zone(zone_change_event);
+                let scene_change_event = crate::domain::log_analysis::models::SceneChangeEvent::Zone(zone_change_event);
                 let log_event = LogEvent::SceneChange(scene_change_event);
                 if let Err(e) = event_broadcaster.broadcast_event(log_event) {
                     error!("Failed to broadcast scene change event: {}", e);
@@ -282,7 +282,7 @@ impl LogAnalyzer {
                 }
                 
                 // Create character level up event
-                let level_up_event = crate::models::events::CharacterLevelUpEvent {
+                let level_up_event = crate::domain::log_analysis::models::CharacterLevelUpEvent {
                     character_name,
                     character_class: character_class.to_string(),
                     new_level: level,
@@ -298,7 +298,7 @@ impl LogAnalyzer {
                 debug!("Character death detected: {}", character_name);
                 
                 // Create character death event
-                let death_event = crate::models::events::CharacterDeathEvent {
+                let death_event = crate::domain::log_analysis::models::CharacterDeathEvent {
                     character_name,
                     timestamp: chrono::Utc::now().to_rfc3339(),
                 };

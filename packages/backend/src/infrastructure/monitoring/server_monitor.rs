@@ -1,5 +1,5 @@
 use crate::errors::{AppError, AppResult};
-use crate::models::events::ServerConnectionEvent;
+use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::infrastructure::tauri::EventDispatcher;
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::server_monitoring::traits::ServerMonitoringService;

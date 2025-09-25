@@ -1,4 +1,4 @@
-use crate::parsers::config::ParsersConfig;
+use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
 use crate::infrastructure::parsing::extraction::extract_content_by_patterns;
 

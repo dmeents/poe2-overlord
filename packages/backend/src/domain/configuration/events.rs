@@ -23,17 +23,27 @@ impl ConfigurationEventHandler {
     }
 
     /// Broadcast a configuration change event
-    pub fn broadcast_config_change(&self, new_config: AppConfig, previous_config: AppConfig) -> AppResult<()> {
+    pub fn broadcast_config_change(
+        &self,
+        new_config: AppConfig,
+        previous_config: AppConfig,
+    ) -> AppResult<()> {
         let event = ConfigurationChangedEvent::new(new_config, previous_config);
-        
+
         match self.event_sender.send(event) {
             Ok(receiver_count) => {
-                debug!("Configuration change event broadcasted to {} receivers", receiver_count);
+                debug!(
+                    "Configuration change event broadcasted to {} receivers",
+                    receiver_count
+                );
                 Ok(())
             }
             Err(broadcast::error::SendError(_event)) => {
                 warn!("Failed to broadcast configuration change event: no receivers");
-                Err(crate::errors::AppError::event_emission_error("No receivers for configuration change event"))
+                Err(crate::errors::AppError::event_emission_error(
+                    "emit_configuration_change",
+                    "No receivers for configuration change event",
+                ))
             }
         }
     }
@@ -76,10 +86,16 @@ impl ConfigurationEventListener {
                 Ok(event)
             }
             Err(broadcast::error::RecvError::Closed) => {
-                Err(crate::errors::AppError::event_emission_error("Configuration event channel closed"))
+                Err(crate::errors::AppError::event_emission_error(
+                    "emit_configuration_change",
+                    "Configuration event channel closed",
+                ))
             }
             Err(broadcast::error::RecvError::Lagged(skipped)) => {
-                warn!("Configuration event listener lagged, skipped {} events", skipped);
+                warn!(
+                    "Configuration event listener lagged, skipped {} events",
+                    skipped
+                );
                 // Try to get the latest event
                 Box::pin(self.listen_for_change()).await
             }
@@ -99,7 +115,10 @@ impl ConfigurationEventListener {
                 None
             }
             Err(broadcast::error::TryRecvError::Lagged(skipped)) => {
-                warn!("Configuration event listener lagged, skipped {} events", skipped);
+                warn!(
+                    "Configuration event listener lagged, skipped {} events",
+                    skipped
+                );
                 // Try to get the latest event
                 self.try_receive()
             }
@@ -133,8 +152,13 @@ impl ConfigurationEventManager {
     }
 
     /// Broadcast a configuration change event
-    pub fn broadcast_config_change(&self, new_config: AppConfig, previous_config: AppConfig) -> AppResult<()> {
-        self.event_handler.broadcast_config_change(new_config, previous_config)
+    pub fn broadcast_config_change(
+        &self,
+        new_config: AppConfig,
+        previous_config: AppConfig,
+    ) -> AppResult<()> {
+        self.event_handler
+            .broadcast_config_change(new_config, previous_config)
     }
 
     /// Create a new event listener

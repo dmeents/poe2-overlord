@@ -1,4 +1,4 @@
-use crate::models::events::LogEvent;
+use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -87,7 +87,7 @@ pub struct EventChannel {
 impl EventChannel {
     pub fn new(event_type: EventType, config: EventChannelConfig) -> Self {
         let (sender, _) = broadcast::channel(config.channel_capacity);
-        
+
         Self {
             event_type,
             sender,
@@ -138,13 +138,15 @@ impl EventPayload {
                 LogEvent::CharacterDeath(death_event) => death_event.timestamp.clone(),
             },
             EventPayload::ServerPing(status) => status.timestamp.clone(),
-            EventPayload::GameProcessStatus(status) => {
-                status.detected_at.duration_since(std::time::UNIX_EPOCH)
-                    .map(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
+            EventPayload::GameProcessStatus(status) => status
+                .detected_at
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| {
+                    chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
                         .unwrap_or_else(|| chrono::Utc::now())
-                        .to_rfc3339())
-                    .unwrap_or_else(|_| chrono::Utc::now().to_rfc3339())
-            },
+                        .to_rfc3339()
+                })
+                .unwrap_or_else(|_| chrono::Utc::now().to_rfc3339()),
             EventPayload::ConfigurationChange(event) => event.timestamp.to_rfc3339(),
             EventPayload::CharacterUpdate(_) => chrono::Utc::now().to_rfc3339(),
             EventPayload::TimeTrackingUpdate(_) => chrono::Utc::now().to_rfc3339(),
@@ -234,19 +236,19 @@ impl Default for EventManagementStats {
 pub enum EventManagementError {
     #[error("Channel not found: {event_type}")]
     ChannelNotFound { event_type: String },
-    
+
     #[error("Channel at capacity: {event_type}")]
     ChannelAtCapacity { event_type: String },
-    
+
     #[error("Subscription not found: {subscription_id}")]
     SubscriptionNotFound { subscription_id: String },
-    
+
     #[error("Invalid event type: {event_type}")]
     InvalidEventType { event_type: String },
-    
+
     #[error("Broadcast error: {message}")]
     BroadcastError { message: String },
-    
+
     #[error("Configuration error: {message}")]
     ConfigurationError { message: String },
 }

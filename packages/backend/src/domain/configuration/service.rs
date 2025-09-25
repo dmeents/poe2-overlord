@@ -129,7 +129,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
         let validation_result = self.validate_config_internal(&new_config);
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
-                "configuration",
+                "validate_config",
                 &format!("Configuration validation failed: {}", validation_result.errors.join(", "))
             ));
         }
@@ -163,7 +163,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
         let validation_result = self.validate_config_internal(&new_config);
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
-                "configuration",
+                "validate_config",
                 &format!("Configuration validation failed: {}", validation_result.errors.join(", "))
             ));
         }
@@ -194,7 +194,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
         let validation_result = self.validate_config_internal(&new_config);
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
-                "configuration",
+                "validate_config",
                 &format!("Configuration validation failed: {}", validation_result.errors.join(", "))
             ));
         }

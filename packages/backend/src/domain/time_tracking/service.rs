@@ -11,7 +11,9 @@ use crate::errors::AppResult;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use log::{debug, warn};
+use serde_json;
 use std::sync::Arc;
+use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
 
 /// Character-aware session tracking constants
@@ -76,6 +78,65 @@ impl TimeTrackingServiceImpl {
     pub async fn get_poe_process_start_time(&self) -> Option<DateTime<Utc>> {
         let poe_start_time = self.poe_process_start_time.read().await;
         *poe_start_time
+    }
+
+
+    /// Emit time tracking events to the frontend
+    fn emit_time_tracking_event(window: &WebviewWindow, event: &TimeTrackingEvent) {
+        match event {
+            TimeTrackingEvent::SessionStarted(session_event) => {
+                Self::emit_json_event(
+                    window,
+                    "time-tracking-session-started",
+                    serde_json::json!({
+                        "location_id": session_event.session.location_id,
+                        "location_name": session_event.session.location_name,
+                        "location_type": session_event.session.location_type,
+                        "entry_timestamp": session_event.session.entry_timestamp
+                    }),
+                );
+            }
+            TimeTrackingEvent::SessionEnded(session_event) => {
+                Self::emit_json_event(
+                    window,
+                    "time-tracking-session-ended",
+                    serde_json::json!({
+                        "location_id": session_event.session.location_id,
+                        "location_name": session_event.session.location_name,
+                        "location_type": session_event.session.location_type,
+                        "duration_seconds": session_event.session.duration_seconds,
+                        "entry_timestamp": session_event.session.entry_timestamp,
+                        "exit_timestamp": session_event.session.exit_timestamp
+                    }),
+                );
+            }
+            TimeTrackingEvent::StatsUpdated(stats_event) => {
+                Self::emit_json_event(
+                    window,
+                    "time-tracking-stats-updated",
+                    serde_json::json!({
+                        "location_id": stats_event.stats.location_id,
+                        "location_name": stats_event.stats.location_name,
+                        "location_type": stats_event.stats.location_type,
+                        "total_visits": stats_event.stats.total_visits,
+                        "total_time_seconds": stats_event.stats.total_time_seconds,
+                        "average_session_seconds": stats_event.stats.average_session_seconds,
+                        "last_visited": stats_event.stats.last_visited
+                    }),
+                );
+            }
+            _ => {
+                // Handle other event types if needed
+                debug!("Unhandled time tracking event type: {:?}", event);
+            }
+        }
+    }
+
+    /// Emit a JSON event to the frontend with proper error handling
+    fn emit_json_event(window: &WebviewWindow, event_name: &str, payload: serde_json::Value) {
+        if let Err(e) = window.emit(event_name, &payload) {
+            warn!("Failed to emit JSON event '{}': {}", event_name, e);
+        }
     }
 
     /// Generate a unique location ID from location name and type
@@ -305,6 +366,21 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
         // TODO: Implement proper saving of all character data
         debug!("Saving all character data");
         Ok(())
+    }
+
+    async fn start_frontend_event_emission(&self, window: WebviewWindow) {
+        let mut event_receiver = self.subscribe();
+        let window_clone = window.clone();
+        
+        tokio::spawn(async move {
+            debug!("Time tracking frontend event emission started");
+            
+            while let Ok(event) = event_receiver.recv().await {
+                Self::emit_time_tracking_event(&window_clone, &event);
+            }
+            
+            debug!("Time tracking frontend event emission stopped");
+        });
     }
 }
 

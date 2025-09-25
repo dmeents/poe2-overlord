@@ -1,9 +1,7 @@
 use crate::domain::character::models::{Character, CharacterData};
 use crate::domain::character::traits::CharacterRepository;
 use crate::errors::{AppError, AppResult};
-use crate::infrastructure::persistence::{
-    PersistenceRepository, PersistenceRepositoryImpl,
-};
+use crate::infrastructure::persistence::{PersistenceRepository, PersistenceRepositoryImpl};
 use async_trait::async_trait;
 use chrono::Utc;
 use log::{debug, info, warn};
@@ -26,7 +24,9 @@ impl CharacterRepositoryImpl {
     /// Create a new character repository
     pub fn new() -> AppResult<Self> {
         // Create persistence repository in config directory
-        let persistence = PersistenceRepositoryImpl::<CharacterData>::new_in_config_dir(CHARACTER_DATA_FILE_NAME)?;
+        let persistence = PersistenceRepositoryImpl::<CharacterData>::new_in_config_dir(
+            CHARACTER_DATA_FILE_NAME,
+        )?;
 
         let repository = Self {
             character_data: Arc::new(RwLock::new(CharacterData::default())),
@@ -94,8 +94,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         let mut character_data = self.character_data.write().await;
         character_data.characters.push(character);
         drop(character_data);
-        self.save(&self.character_data.read().await.clone())
-            .await
+        self.save(&self.character_data.read().await.clone()).await
     }
 
     async fn update_character(&self, character: Character) -> AppResult<()> {
@@ -108,8 +107,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         {
             *existing = character;
             drop(character_data);
-            self.save(&self.character_data.read().await.clone())
-                .await
+            self.save(&self.character_data.read().await.clone()).await
         } else {
             Err(AppError::character_management_error(
                 "update_character",
@@ -140,8 +138,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         }
 
         drop(character_data);
-        self.save(&self.character_data.read().await.clone())
-            .await?;
+        self.save(&self.character_data.read().await.clone()).await?;
         info!("Deleted character: {}", character.name);
         Ok(character)
     }
@@ -171,8 +168,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         character_data.active_character_id = Some(id.to_string());
 
         drop(character_data);
-        self.save(&self.character_data.read().await.clone())
-            .await?;
+        self.save(&self.character_data.read().await.clone()).await?;
         info!("Set active character: {}", id);
         Ok(())
     }
@@ -186,7 +182,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
             .any(|c| c.name == name && exclude_id.map_or(true, |exclude| c.id != exclude))
         {
             return Err(AppError::validation_error(
-                "character_name",
+                "validate_unique_name",
                 &format!("Character name '{}' is already taken", name),
             ));
         }

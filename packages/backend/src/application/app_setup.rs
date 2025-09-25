@@ -1,24 +1,14 @@
-pub mod event_utils;
-pub mod ping_event_handler;
-pub mod runtime_manager;
-pub mod service_initializer;
-pub mod service_launcher;
-pub mod service_registry_initializer;
-pub mod task_manager;
-pub mod time_tracking_handler;
-
 use log::{debug, info, warn};
 use std::sync::Arc;
 use tauri::Manager;
 
-use crate::domain::configuration::traits::ConfigurationService;
-use crate::handlers::runtime_manager::RuntimeManager;
-use crate::handlers::service_initializer::ServiceInitializer;
-use crate::handlers::service_launcher::{
+use crate::application::service_registry::ServiceInitializer;
+use crate::application::service_orchestrator::{
     start_game_process_monitoring, start_log_monitoring, start_ping_event_emission,
     start_time_tracking_emission,
 };
-use crate::handlers::task_manager::TaskManager;
+use crate::domain::configuration::traits::ConfigurationService;
+use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let services = ServiceInitializer::initialize_services(app)?;
@@ -111,7 +101,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         // Start ping event emission
         start_ping_event_emission(
             main_window.clone(),
-            services.event_broadcaster.clone(),
+            services.server_status.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

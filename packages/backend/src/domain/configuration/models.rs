@@ -46,7 +46,7 @@ impl AppConfig {
 
     /// Get the OS-specific default POE client log path
     pub fn get_default_poe_client_log_path() -> String {
-        crate::utils::PoeClientLogPaths::get_default_path_string()
+        crate::infrastructure::system::paths::PoeClientLogPaths::get_default_path_string()
     }
 
     /// Check if the current POE client log path is the default

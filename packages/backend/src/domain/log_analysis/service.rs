@@ -1,4 +1,5 @@
 use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
+use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::log_analysis::models::{
     LogAnalysisConfig, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
 };
@@ -12,7 +13,6 @@ use crate::domain::server_monitoring::traits::ServerMonitoringService as ServerM
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::parsing::LogParserManager;
 use crate::infrastructure::tauri::EventPublisher;
-use crate::models::events::LogEvent;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::path::PathBuf;
@@ -116,7 +116,10 @@ impl LogAnalysisServiceImpl {
         drop(config);
 
         if log_path.is_empty() {
-            return Err(AppError::config_error("Log file path not configured"));
+            return Err(AppError::config_error(
+                "get_log_file_info",
+                "Log file path not configured",
+            ));
         }
 
         // Initialize last position
@@ -288,13 +291,14 @@ impl LogAnalysisServiceImpl {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
                     // Process scene change through location tracking service
                     // This will be handled by the location tracking domain
-                    let event =
-                        LogEvent::SceneChange(crate::models::events::SceneChangeEvent::Zone(
-                            crate::models::events::ZoneChangeEvent {
+                    let event = LogEvent::SceneChange(
+                        crate::domain::log_analysis::models::SceneChangeEvent::Zone(
+                            crate::domain::log_analysis::models::ZoneChangeEvent {
                                 zone_name: content,
                                 timestamp: chrono::Utc::now().to_rfc3339(),
                             },
-                        ));
+                        ),
+                    );
 
                     if let Err(e) = event_publisher.broadcast_log_event(event) {
                         warn!("Failed to broadcast log event: {}", e);
@@ -334,12 +338,13 @@ impl LogAnalysisServiceImpl {
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
 
-                            let level_up_event = crate::models::events::CharacterLevelUpEvent {
-                                character_name: character_name.clone(),
-                                character_class: character_class.to_string(),
-                                new_level,
-                                timestamp: chrono::Utc::now().to_rfc3339(),
-                            };
+                            let level_up_event =
+                                crate::domain::log_analysis::models::CharacterLevelUpEvent {
+                                    character_name: character_name.clone(),
+                                    character_class: character_class.to_string(),
+                                    new_level,
+                                    timestamp: chrono::Utc::now().to_rfc3339(),
+                                };
 
                             if let Err(e) = event_publisher
                                 .broadcast_log_event(LogEvent::CharacterLevelUp(level_up_event))
@@ -360,10 +365,11 @@ impl LogAnalysisServiceImpl {
                                 .increment_character_deaths(&active_character.id)
                                 .await?;
 
-                            let death_event = crate::models::events::CharacterDeathEvent {
-                                character_name: character_name.clone(),
-                                timestamp: chrono::Utc::now().to_rfc3339(),
-                            };
+                            let death_event =
+                                crate::domain::log_analysis::models::CharacterDeathEvent {
+                                    character_name: character_name.clone(),
+                                    timestamp: chrono::Utc::now().to_rfc3339(),
+                                };
 
                             if let Err(e) = event_publisher
                                 .broadcast_log_event(LogEvent::CharacterDeath(death_event))
@@ -429,7 +435,10 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         drop(config);
 
         if log_path.is_empty() {
-            return Err(AppError::config_error("Log file path not configured"));
+            return Err(AppError::config_error(
+                "get_log_file_info",
+                "Log file path not configured",
+            ));
         }
 
         self.log_file_repository.get_file_info(&log_path).await
@@ -441,7 +450,10 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         drop(config);
 
         if log_path.is_empty() {
-            return Err(AppError::config_error("Log file path not configured"));
+            return Err(AppError::config_error(
+                "get_log_file_info",
+                "Log file path not configured",
+            ));
         }
 
         self.log_file_repository

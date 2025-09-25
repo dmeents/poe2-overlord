@@ -3,14 +3,14 @@ use thiserror::Error;
 /// Unified error type for the entire backend application
 #[derive(Error, Debug)]
 pub enum AppError {
-    #[error("Configuration error: {message}")]
-    Config { message: String },
+    #[error("Configuration error: {operation} - {message}")]
+    Config { operation: String, message: String },
 
-    #[error("Log monitoring error: {message}")]
-    LogMonitor { message: String },
+    #[error("Log monitoring error: {operation} - {message}")]
+    LogMonitor { operation: String, message: String },
 
-    #[error("Process monitoring error: {message}")]
-    ProcessMonitor { message: String },
+    #[error("Process monitoring error: {operation} - {message}")]
+    ProcessMonitor { operation: String, message: String },
 
     #[error("File system error: {operation} - {message}")]
     FileSystem { operation: String, message: String },
@@ -24,11 +24,11 @@ pub enum AppError {
     #[error("Time tracking error: {operation} - {message}")]
     TimeTracking { operation: String, message: String },
 
-    #[error("Validation error: {field} - {message}")]
-    Validation { field: String, message: String },
+    #[error("Validation error: {operation} - {message}")]
+    Validation { operation: String, message: String },
 
-    #[error("Event emission error: {message}")]
-    EventEmission { message: String },
+    #[error("Event emission error: {operation} - {message}")]
+    EventEmission { operation: String, message: String },
 
     #[error("Internal error: {operation} - {message}")]
     Internal { operation: String, message: String },
@@ -64,6 +64,7 @@ impl From<Box<dyn std::error::Error>> for AppError {
 impl From<notify::Error> for AppError {
     fn from(err: notify::Error) -> Self {
         AppError::LogMonitor {
+            operation: "notify_operation".to_string(),
             message: err.to_string(),
         }
     }
@@ -103,9 +104,9 @@ impl AppError {
     }
 
     /// Create a validation error with context
-    pub fn validation_error(field: &str, message: &str) -> Self {
+    pub fn validation_error(operation: &str, message: &str) -> Self {
         Self::Validation {
-            field: field.to_string(),
+            operation: operation.to_string(),
             message: message.to_string(),
         }
     }
@@ -119,29 +120,33 @@ impl AppError {
     }
 
     /// Create a configuration error
-    pub fn config_error(message: &str) -> Self {
+    pub fn config_error(operation: &str, message: &str) -> Self {
         Self::Config {
+            operation: operation.to_string(),
             message: message.to_string(),
         }
     }
 
     /// Create a log monitor error
-    pub fn log_monitor_error(message: &str) -> Self {
+    pub fn log_monitor_error(operation: &str, message: &str) -> Self {
         Self::LogMonitor {
+            operation: operation.to_string(),
             message: message.to_string(),
         }
     }
 
     /// Create a process monitor error
-    pub fn process_monitor_error(message: &str) -> Self {
+    pub fn process_monitor_error(operation: &str, message: &str) -> Self {
         Self::ProcessMonitor {
+            operation: operation.to_string(),
             message: message.to_string(),
         }
     }
 
     /// Create an event emission error
-    pub fn event_emission_error(message: &str) -> Self {
+    pub fn event_emission_error(operation: &str, message: &str) -> Self {
         Self::EventEmission {
+            operation: operation.to_string(),
             message: message.to_string(),
         }
     }
@@ -213,6 +218,38 @@ macro_rules! handle_time_tracking_error {
 #[macro_export]
 macro_rules! handle_event_emission_error {
     ($result:expr, $operation:expr) => {
-        $result.map_err(|e| AppError::event_emission_error(&format!("{}: {}", $operation, e.to_string())))
+        $result.map_err(|e| AppError::event_emission_error($operation, &e.to_string()))
+    };
+}
+
+/// Macro for configuration operations
+#[macro_export]
+macro_rules! handle_config_error {
+    ($result:expr, $operation:expr) => {
+        $result.map_err(|e| AppError::config_error($operation, &e.to_string()))
+    };
+}
+
+/// Macro for log monitoring operations
+#[macro_export]
+macro_rules! handle_log_monitor_error {
+    ($result:expr, $operation:expr) => {
+        $result.map_err(|e| AppError::log_monitor_error($operation, &e.to_string()))
+    };
+}
+
+/// Macro for process monitoring operations
+#[macro_export]
+macro_rules! handle_process_monitor_error {
+    ($result:expr, $operation:expr) => {
+        $result.map_err(|e| AppError::process_monitor_error($operation, &e.to_string()))
+    };
+}
+
+/// Macro for validation operations
+#[macro_export]
+macro_rules! handle_validation_error {
+    ($result:expr, $operation:expr) => {
+        $result.map_err(|e| AppError::validation_error($operation, &e.to_string()))
     };
 }

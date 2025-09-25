@@ -45,7 +45,7 @@ impl CharacterService {
         // Validate that the ascendency belongs to the class
         if !is_valid_ascendency_for_class(&ascendency, &class) {
             return Err(AppError::validation_error(
-                "ascendency",
+                "validate_ascendency",
                 &format!(
                     "Ascendency '{:?}' is not valid for class '{:?}'",
                     ascendency, class
@@ -125,7 +125,7 @@ impl CharacterService {
         // Validate that the ascendency belongs to the class
         if !is_valid_ascendency_for_class(&params.ascendency, &params.class) {
             return Err(AppError::validation_error(
-                "ascendency",
+                "validate_ascendency",
                 &format!(
                     "Ascendency '{:?}' is not valid for class '{:?}'",
                     params.ascendency, params.class

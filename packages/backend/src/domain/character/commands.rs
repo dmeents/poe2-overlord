@@ -1,4 +1,4 @@
-use crate::commands::{to_command_result, CommandResult};
+use crate::infrastructure::tauri::{to_command_result, CommandResult};
 use crate::domain::character::models::{
     get_all_character_classes, get_all_leagues, get_ascendencies_for_class, Ascendency, Character,
     CharacterClass, CharacterUpdateParams, League,

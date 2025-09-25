@@ -102,7 +102,7 @@ impl EventManagementService for EventManagementServiceImpl {
         // Send the event
         if let Err(e) = channel.sender.send(event.clone()) {
             error!("Failed to send event: {}", e);
-            return Err(crate::errors::AppError::event_emission_error(&format!(
+              return Err(crate::errors::AppError::event_emission_error("send_event", &format!(
                 "Failed to send event: {}",
                 e
             )));
@@ -133,7 +133,7 @@ impl EventManagementService for EventManagementServiceImpl {
 
         // Check if channel is at capacity
         if channel.is_at_capacity() {
-            return Err(crate::errors::AppError::event_emission_error(&format!(
+              return Err(crate::errors::AppError::event_emission_error("create_channel", &format!(
                 "Channel for event type {:?} is at capacity",
                 event_type
             )));

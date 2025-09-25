@@ -7,8 +7,8 @@ use crate::domain::location_tracking::traits::{
     LocationTrackingSessionRepository, LocationTrackingStatsRepository, SceneTypeDetector,
 };
 use crate::errors::AppResult;
-use crate::models::events::{ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent};
-use crate::models::scene_type::SceneType;
+use crate::domain::log_analysis::models::{ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ZoneChangeEvent};
+use crate::domain::location_tracking::models::SceneType;
 use async_trait::async_trait;
 use log::{debug, info};
 use std::sync::Arc;

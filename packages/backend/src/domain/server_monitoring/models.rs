@@ -23,7 +23,7 @@ impl ServerStatus {
     }
 
     /// Create from a server connection event
-    pub fn from_connection_event(event: &crate::models::events::ServerConnectionEvent) -> Self {
+    pub fn from_connection_event(event: &crate::domain::log_analysis::models::ServerConnectionEvent) -> Self {
         Self {
             ip_address: event.ip_address.clone(),
             port: event.port,

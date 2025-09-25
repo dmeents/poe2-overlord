@@ -1,5 +1,5 @@
 use crate::domain::location_tracking::models::LocationState;
-use crate::models::scene_type::SceneType;
+use crate::domain::location_tracking::models::SceneType;
 use serde::{Deserialize, Serialize};
 
 /// Events related to location tracking operations

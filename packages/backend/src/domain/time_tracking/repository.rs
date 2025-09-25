@@ -6,7 +6,7 @@ use crate::errors::{AppError, AppResult};
 use crate::infrastructure::persistence::{
     ScopedPersistenceRepository, ScopedPersistenceRepositoryImpl,
 };
-use crate::utils::time_calculations::validate_no_session_overlap;
+use crate::infrastructure::time::calculations::validate_no_session_overlap;
 use async_trait::async_trait;
 use log::debug;
 use std::collections::HashMap;
@@ -288,14 +288,14 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
             new_session.exit_timestamp,
             &existing_sessions,
         ) {
-            crate::utils::time_calculations::ValidationResult::Valid => Ok(()),
-            crate::utils::time_calculations::ValidationResult::Error(error) => {
+            crate::infrastructure::time::calculations::ValidationResult::Valid => Ok(()),
+            crate::infrastructure::time::calculations::ValidationResult::Error(error) => {
                 Err(AppError::validation_error(
-                    "session_overlap",
+                    "validate_session_overlap",
                     &format!("Session overlap detected: {}", error),
                 ))
             }
-            crate::utils::time_calculations::ValidationResult::Warning(warning) => {
+            crate::infrastructure::time::calculations::ValidationResult::Warning(warning) => {
                 // Log warning but allow the operation
                 debug!("Session overlap warning: {}", warning);
                 Ok(())

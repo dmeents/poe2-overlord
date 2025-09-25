@@ -44,11 +44,6 @@ use tauri::State;
 /// 
 /// The current `AppConfig` containing all configuration settings
 /// 
-/// # Frontend Usage
-/// 
-/// ```typescript
-/// const config = await invoke('get_config');
-/// ```
 #[tauri::command]
 pub async fn get_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -69,11 +64,6 @@ pub async fn get_config(
 /// Returns a new `AppConfig` instance with all default values.
 /// This is useful for frontend forms and reset operations.
 /// 
-/// # Frontend Usage
-/// 
-/// ```typescript
-/// const defaultConfig = await invoke('get_default_config');
-/// ```
 #[tauri::command]
 pub async fn get_default_config() -> CommandResult<AppConfig> {
     debug!("Getting default configuration");
@@ -95,11 +85,6 @@ pub async fn get_default_config() -> CommandResult<AppConfig> {
 /// The configuration will be validated before saving. If validation fails,
 /// the command will return an error and no changes will be persisted.
 /// 
-/// # Frontend Usage
-/// 
-/// ```typescript
-/// await invoke('update_config', { newConfig: config });
-/// ```
 #[tauri::command]
 pub async fn update_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -164,11 +149,6 @@ pub async fn get_poe_client_log_path(
 /// The path will be validated to ensure it's not empty. Additional file
 /// existence validation may be performed by the service layer.
 /// 
-/// # Frontend Usage
-/// 
-/// ```typescript
-/// await invoke('set_poe_client_log_path', { path: '/path/to/Client.txt' });
-/// ```
 #[tauri::command]
 pub async fn set_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -301,14 +281,6 @@ pub async fn get_config_file_info(
 /// - POE client log path must not be empty
 /// - Additional domain-specific validation rules
 /// 
-/// # Frontend Usage
-/// 
-/// ```typescript
-/// const result = await invoke('validate_config');
-/// if (!result.is_valid) {
-///   console.error('Validation errors:', result.errors);
-/// }
-/// ```
 #[tauri::command]
 pub async fn validate_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,

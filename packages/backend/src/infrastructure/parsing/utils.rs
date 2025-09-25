@@ -1,7 +1,15 @@
+//! Utility functions for log parsing
+//! 
+//! Provides common parsing utilities including content extraction, validation,
+//! and pattern matching functionality used across different parsers.
+
 use crate::infrastructure::parsing::ParseError;
-use crate::infrastructure::parsing::validation::validate_content;
 use std::borrow::Cow;
 
+/// Extracts content between delimiters from a log line
+/// 
+/// Searches for a pattern in the line and extracts content between the specified
+/// start and end delimiters. Returns the trimmed content if found and valid.
 pub fn extract_content_between_delimiters<'a>(
     line: &'a str,
     pattern: &str,
@@ -39,6 +47,10 @@ pub fn extract_content_between_delimiters<'a>(
     Err(ParseError::content_extraction_failed(line))
 }
 
+/// Extracts content by trying multiple patterns
+/// 
+/// Attempts to extract content using each pattern in the provided list.
+/// Returns the first successful extraction or an error if none match.
 pub fn extract_content_by_patterns<'a>(
     line: &'a str,
     patterns: &[String],
@@ -54,4 +66,26 @@ pub fn extract_content_by_patterns<'a>(
     }
 
     Err(ParseError::content_extraction_failed(line))
+}
+
+/// Validates that extracted content is meaningful
+/// 
+/// Checks that content is not empty and doesn't contain placeholder values
+/// that indicate missing or invalid data.
+pub fn validate_content(content: &str) -> bool {
+    !content.is_empty()
+        && content != "(null)"
+        && content != "(undefined)"
+        && content != "(unknown)"
+        && content != "undefined"
+        && content.to_lowercase() != "null"
+        && content.to_lowercase() != "undefined"
+}
+
+/// Checks if a line matches any of the provided patterns
+/// 
+/// Returns true if the line contains any of the patterns, false otherwise.
+/// This is a simple string containment check for pattern matching.
+pub fn matches_patterns(line: &str, patterns: &[String]) -> bool {
+    patterns.iter().any(|pattern| line.contains(pattern))
 }

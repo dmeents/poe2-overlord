@@ -1,6 +1,7 @@
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
-use crate::infrastructure::parsing::extraction::extract_content_by_patterns;
+use crate::infrastructure::parsing::utils::extract_content_by_patterns;
+use crate::infrastructure::parsing::manager::ParserResult;
 
 #[derive(Clone)]
 pub struct SceneChangeParser {
@@ -27,7 +28,7 @@ impl SceneChangeParser {
 }
 
 impl LogParser for SceneChangeParser {
-    type Event = String; // Now returns raw content instead of SceneChangeEvent
+    type Event = ParserResult;
 
     fn should_parse(&self, line: &str) -> bool {
         self.config
@@ -41,7 +42,7 @@ impl LogParser for SceneChangeParser {
         }
 
         let content = self.extract_scene_content(line)?;
-        Ok(content)
+        Ok(ParserResult::SceneChange(content))
     }
 
     fn parser_name(&self) -> &'static str {

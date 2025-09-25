@@ -33,12 +33,12 @@ pub struct LogAnalysisServiceImpl {
     stats_repository: Arc<dyn LogAnalysisStatsRepository>,
     /// Publisher for broadcasting log events to subscribers
     event_publisher: Arc<EventPublisher>,
-    /// Manager for parsing log lines and extracting events
-    parser_manager: LogParserManager,
     /// Service for character-related operations
     character_service: Arc<dyn CharacterServiceTrait>,
     /// Service for server monitoring operations
     server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
+    /// Parser manager for processing log lines
+    parser_manager: LogParserManager,
     /// Flag indicating whether log monitoring is currently active
     is_running: Arc<RwLock<bool>>,
     /// The currently active log analysis session
@@ -61,16 +61,15 @@ impl LogAnalysisServiceImpl {
         let session_repository = Arc::new(LogAnalysisSessionRepositoryImpl::new()?);
         let stats_repository = Arc::new(LogAnalysisStatsRepositoryImpl::new()?);
         let parser_manager = LogParserManager::new();
-
         Ok(Self {
             config,
             log_file_repository,
             session_repository,
             stats_repository,
             event_publisher,
-            parser_manager,
             character_service,
             server_monitoring_service,
+            parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             current_session: Arc::new(RwLock::new(None)),
             last_position: Arc::new(RwLock::new(0)),
@@ -89,16 +88,15 @@ impl LogAnalysisServiceImpl {
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
         let parser_manager = LogParserManager::new();
-
         Self {
             config,
             log_file_repository,
             session_repository,
             stats_repository,
             event_publisher,
-            parser_manager,
             character_service,
             server_monitoring_service,
+            parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             current_session: Arc::new(RwLock::new(None)),
             last_position: Arc::new(RwLock::new(0)),
@@ -151,7 +149,6 @@ impl LogAnalysisServiceImpl {
         // Clone all necessary dependencies for the spawned task
         let log_file_repository = Arc::clone(&self.log_file_repository);
         let event_publisher = Arc::clone(&self.event_publisher);
-        let parser_manager = self.parser_manager.clone();
         let character_service = Arc::clone(&self.character_service);
         let server_monitoring_service = Arc::clone(&self.server_monitoring_service);
         let is_running = Arc::clone(&self.is_running);
@@ -159,6 +156,7 @@ impl LogAnalysisServiceImpl {
         let current_session = Arc::clone(&self.current_session);
         let session_repository = Arc::clone(&self.session_repository);
         let stats_repository = Arc::clone(&self.stats_repository);
+        let parser_manager = self.parser_manager.clone();
 
         tokio::spawn(async move {
             let mut interval = time::interval(Duration::from_millis(interval_ms));
@@ -179,10 +177,10 @@ impl LogAnalysisServiceImpl {
                         if current_size > last_pos {
                             // New content detected, process it
                             if let Err(e) = Self::process_new_lines(
+                                &parser_manager,
                                 &log_path,
                                 &log_file_repository,
                                 &event_publisher,
-                                &parser_manager,
                                 &character_service,
                                 &server_monitoring_service,
                                 &last_position,
@@ -214,10 +212,10 @@ impl LogAnalysisServiceImpl {
 
     /// Processes new lines that have been added to the log file
     async fn process_new_lines(
+        parser_manager: &LogParserManager,
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
         event_publisher: &Arc<EventPublisher>,
-        parser_manager: &LogParserManager,
         character_service: &Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: &Arc<dyn ServerMonitoringServiceTrait>,
         last_position: &Arc<RwLock<u64>>,
@@ -238,8 +236,8 @@ impl LogAnalysisServiceImpl {
         // Process each new line
         for line in &new_lines {
             if let Err(e) = Self::process_single_line(
-                &line,
                 parser_manager,
+                &line,
                 event_publisher,
                 character_service,
                 server_monitoring_service,
@@ -274,8 +272,8 @@ impl LogAnalysisServiceImpl {
 
     /// Processes a single log line and handles any detected events
     async fn process_single_line(
-        line: &str,
         parser_manager: &LogParserManager,
+        line: &str,
         event_publisher: &Arc<EventPublisher>,
         character_service: &Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: &Arc<dyn ServerMonitoringServiceTrait>,

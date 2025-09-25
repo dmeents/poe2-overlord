@@ -1,30 +1,26 @@
 //! Log parsing infrastructure for analyzing POE2 game logs
-//! 
+//!
 //! Provides comprehensive log parsing capabilities including pattern matching,
 //! event extraction, and real-time log monitoring. Handles various game events
 //! such as scene changes, server connections, character progression, and deaths.
+//!
+//! This module focuses on infrastructure concerns (file monitoring and parsing)
+//! and delegates domain logic to event handlers through the event system.
 
+pub mod analyzer;
 pub mod config;
 pub mod errors;
-pub mod extraction;
 pub mod factory;
-pub mod location_tracker;
-pub mod log_analyzer;
 pub mod manager;
-pub mod pattern_matching;
-pub mod patterns;
+pub mod parsers;
 pub mod traits;
-pub mod validation;
+pub mod utils;
 
+pub use analyzer::LogAnalyzer;
 pub use config::{ParserConfig, ParsersConfig};
 pub use errors::ParseError;
-pub use extraction::*;
 pub use factory::ParserFactory;
-pub use location_tracker::{LocationTracker, SceneTypeConfig};
-pub use log_analyzer::LogAnalyzer;
-pub use manager::ParserType;
 pub use manager::{LogParserManager, ParserResult};
-pub use pattern_matching::*;
-pub use patterns::*;
+pub use parsers::*;
 pub use traits::LogParser;
-pub use validation::*;
+pub use utils::*;

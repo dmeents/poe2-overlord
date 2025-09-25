@@ -31,25 +31,6 @@
 /// - **Concurrent Access**: Thread-safe operations using async/await and RwLock synchronization
 /// - **Integration**: Seamless integration with time tracking and other domain services
 ///
-/// ## Usage
-///
-/// The character domain is typically used through the `CharacterService` which provides
-/// a high-level interface for all character operations. The service can be injected
-/// into Tauri commands or used directly in other parts of the application.
-///
-/// ```rust
-/// use crate::domain::character::CharacterService;
-///
-/// let service = CharacterService::new()?;
-/// let character = service.create_character(
-///     "MyCharacter".to_string(),
-///     CharacterClass::Warrior,
-///     Ascendency::Titan,
-///     League::Standard,
-///     false,
-///     false
-/// ).await?;
-/// ```
 // Module declarations
 pub mod commands;
 pub mod models;

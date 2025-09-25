@@ -47,9 +47,17 @@ pub use domain::game_monitoring::{
     GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
 
+// Location tracking domain services and models
+pub use domain::location_tracking::{
+    LocationTrackingEvent, LocationTrackingService, LocationTrackingServiceImpl,
+    LocationTrackingSession, LocationTrackingStats, LocationState, SceneTypeConfig,
+    SimpleSceneTypeDetector,
+};
+pub use domain::location_tracking::models::SceneType;
+
 // Infrastructure services and utilities
 pub use infrastructure::monitoring::ServerMonitor;  // Server connectivity monitoring
-pub use infrastructure::parsing::{LocationTracker, LogAnalyzer, SceneTypeConfig};  // Log parsing and analysis
+pub use infrastructure::parsing::LogAnalyzer;  // Log parsing and analysis
 pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};  // OS detection and paths
 pub use infrastructure::tauri::{EventDispatcher, EventService};  // Tauri event system integration
 pub use infrastructure::time::{  // Time calculation and validation utilities

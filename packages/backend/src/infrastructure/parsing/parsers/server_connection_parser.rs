@@ -1,6 +1,7 @@
 use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
+use crate::infrastructure::parsing::manager::ParserResult;
 use crate::infrastructure::network::parse_ip_port;
 use log::debug;
 
@@ -40,7 +41,7 @@ impl ServerConnectionParser {
 }
 
 impl LogParser for ServerConnectionParser {
-    type Event = ServerConnectionEvent;
+    type Event = ParserResult;
 
     fn should_parse(&self, line: &str) -> bool {
         self.config
@@ -68,7 +69,7 @@ impl LogParser for ServerConnectionParser {
         };
 
         debug!("Successfully created server connection event: {:?}", event);
-        Ok(event)
+        Ok(ParserResult::ServerConnection(event))
     }
 
     fn parser_name(&self) -> &'static str {

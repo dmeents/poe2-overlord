@@ -1,13 +1,10 @@
 use crate::infrastructure::parsing::ParseError;
 
 /// Parses a server connection string into IP address and port
-/// 
+///
 /// Expects format "IP:PORT" and validates both components.
 /// Returns a tuple of (ip_address, port) or a parse error if the format is invalid.
-/// 
-/// # Examples
-/// - "192.168.1.1:8080" -> Ok(("192.168.1.1".to_string(), 8080))
-/// - "localhost:3000" -> Ok(("localhost".to_string(), 3000))
+///
 pub fn parse_ip_port(server_info: &str) -> Result<(String, u16), ParseError> {
     if let Some(colon_pos) = server_info.rfind(':') {
         let ip_part = server_info[..colon_pos].trim();

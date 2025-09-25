@@ -37,17 +37,6 @@
 //! - **Server Monitoring**: Network connectivity and server status tracking
 //! - **Configuration Management**: Application settings and preferences
 //!
-//! ## Usage Pattern
-//!
-//! ```rust
-//! // 1. Initialize services through the registry
-//! let services = ServiceInitializer::initialize_services(app)?;
-//!
-//! // 2. Set up application with configuration and background tasks
-//! setup_app(app)?;
-//!
-//! // 3. Background services are automatically started and managed
-//! ```
 
 pub mod app_setup;
 pub mod service_orchestrator;

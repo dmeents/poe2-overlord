@@ -1,61 +1,11 @@
-use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::domain::character::models::CharacterClass;
+use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
-use crate::infrastructure::parsing::patterns::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 use log::debug;
 
-/// Enum representing different types of log parsers
-/// 
-/// Each variant contains a specific parser implementation for handling
-/// different types of game events found in POE2 log files.
-#[derive(Clone)]
-pub enum ParserType {
-    SceneChange(SceneChangeParser),
-    ServerConnection(ServerConnectionParser),
-    CharacterLevel(CharacterLevelParser),
-    CharacterDeath(CharacterDeathParser),
-}
-
-impl ParserType {
-    pub fn parser_name(&self) -> &'static str {
-        match self {
-            ParserType::SceneChange(parser) => parser.parser_name(),
-            ParserType::ServerConnection(parser) => parser.parser_name(),
-            ParserType::CharacterLevel(parser) => parser.parser_name(),
-            ParserType::CharacterDeath(parser) => parser.parser_name(),
-        }
-    }
-
-    pub fn should_parse(&self, line: &str) -> bool {
-        match self {
-            ParserType::SceneChange(parser) => parser.should_parse(line),
-            ParserType::ServerConnection(parser) => parser.should_parse(line),
-            ParserType::CharacterLevel(parser) => parser.should_parse(line),
-            ParserType::CharacterDeath(parser) => parser.should_parse(line),
-        }
-    }
-
-    pub fn parse_line(&self, line: &str) -> Result<ParserResult, ParseError> {
-        match self {
-            ParserType::SceneChange(parser) => parser
-                .parse_line(line)
-                .map(ParserResult::SceneChange),
-            ParserType::ServerConnection(parser) => parser
-                .parse_line(line)
-                .map(ParserResult::ServerConnection),
-            ParserType::CharacterLevel(parser) => parser
-                .parse_line(line)
-                .map(ParserResult::CharacterLevel),
-            ParserType::CharacterDeath(parser) => parser
-                .parse_line(line)
-                .map(ParserResult::CharacterDeath),
-        }
-    }
-}
-
 /// Results produced by log parsers
-/// 
+///
 /// Contains the parsed data from different types of log events.
 /// Each variant represents a specific type of game event that was successfully parsed.
 #[derive(Debug)]
@@ -63,17 +13,16 @@ pub enum ParserResult {
     SceneChange(String), // Raw scene change content
     ServerConnection(ServerConnectionEvent),
     CharacterLevel((String, CharacterClass, u32)), // (character_name, character_class, level)
-    CharacterDeath(String), // character_name
+    CharacterDeath(String),                        // character_name
 }
 
 /// Manages a collection of log parsers for processing game log events
-/// 
+///
 /// Coordinates multiple parsers to handle different types of log events.
 /// Provides a unified interface for parsing log lines and extracting game events.
-#[derive(Clone)]
 pub struct LogParserManager {
-    /// Collection of active parsers
-    parsers: Vec<ParserType>,
+    /// Collection of active parsers as trait objects
+    parsers: Vec<Box<dyn LogParser<Event = ParserResult> + Send + Sync>>,
     /// Configuration for parser behavior
     config: ParsersConfig,
 }
@@ -90,7 +39,7 @@ impl LogParserManager {
     }
 
     /// Attempts to parse a log line using all available parsers
-    /// 
+    ///
     /// Iterates through all parsers to find one that can handle the log line.
     /// Returns the first successful parse result or None if no parser matches.
     pub fn parse_line(&self, line: &str) -> Result<Option<ParserResult>, ParseError> {
@@ -115,7 +64,10 @@ impl LogParserManager {
                                 debug!("Server connection event detected: {:?}", event);
                             }
                             ParserResult::CharacterLevel((name, class, level)) => {
-                                debug!("Character level-up detected: {} ({}) -> level {}", name, class, level);
+                                debug!(
+                                    "Character level-up detected: {} ({}) -> level {}",
+                                    name, class, level
+                                );
                             }
                             ParserResult::CharacterDeath(name) => {
                                 debug!("Character death detected: {} has been slain", name);
@@ -145,8 +97,17 @@ impl LogParserManager {
             .collect()
     }
 
-    pub fn get_parser_by_name(&self, parser_name: &str) -> Option<ParserType> {
+    pub fn get_parser_by_name(
+        &self,
+        parser_name: &str,
+    ) -> Option<Box<dyn LogParser<Event = ParserResult> + Send + Sync>> {
         ParserFactory::create_parser(parser_name, &self.config)
+    }
+}
+
+impl Clone for LogParserManager {
+    fn clone(&self) -> Self {
+        Self::with_config(self.config.clone())
     }
 }
 

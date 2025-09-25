@@ -121,8 +121,6 @@ impl ServiceInitializer {
         debug!("Initializing LogAnalyzer...");
         let log_monitor_service = LogAnalyzer::new(
             "".to_string(), // Log path will be configured later
-            server_status_arc.clone(),
-            character_arc.clone(),
         );
         let log_monitor_arc = Arc::new(log_monitor_service);
         app.manage(log_monitor_arc.clone());

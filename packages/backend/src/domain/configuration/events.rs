@@ -42,19 +42,19 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 
 /// Core configuration event broadcasting handler
-/// 
+///
 /// This struct manages the broadcasting of configuration change events to multiple
 /// subscribers using Tokio's broadcast channel. It provides thread-safe event
 /// emission with automatic receiver management.
-/// 
+///
 /// # Capacity Management
-/// 
+///
 /// The broadcast channel has a limited capacity. When the channel is full,
 /// the oldest messages are dropped. Receivers that can't keep up will receive
 /// `RecvError::Lagged` errors indicating how many events were missed.
-/// 
+///
 /// # Thread Safety
-/// 
+///
 /// All operations are thread-safe and can be called concurrently from multiple
 /// async tasks without additional synchronization.
 pub struct ConfigurationEventHandler {
@@ -64,7 +64,7 @@ pub struct ConfigurationEventHandler {
 
 impl ConfigurationEventHandler {
     /// Create a new event handler with default capacity (16 events)
-    /// 
+    ///
     /// The default capacity is suitable for most use cases where configuration
     /// changes are infrequent. For applications with high-frequency configuration
     /// updates, consider using `with_capacity()` with a larger buffer.
@@ -74,13 +74,13 @@ impl ConfigurationEventHandler {
     }
 
     /// Create a new event handler with a specific channel capacity
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `capacity` - Maximum number of events to buffer in the channel
-    /// 
+    ///
     /// # Capacity Guidelines
-    /// 
+    ///
     /// - Small applications: 8-16 events
     /// - Medium applications: 32-64 events  
     /// - High-frequency updates: 128+ events
@@ -90,23 +90,23 @@ impl ConfigurationEventHandler {
     }
 
     /// Broadcast a configuration change event to all subscribers
-    /// 
+    ///
     /// Creates and sends a configuration change event containing both the new
     /// and previous configuration states. All active subscribers will receive
     /// this event asynchronously.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `new_config` - The configuration state after the change
     /// * `previous_config` - The configuration state before the change
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(())` if the event was successfully broadcast
     /// * `Err(AppError)` if no receivers are available
-    /// 
+    ///
     /// # Behavior
-    /// 
+    ///
     /// - Events are timestamped automatically
     /// - The number of receivers that received the event is logged
     /// - If no receivers exist, a warning is logged and an error is returned
@@ -136,26 +136,26 @@ impl ConfigurationEventHandler {
     }
 
     /// Create a new subscriber to configuration change events
-    /// 
+    ///
     /// Returns a new receiver that will receive all future configuration
     /// change events. Each receiver operates independently and maintains
     /// its own position in the event stream.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new `broadcast::Receiver` for configuration change events
     pub fn subscribe(&self) -> broadcast::Receiver<ConfigurationChangedEvent> {
         self.event_sender.subscribe()
     }
 
     /// Get the current number of active receivers
-    /// 
+    ///
     /// This count includes all active receivers that have been created
     /// but not yet dropped. It's useful for monitoring and debugging
     /// the event system.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The number of currently active receivers
     pub fn receiver_count(&self) -> usize {
         self.event_sender.receiver_count()
@@ -169,19 +169,14 @@ impl Default for ConfigurationEventHandler {
 }
 
 /// Individual event listener for configuration changes
-/// 
+///
 /// This struct provides a convenient interface for subscribing to and receiving
 /// configuration change events. Each listener maintains its own position in the
 /// event stream and can be used independently of other listeners.
-/// 
-/// # Usage Patterns
-/// 
-/// - **Async Listening**: Use `listen_for_change()` to wait for the next event
-/// - **Non-blocking Polling**: Use `try_receive()` to check for events without blocking
-/// - **Event Processing**: Handle both successful events and error conditions
-/// 
+///
+///
 /// # Error Handling
-/// 
+///
 /// The listener automatically handles common broadcast channel errors:
 /// - **Lagged**: Automatically recovers from missed events
 /// - **Closed**: Returns appropriate errors when the channel is closed
@@ -193,9 +188,9 @@ pub struct ConfigurationEventListener {
 
 impl ConfigurationEventListener {
     /// Create a new event listener from an event handler
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event_handler` - The event handler to subscribe to
     pub fn new(event_handler: &ConfigurationEventHandler) -> Self {
         Self {
@@ -204,32 +199,23 @@ impl ConfigurationEventListener {
     }
 
     /// Wait for the next configuration change event (blocking)
-    /// 
+    ///
     /// This method will asynchronously wait for the next configuration change
     /// event to arrive. It handles lag recovery automatically by recursively
     /// calling itself when events are missed.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(ConfigurationChangedEvent)` when an event is received
     /// * `Err(AppError)` if the event channel is closed
-    /// 
+    ///
     /// # Behavior
-    /// 
+    ///
     /// - Blocks until an event is available
     /// - Automatically recovers from lagged events
     /// - Logs received events and lag recovery attempts
     /// - Returns an error only if the channel is permanently closed
-    /// 
-    /// # Example
-    /// 
-    /// ```rust
-    /// let mut listener = ConfigurationEventListener::new(&event_handler);
-    /// match listener.listen_for_change().await {
-    ///     Ok(event) => println!("Config changed at {}", event.timestamp),
-    ///     Err(e) => eprintln!("Event channel closed: {}", e),
-    /// }
-    /// ```
+    ///
     pub async fn listen_for_change(&mut self) -> AppResult<ConfigurationChangedEvent> {
         match self.receiver.recv().await {
             Ok(event) => {
@@ -253,33 +239,23 @@ impl ConfigurationEventListener {
     }
 
     /// Try to receive an event without blocking
-    /// 
+    ///
     /// This method checks for available events without blocking the current task.
     /// It's useful for polling-based event processing or when you want to check
     /// for events as part of a larger processing loop.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Some(ConfigurationChangedEvent)` if an event is available
     /// * `None` if no event is currently available or the channel is closed
-    /// 
+    ///
     /// # Behavior
-    /// 
+    ///
     /// - Non-blocking operation
     /// - Automatically handles lag recovery by recursing
     /// - Returns `None` for both empty channel and closed channel
     /// - Logs lag recovery attempts
-    /// 
-    /// # Example
-    /// 
-    /// ```rust
-    /// let mut listener = ConfigurationEventListener::new(&event_handler);
-    /// if let Some(event) = listener.try_receive() {
-    ///     println!("Immediate event available: {:?}", event);
-    /// } else {
-    ///     println!("No events currently available");
-    /// }
-    /// ```
+    ///
     pub fn try_receive(&mut self) -> Option<ConfigurationChangedEvent> {
         match self.receiver.try_recv() {
             Ok(event) => {
@@ -303,19 +279,19 @@ impl ConfigurationEventListener {
 }
 
 /// High-level configuration event management and coordination
-/// 
+///
 /// This struct provides a convenient high-level interface for managing
 /// configuration events, combining the functionality of the event handler
 /// with convenient listener creation and management methods.
-/// 
+///
 /// # Design Philosophy
-/// 
+///
 /// The event manager serves as a facade over the lower-level event handler,
 /// providing a more convenient API for typical use cases while maintaining
 /// access to the underlying broadcast channel functionality.
-/// 
+///
 /// # Use Cases
-/// 
+///
 /// - Application-wide event coordination
 /// - Centralized listener management
 /// - Simplified event system integration
@@ -334,9 +310,9 @@ impl ConfigurationEventManager {
     }
 
     /// Create a new event manager with a specific channel capacity
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `capacity` - Maximum number of events to buffer in the channel
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -345,7 +321,7 @@ impl ConfigurationEventManager {
     }
 
     /// Get a shared reference to the underlying event handler
-    /// 
+    ///
     /// This allows direct access to the event handler for advanced use cases
     /// while maintaining the shared ownership model.
     pub fn get_event_handler(&self) -> Arc<ConfigurationEventHandler> {
@@ -353,12 +329,12 @@ impl ConfigurationEventManager {
     }
 
     /// Broadcast a configuration change event
-    /// 
+    ///
     /// Convenience method that delegates to the underlying event handler's
     /// broadcast functionality.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `new_config` - The new configuration state
     /// * `previous_config` - The previous configuration state
     pub fn broadcast_config_change(
@@ -371,21 +347,21 @@ impl ConfigurationEventManager {
     }
 
     /// Create a new event listener
-    /// 
+    ///
     /// This is a convenience method for creating new listeners without
     /// needing direct access to the event handler.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new `ConfigurationEventListener` subscribed to events from this manager
     pub fn create_listener(&self) -> ConfigurationEventListener {
         ConfigurationEventListener::new(&self.event_handler)
     }
 
     /// Get the current number of active event receivers
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The number of currently active event listeners
     pub fn receiver_count(&self) -> usize {
         self.event_handler.receiver_count()

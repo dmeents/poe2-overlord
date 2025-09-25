@@ -1,6 +1,7 @@
 use crate::domain::character::models::CharacterClass;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
+use crate::infrastructure::parsing::manager::ParserResult;
 use log::debug;
 use regex::Regex;
 
@@ -87,7 +88,7 @@ impl CharacterLevelParser {
 }
 
 impl LogParser for CharacterLevelParser {
-    type Event = (String, CharacterClass, u32); // (character_name, character_class, level)
+    type Event = ParserResult;
 
     fn should_parse(&self, line: &str) -> bool {
         self.config
@@ -120,7 +121,7 @@ impl LogParser for CharacterLevelParser {
             character_name, character_class, level
         );
 
-        Ok((character_name, character_class, level))
+        Ok(ParserResult::CharacterLevel((character_name, character_class, level)))
     }
 
     fn parser_name(&self) -> &'static str {
@@ -184,7 +185,7 @@ impl CharacterDeathParser {
 }
 
 impl LogParser for CharacterDeathParser {
-    type Event = String; // character_name
+    type Event = ParserResult;
 
     fn should_parse(&self, line: &str) -> bool {
         self.config
@@ -210,7 +211,7 @@ impl LogParser for CharacterDeathParser {
             character_name
         );
 
-        Ok(character_name)
+        Ok(ParserResult::CharacterDeath(character_name))
     }
 
     fn parser_name(&self) -> &'static str {

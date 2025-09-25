@@ -20,13 +20,6 @@
 //! - Service traits define business operation contracts
 //! - Events enable loose coupling between components
 //!
-//! ## Usage
-//!
-//! The server monitoring service can be used to:
-//! - Monitor server connectivity with configurable ping intervals
-//! - Track monitoring sessions and collect statistics
-//! - Persist server information and status across application restarts
-//! - Provide real-time status updates to the frontend via events
 
 pub mod events;
 pub mod models;

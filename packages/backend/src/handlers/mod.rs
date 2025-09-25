@@ -1,6 +1,5 @@
 pub mod event_utils;
 pub mod game_process_handler;
-pub mod log_event_handler;
 pub mod ping_event_handler;
 pub mod runtime_manager;
 pub mod service_initializer;
@@ -16,7 +15,7 @@ use tauri::Manager;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::service_initializer::ServiceInitializer;
 use crate::handlers::service_launcher::{
-    start_game_process_monitoring, start_log_event_emission, start_log_monitoring,
+    start_game_process_monitoring, start_log_monitoring,
     start_ping_event_emission, start_time_tracking_emission,
 };
 use crate::handlers::task_manager::TaskManager;
@@ -89,14 +88,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             task_manager.clone(),
         );
 
-        // Start log event emission
-        start_log_event_emission(
-            main_window.clone(),
-            services.log_monitor.clone(),
-            services.character_session_tracker.clone(),
-            runtime_manager.clone(),
-            task_manager.clone(),
-        );
 
         // Start time tracking event emission
         start_time_tracking_emission(

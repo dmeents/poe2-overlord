@@ -1,5 +1,5 @@
 use crate::errors::{AppError, AppResult};
-use crate::models::character::{Character, CharacterData};
+use crate::domain::character::models::{Character, CharacterData};
 use chrono::Utc;
 use log::{debug, warn};
 use serde_json;
@@ -30,17 +30,10 @@ impl Default for CharacterRepository {
 impl CharacterRepository {
     /// Create a new character repository
     pub fn new() -> Self {
-        Self::with_data_directory(None)
-    }
-
-    /// Create a new character repository with a custom data directory (mainly for testing)
-    pub fn with_data_directory(custom_dir: Option<PathBuf>) -> Self {
-        // Use custom directory if provided, otherwise use system config directory
-        let config_dir = custom_dir.unwrap_or_else(|| {
-            dirs::config_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join("poe2-overlord")
-        });
+        // Use system config directory
+        let config_dir = dirs::config_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("poe2-overlord");
 
         // Ensure config directory exists
         if !config_dir.exists() {
@@ -95,8 +88,9 @@ impl CharacterRepository {
             character_data.clone()
         };
 
-        let content = serde_json::to_string_pretty(&data)
-            .map_err(|e| AppError::serialization_error("serialize_character_data", &e.to_string()))?;
+        let content = serde_json::to_string_pretty(&data).map_err(|e| {
+            AppError::serialization_error("serialize_character_data", &e.to_string())
+        })?;
 
         // Write to a temporary file first, then rename to ensure atomic write
         let temp_path = self.data_file_path.with_extension(TEMP_FILE_EXTENSION);
@@ -150,10 +144,18 @@ impl CharacterRepository {
     }
 
     /// Update an existing character
-    pub async fn update_character(&self, character_id: &str, character: Character) -> AppResult<()> {
+    pub async fn update_character(
+        &self,
+        character_id: &str,
+        character: Character,
+    ) -> AppResult<()> {
         let mut character_data = self.character_data.write().await;
-        
-        if let Some(existing) = character_data.characters.iter_mut().find(|c| c.id == character_id) {
+
+        if let Some(existing) = character_data
+            .characters
+            .iter_mut()
+            .find(|c| c.id == character_id)
+        {
             *existing = character;
             drop(character_data);
             self.save_character_data().await
@@ -165,8 +167,8 @@ impl CharacterRepository {
         }
     }
 
-    /// Remove a character by ID
-    pub async fn remove_character(&self, character_id: &str) -> AppResult<Character> {
+    /// Delete a character by ID
+    pub async fn delete_character(&self, character_id: &str) -> AppResult<Character> {
         let mut character_data = self.character_data.write().await;
 
         let index = character_data
@@ -174,27 +176,17 @@ impl CharacterRepository {
             .iter()
             .position(|c| c.id == character_id)
             .ok_or_else(|| {
-                AppError::internal_error("Character with ID '{}' not found", &character_id.to_string())
+                AppError::internal_error(
+                    "Character with ID '{}' not found",
+                    &character_id.to_string(),
+                )
             })?;
 
         let character = character_data.characters.remove(index);
 
-        // If we removed the active character, set a new active one
+        // If we removed the active character, clear the active character
         if character_data.active_character_id.as_ref() == Some(&character_id.to_string()) {
-            let new_active_id = character_data.characters.first().map(|c| c.id.clone());
-            character_data.active_character_id = new_active_id.clone();
-
-            // Activate the new character if there is one
-            if let Some(new_active_id) = new_active_id {
-                if let Some(new_active) = character_data
-                    .characters
-                    .iter_mut()
-                    .find(|c| c.id == new_active_id)
-                {
-                    new_active.is_active = true;
-                    new_active.last_played = Some(Utc::now());
-                }
-            }
+            character_data.active_character_id = None;
         }
 
         drop(character_data);
@@ -239,12 +231,6 @@ impl CharacterRepository {
         self.save_character_data().await
     }
 
-    /// Check if a character name is available
-    pub async fn is_name_available(&self, name: &str) -> bool {
-        let character_data = self.character_data.read().await;
-        !character_data.characters.iter().any(|c| c.name == name)
-    }
-
     /// Clear all character data
     pub async fn clear_all_data(&self) -> AppResult<()> {
         {
@@ -255,23 +241,12 @@ impl CharacterRepository {
 
         // Remove data file
         if self.data_file_path.exists() {
-            fs::remove_file(&self.data_file_path)
-                .map_err(|e| AppError::file_system_error("Failed to remove data file: {}", &e.to_string()))?;
+            fs::remove_file(&self.data_file_path).map_err(|e| {
+                AppError::file_system_error("Failed to remove data file: {}", &e.to_string())
+            })?;
         }
 
         debug!("All character data cleared");
         Ok(())
-    }
-
-    /// Get the total number of characters
-    pub async fn get_character_count(&self) -> usize {
-        let character_data = self.character_data.read().await;
-        character_data.characters.len()
-    }
-
-    /// Check if there are any characters
-    pub async fn has_characters(&self) -> bool {
-        let character_data = self.character_data.read().await;
-        !character_data.characters.is_empty()
     }
 }

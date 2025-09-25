@@ -3,7 +3,6 @@ use std::sync::Arc;
 use tauri::WebviewWindow;
 
 use crate::handlers::game_process_handler::GameProcessHandler;
-use crate::handlers::log_event_handler::LogEventHandler;
 use crate::handlers::ping_event_handler::PingEventHandler;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
@@ -40,34 +39,6 @@ pub fn start_game_process_monitoring(
     );
 }
 
-/// Helper function to start log event emission with only required services
-pub fn start_log_event_emission(
-    window: WebviewWindow,
-    log_monitor: Arc<LogAnalyzer>,
-    time_tracking: Arc<CharacterSessionTracker>,
-    runtime_manager: Arc<RuntimeManager>,
-    task_manager: Arc<TaskManager>,
-) {
-    let window_clone = window.clone();
-    let log_monitor_clone = log_monitor.clone();
-    let time_tracking_clone = time_tracking.clone();
-    let runtime_manager_clone = runtime_manager.clone();
-    let task_manager_clone = task_manager.clone();
-
-    let _handle = runtime_manager.spawn_background_task(
-        "log_event_emission_setup".to_string(),
-        move || async move {
-            LogEventHandler::start_event_emission(
-                window_clone,
-                log_monitor_clone,
-                time_tracking_clone,
-                runtime_manager_clone,
-                task_manager_clone,
-            )
-            .await;
-        },
-    );
-}
 
 /// Helper function to start time tracking event emission with only required services
 pub fn start_time_tracking_emission(

@@ -1,4 +1,5 @@
 use crate::domain::character::service::CharacterService;
+use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
 use crate::domain::time_tracking::CharacterSessionTracker;
 use crate::services::{
     configuration_manager::ConfigurationManager,
@@ -6,8 +7,8 @@ use crate::services::{
     log_analyzer::LogAnalyzer,
     server_monitor::ServerMonitor,
     traits::{
-        CharacterService as CharacterServiceTrait, ConfigurationService, EventService, LogAnalysisService,
-        ServerMonitoringService, ServiceRegistry, TimeTrackingService,
+        ConfigurationService, EventService,
+        LogAnalysisService, ServerMonitoringService, ServiceRegistry, TimeTrackingService,
     },
 };
 use std::sync::Arc;
@@ -37,7 +38,7 @@ impl ServiceRegistryImpl {
 
         // Initialize time tracking service (depends on character service)
         let time_tracking_service = Arc::new(CharacterSessionTracker::with_character_manager(
-            character_service.clone(),
+            Some(character_service.clone()),
         ));
 
         // Initialize log analysis service (depends on character service and server monitoring)

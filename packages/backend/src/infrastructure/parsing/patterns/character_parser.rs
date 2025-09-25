@@ -1,6 +1,6 @@
 use crate::parsers::config::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
-use crate::models::character::CharacterClass;
+use crate::domain::character::models::CharacterClass;
 use log::debug;
 use regex::Regex;
 

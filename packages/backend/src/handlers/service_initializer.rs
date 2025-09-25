@@ -38,7 +38,7 @@ impl ServiceInitializer {
         // Initialize character session tracker
         debug!("Initializing CharacterSessionTracker...");
         let character_session_service =
-            CharacterSessionTracker::with_character_manager(character_arc.clone());
+            CharacterSessionTracker::with_character_manager(Some(character_arc.clone()));
         let character_session_arc = Arc::new(character_session_service);
         app.manage(character_session_arc.clone());
         debug!("CharacterSessionTracker managed successfully");
@@ -55,7 +55,8 @@ impl ServiceInitializer {
         // Initialize log analyzer
         debug!("Initializing LogAnalyzer...");
         let log_path = config_service.get_poe_client_log_path();
-        let log_monitor_service = LogAnalyzer::new(log_path, server_status_arc.clone(), character_arc.clone());
+        let log_monitor_service =
+            LogAnalyzer::new(log_path, server_status_arc.clone(), character_arc.clone());
         let log_monitor_arc = Arc::new(log_monitor_service);
         app.manage(log_monitor_arc.clone());
         debug!("LogAnalyzer managed successfully");

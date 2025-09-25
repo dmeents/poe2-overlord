@@ -45,34 +45,19 @@ impl Default for CharacterSessionTracker {
 impl CharacterSessionTracker {
     /// Create a new character-aware session tracker
     pub fn new() -> Self {
-        Self::with_data_directory_and_character_manager(None, None)
+        Self::with_character_manager(None)
     }
 
     /// Create a new character-aware session tracker with character manager
     pub fn with_character_manager(
-        character_manager: Arc<crate::domain::character::service::CharacterService>,
-    ) -> Self {
-        Self::with_data_directory_and_character_manager(None, Some(character_manager))
-    }
-
-    /// Create a new character-aware session tracker with a custom data directory (mainly for testing)
-    pub fn with_data_directory(custom_dir: Option<PathBuf>) -> Self {
-        Self::with_data_directory_and_character_manager(custom_dir, None)
-    }
-
-    /// Create a new character-aware session tracker with a custom data directory and character manager
-    pub fn with_data_directory_and_character_manager(
-        custom_dir: Option<PathBuf>,
         character_manager: Option<Arc<crate::domain::character::service::CharacterService>>,
     ) -> Self {
         let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
 
-        // Use custom directory if provided, otherwise use system config directory
-        let data_directory = custom_dir.unwrap_or_else(|| {
-            dirs::config_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join("poe2-overlord")
-        });
+        // Use system config directory
+        let data_directory = dirs::config_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("poe2-overlord");
 
         Self {
             active_sessions: Arc::new(RwLock::new(HashMap::new())),

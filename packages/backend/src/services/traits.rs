@@ -1,41 +1,14 @@
 use crate::errors::AppResult;
 use crate::models::events::LogEvent;
 use crate::models::{
-    AppConfig, Character, CharacterUpdateParams, LocationSession, LocationStats, TimeTrackingEvent,
+    AppConfig, LocationSession, LocationStats, TimeTrackingEvent,
 };
 use crate::services::server_monitor::ServerStatus;
+use crate::domain::character::traits::CharacterService;
 use async_trait::async_trait;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 
-/// Trait for character management operations
-#[async_trait]
-pub trait CharacterService: Send + Sync {
-    async fn create_character(
-        &self,
-        name: String,
-        class: crate::models::CharacterClass,
-        ascendency: crate::models::Ascendency,
-        league: crate::models::League,
-        hardcore: bool,
-        solo_self_found: bool,
-    ) -> AppResult<Character>;
-
-    async fn get_all_characters(&self) -> Vec<Character>;
-    async fn get_character(&self, character_id: &str) -> Option<Character>;
-    async fn update_character(
-        &self,
-        character_id: &str,
-        params: CharacterUpdateParams,
-    ) -> AppResult<Character>;
-    async fn remove_character(&self, character_id: &str) -> AppResult<Character>;
-    async fn set_active_character(&self, character_id: &str) -> AppResult<()>;
-    async fn get_active_character(&self) -> Option<Character>;
-    async fn update_last_played(&self, character_id: &str) -> AppResult<()>;
-    async fn clear_all_characters(&self) -> AppResult<()>;
-    async fn update_character_level(&self, character_id: &str, level: u32) -> AppResult<()>;
-    async fn increment_character_deaths(&self, character_id: &str) -> AppResult<()>;
-}
 
 /// Trait for time tracking operations
 #[async_trait]

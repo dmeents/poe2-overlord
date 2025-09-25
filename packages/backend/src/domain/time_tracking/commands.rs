@@ -1,6 +1,8 @@
 use crate::commands::{to_command_result, CommandResult};
-use crate::domain::time_tracking::CharacterSessionTracker;
-use crate::models::{LocationStats, LocationType, TimeTrackingData, TimeTrackingSummary};
+use crate::domain::time_tracking::{
+    models::{LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingSummary},
+    traits::TimeTrackingService,
+};
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
@@ -9,17 +11,17 @@ use tauri::State;
 #[tauri::command]
 pub async fn get_character_time_tracking_data(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
 ) -> CommandResult<TimeTrackingData> {
     debug!("Getting time tracking data for character: {}", character_id);
 
-    let active_sessions = character_session_tracker
+    let active_sessions = time_tracking_service
         .get_active_sessions(&character_id)
         .await;
-    let completed_sessions = character_session_tracker
+    let completed_sessions = time_tracking_service
         .get_completed_sessions(&character_id)
         .await;
-    let all_location_stats = character_session_tracker.get_all_stats(&character_id).await;
+    let all_location_stats = time_tracking_service.get_all_stats(&character_id).await;
 
     // Create summary with top locations
     let zone_stats: Vec<LocationStats> = all_location_stats
@@ -32,13 +34,13 @@ pub async fn get_character_time_tracking_data(
     sorted_stats.sort_by(|a, b| b.total_time_seconds.cmp(&a.total_time_seconds));
     let top_stats = sorted_stats.into_iter().take(10).collect::<Vec<_>>();
 
-    let total_play_time = character_session_tracker
+    let total_play_time = time_tracking_service
         .get_total_play_time(&character_id)
         .await;
-    let total_play_time_since_process_start = character_session_tracker
+    let total_play_time_since_process_start = time_tracking_service
         .get_total_play_time_since_process_start(&character_id)
         .await;
-    let total_hideout_time = character_session_tracker
+    let total_hideout_time = time_tracking_service
         .get_total_hideout_time(&character_id)
         .await;
 
@@ -69,7 +71,7 @@ pub async fn get_character_time_tracking_data(
 #[tauri::command]
 pub async fn clear_character_time_tracking_data(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
 ) -> CommandResult<()> {
     debug!(
         "Clearing all time tracking data for character: {}",
@@ -77,7 +79,7 @@ pub async fn clear_character_time_tracking_data(
     );
 
     to_command_result(
-        character_session_tracker
+        time_tracking_service
             .clear_character_data(&character_id)
             .await
             .map_err(|e| {
@@ -96,11 +98,11 @@ pub async fn clear_character_time_tracking_data(
 #[tauri::command]
 pub async fn get_character_active_sessions(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
-) -> CommandResult<Vec<crate::models::LocationSession>> {
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
+) -> CommandResult<Vec<LocationSession>> {
     debug!("Getting active sessions for character: {}", character_id);
 
-    let sessions = character_session_tracker
+    let sessions = time_tracking_service
         .get_active_sessions(&character_id)
         .await;
     debug!(
@@ -115,11 +117,11 @@ pub async fn get_character_active_sessions(
 #[tauri::command]
 pub async fn get_character_completed_sessions(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
-) -> CommandResult<Vec<crate::models::LocationSession>> {
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
+) -> CommandResult<Vec<LocationSession>> {
     debug!("Getting completed sessions for character: {}", character_id);
 
-    let sessions = character_session_tracker
+    let sessions = time_tracking_service
         .get_completed_sessions(&character_id)
         .await;
     debug!(
@@ -134,31 +136,17 @@ pub async fn get_character_completed_sessions(
 #[tauri::command]
 pub async fn get_character_last_known_location(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
-) -> CommandResult<Option<crate::models::LocationSession>> {
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
+) -> CommandResult<Option<LocationSession>> {
     debug!(
         "Getting last known location for character: {}",
         character_id
     );
 
-    // Get all completed sessions and find the most recent one
-    let sessions = character_session_tracker
-        .get_completed_sessions(&character_id)
+    // Use the service method to get the last known location
+    let last_location = time_tracking_service
+        .get_last_known_location(&character_id)
         .await;
-
-    // Also check for active sessions (current location)
-    let active_sessions = character_session_tracker
-        .get_active_sessions(&character_id)
-        .await;
-
-    // Combine active and completed sessions
-    let mut all_sessions = sessions;
-    all_sessions.extend(active_sessions);
-
-    // Sort by entry timestamp (most recent first)
-    all_sessions.sort_by(|a, b| b.entry_timestamp.cmp(&a.entry_timestamp));
-
-    let last_location = all_sessions.first().cloned();
 
     if let Some(ref location) = last_location {
         debug!(
@@ -176,11 +164,11 @@ pub async fn get_character_last_known_location(
 #[tauri::command]
 pub async fn get_character_location_stats(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
 ) -> CommandResult<Vec<LocationStats>> {
     debug!("Getting location stats for character: {}", character_id);
 
-    let stats = character_session_tracker.get_all_stats(&character_id).await;
+    let stats = time_tracking_service.get_all_stats(&character_id).await;
     debug!(
         "Retrieved {} location stats for character {}",
         stats.len(),
@@ -193,11 +181,11 @@ pub async fn get_character_location_stats(
 #[tauri::command]
 pub async fn get_character_total_play_time(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
 ) -> CommandResult<u64> {
     debug!("Getting total play time for character: {}", character_id);
 
-    let total_time = character_session_tracker
+    let total_time = time_tracking_service
         .get_total_play_time(&character_id)
         .await;
     debug!(
@@ -211,14 +199,14 @@ pub async fn get_character_total_play_time(
 #[tauri::command]
 pub async fn get_character_total_play_time_since_process_start(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
 ) -> CommandResult<u64> {
     debug!(
         "Getting total play time since process start for character: {}",
         character_id
     );
 
-    let total_time = character_session_tracker
+    let total_time = time_tracking_service
         .get_total_play_time_since_process_start(&character_id)
         .await;
     debug!(
@@ -232,11 +220,11 @@ pub async fn get_character_total_play_time_since_process_start(
 #[tauri::command]
 pub async fn get_character_total_hideout_time(
     character_id: String,
-    character_session_tracker: State<'_, Arc<CharacterSessionTracker>>,
+    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
 ) -> CommandResult<u64> {
     debug!("Getting total hideout time for character: {}", character_id);
 
-    let total_time = character_session_tracker
+    let total_time = time_tracking_service
         .get_total_hideout_time(&character_id)
         .await;
     debug!(

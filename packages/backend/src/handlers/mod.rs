@@ -1,5 +1,4 @@
 pub mod event_utils;
-pub mod game_process_handler;
 pub mod ping_event_handler;
 pub mod runtime_manager;
 pub mod service_initializer;
@@ -12,17 +11,23 @@ use log::{debug, info, warn};
 use std::sync::Arc;
 use tauri::Manager;
 
+use crate::domain::configuration::traits::ConfigurationService;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::service_initializer::ServiceInitializer;
 use crate::handlers::service_launcher::{
-    start_game_process_monitoring, start_log_monitoring,
-    start_ping_event_emission, start_time_tracking_emission,
+    start_game_process_monitoring, start_log_monitoring, start_ping_event_emission,
+    start_time_tracking_emission,
 };
 use crate::handlers::task_manager::TaskManager;
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let services = ServiceInitializer::initialize_services(app)?;
-    let log_level = services.config_service.get_log_level().to_lowercase();
+    
+    // Get log level asynchronously
+    let config_service = services.config_service.clone();
+    let log_level = tauri::async_runtime::block_on(async {
+        config_service.get_log_level().await.unwrap_or_else(|_| "info".to_string())
+    }).to_lowercase();
 
     let level_filter = match log_level.as_str() {
         "trace" => log::LevelFilter::Trace,
@@ -54,10 +59,13 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     // Load existing character time tracking data
     debug!("Loading existing character time tracking data...");
-    let character_session_tracker = services.character_session_tracker.clone();
+    let time_tracking_service = services.time_tracking_service.clone();
     tauri::async_runtime::spawn(async move {
-        if let Err(e) = character_session_tracker.load_all_character_data().await {
-            warn!("Failed to load existing character time tracking data: {}", e);
+        if let Err(e) = time_tracking_service.load_all_character_data().await {
+            warn!(
+                "Failed to load existing character time tracking data: {}",
+                e
+            );
         } else {
             info!("Successfully loaded existing character time tracking data");
         }
@@ -80,19 +88,18 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             task_manager.clone(),
         );
 
-        // Start process monitoring
+        // Start process monitoring using new domain-oriented architecture
         start_game_process_monitoring(
             main_window.clone(),
-            services.character_session_tracker.clone(),
+            services.game_monitoring_app_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );
 
-
         // Start time tracking event emission
         start_time_tracking_emission(
             main_window.clone(),
-            services.character_session_tracker.clone(),
+            services.time_tracking_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

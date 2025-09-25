@@ -27,6 +27,9 @@ pub enum AppError {
     #[error("Validation error: {field} - {message}")]
     Validation { field: String, message: String },
 
+    #[error("Event emission error: {message}")]
+    EventEmission { message: String },
+
     #[error("Internal error: {operation} - {message}")]
     Internal { operation: String, message: String },
 }
@@ -135,6 +138,13 @@ impl AppError {
             message: message.to_string(),
         }
     }
+
+    /// Create an event emission error
+    pub fn event_emission_error(message: &str) -> Self {
+        Self::EventEmission {
+            message: message.to_string(),
+        }
+    }
 }
 
 /// Result type alias for backend operations
@@ -196,5 +206,13 @@ macro_rules! handle_character_error {
 macro_rules! handle_time_tracking_error {
     ($result:expr, $operation:expr) => {
         $result.map_err(|e| AppError::time_tracking_error($operation, &e.to_string()))
+    };
+}
+
+/// Macro for event emission operations
+#[macro_export]
+macro_rules! handle_event_emission_error {
+    ($result:expr, $operation:expr) => {
+        $result.map_err(|e| AppError::event_emission_error(&format!("{}: {}", $operation, e.to_string())))
     };
 }

@@ -1,45 +1,14 @@
 use crate::errors::AppResult;
 use crate::models::events::LogEvent;
-use crate::models::{
-    AppConfig, LocationSession, LocationStats, TimeTrackingEvent,
-};
 use crate::services::server_monitor::ServerStatus;
 use crate::domain::character::traits::CharacterService;
+use crate::domain::configuration::traits::ConfigurationService;
+use crate::domain::time_tracking::traits::TimeTrackingService;
 use async_trait::async_trait;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 
-
-/// Trait for time tracking operations
-#[async_trait]
-pub trait TimeTrackingService: Send + Sync {
-    async fn start_session(
-        &self,
-        character_id: &str,
-        location_name: String,
-        location_type: crate::models::LocationType,
-    ) -> AppResult<()>;
-
-    async fn end_session(&self, character_id: &str, location_id: &str) -> AppResult<()>;
-    async fn get_active_sessions(&self, character_id: &str) -> Vec<LocationSession>;
-    async fn get_completed_sessions(&self, character_id: &str) -> Vec<LocationSession>;
-    async fn get_all_stats(&self, character_id: &str) -> Vec<LocationStats>;
-    async fn get_total_play_time(&self, character_id: &str) -> u64;
-    async fn clear_character_data(&self, character_id: &str) -> AppResult<()>;
-    async fn load_all_character_data(&self) -> AppResult<()>;
-    async fn save_all_character_data(&self) -> AppResult<()>;
-
-    fn subscribe_to_events(&self) -> broadcast::Receiver<TimeTrackingEvent>;
-}
-
-/// Trait for configuration management
-pub trait ConfigurationService: Send + Sync {
-    fn get_config(&self) -> AppConfig;
-    fn update_config(&self, config: AppConfig) -> AppResult<()>;
-    fn reset_to_defaults(&self) -> AppResult<()>;
-    fn load_config(&self) -> AppResult<()>;
-    fn save_config(&self) -> AppResult<()>;
-}
+// ConfigurationService trait moved to domain::configuration::traits
 
 /// Trait for event dispatching
 pub trait EventService: Send + Sync {

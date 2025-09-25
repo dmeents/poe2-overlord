@@ -1,14 +1,18 @@
 use crate::domain::character::service::CharacterService;
 use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
-use crate::domain::time_tracking::CharacterSessionTracker;
+use crate::domain::configuration::service::ConfigurationServiceImpl;
+use crate::domain::configuration::traits::ConfigurationService;
+use crate::domain::time_tracking::{
+    service::TimeTrackingServiceImpl,
+    traits::TimeTrackingService,
+};
 use crate::services::{
-    configuration_manager::ConfigurationManager,
     event_dispatcher::EventDispatcher,
     log_analyzer::LogAnalyzer,
     server_monitor::ServerMonitor,
     traits::{
-        ConfigurationService, EventService,
-        LogAnalysisService, ServerMonitoringService, ServiceRegistry, TimeTrackingService,
+        EventService,
+        LogAnalysisService, ServerMonitoringService, ServiceRegistry,
     },
 };
 use std::sync::Arc;
@@ -25,9 +29,9 @@ pub struct ServiceRegistryImpl {
 
 impl ServiceRegistryImpl {
     /// Create a new service registry with all services initialized
-    pub fn new(app_handle: &tauri::AppHandle) -> Self {
+    pub fn new(_app_handle: &tauri::AppHandle) -> Self {
         // Initialize core services first (no dependencies)
-        let configuration_service = Arc::new(ConfigurationManager::new(app_handle));
+        let configuration_service = Arc::new(ConfigurationServiceImpl::new().expect("Failed to create configuration service"));
         let event_service = Arc::new(EventDispatcher::new());
 
         // Initialize character service (no dependencies)
@@ -37,13 +41,15 @@ impl ServiceRegistryImpl {
         let server_monitoring_service = Arc::new(ServerMonitor::new(event_service.clone()));
 
         // Initialize time tracking service (depends on character service)
-        let time_tracking_service = Arc::new(CharacterSessionTracker::with_character_manager(
+        let time_tracking_service = Arc::new(TimeTrackingServiceImpl::with_character_service(
             Some(character_service.clone()),
-        ));
+        )) as Arc<dyn TimeTrackingService>;
 
         // Initialize log analysis service (depends on character service and server monitoring)
+        // We need to get the config path asynchronously, so we'll use a default for now
+        // and let the log analyzer update it when the config is loaded
         let log_analysis_service = Arc::new(LogAnalyzer::new(
-            configuration_service.get_config().poe_client_log_path,
+            "".to_string(), // Will be updated when config is loaded
             server_monitoring_service.clone(),
             character_service.clone(),
         ));

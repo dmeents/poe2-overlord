@@ -1,11 +1,12 @@
 pub mod command_utils;
-pub mod config_commands;
 pub mod helpers;
 pub mod log_commands;
 pub use command_utils::*;
-pub use config_commands::*;
 pub use helpers::*;
 pub use log_commands::*;
+
+// Re-export configuration commands from domain
+pub use crate::domain::configuration::commands::*;
 
 // Re-export common types for commands
 pub use crate::errors::AppError;

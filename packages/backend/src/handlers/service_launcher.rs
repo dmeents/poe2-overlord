@@ -2,39 +2,41 @@ use log::{error, info};
 use std::sync::Arc;
 use tauri::WebviewWindow;
 
-use crate::handlers::game_process_handler::GameProcessHandler;
+use crate::application::services::GameMonitoringApplicationService;
 use crate::handlers::ping_event_handler::PingEventHandler;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
-use crate::domain::time_tracking::CharacterSessionTracker;
+use crate::domain::time_tracking::traits::TimeTrackingService;
+use crate::infrastructure::tauri::GameMonitoringHandler;
 use crate::services::{
     event_dispatcher::EventDispatcher,
     log_analyzer::LogAnalyzer,
 };
 
-/// Helper function to start process monitoring with only required services
+/// Helper function to start process monitoring using the new domain-oriented architecture
 pub fn start_game_process_monitoring(
     window: WebviewWindow,
-    time_tracking: Arc<CharacterSessionTracker>,
+    game_monitoring_app_service: Arc<GameMonitoringApplicationService>,
     runtime_manager: Arc<RuntimeManager>,
     task_manager: Arc<TaskManager>,
 ) {
     let window_clone = window.clone();
-    let time_tracking_clone = time_tracking.clone();
+    let app_service_clone = game_monitoring_app_service.clone();
     let runtime_manager_clone = runtime_manager.clone();
     let task_manager_clone = task_manager.clone();
 
     let _handle = runtime_manager.spawn_background_task(
         "game_process_monitoring_setup".to_string(),
         move || async move {
-            GameProcessHandler::start_monitoring(
+            if let Err(e) = GameMonitoringHandler::start_monitoring(
                 window_clone,
-                time_tracking_clone,
+                app_service_clone,
                 runtime_manager_clone,
                 task_manager_clone,
-            )
-            .await;
+            ).await {
+                error!("Failed to start game monitoring: {}", e);
+            }
         },
     );
 }
@@ -43,7 +45,7 @@ pub fn start_game_process_monitoring(
 /// Helper function to start time tracking event emission with only required services
 pub fn start_time_tracking_emission(
     window: WebviewWindow,
-    time_tracking: Arc<CharacterSessionTracker>,
+    time_tracking: Arc<dyn TimeTrackingService>,
     runtime_manager: Arc<RuntimeManager>,
     task_manager: Arc<TaskManager>,
 ) {

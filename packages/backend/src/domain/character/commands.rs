@@ -4,7 +4,7 @@ use crate::domain::character::models::{
     CharacterClass, CharacterUpdateParams, League,
 };
 use crate::domain::character::service::CharacterService;
-use crate::services::traits::TimeTrackingService;
+use crate::domain::time_tracking::traits::TimeTrackingService;
 use log::{debug, info, warn};
 use std::sync::Arc;
 use tauri::State;

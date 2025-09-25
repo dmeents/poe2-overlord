@@ -1,4 +1,5 @@
 // Module declarations
+pub mod application;
 pub mod commands;
 pub mod domain;
 pub mod errors;
@@ -17,16 +18,28 @@ pub use errors::*;
 pub use handlers::*;
 // Import specific models to avoid naming conflicts with services
 pub use models::{
-    ActChangeEvent, AppConfig, HideoutChangeEvent, LocationSession, LocationStats, LocationType,
-    OverlayState, ProcessInfo, SceneChangeEvent, ServerConnectionEvent, TimeTrackingEvent,
-    ZoneChangeEvent,
+    ActChangeEvent, HideoutChangeEvent, OverlayState,
+    ProcessInfo, SceneChangeEvent, ServerConnectionEvent, ZoneChangeEvent,
 };
 // Import character models from domain
 pub use domain::character::{
     Ascendency, Character, CharacterClass, CharacterData, CharacterUpdateParams, League,
 };
 // Import time tracking from domain
-pub use domain::time_tracking::CharacterSessionTracker;
+pub use domain::time_tracking::{
+    LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
+    TimeTrackingSummary, TimeTrackingService, TimeTrackingServiceImpl,
+};
+// Import configuration from domain
+pub use domain::configuration::{
+    AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationService,
+    ConfigurationServiceImpl, ConfigurationValidationResult,
+};
+// Import game monitoring from domain
+pub use domain::game_monitoring::{
+    GameMonitoringEvent, GameMonitoringEventPublisher, GameMonitoringService,
+    GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
+};
 pub use services::*;
 
 pub fn run() {
@@ -35,10 +48,20 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             check_game_process,
+            // Configuration commands
             get_config,
             get_default_config,
             update_config,
             reset_config_to_defaults,
+            get_poe_client_log_path,
+            set_poe_client_log_path,
+            get_default_poe_client_log_path,
+            reset_poe_client_log_path_to_default,
+            get_log_level,
+            set_log_level,
+            get_config_file_info,
+            validate_config,
+            // Log commands
             is_log_monitoring_active,
             get_log_file_size,
             read_last_log_lines,

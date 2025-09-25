@@ -5,9 +5,9 @@ use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::Tim
 use crate::infrastructure::{
     monitoring::ProcessMonitorImpl, tauri::TauriGameMonitoringEventPublisher,
 };
-use crate::services::{
-    event_dispatcher::EventDispatcher, log_analyzer::LogAnalyzer, server_monitor::ServerMonitor,
-};
+use crate::infrastructure::tauri::EventDispatcher;
+use crate::infrastructure::parsing::LogAnalyzer;
+use crate::infrastructure::monitoring::ServerMonitor;
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::Manager;

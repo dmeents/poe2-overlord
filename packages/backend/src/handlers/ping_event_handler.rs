@@ -1,7 +1,7 @@
 use crate::handlers::{
     event_utils::emit_event, runtime_manager::RuntimeManager, task_manager::TaskManager,
 };
-use crate::services::event_dispatcher::EventDispatcher;
+use crate::infrastructure::tauri::EventDispatcher;
 use log::debug;
 use std::sync::Arc;
 use tauri::WebviewWindow;

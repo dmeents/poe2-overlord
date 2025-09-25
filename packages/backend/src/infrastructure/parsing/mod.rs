@@ -1,6 +1,8 @@
 pub mod errors;
 pub mod extraction;
 pub mod factory;
+pub mod location_tracker;
+pub mod log_analyzer;
 pub mod manager;
 pub mod pattern_matching;
 pub mod patterns;
@@ -11,6 +13,8 @@ pub mod validation;
 pub use errors::ParseError;
 pub use extraction::*;
 pub use factory::ParserFactory;
+pub use location_tracker::{LocationTracker, SceneTypeConfig};
+pub use log_analyzer::LogAnalyzer;
 pub use manager::ParserType;
 pub use manager::{LogParserManager, ParserResult};
 pub use pattern_matching::*;

@@ -1,8 +1,21 @@
+use crate::domain::server_monitoring::models::ServerStatus;
 use crate::models::events::LogEvent;
-use crate::services::server_monitor::ServerStatus;
-use crate::services::traits::EventService;
 use log::debug;
 use tokio::sync::broadcast;
+
+/// Trait for event dispatching infrastructure
+pub trait EventService: Send + Sync {
+    fn subscribe_to_log_events(&self) -> broadcast::Receiver<LogEvent>;
+    fn subscribe_to_ping_events(&self) -> broadcast::Receiver<ServerStatus>;
+    fn broadcast_log_event(
+        &self,
+        event: LogEvent,
+    ) -> Result<(), broadcast::error::SendError<LogEvent>>;
+    fn broadcast_ping_event(
+        &self,
+        event: ServerStatus,
+    ) -> Result<(), broadcast::error::SendError<ServerStatus>>;
+}
 
 /// Event dispatcher that manages event channels and subscriptions
 pub struct EventDispatcher {

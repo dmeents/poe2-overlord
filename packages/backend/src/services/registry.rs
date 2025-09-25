@@ -3,12 +3,12 @@ use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
-use crate::services::{
-    event_dispatcher::EventDispatcher,
-    log_analyzer::LogAnalyzer,
-    server_monitor::ServerMonitor,
-    traits::{EventService, LogAnalysisService, ServerMonitoringService, ServiceRegistry},
-};
+use crate::infrastructure::tauri::{EventDispatcher, EventService};
+use crate::infrastructure::monitoring::ServerMonitor;
+use crate::infrastructure::parsing::LogAnalyzer;
+use crate::domain::server_monitoring::traits::ServerMonitoringService;
+use crate::domain::log_analysis::traits::LogAnalysisService;
+use crate::services::traits::ServiceRegistry;
 use log::error;
 use std::sync::Arc;
 

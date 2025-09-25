@@ -2,10 +2,106 @@ use crate::domain::game_monitoring::{
     events::GameMonitoringEvent, models::GameProcessStatus, traits::GameMonitoringEventPublisher,
 };
 use crate::errors::AppResult;
+use crate::models::events::LogEvent;
+use crate::domain::server_monitoring::models::ServerStatus;
 use log::error;
-// Arc not needed for this implementation
 use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
+
+/// Generic event publisher for handling various types of events
+pub struct EventPublisher {
+    log_event_sender: broadcast::Sender<LogEvent>,
+    ping_event_sender: broadcast::Sender<ServerStatus>,
+    window: Option<WebviewWindow>,
+}
+
+impl EventPublisher {
+    /// Create a new event publisher
+    pub fn new() -> Self {
+        let (log_event_sender, _) = broadcast::channel(1000);
+        let (ping_event_sender, _) = broadcast::channel(100);
+
+        Self {
+            log_event_sender,
+            ping_event_sender,
+            window: None,
+        }
+    }
+
+    /// Create a new event publisher with Tauri window
+    pub fn with_window(window: WebviewWindow) -> Self {
+        let (log_event_sender, _) = broadcast::channel(1000);
+        let (ping_event_sender, _) = broadcast::channel(100);
+
+        Self {
+            log_event_sender,
+            ping_event_sender,
+            window: Some(window),
+        }
+    }
+
+    /// Broadcast a log event
+    pub fn broadcast_log_event(&self, event: LogEvent) -> Result<(), broadcast::error::SendError<LogEvent>> {
+        let result = self.log_event_sender.send(event.clone());
+        
+        if let Err(ref e) = result {
+            error!("Failed to broadcast log event: {}", e);
+        }
+
+        // Emit to Tauri window if available
+        if let Some(ref window) = self.window {
+            if let Err(e) = window.emit("log-event", &event) {
+                error!("Failed to emit log event to frontend: {}", e);
+            }
+        }
+
+        result.map(|_| ())
+    }
+
+    /// Broadcast a ping event
+    pub fn broadcast_ping_event(&self, event: ServerStatus) -> Result<(), broadcast::error::SendError<ServerStatus>> {
+        let result = self.ping_event_sender.send(event.clone());
+        
+        if let Err(ref e) = result {
+            error!("Failed to broadcast ping event: {}", e);
+        }
+
+        // Emit to Tauri window if available
+        if let Some(ref window) = self.window {
+            if let Err(e) = window.emit("server-ping", &event) {
+                error!("Failed to emit ping event to frontend: {}", e);
+            }
+        }
+
+        result.map(|_| ())
+    }
+
+    /// Subscribe to log events
+    pub fn subscribe_to_log_events(&self) -> broadcast::Receiver<LogEvent> {
+        self.log_event_sender.subscribe()
+    }
+
+    /// Subscribe to ping events
+    pub fn subscribe_to_ping_events(&self) -> broadcast::Receiver<ServerStatus> {
+        self.ping_event_sender.subscribe()
+    }
+
+    /// Get the number of log event subscribers
+    pub fn log_subscriber_count(&self) -> usize {
+        self.log_event_sender.receiver_count()
+    }
+
+    /// Get the number of ping event subscribers
+    pub fn ping_subscriber_count(&self) -> usize {
+        self.ping_event_sender.receiver_count()
+    }
+}
+
+impl Default for EventPublisher {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Tauri-specific implementation of the game monitoring event publisher
 /// This handles emitting events to the frontend through Tauri's event system

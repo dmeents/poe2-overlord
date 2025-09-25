@@ -1,10 +1,10 @@
 use crate::errors::{AppError, AppResult};
 use crate::models::events::ServerConnectionEvent;
-use crate::services::event_dispatcher::EventDispatcher;
-use crate::services::traits::ServerMonitoringService;
+use crate::infrastructure::tauri::EventDispatcher;
+use crate::domain::server_monitoring::models::ServerStatus;
+use crate::domain::server_monitoring::traits::ServerMonitoringService;
 use async_trait::async_trait;
 use log::{debug, info, warn};
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,16 +12,6 @@ use tokio::fs;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
 use tokio::time::timeout;
-
-/// Server status information for both internal storage and frontend events
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServerStatus {
-    pub ip_address: String,
-    pub port: u16,
-    pub is_online: bool,
-    pub latency_ms: Option<u64>,
-    pub timestamp: String,
-}
 
 /// Server monitor for tracking server status and connectivity
 pub struct ServerMonitor {
@@ -83,13 +73,7 @@ impl ServerMonitor {
             event.ip_address, event.port
         );
 
-        let new_status = ServerStatus {
-            ip_address: event.ip_address.clone(),
-            port: event.port,
-            is_online: true,
-            latency_ms: None,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        };
+        let new_status = ServerStatus::from_connection_event(event);
 
         // Update in-memory status
         let mut status = self.status.write().await;
@@ -174,7 +158,7 @@ impl ServerMonitor {
                 timestamp: chrono::Utc::now().to_rfc3339(),
             };
 
-            // Broadcast the ping event (we'll need to add this to EventDispatcher)
+            // Broadcast the ping event
             if let Err(e) = self.event_broadcaster.broadcast_ping_event(ping_event) {
                 warn!("Failed to broadcast ping event: {}", e);
             }
@@ -289,18 +273,82 @@ impl ServerMonitor {
 #[async_trait]
 impl ServerMonitoringService for ServerMonitor {
     async fn get_current_status(&self) -> ServerStatus {
-        self.get_current_status().await
+        if let Some(status) = self.get_server_status().await {
+            status
+        } else {
+            ServerStatus::new("0.0.0.0".to_string(), 0)
+        }
     }
 
     async fn update_status(&self, status: ServerStatus) -> AppResult<()> {
-        self.update_status(status).await
+        let mut current_status = self.status.write().await;
+        *current_status = Some(status);
+        Ok(())
     }
 
     async fn save_status(&self) -> AppResult<()> {
-        self.save_status().await
+        if let Some(status) = self.get_server_status().await {
+            self.save_status_to_file(&status).await
+        } else {
+            Ok(())
+        }
     }
 
     async fn load_status(&self) -> AppResult<()> {
         self.load_status().await
+    }
+
+    async fn ping_server(&self) -> AppResult<Option<u64>> {
+        self.ping_server().await
+    }
+
+    async fn start_periodic_ping(&self) -> AppResult<()> {
+        self.start_periodic_ping().await;
+        Ok(())
+    }
+
+    async fn stop_periodic_ping(&self) -> AppResult<()> {
+        // TODO: Implement stop functionality
+        Ok(())
+    }
+
+    async fn is_ping_monitoring_active(&self) -> bool {
+        // TODO: Implement monitoring state tracking
+        false
+    }
+
+    async fn get_server_info(&self) -> Option<crate::domain::server_monitoring::models::ServerInfo> {
+        if let Some(status) = self.get_server_status().await {
+            Some(crate::domain::server_monitoring::models::ServerInfo::new(
+                status.ip_address,
+                status.port,
+            ))
+        } else {
+            None
+        }
+    }
+
+    async fn update_server_info(&self, ip_address: String, port: u16) -> AppResult<()> {
+        let new_status = ServerStatus::new(ip_address, port);
+        self.update_status(new_status).await
+    }
+
+    async fn get_monitoring_stats(&self) -> AppResult<crate::domain::server_monitoring::models::ServerMonitoringStats> {
+        Ok(crate::domain::server_monitoring::models::ServerMonitoringStats::default())
+    }
+
+    async fn get_config(&self) -> crate::domain::server_monitoring::models::ServerMonitoringConfig {
+        crate::domain::server_monitoring::models::ServerMonitoringConfig::default()
+    }
+
+    async fn update_config(&self, _config: crate::domain::server_monitoring::models::ServerMonitoringConfig) -> AppResult<()> {
+        // TODO: Implement config update
+        Ok(())
+    }
+
+    fn subscribe_to_status_changes(&self) -> tokio::sync::broadcast::Receiver<ServerStatus> {
+        // TODO: Implement status change subscription
+        let (_, receiver) = tokio::sync::broadcast::channel(1);
+        receiver
     }
 }

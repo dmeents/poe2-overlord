@@ -9,7 +9,8 @@ use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
 // GameMonitoringHandler removed - domain service now handles its own background monitoring
-use crate::services::{event_dispatcher::EventDispatcher, log_analyzer::LogAnalyzer};
+use crate::infrastructure::tauri::EventDispatcher;
+use crate::infrastructure::parsing::LogAnalyzer;
 
 /// Helper function to automatically start process monitoring on application startup
 /// Game monitoring is always running when the application is running

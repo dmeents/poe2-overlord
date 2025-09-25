@@ -39,7 +39,13 @@ pub use domain::game_monitoring::{
     GameMonitoringEvent, GameMonitoringEventPublisher, GameMonitoringService,
     GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
-pub use services::*;
+// Export infrastructure components
+pub use infrastructure::monitoring::ServerMonitor;
+pub use infrastructure::parsing::{LocationTracker, LogAnalyzer, SceneTypeConfig};
+pub use infrastructure::tauri::{EventDispatcher, EventService};
+// Export service registry
+pub use services::registry::ServiceRegistryImpl;
+pub use services::traits::ServiceRegistry;
 
 pub fn run() {
     tauri::Builder::default()

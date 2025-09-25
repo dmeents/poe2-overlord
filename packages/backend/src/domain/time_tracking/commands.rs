@@ -7,6 +7,8 @@ use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
 
+/// Tauri command to get complete time tracking data for a character
+/// Returns active sessions, completed sessions, location stats, and summary
 #[tauri::command]
 pub async fn get_character_time_tracking_data(
     character_id: String,
@@ -14,6 +16,7 @@ pub async fn get_character_time_tracking_data(
 ) -> CommandResult<TimeTrackingData> {
     debug!("Getting time tracking data for character: {}", character_id);
 
+    // Fetch all time tracking data for the character
     let active_sessions = time_tracking_service
         .get_active_sessions(&character_id)
         .await;
@@ -22,6 +25,7 @@ pub async fn get_character_time_tracking_data(
         .await;
     let all_location_stats = time_tracking_service.get_all_stats(&character_id).await;
 
+    // Filter and sort zone stats to get top 10 locations by time spent
     let zone_stats: Vec<LocationStats> = all_location_stats
         .iter()
         .filter(|stat| stat.location_type == LocationType::Zone)
@@ -32,6 +36,7 @@ pub async fn get_character_time_tracking_data(
     sorted_stats.sort_by(|a, b| b.total_time_seconds.cmp(&a.total_time_seconds));
     let top_stats = sorted_stats.into_iter().take(10).collect::<Vec<_>>();
 
+    // Calculate summary metrics
     let total_play_time = time_tracking_service
         .get_total_play_time(&character_id)
         .await;
@@ -42,6 +47,7 @@ pub async fn get_character_time_tracking_data(
         .get_total_hideout_time(&character_id)
         .await;
 
+    // Build the summary with all calculated data
     let summary = TimeTrackingSummary {
         character_id: character_id.clone(),
         active_sessions: active_sessions.clone(),
@@ -65,6 +71,7 @@ pub async fn get_character_time_tracking_data(
     Ok(data)
 }
 
+/// Tauri command to clear all time tracking data for a character
 #[tauri::command]
 pub async fn clear_character_time_tracking_data(
     character_id: String,
@@ -91,6 +98,7 @@ pub async fn clear_character_time_tracking_data(
     Ok(())
 }
 
+/// Tauri command to get all active sessions for a character
 #[tauri::command]
 pub async fn get_character_active_sessions(
     character_id: String,
@@ -109,6 +117,7 @@ pub async fn get_character_active_sessions(
     Ok(sessions)
 }
 
+/// Tauri command to get all completed sessions for a character
 #[tauri::command]
 pub async fn get_character_completed_sessions(
     character_id: String,
@@ -127,6 +136,7 @@ pub async fn get_character_completed_sessions(
     Ok(sessions)
 }
 
+/// Tauri command to get the last known location for a character
 #[tauri::command]
 pub async fn get_character_last_known_location(
     character_id: String,
@@ -153,6 +163,7 @@ pub async fn get_character_last_known_location(
     Ok(last_location)
 }
 
+/// Tauri command to get all location statistics for a character
 #[tauri::command]
 pub async fn get_character_location_stats(
     character_id: String,
@@ -169,6 +180,7 @@ pub async fn get_character_location_stats(
     Ok(stats)
 }
 
+/// Tauri command to get total play time for a character
 #[tauri::command]
 pub async fn get_character_total_play_time(
     character_id: String,
@@ -186,6 +198,7 @@ pub async fn get_character_total_play_time(
     Ok(total_time)
 }
 
+/// Tauri command to get total play time since process start for a character
 #[tauri::command]
 pub async fn get_character_total_play_time_since_process_start(
     character_id: String,
@@ -206,6 +219,7 @@ pub async fn get_character_total_play_time_since_process_start(
     Ok(total_time)
 }
 
+/// Tauri command to get total hideout time for a character
 #[tauri::command]
 pub async fn get_character_total_hideout_time(
     character_id: String,

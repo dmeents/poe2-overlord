@@ -1,4 +1,9 @@
 
+//! Data persistence infrastructure for file operations and storage
+//! 
+//! Provides utilities for atomic file writing, JSON serialization/deserialization,
+//! directory management, and repository pattern implementations for data persistence.
+
 pub mod atomic_writer;
 pub mod directory_manager;
 pub mod file_operations;

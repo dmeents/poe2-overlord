@@ -8,9 +8,16 @@ use log::error;
 use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
 
+/// Event publisher that bridges backend events to the Tauri frontend
+/// 
+/// Handles both internal event broadcasting and Tauri-specific event emission
+/// to the frontend application. Provides dual-channel event distribution.
 pub struct EventPublisher {
+    /// Internal broadcast channel for log events
     log_event_sender: broadcast::Sender<LogEvent>,
+    /// Internal broadcast channel for ping events
     ping_event_sender: broadcast::Sender<ServerStatus>,
+    /// Optional Tauri window for frontend communication
     window: Option<WebviewWindow>,
 }
 
@@ -37,6 +44,10 @@ impl EventPublisher {
         }
     }
 
+    /// Broadcasts log events both internally and to the frontend
+    /// 
+    /// Sends events to internal subscribers and emits them to the Tauri frontend
+    /// if a window is available. Handles errors gracefully for both channels.
     pub fn broadcast_log_event(&self, event: LogEvent) -> Result<(), broadcast::error::SendError<LogEvent>> {
         let result = self.log_event_sender.send(event.clone());
         
@@ -44,6 +55,7 @@ impl EventPublisher {
             error!("Failed to broadcast log event: {}", e);
         }
 
+        // Emit to frontend if window is available
         if let Some(ref window) = self.window {
             if let Err(e) = window.emit("log-event", &event) {
                 error!("Failed to emit log event to frontend: {}", e);
@@ -92,7 +104,12 @@ impl Default for EventPublisher {
     }
 }
 
+/// Tauri-specific event publisher for game monitoring events
+/// 
+/// Handles publishing game monitoring events directly to the Tauri frontend
+/// using the WebviewWindow's emit functionality.
 pub struct TauriGameMonitoringEventPublisher {
+    /// Tauri window for frontend communication
     window: WebviewWindow,
 }
 
@@ -101,6 +118,10 @@ impl TauriGameMonitoringEventPublisher {
         Self { window }
     }
 
+    /// Emits game process status to the frontend
+    /// 
+    /// Sends the current game process status to the Tauri frontend
+    /// for real-time display of game monitoring information.
     async fn emit_game_process_status(&self, status: &GameProcessStatus) -> AppResult<()> {
         if let Err(e) = self.window.emit("game-process-status", status) {
             error!("Failed to emit game process status: {}", e);

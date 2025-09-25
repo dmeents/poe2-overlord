@@ -3,6 +3,11 @@ use std::sync::Arc;
 use tokio::runtime::{Handle, Runtime};
 use tokio::task::JoinHandle;
 
+/// Centralized Tokio runtime manager for the application
+/// 
+/// Provides a shared runtime instance that can be used across the application
+/// for spawning background tasks and managing async operations.
+/// Ensures consistent runtime configuration and lifecycle management.
 #[derive(Clone)]
 pub struct RuntimeManager {
     runtime: Arc<Runtime>,
@@ -22,6 +27,11 @@ impl RuntimeManager {
         })
     }
 
+    /// Spawns a named background task on the shared runtime
+    /// 
+    /// Creates a new async task with the given name and function.
+    /// The task will be executed on the shared runtime and its completion
+    /// will be logged for debugging purposes.
     pub fn spawn_background_task<F, Fut>(&self, name: String, task: F) -> JoinHandle<()>
     where
         F: FnOnce() -> Fut + Send + 'static,

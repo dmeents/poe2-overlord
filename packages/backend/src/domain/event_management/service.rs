@@ -1,3 +1,9 @@
+//! Event Management Service Implementation
+//!
+//! This module contains the concrete implementations of the event management service and
+//! channel manager. It provides the core business logic for the publish-subscribe pattern
+//! using Tokio broadcast channels with session tracking and statistics.
+
 use crate::domain::event_management::models::{
     EventChannel, EventChannelConfig, EventManagementSession, EventManagementStats, EventPayload,
     EventSubscription, EventType,
@@ -13,15 +19,28 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 
+/// Main implementation of the event management service
+///
+/// This service manages event channels, subscriptions, and sessions using in-memory storage
+/// with optional persistence through repository interfaces. It provides thread-safe operations
+/// using RwLock for concurrent access.
 pub struct EventManagementServiceImpl {
+    /// In-memory storage for active event channels
     channels: Arc<RwLock<HashMap<EventType, Arc<EventChannel>>>>,
+    /// In-memory storage for active subscriptions
     subscriptions: Arc<RwLock<HashMap<String, EventSubscription>>>,
+    /// Repository for persisting session data
     session_repository: Arc<dyn EventManagementSessionRepository>,
+    /// Repository for persisting statistics data
     stats_repository: Arc<dyn EventManagementStatsRepository>,
+    /// Current active session, if any
     current_session: Arc<RwLock<Option<EventManagementSession>>>,
 }
 
 impl EventManagementServiceImpl {
+    /// Creates a new event management service instance
+    ///
+    /// Initializes the service with empty in-memory storage and the provided repository dependencies.
     pub fn new(
         session_repository: Arc<dyn EventManagementSessionRepository>,
         stats_repository: Arc<dyn EventManagementStatsRepository>,
@@ -38,6 +57,11 @@ impl EventManagementServiceImpl {
         }
     }
 
+    /// Gets an existing channel or creates a new one if it doesn't exist
+    ///
+    /// This method implements lazy channel creation - channels are only created when first needed.
+    /// This approach conserves resources and ensures channels are only created for event types
+    /// that are actually used.
     async fn get_or_create_channel(&self, event_type: EventType) -> AppResult<Arc<EventChannel>> {
         let mut channels = self.channels.write().await;
 
@@ -55,6 +79,9 @@ impl EventManagementServiceImpl {
         Ok(channel)
     }
 
+    /// Starts a new event management session for tracking metrics
+    ///
+    /// Creates a new session, persists it to storage, and sets it as the current active session.
     async fn start_management_session(&self) -> AppResult<()> {
         let session = EventManagementSession::new();
         self.session_repository.save_session(&session).await?;
@@ -66,6 +93,10 @@ impl EventManagementServiceImpl {
         Ok(())
     }
 
+    /// Ends the current session and updates aggregate statistics
+    ///
+    /// Finalizes the current session, updates the session in storage, and rolls up the
+    /// session metrics into the overall system statistics.
     async fn end_management_session(&self) -> AppResult<()> {
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.end_session();
@@ -92,14 +123,16 @@ impl EventManagementService for EventManagementServiceImpl {
         let event_type = event.get_event_type();
         let channel = self.get_or_create_channel(event_type.clone()).await?;
 
+        // Send the event to all subscribers of this channel
         if let Err(e) = channel.sender.send(event.clone()) {
             error!("Failed to send event: {}", e);
-              return Err(crate::errors::AppError::event_emission_error("send_event", &format!(
-                "Failed to send event: {}",
-                e
-            )));
+            return Err(crate::errors::AppError::event_emission_error(
+                "send_event",
+                &format!("Failed to send event: {}", e),
+            ));
         }
 
+        // Update session metrics if there's an active session
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.increment_published_events();
             self.session_repository.update_session(&session).await?;
@@ -108,6 +141,7 @@ impl EventManagementService for EventManagementServiceImpl {
             *current_session = Some(session);
         }
 
+        // Update global statistics
         self.stats_repository.increment_published_events().await?;
 
         debug!("Published event of type: {:?}", event_type);
@@ -121,13 +155,15 @@ impl EventManagementService for EventManagementServiceImpl {
     ) -> AppResult<EventSubscription> {
         let channel = self.get_or_create_channel(event_type.clone()).await?;
 
+        // Check if the channel has reached its subscriber capacity
         if channel.is_at_capacity() {
-              return Err(crate::errors::AppError::event_emission_error("create_channel", &format!(
-                "Channel for event type {:?} is at capacity",
-                event_type
-            )));
+            return Err(crate::errors::AppError::event_emission_error(
+                "create_channel",
+                &format!("Channel for event type {:?} is at capacity", event_type),
+            ));
         }
 
+        // Create the subscription and store it
         let subscription = EventSubscription::new(event_type, subscriber_name);
         let subscription_id = subscription.subscription_id.clone();
         let subscription_event_type = subscription.event_type.clone();
@@ -137,6 +173,7 @@ impl EventManagementService for EventManagementServiceImpl {
             .await
             .insert(subscription_id.clone(), subscription.clone());
 
+        // Update session metrics if there's an active session
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.add_subscription(subscription_event_type.clone());
             self.session_repository.update_session(&session).await?;
@@ -159,6 +196,7 @@ impl EventManagementService for EventManagementServiceImpl {
             let event_type = subscription.event_type.clone();
             subscription.deactivate();
 
+            // Update session metrics if there's an active session
             if let Some(mut session) = self.current_session.read().await.clone() {
                 session.remove_subscription(event_type.clone());
                 self.session_repository.update_session(&session).await?;
@@ -179,6 +217,8 @@ impl EventManagementService for EventManagementServiceImpl {
         &self,
         event_type: EventType,
     ) -> Option<broadcast::Receiver<EventPayload>> {
+        // This method needs to be synchronous but uses async operations internally
+        // We use block_in_place to avoid blocking the async runtime
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
                 if let Ok(channel) = self.get_or_create_channel(event_type).await {
@@ -234,6 +274,7 @@ impl EventManagementService for EventManagementServiceImpl {
         event_type: EventType,
         config: EventChannelConfig,
     ) -> AppResult<()> {
+        // TODO: Implement actual channel configuration updates
         debug!(
             "Channel config update requested for {:?}: {:?}",
             event_type, config
@@ -250,11 +291,18 @@ impl EventManagementService for EventManagementServiceImpl {
     }
 }
 
+/// Simple implementation of the event channel manager
+///
+/// This is a basic implementation that manages event channels in memory without
+/// persistence. It's useful for testing or simple use cases where persistence
+/// is not required.
 pub struct SimpleEventChannelManager {
+    /// In-memory storage for event channels
     channels: Arc<RwLock<HashMap<EventType, Arc<EventChannel>>>>,
 }
 
 impl SimpleEventChannelManager {
+    /// Creates a new simple event channel manager
     pub fn new() -> Self {
         Self {
             channels: Arc::new(RwLock::new(HashMap::new())),
@@ -293,6 +341,7 @@ impl EventChannelManager for SimpleEventChannelManager {
         event_type: EventType,
         config: EventChannelConfig,
     ) -> AppResult<()> {
+        // TODO: Implement actual channel configuration updates
         debug!(
             "Channel config update requested for {:?}: {:?}",
             event_type, config
@@ -308,8 +357,8 @@ impl EventChannelManager for SimpleEventChannelManager {
             let stats = crate::domain::event_management::traits::ChannelStats {
                 event_type,
                 subscriber_count: channel.get_subscriber_count(),
-                messages_sent: 0,     // Would need to track this
-                messages_received: 0, // Would need to track this
+                messages_sent: 0,     // TODO: Would need to track this
+                messages_received: 0, // TODO: Would need to track this
                 created_at: channel.created_at,
                 last_activity: chrono::Utc::now(),
             };

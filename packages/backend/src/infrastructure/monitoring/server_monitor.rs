@@ -1,8 +1,8 @@
-use crate::errors::{AppError, AppResult};
 use crate::domain::log_analysis::models::ServerConnectionEvent;
-use crate::infrastructure::tauri::EventDispatcher;
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::server_monitoring::traits::ServerMonitoringService;
+use crate::errors::{AppError, AppResult};
+use crate::infrastructure::tauri::EventDispatcher;
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::path::PathBuf;
@@ -13,9 +13,17 @@ use tokio::net::TcpStream;
 use tokio::sync::RwLock;
 use tokio::time::timeout;
 
+/// Monitors server connectivity and maintains server status information
+///
+/// Handles server discovery from log events, persistent status storage,
+/// periodic ping monitoring, and real-time connectivity testing.
+/// Integrates with the event system to broadcast status changes.
 pub struct ServerMonitor {
+    /// Current server status with thread-safe access
     status: Arc<RwLock<Option<ServerStatus>>>,
+    /// Path to persistent status storage file
     status_file_path: PathBuf,
+    /// Event broadcaster for status change notifications
     event_broadcaster: Arc<EventDispatcher>,
 }
 
@@ -31,6 +39,10 @@ impl ServerMonitor {
         }
     }
 
+    /// Constructs the path for persistent server status storage
+    ///
+    /// Uses the system config directory with a fallback to current directory.
+    /// Creates a dedicated subdirectory for the application's data.
     fn get_status_file_path() -> PathBuf {
         let mut path = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("poe2-overlord");
@@ -46,10 +58,13 @@ impl ServerMonitor {
 
         let contents = fs::read_to_string(&self.status_file_path)
             .await
-            .map_err(|e| AppError::file_system_error("Failed to read status file: {}", &e.to_string()))?;
+            .map_err(|e| {
+                AppError::file_system_error("Failed to read status file: {}", &e.to_string())
+            })?;
 
-        let loaded_status: ServerStatus = serde_json::from_str(&contents)
-            .map_err(|e| AppError::serialization_error("Failed to parse status file: {}", &e.to_string()))?;
+        let loaded_status: ServerStatus = serde_json::from_str(&contents).map_err(|e| {
+            AppError::serialization_error("Failed to parse status file: {}", &e.to_string())
+        })?;
 
         let mut status = self.status.write().await;
         *status = Some(loaded_status.clone());
@@ -92,6 +107,11 @@ impl ServerMonitor {
         status.as_ref().map(|s| (s.ip_address.clone(), s.port))
     }
 
+    /// Performs a TCP connection test to measure server latency
+    ///
+    /// Attempts to establish a TCP connection to the server and measures
+    /// the round-trip time. Returns the latency in milliseconds or an error
+    /// if the connection fails or times out.
     async fn ping_server_internal(
         ip: &str,
         port: u16,
@@ -164,22 +184,28 @@ impl ServerMonitor {
 
     async fn save_status_to_file(&self, status: &ServerStatus) -> AppResult<()> {
         if let Some(parent) = self.status_file_path.parent() {
-            fs::create_dir_all(parent)
-                .await
-                .map_err(|e| AppError::file_system_error("Failed to create directory: {}", &e.to_string()))?;
+            fs::create_dir_all(parent).await.map_err(|e| {
+                AppError::file_system_error("Failed to create directory: {}", &e.to_string())
+            })?;
         }
 
-        let json = serde_json::to_string_pretty(status)
-            .map_err(|e| AppError::serialization_error("Failed to serialize status: {}", &e.to_string()))?;
+        let json = serde_json::to_string_pretty(status).map_err(|e| {
+            AppError::serialization_error("Failed to serialize status: {}", &e.to_string())
+        })?;
 
-        fs::write(&self.status_file_path, json)
-            .await
-            .map_err(|e| AppError::file_system_error("Failed to write status file: {}", &e.to_string()))?;
+        fs::write(&self.status_file_path, json).await.map_err(|e| {
+            AppError::file_system_error("Failed to write status file: {}", &e.to_string())
+        })?;
 
         debug!("Server status saved to file");
         Ok(())
     }
 
+    /// Starts a background task for periodic server ping monitoring
+    ///
+    /// Spawns an async task that pings the server every 30 seconds.
+    /// Updates status, saves to file, and broadcasts events on each ping.
+    /// The task runs indefinitely until the application shuts down.
     pub async fn start_periodic_ping(&self) {
         let server_manager = Arc::clone(&self.status);
         let event_broadcaster = Arc::clone(&self.event_broadcaster);
@@ -205,6 +231,7 @@ impl ServerMonitor {
                         Err(_) => (false, None),
                     };
 
+                    // Update status with ping results
                     let mut status = server_manager.write().await;
                     if let Some(ref mut s) = *status {
                         s.is_online = is_online;
@@ -214,6 +241,7 @@ impl ServerMonitor {
                     let status_to_save = status.clone();
                     drop(status);
 
+                    // Persist status to file
                     if let Some(ref status) = status_to_save {
                         if let Some(parent) = status_file_path.parent() {
                             if let Err(e) = fs::create_dir_all(parent).await {
@@ -230,6 +258,7 @@ impl ServerMonitor {
                         }
                     }
 
+                    // Broadcast ping event to subscribers
                     let ping_event = ServerStatus {
                         ip_address: ip,
                         port,
@@ -292,7 +321,9 @@ impl ServerMonitoringService for ServerMonitor {
         false
     }
 
-    async fn get_server_info(&self) -> Option<crate::domain::server_monitoring::models::ServerInfo> {
+    async fn get_server_info(
+        &self,
+    ) -> Option<crate::domain::server_monitoring::models::ServerInfo> {
         if let Some(status) = self.get_server_status().await {
             Some(crate::domain::server_monitoring::models::ServerInfo::new(
                 status.ip_address,
@@ -308,7 +339,9 @@ impl ServerMonitoringService for ServerMonitor {
         self.update_status(new_status).await
     }
 
-    async fn get_monitoring_stats(&self) -> AppResult<crate::domain::server_monitoring::models::ServerMonitoringStats> {
+    async fn get_monitoring_stats(
+        &self,
+    ) -> AppResult<crate::domain::server_monitoring::models::ServerMonitoringStats> {
         Ok(crate::domain::server_monitoring::models::ServerMonitoringStats::default())
     }
 
@@ -316,7 +349,10 @@ impl ServerMonitoringService for ServerMonitor {
         crate::domain::server_monitoring::models::ServerMonitoringConfig::default()
     }
 
-    async fn update_config(&self, _config: crate::domain::server_monitoring::models::ServerMonitoringConfig) -> AppResult<()> {
+    async fn update_config(
+        &self,
+        _config: crate::domain::server_monitoring::models::ServerMonitoringConfig,
+    ) -> AppResult<()> {
         Ok(())
     }
 

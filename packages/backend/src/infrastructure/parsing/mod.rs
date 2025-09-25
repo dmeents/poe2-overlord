@@ -1,3 +1,9 @@
+//! Log parsing infrastructure for analyzing POE2 game logs
+//! 
+//! Provides comprehensive log parsing capabilities including pattern matching,
+//! event extraction, and real-time log monitoring. Handles various game events
+//! such as scene changes, server connections, character progression, and deaths.
+
 pub mod config;
 pub mod errors;
 pub mod extraction;

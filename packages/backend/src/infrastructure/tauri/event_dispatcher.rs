@@ -3,6 +3,10 @@ use crate::domain::log_analysis::models::LogEvent;
 use log::debug;
 use tokio::sync::broadcast;
 
+/// Trait for event service operations
+/// 
+/// Defines the interface for subscribing to and broadcasting different types of events
+/// within the application's event system.
 pub trait EventService: Send + Sync {
     fn subscribe_to_log_events(&self) -> broadcast::Receiver<LogEvent>;
     fn subscribe_to_ping_events(&self) -> broadcast::Receiver<ServerStatus>;
@@ -16,8 +20,14 @@ pub trait EventService: Send + Sync {
     ) -> Result<(), broadcast::error::SendError<ServerStatus>>;
 }
 
+/// Central event dispatcher for managing application-wide event broadcasting
+/// 
+/// Provides a unified interface for broadcasting and subscribing to different types
+/// of events. Uses Tokio's broadcast channels for efficient multi-consumer event distribution.
 pub struct EventDispatcher {
+    /// Sender for log-related events (scene changes, character events, etc.)
     pub unified_event_sender: broadcast::Sender<LogEvent>,
+    /// Sender for server ping/connectivity events
     pub ping_event_sender: broadcast::Sender<ServerStatus>,
 }
 
@@ -40,6 +50,10 @@ impl EventDispatcher {
         self.ping_event_sender.subscribe()
     }
 
+    /// Broadcasts a log event to all subscribers
+    /// 
+    /// Sends the event to all active subscribers and logs the result.
+    /// Returns an error if there are no subscribers to receive the event.
     pub fn broadcast_event(
         &self,
         event: LogEvent,

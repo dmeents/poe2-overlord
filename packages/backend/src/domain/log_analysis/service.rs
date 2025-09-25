@@ -15,27 +15,40 @@ use crate::infrastructure::parsing::LogParserManager;
 use crate::infrastructure::tauri::EventPublisher;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{broadcast, RwLock};
 use tokio::time;
 
+/// Main implementation of the log analysis service
+/// Handles monitoring game log files, parsing events, and coordinating with other services
 pub struct LogAnalysisServiceImpl {
+    /// Configuration for log analysis operations
     config: Arc<RwLock<LogAnalysisConfig>>,
+    /// Repository for file system operations on log files
     log_file_repository: Arc<dyn LogFileRepository>,
+    /// Repository for managing log analysis sessions
     session_repository: Arc<dyn LogAnalysisSessionRepository>,
+    /// Repository for managing log analysis statistics
     stats_repository: Arc<dyn LogAnalysisStatsRepository>,
+    /// Publisher for broadcasting log events to subscribers
     event_publisher: Arc<EventPublisher>,
+    /// Manager for parsing log lines and extracting events
     parser_manager: LogParserManager,
+    /// Service for character-related operations
     character_service: Arc<dyn CharacterServiceTrait>,
+    /// Service for server monitoring operations
     server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
+    /// Flag indicating whether log monitoring is currently active
     is_running: Arc<RwLock<bool>>,
+    /// The currently active log analysis session
     current_session: Arc<RwLock<Option<LogAnalysisSession>>>,
+    /// Last position read in the log file (for incremental reading)
     last_position: Arc<RwLock<u64>>,
 }
 
 impl LogAnalysisServiceImpl {
+    /// Creates a new LogAnalysisServiceImpl with default repositories
     pub fn new(
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterServiceTrait>,
@@ -45,22 +58,8 @@ impl LogAnalysisServiceImpl {
         let config = Arc::new(RwLock::new(config));
         let log_file_repository = Arc::new(LogFileRepositoryImpl::new(String::new()));
 
-        let sessions_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("poe2-overlord")
-            .join("sessions")
-            .to_string_lossy()
-            .to_string();
-
-        let stats_file_path = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("poe2-overlord")
-            .join("log_analysis_stats.json")
-            .to_string_lossy()
-            .to_string();
-
-        let session_repository = Arc::new(LogAnalysisSessionRepositoryImpl::new(sessions_dir));
-        let stats_repository = Arc::new(LogAnalysisStatsRepositoryImpl::new(stats_file_path));
+        let session_repository = Arc::new(LogAnalysisSessionRepositoryImpl::new()?);
+        let stats_repository = Arc::new(LogAnalysisStatsRepositoryImpl::new()?);
         let parser_manager = LogParserManager::new();
 
         Ok(Self {
@@ -78,6 +77,7 @@ impl LogAnalysisServiceImpl {
         })
     }
 
+    /// Creates a new LogAnalysisServiceImpl with custom repositories (for testing)
     pub fn with_repositories(
         config: LogAnalysisConfig,
         log_file_repository: Arc<dyn LogFileRepository>,
@@ -105,6 +105,7 @@ impl LogAnalysisServiceImpl {
         }
     }
 
+    /// Starts the main monitoring loop for log file analysis
     async fn start_monitoring_loop(&self) -> AppResult<()> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
@@ -117,12 +118,14 @@ impl LogAnalysisServiceImpl {
             ));
         }
 
+        // Initialize the last position to the current file size
         let file_size = self.log_file_repository.get_file_size(&log_path).await?;
         {
             let mut last_pos = self.last_position.write().await;
             *last_pos = file_size;
         }
 
+        // Create and save a new analysis session
         let session = LogAnalysisSession::new();
         {
             let mut current_session = self.current_session.write().await;
@@ -138,12 +141,14 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
+    /// Creates and spawns the background monitoring task
     async fn create_monitoring_task(&self) -> AppResult<()> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
         let interval_ms = config.monitoring_interval_ms;
         drop(config);
 
+        // Clone all necessary dependencies for the spawned task
         let log_file_repository = Arc::clone(&self.log_file_repository);
         let event_publisher = Arc::clone(&self.event_publisher);
         let parser_manager = self.parser_manager.clone();
@@ -161,15 +166,18 @@ impl LogAnalysisServiceImpl {
             loop {
                 interval.tick().await;
 
+                // Check if monitoring should continue
                 if !*is_running.read().await {
                     debug!("Log monitoring stopped, exiting monitor loop");
                     break;
                 }
 
+                // Check for new content in the log file
                 match log_file_repository.get_file_size(&log_path).await {
                     Ok(current_size) => {
                         let last_pos = *last_position.read().await;
                         if current_size > last_pos {
+                            // New content detected, process it
                             if let Err(e) = Self::process_new_lines(
                                 &log_path,
                                 &log_file_repository,
@@ -188,6 +196,7 @@ impl LogAnalysisServiceImpl {
                                 error!("Failed to process new log lines: {}", e);
                             }
                         } else if current_size < last_pos {
+                            // File was truncated, reset position
                             warn!("Log file was truncated, resetting position");
                             let mut pos = last_position.write().await;
                             *pos = current_size;
@@ -203,6 +212,7 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
+    /// Processes new lines that have been added to the log file
     async fn process_new_lines(
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
@@ -216,6 +226,7 @@ impl LogAnalysisServiceImpl {
         stats_repository: &Arc<dyn LogAnalysisStatsRepository>,
         start_position: u64,
     ) -> AppResult<()> {
+        // Read new lines from the last known position
         let new_lines = log_file_repository
             .read_from_position(log_path, start_position)
             .await?;
@@ -224,6 +235,7 @@ impl LogAnalysisServiceImpl {
             return Ok(());
         }
 
+        // Process each new line
         for line in &new_lines {
             if let Err(e) = Self::process_single_line(
                 &line,
@@ -240,12 +252,14 @@ impl LogAnalysisServiceImpl {
             }
         }
 
+        // Update the last position to the current file size
         let current_size = log_file_repository.get_file_size(log_path).await?;
         {
             let mut pos = last_position.write().await;
             *pos = current_size;
         }
 
+        // Update the current session with the number of lines processed
         if let Some(mut session) = current_session.read().await.clone() {
             session.events_processed += new_lines.len() as u64;
             session.last_position = current_size;
@@ -258,6 +272,7 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
+    /// Processes a single log line and handles any detected events
     async fn process_single_line(
         line: &str,
         parser_manager: &LogParserManager,
@@ -267,9 +282,11 @@ impl LogAnalysisServiceImpl {
         _current_session: &Arc<RwLock<Option<LogAnalysisSession>>>,
         stats_repository: &Arc<dyn LogAnalysisStatsRepository>,
     ) -> AppResult<()> {
+        // Try to parse the line for known events
         if let Ok(Some(result)) = parser_manager.parse_line(line) {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
+                    // Handle zone change events
                     let event = LogEvent::SceneChange(
                         crate::domain::log_analysis::models::SceneChangeEvent::Zone(
                             crate::domain::log_analysis::models::ZoneChangeEvent {
@@ -287,6 +304,7 @@ impl LogAnalysisServiceImpl {
                         .await?;
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
+                    // Handle server connection events
                     let server_status = crate::domain::server_monitoring::models::ServerStatus::from_connection_event(&event);
                     server_monitoring_service
                         .update_status(server_status)
@@ -306,6 +324,7 @@ impl LogAnalysisServiceImpl {
                     character_class,
                     new_level,
                 )) => {
+                    // Handle character level up events
                     if let Some(active_character) = character_service.get_active_character().await {
                         if active_character.name == character_name
                             && active_character.class == character_class
@@ -334,6 +353,7 @@ impl LogAnalysisServiceImpl {
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterDeath(character_name) => {
+                    // Handle character death events
                     if let Some(active_character) = character_service.get_active_character().await {
                         if active_character.name == character_name {
                             character_service
@@ -366,6 +386,7 @@ impl LogAnalysisServiceImpl {
 
 #[async_trait]
 impl LogAnalysisService for LogAnalysisServiceImpl {
+    /// Starts monitoring the configured log file for new events
     async fn start_monitoring(&self) -> AppResult<()> {
         let mut is_running = self.is_running.write().await;
         if *is_running {
@@ -379,6 +400,7 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         self.start_monitoring_loop().await
     }
 
+    /// Stops the current log monitoring session
     async fn stop_monitoring(&self) -> AppResult<()> {
         let mut is_running = self.is_running.write().await;
         if !*is_running {
@@ -388,6 +410,7 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
 
         *is_running = false;
 
+        // End the current session if it exists
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.end_session();
             self.session_repository.update_session(&session).await?;
@@ -399,10 +422,12 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         Ok(())
     }
 
+    /// Returns whether log monitoring is currently active
     async fn is_monitoring(&self) -> bool {
         *self.is_running.read().await
     }
 
+    /// Gets information about the currently monitored log file
     async fn get_log_file_info(&self) -> AppResult<LogFileInfo> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
@@ -418,6 +443,7 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         self.log_file_repository.get_file_info(&log_path).await
     }
 
+    /// Reads a specified number of lines from the log file starting at a given line
     async fn read_log_lines(&self, start_line: usize, count: usize) -> AppResult<Vec<String>> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
@@ -435,14 +461,17 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
             .await
     }
 
+    /// Gets current statistics about log analysis activity
     async fn get_analysis_stats(&self) -> AppResult<LogAnalysisStats> {
         self.stats_repository.load_stats().await
     }
 
+    /// Subscribes to log events broadcast by the service
     fn subscribe_to_events(&self) -> broadcast::Receiver<LogEvent> {
         self.event_publisher.subscribe_to_log_events()
     }
 
+    /// Updates the path to the log file being monitored
     async fn update_log_path(&self, new_path: String) -> AppResult<()> {
         let mut config = self.config.write().await;
         config.log_file_path = new_path;
@@ -450,10 +479,12 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         Ok(())
     }
 
+    /// Gets the current log analysis configuration
     async fn get_config(&self) -> LogAnalysisConfig {
         self.config.read().await.clone()
     }
 
+    /// Updates the log analysis configuration
     async fn update_config(&self, new_config: LogAnalysisConfig) -> AppResult<()> {
         let mut config = self.config.write().await;
         *config = new_config;

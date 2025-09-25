@@ -1,3 +1,9 @@
+//! Tauri integration infrastructure for frontend communication
+//! 
+//! Provides utilities for event dispatching, command handling, and communication
+//! between the Rust backend and the frontend application. Handles real-time
+//! event broadcasting and Tauri-specific operations.
+
 pub mod command_utils;
 pub mod event_dispatcher;
 pub mod event_publisher;

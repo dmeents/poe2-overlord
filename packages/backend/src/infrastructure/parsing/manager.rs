@@ -5,6 +5,10 @@ use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
 use crate::infrastructure::parsing::patterns::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 use log::debug;
 
+/// Enum representing different types of log parsers
+/// 
+/// Each variant contains a specific parser implementation for handling
+/// different types of game events found in POE2 log files.
 #[derive(Clone)]
 pub enum ParserType {
     SceneChange(SceneChangeParser),
@@ -50,17 +54,27 @@ impl ParserType {
     }
 }
 
+/// Results produced by log parsers
+/// 
+/// Contains the parsed data from different types of log events.
+/// Each variant represents a specific type of game event that was successfully parsed.
 #[derive(Debug)]
 pub enum ParserResult {
-    SceneChange(String), // Now returns raw content instead of SceneChangeEvent
+    SceneChange(String), // Raw scene change content
     ServerConnection(ServerConnectionEvent),
     CharacterLevel((String, CharacterClass, u32)), // (character_name, character_class, level)
     CharacterDeath(String), // character_name
 }
 
+/// Manages a collection of log parsers for processing game log events
+/// 
+/// Coordinates multiple parsers to handle different types of log events.
+/// Provides a unified interface for parsing log lines and extracting game events.
 #[derive(Clone)]
 pub struct LogParserManager {
+    /// Collection of active parsers
     parsers: Vec<ParserType>,
+    /// Configuration for parser behavior
     config: ParsersConfig,
 }
 
@@ -75,6 +89,10 @@ impl LogParserManager {
         Self { parsers, config }
     }
 
+    /// Attempts to parse a log line using all available parsers
+    /// 
+    /// Iterates through all parsers to find one that can handle the log line.
+    /// Returns the first successful parse result or None if no parser matches.
     pub fn parse_line(&self, line: &str) -> Result<Option<ParserResult>, ParseError> {
         for parser in &self.parsers {
             if parser.should_parse(line) {
@@ -88,6 +106,7 @@ impl LogParserManager {
                             result
                         );
 
+                        // Log specific event details for debugging
                         match &result {
                             ParserResult::SceneChange(content) => {
                                 debug!("Scene change content parsed successfully: {}", content);

@@ -8,15 +8,46 @@ use log::{debug, info, warn};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// File name for character data persistence.
+///
+/// This constant defines the JSON file name used to store character data
+/// in the application's configuration directory.
 const CHARACTER_DATA_FILE_NAME: &str = "characters.json";
 
+/// Implementation of the CharacterRepository trait for character data persistence.
+///
+/// This repository uses a combination of in-memory caching with RwLock for thread-safe
+/// concurrent access and file-based persistence for data durability. The architecture
+/// provides fast read operations through in-memory access while ensuring data is
+/// persisted to disk for reliability.
+///
+/// Key features:
+/// - Thread-safe concurrent access using tokio::sync::RwLock
+/// - Automatic data loading on initialization
+/// - Graceful handling of missing or corrupted data files
+/// - Atomic write operations to prevent data corruption
 #[derive(Clone)]
 pub struct CharacterRepositoryImpl {
+    /// In-memory character data protected by a read-write lock for concurrent access
     character_data: Arc<RwLock<CharacterData>>,
+    /// Persistence layer for saving/loading data to/from disk
     persistence: PersistenceRepositoryImpl<CharacterData>,
 }
 
 impl CharacterRepositoryImpl {
+    /// Creates a new CharacterRepositoryImpl instance.
+    ///
+    /// This constructor initializes the repository with:
+    /// - A persistence layer configured to use the character data file
+    /// - An empty in-memory data structure protected by RwLock
+    /// - Automatic loading of existing data from disk (if available)
+    ///
+    /// If data loading fails (e.g., file doesn't exist or is corrupted),
+    /// the repository will start with empty data and log a warning.
+    ///
+    /// # Returns
+    /// * `Ok(CharacterRepositoryImpl)` - Successfully initialized repository
+    /// * `Err(AppError)` - If persistence layer initialization fails
     pub fn new() -> AppResult<Self> {
         let persistence = PersistenceRepositoryImpl::<CharacterData>::new_in_config_dir(
             CHARACTER_DATA_FILE_NAME,
@@ -27,6 +58,7 @@ impl CharacterRepositoryImpl {
             persistence,
         };
 
+        // Attempt to load existing data, but don't fail if it doesn't exist
         if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load()) {
             warn!("Failed to load character data, starting fresh: {}", e);
         }
@@ -37,13 +69,34 @@ impl CharacterRepositoryImpl {
 
 #[async_trait]
 impl CharacterRepository for CharacterRepositoryImpl {
+    /// Saves character data to persistent storage.
+    ///
+    /// This method delegates to the persistence layer to write the data to disk.
+    /// The in-memory cache is not updated here as it should already be in sync.
+    ///
+    /// # Arguments
+    /// * `data` - The character data to save
+    ///
+    /// # Returns
+    /// * `Ok(())` - If save operation succeeds
+    /// * `Err(AppError)` - If save operation fails
     async fn save(&self, data: &CharacterData) -> AppResult<()> {
         self.persistence.save(data).await
     }
 
+    /// Loads character data from persistent storage and updates the in-memory cache.
+    ///
+    /// This method performs a complete data reload from disk, updating both
+    /// the in-memory cache and returning the loaded data. This is useful for
+    /// initialization and potential data refresh scenarios.
+    ///
+    /// # Returns
+    /// * `Ok(CharacterData)` - The loaded character data
+    /// * `Err(AppError)` - If load operation fails
     async fn load(&self) -> AppResult<CharacterData> {
         let data = self.persistence.load().await?;
 
+        // Update the in-memory cache with the loaded data
         {
             let mut character_data = self.character_data.write().await;
             *character_data = data.clone();
@@ -53,6 +106,18 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(data)
     }
 
+    /// Finds a character by its unique identifier.
+    ///
+    /// This method performs a linear search through the in-memory character list.
+    /// The read lock is held for the minimum time necessary to find and clone the character.
+    ///
+    /// # Arguments
+    /// * `id` - The character's unique identifier
+    ///
+    /// # Returns
+    /// * `Ok(Some(Character))` - If character exists
+    /// * `Ok(None)` - If no character with the given ID exists
+    /// * `Err(AppError)` - If lookup operation fails
     async fn find_by_id(&self, id: &str) -> AppResult<Option<Character>> {
         let character_data = self.character_data.read().await;
         let character = character_data
@@ -63,6 +128,15 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(character)
     }
 
+    /// Retrieves the currently active character.
+    ///
+    /// This method first checks if there's an active character ID set, then
+    /// searches for the corresponding character in the character list.
+    ///
+    /// # Returns
+    /// * `Ok(Some(Character))` - The active character if one exists
+    /// * `Ok(None)` - If no character is currently active
+    /// * `Err(AppError)` - If lookup operation fails
     async fn get_active_character(&self) -> AppResult<Option<Character>> {
         let character_data = self.character_data.read().await;
         let character = character_data.active_character_id.as_ref().and_then(|id| {
@@ -75,11 +149,31 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(character)
     }
 
+    /// Retrieves all characters in the system.
+    ///
+    /// This method returns a clone of the entire character list. For large
+    /// character collections, consider implementing pagination or filtering.
+    ///
+    /// # Returns
+    /// * `Ok(Vec<Character>)` - All characters in the system
+    /// * `Err(AppError)` - If retrieval operation fails
     async fn get_all_characters(&self) -> AppResult<Vec<Character>> {
         let character_data = self.character_data.read().await;
         Ok(character_data.characters.clone())
     }
 
+    /// Adds a new character to the repository.
+    ///
+    /// This method adds the character to the in-memory list and immediately
+    /// persists the change to disk. The write lock is held only for the
+    /// minimum time necessary to add the character.
+    ///
+    /// # Arguments
+    /// * `character` - The character to add
+    ///
+    /// # Returns
+    /// * `Ok(())` - If character is added successfully
+    /// * `Err(AppError)` - If add operation fails
     async fn add_character(&self, character: Character) -> AppResult<()> {
         let mut character_data = self.character_data.write().await;
         character_data.characters.push(character);
@@ -87,6 +181,18 @@ impl CharacterRepository for CharacterRepositoryImpl {
         self.save(&self.character_data.read().await.clone()).await
     }
 
+    /// Updates an existing character in the repository.
+    ///
+    /// This method finds the character by ID and replaces it with the updated version.
+    /// The change is immediately persisted to disk. If the character doesn't exist,
+    /// an error is returned.
+    ///
+    /// # Arguments
+    /// * `character` - The character with updated data
+    ///
+    /// # Returns
+    /// * `Ok(())` - If character is updated successfully
+    /// * `Err(AppError)` - If update operation fails or character not found
     async fn update_character(&self, character: Character) -> AppResult<()> {
         let mut character_data = self.character_data.write().await;
 
@@ -106,6 +212,18 @@ impl CharacterRepository for CharacterRepositoryImpl {
         }
     }
 
+    /// Deletes a character from the repository.
+    ///
+    /// This method removes the character from the in-memory list and clears
+    /// the active character ID if the deleted character was active. The change
+    /// is immediately persisted to disk.
+    ///
+    /// # Arguments
+    /// * `id` - The ID of the character to delete
+    ///
+    /// # Returns
+    /// * `Ok(Character)` - The deleted character
+    /// * `Err(AppError)` - If delete operation fails or character not found
     async fn delete_character(&self, id: &str) -> AppResult<Character> {
         let mut character_data = self.character_data.write().await;
 
@@ -122,6 +240,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         let character = character_data.characters.remove(index);
 
+        // Clear active character if the deleted character was active
         if character_data.active_character_id.as_ref() == Some(&id.to_string()) {
             character_data.active_character_id = None;
         }
@@ -132,6 +251,22 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(character)
     }
 
+    /// Sets a character as the active character.
+    ///
+    /// This method ensures only one character can be active at a time by:
+    /// 1. Deactivating all characters
+    /// 2. Activating the specified character
+    /// 3. Updating the last_played timestamp
+    /// 4. Setting the active_character_id
+    ///
+    /// The change is immediately persisted to disk.
+    ///
+    /// # Arguments
+    /// * `id` - The ID of the character to set as active
+    ///
+    /// # Returns
+    /// * `Ok(())` - If operation succeeds
+    /// * `Err(AppError)` - If operation fails or character not found
     async fn set_active_character(&self, id: &str) -> AppResult<()> {
         let mut character_data = self.character_data.write().await;
 
@@ -142,10 +277,12 @@ impl CharacterRepository for CharacterRepositoryImpl {
             ));
         }
 
+        // Deactivate all characters first
         for character in &mut character_data.characters {
             character.is_active = false;
         }
 
+        // Activate the specified character and update last played time
         if let Some(character) = character_data.characters.iter_mut().find(|c| c.id == id) {
             character.is_active = true;
             character.last_played = Some(Utc::now());
@@ -159,6 +296,19 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(())
     }
 
+    /// Ensures that a character name is unique across all characters.
+    ///
+    /// This method checks if the given name is already used by another character.
+    /// When updating an existing character, the exclude_id parameter allows
+    /// the character to keep its current name.
+    ///
+    /// # Arguments
+    /// * `name` - The name to check for uniqueness
+    /// * `exclude_id` - Optional character ID to exclude from the check (for updates)
+    ///
+    /// # Returns
+    /// * `Ok(())` - If name is unique
+    /// * `Err(AppError)` - If name is already taken
     async fn ensure_unique_name(&self, name: &str, exclude_id: Option<&str>) -> AppResult<()> {
         let character_data = self.character_data.read().await;
 
@@ -176,6 +326,18 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(())
     }
 
+    /// Clears all character data from the repository.
+    ///
+    /// This is a destructive operation that:
+    /// 1. Clears the in-memory character list
+    /// 2. Resets the active character ID
+    /// 3. Deletes the persistence file
+    ///
+    /// Use with caution as this operation cannot be undone.
+    ///
+    /// # Returns
+    /// * `Ok(())` - If operation succeeds
+    /// * `Err(AppError)` - If operation fails
     async fn clear_all_characters(&self) -> AppResult<()> {
         {
             let mut character_data = self.character_data.write().await;
@@ -189,6 +351,15 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(())
     }
 
+    /// Checks if this would be the first character in the system.
+    ///
+    /// This method is used to determine if a newly created character should
+    /// automatically be set as active (first character behavior).
+    ///
+    /// # Returns
+    /// * `Ok(true)` - If no characters exist
+    /// * `Ok(false)` - If at least one character exists
+    /// * `Err(AppError)` - If check operation fails
     async fn is_first_character(&self) -> AppResult<bool> {
         let character_data = self.character_data.read().await;
         Ok(character_data.characters.is_empty())

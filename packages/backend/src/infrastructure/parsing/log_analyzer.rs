@@ -15,12 +15,23 @@ use std::time::Duration;
 use tokio::sync::broadcast;
 use tokio::time;
 
+/// Real-time log file analyzer for POE2 game events
+/// 
+/// Monitors the game's log file for new content and parses it to extract
+/// various game events such as scene changes, server connections, character
+/// progression, and deaths. Broadcasts events to subscribers for further processing.
 pub struct LogAnalyzer {
+    /// Path to the POE2 client log file
     log_path: String,
+    /// Event broadcaster for notifying subscribers of parsed events
     event_broadcaster: Arc<EventDispatcher>,
+    /// Server monitoring service for handling connection events
     server_manager: Arc<ServerMonitor>,
+    /// Character service for updating character data
     character_service: Arc<dyn CharacterService>,
+    /// Parser manager for processing log lines
     parser_manager: LogParserManager,
+    /// Flag indicating whether monitoring is currently active
     is_running: Arc<tokio::sync::RwLock<bool>>,
 }
 
@@ -122,6 +133,10 @@ impl LogAnalyzer {
         Ok(lines)
     }
 
+    /// Starts the main monitoring loop in a background task
+    /// 
+    /// Continuously monitors the log file for new content and processes it.
+    /// Uses a 500ms polling interval to balance responsiveness with performance.
     async fn start_monitoring_loop(&self) {
         let log_path = self.log_path.clone();
         let event_broadcaster = Arc::clone(&self.event_broadcaster);
@@ -137,6 +152,7 @@ impl LogAnalyzer {
             loop {
                 interval.tick().await;
 
+                // Check if monitoring should continue
                 {
                     let running = is_running.read().await;
                     if !*running {
@@ -145,11 +161,13 @@ impl LogAnalyzer {
                     }
                 }
 
+                // Wait for log file to exist
                 if !Path::new(&log_path).exists() {
                     debug!("Log file does not exist yet: {}", log_path);
                     continue;
                 }
 
+                // Get current file size
                 let current_size = match fs::metadata(&log_path) {
                     Ok(metadata) => metadata.len(),
                     Err(e) => {
@@ -158,15 +176,18 @@ impl LogAnalyzer {
                     }
                 };
 
+                // Skip if no new content
                 if current_size <= last_position {
                     continue;
                 }
 
+                // Read and process new content
                 match Self::read_new_content(&log_path, last_position, current_size).await {
                     Ok(new_content) => {
                         if !new_content.is_empty() {
                             debug!("Read {} bytes of new content", new_content.len());
 
+                            // Parse each line of new content
                             for line in new_content.lines() {
                                 match parser_manager.parse_line(line) {
                                     Ok(Some(parser_result)) => {
@@ -178,8 +199,8 @@ impl LogAnalyzer {
                                         )
                                         .await;
                                     }
-                                    Ok(None) => {}
-                                    Err(_) => {}
+                                    Ok(None) => {} // No parser matched this line
+                                    Err(_) => {} // Parser error, skip line
                                 }
                             }
                         }
@@ -217,6 +238,10 @@ impl LogAnalyzer {
         })
     }
 
+    /// Handles parsed results and triggers appropriate actions
+    /// 
+    /// Processes different types of parsed events and updates relevant services
+    /// while broadcasting events to subscribers for further processing.
     async fn handle_parser_result(
         parser_result: ParserResult,
         event_broadcaster: &Arc<EventDispatcher>,
@@ -227,6 +252,7 @@ impl LogAnalyzer {
             ParserResult::SceneChange(scene_content) => {
                 debug!("Scene change detected: {}", scene_content);
 
+                // Create zone change event and broadcast it
                 let zone_change_event = crate::domain::log_analysis::models::ZoneChangeEvent {
                     zone_name: scene_content,
                     timestamp: chrono::Utc::now().to_rfc3339(),
@@ -242,10 +268,12 @@ impl LogAnalyzer {
             ParserResult::ServerConnection(connection_event) => {
                 debug!("Server connection detected: {:?}", connection_event);
 
+                // Update server monitoring with new connection info
                 if let Err(e) = server_manager.update_server_info(&connection_event).await {
                     error!("Failed to update server info: {}", e);
                 }
 
+                // Broadcast server connection event
                 let log_event = LogEvent::ServerConnection(connection_event);
                 if let Err(e) = event_broadcaster.broadcast_event(log_event) {
                     error!("Failed to broadcast server connection event: {}", e);
@@ -257,6 +285,7 @@ impl LogAnalyzer {
                     character_name, character_class, level
                 );
 
+                // Update character service with new level
                 if let Err(e) = character_service
                     .update_character_level(&character_name, level)
                     .await
@@ -264,6 +293,7 @@ impl LogAnalyzer {
                     error!("Failed to update character level: {}", e);
                 }
 
+                // Create and broadcast level up event
                 let level_up_event = crate::domain::log_analysis::models::CharacterLevelUpEvent {
                     character_name,
                     character_class: character_class.to_string(),
@@ -279,6 +309,7 @@ impl LogAnalyzer {
             ParserResult::CharacterDeath(character_name) => {
                 debug!("Character death detected: {}", character_name);
 
+                // Create and broadcast death event
                 let death_event = crate::domain::log_analysis::models::CharacterDeathEvent {
                     character_name,
                     timestamp: chrono::Utc::now().to_rfc3339(),

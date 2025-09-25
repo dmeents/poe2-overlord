@@ -263,7 +263,7 @@ impl TimeTrackingSummary {
 }
 
 /// Character-specific time tracking data structure for persistence
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CharacterTimeTrackingData {
     /// Character ID
     pub character_id: String,

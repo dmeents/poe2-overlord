@@ -1,4 +1,4 @@
-pub mod game_monitoring_handler;
+pub mod event_publisher;
 
 // Re-export main types for easy access
-pub use game_monitoring_handler::{GameMonitoringHandler, TauriGameMonitoringEventPublisher};
+pub use event_publisher::TauriGameMonitoringEventPublisher;

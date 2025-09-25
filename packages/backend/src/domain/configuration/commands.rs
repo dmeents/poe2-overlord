@@ -1,37 +1,16 @@
-use crate::application::services::GameMonitoringApplicationService;
 use crate::commands::{to_command_result, CommandResult};
 use crate::domain::configuration::models::{
     AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
 };
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
+// ProcessDetector import removed - no longer needed for Tauri commands
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::State;
 
-/// Check game process status using the new domain-oriented architecture
-#[tauri::command]
-pub async fn check_game_process(
-    game_monitoring_service: State<'_, std::sync::Arc<GameMonitoringApplicationService>>,
-) -> CommandResult<crate::models::ProcessInfo> {
-    to_command_result(
-        game_monitoring_service
-            .check_process_status()
-            .await
-            .map(|status| crate::models::ProcessInfo {
-                name: status.name,
-                pid: status.pid,
-                running: status.running,
-            })
-            .map_err(|e| {
-                error!("Failed to check game process: {}", e);
-                crate::errors::AppError::process_monitor_error(&format!(
-                    "Failed to check game process: {}",
-                    e
-                ))
-            }),
-    )
-}
+// Note: check_game_process command removed
+// Frontend listens to game-monitoring events instead of polling for status
 
 /// Get the current application configuration
 #[tauri::command]

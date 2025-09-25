@@ -1,20 +1,14 @@
-use crate::application::services::GameMonitoringApplicationService;
 use crate::domain::character::service::CharacterService;
 use crate::domain::configuration::service::ConfigurationServiceImpl;
-use crate::domain::game_monitoring::GameMonitoringServiceImpl;
-use crate::domain::time_tracking::{
-    service::TimeTrackingServiceImpl,
-    traits::TimeTrackingService,
-};
+use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
+use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
 use crate::infrastructure::{
-    monitoring::ProcessMonitorImpl,
-    tauri::TauriGameMonitoringEventPublisher,
+    monitoring::ProcessMonitorImpl, tauri::TauriGameMonitoringEventPublisher,
 };
 use crate::services::{
-    event_dispatcher::EventDispatcher,
-    log_analyzer::LogAnalyzer, server_monitor::ServerMonitor,
+    event_dispatcher::EventDispatcher, log_analyzer::LogAnalyzer, server_monitor::ServerMonitor,
 };
-use log::{debug, info};
+use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::Manager;
 
@@ -28,7 +22,9 @@ impl ServiceInitializer {
 
         // Initialize configuration service
         debug!("Initializing ConfigurationService...");
-        let config_service = Arc::new(ConfigurationServiceImpl::new().expect("Failed to create configuration service"));
+        let config_service = Arc::new(
+            ConfigurationServiceImpl::new().expect("Failed to create configuration service"),
+        );
         app.manage(config_service.clone());
         debug!("ConfigurationService managed successfully");
 
@@ -40,17 +36,22 @@ impl ServiceInitializer {
 
         // Initialize character service
         debug!("Initializing CharacterService...");
-        let character_service = CharacterService::new();
+        let character_service = CharacterService::new().map_err(|e| {
+            error!("Failed to initialize CharacterService: {}", e);
+            e
+        })?;
         let character_arc = Arc::new(character_service);
         app.manage(character_arc.clone());
         debug!("CharacterService managed successfully");
 
         // Initialize time tracking service
         debug!("Initializing TimeTrackingService...");
-        let time_tracking_service = Arc::new(TimeTrackingServiceImpl::with_character_service(
-            Some(character_arc.clone()),
-        )) as Arc<dyn TimeTrackingService>;
-        app.manage(time_tracking_service.clone());
+        let time_tracking_service = TimeTrackingServiceImpl::new().map_err(|e| {
+            error!("Failed to initialize TimeTrackingService: {}", e);
+            e
+        })?;
+        let time_tracking_arc = Arc::new(time_tracking_service) as Arc<dyn TimeTrackingService>;
+        app.manage(time_tracking_arc.clone());
         debug!("TimeTrackingService managed successfully");
 
         // Note: SessionTracker removed in favor of CharacterSessionTracker
@@ -65,39 +66,36 @@ impl ServiceInitializer {
         // Initialize log analyzer
         debug!("Initializing LogAnalyzer...");
         // We'll get the log path asynchronously when needed
-        let log_monitor_service =
-            LogAnalyzer::new("".to_string(), server_status_arc.clone(), character_arc.clone());
+        let log_monitor_service = LogAnalyzer::new(
+            "".to_string(),
+            server_status_arc.clone(),
+            character_arc.clone(),
+        );
         let log_monitor_arc = Arc::new(log_monitor_service);
         app.manage(log_monitor_arc.clone());
         debug!("LogAnalyzer managed successfully");
 
         // Initialize game monitoring services
         debug!("Initializing Game Monitoring services...");
-        
+
         // Create infrastructure services
         let process_detector = Arc::new(ProcessMonitorImpl::new());
-        
+
         // Create event publisher (will be properly initialized when we have the window)
         let event_publisher = Arc::new(TauriGameMonitoringEventPublisher::new(
-            app.get_webview_window("main").unwrap_or_else(|| {
-                panic!("Main window not found during service initialization")
-            })
+            app.get_webview_window("main")
+                .unwrap_or_else(|| panic!("Main window not found during service initialization")),
         ));
-        
+
         // Create domain service
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
-            time_tracking_service.clone(),
+            time_tracking_arc.clone(),
             event_publisher.clone(),
             process_detector.clone(),
         ));
-        
-        // Create application service
-        let game_monitoring_app_service = Arc::new(GameMonitoringApplicationService::new(
-            game_monitoring_service.clone(),
-            process_detector.clone(),
-        ));
-        
-        app.manage(game_monitoring_app_service.clone());
+
+        // Manage the domain service (process detector is used internally only)
+        app.manage(game_monitoring_service.clone());
         debug!("Game Monitoring services managed successfully");
 
         info!("Service initialization completed successfully");
@@ -106,10 +104,10 @@ impl ServiceInitializer {
             config_service,
             event_broadcaster,
             character_service: character_arc,
-            time_tracking_service,
+            time_tracking_service: time_tracking_arc,
             log_monitor: log_monitor_arc,
             server_status: server_status_arc,
-            game_monitoring_app_service,
+            game_monitoring_service,
         })
     }
 }
@@ -122,5 +120,5 @@ pub struct ServiceInstances {
     pub time_tracking_service: Arc<dyn TimeTrackingService>,
     pub log_monitor: Arc<LogAnalyzer>,
     pub server_status: Arc<ServerMonitor>,
-    pub game_monitoring_app_service: Arc<GameMonitoringApplicationService>,
+    pub game_monitoring_service: Arc<dyn GameMonitoringService>,
 }

@@ -22,12 +22,16 @@ use crate::handlers::task_manager::TaskManager;
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let services = ServiceInitializer::initialize_services(app)?;
-    
+
     // Get log level asynchronously
     let config_service = services.config_service.clone();
     let log_level = tauri::async_runtime::block_on(async {
-        config_service.get_log_level().await.unwrap_or_else(|_| "info".to_string())
-    }).to_lowercase();
+        config_service
+            .get_log_level()
+            .await
+            .unwrap_or_else(|_| "info".to_string())
+    })
+    .to_lowercase();
 
     let level_filter = match log_level.as_str() {
         "trace" => log::LevelFilter::Trace,
@@ -88,10 +92,10 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             task_manager.clone(),
         );
 
-        // Start process monitoring using new domain-oriented architecture
+        // Start process monitoring using domain service directly
         start_game_process_monitoring(
             main_window.clone(),
-            services.game_monitoring_app_service.clone(),
+            services.game_monitoring_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

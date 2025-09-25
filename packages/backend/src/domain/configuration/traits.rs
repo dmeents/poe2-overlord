@@ -52,3 +52,37 @@ pub trait ConfigurationService: Send + Sync {
         &self,
     ) -> tokio::sync::broadcast::Receiver<ConfigurationChangedEvent>;
 }
+
+/// Trait for configuration data repository operations
+#[async_trait]
+pub trait ConfigurationRepository: Send + Sync {
+    // Persistence operations
+    async fn save(&self, config: &AppConfig) -> AppResult<()>;
+    async fn load(&self) -> AppResult<AppConfig>;
+    async fn exists(&self) -> AppResult<bool>;
+    async fn delete(&self) -> AppResult<()>;
+
+    // Data management
+    async fn get_in_memory_config(&self) -> AppResult<AppConfig>;
+    async fn update_in_memory_config(&self, config: AppConfig) -> AppResult<()>;
+
+    // Query operations
+    async fn get_poe_client_log_path(&self) -> AppResult<String>;
+    async fn get_log_level(&self) -> AppResult<String>;
+    async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo>;
+
+    // Data manipulation
+    async fn set_poe_client_log_path(&self, path: String) -> AppResult<()>;
+    async fn set_log_level(&self, level: String) -> AppResult<()>;
+    async fn reset_to_defaults(&self) -> AppResult<()>;
+
+    // Business rules and validation
+    async fn validate_config(&self, config: &AppConfig)
+        -> AppResult<ConfigurationValidationResult>;
+    async fn ensure_valid_log_level(&self, level: &str) -> AppResult<()>;
+    async fn ensure_valid_poe_path(&self, path: &str) -> AppResult<()>;
+
+    // Utility operations
+    async fn get_default_poe_client_log_path(&self) -> String;
+    async fn is_using_default_poe_path(&self) -> AppResult<bool>;
+}

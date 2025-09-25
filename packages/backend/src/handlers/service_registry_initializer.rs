@@ -18,7 +18,7 @@ impl ServiceRegistryInitializer {
 
         // Create the service registry
         debug!("Creating service registry...");
-        let registry = Arc::new(ServiceRegistryImpl::new(app.handle()));
+        let registry = Arc::new(ServiceRegistryImpl::new(app.handle())?);
         debug!("Service registry created successfully");
 
         // Register services with Tauri's state management

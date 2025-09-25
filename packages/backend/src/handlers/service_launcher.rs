@@ -2,45 +2,36 @@ use log::{error, info};
 use std::sync::Arc;
 use tauri::WebviewWindow;
 
-use crate::application::services::GameMonitoringApplicationService;
+use crate::domain::game_monitoring::traits::GameMonitoringService;
+use crate::domain::time_tracking::traits::TimeTrackingService;
 use crate::handlers::ping_event_handler::PingEventHandler;
 use crate::handlers::runtime_manager::RuntimeManager;
 use crate::handlers::task_manager::TaskManager;
 use crate::handlers::time_tracking_handler::TimeTrackingHandler;
-use crate::domain::time_tracking::traits::TimeTrackingService;
-use crate::infrastructure::tauri::GameMonitoringHandler;
-use crate::services::{
-    event_dispatcher::EventDispatcher,
-    log_analyzer::LogAnalyzer,
-};
+// GameMonitoringHandler removed - domain service now handles its own background monitoring
+use crate::services::{event_dispatcher::EventDispatcher, log_analyzer::LogAnalyzer};
 
-/// Helper function to start process monitoring using the new domain-oriented architecture
+/// Helper function to automatically start process monitoring on application startup
+/// Game monitoring is always running when the application is running
+/// The domain service handles its own background monitoring
 pub fn start_game_process_monitoring(
-    window: WebviewWindow,
-    game_monitoring_app_service: Arc<GameMonitoringApplicationService>,
+    _window: WebviewWindow,
+    game_monitoring_service: Arc<dyn GameMonitoringService>,
     runtime_manager: Arc<RuntimeManager>,
-    task_manager: Arc<TaskManager>,
+    _task_manager: Arc<TaskManager>,
 ) {
-    let window_clone = window.clone();
-    let app_service_clone = game_monitoring_app_service.clone();
-    let runtime_manager_clone = runtime_manager.clone();
-    let task_manager_clone = task_manager.clone();
+    let service_clone = game_monitoring_service.clone();
 
     let _handle = runtime_manager.spawn_background_task(
         "game_process_monitoring_setup".to_string(),
         move || async move {
-            if let Err(e) = GameMonitoringHandler::start_monitoring(
-                window_clone,
-                app_service_clone,
-                runtime_manager_clone,
-                task_manager_clone,
-            ).await {
+            info!("Automatically starting game monitoring on application startup");
+            if let Err(e) = service_clone.start_monitoring().await {
                 error!("Failed to start game monitoring: {}", e);
             }
         },
     );
 }
-
 
 /// Helper function to start time tracking event emission with only required services
 pub fn start_time_tracking_emission(

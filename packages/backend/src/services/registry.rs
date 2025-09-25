@@ -2,19 +2,14 @@ use crate::domain::character::service::CharacterService;
 use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
-use crate::domain::time_tracking::{
-    service::TimeTrackingServiceImpl,
-    traits::TimeTrackingService,
-};
+use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
 use crate::services::{
     event_dispatcher::EventDispatcher,
     log_analyzer::LogAnalyzer,
     server_monitor::ServerMonitor,
-    traits::{
-        EventService,
-        LogAnalysisService, ServerMonitoringService, ServiceRegistry,
-    },
+    traits::{EventService, LogAnalysisService, ServerMonitoringService, ServiceRegistry},
 };
+use log::error;
 use std::sync::Arc;
 
 /// Service registry implementation that manages all service dependencies
@@ -29,21 +24,29 @@ pub struct ServiceRegistryImpl {
 
 impl ServiceRegistryImpl {
     /// Create a new service registry with all services initialized
-    pub fn new(_app_handle: &tauri::AppHandle) -> Self {
+    pub fn new(_app_handle: &tauri::AppHandle) -> Result<Self, crate::errors::AppError> {
         // Initialize core services first (no dependencies)
-        let configuration_service = Arc::new(ConfigurationServiceImpl::new().expect("Failed to create configuration service"));
+        let configuration_service = Arc::new(
+            ConfigurationServiceImpl::new().expect("Failed to create configuration service"),
+        );
         let event_service = Arc::new(EventDispatcher::new());
 
         // Initialize character service (no dependencies)
-        let character_service = Arc::new(CharacterService::new());
+        let character_service = CharacterService::new().map_err(|e| {
+            error!("Failed to initialize CharacterService: {}", e);
+            e
+        })?;
+        let character_service = Arc::new(character_service);
 
         // Initialize server monitoring service (depends on event service)
         let server_monitoring_service = Arc::new(ServerMonitor::new(event_service.clone()));
 
-        // Initialize time tracking service (depends on character service)
-        let time_tracking_service = Arc::new(TimeTrackingServiceImpl::with_character_service(
-            Some(character_service.clone()),
-        )) as Arc<dyn TimeTrackingService>;
+        // Initialize time tracking service
+        let time_tracking_service = TimeTrackingServiceImpl::new().map_err(|e| {
+            error!("Failed to initialize TimeTrackingService: {}", e);
+            e
+        })?;
+        let time_tracking_service = Arc::new(time_tracking_service) as Arc<dyn TimeTrackingService>;
 
         // Initialize log analysis service (depends on character service and server monitoring)
         // We need to get the config path asynchronously, so we'll use a default for now
@@ -54,14 +57,14 @@ impl ServiceRegistryImpl {
             character_service.clone(),
         ));
 
-        Self {
+        Ok(Self {
             character_service,
             time_tracking_service,
             configuration_service,
             event_service,
             server_monitoring_service,
             log_analysis_service,
-        }
+        })
     }
 
     /// Create a new service registry with custom services (useful for testing)

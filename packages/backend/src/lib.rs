@@ -1,5 +1,4 @@
 // Module declarations
-pub mod application;
 pub mod commands;
 pub mod domain;
 pub mod errors;
@@ -18,8 +17,8 @@ pub use errors::*;
 pub use handlers::*;
 // Import specific models to avoid naming conflicts with services
 pub use models::{
-    ActChangeEvent, HideoutChangeEvent, OverlayState,
-    ProcessInfo, SceneChangeEvent, ServerConnectionEvent, ZoneChangeEvent,
+    ActChangeEvent, HideoutChangeEvent, OverlayState, ProcessInfo, SceneChangeEvent,
+    ServerConnectionEvent, ZoneChangeEvent,
 };
 // Import character models from domain
 pub use domain::character::{
@@ -28,7 +27,7 @@ pub use domain::character::{
 // Import time tracking from domain
 pub use domain::time_tracking::{
     LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
-    TimeTrackingSummary, TimeTrackingService, TimeTrackingServiceImpl,
+    TimeTrackingService, TimeTrackingServiceImpl, TimeTrackingSummary,
 };
 // Import configuration from domain
 pub use domain::configuration::{
@@ -47,7 +46,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
-            check_game_process,
             // Configuration commands
             get_config,
             get_default_config,

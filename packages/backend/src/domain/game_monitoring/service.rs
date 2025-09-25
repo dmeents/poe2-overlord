@@ -1,7 +1,6 @@
 use crate::domain::game_monitoring::{
-    commands::{GameMonitoringCommandHandler, GameMonitoringCommandResult, StartGameMonitoring, StopGameMonitoring, CheckGameProcessStatus, UpdateGameMonitoringConfig},
-    events::{GameMonitoringEvent, GameProcessStarted, GameProcessStopped, GameProcessStatusUpdated},
-    models::{GameProcessStatus, GameMonitoringConfig},
+    events::{GameMonitoringEvent, GameProcessStatusUpdated},
+    models::GameProcessStatus,
     traits::{GameMonitoringEventPublisher, GameMonitoringService, ProcessDetector},
 };
 use crate::domain::time_tracking::traits::TimeTrackingService;
@@ -9,9 +8,12 @@ use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::{debug, error, info};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
+use tokio::time::interval;
 
 /// Game monitoring domain service that handles business logic for game process monitoring
+#[derive(Clone)]
 pub struct GameMonitoringServiceImpl {
     /// Service for tracking character sessions
     time_tracker: Arc<dyn TimeTrackingService>,
@@ -23,8 +25,8 @@ pub struct GameMonitoringServiceImpl {
     is_monitoring: Arc<RwLock<bool>>,
     /// Current game process status
     current_status: Arc<RwLock<Option<GameProcessStatus>>>,
-    /// Configuration for monitoring
-    config: Arc<RwLock<GameMonitoringConfig>>,
+    /// Background monitoring task handle
+    monitoring_task: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 impl GameMonitoringServiceImpl {
@@ -40,7 +42,7 @@ impl GameMonitoringServiceImpl {
             process_detector,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
-            config: Arc::new(RwLock::new(GameMonitoringConfig::default())),
+            monitoring_task: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -57,35 +59,33 @@ impl GameMonitoringServiceImpl {
 
         if is_state_change {
             if current_status.is_running() {
-                info!("POE2 process started - PID: {}, Name: {}", current_status.pid, current_status.name);
-                
+                info!(
+                    "POE2 process started - PID: {}, Name: {}",
+                    current_status.pid, current_status.name
+                );
+
                 // Business logic: Set the process start time for time tracking
                 let start_time = chrono::DateTime::from(current_status.detected_at);
-                self.time_tracker.set_poe_process_start_time(start_time).await;
-                
-                // Publish domain event
-                let event = GameMonitoringEvent::ProcessStarted(GameProcessStarted::new(current_status.clone()));
-                self.event_publisher.publish_event(event).await?;
+                self.time_tracker
+                    .set_poe_process_start_time(start_time)
+                    .await;
             } else {
                 info!("POE2 process stopped");
                 debug!("POE2 process stopped, ending all active time tracking sessions");
-                
+
                 // Business logic: End all active sessions and clear process start time
                 if let Err(e) = self.time_tracker.end_all_active_sessions_global().await {
                     error!("Failed to end active time tracking sessions: {}", e);
                 }
                 self.time_tracker.clear_poe_process_start_time().await;
-                
-                // Publish domain event
-                let event = GameMonitoringEvent::ProcessStopped(GameProcessStopped::new(current_status.clone()));
-                self.event_publisher.publish_event(event).await?;
             }
         }
 
         // Always publish status update event
-        let status_event = GameMonitoringEvent::StatusUpdated(
-            GameProcessStatusUpdated::new(current_status.clone(), is_state_change)
-        );
+        let status_event = GameMonitoringEvent::StatusUpdated(GameProcessStatusUpdated::new(
+            current_status.clone(),
+            is_state_change,
+        ));
         self.event_publisher.publish_event(status_event).await?;
 
         // Update current status
@@ -94,6 +94,72 @@ impl GameMonitoringServiceImpl {
             *status = Some(current_status);
         }
 
+        Ok(())
+    }
+
+    /// Start the background monitoring loop
+    async fn start_monitoring_loop(&self) -> AppResult<()> {
+        let process_detector = self.process_detector.clone();
+        let is_monitoring = self.is_monitoring.clone();
+
+        // Get the check interval from the process detector configuration
+        let check_interval =
+            Duration::from_secs(process_detector.get_config().check_interval_seconds);
+        let mut interval_timer = interval(check_interval);
+        let mut previous_status: Option<GameProcessStatus> = None;
+
+        info!(
+            "Game monitoring loop started with interval: {:?}",
+            check_interval
+        );
+
+        loop {
+            interval_timer.tick().await;
+
+            // Check if monitoring is still active
+            if !*is_monitoring.read().await {
+                debug!("Game monitoring stopped, exiting monitoring loop");
+                break;
+            }
+
+            // Check current process status
+            match process_detector.check_game_process().await {
+                Ok(current_status_value) => {
+                    // Only handle state changes to avoid unnecessary processing
+                    let is_state_change = previous_status
+                        .as_ref()
+                        .map(|prev| current_status_value.is_state_change(prev))
+                        .unwrap_or(true);
+
+                    if is_state_change {
+                        debug!(
+                            "Game process state change detected: running={}, pid={}, name={}",
+                            current_status_value.running,
+                            current_status_value.pid,
+                            current_status_value.name
+                        );
+
+                        // Handle the state change
+                        if let Err(e) = self
+                            .handle_process_state_change(
+                                current_status_value.clone(),
+                                previous_status.clone(),
+                            )
+                            .await
+                        {
+                            error!("Failed to handle process status change: {}", e);
+                        }
+                    }
+
+                    previous_status = Some(current_status_value);
+                }
+                Err(e) => {
+                    error!("Error checking game process: {}", e);
+                }
+            }
+        }
+
+        info!("Game monitoring loop stopped");
         Ok(())
     }
 }
@@ -105,7 +171,8 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
         current_status: GameProcessStatus,
         previous_status: Option<GameProcessStatus>,
     ) -> AppResult<()> {
-        self.handle_process_state_change(current_status, previous_status).await
+        self.handle_process_state_change(current_status, previous_status)
+            .await
     }
 
     async fn start_monitoring(&self) -> AppResult<()> {
@@ -117,6 +184,21 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
 
         *is_monitoring = true;
         info!("Starting game process monitoring");
+
+        // Start the background monitoring task
+        let service_clone = Arc::new(self.clone());
+        let task_handle = tokio::spawn(async move {
+            if let Err(e) = service_clone.start_monitoring_loop().await {
+                error!("Background monitoring loop failed: {}", e);
+            }
+        });
+
+        // Store the task handle
+        {
+            let mut task = self.monitoring_task.write().await;
+            *task = Some(task_handle);
+        }
+
         Ok(())
     }
 
@@ -129,6 +211,14 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
 
         *is_monitoring = false;
         info!("Stopping game process monitoring");
+
+        // Wait for the background task to complete
+        if let Some(task_handle) = self.monitoring_task.write().await.take() {
+            if let Err(e) = task_handle.await {
+                error!("Error waiting for monitoring task to complete: {}", e);
+            }
+        }
+
         Ok(())
     }
 
@@ -141,26 +231,5 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     }
 }
 
-#[async_trait]
-impl GameMonitoringCommandHandler for GameMonitoringServiceImpl {
-    async fn handle_start_monitoring(&self, _command: StartGameMonitoring) -> AppResult<GameMonitoringCommandResult> {
-        self.start_monitoring().await?;
-        Ok(GameMonitoringCommandResult::MonitoringStarted)
-    }
-
-    async fn handle_stop_monitoring(&self, _command: StopGameMonitoring) -> AppResult<GameMonitoringCommandResult> {
-        self.stop_monitoring().await?;
-        Ok(GameMonitoringCommandResult::MonitoringStopped)
-    }
-
-    async fn handle_check_status(&self, _command: CheckGameProcessStatus) -> AppResult<GameMonitoringCommandResult> {
-        let status = self.process_detector.check_game_process().await?;
-        Ok(GameMonitoringCommandResult::ProcessStatus(status))
-    }
-
-    async fn handle_update_config(&self, command: UpdateGameMonitoringConfig) -> AppResult<GameMonitoringCommandResult> {
-        let mut config = self.config.write().await;
-        *config = command.config;
-        Ok(GameMonitoringCommandResult::ConfigUpdated)
-    }
-}
+// Note: GameMonitoringCommandHandler implementation removed
+// Commands are no longer used - monitoring is always running and frontend listens to events

@@ -79,26 +79,75 @@ pub trait TimeTrackingService: Send + Sync {
     async fn end_all_active_sessions_global(&self) -> AppResult<()>;
 }
 
-/// Trait for time tracking data persistence
+/// Trait for time tracking data persistence and management
 #[async_trait]
 pub trait TimeTrackingRepository: Send + Sync {
-    /// Load time tracking data for a character
-    async fn load_character_data(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Option<crate::domain::time_tracking::models::CharacterTimeTrackingData>>;
-
-    /// Save time tracking data for a character
+    // Persistence operations
     async fn save_character_data(
         &self,
         data: &crate::domain::time_tracking::models::CharacterTimeTrackingData,
     ) -> AppResult<()>;
 
-    /// Delete time tracking data for a character
-    async fn delete_character_data(&self, character_id: &str) -> AppResult<()>;
+    async fn load_character_data(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<crate::domain::time_tracking::models::CharacterTimeTrackingData>>;
 
-    /// Check if time tracking data exists for a character
+    async fn delete_character_data(&self, character_id: &str) -> AppResult<()>;
     async fn character_data_exists(&self, character_id: &str) -> AppResult<bool>;
+
+    // Data management
+    async fn get_active_sessions(
+        &self,
+        character_id: &str,
+    ) -> AppResult<std::collections::HashMap<String, LocationSession>>;
+    async fn get_completed_sessions(&self, character_id: &str) -> AppResult<Vec<LocationSession>>;
+    async fn get_stats_cache(
+        &self,
+        character_id: &str,
+    ) -> AppResult<std::collections::HashMap<String, LocationStats>>;
+
+    // Query operations
+    async fn find_session_by_location(
+        &self,
+        character_id: &str,
+        location_id: &str,
+    ) -> AppResult<Option<LocationSession>>;
+    async fn get_last_known_location(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<LocationSession>>;
+    async fn get_location_stats(
+        &self,
+        character_id: &str,
+        location_id: &str,
+    ) -> AppResult<Option<LocationStats>>;
+
+    // Data manipulation
+    async fn start_session(&self, character_id: &str, session: LocationSession) -> AppResult<()>;
+    async fn end_session(&self, character_id: &str, location_id: &str) -> AppResult<()>;
+    async fn update_stats(
+        &self,
+        character_id: &str,
+        location_id: &str,
+        stats: LocationStats,
+    ) -> AppResult<()>;
+
+    // Aggregation
+    async fn calculate_total_play_time(&self, character_id: &str) -> AppResult<u64>;
+    async fn calculate_total_hideout_time(&self, character_id: &str) -> AppResult<u64>;
+    async fn get_top_locations(
+        &self,
+        character_id: &str,
+        limit: usize,
+    ) -> AppResult<Vec<LocationStats>>;
+
+    // Business rules
+    async fn validate_no_overlapping_sessions(
+        &self,
+        character_id: &str,
+        new_session: &LocationSession,
+    ) -> AppResult<()>;
 }
 
 /// Trait for time tracking session validation

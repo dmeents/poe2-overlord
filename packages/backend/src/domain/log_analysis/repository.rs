@@ -11,7 +11,10 @@ use async_trait::async_trait;
 use log::{debug, warn};
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use tokio::fs;
 use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 use tokio::sync::RwLock;
@@ -227,6 +230,8 @@ pub struct LogAnalysisSessionRepositoryImpl {
     persistence: ScopedPersistenceRepositoryImpl<LogAnalysisSession, String>,
     /// Repository for storing the currently active session
     active_session_persistence: PersistenceRepositoryImpl<LogAnalysisSession>,
+    /// Flag to track whether data has been loaded from disk
+    data_loaded: Arc<AtomicBool>,
 }
 
 impl LogAnalysisSessionRepositoryImpl {
@@ -243,22 +248,33 @@ impl LogAnalysisSessionRepositoryImpl {
                 "active_log_analysis_session.json",
             )?;
 
-        let repository = Self {
+        Ok(Self {
             active_session: Arc::new(RwLock::new(None)),
             persistence,
             active_session_persistence,
-        };
+            data_loaded: Arc::new(AtomicBool::new(false)),
+        })
+    }
 
-        // Attempt to load active session, but don't fail if it doesn't exist
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.get_active_session())
-        {
-            debug!(
-                "Failed to load active log analysis session, starting fresh: {}",
-                e
-            );
+    /// Ensures that data has been loaded from disk.
+    ///
+    /// This method checks if data has already been loaded and loads it if necessary.
+    /// It's safe to call multiple times and will only load data once.
+    ///
+    /// # Returns
+    /// * `Ok(())` - Data is loaded and ready
+    /// * `Err(AppError)` - If data loading fails
+    async fn ensure_data_loaded(&self) -> AppResult<()> {
+        if !self.data_loaded.load(Ordering::Relaxed) {
+            if let Err(e) = self.get_active_session().await {
+                debug!(
+                    "Failed to load active log analysis session, starting fresh: {}",
+                    e
+                );
+                // Don't return error - allow repository to work with empty data
+            }
         }
-
-        Ok(repository)
+        Ok(())
     }
 }
 
@@ -280,6 +296,7 @@ impl LogAnalysisSessionRepository for LogAnalysisSessionRepositoryImpl {
 
     /// Gets the currently active log analysis session, if any
     async fn get_active_session(&self) -> AppResult<Option<LogAnalysisSession>> {
+        self.ensure_data_loaded().await?;
         // Check in-memory cache first
         let active_session = self.active_session.read().await.clone();
         if active_session.is_some() {
@@ -291,9 +308,13 @@ impl LogAnalysisSessionRepository for LogAnalysisSessionRepositoryImpl {
             let session = self.active_session_persistence.load().await?;
             let mut current_active = self.active_session.write().await;
             *current_active = Some(session.clone());
+            // Mark data as loaded
+            self.data_loaded.store(true, Ordering::Relaxed);
             return Ok(Some(session));
         }
 
+        // Mark data as loaded even if no data exists
+        self.data_loaded.store(true, Ordering::Relaxed);
         Ok(None)
     }
 
@@ -322,6 +343,7 @@ impl LogAnalysisSessionRepository for LogAnalysisSessionRepositoryImpl {
 
     /// Gets all stored log analysis sessions
     async fn get_all_sessions(&self) -> AppResult<Vec<LogAnalysisSession>> {
+        self.ensure_data_loaded().await?;
         // Note: This is a simplified implementation. In a real scenario, you might want to
         // maintain a list of all session IDs or scan the data directory.
         // For now, we'll return an empty vector as the scoped persistence doesn't provide
@@ -337,6 +359,8 @@ pub struct LogAnalysisStatsRepositoryImpl {
     stats: Arc<RwLock<LogAnalysisStats>>,
     /// Repository for persisting statistics to disk
     persistence: PersistenceRepositoryImpl<LogAnalysisStats>,
+    /// Flag to track whether data has been loaded from disk
+    data_loaded: Arc<AtomicBool>,
 }
 
 impl LogAnalysisStatsRepositoryImpl {
@@ -346,17 +370,29 @@ impl LogAnalysisStatsRepositoryImpl {
             "log_analysis_stats.json",
         )?;
 
-        let repository = Self {
+        Ok(Self {
             stats: Arc::new(RwLock::new(LogAnalysisStats::default())),
             persistence,
-        };
+            data_loaded: Arc::new(AtomicBool::new(false)),
+        })
+    }
 
-        // Attempt to load existing data, but don't fail if it doesn't exist
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load_stats()) {
-            debug!("Failed to load log analysis stats, starting fresh: {}", e);
+    /// Ensures that data has been loaded from disk.
+    ///
+    /// This method checks if data has already been loaded and loads it if necessary.
+    /// It's safe to call multiple times and will only load data once.
+    ///
+    /// # Returns
+    /// * `Ok(())` - Data is loaded and ready
+    /// * `Err(AppError)` - If data loading fails
+    async fn ensure_data_loaded(&self) -> AppResult<()> {
+        if !self.data_loaded.load(Ordering::Relaxed) {
+            if let Err(e) = self.load_stats().await {
+                debug!("Failed to load log analysis stats, starting fresh: {}", e);
+                // Don't return error - allow repository to work with empty data
+            }
         }
-
-        Ok(repository)
+        Ok(())
     }
 }
 
@@ -384,6 +420,8 @@ impl LogAnalysisStatsRepository for LogAnalysisStatsRepositoryImpl {
             *current_stats = stats.clone();
         }
 
+        // Mark data as loaded
+        self.data_loaded.store(true, Ordering::Relaxed);
         debug!("Log analysis statistics loaded successfully");
         Ok(stats)
     }
@@ -395,6 +433,7 @@ impl LogAnalysisStatsRepository for LogAnalysisStatsRepositoryImpl {
 
     /// Increments the count for a specific event type
     async fn increment_event_count(&self, event_type: &str) -> AppResult<()> {
+        self.ensure_data_loaded().await?;
         let mut stats = self.stats.read().await.clone();
 
         // Increment the appropriate counter based on event type
@@ -417,6 +456,7 @@ impl LogAnalysisStatsRepository for LogAnalysisStatsRepositoryImpl {
 
     /// Resets all statistics to their default values
     async fn reset_stats(&self) -> AppResult<()> {
+        self.ensure_data_loaded().await?;
         let stats = LogAnalysisStats::default();
         self.save_stats(&stats).await
     }

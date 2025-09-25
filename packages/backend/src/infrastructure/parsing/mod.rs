@@ -7,7 +7,7 @@
 //! This module focuses on infrastructure concerns (file monitoring and parsing)
 //! and delegates domain logic to event handlers through the event system.
 
-pub mod analyzer;
+// analyzer module removed - functionality moved to domain layer
 pub mod config;
 pub mod errors;
 pub mod factory;
@@ -16,7 +16,7 @@ pub mod parsers;
 pub mod traits;
 pub mod utils;
 
-pub use analyzer::LogAnalyzer;
+// LogAnalyzer has been removed - use LogAnalysisService from domain layer instead
 pub use config::{ParserConfig, ParsersConfig};
 pub use errors::ParseError;
 pub use factory::ParserFactory;

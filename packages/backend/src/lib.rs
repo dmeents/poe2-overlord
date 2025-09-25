@@ -57,7 +57,7 @@ pub use domain::location_tracking::models::SceneType;
 
 // Infrastructure services and utilities
 pub use infrastructure::monitoring::ServerMonitor;  // Server connectivity monitoring
-pub use infrastructure::parsing::LogAnalyzer;  // Log parsing and analysis
+pub use domain::log_analysis::traits::LogAnalysisService;  // Log parsing and analysis
 pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};  // OS detection and paths
 pub use infrastructure::tauri::{EventDispatcher, EventService};  // Tauri event system integration
 pub use infrastructure::time::{  // Time calculation and validation utilities

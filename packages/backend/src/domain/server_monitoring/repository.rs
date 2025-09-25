@@ -1,5 +1,5 @@
 //! # Server Monitoring Repository Implementations
-//! 
+//!
 //! This module provides concrete implementations of the repository traits for server monitoring.
 //! These implementations use a combination of in-memory caching and file-based persistence
 //! to provide fast access to frequently used data while ensuring durability.
@@ -13,7 +13,8 @@ use crate::domain::server_monitoring::traits::{
 };
 use crate::errors::AppResult;
 use crate::infrastructure::persistence::{
-    PersistenceRepository, PersistenceRepositoryImpl, ScopedPersistenceRepository, ScopedPersistenceRepositoryImpl,
+    PersistenceRepository, PersistenceRepositoryImpl, ScopedPersistenceRepository,
+    ScopedPersistenceRepositoryImpl,
 };
 use async_trait::async_trait;
 use log::debug;
@@ -21,7 +22,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// Repository implementation for server status persistence.
-/// 
+///
 /// Uses in-memory caching with file-based persistence for optimal performance
 /// and data durability. The cache is updated on every save operation and
 /// loaded on initialization.
@@ -34,23 +35,17 @@ pub struct ServerStatusRepositoryImpl {
 
 impl ServerStatusRepositoryImpl {
     /// Create a new server status repository with file-based persistence.
-    /// 
+    ///
     /// Attempts to load existing status data on initialization, but gracefully
     /// handles the case where no previous data exists.
     pub fn new() -> AppResult<Self> {
-        let persistence = PersistenceRepositoryImpl::<ServerStatus>::new_in_data_dir("server_status.json")?;
+        let persistence =
+            PersistenceRepositoryImpl::<ServerStatus>::new_in_data_dir("server_status.json")?;
 
-        let repository = Self {
+        Ok(Self {
             status: Arc::new(RwLock::new(None)),
             persistence,
-        };
-
-        // Attempt to load existing data, but don't fail if it doesn't exist
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load_status()) {
-            debug!("Failed to load server status, starting fresh: {}", e);
-        }
-
-        Ok(repository)
+        })
     }
 }
 
@@ -62,7 +57,7 @@ impl ServerStatusRepository for ServerStatusRepositoryImpl {
             let mut current_status = self.status.write().await;
             *current_status = Some(status.clone());
         }
-        
+
         // Persist to disk for durability
         self.persistence.save(status).await?;
         debug!("Server status saved to file");
@@ -95,7 +90,7 @@ impl ServerStatusRepository for ServerStatusRepositoryImpl {
             let mut status = self.status.write().await;
             *status = None;
         }
-        
+
         // Delete from persistence
         self.persistence.delete().await?;
         debug!("Server status file deleted");
@@ -108,7 +103,7 @@ impl ServerStatusRepository for ServerStatusRepositoryImpl {
 }
 
 /// Repository implementation for server information persistence.
-/// 
+///
 /// Manages server metadata including connection history and uptime statistics
 /// with the same caching strategy as the status repository.
 pub struct ServerInfoRepositoryImpl {
@@ -120,19 +115,13 @@ pub struct ServerInfoRepositoryImpl {
 
 impl ServerInfoRepositoryImpl {
     pub fn new() -> AppResult<Self> {
-        let persistence = PersistenceRepositoryImpl::<ServerInfo>::new_in_data_dir("server_info.json")?;
+        let persistence =
+            PersistenceRepositoryImpl::<ServerInfo>::new_in_data_dir("server_info.json")?;
 
-        let repository = Self {
+        Ok(Self {
             server_info: Arc::new(RwLock::new(None)),
             persistence,
-        };
-
-        // Attempt to load existing data, but don't fail if it doesn't exist
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load_server_info()) {
-            debug!("Failed to load server info, starting fresh: {}", e);
-        }
-
-        Ok(repository)
+        })
     }
 }
 
@@ -144,7 +133,7 @@ impl ServerInfoRepository for ServerInfoRepositoryImpl {
             let mut current_info = self.server_info.write().await;
             *current_info = Some(server_info.clone());
         }
-        
+
         // Persist to disk
         self.persistence.save(server_info).await?;
         debug!("Server info saved to file");
@@ -178,7 +167,7 @@ impl ServerInfoRepository for ServerInfoRepositoryImpl {
             let mut server_info = self.server_info.write().await;
             *server_info = None;
         }
-        
+
         // Delete from persistence
         self.persistence.delete().await?;
         debug!("Server info file deleted");
@@ -187,7 +176,7 @@ impl ServerInfoRepository for ServerInfoRepositoryImpl {
 }
 
 /// Repository implementation for monitoring session persistence.
-/// 
+///
 /// Uses scoped persistence for individual sessions and maintains a separate
 /// active session cache for fast access to the current monitoring session.
 pub struct ServerMonitoringSessionRepositoryImpl {
@@ -201,32 +190,31 @@ pub struct ServerMonitoringSessionRepositoryImpl {
 
 impl ServerMonitoringSessionRepositoryImpl {
     pub fn new() -> AppResult<Self> {
-        let persistence = ScopedPersistenceRepositoryImpl::<ServerMonitoringSession, String>::new_in_data_dir(
-            "server_monitoring_session_",
-            ".json"
-        )?;
-        
-        let active_session_persistence = PersistenceRepositoryImpl::<ServerMonitoringSession>::new_in_data_dir("active_server_monitoring_session.json")?;
+        let persistence =
+            ScopedPersistenceRepositoryImpl::<ServerMonitoringSession, String>::new_in_data_dir(
+                "server_monitoring_session_",
+                ".json",
+            )?;
 
-        let repository = Self {
+        let active_session_persistence =
+            PersistenceRepositoryImpl::<ServerMonitoringSession>::new_in_data_dir(
+                "active_server_monitoring_session.json",
+            )?;
+
+        Ok(Self {
             active_session: Arc::new(RwLock::new(None)),
             persistence,
             active_session_persistence,
-        };
-
-        // Attempt to load active session, but don't fail if it doesn't exist
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.get_active_session()) {
-            debug!("Failed to load active server monitoring session, starting fresh: {}", e);
-        }
-
-        Ok(repository)
+        })
     }
 }
 
 #[async_trait]
 impl ServerMonitoringSessionRepository for ServerMonitoringSessionRepositoryImpl {
     async fn save_session(&self, session: &ServerMonitoringSession) -> AppResult<()> {
-        self.persistence.save_scoped(&session.session_id, session).await?;
+        self.persistence
+            .save_scoped(&session.session_id, session)
+            .await?;
         debug!("Saved server monitoring session: {}", session.session_id);
         Ok(())
     }
@@ -260,13 +248,13 @@ impl ServerMonitoringSessionRepository for ServerMonitoringSessionRepositoryImpl
         if let Some(mut session) = self.get_active_session().await? {
             session.end_session();
             self.update_session(&session).await?;
-            
+
             // Clear active session
             {
                 let mut active_session = self.active_session.write().await;
                 *active_session = None;
             }
-            
+
             // Delete active session file
             self.active_session_persistence.delete().await?;
         }
@@ -283,7 +271,7 @@ impl ServerMonitoringSessionRepository for ServerMonitoringSessionRepositoryImpl
 }
 
 /// Repository implementation for monitoring statistics persistence.
-/// 
+///
 /// Manages aggregated statistics with in-memory caching and provides
 /// atomic operations for updating individual statistics counters.
 pub struct ServerMonitoringStatsRepositoryImpl {
@@ -295,19 +283,14 @@ pub struct ServerMonitoringStatsRepositoryImpl {
 
 impl ServerMonitoringStatsRepositoryImpl {
     pub fn new() -> AppResult<Self> {
-        let persistence = PersistenceRepositoryImpl::<ServerMonitoringStats>::new_in_data_dir("server_monitoring_stats.json")?;
+        let persistence = PersistenceRepositoryImpl::<ServerMonitoringStats>::new_in_data_dir(
+            "server_monitoring_stats.json",
+        )?;
 
-        let repository = Self {
+        Ok(Self {
             stats: Arc::new(RwLock::new(ServerMonitoringStats::default())),
             persistence,
-        };
-
-        // Attempt to load existing data, but don't fail if it doesn't exist
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load_stats()) {
-            debug!("Failed to load server monitoring stats, starting fresh: {}", e);
-        }
-
-        Ok(repository)
+        })
     }
 }
 
@@ -319,20 +302,20 @@ impl ServerMonitoringStatsRepository for ServerMonitoringStatsRepositoryImpl {
             let mut current_stats = self.stats.write().await;
             *current_stats = stats.clone();
         }
-        
+
         // Persist to disk
         self.persistence.save(stats).await
     }
 
     async fn load_stats(&self) -> AppResult<ServerMonitoringStats> {
         let stats = self.persistence.load().await?;
-        
+
         // Update in-memory cache
         {
             let mut current_stats = self.stats.write().await;
             *current_stats = stats.clone();
         }
-        
+
         debug!("Server monitoring statistics loaded successfully");
         Ok(stats)
     }
@@ -343,7 +326,7 @@ impl ServerMonitoringStatsRepository for ServerMonitoringStatsRepositoryImpl {
 
     async fn increment_ping_count(&self, success: bool) -> AppResult<()> {
         let mut stats = self.stats.read().await.clone();
-        
+
         // Atomically update ping counters
         stats.total_pings += 1;
         if success {
@@ -351,22 +334,22 @@ impl ServerMonitoringStatsRepository for ServerMonitoringStatsRepositoryImpl {
         } else {
             stats.failed_pings += 1;
         }
-        
+
         stats.last_monitoring_time = chrono::Utc::now();
-        
+
         self.update_stats(&stats).await
     }
 
     async fn update_average_latency(&self, latency_ms: u64) -> AppResult<()> {
         let mut stats = self.stats.read().await.clone();
-        
+
         // Update running average latency calculation
         if let Some(current_avg) = stats.average_latency_ms {
             stats.average_latency_ms = Some((current_avg + latency_ms as f64) / 2.0);
         } else {
             stats.average_latency_ms = Some(latency_ms as f64);
         }
-        
+
         self.update_stats(&stats).await
     }
 

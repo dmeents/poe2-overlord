@@ -40,9 +40,9 @@ use std::sync::Arc;
 use tauri::WebviewWindow;
 
 use crate::domain::game_monitoring::traits::GameMonitoringService;
+use crate::domain::log_analysis::traits::LogAnalysisService;
 use crate::domain::time_tracking::traits::TimeTrackingService;
 use crate::infrastructure::monitoring::ServerMonitor;
-use crate::infrastructure::parsing::LogAnalyzer;
 use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
 /// Starts the game process monitoring service as a background task.
@@ -106,17 +106,20 @@ pub fn start_game_process_monitoring(
 pub fn start_time_tracking_emission(
     window: WebviewWindow,
     time_tracking: Arc<dyn TimeTrackingService>,
-    _runtime_manager: Arc<RuntimeManager>,
+    runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
     let time_tracking_clone = time_tracking.clone();
 
-    // Spawn the time tracking emission task directly using tokio
-    tokio::spawn(async move {
-        time_tracking_clone
-            .start_frontend_event_emission(window)
-            .await;
-    });
+    // Spawn the time tracking emission task using the runtime manager
+    runtime_manager.spawn_background_task(
+        "time_tracking_emission".to_string(),
+        move || async move {
+            time_tracking_clone
+                .start_frontend_event_emission(window)
+                .await;
+        },
+    );
 }
 
 /// Starts the server ping monitoring service as a background task.
@@ -141,15 +144,18 @@ pub fn start_time_tracking_emission(
 pub fn start_ping_event_emission(
     _window: WebviewWindow,
     server_status: Arc<ServerMonitor>,
-    _runtime_manager: Arc<RuntimeManager>,
+    runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
     let server_status_clone = server_status.clone();
 
-    // Spawn the server ping monitoring task directly using tokio
-    tokio::spawn(async move {
-        server_status_clone.start_periodic_ping().await;
-    });
+    // Spawn the server ping monitoring task using the runtime manager
+    runtime_manager.spawn_background_task(
+        "server_ping_monitoring".to_string(),
+        move || async move {
+            server_status_clone.start_periodic_ping().await;
+        },
+    );
 }
 
 /// Starts the log monitoring service as a background task.
@@ -172,14 +178,14 @@ pub fn start_ping_event_emission(
 /// - Handles errors gracefully with comprehensive logging
 /// - Runs continuously in the background
 pub fn start_log_monitoring(
-    log_monitor: Arc<LogAnalyzer>,
-    _runtime_manager: Arc<RuntimeManager>,
+    log_monitor: Arc<dyn LogAnalysisService>,
+    runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
     let log_monitor_clone = log_monitor.clone();
 
-    // Spawn the log monitoring task directly using tokio
-    tokio::spawn(async move {
+    // Spawn the log monitoring task using the runtime manager
+    runtime_manager.spawn_background_task("log_monitoring".to_string(), move || async move {
         if let Err(e) = log_monitor_clone.start_monitoring().await {
             error!("Failed to start log monitoring: {}", e);
         }

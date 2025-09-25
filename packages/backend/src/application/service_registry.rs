@@ -1,39 +1,41 @@
 //! # Service Registry
-//! 
+//!
 //! Implements the dependency injection container for the POE2 Overlord application.
 //! This module is responsible for initializing, configuring, and registering all application services
 //! with Tauri's application state management system.
-//! 
+//!
 //! ## Key Responsibilities
-//! 
+//!
 //! - **Service Initialization**: Creates and configures all domain and infrastructure services
 //! - **Dependency Injection**: Manages service dependencies and ensures proper initialization order
 //! - **State Management**: Registers services with Tauri's app state for global access
 //! - **Error Handling**: Provides comprehensive error handling during service initialization
-//! 
+//!
 //! ## Service Initialization Order
-//! 
+//!
 //! Services are initialized in a specific order to respect dependencies:
 //! 1. Configuration Service (no dependencies)
-//! 2. Event Dispatcher (no dependencies) 
+//! 2. Event Dispatcher (no dependencies)
 //! 3. Character Service (depends on configuration)
 //! 4. Time Tracking Service (depends on configuration)
 //! 5. Server Monitor (depends on event dispatcher)
 //! 6. Log Analyzer (depends on server monitor and character service)
 //! 7. Game Monitoring Service (depends on time tracking, event publisher, and process detector)
-//! 
+//!
 //! ## Error Handling Strategy
-//! 
+//!
 //! - Each service initialization is wrapped in error handling
 //! - Failed service initialization causes the entire application startup to fail
 //! - Detailed logging provides visibility into initialization progress and failures
 
 use crate::domain::character::service::CharacterService;
-use crate::domain::configuration::service::ConfigurationServiceImpl;
+use crate::domain::configuration::{
+    service::ConfigurationServiceImpl, traits::ConfigurationService,
+};
 use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
+use crate::domain::log_analysis::{service::LogAnalysisServiceImpl, traits::LogAnalysisService, models::LogAnalysisConfig};
 use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
 use crate::infrastructure::monitoring::ServerMonitor;
-use crate::infrastructure::parsing::LogAnalyzer;
 use crate::infrastructure::tauri::EventDispatcher;
 use crate::infrastructure::{
     monitoring::ProcessMonitorImpl, tauri::TauriGameMonitoringEventPublisher,
@@ -43,30 +45,30 @@ use std::sync::Arc;
 use tauri::Manager;
 
 /// Service initializer that implements the dependency injection container pattern.
-/// 
+///
 /// This struct provides a centralized way to initialize all application services
 /// in the correct dependency order and register them with Tauri's state management.
 pub struct ServiceInitializer;
 
 impl ServiceInitializer {
     /// Initializes all application services and registers them with Tauri's app state.
-    /// 
+    ///
     /// This method follows a specific initialization order to respect service dependencies:
     /// 1. Core services (configuration, event dispatcher) are initialized first
     /// 2. Domain services (character, time tracking) are initialized next
     /// 3. Infrastructure services (monitoring, logging) are initialized last
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `app` - Mutable reference to the Tauri application instance
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Result<ServiceInstances, Box<dyn std::error::Error>>` - Returns a container
     ///   with all initialized services on success, or an error if initialization fails
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// This function will return an error if any service fails to initialize,
     /// as the application cannot function without all required services.
     pub fn initialize_services(
@@ -116,15 +118,55 @@ impl ServiceInitializer {
         app.manage(server_status_arc.clone());
         debug!("ServerMonitor managed successfully");
 
-        // Initialize Log Analyzer - processes game logs and extracts events
+        // Initialize Log Analysis Service - processes game logs and extracts events
         // Depends on server monitor for status updates and character service for character operations
-        debug!("Initializing LogAnalyzer...");
-        let log_monitor_service = LogAnalyzer::new(
-            "".to_string(), // Log path will be configured later
-        );
-        let log_monitor_arc = Arc::new(log_monitor_service);
-        app.manage(log_monitor_arc.clone());
-        debug!("LogAnalyzer managed successfully");
+        debug!("Initializing LogAnalysisService...");
+        
+        // Create default log analysis configuration
+        let log_analysis_config = LogAnalysisConfig {
+            log_file_path: String::new(), // Will be configured from configuration service
+            monitoring_interval_ms: 500,
+            max_file_size_mb: 100,
+            buffer_size: 1000,
+        };
+        
+        // Create the log analysis service
+        let log_analysis_service = LogAnalysisServiceImpl::new(
+            log_analysis_config,
+            character_arc.clone(),
+            server_status_arc.clone(),
+            event_broadcaster.clone(),
+        ).map_err(|e| {
+            error!("Failed to initialize LogAnalysisService: {}", e);
+            e
+        })?;
+        
+        let log_analysis_arc = Arc::new(log_analysis_service) as Arc<dyn LogAnalysisService>;
+
+        // Configure the log path from the configuration service
+        let config_service_clone = config_service.clone();
+        let log_analysis_clone = log_analysis_arc.clone();
+        tauri::async_runtime::spawn(async move {
+            match config_service_clone.get_poe_client_log_path().await {
+                Ok(log_path) => {
+                    if !log_path.is_empty() {
+                        if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
+                            error!("Failed to update log path in LogAnalysisService: {}", e);
+                        } else {
+                            debug!("LogAnalysisService configured with log path: {}", log_path);
+                        }
+                    } else {
+                        debug!("Log path is empty, LogAnalysisService will wait for configuration");
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to get log path from configuration service: {}", e);
+                }
+            }
+        });
+
+        app.manage(log_analysis_arc.clone());
+        debug!("LogAnalysisService managed successfully");
 
         // Initialize Game Monitoring services - complex service with multiple dependencies
         debug!("Initializing Game Monitoring services...");
@@ -156,7 +198,7 @@ impl ServiceInitializer {
             event_broadcaster,
             character_service: character_arc,
             time_tracking_service: time_tracking_arc,
-            log_monitor: log_monitor_arc,
+            log_analysis_service: log_analysis_arc,
             server_status: server_status_arc,
             game_monitoring_service,
         })
@@ -164,11 +206,11 @@ impl ServiceInitializer {
 }
 
 /// Container for all initialized application services.
-/// 
+///
 /// This struct holds references to all the services that have been initialized
 /// and registered with Tauri's state management system. It provides a convenient
 /// way to pass service instances around during application setup and orchestration.
-/// 
+///
 /// All services are wrapped in `Arc` for thread-safe sharing across the application.
 /// Domain services use trait objects (`dyn Trait`) to allow for different implementations
 /// and better testability.
@@ -176,22 +218,22 @@ impl ServiceInitializer {
 pub struct ServiceInstances {
     /// Configuration service for managing application settings and preferences
     pub config_service: Arc<ConfigurationServiceImpl>,
-    
+
     /// Event dispatcher for broadcasting events across the application
     pub event_broadcaster: Arc<EventDispatcher>,
-    
+
     /// Character service for managing character data and operations
     pub character_service: Arc<CharacterService>,
-    
+
     /// Time tracking service for monitoring and analyzing play time
     pub time_tracking_service: Arc<dyn TimeTrackingService>,
-    
-    /// Log analyzer for processing game logs and extracting events
-    pub log_monitor: Arc<LogAnalyzer>,
-    
+
+    /// Log analysis service for processing game logs and extracting events
+    pub log_analysis_service: Arc<dyn LogAnalysisService>,
+
     /// Server monitor for tracking network connectivity and server status
     pub server_status: Arc<ServerMonitor>,
-    
+
     /// Game monitoring service for detecting game processes and managing game state
     pub game_monitoring_service: Arc<dyn GameMonitoringService>,
 }

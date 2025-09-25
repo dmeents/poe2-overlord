@@ -8,7 +8,10 @@ use crate::infrastructure::persistence::{
 };
 use async_trait::async_trait;
 use log::debug;
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use tokio::sync::RwLock;
 
 /// Configuration file name used for persistent storage
@@ -37,6 +40,9 @@ pub struct ConfigurationRepositoryImpl {
     
     /// Persistence layer for configuration file I/O operations
     persistence: PersistenceRepositoryImpl<AppConfig>,
+    
+    /// Flag to track whether data has been loaded from disk
+    data_loaded: Arc<AtomicBool>,
 }
 
 impl ConfigurationRepositoryImpl {
@@ -60,16 +66,29 @@ impl ConfigurationRepositoryImpl {
     pub fn new() -> AppResult<Self> {
         let persistence = PersistenceRepositoryImpl::<AppConfig>::new_in_config_dir(CONFIG_FILE_NAME)?;
 
-        let repository = Self {
+        Ok(Self {
             config: Arc::new(RwLock::new(AppConfig::default())),
             persistence,
-        };
+            data_loaded: Arc::new(AtomicBool::new(false)),
+        })
+    }
 
-        if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load()) {
-            debug!("Failed to load configuration, using defaults: {}", e);
+    /// Ensures that data has been loaded from disk.
+    ///
+    /// This method checks if data has already been loaded and loads it if necessary.
+    /// It's safe to call multiple times and will only load data once.
+    ///
+    /// # Returns
+    /// * `Ok(())` - Data is loaded and ready
+    /// * `Err(AppError)` - If data loading fails
+    async fn ensure_data_loaded(&self) -> AppResult<()> {
+        if !self.data_loaded.load(Ordering::Relaxed) {
+            if let Err(e) = self.load().await {
+                debug!("Failed to load configuration, using defaults: {}", e);
+                // Don't return error - allow repository to work with default data
+            }
         }
-
-        Ok(repository)
+        Ok(())
     }
 }
 
@@ -99,6 +118,8 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             *current_config = config.clone();
         }
 
+        // Mark data as loaded
+        self.data_loaded.store(true, Ordering::Relaxed);
         debug!("Configuration loaded successfully");
         Ok(config)
     }
@@ -120,11 +141,13 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn get_in_memory_config(&self) -> AppResult<AppConfig> {
+        self.ensure_data_loaded().await?;
         let config = self.config.read().await;
         Ok(config.clone())
     }
 
     async fn update_in_memory_config(&self, config: AppConfig) -> AppResult<()> {
+        self.ensure_data_loaded().await?;
         {
             let mut current_config = self.config.write().await;
             *current_config = config;
@@ -133,16 +156,19 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn get_poe_client_log_path(&self) -> AppResult<String> {
+        self.ensure_data_loaded().await?;
         let config = self.config.read().await;
         Ok(config.poe_client_log_path.clone())
     }
 
     async fn get_log_level(&self) -> AppResult<String> {
+        self.ensure_data_loaded().await?;
         let config = self.config.read().await;
         Ok(config.log_level.clone())
     }
 
     async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo> {
+        self.ensure_data_loaded().await?;
         Ok(ConfigurationFileInfo::new(self.persistence.get_file_path().clone()))
     }
 
@@ -151,6 +177,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     /// Updates the in-memory configuration and immediately saves to persistent
     /// storage to ensure consistency.
     async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
+        self.ensure_data_loaded().await?;
         let mut config = self.config.write().await;
         config.poe_client_log_path = path;
         drop(config);
@@ -162,6 +189,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     /// Validates the log level before updating the configuration.
     /// Updates both in-memory cache and persistent storage atomically.
     async fn set_log_level(&self, level: String) -> AppResult<()> {
+        self.ensure_data_loaded().await?;
         self.ensure_valid_log_level(&level).await?;
         
         let mut config = self.config.write().await;
@@ -171,6 +199,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn reset_to_defaults(&self) -> AppResult<()> {
+        self.ensure_data_loaded().await?;
         let default_config = AppConfig::default();
         self.update_in_memory_config(default_config.clone()).await?;
         self.save(&default_config).await
@@ -233,6 +262,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn is_using_default_poe_path(&self) -> AppResult<bool> {
+        self.ensure_data_loaded().await?;
         let config = self.config.read().await;
         Ok(config.is_using_default_poe_path())
     }

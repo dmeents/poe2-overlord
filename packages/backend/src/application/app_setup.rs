@@ -1,11 +1,11 @@
 //! # Application Setup
-//! 
+//!
 //! Handles the complete application bootstrap process for the POE2 Overlord application.
 //! This module coordinates service initialization, configuration setup, logging configuration,
 //! and the startup of background services.
-//! 
+//!
 //! ## Bootstrap Process
-//! 
+//!
 //! The application setup follows this sequence:
 //! 1. **Service Initialization**: Initialize all services through the service registry
 //! 2. **Configuration Loading**: Load and apply application configuration settings
@@ -13,16 +13,16 @@
 //! 4. **Data Loading**: Load persisted character time tracking data asynchronously
 //! 5. **Runtime Management**: Initialize runtime and task management systems
 //! 6. **Background Services**: Start all background monitoring and processing services
-//! 
+//!
 //! ## Key Features
-//! 
+//!
 //! - **Dynamic Logging Configuration**: Log levels are loaded from configuration and applied at runtime
 //! - **Asynchronous Data Loading**: Character data is loaded in the background to avoid blocking startup
 //! - **Service Orchestration**: All background services are started in a coordinated manner
 //! - **Error Handling**: Comprehensive error handling with detailed logging throughout the process
-//! 
+//!
 //! ## Background Services Started
-//! 
+//!
 //! - **Log Monitoring**: Real-time analysis of game log files
 //! - **Game Process Monitoring**: Detection and tracking of game processes
 //! - **Time Tracking Emission**: Periodic emission of time tracking data to frontend
@@ -32,31 +32,31 @@ use log::{debug, info, warn};
 use std::sync::Arc;
 use tauri::Manager;
 
-use crate::application::service_registry::ServiceInitializer;
 use crate::application::service_orchestrator::{
     start_game_process_monitoring, start_log_monitoring, start_ping_event_emission,
     start_time_tracking_emission,
 };
+use crate::application::service_registry::ServiceInitializer;
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
 /// Sets up the complete application with all services, configuration, and background tasks.
-/// 
+///
 /// This is the main entry point for application initialization. It orchestrates the entire
 /// bootstrap process including service initialization, configuration loading, logging setup,
 /// and background service startup.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `app` - Mutable reference to the Tauri application instance
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Result<(), Box<dyn std::error::Error>>` - Returns Ok(()) on successful setup,
 ///   or an error if any part of the setup process fails
-/// 
+///
 /// # Process Flow
-/// 
+///
 /// 1. Initialize all services through the service registry
 /// 2. Load configuration and set up logging
 /// 3. Start asynchronous data loading
@@ -68,7 +68,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     // Step 2: Load configuration and set up logging
     let config_service = services.config_service.clone();
-    
+
     // Load log level from configuration - this allows dynamic logging configuration
     let log_level = tauri::async_runtime::block_on(async {
         config_service
@@ -135,7 +135,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
         // Start log monitoring service - analyzes game logs in real-time
         start_log_monitoring(
-            services.log_monitor.clone(),
+            services.log_analysis_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

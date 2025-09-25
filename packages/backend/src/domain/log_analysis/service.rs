@@ -21,7 +21,6 @@ use std::time::Duration;
 use tokio::sync::{broadcast, RwLock};
 use tokio::time;
 
-/// Log analysis service implementation
 pub struct LogAnalysisServiceImpl {
     config: Arc<RwLock<LogAnalysisConfig>>,
     log_file_repository: Arc<dyn LogFileRepository>,
@@ -37,7 +36,6 @@ pub struct LogAnalysisServiceImpl {
 }
 
 impl LogAnalysisServiceImpl {
-    /// Create a new log analysis service
     pub fn new(
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterServiceTrait>,
@@ -47,7 +45,6 @@ impl LogAnalysisServiceImpl {
         let config = Arc::new(RwLock::new(config));
         let log_file_repository = Arc::new(LogFileRepositoryImpl::new(String::new()));
 
-        // Create repositories with default paths
         let sessions_dir = dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join("poe2-overlord")
@@ -81,7 +78,6 @@ impl LogAnalysisServiceImpl {
         })
     }
 
-    /// Create a new log analysis service with custom repositories (for testing)
     pub fn with_repositories(
         config: LogAnalysisConfig,
         log_file_repository: Arc<dyn LogFileRepository>,
@@ -109,7 +105,6 @@ impl LogAnalysisServiceImpl {
         }
     }
 
-    /// Start the monitoring loop
     async fn start_monitoring_loop(&self) -> AppResult<()> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
@@ -122,14 +117,12 @@ impl LogAnalysisServiceImpl {
             ));
         }
 
-        // Initialize last position
         let file_size = self.log_file_repository.get_file_size(&log_path).await?;
         {
             let mut last_pos = self.last_position.write().await;
             *last_pos = file_size;
         }
 
-        // Create new session
         let session = LogAnalysisSession::new();
         {
             let mut current_session = self.current_session.write().await;
@@ -139,14 +132,12 @@ impl LogAnalysisServiceImpl {
 
         info!("Starting log file monitoring for: {}", log_path);
 
-        // Start the monitoring task
         let monitoring_task = self.create_monitoring_task();
         monitoring_task.await?;
 
         Ok(())
     }
 
-    /// Create the monitoring task
     async fn create_monitoring_task(&self) -> AppResult<()> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
@@ -170,13 +161,11 @@ impl LogAnalysisServiceImpl {
             loop {
                 interval.tick().await;
 
-                // Check if we should stop monitoring
                 if !*is_running.read().await {
                     debug!("Log monitoring stopped, exiting monitor loop");
                     break;
                 }
 
-                // Check for new content in the log file
                 match log_file_repository.get_file_size(&log_path).await {
                     Ok(current_size) => {
                         let last_pos = *last_position.read().await;
@@ -199,7 +188,6 @@ impl LogAnalysisServiceImpl {
                                 error!("Failed to process new log lines: {}", e);
                             }
                         } else if current_size < last_pos {
-                            // File was truncated, reset position
                             warn!("Log file was truncated, resetting position");
                             let mut pos = last_position.write().await;
                             *pos = current_size;
@@ -215,7 +203,6 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
-    /// Process new lines from the log file
     async fn process_new_lines(
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
@@ -229,7 +216,6 @@ impl LogAnalysisServiceImpl {
         stats_repository: &Arc<dyn LogAnalysisStatsRepository>,
         start_position: u64,
     ) -> AppResult<()> {
-        // Read new lines from the file
         let new_lines = log_file_repository
             .read_from_position(log_path, start_position)
             .await?;
@@ -238,7 +224,6 @@ impl LogAnalysisServiceImpl {
             return Ok(());
         }
 
-        // Process each line
         for line in &new_lines {
             if let Err(e) = Self::process_single_line(
                 &line,
@@ -255,14 +240,12 @@ impl LogAnalysisServiceImpl {
             }
         }
 
-        // Update last position
         let current_size = log_file_repository.get_file_size(log_path).await?;
         {
             let mut pos = last_position.write().await;
             *pos = current_size;
         }
 
-        // Update session
         if let Some(mut session) = current_session.read().await.clone() {
             session.events_processed += new_lines.len() as u64;
             session.last_position = current_size;
@@ -275,7 +258,6 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
-    /// Process a single log line
     async fn process_single_line(
         line: &str,
         parser_manager: &LogParserManager,
@@ -285,12 +267,9 @@ impl LogAnalysisServiceImpl {
         _current_session: &Arc<RwLock<Option<LogAnalysisSession>>>,
         stats_repository: &Arc<dyn LogAnalysisStatsRepository>,
     ) -> AppResult<()> {
-        // Parse the line using the unified parser
         if let Ok(Some(result)) = parser_manager.parse_line(line) {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
-                    // Process scene change through location tracking service
-                    // This will be handled by the location tracking domain
                     let event = LogEvent::SceneChange(
                         crate::domain::log_analysis::models::SceneChangeEvent::Zone(
                             crate::domain::log_analysis::models::ZoneChangeEvent {
@@ -308,13 +287,11 @@ impl LogAnalysisServiceImpl {
                         .await?;
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
-                    // Update server status
                     let server_status = crate::domain::server_monitoring::models::ServerStatus::from_connection_event(&event);
                     server_monitoring_service
                         .update_status(server_status)
                         .await?;
 
-                    // Broadcast event
                     if let Err(e) =
                         event_publisher.broadcast_log_event(LogEvent::ServerConnection(event))
                     {
@@ -329,7 +306,6 @@ impl LogAnalysisServiceImpl {
                     character_class,
                     new_level,
                 )) => {
-                    // Handle character level up
                     if let Some(active_character) = character_service.get_active_character().await {
                         if active_character.name == character_name
                             && active_character.class == character_class
@@ -358,7 +334,6 @@ impl LogAnalysisServiceImpl {
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterDeath(character_name) => {
-                    // Handle character death
                     if let Some(active_character) = character_service.get_active_character().await {
                         if active_character.name == character_name {
                             character_service
@@ -413,7 +388,6 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
 
         *is_running = false;
 
-        // End current session
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.end_session();
             self.session_repository.update_session(&session).await?;

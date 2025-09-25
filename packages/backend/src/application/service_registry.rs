@@ -2,12 +2,12 @@ use crate::domain::character::service::CharacterService;
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
 use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
+use crate::infrastructure::monitoring::ServerMonitor;
+use crate::infrastructure::parsing::LogAnalyzer;
+use crate::infrastructure::tauri::EventDispatcher;
 use crate::infrastructure::{
     monitoring::ProcessMonitorImpl, tauri::TauriGameMonitoringEventPublisher,
 };
-use crate::infrastructure::tauri::EventDispatcher;
-use crate::infrastructure::parsing::LogAnalyzer;
-use crate::infrastructure::monitoring::ServerMonitor;
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::Manager;
@@ -20,7 +20,6 @@ impl ServiceInitializer {
     ) -> Result<ServiceInstances, Box<dyn std::error::Error>> {
         info!("Starting service initialization...");
 
-        // Initialize configuration service
         debug!("Initializing ConfigurationService...");
         let config_service = Arc::new(
             ConfigurationServiceImpl::new().expect("Failed to create configuration service"),
@@ -28,13 +27,11 @@ impl ServiceInitializer {
         app.manage(config_service.clone());
         debug!("ConfigurationService managed successfully");
 
-        // Initialize event dispatcher
         debug!("Initializing EventDispatcher...");
         let event_broadcaster = Arc::new(EventDispatcher::new());
         app.manage(event_broadcaster.clone());
         debug!("EventDispatcher managed successfully");
 
-        // Initialize character service
         debug!("Initializing CharacterService...");
         let character_service = CharacterService::new().map_err(|e| {
             error!("Failed to initialize CharacterService: {}", e);
@@ -44,7 +41,6 @@ impl ServiceInitializer {
         app.manage(character_arc.clone());
         debug!("CharacterService managed successfully");
 
-        // Initialize time tracking service
         debug!("Initializing TimeTrackingService...");
         let time_tracking_service = TimeTrackingServiceImpl::new().map_err(|e| {
             error!("Failed to initialize TimeTrackingService: {}", e);
@@ -54,18 +50,13 @@ impl ServiceInitializer {
         app.manage(time_tracking_arc.clone());
         debug!("TimeTrackingService managed successfully");
 
-        // Note: SessionTracker removed in favor of CharacterSessionTracker
-
-        // Initialize server monitor
         debug!("Initializing ServerMonitor...");
         let server_status_manager = ServerMonitor::new(event_broadcaster.clone());
         let server_status_arc = Arc::new(server_status_manager);
         app.manage(server_status_arc.clone());
         debug!("ServerMonitor managed successfully");
 
-        // Initialize log analyzer
         debug!("Initializing LogAnalyzer...");
-        // We'll get the log path asynchronously when needed
         let log_monitor_service = LogAnalyzer::new(
             "".to_string(),
             server_status_arc.clone(),
@@ -75,26 +66,21 @@ impl ServiceInitializer {
         app.manage(log_monitor_arc.clone());
         debug!("LogAnalyzer managed successfully");
 
-        // Initialize game monitoring services
         debug!("Initializing Game Monitoring services...");
 
-        // Create infrastructure services
         let process_detector = Arc::new(ProcessMonitorImpl::new());
 
-        // Create event publisher (will be properly initialized when we have the window)
         let event_publisher = Arc::new(TauriGameMonitoringEventPublisher::new(
             app.get_webview_window("main")
                 .unwrap_or_else(|| panic!("Main window not found during service initialization")),
         ));
 
-        // Create domain service
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
             time_tracking_arc.clone(),
             event_publisher.clone(),
             process_detector.clone(),
         ));
 
-        // Manage the domain service (process detector is used internally only)
         app.manage(game_monitoring_service.clone());
         debug!("Game Monitoring services managed successfully");
 

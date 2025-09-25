@@ -4,7 +4,6 @@ use log::debug;
 use std::sync::Arc;
 use tauri::State;
 
-/// Check if log monitoring is currently active
 #[tauri::command]
 pub async fn is_log_monitoring_active(
     log_analysis_service: State<'_, Arc<dyn LogAnalysisService>>,
@@ -13,7 +12,6 @@ pub async fn is_log_monitoring_active(
     Ok(log_analysis_service.is_monitoring().await)
 }
 
-/// Get the current size of the log file
 #[tauri::command]
 pub async fn get_log_file_size(
     log_analysis_service: State<'_, Arc<dyn LogAnalysisService>>,
@@ -27,7 +25,6 @@ pub async fn get_log_file_size(
     Ok(file_info.size)
 }
 
-/// Read the last N lines from the log file
 #[tauri::command]
 pub async fn read_last_log_lines(
     count: usize,

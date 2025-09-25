@@ -1,41 +1,33 @@
-// Module declarations
 pub mod application;
 pub mod domain;
 pub mod errors;
 pub mod infrastructure;
 
-// Re-export commonly used items
 pub use application::setup_app;
 pub use domain::character::commands::*;
 pub use domain::configuration::commands::*;
 pub use domain::log_analysis::commands::*;
 pub use domain::time_tracking::commands::*;
 pub use errors::*;
-// Import specific models from domain modules
 pub use domain::game_monitoring::models::{OverlayState, ProcessInfo};
 pub use domain::log_analysis::models::{
     ActChangeEvent, HideoutChangeEvent, SceneChangeEvent, ServerConnectionEvent, ZoneChangeEvent,
 };
-// Import character models from domain
 pub use domain::character::{
     Ascendency, Character, CharacterClass, CharacterData, CharacterUpdateParams, League,
 };
-// Import time tracking from domain
 pub use domain::time_tracking::{
     LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
     TimeTrackingService, TimeTrackingServiceImpl, TimeTrackingSummary,
 };
-// Import configuration from domain
 pub use domain::configuration::{
     AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationService,
     ConfigurationServiceImpl, ConfigurationValidationResult,
 };
-// Import game monitoring from domain
 pub use domain::game_monitoring::{
     GameMonitoringEvent, GameMonitoringEventPublisher, GameMonitoringService,
     GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
-// Export infrastructure components
 pub use infrastructure::monitoring::ServerMonitor;
 pub use infrastructure::parsing::{LocationTracker, LogAnalyzer, SceneTypeConfig};
 pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};
@@ -51,7 +43,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
-            // Configuration commands
             get_config,
             get_default_config,
             update_config,
@@ -64,12 +55,9 @@ pub fn run() {
             set_log_level,
             get_config_file_info,
             validate_config,
-            // Log commands
             is_log_monitoring_active,
             get_log_file_size,
             read_last_log_lines,
-            // Note: Old time tracking commands removed in favor of character-aware commands
-            // Character commands
             create_character,
             update_character,
             get_all_characters,
@@ -83,7 +71,6 @@ pub fn run() {
             clear_all_character_data,
             update_character_level,
             increment_character_deaths,
-            // Character time tracking commands
             get_character_time_tracking_data,
             clear_character_time_tracking_data,
             get_character_active_sessions,

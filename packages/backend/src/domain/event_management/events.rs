@@ -1,16 +1,13 @@
 use crate::domain::event_management::models::EventType;
 use serde::{Deserialize, Serialize};
 
-/// Events related to event management operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EventManagementEvent {
-    /// Event published
     EventPublished {
         event_type: EventType,
         timestamp: String,
     },
     
-    /// Event subscription created
     SubscriptionCreated {
         subscription_id: String,
         event_type: EventType,
@@ -18,33 +15,28 @@ pub enum EventManagementEvent {
         timestamp: String,
     },
     
-    /// Event subscription removed
     SubscriptionRemoved {
         subscription_id: String,
         event_type: EventType,
         timestamp: String,
     },
     
-    /// Event channel created
     ChannelCreated {
         event_type: EventType,
         channel_capacity: usize,
         timestamp: String,
     },
     
-    /// Event channel removed
     ChannelRemoved {
         event_type: EventType,
         timestamp: String,
     },
     
-    /// Event management session started
     SessionStarted {
         session_id: String,
         timestamp: String,
     },
     
-    /// Event management session ended
     SessionEnded {
         session_id: String,
         events_published: u64,
@@ -52,13 +44,11 @@ pub enum EventManagementEvent {
         timestamp: String,
     },
     
-    /// Channel configuration updated
     ChannelConfigUpdated {
         event_type: EventType,
         timestamp: String,
     },
     
-    /// Error occurred during event management
     ManagementError {
         error_message: String,
         timestamp: String,

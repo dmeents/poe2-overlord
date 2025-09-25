@@ -8,31 +8,22 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::marker::PhantomData;
 use std::path::PathBuf;
 
-/// Generic persistence repository trait with consistent naming
-/// Provides standardized persistence operations for all domain repositories
 #[async_trait]
 pub trait PersistenceRepository<T>: Send + Sync 
 where
     T: Send + Sync + Serialize + DeserializeOwned + Clone + Default,
 {
-    /// Save data to persistent storage
     async fn save(&self, data: &T) -> AppResult<()>;
     
-    /// Load data from persistent storage
     async fn load(&self) -> AppResult<T>;
     
-    /// Check if persistent storage exists
     async fn exists(&self) -> AppResult<bool>;
     
-    /// Delete persistent storage
     async fn delete(&self) -> AppResult<()>;
     
-    /// Load data from storage or return default if not found
     async fn load_or_default(&self) -> AppResult<T>;
 }
 
-/// Generic persistence repository implementation
-/// Handles all common persistence operations using JSON storage and atomic writes
 #[derive(Clone)]
 pub struct PersistenceRepositoryImpl<T> {
     file_path: PathBuf,
@@ -43,7 +34,6 @@ impl<T> PersistenceRepositoryImpl<T>
 where
     T: Send + Sync + Serialize + DeserializeOwned + Clone + Default,
 {
-    /// Create a new persistence repository with a specific file path
     pub fn new(file_path: PathBuf) -> Self {
         Self {
             file_path,
@@ -51,21 +41,18 @@ where
         }
     }
     
-    /// Create a repository in the config directory
     pub fn new_in_config_dir(file_name: &str) -> AppResult<Self> {
         let config_dir = DirectoryManager::ensure_config_directory()?;
         let file_path = config_dir.join(file_name);
         Ok(Self::new(file_path))
     }
     
-    /// Create a repository in the data directory
     pub fn new_in_data_dir(file_name: &str) -> AppResult<Self> {
         let data_dir = DirectoryManager::ensure_data_directory()?;
         let file_path = data_dir.join(file_name);
         Ok(Self::new(file_path))
     }
     
-    /// Get the file path for this repository
     pub fn get_file_path(&self) -> &PathBuf {
         &self.file_path
     }
@@ -115,28 +102,21 @@ where
     }
 }
 
-/// Specialized persistence repository for scoped data (e.g., per-character data)
-/// Useful for time tracking where each character has their own data file
 #[async_trait]
 pub trait ScopedPersistenceRepository<T, K>: Send + Sync 
 where
     T: Send + Sync + Serialize + DeserializeOwned + Clone + Default,
     K: Send + Sync + Clone + ToString,
 {
-    /// Save data for a specific scope/key
     async fn save_scoped(&self, key: &K, data: &T) -> AppResult<()>;
     
-    /// Load data for a specific scope/key
     async fn load_scoped(&self, key: &K) -> AppResult<Option<T>>;
     
-    /// Delete data for a specific scope/key
     async fn delete_scoped(&self, key: &K) -> AppResult<()>;
     
-    /// Check if data exists for a specific scope/key
     async fn exists_scoped(&self, key: &K) -> AppResult<bool>;
 }
 
-/// Implementation for scoped persistence repository
 #[derive(Clone)]
 pub struct ScopedPersistenceRepositoryImpl<T, K> {
     base_directory: PathBuf,
@@ -150,7 +130,6 @@ where
     T: Send + Sync + Serialize + DeserializeOwned + Clone + Default,
     K: Send + Sync + Clone + ToString,
 {
-    /// Create a new scoped persistence repository
     pub fn new(
         base_directory: PathBuf,
         file_prefix: String,
@@ -164,7 +143,6 @@ where
         }
     }
     
-    /// Create a scoped repository in the data directory
     pub fn new_in_data_dir(file_prefix: &str, file_suffix: &str) -> AppResult<Self> {
         let data_dir = DirectoryManager::ensure_data_directory()?;
         Ok(Self::new(
@@ -174,7 +152,6 @@ where
         ))
     }
     
-    /// Get the file path for a specific key
     fn get_file_path(&self, key: &K) -> PathBuf {
         let file_name = format!("{}{}{}", self.file_prefix, key.to_string(), self.file_suffix);
         self.base_directory.join(file_name)

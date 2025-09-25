@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-/// Server status information for both internal storage and frontend events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerStatus {
     pub ip_address: String,
@@ -22,7 +21,6 @@ impl ServerStatus {
         }
     }
 
-    /// Create from a server connection event
     pub fn from_connection_event(event: &crate::domain::log_analysis::models::ServerConnectionEvent) -> Self {
         Self {
             ip_address: event.ip_address.clone(),
@@ -66,7 +64,6 @@ impl ServerStatus {
     }
 }
 
-/// Server monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerMonitoringConfig {
     pub ping_interval_seconds: u64,
@@ -92,7 +89,6 @@ impl Default for ServerMonitoringConfig {
     }
 }
 
-/// Server connection information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerInfo {
     pub ip_address: String,
@@ -123,7 +119,6 @@ impl ServerInfo {
     }
 }
 
-/// Server monitoring session
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerMonitoringSession {
     pub session_id: String,
@@ -176,7 +171,6 @@ impl ServerMonitoringSession {
     }
 }
 
-/// Server monitoring statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerMonitoringStats {
     pub total_sessions: u64,
@@ -202,7 +196,6 @@ impl Default for ServerMonitoringStats {
     }
 }
 
-/// Server monitoring error types
 #[derive(Debug, thiserror::Error)]
 pub enum ServerMonitoringError {
     #[error("Network error: {message}")]

@@ -12,12 +12,10 @@ use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 use tokio::task;
 
-/// Configuration constants
 const CONFIG_DIR_NAME: &str = "poe2-overlord";
 const CONFIG_FILE_NAME: &str = "config.json";
 const TEMP_FILE_EXTENSION: &str = "tmp";
 
-/// Configuration service implementation
 pub struct ConfigurationServiceImpl {
     config_path: PathBuf,
     config: Arc<RwLock<AppConfig>>,
@@ -25,14 +23,11 @@ pub struct ConfigurationServiceImpl {
 }
 
 impl ConfigurationServiceImpl {
-    /// Create a new configuration service
     pub fn new() -> AppResult<Self> {
-        // Use standard config directory for the current user
         let config_dir = dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join(CONFIG_DIR_NAME);
 
-        // Ensure config directory exists
         if !config_dir.exists() {
             if let Err(e) = fs::create_dir_all(&config_dir) {
                 warn!("Failed to create config directory: {}", e);
@@ -49,10 +44,8 @@ impl ConfigurationServiceImpl {
             event_sender,
         };
 
-        // Load existing configuration or create default
         if let Err(e) = tauri::async_runtime::block_on(service.load_config()) {
             warn!("Failed to load config, using defaults: {}", e);
-            // Try to save the default config to ensure we have a working file
             if let Err(save_err) = tauri::async_runtime::block_on(service.save_config()) {
                 warn!("Failed to save default config: {}", save_err);
             }
@@ -61,7 +54,6 @@ impl ConfigurationServiceImpl {
         Ok(service)
     }
 
-    /// Broadcast configuration change event
     fn broadcast_config_change(&self, new_config: AppConfig, previous_config: AppConfig) {
         let event = ConfigurationChangedEvent::new(new_config, previous_config);
         if let Err(e) = self.event_sender.send(event) {
@@ -69,7 +61,6 @@ impl ConfigurationServiceImpl {
         }
     }
 
-    /// Validate configuration and return detailed results
     fn validate_config_internal(&self, config: &AppConfig) -> ConfigurationValidationResult {
         match config.validate() {
             Ok(()) => ConfigurationValidationResult::valid(),
@@ -77,11 +68,9 @@ impl ConfigurationServiceImpl {
         }
     }
 
-    /// Write content to a temporary file, then rename atomically
     async fn atomic_write(&self, content: &str) -> AppResult<()> {
         let temp_path = self.config_path.with_extension(TEMP_FILE_EXTENSION);
         
-        // Write to temporary file
         task::spawn_blocking({
             let temp_path = temp_path.clone();
             let content = content.to_string();
@@ -91,7 +80,6 @@ impl ConfigurationServiceImpl {
         .map_err(|e| AppError::file_system_error("spawn_write_task", &e.to_string()))?
         .map_err(|e| AppError::file_system_error("write_temp_file", &e.to_string()))?;
 
-        // Rename to final location
         task::spawn_blocking({
             let temp_path = temp_path.clone();
             let config_path = self.config_path.clone();
@@ -105,7 +93,6 @@ impl ConfigurationServiceImpl {
         Ok(())
     }
 
-    /// Read content from file
     async fn read_file(&self) -> AppResult<String> {
         task::spawn_blocking({
             let config_path = self.config_path.clone();
@@ -125,7 +112,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
     }
 
     async fn update_config(&self, new_config: AppConfig) -> AppResult<()> {
-        // Validate the new configuration
         let validation_result = self.validate_config_internal(&new_config);
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
@@ -134,19 +120,15 @@ impl ConfigurationService for ConfigurationServiceImpl {
             ));
         }
 
-        // Get current config for event
         let previous_config = self.get_config().await?;
 
-        // Update the configuration
         {
             let mut config = self.config.write().await;
             *config = new_config.clone();
         }
 
-        // Save to storage
         self.save_config().await?;
 
-        // Broadcast change event
         self.broadcast_config_change(new_config, previous_config);
 
         info!("Configuration updated successfully");
@@ -159,7 +141,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
         
         new_config.poe_client_log_path = path;
 
-        // Validate the updated configuration
         let validation_result = self.validate_config_internal(&new_config);
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
@@ -168,16 +149,13 @@ impl ConfigurationService for ConfigurationServiceImpl {
             ));
         }
 
-        // Update the configuration
         {
             let mut config = self.config.write().await;
             *config = new_config.clone();
         }
 
-        // Save to storage
         self.save_config().await?;
 
-        // Broadcast change event
         self.broadcast_config_change(new_config, previous_config);
 
         debug!("POE client log path updated successfully");
@@ -190,7 +168,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
         
         new_config.log_level = level;
 
-        // Validate the updated configuration
         let validation_result = self.validate_config_internal(&new_config);
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
@@ -199,16 +176,13 @@ impl ConfigurationService for ConfigurationServiceImpl {
             ));
         }
 
-        // Update the configuration
         {
             let mut config = self.config.write().await;
             *config = new_config.clone();
         }
 
-        // Save to storage
         self.save_config().await?;
 
-        // Broadcast change event
         self.broadcast_config_change(new_config, previous_config);
 
         debug!("Log level updated successfully");
@@ -267,7 +241,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
         let config = self.config.read().await;
         let path = &config.poe_client_log_path;
 
-        // If the path is empty, return the OS-specific default
         if path.is_empty() {
             Ok(AppConfig::get_default_poe_client_log_path())
         } else {

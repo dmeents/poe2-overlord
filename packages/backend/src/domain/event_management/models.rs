@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::sync::broadcast;
 
-/// Event subscription information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventSubscription {
     pub subscription_id: String,
@@ -30,7 +29,6 @@ impl EventSubscription {
     }
 }
 
-/// Types of events that can be subscribed to
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum EventType {
     LogEvent,
@@ -54,7 +52,6 @@ impl EventType {
     }
 }
 
-/// Event channel configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventChannelConfig {
     pub channel_capacity: usize,
@@ -74,7 +71,6 @@ impl Default for EventChannelConfig {
     }
 }
 
-/// Event channel information
 #[derive(Debug, Clone)]
 pub struct EventChannel {
     pub event_type: EventType,
@@ -106,7 +102,6 @@ impl EventChannel {
     }
 }
 
-/// Event payload that can contain different types of events
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EventPayload {
     LogEvent(LogEvent),
@@ -154,7 +149,6 @@ impl EventPayload {
     }
 }
 
-/// Event management session
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventManagementSession {
     pub session_id: String,
@@ -205,7 +199,6 @@ impl EventManagementSession {
     }
 }
 
-/// Event management statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventManagementStats {
     pub total_sessions: u64,
@@ -231,7 +224,6 @@ impl Default for EventManagementStats {
     }
 }
 
-/// Event management error types
 #[derive(Debug, thiserror::Error)]
 pub enum EventManagementError {
     #[error("Channel not found: {event_type}")]

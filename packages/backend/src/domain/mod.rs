@@ -7,7 +7,6 @@ pub mod log_analysis;
 pub mod server_monitoring;
 pub mod time_tracking;
 
-// Re-export main types for backward compatibility
 pub use character::{
     Ascendency, Character, CharacterClass, CharacterData, CharacterService, CharacterUpdateParams,
     League,
@@ -32,15 +31,14 @@ pub use location_tracking::{
 };
 pub use log_analysis::{
     LogAnalysisConfig, LogAnalysisError, LogAnalysisEvent, LogAnalysisService,
-    LogAnalysisServiceImpl, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
-    LogLineAnalysis,
+    LogAnalysisServiceImpl, LogAnalysisSession, LogAnalysisStats, LogFileInfo, LogLineAnalysis,
 };
 pub use server_monitoring::{
-    NetworkConnectivity, NetworkConfig, ServerInfo, ServerMonitoringConfig, ServerMonitoringEvent,
+    NetworkConfig, NetworkConnectivity, ServerInfo, ServerMonitoringConfig, ServerMonitoringEvent,
     ServerMonitoringService, ServerMonitoringServiceImpl, ServerMonitoringSession,
     ServerMonitoringStats, ServerStatus,
 };
 pub use time_tracking::{
     LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
-    TimeTrackingSummary, TimeTrackingService, TimeTrackingServiceImpl,
+    TimeTrackingService, TimeTrackingServiceImpl, TimeTrackingSummary,
 };

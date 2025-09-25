@@ -4,7 +4,6 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
-// Re-export main types for backward compatibility
 pub use events::ServerMonitoringEvent;
 pub use models::{
     ServerInfo, ServerMonitoringConfig, ServerMonitoringSession, ServerMonitoringStats, ServerStatus,

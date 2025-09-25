@@ -13,25 +13,19 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Time tracking repository constants
 const TIME_TRACKING_FILE_PREFIX: &str = "time_tracking_";
 const TIME_TRACKING_FILE_SUFFIX: &str = ".json";
 
-/// Time tracking repository implementation that handles all time tracking data operations
 #[derive(Clone)]
 pub struct TimeTrackingRepositoryImpl {
-    /// Character-scoped data: character_id -> data
     active_sessions: Arc<RwLock<HashMap<String, HashMap<String, LocationSession>>>>, // character_id -> location_id -> session
     completed_sessions: Arc<RwLock<HashMap<String, Vec<LocationSession>>>>, // character_id -> sessions
     stats_cache: Arc<RwLock<HashMap<String, HashMap<String, LocationStats>>>>, // character_id -> location_id -> stats
-    /// Scoped persistence repository for character-specific data files
     persistence: ScopedPersistenceRepositoryImpl<CharacterTimeTrackingData, String>,
 }
 
 impl TimeTrackingRepositoryImpl {
-    /// Create a new time tracking repository
     pub fn new() -> AppResult<Self> {
-        // Create scoped persistence repository in data directory
         let persistence =
             ScopedPersistenceRepositoryImpl::<CharacterTimeTrackingData, String>::new_in_data_dir(
                 TIME_TRACKING_FILE_PREFIX,
@@ -51,7 +45,6 @@ impl TimeTrackingRepositoryImpl {
 
 #[async_trait]
 impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
-    // Persistence operations
     async fn save_character_data(&self, data: &CharacterTimeTrackingData) -> AppResult<()> {
         self.persistence.save_scoped(&data.character_id, data).await
     }
@@ -70,7 +63,6 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
             .delete_scoped(&character_id.to_string())
             .await?;
 
-        // Clear in-memory data
         {
             let mut active_sessions = self.active_sessions.write().await;
             active_sessions.remove(character_id);
@@ -94,7 +86,6 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
             .await
     }
 
-    // Data management
     async fn get_active_sessions(
         &self,
         character_id: &str,
@@ -122,7 +113,6 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
         Ok(stats_cache.get(character_id).cloned().unwrap_or_default())
     }
 
-    // Query operations
     async fn find_session_by_location(
         &self,
         character_id: &str,
@@ -140,14 +130,11 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
         &self,
         character_id: &str,
     ) -> AppResult<Option<LocationSession>> {
-        // Get all completed sessions and find the most recent one
         let mut sessions = self.get_completed_sessions(character_id).await?;
 
-        // Also check for active sessions (current location)
         let active_sessions = self.get_active_sessions(character_id).await?;
         sessions.extend(active_sessions.into_values());
 
-        // Sort by entry timestamp (most recent first)
         sessions.sort_by(|a, b| b.entry_timestamp.cmp(&a.entry_timestamp));
 
         Ok(sessions.first().cloned())
@@ -166,9 +153,7 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
         }
     }
 
-    // Data manipulation
     async fn start_session(&self, character_id: &str, session: LocationSession) -> AppResult<()> {
-        // Validate no overlapping sessions
         self.validate_no_overlapping_sessions(character_id, &session)
             .await?;
 
@@ -234,7 +219,6 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
         Ok(())
     }
 
-    // Aggregation
     async fn calculate_total_play_time(&self, character_id: &str) -> AppResult<u64> {
         let completed_sessions = self.get_completed_sessions(character_id).await?;
         Ok(completed_sessions
@@ -260,15 +244,12 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
         let stats_cache = self.get_stats_cache(character_id).await?;
         let mut stats: Vec<LocationStats> = stats_cache.into_values().collect();
 
-        // Sort by total time (descending)
         stats.sort_by(|a, b| b.total_time_seconds.cmp(&a.total_time_seconds));
 
-        // Take top N
         stats.truncate(limit);
         Ok(stats)
     }
 
-    // Business rules
     async fn validate_no_overlapping_sessions(
         &self,
         character_id: &str,
@@ -296,7 +277,6 @@ impl TimeTrackingRepository for TimeTrackingRepositoryImpl {
                 ))
             }
             crate::infrastructure::time::calculations::ValidationResult::Warning(warning) => {
-                // Log warning but allow the operation
                 debug!("Session overlap warning: {}", warning);
                 Ok(())
             }

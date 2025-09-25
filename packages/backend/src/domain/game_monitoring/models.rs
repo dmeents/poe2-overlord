@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
-// ============================================================================
-// Process Information Models
-// ============================================================================
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProcessInfo {
@@ -20,25 +17,16 @@ pub struct OverlayState {
     pub always_on_top: bool,
 }
 
-// ============================================================================
-// Game Monitoring Models
-// ============================================================================
 
-/// Domain model representing the status of the Path of Exile 2 game process
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GameProcessStatus {
-    /// The name of the process
     pub name: String,
-    /// The process ID
     pub pid: u32,
-    /// Whether the process is currently running
     pub running: bool,
-    /// When this status was detected
     pub detected_at: SystemTime,
 }
 
 impl GameProcessStatus {
-    /// Create a new game process status
     pub fn new(name: String, pid: u32, running: bool) -> Self {
         Self {
             name,
@@ -48,7 +36,6 @@ impl GameProcessStatus {
         }
     }
 
-    /// Create a status indicating the game is not running
     pub fn not_running() -> Self {
         Self {
             name: "Not Found".to_string(),
@@ -58,23 +45,18 @@ impl GameProcessStatus {
         }
     }
 
-    /// Check if the game process is currently running
     pub fn is_running(&self) -> bool {
         self.running
     }
 
-    /// Check if this represents a state change from the previous status
     pub fn is_state_change(&self, previous: &GameProcessStatus) -> bool {
         self.running != previous.running
     }
 }
 
-/// Domain model for game monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameMonitoringConfig {
-    /// How often to check for the game process (in seconds)
     pub check_interval_seconds: u64,
-    /// Process names to look for when detecting POE2
     pub process_names: Vec<String>,
 }
 

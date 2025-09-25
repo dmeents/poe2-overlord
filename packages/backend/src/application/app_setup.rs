@@ -13,7 +13,6 @@ use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let services = ServiceInitializer::initialize_services(app)?;
 
-    // Get log level asynchronously
     let config_service = services.config_service.clone();
     let log_level = tauri::async_runtime::block_on(async {
         config_service
@@ -35,7 +34,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         }
     };
 
-    // Setup logging with the configured level
     if cfg!(debug_assertions) {
         app.handle().plugin(
             tauri_plugin_log::Builder::default()
@@ -51,7 +49,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         log_level, level_filter
     );
 
-    // Load existing character time tracking data
     debug!("Loading existing character time tracking data...");
     let time_tracking_service = services.time_tracking_service.clone();
     tauri::async_runtime::spawn(async move {
@@ -71,18 +68,15 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     app.manage(runtime_manager.clone());
     app.manage(task_manager.clone());
 
-    // Get main window and start background services
     if let Some(main_window) = app.get_webview_window("main") {
         info!("Starting background services");
 
-        // Start client log monitoring
         start_log_monitoring(
             services.log_monitor.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );
 
-        // Start process monitoring using domain service directly
         start_game_process_monitoring(
             main_window.clone(),
             services.game_monitoring_service.clone(),
@@ -90,7 +84,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             task_manager.clone(),
         );
 
-        // Start time tracking event emission
         start_time_tracking_emission(
             main_window.clone(),
             services.time_tracking_service.clone(),
@@ -98,7 +91,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             task_manager.clone(),
         );
 
-        // Start ping event emission
         start_ping_event_emission(
             main_window.clone(),
             services.server_status.clone(),

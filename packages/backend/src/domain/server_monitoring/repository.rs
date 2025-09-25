@@ -11,7 +11,6 @@ use log::debug;
 use std::path::Path;
 use tokio::fs;
 
-/// Implementation of server status repository using file system
 pub struct ServerStatusRepositoryImpl {
     status_file_path: String,
 }
@@ -25,7 +24,6 @@ impl ServerStatusRepositoryImpl {
 #[async_trait]
 impl ServerStatusRepository for ServerStatusRepositoryImpl {
     async fn save_status(&self, status: &ServerStatus) -> AppResult<()> {
-        // Ensure the directory exists
         if let Some(parent) = Path::new(&self.status_file_path).parent() {
             fs::create_dir_all(parent).await.map_err(|e| {
                 AppError::file_system_error("Failed to create directory: {}", &e.to_string())
@@ -77,7 +75,6 @@ impl ServerStatusRepository for ServerStatusRepositoryImpl {
     }
 }
 
-/// Implementation of server info repository using file system
 pub struct ServerInfoRepositoryImpl {
     info_file_path: String,
 }
@@ -91,7 +88,6 @@ impl ServerInfoRepositoryImpl {
 #[async_trait]
 impl ServerInfoRepository for ServerInfoRepositoryImpl {
     async fn save_server_info(&self, server_info: &ServerInfo) -> AppResult<()> {
-        // Ensure the directory exists
         if let Some(parent) = Path::new(&self.info_file_path).parent() {
             fs::create_dir_all(parent).await.map_err(|e| {
                 AppError::file_system_error("Failed to create directory: {}", &e.to_string())
@@ -141,7 +137,6 @@ impl ServerInfoRepository for ServerInfoRepositoryImpl {
     }
 }
 
-/// Implementation of server monitoring session repository using file system
 pub struct ServerMonitoringSessionRepositoryImpl {
     sessions_dir: String,
 }
@@ -165,7 +160,6 @@ impl ServerMonitoringSessionRepository for ServerMonitoringSessionRepositoryImpl
     async fn save_session(&self, session: &ServerMonitoringSession) -> AppResult<()> {
         let file_path = self.get_session_file_path(&session.session_id);
         
-        // Ensure directory exists
         if let Some(parent) = Path::new(&file_path).parent() {
             fs::create_dir_all(parent).await.map_err(|e| {
                 AppError::file_system_error("Failed to create sessions directory: {}", &e.to_string())
@@ -229,7 +223,6 @@ impl ServerMonitoringSessionRepository for ServerMonitoringSessionRepositoryImpl
             session.end_session();
             self.update_session(&session).await?;
             
-            // Remove active session file
             let active_file_path = self.get_active_session_file_path();
             if Path::new(&active_file_path).exists() {
                 fs::remove_file(&active_file_path).await.map_err(|e| {
@@ -267,13 +260,11 @@ impl ServerMonitoringSessionRepository for ServerMonitoringSessionRepositoryImpl
             }
         }
 
-        // Sort by start time (newest first)
         sessions.sort_by(|a, b| b.start_time.cmp(&a.start_time));
         Ok(sessions)
     }
 }
 
-/// Implementation of server monitoring statistics repository using file system
 pub struct ServerMonitoringStatsRepositoryImpl {
     stats_file_path: String,
 }
@@ -287,7 +278,6 @@ impl ServerMonitoringStatsRepositoryImpl {
 #[async_trait]
 impl ServerMonitoringStatsRepository for ServerMonitoringStatsRepositoryImpl {
     async fn save_stats(&self, stats: &ServerMonitoringStats) -> AppResult<()> {
-        // Ensure directory exists
         if let Some(parent) = Path::new(&self.stats_file_path).parent() {
             fs::create_dir_all(parent).await.map_err(|e| {
                 AppError::file_system_error("Failed to create stats directory: {}", &e.to_string())
@@ -344,7 +334,6 @@ impl ServerMonitoringStatsRepository for ServerMonitoringStatsRepositoryImpl {
     async fn update_average_latency(&self, latency_ms: u64) -> AppResult<()> {
         let mut stats = self.load_stats().await?;
         
-        // Simple moving average calculation
         if let Some(current_avg) = stats.average_latency_ms {
             stats.average_latency_ms = Some((current_avg + latency_ms as f64) / 2.0);
         } else {

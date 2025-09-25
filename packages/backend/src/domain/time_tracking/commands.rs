@@ -7,7 +7,6 @@ use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;
 
-/// Get all time tracking data for a specific character
 #[tauri::command]
 pub async fn get_character_time_tracking_data(
     character_id: String,
@@ -23,7 +22,6 @@ pub async fn get_character_time_tracking_data(
         .await;
     let all_location_stats = time_tracking_service.get_all_stats(&character_id).await;
 
-    // Create summary with top locations
     let zone_stats: Vec<LocationStats> = all_location_stats
         .iter()
         .filter(|stat| stat.location_type == LocationType::Zone)
@@ -67,7 +65,6 @@ pub async fn get_character_time_tracking_data(
     Ok(data)
 }
 
-/// Clear all time tracking data for a specific character
 #[tauri::command]
 pub async fn clear_character_time_tracking_data(
     character_id: String,
@@ -94,7 +91,6 @@ pub async fn clear_character_time_tracking_data(
     Ok(())
 }
 
-/// Get active sessions for a specific character
 #[tauri::command]
 pub async fn get_character_active_sessions(
     character_id: String,
@@ -113,7 +109,6 @@ pub async fn get_character_active_sessions(
     Ok(sessions)
 }
 
-/// Get completed sessions for a specific character
 #[tauri::command]
 pub async fn get_character_completed_sessions(
     character_id: String,
@@ -132,7 +127,6 @@ pub async fn get_character_completed_sessions(
     Ok(sessions)
 }
 
-/// Get the last known location for a specific character
 #[tauri::command]
 pub async fn get_character_last_known_location(
     character_id: String,
@@ -143,7 +137,6 @@ pub async fn get_character_last_known_location(
         character_id
     );
 
-    // Use the service method to get the last known location
     let last_location = time_tracking_service
         .get_last_known_location(&character_id)
         .await;
@@ -160,7 +153,6 @@ pub async fn get_character_last_known_location(
     Ok(last_location)
 }
 
-/// Get all location stats for a specific character
 #[tauri::command]
 pub async fn get_character_location_stats(
     character_id: String,
@@ -177,7 +169,6 @@ pub async fn get_character_location_stats(
     Ok(stats)
 }
 
-/// Get total play time for a specific character
 #[tauri::command]
 pub async fn get_character_total_play_time(
     character_id: String,
@@ -195,7 +186,6 @@ pub async fn get_character_total_play_time(
     Ok(total_time)
 }
 
-/// Get total play time since process start for a specific character
 #[tauri::command]
 pub async fn get_character_total_play_time_since_process_start(
     character_id: String,
@@ -216,7 +206,6 @@ pub async fn get_character_total_play_time_since_process_start(
     Ok(total_time)
 }
 
-/// Get total hideout time for a specific character
 #[tauri::command]
 pub async fn get_character_total_hideout_time(
     character_id: String,

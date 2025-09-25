@@ -7,30 +7,25 @@ use async_trait::async_trait;
 use log::debug;
 use sysinfo::System;
 
-/// Infrastructure implementation of process detection for Path of Exile 2
 pub struct ProcessMonitorImpl {
     config: GameMonitoringConfig,
 }
 
 impl ProcessMonitorImpl {
-    /// Create a new process monitor with default configuration
     pub fn new() -> Self {
         Self {
             config: GameMonitoringConfig::default(),
         }
     }
 
-    /// Create a new process monitor with custom configuration
     pub fn with_config(config: GameMonitoringConfig) -> Self {
         Self { config }
     }
 
-    /// Check if any of the configured process names are running
     fn check_for_processes(&self, system: &System) -> Option<GameProcessStatus> {
         for (pid, process) in system.processes() {
             let process_name = process.name().to_string_lossy().to_lowercase();
 
-            // Check if this process matches any of our configured names
             if self.config.process_names
                 .iter()
                 .any(|name| process_name.contains(&name.to_lowercase()))

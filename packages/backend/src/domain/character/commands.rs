@@ -9,7 +9,6 @@ use log::{debug, info, warn};
 use std::sync::Arc;
 use tauri::State;
 
-/// Create a new character
 #[tauri::command]
 pub async fn create_character(
     name: String,
@@ -39,7 +38,6 @@ pub async fn create_character(
     Ok(character)
 }
 
-/// Get all characters
 #[tauri::command]
 pub async fn get_all_characters(
     character_service: State<'_, Arc<CharacterService>>,
@@ -51,7 +49,6 @@ pub async fn get_all_characters(
     Ok(characters)
 }
 
-/// Get character by ID
 #[tauri::command]
 pub async fn get_character(
     character_id: String,
@@ -63,7 +60,6 @@ pub async fn get_character(
     Ok(character)
 }
 
-/// Get the currently active character
 #[tauri::command]
 pub async fn get_active_character(
     character_service: State<'_, Arc<CharacterService>>,
@@ -74,7 +70,6 @@ pub async fn get_active_character(
     Ok(character)
 }
 
-/// Set the active character by ID
 #[tauri::command]
 pub async fn set_active_character(
     character_id: String,
@@ -88,7 +83,6 @@ pub async fn set_active_character(
     Ok(())
 }
 
-/// Delete a character by ID and all associated data
 #[tauri::command]
 pub async fn delete_character(
     character_id: String,
@@ -100,7 +94,6 @@ pub async fn delete_character(
         character_id
     );
 
-    // First, delete the character from the character service
     let character = to_command_result(
         character_service
             .delete_character(&character_id)
@@ -113,7 +106,6 @@ pub async fn delete_character(
             }),
     )?;
 
-    // Then, clear all time tracking data for this character
     match time_tracking_service
         .clear_character_data(&character_id)
         .await
@@ -125,8 +117,6 @@ pub async fn delete_character(
             );
         }
         Err(e) => {
-            // Log the error but don't fail the entire operation
-            // The character has already been deleted, so we can't rollback
             warn!(
                 "Failed to clear time tracking data for character {}: {}. Character was still deleted.",
                 character_id, e
@@ -141,7 +131,6 @@ pub async fn delete_character(
     Ok(character)
 }
 
-/// Get all available character classes
 #[tauri::command]
 pub async fn get_available_character_classes() -> CommandResult<Vec<CharacterClass>> {
     debug!("Getting available character classes");
@@ -151,7 +140,6 @@ pub async fn get_available_character_classes() -> CommandResult<Vec<CharacterCla
     Ok(classes)
 }
 
-/// Get all available leagues
 #[tauri::command]
 pub async fn get_available_leagues() -> CommandResult<Vec<League>> {
     debug!("Getting available leagues");
@@ -161,7 +149,6 @@ pub async fn get_available_leagues() -> CommandResult<Vec<League>> {
     Ok(leagues)
 }
 
-/// Get available ascendencies for a given class
 #[tauri::command]
 pub async fn get_available_ascendencies_for_class(
     class: CharacterClass,
@@ -177,7 +164,6 @@ pub async fn get_available_ascendencies_for_class(
     Ok(ascendencies)
 }
 
-/// Update a character's information
 #[tauri::command]
 pub async fn update_character(
     character_id: String,
@@ -202,7 +188,6 @@ pub async fn update_character(
     Ok(character)
 }
 
-/// Clear all character data
 #[tauri::command]
 pub async fn clear_all_character_data(
     character_service: State<'_, Arc<CharacterService>>,
@@ -220,7 +205,6 @@ pub async fn clear_all_character_data(
     Ok(())
 }
 
-/// Update a character's level (system-managed, for testing purposes)
 #[tauri::command]
 pub async fn update_character_level(
     character_id: String,
@@ -248,7 +232,6 @@ pub async fn update_character_level(
     Ok(())
 }
 
-/// Increment a character's death count (system-managed, for testing purposes)
 #[tauri::command]
 pub async fn increment_character_deaths(
     character_id: String,

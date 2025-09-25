@@ -1,32 +1,25 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-// ============================================================================
-// Log Event Types (parsed from game logs)
-// ============================================================================
 
-/// Zone change event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZoneChangeEvent {
     pub zone_name: String,
     pub timestamp: String,
 }
 
-/// Act change event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActChangeEvent {
     pub act_name: String,
     pub timestamp: String,
 }
 
-/// Hideout change event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HideoutChangeEvent {
     pub hideout_name: String,
     pub timestamp: String,
 }
 
-/// Server connection event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConnectionEvent {
     pub ip_address: String,
@@ -34,7 +27,6 @@ pub struct ServerConnectionEvent {
     pub timestamp: String,
 }
 
-/// Character level-up event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterLevelUpEvent {
     pub character_name: String,
@@ -43,14 +35,12 @@ pub struct CharacterLevelUpEvent {
     pub timestamp: String,
 }
 
-/// Character death event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterDeathEvent {
     pub character_name: String,
     pub timestamp: String,
 }
 
-/// Combined scene change event that can represent either a zone, act, or hideout change
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SceneChangeEvent {
@@ -59,7 +49,6 @@ pub enum SceneChangeEvent {
     Hideout(HideoutChangeEvent),
 }
 
-/// Unified log event that can represent either a scene change, server connection, character level-up, or character death
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "event_type")]
 pub enum LogEvent {
@@ -70,7 +59,6 @@ pub enum LogEvent {
 }
 
 impl SceneChangeEvent {
-    /// Get the name of the scene (zone, act, or hideout)
     pub fn get_name(&self) -> &str {
         match self {
             SceneChangeEvent::Zone(event) => &event.zone_name,
@@ -79,7 +67,6 @@ impl SceneChangeEvent {
         }
     }
 
-    /// Get the timestamp of the event
     pub fn get_timestamp(&self) -> &str {
         match self {
             SceneChangeEvent::Zone(event) => &event.timestamp,
@@ -88,27 +75,20 @@ impl SceneChangeEvent {
         }
     }
 
-    /// Check if this is a zone change event
     pub fn is_zone(&self) -> bool {
         matches!(self, SceneChangeEvent::Zone(_))
     }
 
-    /// Check if this is an act change event
     pub fn is_act(&self) -> bool {
         matches!(self, SceneChangeEvent::Act(_))
     }
 
-    /// Check if this is a hideout change event
     pub fn is_hideout(&self) -> bool {
         matches!(self, SceneChangeEvent::Hideout(_))
     }
 }
 
-// ============================================================================
-// Log Analysis Models
-// ============================================================================
 
-/// Log file information and metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogFileInfo {
     pub path: PathBuf,
@@ -117,7 +97,6 @@ pub struct LogFileInfo {
     pub exists: bool,
 }
 
-/// Log analysis configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogAnalysisConfig {
     pub log_file_path: String,
@@ -137,7 +116,6 @@ impl Default for LogAnalysisConfig {
     }
 }
 
-/// Log analysis session data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogAnalysisSession {
     pub session_id: String,
@@ -166,7 +144,6 @@ impl LogAnalysisSession {
     }
 }
 
-/// Log analysis statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogAnalysisStats {
     pub total_events_processed: u64,
@@ -192,7 +169,6 @@ impl Default for LogAnalysisStats {
     }
 }
 
-/// Log analysis result for a single line
 #[derive(Debug, Clone)]
 pub struct LogLineAnalysis {
     pub line_number: usize,
@@ -202,7 +178,6 @@ pub struct LogLineAnalysis {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
-/// Log analysis error types
 #[derive(Debug, thiserror::Error)]
 pub enum LogAnalysisError {
     #[error("File not found: {path}")]

@@ -7,7 +7,6 @@ pub mod system;
 pub mod tauri;
 pub mod time;
 
-// Re-export main types for easy access
 pub use monitoring::process_monitor::ProcessMonitorImpl;
 pub use runtime::{RuntimeManager, TaskManager};
 pub use system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};

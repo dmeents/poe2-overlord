@@ -2,48 +2,40 @@ use crate::domain::location_tracking::models::LocationState;
 use crate::domain::location_tracking::models::SceneType;
 use serde::{Deserialize, Serialize};
 
-/// Events related to location tracking operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LocationTrackingEvent {
-    /// Location state changed
     LocationStateChanged {
         old_state: Option<LocationState>,
         new_state: LocationState,
         timestamp: String,
     },
     
-    /// Scene change detected
     SceneChangeDetected {
         scene_type: SceneType,
         scene_name: String,
         timestamp: String,
     },
     
-    /// Act change detected
     ActChangeDetected {
         act_name: String,
         timestamp: String,
     },
     
-    /// Zone change detected
     ZoneChangeDetected {
         zone_name: String,
         timestamp: String,
     },
     
-    /// Hideout change detected
     HideoutChangeDetected {
         hideout_name: String,
         timestamp: String,
     },
     
-    /// Location tracking session started
     SessionStarted {
         session_id: String,
         timestamp: String,
     },
     
-    /// Location tracking session ended
     SessionEnded {
         session_id: String,
         total_changes: u64,
@@ -51,22 +43,18 @@ pub enum LocationTrackingEvent {
         timestamp: String,
     },
     
-    /// Location tracking reset
     TrackingReset {
         timestamp: String,
     },
     
-    /// Configuration updated
     ConfigurationUpdated {
         timestamp: String,
     },
     
-    /// History cleared
     HistoryCleared {
         timestamp: String,
     },
     
-    /// Error occurred during location tracking
     TrackingError {
         error_message: String,
         timestamp: String,

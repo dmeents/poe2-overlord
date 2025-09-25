@@ -21,7 +21,6 @@ use tauri::{Emitter, WebviewWindow};
 use tokio::sync::{broadcast, RwLock};
 use tokio::time;
 
-/// Server monitoring service implementation
 pub struct ServerMonitoringServiceImpl {
     config: Arc<RwLock<ServerMonitoringConfig>>,
     status_repository: Arc<dyn ServerStatusRepository>,
@@ -37,11 +36,9 @@ pub struct ServerMonitoringServiceImpl {
 }
 
 impl ServerMonitoringServiceImpl {
-    /// Create a new server monitoring service
     pub fn new(event_publisher: Arc<EventPublisher>) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(ServerMonitoringConfig::default()));
 
-        // Create repositories with default paths
         let status_file_path = dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join("poe2-overlord")
@@ -93,7 +90,6 @@ impl ServerMonitoringServiceImpl {
         })
     }
 
-    /// Create a new server monitoring service with custom repositories (for testing)
     pub fn with_repositories(
         config: ServerMonitoringConfig,
         status_repository: Arc<dyn ServerStatusRepository>,
@@ -121,7 +117,6 @@ impl ServerMonitoringServiceImpl {
         }
     }
 
-    /// Start a new monitoring session
     async fn start_monitoring_session(&self) -> AppResult<()> {
         let session = ServerMonitoringSession::new();
         self.session_repository.save_session(&session).await?;
@@ -133,13 +128,11 @@ impl ServerMonitoringServiceImpl {
         Ok(())
     }
 
-    /// End the current monitoring session
     async fn end_monitoring_session(&self) -> AppResult<()> {
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.end_session();
             self.session_repository.update_session(&session).await?;
 
-            // Update statistics
             let mut stats = self.stats_repository.load_stats().await?;
             stats.total_sessions += 1;
             stats.total_pings += session.total_pings;
@@ -155,7 +148,6 @@ impl ServerMonitoringServiceImpl {
         Ok(())
     }
 
-    /// Update server information
     async fn update_server_info_internal(&self, ip_address: String, port: u16) -> AppResult<()> {
         let server_info = match self.info_repository.load_server_info().await? {
             Some(mut info) => {
@@ -171,7 +163,6 @@ impl ServerMonitoringServiceImpl {
 
         self.info_repository.save_server_info(&server_info).await?;
 
-        // Update current session if active
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.set_server_info(server_info);
             self.session_repository.update_session(&session).await?;
@@ -184,7 +175,6 @@ impl ServerMonitoringServiceImpl {
         Ok(())
     }
 
-    /// Start frontend event emission for this service
     pub async fn start_frontend_event_emission(&self, window: WebviewWindow) {
         let mut status_receiver = self.subscribe_to_status_changes();
         let window_clone = window.clone();
@@ -200,7 +190,6 @@ impl ServerMonitoringServiceImpl {
         });
     }
 
-    /// Emit server status events to the frontend
     fn emit_server_status_event(window: &WebviewWindow, status: &ServerStatus) {
         if let Err(e) = window.emit("server-status-updated", status) {
             warn!("Failed to emit server status event: {}", e);
@@ -218,21 +207,17 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     }
 
     async fn update_status(&self, status: ServerStatus) -> AppResult<()> {
-        // Update in-memory status
         {
             let mut current_status = self.current_status.write().await;
             *current_status = Some(status.clone());
         }
 
-        // Save to persistent storage
         self.status_repository.save_status(&status).await?;
 
-        // Broadcast status change
         if let Err(e) = self.status_change_sender.send(status.clone()) {
             warn!("Failed to broadcast status change: {}", e);
         }
 
-        // Emit to frontend
         if let Err(e) = self.event_publisher.broadcast_ping_event(status.clone()) {
             warn!("Failed to broadcast ping event: {}", e);
         }
@@ -284,17 +269,14 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
                 .await
             {
                 Ok(Some(latency_ms)) => {
-                    // Update status with successful ping
                     let status = ServerStatus::with_latency(ip.clone(), port, latency_ms);
                     self.update_status(status.clone()).await?;
 
-                    // Update statistics
                     self.stats_repository.increment_ping_count(true).await?;
                     self.stats_repository
                         .update_average_latency(latency_ms)
                         .await?;
 
-                    // Update session
                     if let Some(mut session) = self.current_session.read().await.clone() {
                         session.record_ping(true);
                         self.session_repository.update_session(&session).await?;
@@ -306,14 +288,11 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
                     Ok(Some(latency_ms))
                 }
                 Ok(None) => {
-                    // Server unreachable
                     let status = ServerStatus::offline(ip.clone(), port);
                     self.update_status(status).await?;
 
-                    // Update statistics
                     self.stats_repository.increment_ping_count(false).await?;
 
-                    // Update session
                     if let Some(mut session) = self.current_session.read().await.clone() {
                         session.record_ping(false);
                         self.session_repository.update_session(&session).await?;
@@ -345,7 +324,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         *is_active = true;
         drop(is_active);
 
-        // Start monitoring session
         self.start_monitoring_session().await?;
 
         let config = self.config.read().await;
@@ -359,19 +337,16 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
             loop {
                 interval.tick().await;
 
-                // Check if we should stop monitoring
                 if !*service.is_ping_monitoring_active.read().await {
                     debug!("Periodic ping monitoring stopped, exiting loop");
                     break;
                 }
 
-                // Perform ping
                 if let Err(e) = service.ping_server().await {
                     error!("Failed to ping server during periodic monitoring: {}", e);
                 }
             }
 
-            // End monitoring session
             if let Err(e) = service.end_monitoring_session().await {
                 error!("Failed to end monitoring session: {}", e);
             }
@@ -391,7 +366,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         *is_active = false;
         drop(is_active);
 
-        // End monitoring session
         self.end_monitoring_session().await?;
 
         info!("Stopped periodic ping monitoring");
@@ -432,7 +406,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     }
 }
 
-/// Network connectivity implementation using tokio
 pub struct NetworkConnectivityImpl {
     config: crate::domain::server_monitoring::traits::NetworkConfig,
 }
@@ -498,7 +471,6 @@ impl NetworkConnectivity for NetworkConnectivityImpl {
     }
 }
 
-// Implement Clone for the service to allow moving into async tasks
 impl Clone for ServerMonitoringServiceImpl {
     fn clone(&self) -> Self {
         Self {

@@ -12,7 +12,6 @@ use std::path::PathBuf;
 use tokio::fs;
 use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 
-/// Implementation of log file repository for file system operations
 pub struct LogFileRepositoryImpl {
     base_path: String,
 }
@@ -86,7 +85,6 @@ impl LogFileRepository for LogFileRepositoryImpl {
         let mut current_line = 0;
         let mut line_buffer = String::new();
 
-        // Skip to start line
         while current_line < start_line {
             match reader.read_line(&mut line_buffer).await {
                 Ok(0) => break, // EOF
@@ -103,7 +101,6 @@ impl LogFileRepository for LogFileRepositoryImpl {
             }
         }
 
-        // Read requested number of lines
         for _ in 0..count {
             line_buffer.clear();
             match reader.read_line(&mut line_buffer).await {
@@ -188,7 +185,6 @@ impl LogFileRepository for LogFileRepositoryImpl {
     }
 }
 
-/// Implementation of log analysis session repository using file system
 pub struct LogAnalysisSessionRepositoryImpl {
     sessions_dir: String,
 }
@@ -212,7 +208,6 @@ impl LogAnalysisSessionRepository for LogAnalysisSessionRepositoryImpl {
     async fn save_session(&self, session: &LogAnalysisSession) -> AppResult<()> {
         let file_path = self.get_session_file_path(&session.session_id);
         
-        // Ensure directory exists
         if let Some(parent) = Path::new(&file_path).parent() {
             fs::create_dir_all(parent).await.map_err(|e| {
                 AppError::file_system_error("Failed to create sessions directory: {}", &e.to_string())
@@ -276,7 +271,6 @@ impl LogAnalysisSessionRepository for LogAnalysisSessionRepositoryImpl {
             session.end_session();
             self.update_session(&session).await?;
             
-            // Remove active session file
             let active_file_path = self.get_active_session_file_path();
             if Path::new(&active_file_path).exists() {
                 fs::remove_file(&active_file_path).await.map_err(|e| {
@@ -314,13 +308,11 @@ impl LogAnalysisSessionRepository for LogAnalysisSessionRepositoryImpl {
             }
         }
 
-        // Sort by start time (newest first)
         sessions.sort_by(|a, b| b.start_time.cmp(&a.start_time));
         Ok(sessions)
     }
 }
 
-/// Implementation of log analysis statistics repository using file system
 pub struct LogAnalysisStatsRepositoryImpl {
     stats_file_path: String,
 }
@@ -334,7 +326,6 @@ impl LogAnalysisStatsRepositoryImpl {
 #[async_trait]
 impl LogAnalysisStatsRepository for LogAnalysisStatsRepositoryImpl {
     async fn save_stats(&self, stats: &LogAnalysisStats) -> AppResult<()> {
-        // Ensure directory exists
         if let Some(parent) = Path::new(&self.stats_file_path).parent() {
             fs::create_dir_all(parent).await.map_err(|e| {
                 AppError::file_system_error("Failed to create stats directory: {}", &e.to_string())

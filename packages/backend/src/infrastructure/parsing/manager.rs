@@ -5,7 +5,6 @@ use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
 use crate::infrastructure::parsing::patterns::{CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser};
 use log::debug;
 
-/// Enum to represent different parser types
 #[derive(Clone)]
 pub enum ParserType {
     SceneChange(SceneChangeParser),
@@ -15,7 +14,6 @@ pub enum ParserType {
 }
 
 impl ParserType {
-    /// Get the parser name
     pub fn parser_name(&self) -> &'static str {
         match self {
             ParserType::SceneChange(parser) => parser.parser_name(),
@@ -25,7 +23,6 @@ impl ParserType {
         }
     }
 
-    /// Check if this parser should parse the given line
     pub fn should_parse(&self, line: &str) -> bool {
         match self {
             ParserType::SceneChange(parser) => parser.should_parse(line),
@@ -35,7 +32,6 @@ impl ParserType {
         }
     }
 
-    /// Parse a line and return the result
     pub fn parse_line(&self, line: &str) -> Result<ParserResult, ParseError> {
         match self {
             ParserType::SceneChange(parser) => parser
@@ -54,7 +50,6 @@ impl ParserType {
     }
 }
 
-/// Enum to represent different parser results
 #[derive(Debug)]
 pub enum ParserResult {
     SceneChange(String), // Now returns raw content instead of SceneChangeEvent
@@ -63,7 +58,6 @@ pub enum ParserResult {
     CharacterDeath(String), // character_name
 }
 
-/// Manager for all log parsers
 #[derive(Clone)]
 pub struct LogParserManager {
     parsers: Vec<ParserType>,
@@ -71,20 +65,16 @@ pub struct LogParserManager {
 }
 
 impl LogParserManager {
-    /// Create a new parser manager with default configuration
     pub fn new() -> Self {
         let config = ParsersConfig::default();
         Self::with_config(config)
     }
 
-    /// Create a new parser manager with custom configuration
     pub fn with_config(config: ParsersConfig) -> Self {
         let parsers = ParserFactory::create_all_parsers(&config);
         Self { parsers, config }
     }
 
-    /// Parse a log line using all available parsers and return the first matching event
-    /// Returns the first event that any parser successfully parses from the line
     pub fn parse_line(&self, line: &str) -> Result<Option<ParserResult>, ParseError> {
         for parser in &self.parsers {
             if parser.should_parse(line) {
@@ -98,7 +88,6 @@ impl LogParserManager {
                             result
                         );
 
-                        // Add specific logging based on parser result type
                         match &result {
                             ParserResult::SceneChange(content) => {
                                 debug!("Scene change content parsed successfully: {}", content);
@@ -130,7 +119,6 @@ impl LogParserManager {
         Ok(None)
     }
 
-    /// Get a list of all active parser names
     pub fn get_active_parser_names(&self) -> Vec<&str> {
         self.parsers
             .iter()
@@ -138,7 +126,6 @@ impl LogParserManager {
             .collect()
     }
 
-    /// Get a specific parser by name (returns a new instance with current config)
     pub fn get_parser_by_name(&self, parser_name: &str) -> Option<ParserType> {
         ParserFactory::create_parser(parser_name, &self.config)
     }

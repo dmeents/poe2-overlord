@@ -4,15 +4,11 @@ use crate::domain::configuration::models::{
 };
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
-// ProcessDetector import removed - no longer needed for Tauri commands
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::State;
 
-// Note: check_game_process command removed
-// Frontend listens to game-monitoring events instead of polling for status
 
-/// Get the current application configuration
 #[tauri::command]
 pub async fn get_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -28,14 +24,12 @@ pub async fn get_config(
     Ok(config)
 }
 
-/// Get the default application configuration (without modifying current config)
 #[tauri::command]
 pub async fn get_default_config() -> CommandResult<AppConfig> {
     debug!("Getting default configuration");
     Ok(AppConfig::default())
 }
 
-/// Update the entire application configuration
 #[tauri::command]
 pub async fn update_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -52,7 +46,6 @@ pub async fn update_config(
     Ok(())
 }
 
-/// Reset configuration to defaults
 #[tauri::command]
 pub async fn reset_config_to_defaults(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -71,7 +64,6 @@ pub async fn reset_config_to_defaults(
     Ok(())
 }
 
-/// Get the POE client log path
 #[tauri::command]
 pub async fn get_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -87,7 +79,6 @@ pub async fn get_poe_client_log_path(
     Ok(path)
 }
 
-/// Set the POE client log path
 #[tauri::command]
 pub async fn set_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -112,7 +103,6 @@ pub async fn set_poe_client_log_path(
     Ok(())
 }
 
-/// Get the OS-specific default POE client log path
 #[tauri::command]
 pub async fn get_default_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -124,7 +114,6 @@ pub async fn get_default_poe_client_log_path(
     Ok(default_path)
 }
 
-/// Reset the POE client log path to the OS-specific default
 #[tauri::command]
 pub async fn reset_poe_client_log_path_to_default(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -148,7 +137,6 @@ pub async fn reset_poe_client_log_path_to_default(
     Ok(())
 }
 
-/// Get the current log level
 #[tauri::command]
 pub async fn get_log_level(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -164,7 +152,6 @@ pub async fn get_log_level(
     Ok(log_level)
 }
 
-/// Set the log level
 #[tauri::command]
 pub async fn set_log_level(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -186,7 +173,6 @@ pub async fn set_log_level(
     Ok(())
 }
 
-/// Get configuration file information
 #[tauri::command]
 pub async fn get_config_file_info(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -205,7 +191,6 @@ pub async fn get_config_file_info(
     Ok(file_info)
 }
 
-/// Validate the current configuration
 #[tauri::command]
 pub async fn validate_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,

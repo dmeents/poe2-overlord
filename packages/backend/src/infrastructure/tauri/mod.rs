@@ -3,7 +3,6 @@ pub mod event_dispatcher;
 pub mod event_publisher;
 pub mod event_utils;
 
-// Re-export main types for easy access
 pub use command_utils::*;
 pub use event_dispatcher::{EventDispatcher, EventService};
 pub use event_publisher::{EventPublisher, TauriGameMonitoringEventPublisher};

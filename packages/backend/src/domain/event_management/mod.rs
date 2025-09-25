@@ -3,7 +3,6 @@ pub mod models;
 pub mod service;
 pub mod traits;
 
-// Re-export main types for backward compatibility
 pub use events::EventManagementEvent;
 pub use models::{
     EventChannel, EventChannelConfig, EventManagementSession, EventManagementStats, EventPayload,

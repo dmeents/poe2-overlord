@@ -1,4 +1,3 @@
-/// Check if content is valid (not null, undefined, or empty)
 pub fn validate_content(content: &str) -> bool {
     !content.is_empty()
         && content != "(null)"

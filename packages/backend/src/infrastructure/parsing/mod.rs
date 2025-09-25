@@ -10,7 +10,6 @@ pub mod patterns;
 pub mod traits;
 pub mod validation;
 
-// Re-export main types for backward compatibility
 pub use config::{ParserConfig, ParsersConfig};
 pub use errors::ParseError;
 pub use extraction::*;

@@ -14,7 +14,6 @@ use log::{debug, info};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Location tracking service implementation
 pub struct LocationTrackingServiceImpl {
     config: Arc<RwLock<LocationTrackingConfig>>,
     state_repository: Arc<dyn LocationStateRepository>,
@@ -27,7 +26,6 @@ pub struct LocationTrackingServiceImpl {
 }
 
 impl LocationTrackingServiceImpl {
-    /// Create a new location tracking service
     pub fn new(
         config: LocationTrackingConfig,
         state_repository: Arc<dyn LocationStateRepository>,
@@ -51,7 +49,6 @@ impl LocationTrackingServiceImpl {
         }
     }
 
-    /// Start a new tracking session
     async fn start_tracking_session(&self) -> AppResult<()> {
         let session = LocationTrackingSession::new();
         self.session_repository.save_session(&session).await?;
@@ -63,13 +60,11 @@ impl LocationTrackingServiceImpl {
         Ok(())
     }
 
-    /// End the current tracking session
     async fn end_tracking_session(&self) -> AppResult<()> {
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.end_session();
             self.session_repository.update_session(&session).await?;
             
-            // Update statistics
             let mut stats = self.stats_repository.load_stats().await?;
             stats.total_sessions += 1;
             stats.total_scene_changes += session.total_scene_changes;
@@ -77,7 +72,6 @@ impl LocationTrackingServiceImpl {
             stats.total_zone_changes += session.total_zone_changes;
             stats.total_hideout_changes += session.total_hideout_changes;
             
-            // Update average session duration
             if let Some(duration) = session.get_session_duration() {
                 let duration_seconds = duration.num_seconds() as f64;
                 if stats.total_sessions == 1 {
@@ -99,7 +93,6 @@ impl LocationTrackingServiceImpl {
         Ok(())
     }
 
-    /// Create a scene change event based on the detected scene type
     fn create_scene_change_event(&self, content: &str, scene_type: SceneType) -> SceneChangeEvent {
         let timestamp = chrono::Utc::now().to_rfc3339();
 
@@ -123,23 +116,19 @@ impl LocationTrackingServiceImpl {
 #[async_trait]
 impl LocationTrackingService for LocationTrackingServiceImpl {
     async fn process_scene_content(&self, content: &str) -> AppResult<Option<SceneChangeEvent>> {
-        // Detect scene type
         let scene_type = {
             let detector = self.scene_type_detector.read().await;
             detector.detect_scene_type(content)
         };
 
-        // Create the event
         let event = self.create_scene_change_event(content, scene_type.clone());
 
-        // Validate if this represents an actual change
         let result = self.validate_scene_change_event(event).await?;
 
         match &result {
             Some(validated_event) => {
                 debug!("Scene change validated as actual change: {:?}", validated_event);
                 
-                // Update current state
                 let mut state = self.current_state.write().await;
                 match validated_event {
                     SceneChangeEvent::Hideout(hideout_event) => {
@@ -153,10 +142,8 @@ impl LocationTrackingService for LocationTrackingServiceImpl {
                     }
                 }
                 
-                // Save state
                 self.state_repository.save_state(&state).await?;
                 
-                // Update session if active
                 if let Some(mut session) = self.current_session.read().await.clone() {
                     let scene_name = match validated_event {
                         SceneChangeEvent::Hideout(hideout_event) => hideout_event.hideout_name.clone(),
@@ -171,10 +158,8 @@ impl LocationTrackingService for LocationTrackingServiceImpl {
                     *current_session = Some(session);
                 }
                 
-                // Update statistics
                 self.stats_repository.increment_scene_change_count(scene_type.clone()).await?;
                 
-                // Add to history if enabled
                 let config = self.config.read().await;
                 if config.enable_history_tracking {
                     let history_entry = LocationHistoryEntry {
@@ -268,7 +253,6 @@ impl LocationTrackingService for LocationTrackingServiceImpl {
 }
 
 impl LocationTrackingServiceImpl {
-    /// Validate a scene change event and return it only if it represents an actual change
     async fn validate_scene_change_event(
         &self,
         event: SceneChangeEvent,
@@ -298,8 +282,6 @@ impl LocationTrackingServiceImpl {
             }
             SceneChangeEvent::Act(act_event) => {
                 debug!("Processing act event: {}", act_event.act_name);
-                // Always return act events, regardless of whether the act changed
-                // This maintains session continuity
                 debug!("Act event always returned for session continuity");
                 Ok(Some(event))
             }
@@ -307,7 +289,6 @@ impl LocationTrackingServiceImpl {
     }
 }
 
-/// Simple scene type detector implementation
 pub struct SimpleSceneTypeDetector {
     config: SceneTypeConfig,
 }
@@ -322,17 +303,14 @@ impl SceneTypeDetector for SimpleSceneTypeDetector {
     fn detect_scene_type(&self, content: &str) -> SceneType {
         let lower_content = content.to_lowercase();
 
-        // Check for hideout keywords first (most specific)
         if self.is_hideout_content(&lower_content) {
             return SceneType::Hideout;
         }
 
-        // Check for act keywords
         if self.is_act_content(&lower_content) {
             return SceneType::Act;
         }
 
-        // Default to zone (fallback)
         SceneType::Zone
     }
 
@@ -351,7 +329,6 @@ impl SceneTypeDetector for SimpleSceneTypeDetector {
     }
 
     fn is_zone_content(&self, _lower_content: &str) -> bool {
-        // This is the fallback case
         true
     }
 

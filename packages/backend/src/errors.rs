@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-/// Unified error type for the entire backend application
 #[derive(Error, Debug)]
 pub enum AppError {
     #[error("Configuration error: {operation} - {message}")]
@@ -71,7 +70,6 @@ impl From<notify::Error> for AppError {
 }
 
 impl AppError {
-    /// Create a file system error with context
     pub fn file_system_error(operation: &str, message: &str) -> Self {
         Self::FileSystem {
             operation: operation.to_string(),
@@ -79,7 +77,6 @@ impl AppError {
         }
     }
 
-    /// Create a serialization error with context
     pub fn serialization_error(operation: &str, message: &str) -> Self {
         Self::Serialization {
             operation: operation.to_string(),
@@ -87,7 +84,6 @@ impl AppError {
         }
     }
 
-    /// Create a character management error with context
     pub fn character_management_error(operation: &str, message: &str) -> Self {
         Self::CharacterManagement {
             operation: operation.to_string(),
@@ -95,7 +91,6 @@ impl AppError {
         }
     }
 
-    /// Create a time tracking error with context
     pub fn time_tracking_error(operation: &str, message: &str) -> Self {
         Self::TimeTracking {
             operation: operation.to_string(),
@@ -103,7 +98,6 @@ impl AppError {
         }
     }
 
-    /// Create a validation error with context
     pub fn validation_error(operation: &str, message: &str) -> Self {
         Self::Validation {
             operation: operation.to_string(),
@@ -111,7 +105,6 @@ impl AppError {
         }
     }
 
-    /// Create an internal error with context
     pub fn internal_error(operation: &str, message: &str) -> Self {
         Self::Internal {
             operation: operation.to_string(),
@@ -119,7 +112,6 @@ impl AppError {
         }
     }
 
-    /// Create a configuration error
     pub fn config_error(operation: &str, message: &str) -> Self {
         Self::Config {
             operation: operation.to_string(),
@@ -127,7 +119,6 @@ impl AppError {
         }
     }
 
-    /// Create a log monitor error
     pub fn log_monitor_error(operation: &str, message: &str) -> Self {
         Self::LogMonitor {
             operation: operation.to_string(),
@@ -135,7 +126,6 @@ impl AppError {
         }
     }
 
-    /// Create a process monitor error
     pub fn process_monitor_error(operation: &str, message: &str) -> Self {
         Self::ProcessMonitor {
             operation: operation.to_string(),
@@ -143,7 +133,6 @@ impl AppError {
         }
     }
 
-    /// Create an event emission error
     pub fn event_emission_error(operation: &str, message: &str) -> Self {
         Self::EventEmission {
             operation: operation.to_string(),
@@ -152,10 +141,8 @@ impl AppError {
     }
 }
 
-/// Result type alias for backend operations
 pub type AppResult<T> = Result<T, AppError>;
 
-/// Helper trait for converting errors to AppError with context
 pub trait ToAppError<T> {
     fn map_app_error<F>(self, operation: &str, f: F) -> AppResult<T>
     where
@@ -174,7 +161,6 @@ where
     }
 }
 
-/// Macro for consistent error handling in service methods
 #[macro_export]
 macro_rules! handle_service_error {
     ($result:expr, $operation:expr) => {
@@ -182,7 +168,6 @@ macro_rules! handle_service_error {
     };
 }
 
-/// Macro for file system operations
 #[macro_export]
 macro_rules! handle_file_error {
     ($result:expr, $operation:expr) => {
@@ -190,7 +175,6 @@ macro_rules! handle_file_error {
     };
 }
 
-/// Macro for serialization operations
 #[macro_export]
 macro_rules! handle_serialization_error {
     ($result:expr, $operation:expr) => {
@@ -198,7 +182,6 @@ macro_rules! handle_serialization_error {
     };
 }
 
-/// Macro for character management operations
 #[macro_export]
 macro_rules! handle_character_error {
     ($result:expr, $operation:expr) => {
@@ -206,7 +189,6 @@ macro_rules! handle_character_error {
     };
 }
 
-/// Macro for time tracking operations
 #[macro_export]
 macro_rules! handle_time_tracking_error {
     ($result:expr, $operation:expr) => {
@@ -214,7 +196,6 @@ macro_rules! handle_time_tracking_error {
     };
 }
 
-/// Macro for event emission operations
 #[macro_export]
 macro_rules! handle_event_emission_error {
     ($result:expr, $operation:expr) => {
@@ -222,7 +203,6 @@ macro_rules! handle_event_emission_error {
     };
 }
 
-/// Macro for configuration operations
 #[macro_export]
 macro_rules! handle_config_error {
     ($result:expr, $operation:expr) => {
@@ -230,7 +210,6 @@ macro_rules! handle_config_error {
     };
 }
 
-/// Macro for log monitoring operations
 #[macro_export]
 macro_rules! handle_log_monitor_error {
     ($result:expr, $operation:expr) => {
@@ -238,7 +217,6 @@ macro_rules! handle_log_monitor_error {
     };
 }
 
-/// Macro for process monitoring operations
 #[macro_export]
 macro_rules! handle_process_monitor_error {
     ($result:expr, $operation:expr) => {
@@ -246,7 +224,6 @@ macro_rules! handle_process_monitor_error {
     };
 }
 
-/// Macro for validation operations
 #[macro_export]
 macro_rules! handle_validation_error {
     ($result:expr, $operation:expr) => {

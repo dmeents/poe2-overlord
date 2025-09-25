@@ -16,17 +16,12 @@ use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
 
-/// Character-aware session tracking constants
 const EVENT_CHANNEL_SIZE: usize = 100;
 
-/// Time tracking service implementation that handles business logic for time tracking
 #[derive(Clone)]
 pub struct TimeTrackingServiceImpl {
-    /// Time tracking repository for data operations
     repository: Arc<dyn TimeTrackingRepository>,
-    /// Event broadcaster for time tracking events
     event_sender: broadcast::Sender<TimeTrackingEvent>,
-    /// POE process start time for calculations
     poe_process_start_time: Arc<tokio::sync::RwLock<Option<DateTime<Utc>>>>,
 }
 
@@ -40,7 +35,6 @@ impl Default for TimeTrackingServiceImpl {
 }
 
 impl TimeTrackingServiceImpl {
-    /// Create a new time tracking service
     pub fn new() -> AppResult<Self> {
         let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
         let repository = Arc::new(TimeTrackingRepositoryImpl::new()?);
@@ -52,7 +46,6 @@ impl TimeTrackingServiceImpl {
         })
     }
 
-    /// Create a new time tracking service with custom repository
     pub fn with_repository(repository: Arc<dyn TimeTrackingRepository>) -> Self {
         let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
 
@@ -63,25 +56,21 @@ impl TimeTrackingServiceImpl {
         }
     }
 
-    /// Get the event receiver for subscribing to time tracking events
     pub fn subscribe(&self) -> broadcast::Receiver<TimeTrackingEvent> {
         self.event_sender.subscribe()
     }
 
-    /// Set the POE process start time
     pub async fn set_poe_process_start_time(&self, start_time: DateTime<Utc>) {
         let mut poe_start_time = self.poe_process_start_time.write().await;
         *poe_start_time = Some(start_time);
     }
 
-    /// Get the POE process start time
     pub async fn get_poe_process_start_time(&self) -> Option<DateTime<Utc>> {
         let poe_start_time = self.poe_process_start_time.read().await;
         *poe_start_time
     }
 
 
-    /// Emit time tracking events to the frontend
     fn emit_time_tracking_event(window: &WebviewWindow, event: &TimeTrackingEvent) {
         match event {
             TimeTrackingEvent::SessionStarted(session_event) => {
@@ -126,20 +115,17 @@ impl TimeTrackingServiceImpl {
                 );
             }
             _ => {
-                // Handle other event types if needed
                 debug!("Unhandled time tracking event type: {:?}", event);
             }
         }
     }
 
-    /// Emit a JSON event to the frontend with proper error handling
     fn emit_json_event(window: &WebviewWindow, event_name: &str, payload: serde_json::Value) {
         if let Err(e) = window.emit(event_name, &payload) {
             warn!("Failed to emit JSON event '{}': {}", event_name, e);
         }
     }
 
-    /// Generate a unique location ID from location name and type
     fn generate_location_id(location_name: &str, location_type: &LocationType) -> String {
         format!(
             "{}_{}",
@@ -159,7 +145,6 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     ) -> AppResult<()> {
         let location_id = Self::generate_location_id(&location_name, &location_type);
 
-        // Create new session
         let session = LocationSession {
             character_id: character_id.to_string(),
             location_id: location_id.clone(),
@@ -170,12 +155,10 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
             duration_seconds: Some(0),
         };
 
-        // Start session via repository
         self.repository
             .start_session(character_id, session.clone())
             .await?;
 
-        // Emit event
         let event = TimeTrackingEvent::SessionStarted(SessionStarted {
             session: session.clone(),
             occurred_at: std::time::SystemTime::now(),
@@ -193,12 +176,10 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     async fn end_session(&self, character_id: &str, location_id: &str) -> AppResult<()> {
-        // End session via repository
         self.repository
             .end_session(character_id, location_id)
             .await?;
 
-        // Emit event
         let event = TimeTrackingEvent::SessionEnded(SessionEnded {
             session: LocationSession {
                 character_id: character_id.to_string(),
@@ -256,8 +237,6 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     async fn get_total_play_time_since_process_start(&self, character_id: &str) -> u64 {
-        // For now, just return total play time
-        // TODO: Implement proper calculation based on process start time
         self.get_total_play_time(character_id).await
     }
 
@@ -279,7 +258,6 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
         let data = self.repository.load_character_data(character_id).await?;
 
         if data.is_some() {
-            // Emit event
             let event = TimeTrackingEvent::TimeTrackingDataLoaded(TimeTrackingDataLoaded {
                 character_id: character_id.to_string(),
                 completed_sessions_count: 0, // TODO: Calculate actual count
@@ -296,11 +274,9 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     async fn save_character_data(&self, character_id: &str) -> AppResult<()> {
-        // Load current data and save it
         if let Some(data) = self.repository.load_character_data(character_id).await? {
             self.repository.save_character_data(&data).await?;
 
-            // Emit event
             let event = TimeTrackingEvent::TimeTrackingDataSaved(TimeTrackingDataSaved {
                 character_id: character_id.to_string(),
                 completed_sessions_count: data.completed_sessions.len(),
@@ -331,8 +307,6 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     async fn end_all_active_sessions_global(&self) -> AppResult<()> {
-        // For now, this is a simplified implementation
-        // TODO: Implement proper global session ending
         debug!("Ending all active sessions globally");
         Ok(())
     }
@@ -340,7 +314,6 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     async fn clear_character_data(&self, character_id: &str) -> AppResult<()> {
         self.repository.delete_character_data(character_id).await?;
 
-        // Emit event
         let event = TimeTrackingEvent::TimeTrackingDataCleared(TimeTrackingDataCleared {
             character_id: character_id.to_string(),
             occurred_at: std::time::SystemTime::now(),
@@ -355,15 +328,11 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     async fn load_all_character_data(&self) -> AppResult<()> {
-        // For now, this is a simplified implementation
-        // TODO: Implement proper loading of all character data
         debug!("Loading all character data");
         Ok(())
     }
 
     async fn save_all_character_data(&self) -> AppResult<()> {
-        // For now, this is a simplified implementation
-        // TODO: Implement proper saving of all character data
         debug!("Saving all character data");
         Ok(())
     }

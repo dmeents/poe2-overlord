@@ -3,7 +3,6 @@ pub mod models;
 pub mod service;
 pub mod traits;
 
-// Re-export main types for backward compatibility
 pub use events::LocationTrackingEvent;
 pub use models::{
     LocationHistoryEntry, LocationState, LocationTrackingConfig, LocationTrackingSession,

@@ -2,55 +2,34 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// Core character structure for Path of Exile 2
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Character {
-    /// UUID for unique identification
     pub id: String,
-    /// Character name (user-defined)
     pub name: String,
-    /// POE2 class
     pub class: CharacterClass,
-    /// Character ascendency (subclass)
     pub ascendency: Ascendency,
-    /// League the character is in
     pub league: League,
-    /// Hardcore mode flag
     pub hardcore: bool,
-    /// Solo Self Found mode flag
     pub solo_self_found: bool,
-    /// Creation timestamp
     pub created_at: DateTime<Utc>,
-    /// Last time this character was active
     pub last_played: Option<DateTime<Utc>>,
-    /// Currently selected character
     pub is_active: bool,
-    /// Current character level (system-managed, read-only in UI)
     #[serde(default = "default_level")]
     pub level: u32,
-    /// Number of times character has died (system-managed, read-only in UI)
     #[serde(default = "default_death_count")]
     pub death_count: u32,
 }
 
-/// Parameters for updating a character's information
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CharacterUpdateParams {
-    /// Character name
     pub name: String,
-    /// POE2 class
     pub class: CharacterClass,
-    /// Character ascendency (subclass)
     pub ascendency: Ascendency,
-    /// League the character is in
     pub league: League,
-    /// Hardcore mode flag
     pub hardcore: bool,
-    /// Solo Self Found mode flag
     pub solo_self_found: bool,
 }
 
-/// POE2 character classes with proper display names
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CharacterClass {
     #[serde(rename = "Warrior")]
@@ -69,10 +48,8 @@ pub enum CharacterClass {
     Witch,
 }
 
-/// POE2 ascendencies with proper display names
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Ascendency {
-    // Warrior ascendencies
     #[serde(rename = "Titan")]
     Titan,
     #[serde(rename = "Warbringer")]
@@ -80,31 +57,26 @@ pub enum Ascendency {
     #[serde(rename = "Smith of Katava")]
     SmithOfKatava,
 
-    // Sorceress ascendencies
     #[serde(rename = "Stormweaver")]
     Stormweaver,
     #[serde(rename = "Chronomancer")]
     Chronomancer,
 
-    // Ranger ascendencies
     #[serde(rename = "Deadeye")]
     Deadeye,
     #[serde(rename = "Pathfinder")]
     Pathfinder,
 
-    // Huntress ascendencies
     #[serde(rename = "Ritualist")]
     Ritualist,
     #[serde(rename = "Amazon")]
     Amazon,
 
-    // Monk ascendencies
     #[serde(rename = "Invoker")]
     Invoker,
     #[serde(rename = "Acolyte of Chayula")]
     AcolyteOfChayula,
 
-    // Mercenary ascendencies
     #[serde(rename = "Gemling Legionnaire")]
     GemlingLegionnaire,
     #[serde(rename = "Tactitian")]
@@ -112,7 +84,6 @@ pub enum Ascendency {
     #[serde(rename = "Witchhunter")]
     Witchhunter,
 
-    // Witch ascendencies
     #[serde(rename = "Blood Mage")]
     BloodMage,
     #[serde(rename = "Infernalist")]
@@ -121,7 +92,6 @@ pub enum Ascendency {
     Lich,
 }
 
-/// League options with proper display names
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum League {
     #[serde(rename = "Standard")]
@@ -130,16 +100,12 @@ pub enum League {
     ThirdEdict,
 }
 
-/// Container for character data (used by services)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CharacterData {
-    /// All characters
     pub characters: Vec<Character>,
-    /// Currently active character ID
     pub active_character_id: Option<String>,
 }
 
-/// Check if an ascendency is valid for a given class
 pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterClass) -> bool {
     match class {
         CharacterClass::Warrior => matches!(
@@ -171,7 +137,6 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
     }
 }
 
-/// Get all valid ascendencies for a given class
 pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
     match class {
         CharacterClass::Warrior => vec![
@@ -197,7 +162,6 @@ pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
 }
 
 
-/// Helper function to get all available character classes
 pub fn get_all_character_classes() -> Vec<CharacterClass> {
     vec![
         CharacterClass::Warrior,
@@ -210,17 +174,14 @@ pub fn get_all_character_classes() -> Vec<CharacterClass> {
     ]
 }
 
-/// Helper function to get all available leagues
 pub fn get_all_leagues() -> Vec<League> {
     vec![League::Standard, League::ThirdEdict]
 }
 
-/// Default level for new characters
 fn default_level() -> u32 {
     1
 }
 
-/// Default death count for new characters
 fn default_death_count() -> u32 {
     0
 }

@@ -4,7 +4,6 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
-// Re-export main types for backward compatibility
 pub use commands::*;
 pub use models::*;
 pub use repository::CharacterRepositoryImpl;

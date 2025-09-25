@@ -1,6 +1,5 @@
 use std::env;
 
-/// Represents the detected operating system
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OperatingSystem {
     Windows,
@@ -9,7 +8,6 @@ pub enum OperatingSystem {
     Unknown,
 }
 
-/// Detect the current operating system
 pub fn detect_os() -> OperatingSystem {
     match env::consts::OS {
         "windows" => OperatingSystem::Windows,
@@ -19,7 +17,6 @@ pub fn detect_os() -> OperatingSystem {
     }
 }
 
-/// Get the current operating system as a string
 pub fn get_os_name() -> &'static str {
     match detect_os() {
         OperatingSystem::Windows => "Windows",

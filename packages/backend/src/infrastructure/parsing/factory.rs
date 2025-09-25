@@ -4,11 +4,9 @@ use crate::infrastructure::parsing::patterns::{
 };
 use crate::infrastructure::parsing::ParsersConfig;
 
-/// Factory for creating parser instances
 pub struct ParserFactory;
 
 impl ParserFactory {
-    /// Create a parser by name with the given configuration
     pub fn create_parser(parser_name: &str, config: &ParsersConfig) -> Option<ParserType> {
         match parser_name {
             "scene_change" if config.scene_change.enabled => Some(ParserType::SceneChange(
@@ -27,7 +25,6 @@ impl ParserFactory {
         }
     }
 
-    /// Create all enabled parsers from the configuration
     pub fn create_all_parsers(config: &ParsersConfig) -> Vec<ParserType> {
         let mut parsers = Vec::new();
 

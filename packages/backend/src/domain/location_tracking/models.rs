@@ -1,11 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ============================================================================
-// Scene Type Definition
-// ============================================================================
 
-/// Represents the different types of scenes that can be detected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SceneType {
     Hideout,
@@ -13,11 +9,7 @@ pub enum SceneType {
     Zone,
 }
 
-// ============================================================================
-// Location Tracking Models
-// ============================================================================
 
-/// Location state for tracking current scene and act
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationState {
     pub scene: Option<String>,
@@ -72,7 +64,6 @@ impl LocationState {
     }
 }
 
-/// Scene type configuration for location tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SceneTypeConfig {
     pub hideout_keywords: Vec<String>,
@@ -108,7 +99,6 @@ impl Default for SceneTypeConfig {
     }
 }
 
-/// Location tracking session
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationTrackingSession {
     pub session_id: String,
@@ -162,7 +152,6 @@ impl LocationTrackingSession {
         
         self.total_scene_changes += 1;
         
-        // Add to history
         self.location_history.push(LocationHistoryEntry {
             scene_type,
             scene_name,
@@ -183,7 +172,6 @@ impl LocationTrackingSession {
     }
 }
 
-/// Location history entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationHistoryEntry {
     pub scene_type: SceneType,
@@ -191,7 +179,6 @@ pub struct LocationHistoryEntry {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
-/// Location tracking statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationTrackingStats {
     pub total_sessions: u64,
@@ -221,7 +208,6 @@ impl Default for LocationTrackingStats {
     }
 }
 
-/// Location tracking configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocationTrackingConfig {
     pub scene_type_config: SceneTypeConfig,
@@ -243,7 +229,6 @@ impl Default for LocationTrackingConfig {
     }
 }
 
-/// Location tracking error types
 #[derive(Debug, thiserror::Error)]
 pub enum LocationTrackingError {
     #[error("Invalid scene type: {scene_type}")]

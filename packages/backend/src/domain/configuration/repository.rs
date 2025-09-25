@@ -11,22 +11,16 @@ use log::debug;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Configuration repository constants
 const CONFIG_FILE_NAME: &str = "config.json";
 
-/// Configuration repository implementation that handles all configuration data operations
 #[derive(Clone)]
 pub struct ConfigurationRepositoryImpl {
-    /// Configuration data with thread-safe access
     config: Arc<RwLock<AppConfig>>,
-    /// Persistence repository for configuration data
     persistence: PersistenceRepositoryImpl<AppConfig>,
 }
 
 impl ConfigurationRepositoryImpl {
-    /// Create a new configuration repository
     pub fn new() -> AppResult<Self> {
-        // Create persistence repository in config directory
         let persistence = PersistenceRepositoryImpl::<AppConfig>::new_in_config_dir(CONFIG_FILE_NAME)?;
 
         let repository = Self {
@@ -34,7 +28,6 @@ impl ConfigurationRepositoryImpl {
             persistence,
         };
 
-        // Load existing configuration
         if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load()) {
             debug!("Failed to load configuration, using defaults: {}", e);
         }
@@ -45,7 +38,6 @@ impl ConfigurationRepositoryImpl {
 
 #[async_trait]
 impl ConfigurationRepository for ConfigurationRepositoryImpl {
-    // Persistence operations
     async fn save(&self, config: &AppConfig) -> AppResult<()> {
         self.persistence.save(config).await
     }
@@ -69,7 +61,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     async fn delete(&self) -> AppResult<()> {
         self.persistence.delete().await?;
 
-        // Reset to default configuration
         {
             let mut config = self.config.write().await;
             *config = AppConfig::default();
@@ -79,7 +70,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(())
     }
 
-    // Data management
     async fn get_in_memory_config(&self) -> AppResult<AppConfig> {
         let config = self.config.read().await;
         Ok(config.clone())
@@ -93,7 +83,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(())
     }
 
-    // Query operations
     async fn get_poe_client_log_path(&self) -> AppResult<String> {
         let config = self.config.read().await;
         Ok(config.poe_client_log_path.clone())
@@ -108,7 +97,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(ConfigurationFileInfo::new(self.persistence.get_file_path().clone()))
     }
 
-    // Data manipulation
     async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
         let mut config = self.config.write().await;
         config.poe_client_log_path = path;
@@ -117,7 +105,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn set_log_level(&self, level: String) -> AppResult<()> {
-        // Validate log level first
         self.ensure_valid_log_level(&level).await?;
         
         let mut config = self.config.write().await;
@@ -132,7 +119,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         self.save(&default_config).await
     }
 
-    // Business rules and validation
     async fn validate_config(&self, config: &AppConfig) -> AppResult<ConfigurationValidationResult> {
         match config.validate() {
             Ok(()) => Ok(ConfigurationValidationResult::valid()),
@@ -165,7 +151,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(())
     }
 
-    // Utility operations
     async fn get_default_poe_client_log_path(&self) -> String {
         AppConfig::get_default_poe_client_log_path()
     }

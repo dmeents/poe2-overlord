@@ -1,6 +1,5 @@
 use crate::infrastructure::parsing::ParseError;
 
-/// Parse IP address and port from a string in format "IP:PORT"
 pub fn parse_ip_port(server_info: &str) -> Result<(String, u16), ParseError> {
     if let Some(colon_pos) = server_info.rfind(':') {
         let ip_part = server_info[..colon_pos].trim();
@@ -14,7 +13,6 @@ pub fn parse_ip_port(server_info: &str) -> Result<(String, u16), ParseError> {
             ParseError::server_info_parse_failed(&format!("Invalid port: {}", port_part))
         })?;
 
-        // Basic IP validation (could be enhanced with proper IP parsing)
         if !ip_part.chars().all(|c| c.is_alphanumeric() || c == '.') {
             return Err(ParseError::server_info_parse_failed(&format!(
                 "Invalid IP format: {}",

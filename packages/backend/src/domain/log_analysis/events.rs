@@ -1,38 +1,31 @@
 use serde::{Deserialize, Serialize};
 
-/// Events related to log analysis operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogAnalysisEvent {
-    /// Log monitoring started
     MonitoringStarted {
         log_file_path: String,
         timestamp: String,
     },
     
-    /// Log monitoring stopped
     MonitoringStopped {
         timestamp: String,
     },
     
-    /// Log file path updated
     LogPathUpdated {
         old_path: String,
         new_path: String,
         timestamp: String,
     },
     
-    /// Configuration updated
     ConfigurationUpdated {
         timestamp: String,
     },
     
-    /// Analysis session started
     SessionStarted {
         session_id: String,
         timestamp: String,
     },
     
-    /// Analysis session ended
     SessionEnded {
         session_id: String,
         events_processed: u64,
@@ -40,13 +33,11 @@ pub enum LogAnalysisEvent {
         timestamp: String,
     },
     
-    /// Statistics updated
     StatisticsUpdated {
         total_events: u64,
         timestamp: String,
     },
     
-    /// Error occurred during analysis
     AnalysisError {
         error_message: String,
         timestamp: String,

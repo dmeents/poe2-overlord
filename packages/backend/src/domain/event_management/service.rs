@@ -13,7 +13,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 
-/// Event management service implementation
 pub struct EventManagementServiceImpl {
     channels: Arc<RwLock<HashMap<EventType, Arc<EventChannel>>>>,
     subscriptions: Arc<RwLock<HashMap<String, EventSubscription>>>,
@@ -23,7 +22,6 @@ pub struct EventManagementServiceImpl {
 }
 
 impl EventManagementServiceImpl {
-    /// Create a new event management service
     pub fn new(
         session_repository: Arc<dyn EventManagementSessionRepository>,
         stats_repository: Arc<dyn EventManagementStatsRepository>,
@@ -40,7 +38,6 @@ impl EventManagementServiceImpl {
         }
     }
 
-    /// Get or create a channel for the given event type
     async fn get_or_create_channel(&self, event_type: EventType) -> AppResult<Arc<EventChannel>> {
         let mut channels = self.channels.write().await;
 
@@ -48,7 +45,6 @@ impl EventManagementServiceImpl {
             return Ok(Arc::clone(channel));
         }
 
-        // Create new channel with default config
         let channel = Arc::new(EventChannel::new(
             event_type.clone(),
             EventChannelConfig::default(),
@@ -59,7 +55,6 @@ impl EventManagementServiceImpl {
         Ok(channel)
     }
 
-    /// Start a new management session
     async fn start_management_session(&self) -> AppResult<()> {
         let session = EventManagementSession::new();
         self.session_repository.save_session(&session).await?;
@@ -71,13 +66,11 @@ impl EventManagementServiceImpl {
         Ok(())
     }
 
-    /// End the current management session
     async fn end_management_session(&self) -> AppResult<()> {
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.end_session();
             self.session_repository.update_session(&session).await?;
 
-            // Update statistics
             let mut stats = self.stats_repository.load_stats().await?;
             stats.total_sessions += 1;
             stats.total_events_published += session.total_events_published;
@@ -99,7 +92,6 @@ impl EventManagementService for EventManagementServiceImpl {
         let event_type = event.get_event_type();
         let channel = self.get_or_create_channel(event_type.clone()).await?;
 
-        // Send the event
         if let Err(e) = channel.sender.send(event.clone()) {
             error!("Failed to send event: {}", e);
               return Err(crate::errors::AppError::event_emission_error("send_event", &format!(
@@ -108,7 +100,6 @@ impl EventManagementService for EventManagementServiceImpl {
             )));
         }
 
-        // Update session statistics
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.increment_published_events();
             self.session_repository.update_session(&session).await?;
@@ -117,7 +108,6 @@ impl EventManagementService for EventManagementServiceImpl {
             *current_session = Some(session);
         }
 
-        // Update global statistics
         self.stats_repository.increment_published_events().await?;
 
         debug!("Published event of type: {:?}", event_type);
@@ -131,7 +121,6 @@ impl EventManagementService for EventManagementServiceImpl {
     ) -> AppResult<EventSubscription> {
         let channel = self.get_or_create_channel(event_type.clone()).await?;
 
-        // Check if channel is at capacity
         if channel.is_at_capacity() {
               return Err(crate::errors::AppError::event_emission_error("create_channel", &format!(
                 "Channel for event type {:?} is at capacity",
@@ -139,18 +128,15 @@ impl EventManagementService for EventManagementServiceImpl {
             )));
         }
 
-        // Create subscription
         let subscription = EventSubscription::new(event_type, subscriber_name);
         let subscription_id = subscription.subscription_id.clone();
         let subscription_event_type = subscription.event_type.clone();
 
-        // Save subscription
         self.subscriptions
             .write()
             .await
             .insert(subscription_id.clone(), subscription.clone());
 
-        // Update session statistics
         if let Some(mut session) = self.current_session.read().await.clone() {
             session.add_subscription(subscription_event_type.clone());
             self.session_repository.update_session(&session).await?;
@@ -173,7 +159,6 @@ impl EventManagementService for EventManagementServiceImpl {
             let event_type = subscription.event_type.clone();
             subscription.deactivate();
 
-            // Update session statistics
             if let Some(mut session) = self.current_session.read().await.clone() {
                 session.remove_subscription(event_type.clone());
                 self.session_repository.update_session(&session).await?;
@@ -194,8 +179,6 @@ impl EventManagementService for EventManagementServiceImpl {
         &self,
         event_type: EventType,
     ) -> Option<broadcast::Receiver<EventPayload>> {
-        // This is a simplified implementation
-        // In a real implementation, we'd need to handle the async nature properly
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
                 if let Ok(channel) = self.get_or_create_channel(event_type).await {
@@ -251,8 +234,6 @@ impl EventManagementService for EventManagementServiceImpl {
         event_type: EventType,
         config: EventChannelConfig,
     ) -> AppResult<()> {
-        // This would require recreating the channel with new config
-        // For now, we'll just log the request
         debug!(
             "Channel config update requested for {:?}: {:?}",
             event_type, config
@@ -269,7 +250,6 @@ impl EventManagementService for EventManagementServiceImpl {
     }
 }
 
-/// Simple event channel manager implementation
 pub struct SimpleEventChannelManager {
     channels: Arc<RwLock<HashMap<EventType, Arc<EventChannel>>>>,
 }
@@ -313,7 +293,6 @@ impl EventChannelManager for SimpleEventChannelManager {
         event_type: EventType,
         config: EventChannelConfig,
     ) -> AppResult<()> {
-        // This would require recreating the channel
         debug!(
             "Channel config update requested for {:?}: {:?}",
             event_type, config

@@ -8,22 +8,16 @@ use log::{debug, info, warn};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Character management constants
 const CHARACTER_DATA_FILE_NAME: &str = "characters.json";
 
-/// Character repository implementation that handles all character data operations
 #[derive(Clone)]
 pub struct CharacterRepositoryImpl {
-    /// Character data with thread-safe access
     character_data: Arc<RwLock<CharacterData>>,
-    /// Persistence repository for character data
     persistence: PersistenceRepositoryImpl<CharacterData>,
 }
 
 impl CharacterRepositoryImpl {
-    /// Create a new character repository
     pub fn new() -> AppResult<Self> {
-        // Create persistence repository in config directory
         let persistence = PersistenceRepositoryImpl::<CharacterData>::new_in_config_dir(
             CHARACTER_DATA_FILE_NAME,
         )?;
@@ -33,7 +27,6 @@ impl CharacterRepositoryImpl {
             persistence,
         };
 
-        // Load existing character data
         if let Err(e) = tokio::runtime::Handle::current().block_on(repository.load()) {
             warn!("Failed to load character data, starting fresh: {}", e);
         }
@@ -44,7 +37,6 @@ impl CharacterRepositoryImpl {
 
 #[async_trait]
 impl CharacterRepository for CharacterRepositoryImpl {
-    // Persistence operations
     async fn save(&self, data: &CharacterData) -> AppResult<()> {
         self.persistence.save(data).await
     }
@@ -61,7 +53,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(data)
     }
 
-    // Query operations
     async fn find_by_id(&self, id: &str) -> AppResult<Option<Character>> {
         let character_data = self.character_data.read().await;
         let character = character_data
@@ -89,7 +80,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(character_data.characters.clone())
     }
 
-    // Data manipulation
     async fn add_character(&self, character: Character) -> AppResult<()> {
         let mut character_data = self.character_data.write().await;
         character_data.characters.push(character);
@@ -132,7 +122,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         let character = character_data.characters.remove(index);
 
-        // If we removed the active character, clear the active character
         if character_data.active_character_id.as_ref() == Some(&id.to_string()) {
             character_data.active_character_id = None;
         }
@@ -146,7 +135,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
     async fn set_active_character(&self, id: &str) -> AppResult<()> {
         let mut character_data = self.character_data.write().await;
 
-        // Check if character exists
         if !character_data.characters.iter().any(|c| c.id == id) {
             return Err(AppError::character_management_error(
                 "set_active_character",
@@ -154,12 +142,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
             ));
         }
 
-        // Deactivate all characters
         for character in &mut character_data.characters {
             character.is_active = false;
         }
 
-        // Activate the specified character
         if let Some(character) = character_data.characters.iter_mut().find(|c| c.id == id) {
             character.is_active = true;
             character.last_played = Some(Utc::now());
@@ -197,7 +183,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
             character_data.active_character_id = None;
         }
 
-        // Remove data file
         self.persistence.delete().await?;
 
         debug!("All character data cleared");

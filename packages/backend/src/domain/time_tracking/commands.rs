@@ -1,8 +1,8 @@
-use crate::infrastructure::tauri::{to_command_result, CommandResult};
 use crate::domain::time_tracking::{
     models::{LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingSummary},
     traits::TimeTrackingService,
 };
+use crate::infrastructure::tauri::{to_command_result, CommandResult};
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;

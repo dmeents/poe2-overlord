@@ -1,4 +1,4 @@
-import { useCharacterTimeTracking } from '../../hooks/useCharacterTimeTracking';
+import { useCharacterManagement, useCharacterTimeTracking } from '../../hooks';
 import { formatDuration } from '../../utils';
 import { quickStatsGridStyles } from './quick-stats-grid.styles';
 
@@ -7,8 +7,9 @@ interface QuickStatsGridProps {
 }
 
 export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
+  const { activeCharacter } = useCharacterManagement();
   const { timeTrackingData, activeSessions, isLoading } =
-    useCharacterTimeTracking();
+    useCharacterTimeTracking({ activeCharacter });
 
   if (isLoading) {
     return (

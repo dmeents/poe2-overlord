@@ -1,4 +1,4 @@
-import { useCharacterTimeTracking } from '../../hooks/useCharacterTimeTracking';
+import { useCharacterManagement, useCharacterTimeTracking } from '../../hooks';
 import { useZoneMonitoring } from '../../hooks/useZoneMonitoring';
 import { recentActivityPanelStyles } from './recent-activity-panel.styles';
 
@@ -9,7 +9,10 @@ interface RecentActivityPanelProps {
 export function RecentActivityPanel({
   className = '',
 }: RecentActivityPanelProps) {
-  const { timeTrackingData, isLoading } = useCharacterTimeTracking();
+  const { activeCharacter } = useCharacterManagement();
+  const { timeTrackingData, isLoading } = useCharacterTimeTracking({
+    activeCharacter,
+  });
   const { currentZone, currentAct, lastZoneChange, lastActChange } =
     useZoneMonitoring();
 

@@ -1,8 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
-import type { CharacterFormData } from '../components/character-management/character-form-modal';
-import type { Character, LocationSession } from '../types';
+import type { CharacterFormData } from '../components/character-modals/character-form-modal';
+import type { Character } from '../types';
 
 export function useCharacterManagement() {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -12,40 +11,18 @@ export function useCharacterManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load all characters with their last known locations
+  // Load all characters
   const loadCharacters = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const allCharacters = await invoke<Character[]>('get_all_characters');
-
-      // Fetch last known location for each character
-      const charactersWithLocations = await Promise.all(
-        allCharacters.map(async character => {
-          try {
-            const lastLocation = await invoke<LocationSession | null>(
-              'get_character_last_known_location',
-              { characterId: character.id }
-            );
-            return {
-              ...character,
-              last_known_location: lastLocation || undefined,
-            };
-          } catch (err) {
-            console.warn(
-              `Failed to load location for character ${character.name}:`,
-              err
-            );
-            return character;
-          }
-        })
-      );
-
-      setCharacters(charactersWithLocations);
+      setCharacters(allCharacters);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load characters'
-      );
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load characters';
+      setError(errorMessage);
+      console.error('Failed to load characters:', err);
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +40,7 @@ export function useCharacterManagement() {
 
   // Create a new character
   const createCharacter = useCallback(
-    async (data: CharacterFormData) => {
+    async (data: CharacterFormData): Promise<Character> => {
       try {
         setError(null);
         const newCharacter = await invoke<Character>('create_character', {
@@ -75,7 +52,7 @@ export function useCharacterManagement() {
           soloSelfFound: data.solo_self_found,
         });
 
-        // Refresh characters list
+        // Refresh characters list and active character
         await loadCharacters();
         await loadActiveCharacter();
 
@@ -92,7 +69,10 @@ export function useCharacterManagement() {
 
   // Update an existing character
   const updateCharacter = useCallback(
-    async (characterId: string, data: CharacterFormData) => {
+    async (
+      characterId: string,
+      data: CharacterFormData
+    ): Promise<Character> => {
       try {
         setError(null);
         const updatedCharacter = await invoke<Character>('update_character', {
@@ -105,7 +85,7 @@ export function useCharacterManagement() {
           soloSelfFound: data.solo_self_found,
         });
 
-        // Refresh characters list
+        // Refresh characters list and active character
         await loadCharacters();
         await loadActiveCharacter();
 
@@ -122,7 +102,7 @@ export function useCharacterManagement() {
 
   // Set active character
   const setActiveCharacterId = useCallback(
-    async (characterId: string) => {
+    async (characterId: string): Promise<void> => {
       try {
         setError(null);
         await invoke('set_active_character', { characterId });
@@ -139,7 +119,7 @@ export function useCharacterManagement() {
 
   // Delete a character
   const deleteCharacter = useCallback(
-    async (characterId: string) => {
+    async (characterId: string): Promise<void> => {
       try {
         setError(null);
         await invoke('delete_character', { characterId });
@@ -157,121 +137,22 @@ export function useCharacterManagement() {
     [loadCharacters, loadActiveCharacter]
   );
 
-  // Check if character name is available
-  const isNameAvailable = useCallback(
-    async (name: string, excludeId?: string): Promise<boolean> => {
-      try {
-        const isAvailable = await invoke<boolean>(
-          'is_character_name_available',
-          { name }
-        );
-
-        // If we're editing an existing character, check if the name is the same as the current name
-        if (excludeId) {
-          const currentCharacter = characters.find(c => c.id === excludeId);
-          if (currentCharacter && currentCharacter.name === name) {
-            return true; // Name hasn't changed, so it's available
-          }
-        }
-
-        return isAvailable;
-      } catch (err) {
-        console.error('Failed to check name availability:', err);
-        return false;
-      }
-    },
-    [characters]
-  );
-
   // Load data on mount
   useEffect(() => {
     loadCharacters();
     loadActiveCharacter();
   }, [loadCharacters, loadActiveCharacter]);
 
-  // Set up real-time event listeners for character updates
-  useEffect(() => {
-    const unlistenFns: (() => void)[] = [];
-
-    const setupListeners = async () => {
-      try {
-        // Listen for character level-up events
-        const unlistenLevelUp = await listen(
-          'character-level-updated',
-          event => {
-            console.log('Character level-up event received:', event.payload);
-            const { character_name, new_level } = event.payload as {
-              character_name: string;
-              new_level: number;
-            };
-
-            // Update the character in the characters list by name
-            setCharacters(prevCharacters =>
-              prevCharacters.map(char =>
-                char.name === character_name
-                  ? { ...char, level: new_level }
-                  : char
-              )
-            );
-
-            // Update active character if it's the same character
-            setActiveCharacter(prevActive =>
-              prevActive && prevActive.name === character_name
-                ? { ...prevActive, level: new_level }
-                : prevActive
-            );
-          }
-        );
-        unlistenFns.push(unlistenLevelUp);
-
-        // Listen for character death events
-        const unlistenDeath = await listen('character-death-updated', event => {
-          console.log('Character death event received:', event.payload);
-          const { character_name } = event.payload as {
-            character_name: string;
-          };
-
-          // Update the character in the characters list by name (increment death count)
-          setCharacters(prevCharacters =>
-            prevCharacters.map(char =>
-              char.name === character_name
-                ? { ...char, death_count: char.death_count + 1 }
-                : char
-            )
-          );
-
-          // Update active character if it's the same character
-          setActiveCharacter(prevActive =>
-            prevActive && prevActive.name === character_name
-              ? { ...prevActive, death_count: prevActive.death_count + 1 }
-              : prevActive
-          );
-        });
-        unlistenFns.push(unlistenDeath);
-      } catch (err) {
-        console.error('Failed to set up character event listeners:', err);
-      }
-    };
-
-    setupListeners();
-
-    // Cleanup listeners
-    return () => {
-      unlistenFns.forEach(unlisten => unlisten());
-    };
-  }, []);
-
   return {
     characters,
     activeCharacter,
     isLoading,
     error,
+    loadCharacters,
+    loadActiveCharacter,
     createCharacter,
     updateCharacter,
     setActiveCharacterId,
     deleteCharacter,
-    isNameAvailable,
-    refreshCharacters: loadCharacters,
-    refreshActiveCharacter: loadActiveCharacter,
   };
 }

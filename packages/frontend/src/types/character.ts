@@ -1,5 +1,3 @@
-import type { LocationSession } from './scene-tracking';
-
 // Character-related types
 export type CharacterClass =
   | 'Warrior'
@@ -49,7 +47,6 @@ export interface Character {
   created_at: string;
   last_played?: string;
   is_active: boolean;
-  last_known_location?: LocationSession;
   level: number;
   death_count: number;
 }

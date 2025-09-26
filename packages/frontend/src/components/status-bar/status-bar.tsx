@@ -19,7 +19,7 @@ import { statusBarStyles } from './status-bar.styles';
 
 export const StatusBar = () => {
   const { processInfo } = useGameProcess();
-  const { currentZone, currentAct, isMonitoring } = useZoneMonitoring();
+  const { currentZone, currentAct } = useZoneMonitoring();
   const { serverStatus } = useServerStatus();
   const { activeCharacter } = useCharacterManagement();
   const navigate = useNavigate();

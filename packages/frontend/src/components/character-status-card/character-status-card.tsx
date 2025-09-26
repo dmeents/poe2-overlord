@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { useCharacterTimeTracking } from '../../hooks/useCharacterTimeTracking';
+import { useCharacterManagement, useCharacterTimeTracking } from '../../hooks';
 import { Button } from '../button';
 import { CharacterCard } from '../character-card';
 import { characterStatusCardStyles } from './character-status-card.styles';
@@ -11,8 +11,10 @@ interface CharacterStatusCardProps {
 export function CharacterStatusCard({
   className = '',
 }: CharacterStatusCardProps) {
-  const { activeCharacter, timeTrackingData, isLoading } =
-    useCharacterTimeTracking();
+  const { activeCharacter } = useCharacterManagement();
+  const { timeTrackingData, isLoading } = useCharacterTimeTracking({
+    activeCharacter,
+  });
 
   if (isLoading) {
     return (

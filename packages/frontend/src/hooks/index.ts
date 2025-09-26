@@ -1,5 +1,5 @@
+export { useCharacterConfig } from './useCharacterConfig';
 export { useCharacterManagement } from './useCharacterManagement';
-export { useCharacterQuery } from './useCharacterQuery';
 export { useCharacterTimeTracking } from './useCharacterTimeTracking';
 export { useCharacterTotalPlayTime } from './useCharacterTotalPlayTime';
 export { useGameProcess } from './useGameProcess';

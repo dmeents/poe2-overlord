@@ -8,14 +8,15 @@ import {
   RecentActivityPanel,
 } from '../components';
 import { PageHeader } from '../components/page-header';
-import { useCharacterTimeTracking } from '../hooks/useCharacterTimeTracking';
+import { useCharacterManagement, useCharacterTimeTracking } from '../hooks';
 
 export const Route = createFileRoute('/')({
   component: Index,
 });
 
 function Index() {
-  const { allStats } = useCharacterTimeTracking();
+  const { activeCharacter } = useCharacterManagement();
+  const { allStats } = useCharacterTimeTracking({ activeCharacter });
 
   return (
     <div className='min-h-screen bg-zinc-900 text-white'>

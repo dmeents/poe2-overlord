@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CheckboxInput, FormField, SelectInput, TextInput } from '../';
-import {
-  ASCENDENCIES,
-  CHARACTER_CLASSES,
-  CHARACTER_FORM_VALIDATION,
-  LEAGUES,
-  getDefaultFormData,
-} from '../../config';
+import { CHARACTER_FORM_VALIDATION } from '../../config';
+import { useCharacterConfig } from '../../hooks';
 import type {
   Ascendency,
   Character,
@@ -44,29 +39,68 @@ export function CharacterFormModal({
   onClose,
   isLoading,
 }: CharacterFormModalProps) {
-  const [formData, setFormData] = useState<CharacterFormData>(
-    getDefaultFormData(character)
-  );
+  const {
+    characterClasses,
+    leagues,
+    ascendencies,
+    isLoading: configLoading,
+    getAscendenciesForClass,
+    getDefaultFormData,
+  } = useCharacterConfig();
+
+  const [formData, setFormData] = useState<CharacterFormData>({
+    name: '',
+    class: 'Warrior',
+    ascendency: 'Titan',
+    league: 'Standard',
+    hardcore: false,
+    solo_self_found: false,
+  });
 
   const [errors, setErrors] = useState<Partial<CharacterFormData>>({});
+  const [availableAscendencies, setAvailableAscendencies] = useState<
+    { value: Ascendency; label: string }[]
+  >([]);
 
-  // Reset form data when character prop changes
+  // Reset form data when character prop changes or config loads
   useEffect(() => {
-    setFormData(getDefaultFormData(character));
-    setErrors({});
-  }, [character]);
-
-  // Reset ascendency when class changes
-  useEffect(() => {
-    const availableAscendencies = ASCENDENCIES[formData.class];
-
-    if (availableAscendencies.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        ascendency: availableAscendencies[0].value,
-      }));
+    if (character) {
+      setFormData({
+        name: character.name,
+        class: character.class,
+        ascendency: character.ascendency,
+        league: character.league,
+        hardcore: character.hardcore,
+        solo_self_found: character.solo_self_found,
+      });
+    } else if (!configLoading && characterClasses.length > 0) {
+      setFormData(getDefaultFormData());
     }
-  }, [formData.class]);
+    setErrors({});
+  }, [character, configLoading, characterClasses, getDefaultFormData]);
+
+  // Load ascendencies when class changes
+  useEffect(() => {
+    const loadAscendencies = async () => {
+      if (formData.class && characterClasses.length > 0) {
+        const ascendencyOptions = await getAscendenciesForClass(formData.class);
+        setAvailableAscendencies(ascendencyOptions);
+
+        // Reset ascendency if current one is not valid for the new class
+        if (
+          ascendencyOptions.length > 0 &&
+          !ascendencyOptions.some(opt => opt.value === formData.ascendency)
+        ) {
+          setFormData(prev => ({
+            ...prev,
+            ascendency: ascendencyOptions[0].value,
+          }));
+        }
+      }
+    };
+
+    loadAscendencies();
+  }, [formData.class, characterClasses, getAscendenciesForClass]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<CharacterFormData> = {};
@@ -104,15 +138,13 @@ export function CharacterFormModal({
     }
   };
 
-  const availableAscendencies = ASCENDENCIES[formData.class];
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       size='2xl'
       title={character ? 'Edit Character' : 'Create Character'}
-      disabled={isLoading}
+      disabled={isLoading || configLoading}
     >
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className={getFormFieldClasses()}>
@@ -131,7 +163,8 @@ export function CharacterFormModal({
               id='character-class'
               value={formData.class}
               onChange={value => handleInputChange('class', value)}
-              options={CHARACTER_CLASSES}
+              options={characterClasses}
+              disabled={configLoading}
             />
           </FormField>
           <FormField label='Ascendency'>
@@ -140,6 +173,7 @@ export function CharacterFormModal({
               value={formData.ascendency}
               onChange={value => handleInputChange('ascendency', value)}
               options={availableAscendencies}
+              disabled={configLoading || availableAscendencies.length === 0}
             />
           </FormField>
           <FormField label='League'>
@@ -147,7 +181,8 @@ export function CharacterFormModal({
               id='character-league'
               value={formData.league}
               onChange={value => handleInputChange('league', value)}
-              options={LEAGUES}
+              options={leagues}
+              disabled={configLoading}
             />
           </FormField>
           <CheckboxInput
@@ -174,12 +209,18 @@ export function CharacterFormModal({
           >
             Cancel
           </Button>
-          <Button type='submit' variant='primary' disabled={isLoading}>
+          <Button
+            type='submit'
+            variant='primary'
+            disabled={isLoading || configLoading}
+          >
             {isLoading
               ? 'Saving...'
-              : character
-                ? 'Update Character'
-                : 'Create Character'}
+              : configLoading
+                ? 'Loading...'
+                : character
+                  ? 'Update Character'
+                  : 'Create Character'}
           </Button>
         </div>
       </form>

@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/button';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
-import { useCharacterTimeTracking } from '@/hooks/useCharacterTimeTracking';
+import { useCharacterManagement, useCharacterTimeTracking } from '@/hooks';
 import { formatDuration } from '@/utils';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -16,19 +16,16 @@ export const Route = createFileRoute('/time-tracking')({
 });
 
 function TimeTrackingPage() {
+  const { activeCharacter } = useCharacterManagement();
   const {
-    activeCharacter,
-    hasActiveCharacter,
     activeSessions,
     completedSessions,
     allStats,
     summary,
     isLoading,
     error,
-    notification,
-    refreshData,
-    clearNotification,
-  } = useCharacterTimeTracking();
+    refetch,
+  } = useCharacterTimeTracking({ activeCharacter });
 
   if (isLoading && !summary) {
     return (
@@ -56,7 +53,7 @@ function TimeTrackingPage() {
         <div className='space-y-6'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <Button onClick={refreshData} variant='outline' size='sm'>
+              <Button onClick={refetch} variant='outline' size='sm'>
                 Refresh
               </Button>
             </div>
@@ -66,28 +63,7 @@ function TimeTrackingPage() {
               <strong>Error:</strong> {error}
             </div>
           )}
-          {notification && (
-            <div
-              className={`px-4 py-3 rounded-lg border ${
-                notification.type === 'info'
-                  ? 'bg-blue-950/20 border-blue-800 text-blue-300'
-                  : notification.type === 'success'
-                    ? 'bg-green-950/20 border-green-800 text-green-300'
-                    : 'bg-yellow-950/20 border-yellow-800 text-yellow-300'
-              }`}
-            >
-              <div className='flex items-center justify-between'>
-                <span>{notification.message}</span>
-                <button
-                  onClick={clearNotification}
-                  className='ml-3 text-current hover:opacity-70 transition-opacity'
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          )}
-          {hasActiveCharacter && summary && (
+          {activeCharacter && summary && (
             <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
               <StatCard
                 value={formatDuration(summary.total_play_time_seconds)}
@@ -114,7 +90,7 @@ function TimeTrackingPage() {
             </div>
           )}
           <ActTimeChart stats={allStats} />
-          {hasActiveCharacter && (
+          {activeCharacter && (
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
               <div className='space-y-6'>
                 <LocationStats stats={allStats} />
@@ -125,7 +101,7 @@ function TimeTrackingPage() {
             </div>
           )}
           {!isLoading &&
-            hasActiveCharacter &&
+            activeCharacter &&
             activeSessions.length === 0 &&
             completedSessions.length === 0 && (
               <div className='text-center py-12'>

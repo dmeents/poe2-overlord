@@ -110,16 +110,12 @@ pub fn run() {
             create_character,
             update_character,
             get_all_characters,
-            get_character,
             get_active_character,
             set_active_character,
             delete_character,
             get_available_character_classes,
             get_available_leagues,
             get_available_ascendencies_for_class,
-            clear_all_character_data,
-            update_character_level,
-            increment_character_deaths,
             
             // Time tracking commands
             get_character_time_tracking_data,

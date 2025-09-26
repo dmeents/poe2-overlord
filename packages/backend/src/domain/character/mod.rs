@@ -38,6 +38,7 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
+
 // Public API exports
 pub use commands::*;
 pub use models::*;

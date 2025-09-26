@@ -21,15 +21,14 @@
 //! - Application logging level control
 
 pub mod commands;
-pub mod events;
 pub mod models;
 pub mod repository;
 pub mod service;
 pub mod traits;
 
+
 // Re-export public API for convenient access
 pub use commands::*;
-pub use events::*;
 pub use models::*;
 pub use repository::ConfigurationRepositoryImpl;
 pub use service::*;

@@ -41,15 +41,21 @@ pub use domain::configuration::{
     ConfigurationServiceImpl, ConfigurationValidationResult,
 };
 
+// Unified event system
+pub use domain::events::{
+    AppEvent, ChannelConfig, ChannelManager, EventBus, EventPublisher,
+    EventPublisherTrait, EventSubscriber, EventSubscriberTrait, EventType,
+};
+
 // Game monitoring domain services and models
 pub use domain::game_monitoring::{
-    GameMonitoringEvent, GameMonitoringEventPublisher, GameMonitoringService,
+    GameMonitoringService,
     GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
 
 // Location tracking domain services and models
 pub use domain::location_tracking::{
-    LocationTrackingEvent, LocationTrackingService, LocationTrackingServiceImpl,
+    LocationTrackingService, LocationTrackingServiceImpl,
     LocationTrackingSession, LocationTrackingStats, LocationState, SceneTypeConfig,
     SimpleSceneTypeDetector,
 };
@@ -59,7 +65,7 @@ pub use domain::location_tracking::models::SceneType;
 pub use infrastructure::monitoring::ServerMonitor;  // Server connectivity monitoring
 pub use domain::log_analysis::traits::LogAnalysisService;  // Log parsing and analysis
 pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};  // OS detection and paths
-pub use infrastructure::tauri::{EventDispatcher, EventService};  // Tauri event system integration
+pub use infrastructure::tauri::TauriEventBridge;  // Tauri event system integration
 pub use infrastructure::time::{  // Time calculation and validation utilities
     calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,
     calculate_session_duration_seconds, validate_duration, validate_no_session_overlap,

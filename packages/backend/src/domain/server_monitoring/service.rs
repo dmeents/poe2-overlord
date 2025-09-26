@@ -16,8 +16,8 @@ use crate::domain::server_monitoring::traits::{
     NetworkConnectivity, ServerInfoRepository, ServerMonitoringService,
     ServerMonitoringSessionRepository, ServerMonitoringStatsRepository, ServerStatusRepository,
 };
+use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::errors::AppResult;
-use crate::infrastructure::tauri::EventPublisher;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::sync::Arc;
@@ -43,8 +43,8 @@ pub struct ServerMonitoringServiceImpl {
     stats_repository: Arc<dyn ServerMonitoringStatsRepository>,
     /// Network connectivity service for ping operations
     network_connectivity: Arc<dyn NetworkConnectivity>,
-    /// Event publisher for broadcasting monitoring events
-    event_publisher: Arc<EventPublisher>,
+    /// Event bus for publishing monitoring events
+    event_bus: Arc<EventBus>,
     /// Current server status cache
     current_status: Arc<RwLock<Option<ServerStatus>>>,
     /// Current monitoring session cache
@@ -56,7 +56,7 @@ pub struct ServerMonitoringServiceImpl {
 }
 
 impl ServerMonitoringServiceImpl {
-    pub fn new(event_publisher: Arc<EventPublisher>) -> AppResult<Self> {
+    pub fn new(event_bus: Arc<EventBus>) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(ServerMonitoringConfig::default()));
 
         let status_repository = Arc::new(ServerStatusRepositoryImpl::new()?);
@@ -74,7 +74,7 @@ impl ServerMonitoringServiceImpl {
             session_repository,
             stats_repository,
             network_connectivity,
-            event_publisher,
+            event_bus,
             current_status: Arc::new(RwLock::new(None)),
             current_session: Arc::new(RwLock::new(None)),
             is_ping_monitoring_active: Arc::new(RwLock::new(false)),
@@ -89,7 +89,7 @@ impl ServerMonitoringServiceImpl {
         session_repository: Arc<dyn ServerMonitoringSessionRepository>,
         stats_repository: Arc<dyn ServerMonitoringStatsRepository>,
         network_connectivity: Arc<dyn NetworkConnectivity>,
-        event_publisher: Arc<EventPublisher>,
+        event_bus: Arc<EventBus>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
         let (status_change_sender, _) = broadcast::channel(100);
@@ -101,7 +101,7 @@ impl ServerMonitoringServiceImpl {
             session_repository,
             stats_repository,
             network_connectivity,
-            event_publisher,
+            event_bus,
             current_status: Arc::new(RwLock::new(None)),
             current_session: Arc::new(RwLock::new(None)),
             is_ping_monitoring_active: Arc::new(RwLock::new(false)),
@@ -176,14 +176,20 @@ impl ServerMonitoringServiceImpl {
 
     /// Start a background task to emit server status events to the frontend
     pub async fn start_frontend_event_emission(&self, window: WebviewWindow) {
-        let mut status_receiver = self.subscribe_to_status_changes();
+        let mut status_receiver = self.subscribe_to_status_changes().await.unwrap_or_else(|_| {
+            // Create a dummy receiver if subscription fails
+            let (_, receiver) = broadcast::channel(1);
+            receiver
+        });
         let window_clone = window.clone();
 
         tokio::spawn(async move {
             debug!("Server monitoring frontend event emission started");
 
-            while let Ok(status) = status_receiver.recv().await {
-                Self::emit_server_status_event(&window_clone, &status);
+            while let Ok(event) = status_receiver.recv().await {
+                if let AppEvent::ServerStatusChanged { new_status, .. } = event {
+                    Self::emit_server_status_event(&window_clone, &new_status);
+                }
             }
 
             debug!("Server monitoring frontend event emission stopped");
@@ -208,6 +214,12 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     }
 
     async fn update_status(&self, status: ServerStatus) -> AppResult<()> {
+        // Get old status before updating
+        let old_status = {
+            let current_status = self.current_status.read().await;
+            current_status.clone()
+        };
+
         // Update in-memory cache
         {
             let mut current_status = self.current_status.write().await;
@@ -222,9 +234,10 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
             warn!("Failed to broadcast status change: {}", e);
         }
 
-        // Broadcast ping event through event publisher
-        if let Err(e) = self.event_publisher.broadcast_ping_event(status.clone()) {
-            warn!("Failed to broadcast ping event: {}", e);
+        // Publish server status changed event
+        let event = AppEvent::server_status_changed(old_status, status.clone());
+        if let Err(e) = self.event_bus.publish(event).await {
+            warn!("Failed to publish server status event: {}", e);
         }
 
         debug!(
@@ -419,8 +432,8 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         Ok(())
     }
 
-    fn subscribe_to_status_changes(&self) -> broadcast::Receiver<ServerStatus> {
-        self.status_change_sender.subscribe()
+    async fn subscribe_to_status_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
+        self.event_bus.get_receiver(EventType::ServerMonitoring).await
     }
 }
 
@@ -508,7 +521,7 @@ impl Clone for ServerMonitoringServiceImpl {
             session_repository: Arc::clone(&self.session_repository),
             stats_repository: Arc::clone(&self.stats_repository),
             network_connectivity: Arc::clone(&self.network_connectivity),
-            event_publisher: Arc::clone(&self.event_publisher),
+            event_bus: Arc::clone(&self.event_bus),
             current_status: Arc::clone(&self.current_status),
             current_session: Arc::clone(&self.current_session),
             is_ping_monitoring_active: Arc::clone(&self.is_ping_monitoring_active),

@@ -1,9 +1,9 @@
-use crate::domain::game_monitoring::{
-    events::GameMonitoringEvent, models::GameProcessStatus, traits::GameMonitoringEventPublisher,
-};
+// Game monitoring imports removed - using unified event system
 use crate::errors::AppResult;
 use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
+use crate::domain::server_monitoring::traits::ServerMonitoringEventPublisher;
+use crate::errors::AppError;
 use log::error;
 use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
@@ -104,55 +104,11 @@ impl Default for EventPublisher {
     }
 }
 
-/// Tauri-specific event publisher for game monitoring events
-/// 
-/// Handles publishing game monitoring events directly to the Tauri frontend
-/// using the WebviewWindow's emit functionality.
-pub struct TauriGameMonitoringEventPublisher {
-    /// Tauri window for frontend communication
-    window: WebviewWindow,
-}
-
-impl TauriGameMonitoringEventPublisher {
-    pub fn new(window: WebviewWindow) -> Self {
-        Self { window }
-    }
-
-    /// Emits game process status to the frontend
-    /// 
-    /// Sends the current game process status to the Tauri frontend
-    /// for real-time display of game monitoring information.
-    async fn emit_game_process_status(&self, status: &GameProcessStatus) -> AppResult<()> {
-        if let Err(e) = self.window.emit("game-process-status", status) {
-            error!("Failed to emit game process status: {}", e);
-              return Err(crate::errors::AppError::event_emission_error("emit_game_process_status", &format!(
-                "Failed to emit game process status: {}",
-                e
-            )));
-        }
-        Ok(())
+impl ServerMonitoringEventPublisher for EventPublisher {
+    fn broadcast_ping_event(&self, status: ServerStatus) -> AppResult<()> {
+        self.broadcast_ping_event(status)
+            .map_err(|e| AppError::event_emission_error("broadcast_ping_event", &e.to_string()))
     }
 }
 
-#[async_trait::async_trait]
-impl GameMonitoringEventPublisher for TauriGameMonitoringEventPublisher {
-    async fn publish_event(&self, event: GameMonitoringEvent) -> AppResult<()> {
-        match event {
-            GameMonitoringEvent::StatusUpdated(updated_event) => {
-                if updated_event.is_state_change {
-                    log::info!("Publishing game process status change event");
-                } else {
-                    log::debug!("Publishing game process status update event");
-                }
-                self.emit_game_process_status(&updated_event.process_status)
-                    .await?;
-            }
-        }
-        Ok(())
-    }
-
-    fn subscribe_to_events(&self) -> broadcast::Receiver<GameMonitoringEvent> {
-        let (_, receiver) = broadcast::channel(100);
-        receiver
-    }
-}
+// TauriGameMonitoringEventPublisher removed - using unified event system

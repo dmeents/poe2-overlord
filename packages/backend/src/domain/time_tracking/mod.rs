@@ -18,6 +18,7 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
+
 // Re-export main types and implementations for easy access
 pub use commands::*;
 pub use events::*;

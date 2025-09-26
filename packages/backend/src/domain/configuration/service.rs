@@ -2,6 +2,7 @@ use crate::domain::configuration::models::{
     AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationValidationResult,
 };
 use crate::domain::configuration::traits::ConfigurationService;
+use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::errors::{AppError, AppResult};
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
@@ -49,8 +50,8 @@ pub struct ConfigurationServiceImpl {
     /// Thread-safe in-memory configuration cache
     config: Arc<RwLock<AppConfig>>,
 
-    /// Broadcast sender for configuration change events
-    event_sender: broadcast::Sender<ConfigurationChangedEvent>,
+    /// Event bus for publishing configuration events
+    event_bus: Arc<EventBus>,
 }
 
 impl ConfigurationServiceImpl {
@@ -93,12 +94,12 @@ impl ConfigurationServiceImpl {
         }
 
         let config_path = config_dir.join(CONFIG_FILE_NAME);
-        let (event_sender, _) = broadcast::channel(16);
+        let event_bus = Arc::new(EventBus::new());
 
         let service = Self {
             config_path,
             config: Arc::new(RwLock::new(AppConfig::default())),
-            event_sender,
+            event_bus,
         };
 
         if let Err(e) = tauri::async_runtime::block_on(service.load_config()) {
@@ -121,10 +122,13 @@ impl ConfigurationServiceImpl {
     ///
     /// * `new_config` - The new configuration state
     /// * `previous_config` - The previous configuration state
-    fn broadcast_config_change(&self, new_config: AppConfig, previous_config: AppConfig) {
-        let event = ConfigurationChangedEvent::new(new_config, previous_config);
-        if let Err(e) = self.event_sender.send(event) {
-            warn!("Failed to broadcast configuration change event: {}", e);
+    async fn publish_config_change(&self, new_config: AppConfig, previous_config: AppConfig) {
+        let event = AppEvent::ConfigurationChanged(ConfigurationChangedEvent::new(
+            new_config,
+            previous_config,
+        ));
+        if let Err(e) = self.event_bus.publish(event).await {
+            warn!("Failed to publish configuration change event: {}", e);
         }
     }
 
@@ -242,7 +246,8 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         self.save_config().await?;
 
-        self.broadcast_config_change(new_config, previous_config);
+        self.publish_config_change(new_config, previous_config)
+            .await;
 
         info!("Configuration updated successfully");
         Ok(())
@@ -272,7 +277,8 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         self.save_config().await?;
 
-        self.broadcast_config_change(new_config, previous_config);
+        self.publish_config_change(new_config, previous_config)
+            .await;
 
         debug!("POE client log path updated successfully");
         Ok(())
@@ -302,7 +308,8 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         self.save_config().await?;
 
-        self.broadcast_config_change(new_config, previous_config);
+        self.publish_config_change(new_config, previous_config)
+            .await;
 
         debug!("Log level updated successfully");
         Ok(())
@@ -384,8 +391,8 @@ impl ConfigurationService for ConfigurationServiceImpl {
         self.set_poe_client_log_path(default_path).await
     }
 
-    fn subscribe_to_config_changes(&self) -> broadcast::Receiver<ConfigurationChangedEvent> {
-        self.event_sender.subscribe()
+    async fn subscribe_to_config_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
+        self.event_bus.get_receiver(EventType::Configuration).await
     }
 }
 

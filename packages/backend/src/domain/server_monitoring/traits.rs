@@ -8,9 +8,19 @@ use crate::domain::server_monitoring::models::{
     ServerInfo, ServerMonitoringConfig, ServerMonitoringSession, ServerMonitoringStats,
     ServerStatus,
 };
+use crate::domain::events::AppEvent;
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use tokio::sync::broadcast;
+
+/// Trait for publishing server monitoring events.
+///
+/// This trait defines the contract for publishing server status events,
+/// allowing for different implementations in testing and production.
+pub trait ServerMonitoringEventPublisher: Send + Sync {
+    /// Broadcast a ping event with server status
+    fn broadcast_ping_event(&self, status: ServerStatus) -> AppResult<()>;
+}
 
 /// Core service trait for server monitoring operations.
 ///
@@ -58,7 +68,7 @@ pub trait ServerMonitoringService: Send + Sync {
     async fn update_config(&self, config: ServerMonitoringConfig) -> AppResult<()>;
 
     /// Subscribe to real-time status change events
-    fn subscribe_to_status_changes(&self) -> broadcast::Receiver<ServerStatus>;
+    async fn subscribe_to_status_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
 }
 
 /// Repository trait for server status persistence operations.

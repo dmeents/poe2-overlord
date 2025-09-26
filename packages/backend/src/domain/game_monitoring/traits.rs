@@ -1,29 +1,8 @@
-use crate::domain::game_monitoring::{events::GameMonitoringEvent, models::GameProcessStatus};
+use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::errors::AppResult;
 use async_trait::async_trait;
-use tokio::sync::broadcast;
 
-/// Trait for publishing game monitoring events to subscribers.
-///
-/// This trait enables the game monitoring service to notify other parts of the system
-/// about process status changes, allowing for loose coupling between domains.
-#[async_trait]
-pub trait GameMonitoringEventPublisher: Send + Sync {
-    /// Publishes a game monitoring event to all subscribers.
-    ///
-    /// # Arguments
-    /// * `event` - The event to publish
-    ///
-    /// # Returns
-    /// * `AppResult<()>` - Success or error result
-    async fn publish_event(&self, event: GameMonitoringEvent) -> AppResult<()>;
-
-    /// Creates a new subscription to game monitoring events.
-    ///
-    /// # Returns
-    /// * `broadcast::Receiver<GameMonitoringEvent>` - Channel receiver for events
-    fn subscribe_to_events(&self) -> broadcast::Receiver<GameMonitoringEvent>;
-}
+// Event publishing trait removed - using unified event system
 
 /// Trait for detecting and checking the status of game processes.
 ///

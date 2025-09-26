@@ -1,3 +1,4 @@
+use crate::domain::events::AppEvent;
 use crate::domain::time_tracking::{
     events::TimeTrackingEvent,
     models::{LocationSession, LocationStats, LocationType},
@@ -14,7 +15,7 @@ pub trait TimeTrackingEventPublisher: Send + Sync {
     async fn publish_event(&self, event: TimeTrackingEvent) -> AppResult<()>;
 
     /// Returns a receiver for subscribing to time tracking events
-    fn subscribe_to_events(&self) -> broadcast::Receiver<TimeTrackingEvent>;
+    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
 }
 
 /// Main service trait for time tracking operations
@@ -68,7 +69,7 @@ pub trait TimeTrackingService: Send + Sync {
     async fn save_character_data(&self, character_id: &str) -> AppResult<()>;
 
     /// Returns a receiver for subscribing to time tracking events
-    fn subscribe_to_events(&self) -> broadcast::Receiver<TimeTrackingEvent>;
+    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
 
     /// Sets the PoE process start time for time calculations
     async fn set_poe_process_start_time(&self, start_time: chrono::DateTime<chrono::Utc>);

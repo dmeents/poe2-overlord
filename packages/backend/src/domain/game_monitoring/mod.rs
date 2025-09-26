@@ -18,13 +18,11 @@
 //! - Event management system (publishes status change events)
 //! - Process detection infrastructure (platform-specific process finding)
 
-pub mod events;
 pub mod models;
 pub mod service;
 pub mod traits;
 
 // Re-export the main types and traits for easy access
-pub use events::{GameMonitoringEvent, GameProcessStatusUpdated};
 pub use models::{GameMonitoringConfig, GameProcessStatus};
 pub use service::GameMonitoringServiceImpl;
-pub use traits::{GameMonitoringEventPublisher, GameMonitoringService, ProcessDetector};
+pub use traits::{GameMonitoringService, ProcessDetector};

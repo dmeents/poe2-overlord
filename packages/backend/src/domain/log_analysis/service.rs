@@ -12,7 +12,7 @@ use crate::domain::log_analysis::traits::{
 use crate::domain::server_monitoring::traits::ServerMonitoringService as ServerMonitoringServiceTrait;
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::parsing::LogParserManager;
-use crate::infrastructure::tauri::EventDispatcher;
+use crate::domain::events::{AppEvent, EventBus, EventType};
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::sync::Arc;
@@ -31,8 +31,8 @@ pub struct LogAnalysisServiceImpl {
     session_repository: Arc<dyn LogAnalysisSessionRepository>,
     /// Repository for managing log analysis statistics
     stats_repository: Arc<dyn LogAnalysisStatsRepository>,
-    /// Event dispatcher for broadcasting log events to subscribers
-    event_dispatcher: Arc<EventDispatcher>,
+    /// Event bus for publishing log events
+    event_bus: Arc<EventBus>,
     /// Service for character-related operations
     character_service: Arc<dyn CharacterServiceTrait>,
     /// Service for server monitoring operations
@@ -53,7 +53,7 @@ impl LogAnalysisServiceImpl {
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
-        event_dispatcher: Arc<EventDispatcher>,
+        event_bus: Arc<EventBus>,
     ) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(config));
         let log_file_repository = Arc::new(LogFileRepositoryImpl::new(String::new()));
@@ -66,7 +66,7 @@ impl LogAnalysisServiceImpl {
             log_file_repository,
             session_repository,
             stats_repository,
-            event_dispatcher,
+            event_bus,
             character_service,
             server_monitoring_service,
             parser_manager,
@@ -84,7 +84,7 @@ impl LogAnalysisServiceImpl {
         stats_repository: Arc<dyn LogAnalysisStatsRepository>,
         character_service: Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
-        event_dispatcher: Arc<EventDispatcher>,
+        event_bus: Arc<EventBus>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
         let parser_manager = LogParserManager::new();
@@ -93,7 +93,7 @@ impl LogAnalysisServiceImpl {
             log_file_repository,
             session_repository,
             stats_repository,
-            event_dispatcher,
+            event_bus,
             character_service,
             server_monitoring_service,
             parser_manager,
@@ -148,7 +148,7 @@ impl LogAnalysisServiceImpl {
 
         // Clone all necessary dependencies for the spawned task
         let log_file_repository = Arc::clone(&self.log_file_repository);
-        let event_dispatcher = Arc::clone(&self.event_dispatcher);
+        let event_bus = Arc::clone(&self.event_bus);
         let character_service = Arc::clone(&self.character_service);
         let server_monitoring_service = Arc::clone(&self.server_monitoring_service);
         let is_running = Arc::clone(&self.is_running);
@@ -180,7 +180,7 @@ impl LogAnalysisServiceImpl {
                                 &parser_manager,
                                 &log_path,
                                 &log_file_repository,
-                                &event_dispatcher,
+                                &event_bus,
                                 &character_service,
                                 &server_monitoring_service,
                                 &last_position,
@@ -215,7 +215,7 @@ impl LogAnalysisServiceImpl {
         parser_manager: &LogParserManager,
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
-        event_dispatcher: &Arc<EventDispatcher>,
+        event_bus: &Arc<EventBus>,
         character_service: &Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: &Arc<dyn ServerMonitoringServiceTrait>,
         last_position: &Arc<RwLock<u64>>,
@@ -238,7 +238,7 @@ impl LogAnalysisServiceImpl {
             if let Err(e) = Self::process_single_line(
                 parser_manager,
                 &line,
-                event_dispatcher,
+                event_bus,
                 character_service,
                 server_monitoring_service,
                 current_session,
@@ -274,7 +274,7 @@ impl LogAnalysisServiceImpl {
     async fn process_single_line(
         parser_manager: &LogParserManager,
         line: &str,
-        event_dispatcher: &Arc<EventDispatcher>,
+        event_bus: &Arc<EventBus>,
         character_service: &Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: &Arc<dyn ServerMonitoringServiceTrait>,
         _current_session: &Arc<RwLock<Option<LogAnalysisSession>>>,
@@ -294,8 +294,8 @@ impl LogAnalysisServiceImpl {
                         ),
                     );
 
-                    if let Err(e) = event_dispatcher.broadcast_event(event) {
-                        warn!("Failed to broadcast log event: {}", e);
+                    if let Err(e) = event_bus.publish(AppEvent::LogParsed(event)).await {
+                        warn!("Failed to publish log event: {}", e);
                     }
                     stats_repository
                         .increment_event_count("scene_change")
@@ -308,10 +308,8 @@ impl LogAnalysisServiceImpl {
                         .update_status(server_status)
                         .await?;
 
-                    if let Err(e) =
-                        event_dispatcher.broadcast_event(LogEvent::ServerConnection(event))
-                    {
-                        warn!("Failed to broadcast server connection event: {}", e);
+                    if let Err(e) = event_bus.publish(AppEvent::LogParsed(LogEvent::ServerConnection(event))).await {
+                        warn!("Failed to publish server connection event: {}", e);
                     }
                     stats_repository
                         .increment_event_count("server_connection")
@@ -339,10 +337,11 @@ impl LogAnalysisServiceImpl {
                                     timestamp: chrono::Utc::now().to_rfc3339(),
                                 };
 
-                            if let Err(e) = event_dispatcher
-                                .broadcast_event(LogEvent::CharacterLevelUp(level_up_event))
+                            if let Err(e) = event_bus
+                                .publish(AppEvent::LogParsed(LogEvent::CharacterLevelUp(level_up_event)))
+                                .await
                             {
-                                warn!("Failed to broadcast character level up event: {}", e);
+                                warn!("Failed to publish character level up event: {}", e);
                             }
                             stats_repository
                                 .increment_event_count("character_level_up")
@@ -364,10 +363,11 @@ impl LogAnalysisServiceImpl {
                                     timestamp: chrono::Utc::now().to_rfc3339(),
                                 };
 
-                            if let Err(e) = event_dispatcher
-                                .broadcast_event(LogEvent::CharacterDeath(death_event))
+                            if let Err(e) = event_bus
+                                .publish(AppEvent::LogParsed(LogEvent::CharacterDeath(death_event)))
+                                .await
                             {
-                                warn!("Failed to broadcast character death event: {}", e);
+                                warn!("Failed to publish character death event: {}", e);
                             }
                             stats_repository
                                 .increment_event_count("character_death")
@@ -464,9 +464,9 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         self.stats_repository.load_stats().await
     }
 
-    /// Subscribes to log events broadcast by the service
-    fn subscribe_to_events(&self) -> broadcast::Receiver<LogEvent> {
-        self.event_dispatcher.subscribe()
+    /// Subscribes to log events published by the service
+    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
+        self.event_bus.get_receiver(EventType::LogAnalysis).await
     }
 
     /// Updates the path to the log file being monitored

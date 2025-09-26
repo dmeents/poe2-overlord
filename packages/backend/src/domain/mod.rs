@@ -40,7 +40,7 @@
 // Domain module declarations - each represents a distinct bounded context
 pub mod character; // Character management and lifecycle operations
 pub mod configuration; // Application configuration and settings management
-pub mod event_management; // Event-driven architecture and pub-sub system
+pub mod events; // Unified event system for all application events
 pub mod game_monitoring; // Game process detection and monitoring
 pub mod location_tracking; // Scene/zone tracking and location history
 pub mod log_analysis; // Log parsing, analysis, and pattern matching
@@ -59,24 +59,21 @@ pub use configuration::{
     ConfigurationServiceImpl, ConfigurationValidationResult,
 };
 
-// Re-export event management system types
-pub use event_management::{
-    ChannelStats, EventChannel, EventChannelConfig, EventChannelManager, EventManagementEvent,
-    EventManagementService, EventManagementServiceImpl, EventManagementSession,
-    EventManagementStats, EventPayload, EventSubscription, EventType,
+// Re-export unified event system types
+pub use events::{
+    AppEvent, ChannelConfig, ChannelManager, EventBus, EventPublisher, EventPublisherTrait,
+    EventSubscriber, EventSubscriberTrait, EventType,
 };
 
 // Re-export game monitoring types
 pub use game_monitoring::{
-    GameMonitoringEvent, GameMonitoringEventPublisher, GameMonitoringService,
-    GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
+    GameMonitoringService, GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
 
 // Re-export location tracking types
 pub use location_tracking::{
-    LocationHistoryEntry, LocationState, LocationTrackingConfig, LocationTrackingEvent,
-    LocationTrackingService, LocationTrackingServiceImpl, LocationTrackingSession,
-    LocationTrackingStats, SceneTypeConfig,
+    LocationHistoryEntry, LocationState, LocationTrackingConfig, LocationTrackingService,
+    LocationTrackingServiceImpl, LocationTrackingSession, LocationTrackingStats, SceneTypeConfig,
 };
 
 // Re-export log analysis types
@@ -87,7 +84,7 @@ pub use log_analysis::{
 
 // Re-export server monitoring types
 pub use server_monitoring::{
-    NetworkConfig, NetworkConnectivity, ServerInfo, ServerMonitoringConfig, ServerMonitoringEvent,
+    NetworkConfig, NetworkConnectivity, ServerInfo, ServerMonitoringConfig,
     ServerMonitoringService, ServerMonitoringServiceImpl, ServerMonitoringSession,
     ServerMonitoringStats, ServerStatus,
 };

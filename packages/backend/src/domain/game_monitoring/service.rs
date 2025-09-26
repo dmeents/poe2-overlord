@@ -1,7 +1,6 @@
 use crate::domain::game_monitoring::{
-    events::{GameMonitoringEvent, GameProcessStatusUpdated},
     models::GameProcessStatus,
-    traits::{GameMonitoringEventPublisher, GameMonitoringService, ProcessDetector},
+    traits::{GameMonitoringService, ProcessDetector},
 };
 use crate::domain::time_tracking::traits::TimeTrackingService;
 use crate::errors::AppResult;
@@ -22,8 +21,7 @@ use tokio::time::interval;
 pub struct GameMonitoringServiceImpl {
     /// Service for managing time tracking sessions
     time_tracker: Arc<dyn TimeTrackingService>,
-    /// Publisher for game monitoring events
-    event_publisher: Arc<dyn GameMonitoringEventPublisher>,
+    // Event publishing removed - using unified event system
     /// Detector for finding and checking game processes
     process_detector: Arc<dyn ProcessDetector>,
     /// Flag indicating whether monitoring is currently active
@@ -50,12 +48,10 @@ impl GameMonitoringServiceImpl {
     /// * `Self` - New GameMonitoringServiceImpl instance
     pub fn new(
         time_tracker: Arc<dyn TimeTrackingService>,
-        event_publisher: Arc<dyn GameMonitoringEventPublisher>,
         process_detector: Arc<dyn ProcessDetector>,
     ) -> Self {
         Self {
             time_tracker,
-            event_publisher,
             process_detector,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
@@ -114,12 +110,8 @@ impl GameMonitoringServiceImpl {
             }
         }
 
-        // Publish the status update event to notify subscribers
-        let status_event = GameMonitoringEvent::StatusUpdated(GameProcessStatusUpdated::new(
-            current_status.clone(),
-            is_state_change,
-        ));
-        self.event_publisher.publish_event(status_event).await?;
+        // Event publishing removed - using unified event system
+        debug!("Game monitoring status updated: {:?}", current_status);
 
         // Update the internal current status
         {

@@ -1,4 +1,4 @@
-use crate::domain::log_analysis::models::LogEvent;
+use crate::domain::events::AppEvent;
 use crate::domain::log_analysis::models::{
     LogAnalysisConfig, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
 };
@@ -28,8 +28,8 @@ pub trait LogAnalysisService: Send + Sync {
     /// Gets current statistics about log analysis activity
     async fn get_analysis_stats(&self) -> AppResult<LogAnalysisStats>;
 
-    /// Subscribes to log events broadcast by the service
-    fn subscribe_to_events(&self) -> broadcast::Receiver<LogEvent>;
+    /// Subscribes to log events published by the service
+    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
 
     /// Updates the path to the log file being monitored
     async fn update_log_path(&self, new_path: String) -> AppResult<()>;

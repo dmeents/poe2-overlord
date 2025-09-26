@@ -36,9 +36,9 @@ use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitori
 use crate::domain::log_analysis::{service::LogAnalysisServiceImpl, traits::LogAnalysisService, models::LogAnalysisConfig};
 use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
 use crate::infrastructure::monitoring::ServerMonitor;
-use crate::infrastructure::tauri::EventDispatcher;
+use crate::domain::events::EventBus;
 use crate::infrastructure::{
-    monitoring::ProcessMonitorImpl, tauri::TauriGameMonitoringEventPublisher,
+    monitoring::ProcessMonitorImpl,
 };
 use log::{debug, error, info};
 use std::sync::Arc;
@@ -84,11 +84,11 @@ impl ServiceInitializer {
         app.manage(config_service.clone());
         debug!("ConfigurationService managed successfully");
 
-        // Initialize Event Dispatcher - provides event broadcasting capabilities to other services
-        debug!("Initializing EventDispatcher...");
-        let event_broadcaster = Arc::new(EventDispatcher::new());
-        app.manage(event_broadcaster.clone());
-        debug!("EventDispatcher managed successfully");
+        // Initialize Event Bus - provides unified event publishing and subscribing capabilities
+        debug!("Initializing EventBus...");
+        let event_bus = Arc::new(EventBus::new());
+        app.manage(event_bus.clone());
+        debug!("EventBus managed successfully");
 
         // Initialize Character Service - manages character data persistence and operations
         debug!("Initializing CharacterService...");
@@ -102,7 +102,7 @@ impl ServiceInitializer {
 
         // Initialize Time Tracking Service - handles play time monitoring and analytics
         debug!("Initializing TimeTrackingService...");
-        let time_tracking_service = TimeTrackingServiceImpl::new().map_err(|e| {
+        let time_tracking_service = TimeTrackingServiceImpl::new(event_bus.clone()).map_err(|e| {
             error!("Failed to initialize TimeTrackingService: {}", e);
             e
         })?;
@@ -113,7 +113,7 @@ impl ServiceInitializer {
         // Initialize Server Monitor - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
         debug!("Initializing ServerMonitor...");
-        let server_status_manager = ServerMonitor::new(event_broadcaster.clone());
+        let server_status_manager = ServerMonitor::new(event_bus.clone());
         let server_status_arc = Arc::new(server_status_manager);
         app.manage(server_status_arc.clone());
         debug!("ServerMonitor managed successfully");
@@ -135,7 +135,7 @@ impl ServiceInitializer {
             log_analysis_config,
             character_arc.clone(),
             server_status_arc.clone(),
-            event_broadcaster.clone(),
+            event_bus.clone(),
         ).map_err(|e| {
             error!("Failed to initialize LogAnalysisService: {}", e);
             e
@@ -174,16 +174,11 @@ impl ServiceInitializer {
         // Process detector for identifying game processes
         let process_detector = Arc::new(ProcessMonitorImpl::new());
 
-        // Event publisher for sending game monitoring events to the frontend
-        let event_publisher = Arc::new(TauriGameMonitoringEventPublisher::new(
-            app.get_webview_window("main")
-                .unwrap_or_else(|| panic!("Main window not found during service initialization")),
-        ));
+        // Event publishing removed - using unified event system
 
-        // Game monitoring service that coordinates process detection, time tracking, and event publishing
+        // Game monitoring service that coordinates process detection and time tracking
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
             time_tracking_arc.clone(),
-            event_publisher.clone(),
             process_detector.clone(),
         ));
 
@@ -195,7 +190,7 @@ impl ServiceInitializer {
         // Return a container with all initialized services for use by the application setup
         Ok(ServiceInstances {
             config_service,
-            event_broadcaster,
+            event_bus,
             character_service: character_arc,
             time_tracking_service: time_tracking_arc,
             log_analysis_service: log_analysis_arc,
@@ -219,8 +214,8 @@ pub struct ServiceInstances {
     /// Configuration service for managing application settings and preferences
     pub config_service: Arc<ConfigurationServiceImpl>,
 
-    /// Event dispatcher for broadcasting events across the application
-    pub event_broadcaster: Arc<EventDispatcher>,
+    /// Event bus for unified event publishing and subscribing
+    pub event_bus: Arc<EventBus>,
 
     /// Character service for managing character data and operations
     pub character_service: Arc<CharacterService>,

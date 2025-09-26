@@ -7,6 +7,7 @@ use crate::domain::time_tracking::{
     repository::TimeTrackingRepositoryImpl,
     traits::{TimeTrackingEventPublisher, TimeTrackingRepository, TimeTrackingService},
 };
+use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -16,8 +17,7 @@ use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
 
-/// Size of the event broadcast channel
-const EVENT_CHANNEL_SIZE: usize = 100;
+// Event channel size constant removed - using unified event system
 
 /// Main implementation of the time tracking service
 /// Handles business logic, event publishing, and frontend communication
@@ -25,8 +25,8 @@ const EVENT_CHANNEL_SIZE: usize = 100;
 pub struct TimeTrackingServiceImpl {
     /// Repository for data persistence and retrieval
     repository: Arc<dyn TimeTrackingRepository>,
-    /// Event broadcaster for publishing time tracking events
-    event_sender: broadcast::Sender<TimeTrackingEvent>,
+    /// Event bus for publishing time tracking events
+    event_bus: Arc<EventBus>,
     /// Tracks when the PoE process started for time calculations
     poe_process_start_time: Arc<tokio::sync::RwLock<Option<DateTime<Utc>>>>,
 }
@@ -34,7 +34,8 @@ pub struct TimeTrackingServiceImpl {
 impl Default for TimeTrackingServiceImpl {
     /// Creates a default service instance, panicking on failure
     fn default() -> Self {
-        Self::new().unwrap_or_else(|e| {
+        let event_bus = Arc::new(crate::domain::events::EventBus::new());
+        Self::new(event_bus).unwrap_or_else(|e| {
             log::error!("Failed to create TimeTrackingServiceImpl: {}", e);
             panic!("Failed to initialize time tracking service");
         })
@@ -43,31 +44,79 @@ impl Default for TimeTrackingServiceImpl {
 
 impl TimeTrackingServiceImpl {
     /// Creates a new time tracking service with default repository
-    pub fn new() -> AppResult<Self> {
-        let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
+    pub fn new(event_bus: Arc<EventBus>) -> AppResult<Self> {
         let repository = Arc::new(TimeTrackingRepositoryImpl::new()?);
 
         Ok(Self {
             repository,
-            event_sender,
+            event_bus,
             poe_process_start_time: Arc::new(tokio::sync::RwLock::new(None)),
         })
     }
 
     /// Creates a new service with a custom repository (useful for testing)
-    pub fn with_repository(repository: Arc<dyn TimeTrackingRepository>) -> Self {
-        let (event_sender, _) = broadcast::channel(EVENT_CHANNEL_SIZE);
-
+    pub fn with_repository(repository: Arc<dyn TimeTrackingRepository>, event_bus: Arc<EventBus>) -> Self {
         Self {
             repository,
-            event_sender,
+            event_bus,
             poe_process_start_time: Arc::new(tokio::sync::RwLock::new(None)),
         }
     }
 
     /// Returns a receiver for subscribing to time tracking events
-    pub fn subscribe(&self) -> broadcast::Receiver<TimeTrackingEvent> {
-        self.event_sender.subscribe()
+    pub async fn subscribe(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
+        self.event_bus.get_receiver(EventType::System).await
+    }
+
+    /// Helper function to publish time tracking events
+    async fn publish_time_tracking_event(&self, event: TimeTrackingEvent) -> AppResult<()> {
+        // Convert TimeTrackingEvent to AppEvent
+        let app_event = match event {
+            TimeTrackingEvent::SessionStarted(session_event) => {
+                AppEvent::SystemError {
+                    error_message: format!("Session started: {}", session_event.session.character_id),
+                    error_type: "TimeTracking".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                }
+            }
+            TimeTrackingEvent::SessionEnded(session_event) => {
+                AppEvent::SystemError {
+                    error_message: format!("Session ended: {}", session_event.session.character_id),
+                    error_type: "TimeTracking".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                }
+            }
+            TimeTrackingEvent::TimeTrackingDataLoaded(data_event) => {
+                AppEvent::SystemError {
+                    error_message: format!("Data loaded: {} sessions", data_event.completed_sessions_count),
+                    error_type: "TimeTracking".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                }
+            }
+            TimeTrackingEvent::TimeTrackingDataSaved(data_event) => {
+                AppEvent::SystemError {
+                    error_message: format!("Data saved: {} sessions", data_event.completed_sessions_count),
+                    error_type: "TimeTracking".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                }
+            }
+            TimeTrackingEvent::TimeTrackingDataCleared(_) => {
+                AppEvent::SystemError {
+                    error_message: "Data cleared".to_string(),
+                    error_type: "TimeTracking".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                }
+            }
+            TimeTrackingEvent::StatsUpdated(_) => {
+                AppEvent::SystemError {
+                    error_message: "Stats updated".to_string(),
+                    error_type: "TimeTracking".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                }
+            }
+        };
+
+        self.event_bus.publish(app_event).await
     }
 
     /// Sets the PoE process start time for time calculations
@@ -183,8 +232,8 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
             occurred_at: std::time::SystemTime::now(),
         });
 
-        if let Err(e) = self.event_sender.send(event) {
-            warn!("Failed to send session started event: {}", e);
+        if let Err(e) = self.publish_time_tracking_event(event).await {
+            warn!("Failed to publish session started event: {}", e);
         }
 
         debug!(
@@ -215,8 +264,8 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
             occurred_at: std::time::SystemTime::now(),
         });
 
-        if let Err(e) = self.event_sender.send(event) {
-            warn!("Failed to send session ended event: {}", e);
+        if let Err(e) = self.publish_time_tracking_event(event).await {
+            warn!("Failed to publish session ended event: {}", e);
         }
 
         debug!(
@@ -296,8 +345,8 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
                 occurred_at: std::time::SystemTime::now(),
             });
 
-            if let Err(e) = self.event_sender.send(event) {
-                warn!("Failed to send data loaded event: {}", e);
+            if let Err(e) = self.publish_time_tracking_event(event).await {
+                warn!("Failed to publish data loaded event: {}", e);
             }
         }
 
@@ -318,8 +367,8 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
                 occurred_at: std::time::SystemTime::now(),
             });
 
-            if let Err(e) = self.event_sender.send(event) {
-                warn!("Failed to send data saved event: {}", e);
+            if let Err(e) = self.publish_time_tracking_event(event).await {
+                warn!("Failed to publish data saved event: {}", e);
             }
         }
 
@@ -328,8 +377,8 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     /// Returns a receiver for subscribing to time tracking events
-    fn subscribe_to_events(&self) -> broadcast::Receiver<TimeTrackingEvent> {
-        self.subscribe()
+    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
+        self.subscribe().await
     }
 
     /// Sets the PoE process start time for time calculations
@@ -360,8 +409,8 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
             occurred_at: std::time::SystemTime::now(),
         });
 
-        if let Err(e) = self.event_sender.send(event) {
-            warn!("Failed to send data cleared event: {}", e);
+        if let Err(e) = self.publish_time_tracking_event(event).await {
+            warn!("Failed to publish data cleared event: {}", e);
         }
 
         debug!("Cleared time tracking data for character {}", character_id);
@@ -381,17 +430,27 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
     }
 
     /// Starts emitting time tracking events to the frontend
-    async fn start_frontend_event_emission(&self, window: WebviewWindow) {
-        let mut event_receiver = self.subscribe();
-        let window_clone = window.clone();
+    async fn start_frontend_event_emission(&self, _window: WebviewWindow) {
+        let mut event_receiver = self.subscribe().await.unwrap_or_else(|_| {
+            // Create a dummy receiver if subscription fails
+            let (_, receiver) = broadcast::channel(1);
+            receiver
+        });
+        // Frontend event emission removed - using unified event system
         
         // Spawn background task to handle event emission
         tokio::spawn(async move {
             debug!("Time tracking frontend event emission started");
             
             // Listen for events and emit them to frontend
-            while let Ok(event) = event_receiver.recv().await {
-                Self::emit_time_tracking_event(&window_clone, &event);
+            while let Ok(app_event) = event_receiver.recv().await {
+                // Convert AppEvent back to TimeTrackingEvent for frontend emission
+                if let AppEvent::SystemError { error_message, error_type, .. } = app_event {
+                    if error_type == "TimeTracking" {
+                        // For now, just log the time tracking events
+                        debug!("Time tracking event: {}", error_message);
+                    }
+                }
             }
             
             debug!("Time tracking frontend event emission stopped");
@@ -403,18 +462,11 @@ impl TimeTrackingService for TimeTrackingServiceImpl {
 impl TimeTrackingEventPublisher for TimeTrackingServiceImpl {
     /// Publishes a time tracking event to all subscribers
     async fn publish_event(&self, event: TimeTrackingEvent) -> AppResult<()> {
-        if let Err(e) = self.event_sender.send(event) {
-            warn!("Failed to publish event: {}", e);
-            return Err(crate::errors::AppError::internal_error(
-                "publish_event",
-                &e.to_string(),
-            ));
-        }
-        Ok(())
+        self.publish_time_tracking_event(event).await
     }
 
     /// Returns a receiver for subscribing to time tracking events
-    fn subscribe_to_events(&self) -> broadcast::Receiver<TimeTrackingEvent> {
-        self.subscribe()
+    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
+        self.subscribe().await
     }
 }

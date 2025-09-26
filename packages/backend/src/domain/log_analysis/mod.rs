@@ -11,6 +11,7 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
+
 // Re-export commonly used types and implementations
 pub use commands::*;
 pub use events::LogAnalysisEvent;

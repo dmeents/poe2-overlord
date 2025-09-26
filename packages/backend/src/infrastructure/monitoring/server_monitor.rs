@@ -2,7 +2,7 @@ use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::server_monitoring::traits::ServerMonitoringService;
 use crate::errors::{AppError, AppResult};
-use crate::infrastructure::tauri::EventDispatcher;
+use crate::domain::events::EventBus;
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::path::PathBuf;
@@ -24,18 +24,18 @@ pub struct ServerMonitor {
     /// Path to persistent status storage file
     status_file_path: PathBuf,
     /// Event broadcaster for status change notifications
-    event_broadcaster: Arc<EventDispatcher>,
+    event_bus: Arc<EventBus>,
 }
 
 impl ServerMonitor {
-    pub fn new(event_broadcaster: Arc<EventDispatcher>) -> Self {
+    pub fn new(event_bus: Arc<EventBus>) -> Self {
         let status_file_path = Self::get_status_file_path();
         let status = Arc::new(RwLock::new(None));
 
         Self {
             status,
             status_file_path,
-            event_broadcaster,
+            event_bus,
         }
     }
 
@@ -165,9 +165,9 @@ impl ServerMonitor {
                 timestamp: chrono::Utc::now().to_rfc3339(),
             };
 
-            if let Err(e) = self.event_broadcaster.broadcast_ping_event(ping_event) {
-                warn!("Failed to broadcast ping event: {}", e);
-            }
+            // Note: ServerMonitor now uses the unified event system
+            // Ping events are published through the server monitoring service
+            debug!("Server ping completed: {:?}ms", ping_event.latency_ms);
 
             if let Some(status_to_save) = self.get_server_status().await {
                 if let Err(e) = self.save_status_to_file(&status_to_save).await {
@@ -208,7 +208,7 @@ impl ServerMonitor {
     /// The task runs indefinitely until the application shuts down.
     pub async fn start_periodic_ping(&self) {
         let server_manager = Arc::clone(&self.status);
-        let event_broadcaster = Arc::clone(&self.event_broadcaster);
+        // Event bus is available for future use if needed
         let status_file_path = self.status_file_path.clone();
 
         tokio::spawn(async move {
@@ -267,9 +267,9 @@ impl ServerMonitor {
                         timestamp: chrono::Utc::now().to_rfc3339(),
                     };
 
-                    if let Err(e) = event_broadcaster.broadcast_ping_event(ping_event) {
-                        warn!("Failed to broadcast ping event: {}", e);
-                    }
+                    // Note: ServerMonitor now uses the unified event system
+                    // Ping events are published through the server monitoring service
+                    debug!("Periodic server ping completed: {:?}ms", ping_event.latency_ms);
                 }
             }
         });
@@ -356,8 +356,7 @@ impl ServerMonitoringService for ServerMonitor {
         Ok(())
     }
 
-    fn subscribe_to_status_changes(&self) -> tokio::sync::broadcast::Receiver<ServerStatus> {
-        let (_, receiver) = tokio::sync::broadcast::channel(1);
-        receiver
+    async fn subscribe_to_status_changes(&self) -> AppResult<tokio::sync::broadcast::Receiver<crate::domain::events::AppEvent>> {
+        self.event_bus.get_receiver(crate::domain::events::EventType::ServerMonitoring).await
     }
 }

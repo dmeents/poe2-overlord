@@ -1,5 +1,6 @@
 import { cn } from '@/utils';
 import { useEffect, useRef } from 'react';
+import { modalStyles } from './modal.styles';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -14,14 +15,6 @@ export interface ModalProps {
   className?: string;
   disabled?: boolean;
 }
-
-const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
-};
 
 export function Modal({
   isOpen,
@@ -87,42 +80,37 @@ export function Modal({
   };
 
   return (
-    <div className='fixed inset-0 z-50 overflow-y-auto'>
-      <div className='flex min-h-full items-center justify-center p-4'>
+    <div className={modalStyles.overlay}>
+      <div className={modalStyles.container}>
         {/* Backdrop */}
-        <div
-          className='fixed inset-0 bg-black/50 transition-opacity'
-          onClick={handleBackdropClick}
-        />
+        <div className={modalStyles.backdrop} onClick={handleBackdropClick} />
 
         {/* Modal */}
         <div
           ref={modalRef}
           className={cn(
-            'relative w-full bg-zinc-800 rounded-lg shadow-xl border border-zinc-700',
-            sizeClasses[size],
+            modalStyles.modal,
+            modalStyles.sizeClasses[size],
             className
           )}
         >
-          <div className='p-6'>
+          <div className={modalStyles.content}>
             {/* Header */}
             {(title || icon || showCloseButton) && (
-              <div className='flex items-center justify-between mb-6'>
-                <div className='flex items-center gap-3'>
-                  {icon && <div className='flex-shrink-0'>{icon}</div>}
-                  {title && (
-                    <h2 className='text-2xl font-bold text-white'>{title}</h2>
-                  )}
+              <div className={modalStyles.header}>
+                <div className={modalStyles.headerContent}>
+                  {icon && <div className={modalStyles.icon}>{icon}</div>}
+                  {title && <h2 className={modalStyles.title}>{title}</h2>}
                 </div>
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className='text-zinc-400 hover:text-white transition-colors'
+                    className={modalStyles.closeButton}
                     disabled={disabled}
                     aria-label='Close modal'
                   >
                     <svg
-                      className='h-6 w-6'
+                      className={modalStyles.closeIcon}
                       fill='none'
                       viewBox='0 0 24 24'
                       stroke='currentColor'

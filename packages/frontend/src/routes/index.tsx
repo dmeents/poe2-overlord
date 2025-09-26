@@ -6,7 +6,7 @@ import {
   QuickActionsPanel,
   QuickStatsGrid,
   RecentActivityPanel,
-} from '../components/dashboard';
+} from '../components';
 import { PageHeader } from '../components/page-header';
 import { useCharacterTimeTracking } from '../hooks/useCharacterTimeTracking';
 

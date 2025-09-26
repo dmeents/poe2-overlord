@@ -1,16 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
-import {
-  CharacterFormModal,
-  CharacterList,
-  DeleteCharacterModal,
-} from '../components/character-management';
-import type { CharacterFormData } from '../components/character-management/character-form-modal';
-import { AlertMessage } from '../components/form/alert-message';
+import { AlertMessage } from '../components';
+import { CharacterManagement } from '../components/character-management';
 import { PageHeader } from '../components/page-header';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
 import { useCharacterTotalPlayTime } from '../hooks/useCharacterTotalPlayTime';
-import type { Character } from '../types';
 
 export const Route = createFileRoute('/characters')({
   component: CharactersPage,
@@ -29,74 +22,6 @@ function CharactersPage() {
   } = useCharacterManagement();
 
   const { getPlayTime } = useCharacterTotalPlayTime(characters);
-
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<Character | null>(
-    null
-  );
-  const [deletingCharacter, setDeletingCharacter] = useState<Character | null>(
-    null
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleCreateCharacter = async (data: CharacterFormData) => {
-    try {
-      setIsSubmitting(true);
-      await createCharacter(data);
-      setShowCreateModal(false);
-    } catch {
-      // Error is handled by the hook
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdateCharacter = async (data: CharacterFormData) => {
-    if (!editingCharacter) return;
-
-    try {
-      setIsSubmitting(true);
-      await updateCharacter(editingCharacter.id, data);
-      setEditingCharacter(null);
-    } catch {
-      // Error is handled by the hook
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEditCharacter = (character: Character) => {
-    setEditingCharacter(character);
-  };
-
-  const handleDeleteCharacter = (characterId: string) => {
-    const character = characters.find(c => c.id === characterId);
-    if (character) {
-      setDeletingCharacter(character);
-    }
-  };
-
-  const confirmDeleteCharacter = async () => {
-    if (!deletingCharacter) return;
-
-    try {
-      setIsSubmitting(true);
-      await deleteCharacter(deletingCharacter.id);
-      setDeletingCharacter(null);
-    } catch {
-      // Error is handled by the hook
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSelectCharacter = async (characterId: string) => {
-    try {
-      await setActiveCharacterId(characterId);
-    } catch {
-      // Error is handled by the hook
-    }
-  };
 
   if (isLoading) {
     return (
@@ -130,41 +55,18 @@ function CharactersPage() {
           </div>
         )}
 
-
-        <CharacterList
+        <CharacterManagement
           characters={characters}
-          activeCharacterId={activeCharacter?.id}
-          onSelectCharacter={handleSelectCharacter}
-          onEditCharacter={handleEditCharacter}
-          onDeleteCharacter={handleDeleteCharacter}
-          onCreateCharacter={() => setShowCreateModal(true)}
+          activeCharacter={activeCharacter || undefined}
+          createCharacter={async data => {
+            await createCharacter(data);
+          }}
+          updateCharacter={async (id, data) => {
+            await updateCharacter(id, data);
+          }}
+          deleteCharacter={deleteCharacter}
+          setActiveCharacterId={setActiveCharacterId}
           getPlayTime={getPlayTime}
-        />
-
-        {/* Create Character Modal */}
-        <CharacterFormModal
-          isOpen={showCreateModal}
-          onSubmit={handleCreateCharacter}
-          onClose={() => setShowCreateModal(false)}
-          isLoading={isSubmitting}
-        />
-
-        {/* Edit Character Modal */}
-        <CharacterFormModal
-          isOpen={!!editingCharacter}
-          character={editingCharacter || undefined}
-          onSubmit={handleUpdateCharacter}
-          onClose={() => setEditingCharacter(null)}
-          isLoading={isSubmitting}
-        />
-
-        {/* Delete Character Modal */}
-        <DeleteCharacterModal
-          isOpen={!!deletingCharacter}
-          character={deletingCharacter || undefined}
-          onConfirm={confirmDeleteCharacter}
-          onCancel={() => setDeletingCharacter(null)}
-          isLoading={isSubmitting}
         />
       </div>
     </div>

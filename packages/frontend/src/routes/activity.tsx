@@ -5,9 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
-import { ActivityLog } from '../components/log-monitor/activity-log';
-import { MonitoringStatus } from '../components/log-monitor/monitoring-status';
-import { RecentLogLines } from '../components/log-monitor/recent-log-lines';
+import { ActivityLog, MonitoringStatus, RecentLogLines } from '../components';
 import { PageHeader } from '../components/page-header';
 import { useGameProcessQuery } from '../hooks/useGameProcessQuery';
 import { useMonitoringQuery } from '../hooks/useMonitoringQuery';

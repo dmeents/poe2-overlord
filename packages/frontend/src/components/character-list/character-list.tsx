@@ -1,0 +1,52 @@
+import type { Character } from '../../types';
+import { CharacterCard } from '../character-card';
+import { CharacterListHeader } from './character-list-header';
+import {
+  getCharacterGridClasses,
+  getListContainerClasses,
+} from './character-list.styles';
+import { EmptyCharacterList } from './empty-character-list';
+
+interface CharacterListProps {
+  characters: Character[];
+  activeCharacterId?: string;
+  onSelectCharacter: (characterId: string) => void;
+  onEditCharacter: (character: Character) => void;
+  onDeleteCharacter: (characterId: string) => void;
+  onCreateCharacter: () => void;
+  getPlayTime: (characterId: string) => number;
+}
+
+export function CharacterList({
+  characters,
+  activeCharacterId,
+  onSelectCharacter,
+  onEditCharacter,
+  onDeleteCharacter,
+  onCreateCharacter,
+  getPlayTime,
+}: CharacterListProps) {
+  if (characters.length === 0) {
+    return <EmptyCharacterList onCreateCharacter={onCreateCharacter} />;
+  }
+
+  return (
+    <div className={getListContainerClasses()}>
+      <CharacterListHeader onCreateCharacter={onCreateCharacter} />
+
+      <div className={getCharacterGridClasses()}>
+        {characters.map(character => (
+          <CharacterCard
+            key={character.id}
+            character={character}
+            isActive={character.id === activeCharacterId}
+            onSelect={() => onSelectCharacter(character.id)}
+            onEdit={() => onEditCharacter(character)}
+            onDelete={() => onDeleteCharacter(character.id)}
+            totalPlayTime={getPlayTime(character.id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

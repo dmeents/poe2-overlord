@@ -1,10 +1,12 @@
+import {
+  ActTimeChart,
+  LocationStats,
+  SessionHistory,
+  StatCard,
+} from '@/components';
 import { Button } from '@/components/button';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
-import { ActTimeChart } from '@/components/time-tracking/act-time-chart';
-import { LocationStats } from '@/components/time-tracking/location-stats';
-import { SessionHistory } from '@/components/time-tracking/session-history';
-import { StatCard } from '@/components/time-tracking/stat-card';
 import { useCharacterTimeTracking } from '@/hooks/useCharacterTimeTracking';
 import { formatDuration } from '@/utils';
 import { createFileRoute } from '@tanstack/react-router';

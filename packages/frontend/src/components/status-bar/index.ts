@@ -1,2 +1,2 @@
 export { StatusBar } from './status-bar';
-export { StatusIndicator } from './status-indicator';
+export { statusBarStyles } from './status-bar.styles';

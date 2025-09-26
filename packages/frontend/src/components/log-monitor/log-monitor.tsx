@@ -4,9 +4,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { Button } from '../button';
-import { ActivityLog } from './activity-log';
-import { MonitoringStatus } from './monitoring-status';
-import { RecentLogLines } from './recent-log-lines';
+import { ActivityLog } from '../log-activity-log';
+import { MonitoringStatus } from '../log-monitoring-status';
+import { RecentLogLines } from '../log-recent-log-lines';
+import { logMonitorStyles } from './log-monitor.styles';
 
 // Combined event type for unified display
 export type SceneEvent = {
@@ -83,11 +84,11 @@ export function LogMonitor() {
   };
 
   return (
-    <div className='space-y-6'>
+    <div className={logMonitorStyles.container}>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <h2 className='text-2xl font-bold text-white'>Scene Monitor</h2>
-        <div className='flex items-center space-x-3'>
+      <div className={logMonitorStyles.header}>
+        <h2 className={logMonitorStyles.title}>Scene Monitor</h2>
+        <div className={logMonitorStyles.headerActions}>
           <Button onClick={refreshLogInfo} variant='secondary' size='sm'>
             Refresh
           </Button>
@@ -95,7 +96,7 @@ export function LogMonitor() {
       </div>
 
       {/* Status and Info */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      <div className={logMonitorStyles.statusGrid}>
         <MonitoringStatus
           isMonitoring={isMonitoring}
           poeProcessStatus={poeProcessStatus}

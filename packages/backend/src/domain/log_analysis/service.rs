@@ -1,4 +1,5 @@
 use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
+use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::log_analysis::models::{
     LogAnalysisConfig, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
@@ -12,7 +13,6 @@ use crate::domain::log_analysis::traits::{
 use crate::domain::server_monitoring::traits::ServerMonitoringService as ServerMonitoringServiceTrait;
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::parsing::LogParserManager;
-use crate::domain::events::{AppEvent, EventBus, EventType};
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::sync::Arc;
@@ -237,7 +237,7 @@ impl LogAnalysisServiceImpl {
         for line in &new_lines {
             if let Err(e) = Self::process_single_line(
                 parser_manager,
-                &line,
+                line,
                 event_bus,
                 character_service,
                 server_monitoring_service,
@@ -308,7 +308,10 @@ impl LogAnalysisServiceImpl {
                         .update_status(server_status)
                         .await?;
 
-                    if let Err(e) = event_bus.publish(AppEvent::LogParsed(LogEvent::ServerConnection(event))).await {
+                    if let Err(e) = event_bus
+                        .publish(AppEvent::LogParsed(LogEvent::ServerConnection(event)))
+                        .await
+                    {
                         warn!("Failed to publish server connection event: {}", e);
                     }
                     stats_repository
@@ -338,7 +341,9 @@ impl LogAnalysisServiceImpl {
                                 };
 
                             if let Err(e) = event_bus
-                                .publish(AppEvent::LogParsed(LogEvent::CharacterLevelUp(level_up_event)))
+                                .publish(AppEvent::LogParsed(LogEvent::CharacterLevelUp(
+                                    level_up_event,
+                                )))
                                 .await
                             {
                                 warn!("Failed to publish character level up event: {}", e);

@@ -12,9 +12,8 @@ use crate::errors::AppResult;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use log::{debug, warn};
-use serde_json;
 use std::sync::Arc;
-use tauri::{Emitter, WebviewWindow};
+use tauri::WebviewWindow;
 use tokio::sync::broadcast;
 
 // Event channel size constant removed - using unified event system
@@ -132,62 +131,6 @@ impl TimeTrackingServiceImpl {
     }
 
 
-    /// Emits time tracking events to the frontend via Tauri
-    fn emit_time_tracking_event(window: &WebviewWindow, event: &TimeTrackingEvent) {
-        match event {
-            TimeTrackingEvent::SessionStarted(session_event) => {
-                Self::emit_json_event(
-                    window,
-                    "time-tracking-session-started",
-                    serde_json::json!({
-                        "location_id": session_event.session.location_id,
-                        "location_name": session_event.session.location_name,
-                        "location_type": session_event.session.location_type,
-                        "entry_timestamp": session_event.session.entry_timestamp
-                    }),
-                );
-            }
-            TimeTrackingEvent::SessionEnded(session_event) => {
-                Self::emit_json_event(
-                    window,
-                    "time-tracking-session-ended",
-                    serde_json::json!({
-                        "location_id": session_event.session.location_id,
-                        "location_name": session_event.session.location_name,
-                        "location_type": session_event.session.location_type,
-                        "duration_seconds": session_event.session.duration_seconds,
-                        "entry_timestamp": session_event.session.entry_timestamp,
-                        "exit_timestamp": session_event.session.exit_timestamp
-                    }),
-                );
-            }
-            TimeTrackingEvent::StatsUpdated(stats_event) => {
-                Self::emit_json_event(
-                    window,
-                    "time-tracking-stats-updated",
-                    serde_json::json!({
-                        "location_id": stats_event.stats.location_id,
-                        "location_name": stats_event.stats.location_name,
-                        "location_type": stats_event.stats.location_type,
-                        "total_visits": stats_event.stats.total_visits,
-                        "total_time_seconds": stats_event.stats.total_time_seconds,
-                        "average_session_seconds": stats_event.stats.average_session_seconds,
-                        "last_visited": stats_event.stats.last_visited
-                    }),
-                );
-            }
-            _ => {
-                debug!("Unhandled time tracking event type: {:?}", event);
-            }
-        }
-    }
-
-    /// Helper function to emit JSON events to the frontend
-    fn emit_json_event(window: &WebviewWindow, event_name: &str, payload: serde_json::Value) {
-        if let Err(e) = window.emit(event_name, &payload) {
-            warn!("Failed to emit JSON event '{}': {}", event_name, e);
-        }
-    }
 
     /// Generates a unique location ID from name and type
     fn generate_location_id(location_name: &str, location_type: &LocationType) -> String {

@@ -27,6 +27,12 @@ pub struct LocationState {
     pub session_start_time: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+impl Default for LocationState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LocationState {
     /// Creates a new location state with current timestamp
     pub fn new() -> Self {
@@ -148,6 +154,12 @@ pub struct LocationTrackingSession {
     pub location_history: Vec<LocationHistoryEntry>,
     /// Whether this session is currently active
     pub is_active: bool,
+}
+
+impl Default for LocationTrackingSession {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl LocationTrackingSession {

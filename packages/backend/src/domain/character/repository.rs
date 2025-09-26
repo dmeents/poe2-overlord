@@ -342,7 +342,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         if character_data
             .characters
             .iter()
-            .any(|c| c.name == name && exclude_id.map_or(true, |exclude| c.id != exclude))
+            .any(|c| c.name == name && exclude_id.is_none_or(|exclude| c.id != exclude))
         {
             return Err(AppError::validation_error(
                 "validate_unique_name",

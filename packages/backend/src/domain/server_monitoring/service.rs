@@ -446,6 +446,12 @@ pub struct NetworkConnectivityImpl {
     config: crate::domain::server_monitoring::traits::NetworkConfig,
 }
 
+impl Default for NetworkConnectivityImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NetworkConnectivityImpl {
     pub fn new() -> Self {
         Self {

@@ -33,8 +33,8 @@ use std::sync::Arc;
 use tauri::Manager;
 
 use crate::application::service_orchestrator::{
-    start_game_process_monitoring, start_log_monitoring, start_ping_event_emission,
-    start_time_tracking_emission,
+    start_character_tracking_emission, start_game_process_monitoring, start_log_monitoring,
+    start_ping_event_emission,
 };
 use crate::application::service_registry::ServiceInitializer;
 use crate::domain::configuration::traits::ConfigurationService;
@@ -108,17 +108,10 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     );
 
     // Step 3: Start asynchronous data loading to avoid blocking application startup
-    debug!("Loading existing character time tracking data...");
-    let time_tracking_service = services.time_tracking_service.clone();
+    debug!("Loading existing character tracking data...");
     tauri::async_runtime::spawn(async move {
-        if let Err(e) = time_tracking_service.load_all_character_data().await {
-            warn!(
-                "Failed to load existing character time tracking data: {}",
-                e
-            );
-        } else {
-            info!("Successfully loaded existing character time tracking data");
-        }
+        // Note: Character tracking data is loaded on-demand, no bulk loading needed
+        info!("Character tracking service initialized");
     });
 
     // Step 4: Initialize runtime management systems for background task coordination
@@ -148,10 +141,10 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             task_manager.clone(),
         );
 
-        // Start time tracking emission - periodically sends time data to frontend
-        start_time_tracking_emission(
+        // Start character tracking emission - periodically sends tracking data to frontend
+        start_character_tracking_emission(
             main_window.clone(),
-            services.time_tracking_service.clone(),
+            services.character_tracking_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

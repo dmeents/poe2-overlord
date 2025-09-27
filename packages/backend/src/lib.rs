@@ -9,9 +9,9 @@ pub use application::setup_app;
 
 // Tauri command handlers - exposed to the frontend
 pub use domain::character::commands::*;        // Character CRUD operations
+pub use domain::character_tracking::commands::*; // Character tracking (location and time)
 pub use domain::configuration::commands::*;    // Configuration management
 pub use domain::log_analysis::commands::*;     // Log file analysis and monitoring
-pub use domain::time_tracking::commands::*;    // Time tracking and session management
 
 // Core error handling
 pub use errors::*;
@@ -29,10 +29,10 @@ pub use domain::character::{
     Ascendency, Character, CharacterClass, CharacterData, CharacterUpdateParams, League,
 };
 
-// Time tracking domain models and services
-pub use domain::time_tracking::{
-    LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
-    TimeTrackingService, TimeTrackingServiceImpl, TimeTrackingSummary,
+// Character tracking domain models and services (replaces time_tracking and location_tracking)
+pub use domain::character_tracking::{
+    CharacterTrackingData, CharacterTrackingService, CharacterTrackingServiceImpl, LocationState,
+    LocationType, SceneTypeConfig, TrackingSummary, ZoneStats,
 };
 
 // Configuration domain models and services
@@ -53,13 +53,8 @@ pub use domain::game_monitoring::{
     GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
 
-// Location tracking domain services and models
-pub use domain::location_tracking::{
-    LocationTrackingService, LocationTrackingServiceImpl,
-    LocationTrackingSession, LocationTrackingStats, LocationState, SceneTypeConfig,
-    SimpleSceneTypeDetector,
-};
-pub use domain::location_tracking::models::SceneType;
+// Scene type enum (moved from location_tracking)
+pub use domain::character_tracking::models::LocationType as SceneType;
 
 // Infrastructure services and utilities
 pub use infrastructure::monitoring::ServerMonitor;  // Server connectivity monitoring
@@ -117,16 +112,19 @@ pub fn run() {
             get_available_leagues,
             get_available_ascendencies_for_class,
             
-            // Time tracking commands
-            get_character_time_tracking_data,
-            clear_character_time_tracking_data,
-            get_character_active_sessions,
-            get_character_completed_sessions,
-            get_character_last_known_location,
-            get_character_location_stats,
+            // Character tracking commands (location and time)
+            get_character_tracking_data,
+            clear_character_tracking_data,
+            get_character_active_zone,
+            get_character_all_zones,
+            get_character_zones_by_time,
             get_character_total_play_time,
-            get_character_total_play_time_since_process_start,
             get_character_total_hideout_time,
+            get_character_total_deaths,
+            get_character_current_location,
+            get_character_current_scene,
+            get_character_current_act,
+            reset_character_tracking,
         ])
         // Initialize application services and start background tasks
         .setup(|app| setup_app(app))

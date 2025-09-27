@@ -47,8 +47,8 @@ pub use app_setup::setup_app;
 
 // Re-export service orchestration functions for background task management
 pub use service_orchestrator::{
-    start_game_process_monitoring, start_log_monitoring, start_ping_event_emission,
-    start_time_tracking_emission,
+    start_character_tracking_emission, start_game_process_monitoring, start_log_monitoring,
+    start_ping_event_emission,
 };
 
 // Re-export service registry components for dependency injection

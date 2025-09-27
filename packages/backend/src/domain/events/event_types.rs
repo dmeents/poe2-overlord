@@ -3,11 +3,11 @@
 //! This module defines the core event types and configuration structures
 //! for the unified event system.
 
+use crate::domain::character_tracking::models::{LocationState, LocationType as SceneType};
+use crate::domain::configuration::models::ConfigurationChangedEvent;
+use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
-use crate::domain::configuration::models::ConfigurationChangedEvent;
-use crate::domain::location_tracking::models::{LocationState, SceneType};
-use crate::domain::game_monitoring::models::GameProcessStatus;
 use serde::{Deserialize, Serialize};
 
 /// All possible events in the application
@@ -22,7 +22,7 @@ pub enum AppEvent {
         error_message: String,
         timestamp: String,
     },
-    
+
     // Server Monitoring Events
     ServerStatusChanged {
         old_status: Option<ServerStatus>,
@@ -34,10 +34,10 @@ pub enum AppEvent {
         latency_ms: Option<u64>,
         timestamp: String,
     },
-    
+
     // Configuration Events
     ConfigurationChanged(ConfigurationChangedEvent),
-    
+
     // Location Tracking Events
     LocationStateChanged {
         old_state: Option<LocationState>,
@@ -61,7 +61,7 @@ pub enum AppEvent {
         hideout_name: String,
         timestamp: String,
     },
-    
+
     // Game Monitoring Events
     GameProcessStatusChanged {
         old_status: Option<GameProcessStatus>,
@@ -69,7 +69,7 @@ pub enum AppEvent {
         is_state_change: bool,
         timestamp: String,
     },
-    
+
     // System Events
     SystemError {
         error_message: String,
@@ -86,16 +86,20 @@ impl AppEvent {
     pub fn event_type(&self) -> EventType {
         match self {
             AppEvent::LogParsed(_) | AppEvent::LogAnalysisError { .. } => EventType::LogAnalysis,
-            AppEvent::ServerStatusChanged { .. } | AppEvent::ServerPingCompleted { .. } => EventType::ServerMonitoring,
+            AppEvent::ServerStatusChanged { .. } | AppEvent::ServerPingCompleted { .. } => {
+                EventType::ServerMonitoring
+            }
             AppEvent::ConfigurationChanged(_) => EventType::Configuration,
-            AppEvent::LocationStateChanged { .. } | AppEvent::SceneChangeDetected { .. } 
-            | AppEvent::ActChangeDetected { .. } | AppEvent::ZoneChangeDetected { .. } 
+            AppEvent::LocationStateChanged { .. }
+            | AppEvent::SceneChangeDetected { .. }
+            | AppEvent::ActChangeDetected { .. }
+            | AppEvent::ZoneChangeDetected { .. }
             | AppEvent::HideoutChangeDetected { .. } => EventType::LocationTracking,
             AppEvent::GameProcessStatusChanged { .. } => EventType::GameMonitoring,
             AppEvent::SystemError { .. } | AppEvent::SystemShutdown { .. } => EventType::System,
         }
     }
-    
+
     /// Get the timestamp for this event
     pub fn timestamp(&self) -> String {
         match self {
@@ -114,7 +118,7 @@ impl AppEvent {
             AppEvent::SystemShutdown { timestamp, .. } => timestamp.clone(),
         }
     }
-    
+
     /// Create a log analysis error event
     pub fn log_analysis_error(error_message: String) -> Self {
         Self::LogAnalysisError {
@@ -122,16 +126,19 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a server status changed event
-    pub fn server_status_changed(old_status: Option<ServerStatus>, new_status: ServerStatus) -> Self {
+    pub fn server_status_changed(
+        old_status: Option<ServerStatus>,
+        new_status: ServerStatus,
+    ) -> Self {
         Self::ServerStatusChanged {
             old_status,
             new_status,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a server ping completed event
     pub fn server_ping_completed(server_status: ServerStatus, latency_ms: Option<u64>) -> Self {
         Self::ServerPingCompleted {
@@ -140,16 +147,19 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a location state changed event
-    pub fn location_state_changed(old_state: Option<LocationState>, new_state: LocationState) -> Self {
+    pub fn location_state_changed(
+        old_state: Option<LocationState>,
+        new_state: LocationState,
+    ) -> Self {
         Self::LocationStateChanged {
             old_state,
             new_state,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a scene change detected event
     pub fn scene_change_detected(scene_type: SceneType, scene_name: String) -> Self {
         Self::SceneChangeDetected {
@@ -158,7 +168,7 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create an act change detected event
     pub fn act_change_detected(act_name: String) -> Self {
         Self::ActChangeDetected {
@@ -166,7 +176,7 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a zone change detected event
     pub fn zone_change_detected(zone_name: String) -> Self {
         Self::ZoneChangeDetected {
@@ -174,7 +184,7 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a hideout change detected event
     pub fn hideout_change_detected(hideout_name: String) -> Self {
         Self::HideoutChangeDetected {
@@ -182,7 +192,7 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a game process status changed event
     pub fn game_process_status_changed(
         old_status: Option<GameProcessStatus>,
@@ -196,7 +206,7 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a system error event
     pub fn system_error(error_message: String, error_type: String) -> Self {
         Self::SystemError {
@@ -205,7 +215,7 @@ impl AppEvent {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    
+
     /// Create a system shutdown event
     pub fn system_shutdown() -> Self {
         Self::SystemShutdown {
@@ -240,16 +250,16 @@ impl EventType {
             EventType::System,
         ]
     }
-    
+
     /// Get the default channel capacity for this event type
     pub fn default_capacity(&self) -> usize {
         match self {
-            EventType::LogAnalysis => 1000,        // High volume
-            EventType::ServerMonitoring => 100,    // Medium volume
-            EventType::Configuration => 16,        // Low volume
-            EventType::LocationTracking => 500,    // Medium-high volume
-            EventType::GameMonitoring => 100,      // Medium volume
-            EventType::System => 50,               // Low volume
+            EventType::LogAnalysis => 1000,     // High volume
+            EventType::ServerMonitoring => 100, // Medium volume
+            EventType::Configuration => 16,     // Low volume
+            EventType::LocationTracking => 500, // Medium-high volume
+            EventType::GameMonitoring => 100,   // Medium volume
+            EventType::System => 50,            // Low volume
         }
     }
 }
@@ -280,7 +290,7 @@ impl ChannelConfig {
             track_subscribers: true,
         }
     }
-    
+
     /// Create a high-capacity configuration for high-volume events
     pub fn high_capacity(capacity: usize) -> Self {
         Self {
@@ -290,7 +300,7 @@ impl ChannelConfig {
             track_subscribers: true,
         }
     }
-    
+
     /// Create a low-capacity configuration for low-volume events
     pub fn low_capacity(capacity: usize) -> Self {
         Self {
@@ -356,7 +366,7 @@ impl EventSubscription {
             is_active: true,
         }
     }
-    
+
     /// Deactivate this subscription
     pub fn deactivate(&mut self) {
         self.is_active = false;

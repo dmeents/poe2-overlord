@@ -3,7 +3,7 @@ use crate::domain::character::models::{
     CharacterClass, CharacterUpdateParams, League,
 };
 use crate::domain::character::service::CharacterService;
-use crate::domain::time_tracking::traits::TimeTrackingService;
+use crate::domain::character_tracking::traits::CharacterTrackingService;
 use crate::infrastructure::tauri::{to_command_result, CommandResult};
 use log::{debug, info, warn};
 use std::sync::Arc;
@@ -149,7 +149,7 @@ pub async fn set_active_character(
 /// # Arguments
 /// * `character_id` - The ID of the character to delete
 /// * `character_service` - Injected character service instance
-/// * `time_tracking_service` - Injected time tracking service instance
+/// * `character_tracking_service` - Injected character tracking service instance
 ///
 /// # Returns
 /// * `Ok(Character)` - The deleted character
@@ -158,7 +158,7 @@ pub async fn set_active_character(
 pub async fn delete_character(
     character_id: String,
     character_service: State<'_, Arc<CharacterService>>,
-    time_tracking_service: State<'_, Arc<dyn TimeTrackingService>>,
+    character_tracking_service: State<'_, Arc<dyn CharacterTrackingService>>,
 ) -> CommandResult<Character> {
     debug!(
         "Deleting character and all associated data: {}",
@@ -177,20 +177,20 @@ pub async fn delete_character(
             }),
     )?;
 
-    // Attempt to clear time tracking data (best effort)
-    match time_tracking_service
+    // Attempt to clear character tracking data (best effort)
+    match character_tracking_service
         .clear_character_data(&character_id)
         .await
     {
         Ok(_) => {
             debug!(
-                "Successfully cleared time tracking data for character: {}",
+                "Successfully cleared character tracking data for character: {}",
                 character_id
             );
         }
         Err(e) => {
             warn!(
-                "Failed to clear time tracking data for character {}: {}. Character was still deleted.",
+                "Failed to clear character tracking data for character {}: {}. Character was still deleted.",
                 character_id, e
             );
         }

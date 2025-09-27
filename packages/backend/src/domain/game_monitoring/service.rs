@@ -2,7 +2,7 @@ use crate::domain::game_monitoring::{
     models::GameProcessStatus,
     traits::{GameMonitoringService, ProcessDetector},
 };
-use crate::domain::time_tracking::traits::TimeTrackingService;
+use crate::domain::character_tracking::traits::CharacterTrackingService;
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::{debug, error, info};
@@ -12,15 +12,15 @@ use tokio::sync::RwLock;
 use tokio::time::interval;
 
 /// Implementation of the game monitoring service.
-/// 
+///
 /// This service orchestrates the monitoring of Path of Exile 2 game processes,
 /// integrating with time tracking services and publishing events about process
 /// status changes. It runs a background monitoring loop that periodically
 /// checks for game processes and handles state transitions.
 #[derive(Clone)]
 pub struct GameMonitoringServiceImpl {
-    /// Service for managing time tracking sessions
-    time_tracker: Arc<dyn TimeTrackingService>,
+    /// Service for managing character tracking (location and time)
+    character_tracker: Arc<dyn CharacterTrackingService>,
     // Event publishing removed - using unified event system
     /// Detector for finding and checking game processes
     process_detector: Arc<dyn ProcessDetector>,
@@ -34,24 +34,24 @@ pub struct GameMonitoringServiceImpl {
 
 impl GameMonitoringServiceImpl {
     /// Creates a new game monitoring service instance.
-    /// 
+    ///
     /// Initializes the service with the required dependencies for time tracking,
     /// event publishing, and process detection. All internal state is initialized
     /// to default values (not monitoring, no current status, no active task).
-    /// 
+    ///
     /// # Arguments
-    /// * `time_tracker` - Service for managing time tracking sessions
+    /// * `character_tracker` - Service for managing character tracking (location and time)
     /// * `event_publisher` - Publisher for game monitoring events
     /// * `process_detector` - Detector for finding and checking game processes
-    /// 
+    ///
     /// # Returns
     /// * `Self` - New GameMonitoringServiceImpl instance
     pub fn new(
-        time_tracker: Arc<dyn TimeTrackingService>,
+        character_tracker: Arc<dyn CharacterTrackingService>,
         process_detector: Arc<dyn ProcessDetector>,
     ) -> Self {
         Self {
-            time_tracker,
+            character_tracker,
             process_detector,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
@@ -60,17 +60,17 @@ impl GameMonitoringServiceImpl {
     }
 
     /// Handles a change in process state, coordinating with time tracking and event publishing.
-    /// 
+    ///
     /// This method is the core logic for processing game process state changes. It:
     /// 1. Determines if this represents an actual state change
     /// 2. Integrates with time tracking services (start/stop sessions)
     /// 3. Publishes events to notify other parts of the system
     /// 4. Updates the internal current status
-    /// 
+    ///
     /// # Arguments
     /// * `current_status` - The current process status
     /// * `previous_status` - The previous process status (None for first detection)
-    /// 
+    ///
     /// # Returns
     /// * `AppResult<()>` - Success or error result
     async fn handle_process_state_change(
@@ -92,21 +92,16 @@ impl GameMonitoringServiceImpl {
                     current_status.pid, current_status.name
                 );
 
-                // Set the process start time for time tracking calculations
-                let start_time = chrono::DateTime::from(current_status.detected_at);
-                self.time_tracker
-                    .set_poe_process_start_time(start_time)
-                    .await;
+                // Game process started - time tracking will be handled by zone changes
+                // when the character enters/leaves zones during gameplay
             } else {
                 info!("POE2 process stopped");
-                debug!("POE2 process stopped, ending all active time tracking sessions");
+                debug!("POE2 process stopped - active zones will remain active until character data is updated");
 
-                // End all active time tracking sessions when the game stops
-                if let Err(e) = self.time_tracker.end_all_active_sessions_global().await {
-                    error!("Failed to end active time tracking sessions: {}", e);
-                }
-                // Clear the process start time
-                self.time_tracker.clear_poe_process_start_time().await;
+                // Note: We don't automatically deactivate zones when the game stops
+                // because the time tracking system is zone-based, not process-based.
+                // Zones will be deactivated when the character actually leaves them
+                // or when the next zone change is detected.
             }
         }
 
@@ -123,11 +118,11 @@ impl GameMonitoringServiceImpl {
     }
 
     /// Runs the main monitoring loop that periodically checks for game processes.
-    /// 
+    ///
     /// This method implements the core monitoring logic that runs in a background task.
     /// It periodically checks for game processes at the configured interval and handles
     /// state changes. The loop continues until the monitoring is stopped.
-    /// 
+    ///
     /// # Returns
     /// * `AppResult<()>` - Success or error result
     async fn start_monitoring_loop(&self) -> AppResult<()> {
@@ -202,7 +197,7 @@ impl GameMonitoringServiceImpl {
 #[async_trait]
 impl GameMonitoringService for GameMonitoringServiceImpl {
     /// Handles a change in process status by delegating to the internal implementation.
-    /// 
+    ///
     /// This is the public interface for handling process status changes, which delegates
     /// to the internal `handle_process_state_change` method that contains the core logic.
     async fn handle_process_status_change(
@@ -215,7 +210,7 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     }
 
     /// Starts the background monitoring loop.
-    /// 
+    ///
     /// This method spawns a new background task that runs the monitoring loop.
     /// If monitoring is already running, this is a no-op. The monitoring task
     /// will continue running until explicitly stopped.
@@ -247,7 +242,7 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     }
 
     /// Stops the background monitoring loop.
-    /// 
+    ///
     /// This method gracefully shuts down the monitoring by setting the stop flag
     /// and waiting for the background task to complete. If monitoring is not
     /// running, this is a no-op.
@@ -272,18 +267,17 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     }
 
     /// Checks if the monitoring service is currently active.
-    /// 
+    ///
     /// Returns the current monitoring state without blocking.
     async fn is_monitoring(&self) -> bool {
         *self.is_monitoring.read().await
     }
 
     /// Gets the current process status if available.
-    /// 
+    ///
     /// Returns a clone of the current process status, or None if no process
     /// has been detected yet.
     async fn get_current_status(&self) -> Option<GameProcessStatus> {
         self.current_status.read().await.clone()
     }
 }
-

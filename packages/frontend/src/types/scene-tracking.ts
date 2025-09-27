@@ -19,44 +19,36 @@ export type SceneChangeEvent =
   | { type: 'Act'; act_name: string; timestamp: string }
   | { type: 'Hideout'; hideout_name: string; timestamp: string };
 
-export interface LocationSession {
-  character_id: string;
-  location_id: string;
-  location_name: string;
-  location_type: 'Zone' | 'Act' | 'Hideout';
-  entry_timestamp: string;
-  exit_timestamp?: string;
-  duration_seconds?: number;
-}
+export type LocationType = 'Zone' | 'Act' | 'Hideout';
 
-export interface LocationStats {
-  character_id: string;
+export interface ZoneStats {
   location_id: string;
   location_name: string;
-  location_type: 'Zone' | 'Act' | 'Hideout';
-  total_visits: number;
-  total_time_seconds: number;
-  average_session_seconds: number;
-  last_visited?: string;
+  location_type: LocationType;
+  act?: string;
+  duration: number;
+  deaths: number;
+  visits: number;
+  first_visited: string;
+  last_visited: string;
+  is_active: boolean;
 }
 
 export interface TimeTrackingSummary {
   character_id: string;
-  active_sessions: LocationSession[];
-  top_locations: LocationStats[];
-  total_locations_tracked: number;
-  total_active_sessions: number;
-  total_play_time_seconds: number;
-  total_play_time_since_process_start_seconds: number;
-  total_hideout_time_seconds: number;
+  total_play_time: number;
+  total_hideout_time: number;
+  total_zones_visited: number;
+  total_deaths: number;
+  current_zone?: string;
+  current_act?: string;
 }
 
-export interface TimeTrackingData {
+export interface CharacterTimeTracking {
   character_id: string;
-  active_sessions: LocationSession[];
-  completed_sessions: LocationSession[];
-  all_location_stats: LocationStats[];
   summary: TimeTrackingSummary;
+  zones: ZoneStats[];
+  last_updated: string;
 }
 
 // Helper functions to extract data from SceneChangeEvent

@@ -39,18 +39,23 @@
 
 // Domain module declarations - each represents a distinct bounded context
 pub mod character; // Character management and lifecycle operations
+pub mod character_tracking; // Combined location and time tracking for characters
 pub mod configuration; // Application configuration and settings management
 pub mod events; // Unified event system for all application events
 pub mod game_monitoring; // Game process detection and monitoring
-pub mod location_tracking; // Scene/zone tracking and location history
 pub mod log_analysis; // Log parsing, analysis, and pattern matching
 pub mod server_monitoring; // Network connectivity and server status monitoring
-pub mod time_tracking; // Character playtime tracking and session management
 
 // Re-export core types from character domain for convenient access
 pub use character::{
     Ascendency, Character, CharacterClass, CharacterData, CharacterService, CharacterUpdateParams,
     League,
+};
+
+// Re-export character tracking types
+pub use character_tracking::{
+    CharacterTrackingData, CharacterTrackingService, CharacterTrackingServiceImpl, LocationState,
+    LocationType, SceneTypeConfig, TrackingSummary, ZoneStats,
 };
 
 // Re-export configuration management types
@@ -70,12 +75,6 @@ pub use game_monitoring::{
     GameMonitoringService, GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
 
-// Re-export location tracking types
-pub use location_tracking::{
-    LocationHistoryEntry, LocationState, LocationTrackingConfig, LocationTrackingService,
-    LocationTrackingServiceImpl, LocationTrackingSession, LocationTrackingStats, SceneTypeConfig,
-};
-
 // Re-export log analysis types
 pub use log_analysis::{
     LogAnalysisConfig, LogAnalysisError, LogAnalysisEvent, LogAnalysisService,
@@ -87,10 +86,4 @@ pub use server_monitoring::{
     NetworkConfig, NetworkConnectivity, ServerInfo, ServerMonitoringConfig,
     ServerMonitoringService, ServerMonitoringServiceImpl, ServerMonitoringSession,
     ServerMonitoringStats, ServerStatus,
-};
-
-// Re-export time tracking types
-pub use time_tracking::{
-    LocationSession, LocationStats, LocationType, TimeTrackingData, TimeTrackingEvent,
-    TimeTrackingService, TimeTrackingServiceImpl, TimeTrackingSummary,
 };

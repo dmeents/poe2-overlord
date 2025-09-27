@@ -41,7 +41,7 @@ use tauri::WebviewWindow;
 
 use crate::domain::game_monitoring::traits::GameMonitoringService;
 use crate::domain::log_analysis::traits::LogAnalysisService;
-use crate::domain::time_tracking::traits::TimeTrackingService;
+use crate::domain::character_tracking::traits::CharacterTrackingService;
 use crate::infrastructure::monitoring::ServerMonitor;
 use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
@@ -103,19 +103,19 @@ pub fn start_game_process_monitoring(
 /// - Emits data to the frontend via Tauri events
 /// - Runs continuously in the background
 /// - Handles frontend communication automatically
-pub fn start_time_tracking_emission(
+pub fn start_character_tracking_emission(
     window: WebviewWindow,
-    time_tracking: Arc<dyn TimeTrackingService>,
+    character_tracking: Arc<dyn CharacterTrackingService>,
     runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
-    let time_tracking_clone = time_tracking.clone();
+    let character_tracking_clone = character_tracking.clone();
 
-    // Spawn the time tracking emission task using the runtime manager
+    // Spawn the character tracking emission task using the runtime manager
     runtime_manager.spawn_background_task(
-        "time_tracking_emission".to_string(),
+        "character_tracking_emission".to_string(),
         move || async move {
-            time_tracking_clone
+            character_tracking_clone
                 .start_frontend_event_emission(window)
                 .await;
         },

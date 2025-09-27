@@ -34,7 +34,7 @@ use crate::domain::configuration::{
 };
 use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
 use crate::domain::log_analysis::{service::LogAnalysisServiceImpl, traits::LogAnalysisService, models::LogAnalysisConfig};
-use crate::domain::time_tracking::{service::TimeTrackingServiceImpl, traits::TimeTrackingService};
+use crate::domain::character_tracking::{service::CharacterTrackingServiceImpl, traits::CharacterTrackingService};
 use crate::infrastructure::monitoring::ServerMonitor;
 use crate::domain::events::EventBus;
 use crate::infrastructure::{
@@ -100,15 +100,15 @@ impl ServiceInitializer {
         app.manage(character_arc.clone());
         debug!("CharacterService managed successfully");
 
-        // Initialize Time Tracking Service - handles play time monitoring and analytics
-        debug!("Initializing TimeTrackingService...");
-        let time_tracking_service = TimeTrackingServiceImpl::new(event_bus.clone()).map_err(|e| {
-            error!("Failed to initialize TimeTrackingService: {}", e);
+        // Initialize Character Tracking Service - handles location and time tracking
+        debug!("Initializing CharacterTrackingService...");
+        let character_tracking_service = CharacterTrackingServiceImpl::new(event_bus.clone()).map_err(|e| {
+            error!("Failed to initialize CharacterTrackingService: {}", e);
             e
         })?;
-        let time_tracking_arc = Arc::new(time_tracking_service) as Arc<dyn TimeTrackingService>;
-        app.manage(time_tracking_arc.clone());
-        debug!("TimeTrackingService managed successfully");
+        let character_tracking_arc = Arc::new(character_tracking_service) as Arc<dyn CharacterTrackingService>;
+        app.manage(character_tracking_arc.clone());
+        debug!("CharacterTrackingService managed successfully");
 
         // Initialize Server Monitor - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
@@ -176,9 +176,9 @@ impl ServiceInitializer {
 
         // Event publishing removed - using unified event system
 
-        // Game monitoring service that coordinates process detection and time tracking
+        // Game monitoring service that coordinates process detection and character tracking
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
-            time_tracking_arc.clone(),
+            character_tracking_arc.clone(),
             process_detector.clone(),
         ));
 
@@ -192,7 +192,7 @@ impl ServiceInitializer {
             config_service,
             event_bus,
             character_service: character_arc,
-            time_tracking_service: time_tracking_arc,
+            character_tracking_service: character_tracking_arc,
             log_analysis_service: log_analysis_arc,
             server_status: server_status_arc,
             game_monitoring_service,
@@ -220,8 +220,8 @@ pub struct ServiceInstances {
     /// Character service for managing character data and operations
     pub character_service: Arc<CharacterService>,
 
-    /// Time tracking service for monitoring and analyzing play time
-    pub time_tracking_service: Arc<dyn TimeTrackingService>,
+    /// Character tracking service for monitoring location and time tracking
+    pub character_tracking_service: Arc<dyn CharacterTrackingService>,
 
     /// Log analysis service for processing game logs and extracting events
     pub log_analysis_service: Arc<dyn LogAnalysisService>,

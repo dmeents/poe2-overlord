@@ -3,7 +3,9 @@
 //! This module defines the core event types and configuration structures
 //! for the unified event system.
 
-use crate::domain::character_tracking::models::{LocationState, LocationType};
+use crate::domain::character_tracking::models::{
+    CharacterTrackingData, LocationState, LocationType,
+};
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::server_monitoring::models::ServerStatus;
@@ -54,6 +56,13 @@ pub enum AppEvent {
         timestamp: String,
     },
 
+    // Character Tracking Events
+    CharacterTrackingDataUpdated {
+        character_id: String,
+        data: CharacterTrackingData,
+        timestamp: String,
+    },
+
     // Game Monitoring Events
     GameProcessStatusChanged {
         old_status: Option<GameProcessStatus>,
@@ -85,7 +94,8 @@ impl AppEvent {
             | AppEvent::SceneChangeDetected { .. }
             | AppEvent::ActChangeDetected { .. }
             | AppEvent::ZoneChangeDetected { .. }
-            | AppEvent::HideoutChangeDetected { .. } => EventType::LocationTracking,
+            | AppEvent::HideoutChangeDetected { .. }
+            | AppEvent::CharacterTrackingDataUpdated { .. } => EventType::LocationTracking,
             AppEvent::GameProcessStatusChanged { .. } => EventType::GameMonitoring,
             AppEvent::SystemError { .. } | AppEvent::SystemShutdown { .. } => EventType::System,
         }
@@ -102,6 +112,7 @@ impl AppEvent {
             AppEvent::ActChangeDetected { timestamp, .. } => timestamp.clone(),
             AppEvent::ZoneChangeDetected { timestamp, .. } => timestamp.clone(),
             AppEvent::HideoutChangeDetected { timestamp, .. } => timestamp.clone(),
+            AppEvent::CharacterTrackingDataUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::GameProcessStatusChanged { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemError { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemShutdown { timestamp, .. } => timestamp.clone(),
@@ -170,6 +181,18 @@ impl AppEvent {
     pub fn hideout_change_detected(hideout_name: String) -> Self {
         Self::HideoutChangeDetected {
             hideout_name,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    /// Create a character tracking data updated event
+    pub fn character_tracking_data_updated(
+        character_id: String,
+        data: CharacterTrackingData,
+    ) -> Self {
+        Self::CharacterTrackingDataUpdated {
+            character_id,
+            data,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }

@@ -1,4 +1,4 @@
-import { useCharacterManagement, useCharacterTimeTracking } from '../../hooks';
+import { useCharacterManagement } from '../../hooks';
 import { formatDuration } from '../../utils';
 import { quickStatsGridStyles } from './quick-stats-grid.styles';
 
@@ -7,9 +7,8 @@ interface QuickStatsGridProps {
 }
 
 export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
-  const { activeCharacter } = useCharacterManagement();
-  const { timeTrackingData, activeSessions, isLoading } =
-    useCharacterTimeTracking({ activeCharacter });
+  const { activeCharacter, isLoading } = useCharacterManagement();
+  const trackingData = activeCharacter?.trackingData;
 
   if (isLoading) {
     return (
@@ -27,11 +26,13 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
     );
   }
 
-  const activeSessionCount = activeSessions.length;
-  const todayPlayTime = timeTrackingData?.summary?.total_play_time_seconds || 0;
-  const totalLocations =
-    timeTrackingData?.summary?.total_locations_tracked || 0;
-  const topLocation = timeTrackingData?.summary?.top_locations?.[0];
+  const activeSessionCount =
+    trackingData?.zones?.filter(zone => zone.is_active).length || 0;
+  const todayPlayTime = trackingData?.summary?.total_play_time || 0;
+  const totalLocations = trackingData?.summary?.total_zones_visited || 0;
+  const topLocation = trackingData?.zones?.sort(
+    (a, b) => b.duration - a.duration
+  )[0];
 
   return (
     <div className={`${quickStatsGridStyles.container} ${className}`}>
@@ -69,7 +70,7 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
           </p>
           {topLocation && (
             <p className={quickStatsGridStyles.statSubtext}>
-              {topLocation.total_visits} visits
+              {topLocation.visits} visits
             </p>
           )}
         </div>

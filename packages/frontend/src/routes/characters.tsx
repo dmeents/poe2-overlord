@@ -3,7 +3,6 @@ import { AlertMessage } from '../components';
 import { CharacterManagement } from '../components/character-management';
 import { PageHeader } from '../components/page-header';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
-import { useCharacterTotalPlayTime } from '../hooks/useCharacterTotalPlayTime';
 
 export const Route = createFileRoute('/characters')({
   component: CharactersPage,
@@ -20,8 +19,6 @@ function CharactersPage() {
     setActiveCharacterId,
     deleteCharacter,
   } = useCharacterManagement();
-
-  const { getPlayTime } = useCharacterTotalPlayTime(characters);
 
   if (isLoading) {
     return (
@@ -66,7 +63,6 @@ function CharactersPage() {
           }}
           deleteCharacter={deleteCharacter}
           setActiveCharacterId={setActiveCharacterId}
-          getPlayTime={getPlayTime}
         />
       </div>
     </div>

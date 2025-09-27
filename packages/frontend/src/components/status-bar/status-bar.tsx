@@ -2,7 +2,6 @@ import {
   useCharacterManagement,
   useGameProcessEvents,
   useServerStatus,
-  useZoneMonitoring,
 } from '@/hooks';
 import type { ServerStatus } from '@/types';
 import {
@@ -18,11 +17,12 @@ import { statusBarStyles } from './status-bar.styles';
 
 export const StatusBar = () => {
   const { processInfo } = useGameProcessEvents();
-  const { currentZone, currentAct } = useZoneMonitoring();
   const { serverStatus } = useServerStatus();
   const { activeCharacter } = useCharacterManagement();
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;
+
+  const currentLocation = activeCharacter?.trackingData?.current_location;
 
   const handleSettingsClick = () => {
     navigate({ to: '/settings' });
@@ -31,13 +31,21 @@ export const StatusBar = () => {
   const getZoneDisplayText = () => {
     const characterName = activeCharacter?.name || 'No active character';
 
-    if (currentZone) {
-      if (currentAct)
-        return `${characterName} - ${currentAct} - ${currentZone}`;
-      return `${characterName} - ${currentZone}`;
+    if (currentLocation) {
+      const parts = [characterName];
+
+      if (currentLocation.act) {
+        parts.push(currentLocation.act);
+      }
+
+      if (currentLocation.scene) {
+        parts.push(currentLocation.scene);
+      }
+
+      return parts.join(' - ');
     }
 
-    return `${characterName}`;
+    return characterName;
   };
 
   const getServerStatusTooltip = () => {

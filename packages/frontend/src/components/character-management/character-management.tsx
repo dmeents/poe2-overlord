@@ -11,7 +11,6 @@ interface CharacterManagementProps {
   updateCharacter: (id: string, data: CharacterFormData) => Promise<void>;
   deleteCharacter: (id: string) => Promise<void>;
   setActiveCharacterId: (id: string) => Promise<void>;
-  getPlayTime: (characterId: string) => number;
 }
 
 export function CharacterManagement({
@@ -21,7 +20,6 @@ export function CharacterManagement({
   updateCharacter,
   deleteCharacter,
   setActiveCharacterId,
-  getPlayTime,
 }: CharacterManagementProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(
@@ -100,7 +98,6 @@ export function CharacterManagement({
         onEditCharacter={handleEditCharacter}
         onDeleteCharacter={handleDeleteCharacter}
         onCreateCharacter={() => setShowCreateModal(true)}
-        getPlayTime={getPlayTime}
       />
 
       {/* Create Character Modal */}

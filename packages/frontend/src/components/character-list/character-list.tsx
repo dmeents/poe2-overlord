@@ -14,7 +14,6 @@ interface CharacterListProps {
   onEditCharacter: (character: Character) => void;
   onDeleteCharacter: (characterId: string) => void;
   onCreateCharacter: () => void;
-  getPlayTime: (characterId: string) => number;
 }
 
 export function CharacterList({
@@ -24,7 +23,6 @@ export function CharacterList({
   onEditCharacter,
   onDeleteCharacter,
   onCreateCharacter,
-  getPlayTime,
 }: CharacterListProps) {
   if (characters.length === 0) {
     return <EmptyCharacterList onCreateCharacter={onCreateCharacter} />;
@@ -43,7 +41,6 @@ export function CharacterList({
             onSelect={() => onSelectCharacter(character.id)}
             onEdit={() => onEditCharacter(character)}
             onDelete={() => onDeleteCharacter(character.id)}
-            totalPlayTime={getPlayTime(character.id)}
           />
         ))}
       </div>

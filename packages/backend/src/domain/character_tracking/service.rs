@@ -93,6 +93,22 @@ impl CharacterTrackingServiceImpl {
         self.event_bus.get_receiver(EventType::System).await
     }
 
+    /// Helper function to emit character tracking data updated event
+    async fn emit_character_tracking_data_updated(&self, character_id: &str) -> AppResult<()> {
+        if let Some(data) = self.repository.load_character_data(character_id).await? {
+            let app_event =
+                AppEvent::character_tracking_data_updated(character_id.to_string(), data);
+
+            if let Err(e) = self.event_bus.publish(app_event).await {
+                log::error!(
+                    "Failed to publish character tracking data updated event: {}",
+                    e
+                );
+            }
+        }
+        Ok(())
+    }
+
     /// Helper function to publish character tracking events
     async fn publish_character_tracking_event(
         &self,
@@ -362,6 +378,10 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
                 data.current_location = Some(location_state);
                 self.repository.save_character_data(&data).await?;
 
+                // Emit character tracking data updated event
+                self.emit_character_tracking_data_updated(character_id)
+                    .await?;
+
                 // Convert to zone event
                 let scene_name = match validated_event {
                     SceneChangeEvent::Hideout(hideout_event) => hideout_event.hideout_name.clone(),
@@ -467,6 +487,10 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
                 data.current_location = Some(location_state);
                 data.touch();
                 self.repository.save_character_data(&data).await?;
+
+                // Emit character tracking data updated event
+                self.emit_character_tracking_data_updated(character_id)
+                    .await?;
 
                 // Process the scene change through the tracking system
                 match validated_event {
@@ -589,6 +613,10 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
                 data.upsert_zone(deactivated_zone);
                 self.repository.save_character_data(&data).await?;
 
+                // Emit character tracking data updated event
+                self.emit_character_tracking_data_updated(character_id)
+                    .await?;
+
                 debug!(
                     "Character {} spent {} seconds in previous zone",
                     character_id, time_spent
@@ -614,6 +642,10 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
         zone.activate();
         zone.start_timer(); // Start timer for the new zone
         self.repository.upsert_zone(character_id, zone).await?;
+
+        // Emit character tracking data updated event
+        self.emit_character_tracking_data_updated(character_id)
+            .await?;
 
         debug!(
             "Character {} entered zone {} ({})",

@@ -6,15 +6,15 @@ import {
   QuickStatsGrid,
 } from '../components';
 import { PageHeader } from '../components/page-header';
-import { useActiveCharacter, useCharacterTimeTracking } from '../hooks';
+import { useCharacterManagement } from '../hooks';
 
 export const Route = createFileRoute('/')({
   component: Index,
 });
 
 function Index() {
-  const { data: activeCharacter = null } = useActiveCharacter();
-  const { allStats } = useCharacterTimeTracking({ activeCharacter });
+  const { activeCharacter } = useCharacterManagement();
+  const allStats = activeCharacter?.trackingData?.zones || [];
 
   return (
     <div className='min-h-screen bg-zinc-900 text-white'>

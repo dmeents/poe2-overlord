@@ -15,7 +15,6 @@ export interface CharacterCardProps {
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  totalPlayTime: number;
   interactive?: boolean;
 }
 
@@ -25,9 +24,25 @@ export function CharacterCard({
   onSelect,
   onEdit,
   onDelete,
-  totalPlayTime,
   interactive = true,
 }: CharacterCardProps) {
+  // Get play time, deaths, zones visited, and current location from character tracking data
+  const playTime = character.trackingData?.summary?.total_play_time || 0;
+  const totalDeaths = character.trackingData?.summary?.total_deaths || 0;
+  const zonesVisited =
+    character.trackingData?.summary?.total_zones_visited || 0;
+  const currentLocation = character.trackingData?.current_location;
+
+  // Helper function to format current location
+  const formatCurrentLocation = (location: typeof currentLocation) => {
+    if (!location) return 'Unknown';
+
+    const parts = [];
+    if (location.act) parts.push(location.act);
+    if (location.scene) parts.push(location.scene);
+
+    return parts.length > 0 ? parts.join(' - ') : 'Unknown';
+  };
   return (
     <div
       className={`group relative rounded-xl border transition-all duration-200 overflow-hidden ${
@@ -141,18 +156,42 @@ export function CharacterCard({
               Play Time
             </span>
             <span className='text-sm font-medium text-zinc-300'>
-              {formatDuration(totalPlayTime)}
+              {formatDuration(playTime)}
             </span>
           </div>
 
           {/* Deaths */}
-          {character.death_count > 0 && (
+          {totalDeaths > 0 && (
             <div className='flex items-center justify-between'>
               <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
                 Deaths
               </span>
               <span className='text-sm font-medium text-zinc-300'>
-                {character.death_count}
+                {totalDeaths}
+              </span>
+            </div>
+          )}
+
+          {/* Zones Visited */}
+          {zonesVisited > 0 && (
+            <div className='flex items-center justify-between'>
+              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                Zones Visited
+              </span>
+              <span className='text-sm font-medium text-zinc-300'>
+                {zonesVisited}
+              </span>
+            </div>
+          )}
+
+          {/* Current Location */}
+          {currentLocation && (
+            <div className='flex items-center justify-between'>
+              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                Current Location
+              </span>
+              <span className='text-sm font-medium text-zinc-300'>
+                {formatCurrentLocation(currentLocation)}
               </span>
             </div>
           )}

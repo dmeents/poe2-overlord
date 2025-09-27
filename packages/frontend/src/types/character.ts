@@ -1,4 +1,6 @@
 // Character-related types
+import type { CharacterTrackingData } from './character-tracking';
+
 export type CharacterClass =
   | 'Warrior'
   | 'Sorceress'
@@ -48,7 +50,7 @@ export interface Character {
   last_played?: string;
   is_active: boolean;
   level: number;
-  death_count: number;
+  trackingData?: CharacterTrackingData;
 }
 
 export interface CharacterData {

@@ -77,7 +77,7 @@ export function CharacterFormModal({
       setFormData(getDefaultFormData());
     }
     setErrors({});
-  }, [character, configLoading, characterClasses, getDefaultFormData]);
+  }, [character, configLoading, characterClasses.length]);
 
   // Load ascendencies when class changes
   useEffect(() => {

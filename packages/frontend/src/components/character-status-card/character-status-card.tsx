@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { useActiveCharacter, useCharacterTimeTracking } from '../../hooks';
+import { useCharacterManagement } from '../../hooks';
 import { Button } from '../button';
 import { CharacterCard } from '../character-card';
 import { characterStatusCardStyles } from './character-status-card.styles';
@@ -11,14 +11,7 @@ interface CharacterStatusCardProps {
 export function CharacterStatusCard({
   className = '',
 }: CharacterStatusCardProps) {
-  const { data: activeCharacter, isLoading: activeCharacterLoading } =
-    useActiveCharacter();
-  const { timeTrackingData, isLoading: timeTrackingLoading } =
-    useCharacterTimeTracking({
-      activeCharacter,
-    });
-
-  const isLoading = activeCharacterLoading || timeTrackingLoading;
+  const { activeCharacter, isLoading } = useCharacterManagement();
 
   if (isLoading) {
     return (
@@ -51,8 +44,6 @@ export function CharacterStatusCard({
     );
   }
 
-  const totalPlayTime = timeTrackingData?.summary?.total_play_time_seconds || 0;
-
   return (
     <div className={className}>
       <CharacterCard
@@ -61,7 +52,6 @@ export function CharacterStatusCard({
         onSelect={() => {}} // No-op since it's already the active character
         onEdit={() => {}} // No-op since interactive is false
         onDelete={() => {}} // No-op since interactive is false
-        totalPlayTime={totalPlayTime}
         interactive={false}
       />
     </div>

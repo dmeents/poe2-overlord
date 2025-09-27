@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useCallback, useEffect, useState } from 'react';
-import type { Ascendency, CharacterClass, League } from '../types';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CharacterFormData } from '../components/character-modals/character-form-modal';
+import type { Ascendency, Character, CharacterClass, League } from '../types';
 
 // Backend response types
 interface CharacterClassOption {
@@ -17,16 +18,6 @@ interface AscendencyOption {
   value: Ascendency;
   label: string;
 }
-
-// Default form data - static values that work as fallbacks
-const DEFAULT_FORM_DATA = {
-  name: '',
-  class: 'Warrior' as CharacterClass,
-  ascendency: 'Titan' as Ascendency,
-  league: 'Standard' as League,
-  hardcore: false,
-  solo_self_found: false,
-};
 
 export function useCharacterConfig() {
   const [characterClasses, setCharacterClasses] = useState<
@@ -162,7 +153,18 @@ export function useCharacterConfig() {
     loadLeagues,
     loadAscendenciesForClass,
     getAscendenciesForClass,
-    getDefaultFormData: DEFAULT_FORM_DATA,
+    getDefaultFormData: useMemo(
+      () =>
+        (character?: Character): CharacterFormData => ({
+          name: character?.name || '',
+          class: character?.class || 'Warrior',
+          ascendency: character?.ascendency || 'Titan',
+          league: character?.league || 'Standard',
+          hardcore: character?.hardcore || false,
+          solo_self_found: character?.solo_self_found || false,
+        }),
+      []
+    ),
     refreshData,
   };
 }

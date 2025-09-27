@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { CharacterFormData } from '../components/character-modals/character-form-modal';
-import type { Character } from '../types';
+import type { CharacterData, CharacterUpdateParams } from '../types';
 
 // Query keys for consistent caching
 export const characterQueryKeys = {
@@ -18,8 +18,8 @@ export const characterQueryKeys = {
 export function useCharacters() {
   return useQuery({
     queryKey: characterQueryKeys.lists(),
-    queryFn: async (): Promise<Character[]> => {
-      return await invoke<Character[]>('get_all_characters');
+    queryFn: async (): Promise<CharacterData[]> => {
+      return await invoke<CharacterData[]>('get_all_characters');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -29,8 +29,8 @@ export function useCharacters() {
 export function useActiveCharacter() {
   return useQuery({
     queryKey: characterQueryKeys.active(),
-    queryFn: async (): Promise<Character | null> => {
-      return await invoke<Character | null>('get_active_character');
+    queryFn: async (): Promise<CharacterData | null> => {
+      return await invoke<CharacterData | null>('get_active_character');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -40,9 +40,10 @@ export function useActiveCharacter() {
 export function useCharacter(characterId: string) {
   return useQuery({
     queryKey: characterQueryKeys.detail(characterId),
-    queryFn: async (): Promise<Character | null> => {
-      const characters = await invoke<Character[]>('get_all_characters');
-      return characters.find(c => c.id === characterId) || null;
+    queryFn: async (): Promise<CharacterData | null> => {
+      return await invoke<CharacterData | null>('get_character', {
+        characterId,
+      });
     },
     enabled: !!characterId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -54,8 +55,8 @@ export function useCreateCharacter() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CharacterFormData): Promise<Character> => {
-      return await invoke<Character>('create_character', {
+    mutationFn: async (data: CharacterFormData): Promise<CharacterData> => {
+      return await invoke<CharacterData>('create_character', {
         name: data.name,
         class: data.class,
         ascendency: data.ascendency,
@@ -82,15 +83,20 @@ export function useUpdateCharacter() {
     }: {
       characterId: string;
       data: CharacterFormData;
-    }): Promise<Character> => {
-      return await invoke<Character>('update_character', {
-        characterId,
+    }): Promise<CharacterData> => {
+      const updateParams: CharacterUpdateParams = {
         name: data.name,
         class: data.class,
         ascendency: data.ascendency,
         league: data.league,
         hardcore: data.hardcore,
-        soloSelfFound: data.solo_self_found,
+        solo_self_found: data.solo_self_found,
+        level: 1, // Default level for now - can be updated later if needed
+      };
+
+      return await invoke<CharacterData>('update_character', {
+        characterId,
+        updateParams,
       });
     },
     onSuccess: updatedCharacter => {
@@ -111,13 +117,13 @@ export function useDeleteCharacter() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (characterId: string): Promise<Character> => {
-      return await invoke<Character>('delete_character', { characterId });
+    mutationFn: async (characterId: string): Promise<void> => {
+      return await invoke('delete_character', { characterId });
     },
-    onSuccess: deletedCharacter => {
+    onSuccess: (_, characterId) => {
       // Remove the character from cache
       queryClient.removeQueries({
-        queryKey: characterQueryKeys.detail(deletedCharacter.id),
+        queryKey: characterQueryKeys.detail(characterId),
       });
       // Invalidate lists and active character
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });

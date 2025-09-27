@@ -1,4 +1,4 @@
-use crate::domain::character_tracking::traits::CharacterTrackingService;
+use crate::domain::character::traits::CharacterService;
 use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::game_monitoring::{
     models::GameProcessStatus,
@@ -24,8 +24,8 @@ pub struct GameMonitoringServiceImpl {
     event_bus: Arc<EventBus>,
     /// Detector for finding and checking game processes
     process_detector: Arc<dyn ProcessDetector>,
-    /// Character tracking service for finalizing zones when game ends
-    character_tracking_service: Arc<dyn CharacterTrackingService>,
+    /// Character service for finalizing zones when game ends (includes tracking)
+    character_service: Arc<dyn CharacterService>,
     /// Flag indicating whether monitoring is currently active
     is_monitoring: Arc<RwLock<bool>>,
     /// Current status of the game process (if detected)
@@ -44,19 +44,19 @@ impl GameMonitoringServiceImpl {
     /// # Arguments
     /// * `event_bus` - Event bus for publishing game monitoring events
     /// * `process_detector` - Detector for finding and checking game processes
-    /// * `character_tracking_service` - Character tracking service for finalizing zones
+    /// * `character_service` - Character service for finalizing zones (includes tracking)
     ///
     /// # Returns
     /// * `Self` - New GameMonitoringServiceImpl instance
     pub fn new(
         event_bus: Arc<EventBus>,
         process_detector: Arc<dyn ProcessDetector>,
-        character_tracking_service: Arc<dyn CharacterTrackingService>,
+        character_service: Arc<dyn CharacterService>,
     ) -> Self {
         Self {
             event_bus,
             process_detector,
-            character_tracking_service,
+            character_service,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
             monitoring_task: Arc::new(RwLock::new(None)),
@@ -104,7 +104,7 @@ impl GameMonitoringServiceImpl {
 
                 // Finalize character tracking when game process stops
                 if let Err(e) = self
-                    .character_tracking_service
+                    .character_service
                     .finalize_all_active_zones()
                     .await
                 {

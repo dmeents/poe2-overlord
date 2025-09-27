@@ -1,7 +1,7 @@
 use crate::domain::character::models::CharacterClass;
+use crate::infrastructure::parsing::manager::ParserResult;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
-use crate::infrastructure::parsing::manager::ParserResult;
 use log::debug;
 use regex::Regex;
 
@@ -121,7 +121,11 @@ impl LogParser for CharacterLevelParser {
             character_name, character_class, level
         );
 
-        Ok(ParserResult::CharacterLevel((character_name, character_class, level)))
+        Ok(ParserResult::CharacterLevel((
+            character_name,
+            character_class,
+            level,
+        )))
     }
 
     fn parser_name(&self) -> &'static str {

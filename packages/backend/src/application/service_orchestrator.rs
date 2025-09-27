@@ -39,7 +39,7 @@ use log::{error, info};
 use std::sync::Arc;
 use tauri::WebviewWindow;
 
-use crate::domain::character_tracking::traits::CharacterTrackingService;
+use crate::domain::character::traits::CharacterService;
 use crate::domain::game_monitoring::traits::GameMonitoringService;
 use crate::domain::log_analysis::traits::LogAnalysisService;
 use crate::domain::server_monitoring::ServerMonitoringService;
@@ -110,17 +110,17 @@ pub fn start_game_process_monitoring(
 /// - Handles frontend communication automatically
 pub fn start_character_tracking_emission(
     window: WebviewWindow,
-    character_tracking: Arc<dyn CharacterTrackingService>,
+    character_service: Arc<dyn CharacterService>,
     runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
-    let character_tracking_clone = character_tracking.clone();
+    let character_service_clone = character_service.clone();
 
     // Spawn the character tracking emission task using the runtime manager
     runtime_manager.spawn_background_task(
         "character_tracking_emission".to_string(),
         move || async move {
-            character_tracking_clone
+            character_service_clone
                 .start_frontend_event_emission(window)
                 .await;
         },

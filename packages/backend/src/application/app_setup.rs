@@ -156,7 +156,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         // Start character tracking emission - periodically sends tracking data to frontend
         start_character_tracking_emission(
             main_window.clone(),
-            services.character_tracking_service.clone(),
+            services.character_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

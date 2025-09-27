@@ -28,10 +28,8 @@
 //! - Failed service initialization causes the entire application startup to fail
 //! - Detailed logging provides visibility into initialization progress and failures
 
-use crate::domain::character::service::CharacterService;
-use crate::domain::character_tracking::{
-    service::CharacterTrackingServiceImpl, traits::CharacterTrackingService,
-};
+use crate::domain::character::traits::CharacterService;
+// Character tracking functionality is now integrated into CharacterService
 use crate::domain::configuration::{
     service::ConfigurationServiceImpl, traits::ConfigurationService,
 };
@@ -95,37 +93,48 @@ impl ServiceInitializer {
         app.manage(event_bus.clone());
         debug!("EventBus managed successfully");
 
-        // Initialize Character Service - manages character data persistence and operations
-        debug!("Initializing CharacterService...");
-        let character_service = CharacterService::new().map_err(|e| {
-            error!("Failed to initialize CharacterService: {}", e);
-            e
-        })?;
-        let character_arc = Arc::new(character_service);
-        app.manage(character_arc.clone());
-        debug!("CharacterService managed successfully");
-
         // Initialize Zone Configuration Service - provides zone-to-act mapping
         debug!("Initializing ZoneConfigurationService...");
-        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new(
-            std::env::current_dir()?.join("config").join("zones.json"),
-        ));
+        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new());
         let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
         app.manage(zone_config_service.clone());
         debug!("ZoneConfigurationService managed successfully");
 
-        // Initialize Character Tracking Service - handles location and time tracking
-        debug!("Initializing CharacterTrackingService...");
-        let character_tracking_service =
-            CharacterTrackingServiceImpl::new(event_bus.clone(), zone_config_service.clone())
-                .map_err(|e| {
-                    error!("Failed to initialize CharacterTrackingService: {}", e);
+        // Initialize Character Service - manages character data persistence and operations
+        debug!("Initializing CharacterService...");
+        let character_service =
+            crate::domain::character::service::CharacterServiceImpl::with_default_repository(
+                event_bus.clone(),
+                zone_config_service.clone(),
+            )
+            .map_err(|e| {
+                error!("Failed to initialize CharacterService: {}", e);
+                e
+            })?;
+
+        // Create a clone for the ServiceInstances (we need Arc for sharing)
+        let character_arc = Arc::new(character_service) as Arc<dyn CharacterService + Send + Sync>;
+
+        // Create a Box for Tauri state management
+        let character_box = Box::new(
+            crate::domain::character::service::CharacterServiceImpl::with_default_repository(
+                event_bus.clone(),
+                zone_config_service.clone(),
+            )
+            .map_err(|e| {
+                error!(
+                    "Failed to initialize CharacterService for state management: {}",
                     e
-                })?;
-        let character_tracking_arc =
-            Arc::new(character_tracking_service) as Arc<dyn CharacterTrackingService>;
-        app.manage(character_tracking_arc.clone());
-        debug!("CharacterTrackingService managed successfully");
+                );
+                e
+            })?,
+        ) as Box<dyn CharacterService + Send + Sync>;
+
+        app.manage(character_box);
+        debug!("CharacterService managed successfully");
+
+        // Character Tracking functionality is now handled by CharacterService
+        debug!("Character tracking functionality integrated into CharacterService");
 
         // Initialize Server Monitoring Service - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
@@ -157,7 +166,6 @@ impl ServiceInitializer {
             log_analysis_config,
             character_arc.clone(),
             server_monitoring_arc.clone(),
-            character_tracking_arc.clone(),
         )
         .map_err(|e| {
             error!("Failed to initialize LogAnalysisService: {}", e);
@@ -201,7 +209,7 @@ impl ServiceInitializer {
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
             event_bus.clone(),
             process_detector.clone(),
-            character_tracking_arc.clone(),
+            character_arc.clone(),
         )) as Arc<dyn GameMonitoringService>;
 
         app.manage(game_monitoring_service.clone());
@@ -214,7 +222,6 @@ impl ServiceInitializer {
             config_service,
             event_bus,
             character_service: character_arc,
-            character_tracking_service: character_tracking_arc,
             log_analysis_service: log_analysis_arc,
             server_monitoring_service: server_monitoring_arc,
             game_monitoring_service,
@@ -239,11 +246,8 @@ pub struct ServiceInstances {
     /// Event bus for unified event publishing and subscribing
     pub event_bus: Arc<EventBus>,
 
-    /// Character service for managing character data and operations
-    pub character_service: Arc<CharacterService>,
-
-    /// Character tracking service for monitoring location and time tracking
-    pub character_tracking_service: Arc<dyn CharacterTrackingService>,
+    /// Character service for managing character data and operations (includes tracking)
+    pub character_service: Arc<dyn CharacterService + Send + Sync>,
 
     /// Log analysis service for processing game logs and extracting events
     pub log_analysis_service: Arc<dyn LogAnalysisService>,
@@ -269,11 +273,7 @@ impl ServiceInstances {
         log::info!("Starting application shutdown cleanup...");
 
         // Step 1: Finalize character tracking data (most important)
-        if let Err(e) = self
-            .character_tracking_service
-            .finalize_all_active_zones()
-            .await
-        {
+        if let Err(e) = self.character_service.finalize_all_active_zones().await {
             log::error!("Failed to finalize character tracking data: {}", e);
             // Continue with shutdown even if this fails
         } else {

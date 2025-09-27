@@ -1,7 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CharacterFormData } from '../components/character-modals/character-form-modal';
-import type { Ascendency, Character, CharacterClass, League } from '../types';
+import type {
+  Ascendency,
+  CharacterClass,
+  CharacterData,
+  League,
+} from '../types';
 
 // Backend response types
 interface CharacterClassOption {
@@ -155,7 +160,7 @@ export function useCharacterConfig() {
     getAscendenciesForClass,
     getDefaultFormData: useMemo(
       () =>
-        (character?: Character): CharacterFormData => ({
+        (character?: CharacterData): CharacterFormData => ({
           name: character?.name || '',
           class: character?.class || 'Warrior',
           ascendency: character?.ascendency || 'Titan',

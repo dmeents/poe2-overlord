@@ -3,9 +3,7 @@
 //! This module defines the core event types and configuration structures
 //! for the unified event system.
 
-use crate::domain::character_tracking::models::{
-    CharacterTrackingData, LocationState, LocationType,
-};
+use crate::domain::character::models::{CharacterData, LocationState, LocationType};
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::server_monitoring::models::ServerStatus;
@@ -59,7 +57,7 @@ pub enum AppEvent {
     // Character Tracking Events
     CharacterTrackingDataUpdated {
         character_id: String,
-        data: CharacterTrackingData,
+        data: CharacterData,
         timestamp: String,
     },
 
@@ -186,10 +184,7 @@ impl AppEvent {
     }
 
     /// Create a character tracking data updated event
-    pub fn character_tracking_data_updated(
-        character_id: String,
-        data: CharacterTrackingData,
-    ) -> Self {
+    pub fn character_tracking_data_updated(character_id: String, data: CharacterData) -> Self {
         Self::CharacterTrackingDataUpdated {
             character_id,
             data,

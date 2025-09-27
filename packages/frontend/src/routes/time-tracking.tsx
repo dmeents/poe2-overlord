@@ -16,9 +16,8 @@ export const Route = createFileRoute('/time-tracking')({
 
 function TimeTrackingPage() {
   const { activeCharacter, isLoading } = useCharacterManagement();
-  const trackingData = activeCharacter?.trackingData;
-  const summary = trackingData?.summary;
-  const zones = trackingData?.zones || [];
+  const summary = activeCharacter?.summary;
+  const zones = activeCharacter?.zones || [];
 
   if (isLoading && !summary) {
     return (

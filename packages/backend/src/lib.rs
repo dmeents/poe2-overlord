@@ -8,8 +8,7 @@ pub mod infrastructure; // External integrations, monitoring, parsing, and syste
 pub use application::setup_app;
 
 // Tauri command handlers - exposed to the frontend
-pub use domain::character::commands::*;        // Character CRUD operations
-pub use domain::character_tracking::commands::*; // Character tracking (location and time)
+pub use domain::character::commands::*;        // Character CRUD operations and tracking
 pub use domain::configuration::commands::*;    // Configuration management
 pub use domain::game_monitoring::commands::*;   // Game process monitoring
 pub use domain::server_monitoring::commands::*; // Server monitoring
@@ -27,14 +26,11 @@ pub use domain::log_analysis::models::{
 
 // Character domain models and data structures
 pub use domain::character::{
-    Ascendency, Character, CharacterClass, CharacterData, CharacterUpdateParams, League,
+    CharacterData, CharacterUpdateParams, CharactersIndex, CharacterClass, Ascendency, League,
+    LocationState, LocationType, TrackingSummary, ZoneStats,
 };
 
-// Character tracking domain models and services (replaces time_tracking and location_tracking)
-pub use domain::character_tracking::{
-    CharacterTrackingData, CharacterTrackingService, CharacterTrackingServiceImpl, LocationState,
-    LocationType, TrackingSummary, ZoneStats,
-};
+// Character tracking functionality is now part of the character domain
 
 // Configuration domain models and services
 pub use domain::configuration::{
@@ -109,6 +105,12 @@ pub fn run() {
             
             // Character tracking commands (location and time)
             get_character_tracking_data,
+            get_character_current_location,
+            enter_zone,
+            leave_zone,
+            record_death,
+            add_zone_time,
+            finalize_all_active_zones,
             
             // Game process monitoring commands
             get_game_process_status,

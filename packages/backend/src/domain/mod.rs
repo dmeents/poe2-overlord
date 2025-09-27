@@ -38,8 +38,7 @@
 //! - **Reliability**: Comprehensive error handling and validation
 
 // Domain module declarations - each represents a distinct bounded context
-pub mod character; // Character management and lifecycle operations
-pub mod character_tracking; // Combined location and time tracking for characters
+pub mod character; // Character management and lifecycle operations (includes tracking)
 pub mod configuration; // Application configuration and settings management
 pub mod events; // Unified event system for all application events
 pub mod game_monitoring; // Game process detection and monitoring
@@ -47,17 +46,14 @@ pub mod log_analysis; // Log parsing, analysis, and pattern matching
 pub mod server_monitoring; // Network connectivity and server status monitoring
 pub mod zone_configuration; // Zone-to-act mapping and town detection
 
-// Re-export core types from character domain for convenient access
+// Re-export character types (including tracking types)
 pub use character::{
-    Ascendency, Character, CharacterClass, CharacterData, CharacterService, CharacterUpdateParams,
-    League,
-};
-
-// Re-export character tracking types
-pub use character_tracking::{
-    CharacterTrackingData, CharacterTrackingService, CharacterTrackingServiceImpl, LocationState,
+    Ascendency, CharacterClass, CharacterData, CharacterRepositoryImpl, CharacterService,
+    CharacterServiceImpl, CharacterUpdateParams, CharactersIndex, League, LocationState,
     LocationType, TrackingSummary, ZoneStats,
 };
+
+// Character tracking types are now part of the character domain
 
 // Re-export configuration management types
 pub use configuration::{

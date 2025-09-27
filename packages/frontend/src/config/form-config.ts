@@ -1,5 +1,5 @@
 import type { CharacterFormData } from '../components/character-modals/character-form-modal';
-import type { Character } from '../types';
+import type { CharacterData } from '../types';
 
 /**
  * Validation rules for character form fields
@@ -22,7 +22,9 @@ export const CHARACTER_FORM_VALIDATION = {
  * Note: This function is now deprecated in favor of useCharacterConfig.getDefaultFormData()
  * which uses dynamic data from the backend
  */
-export function getDefaultFormData(character?: Character): CharacterFormData {
+export function getDefaultFormData(
+  character?: CharacterData
+): CharacterFormData {
   return {
     name: character?.name || '',
     class: character?.class || 'Warrior',

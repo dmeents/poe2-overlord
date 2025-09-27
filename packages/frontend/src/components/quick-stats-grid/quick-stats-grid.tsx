@@ -8,7 +8,16 @@ interface QuickStatsGridProps {
 
 export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
   const { activeCharacter, isLoading } = useCharacterManagement();
-  const trackingData = activeCharacter?.trackingData;
+  // Extract tracking data from the unified character data
+  const trackingData = activeCharacter
+    ? {
+        character_id: activeCharacter.id,
+        current_location: activeCharacter.current_location,
+        summary: activeCharacter.summary,
+        zones: activeCharacter.zones,
+        last_updated: activeCharacter.last_updated,
+      }
+    : null;
 
   if (isLoading) {
     return (

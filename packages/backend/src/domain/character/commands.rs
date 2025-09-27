@@ -1,299 +1,265 @@
-use crate::domain::character::models::{
-    get_all_character_classes, get_all_leagues, get_ascendencies_for_class, Ascendency, Character,
-    CharacterClass, CharacterUpdateParams, League,
-};
-use crate::domain::character::service::CharacterService;
-use crate::domain::character_tracking::traits::CharacterTrackingService;
-use crate::infrastructure::tauri::{to_command_result, CommandResult};
-use log::{debug, info, warn};
-use std::sync::Arc;
+// Arc is no longer needed since we removed the character_tracking_service parameter
 use tauri::State;
 
-/// Tauri command handlers for character management operations.
+use crate::domain::character::traits::CharacterService;
+use crate::infrastructure::tauri::{to_command_result, CommandResult};
+
+/// Tauri command to create a new character (new domain)
 ///
-/// This module provides the bridge between the frontend and the character domain
-/// by exposing character service functionality as Tauri commands. Each command
-/// handler is responsible for:
-/// - Receiving parameters from the frontend
-/// - Calling the appropriate service method
-/// - Converting results to the expected Tauri format
-/// - Handling and logging errors appropriately
-///
-/// The commands follow a consistent pattern of logging debug information for
-/// incoming requests and info/warn messages for successful operations or errors.
-/// Creates a new character with the specified parameters.
-///
-/// This command handler validates the input parameters and creates a new character
-/// through the character service. The character will be automatically set as active
-/// if it's the first character in the system.
-///
-/// # Arguments
-/// * `name` - Unique character name
-/// * `class` - Base character class
-/// * `ascendency` - Specialized ascendency (must be valid for the class)
-/// * `league` - Game league/mode
-/// * `hardcore` - Whether character is in hardcore mode
-/// * `solo_self_found` - Whether character is in SSF mode
-/// * `character_service` - Injected character service instance
-///
-/// # Returns
-/// * `Ok(Character)` - The newly created character
-/// * `Err(CommandError)` - If validation fails or name is not unique
+/// This command creates a new character with the provided metadata and tracking data.
+/// The character will be saved to its own character_data_{id}.json file and added to
+/// the characters index.
 #[tauri::command]
 pub async fn create_character(
     name: String,
-    class: CharacterClass,
-    ascendency: Ascendency,
-    league: League,
+    class: crate::domain::character::models::CharacterClass,
+    ascendency: crate::domain::character::models::Ascendency,
+    league: crate::domain::character::models::League,
     hardcore: bool,
     solo_self_found: bool,
-    character_service: State<'_, Arc<CharacterService>>,
-) -> CommandResult<Character> {
-    debug!("Creating new character: {}", name);
-
-    let character = to_command_result(
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<crate::domain::character::models::CharacterData> {
+    to_command_result(
         character_service
-            .create_character(
-                name.clone(),
-                class,
-                ascendency,
-                league,
-                hardcore,
-                solo_self_found,
-            )
+            .create_character(name, class, ascendency, league, hardcore, solo_self_found)
             .await,
-    )?;
-
-    info!("Successfully created character: {}", name);
-    Ok(character)
+    )
 }
 
-/// Retrieves all characters in the system.
+/// Tauri command to get a character by ID
 ///
-/// This command handler returns a list of all characters, which is typically
-/// used by the frontend to display the character list or selection interface.
+/// This command retrieves a character's complete data including metadata and tracking information.
+#[tauri::command]
+pub async fn get_character(
+    character_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<crate::domain::character::models::CharacterData> {
+    to_command_result(character_service.get_character(&character_id).await)
+}
+
+/// Tauri command to get all characters
 ///
-/// # Arguments
-/// * `character_service` - Injected character service instance
-///
-/// # Returns
-/// * `Ok(Vec<Character>)` - All characters in the system
+/// This command retrieves all characters with their complete data.
 #[tauri::command]
 pub async fn get_all_characters(
-    character_service: State<'_, Arc<CharacterService>>,
-) -> CommandResult<Vec<Character>> {
-    debug!("Getting all characters");
-
-    let characters = character_service.get_all_characters().await;
-    debug!("Retrieved {} characters", characters.len());
-    Ok(characters)
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Vec<crate::domain::character::models::CharacterData>> {
+    to_command_result(character_service.get_all_characters().await)
 }
 
-/// Retrieves the currently active character.
+/// Tauri command to update a character
 ///
-/// This command handler returns the character that is currently set as active,
-/// which is used by the frontend to display the current character's information
-/// and for game monitoring purposes.
-///
-/// # Arguments
-/// * `character_service` - Injected character service instance
-///
-/// # Returns
-/// * `Ok(Some(Character))` - The active character if one exists
-/// * `Ok(None)` - If no character is currently active
-#[tauri::command]
-pub async fn get_active_character(
-    character_service: State<'_, Arc<CharacterService>>,
-) -> CommandResult<Option<Character>> {
-    debug!("Getting active character");
-
-    let character = character_service.get_active_character().await;
-    Ok(character)
-}
-
-/// Sets a character as the active character.
-///
-/// This command handler changes which character is currently active. Only one
-/// character can be active at a time, and setting a new active character will
-/// deactivate the previously active character.
-///
-/// # Arguments
-/// * `character_id` - The ID of the character to set as active
-/// * `character_service` - Injected character service instance
-///
-/// # Returns
-/// * `Ok(())` - If successful
-/// * `Err(CommandError)` - If character not found or operation fails
-#[tauri::command]
-pub async fn set_active_character(
-    character_id: String,
-    character_service: State<'_, Arc<CharacterService>>,
-) -> CommandResult<()> {
-    debug!("Setting active character: {}", character_id);
-
-    to_command_result(character_service.set_active_character(&character_id).await)?;
-
-    info!("Successfully set active character: {}", character_id);
-    Ok(())
-}
-
-/// Deletes a character and all associated data.
-///
-/// This command handler performs a complete cleanup by:
-/// 1. Deleting the character from the character service
-/// 2. Clearing all time tracking data associated with the character
-///
-/// The time tracking cleanup is performed as a best-effort operation - if it fails,
-/// the character is still deleted but a warning is logged.
-///
-/// # Arguments
-/// * `character_id` - The ID of the character to delete
-/// * `character_service` - Injected character service instance
-/// * `character_tracking_service` - Injected character tracking service instance
-///
-/// # Returns
-/// * `Ok(Character)` - The deleted character
-/// * `Err(CommandError)` - If character not found or operation fails
-#[tauri::command]
-pub async fn delete_character(
-    character_id: String,
-    character_service: State<'_, Arc<CharacterService>>,
-    character_tracking_service: State<'_, Arc<dyn CharacterTrackingService>>,
-) -> CommandResult<Character> {
-    debug!(
-        "Deleting character and all associated data: {}",
-        character_id
-    );
-
-    let character = to_command_result(
-        character_service
-            .delete_character(&character_id)
-            .await
-            .map_err(|e| {
-                crate::errors::AppError::internal_error(
-                    "Failed to delete character: {}",
-                    &e.to_string(),
-                )
-            }),
-    )?;
-
-    // Delete character tracking data
-    if let Err(e) = character_tracking_service
-        .delete_character_data(&character_id)
-        .await
-    {
-        warn!(
-            "Failed to delete character tracking data for character {}: {}. Character was still deleted.",
-            character_id, e
-        );
-    } else {
-        debug!(
-            "Successfully deleted character tracking data for character: {}",
-            character_id
-        );
-    }
-
-    info!(
-        "Successfully deleted character and associated data: {}",
-        character_id
-    );
-    Ok(character)
-}
-
-/// Retrieves all available character classes.
-///
-/// This command handler returns a list of all character classes that can be
-/// selected when creating a new character. Used by the frontend to populate
-/// class selection dropdowns.
-///
-/// # Returns
-/// * `Ok(Vec<CharacterClass>)` - All available character classes
-#[tauri::command]
-pub async fn get_available_character_classes() -> CommandResult<Vec<CharacterClass>> {
-    debug!("Getting available character classes");
-
-    let classes = get_all_character_classes();
-    debug!("Retrieved {} character classes", classes.len());
-    Ok(classes)
-}
-
-/// Retrieves all available leagues.
-///
-/// This command handler returns a list of all leagues that can be selected
-/// when creating a new character. Used by the frontend to populate league
-/// selection dropdowns.
-///
-/// # Returns
-/// * `Ok(Vec<League>)` - All available leagues
-#[tauri::command]
-pub async fn get_available_leagues() -> CommandResult<Vec<League>> {
-    debug!("Getting available leagues");
-
-    let leagues = get_all_leagues();
-    debug!("Retrieved {} leagues", leagues.len());
-    Ok(leagues)
-}
-
-/// Retrieves all available ascendencies for a specific character class.
-///
-/// This command handler returns the ascendencies that are valid for the given
-/// character class. Used by the frontend to dynamically populate ascendency
-/// selection dropdowns based on the selected class.
-///
-/// # Arguments
-/// * `class` - The character class to get ascendencies for
-///
-/// # Returns
-/// * `Ok(Vec<Ascendency>)` - All ascendencies available for the specified class
-#[tauri::command]
-pub async fn get_available_ascendencies_for_class(
-    class: CharacterClass,
-) -> CommandResult<Vec<Ascendency>> {
-    debug!("Getting available ascendencies for class: {:?}", class);
-
-    let ascendencies = get_ascendencies_for_class(&class);
-    debug!(
-        "Retrieved {} ascendencies for class {:?}",
-        ascendencies.len(),
-        class
-    );
-    Ok(ascendencies)
-}
-
-/// Updates an existing character with new parameters.
-///
-/// This command handler validates the new parameters and updates the character
-/// through the character service. The update includes validation of ascendency-class
-/// combinations and name uniqueness.
-///
-/// # Arguments
-/// * `character_id` - The ID of the character to update
-/// * `params` - The new character parameters
-/// * `character_service` - Injected character service instance
-///
-/// # Returns
-/// * `Ok(Character)` - The updated character
-/// * `Err(CommandError)` - If validation fails or character not found
+/// This command updates an existing character's metadata and tracking data.
 #[tauri::command]
 pub async fn update_character(
     character_id: String,
-    params: CharacterUpdateParams,
-    character_service: State<'_, Arc<CharacterService>>,
-) -> CommandResult<Character> {
-    debug!("Updating character: {} (ID: {})", params.name, character_id);
-
-    let character = to_command_result(
+    update_params: crate::domain::character::models::CharacterUpdateParams,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<crate::domain::character::models::CharacterData> {
+    to_command_result(
         character_service
-            .update_character(&character_id, params.clone())
-            .await
-            .map_err(|e| {
-                crate::errors::AppError::internal_error(
-                    "Failed to update character: {}",
-                    &e.to_string(),
-                )
-            }),
-    )?;
+            .update_character(&character_id, update_params)
+            .await,
+    )
+}
 
-    info!("Successfully updated character: {}", params.name);
-    Ok(character)
+/// Tauri command to delete a character
+///
+/// This command deletes a character and removes it from the characters index.
+#[tauri::command]
+pub async fn delete_character(
+    character_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(character_service.delete_character(&character_id).await)
+}
+
+/// Tauri command to set the active character
+///
+/// This command sets which character is currently active in the application.
+#[tauri::command]
+pub async fn set_active_character(
+    character_id: Option<String>,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .set_active_character(character_id.as_deref())
+            .await,
+    )
+}
+
+/// Tauri command to get the active character
+///
+/// This command retrieves the currently active character's data.
+#[tauri::command]
+pub async fn get_active_character(
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Option<crate::domain::character::models::CharacterData>> {
+    to_command_result(character_service.get_active_character().await)
+}
+
+/// Tauri command to get the characters index
+///
+/// This command retrieves the characters index containing all character IDs and active character.
+#[tauri::command]
+pub async fn get_characters_index(
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<crate::domain::character::models::CharactersIndex> {
+    to_command_result(character_service.get_characters_index().await)
+}
+
+/// Tauri command to check if a character name is unique
+///
+/// This command validates that a character name is not already in use.
+#[tauri::command]
+pub async fn is_character_name_unique(
+    name: String,
+    exclude_id: Option<String>,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<bool> {
+    to_command_result(
+        character_service
+            .is_name_unique(&name, exclude_id.as_deref())
+            .await,
+    )
+}
+
+/// Tauri command to get all available character classes
+///
+/// This command returns all character classes that can be selected when creating a character.
+#[tauri::command]
+pub async fn get_available_character_classes(
+) -> CommandResult<Vec<crate::domain::character::models::CharacterClass>> {
+    Ok(crate::domain::character::models::get_all_character_classes())
+}
+
+/// Tauri command to get all available leagues
+///
+/// This command returns all leagues that can be selected when creating a character.
+#[tauri::command]
+pub async fn get_available_leagues() -> CommandResult<Vec<crate::domain::character::models::League>>
+{
+    Ok(crate::domain::character::models::get_all_leagues())
+}
+
+/// Tauri command to get available ascendencies for a character class
+///
+/// This command returns all ascendencies that are valid for the specified character class.
+#[tauri::command]
+pub async fn get_available_ascendencies_for_class(
+    class: crate::domain::character::models::CharacterClass,
+) -> CommandResult<Vec<crate::domain::character::models::Ascendency>> {
+    Ok(crate::domain::character::models::get_ascendencies_for_class(&class))
+}
+
+// Character Tracking Commands (merged from character_tracking domain)
+
+/// Tauri command to get complete character tracking data for a character
+///
+/// This command retrieves all tracking data including zones, location, and statistics.
+#[tauri::command]
+pub async fn get_character_tracking_data(
+    character_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Option<crate::domain::character::models::CharacterData>> {
+    let result = to_command_result(character_service.get_character(&character_id).await)?;
+    Ok(Some(result))
+}
+
+/// Tauri command to get current location for a character
+///
+/// This command retrieves the current location state of a character.
+#[tauri::command]
+pub async fn get_character_current_location(
+    character_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Option<crate::domain::character::models::LocationState>> {
+    to_command_result(character_service.get_current_location(&character_id).await)
+}
+
+/// Tauri command to enter a zone
+///
+/// This command handles a character entering a zone with time tracking.
+#[tauri::command]
+pub async fn enter_zone(
+    character_id: String,
+    location_id: String,
+    location_name: String,
+    location_type: crate::domain::character::models::LocationType,
+    act: Option<String>,
+    is_town: bool,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .enter_zone(
+                &character_id,
+                location_id,
+                location_name,
+                location_type,
+                act,
+                is_town,
+            )
+            .await,
+    )
+}
+
+/// Tauri command to leave a zone
+///
+/// This command handles a character leaving a zone with time calculation.
+#[tauri::command]
+pub async fn leave_zone(
+    character_id: String,
+    location_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .leave_zone(&character_id, &location_id)
+            .await,
+    )
+}
+
+/// Tauri command to record a death in a zone
+///
+/// This command records a character death in a specific zone.
+#[tauri::command]
+pub async fn record_death(
+    character_id: String,
+    location_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .record_death(&character_id, &location_id)
+            .await,
+    )
+}
+
+/// Tauri command to add time to a zone
+///
+/// This command adds time to a specific zone for a character.
+#[tauri::command]
+pub async fn add_zone_time(
+    character_id: String,
+    location_id: String,
+    seconds: u64,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .add_zone_time(&character_id, &location_id, seconds)
+            .await,
+    )
+}
+
+/// Tauri command to finalize all active zones
+///
+/// This command stops all active timers and saves the data.
+#[tauri::command]
+pub async fn finalize_all_active_zones(
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(character_service.finalize_all_active_zones().await)
 }

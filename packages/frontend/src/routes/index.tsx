@@ -14,7 +14,7 @@ export const Route = createFileRoute('/')({
 
 function Index() {
   const { activeCharacter } = useCharacterManagement();
-  const allStats = activeCharacter?.trackingData?.zones || [];
+  const allStats = activeCharacter?.zones || [];
 
   return (
     <div className='min-h-screen bg-zinc-900 text-white'>

@@ -14,7 +14,7 @@ pub enum ParserResult {
     ServerConnection(ServerConnectionEvent),
     CharacterLevel((String, CharacterClass, u32)), // (character_name, character_class, level)
     CharacterDeath(String),                        // character_name
-    ZoneLevel(u32),                               // zone level
+    ZoneLevel(u32),                                // zone level
 }
 
 /// Manages a collection of log parsers for processing game log events

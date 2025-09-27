@@ -4,8 +4,8 @@ import { CHARACTER_FORM_VALIDATION } from '../../config';
 import { useCharacterConfig } from '../../hooks';
 import type {
   Ascendency,
-  Character,
   CharacterClass,
+  CharacterData,
   League,
 } from '../../types';
 import { Button } from '../button';
@@ -17,7 +17,7 @@ import {
 
 interface CharacterFormModalProps {
   isOpen: boolean;
-  character?: Character;
+  character?: CharacterData;
   onSubmit: (data: CharacterFormData) => void;
   onClose: () => void;
   isLoading?: boolean;

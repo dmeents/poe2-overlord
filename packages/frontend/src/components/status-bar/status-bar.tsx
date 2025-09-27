@@ -22,7 +22,7 @@ export const StatusBar = () => {
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;
 
-  const currentLocation = activeCharacter?.trackingData?.current_location;
+  const currentLocation = activeCharacter?.current_location;
 
   const handleSettingsClick = () => {
     navigate({ to: '/settings' });

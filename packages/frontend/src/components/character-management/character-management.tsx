@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import type { Character } from '../../types';
+import type { CharacterData } from '../../types';
 import { CharacterList } from '../character-list';
 import type { CharacterFormData } from '../character-modals';
 import { CharacterFormModal, DeleteCharacterModal } from '../character-modals';
 
 interface CharacterManagementProps {
-  characters: Character[];
-  activeCharacter?: Character;
+  characters: CharacterData[];
+  activeCharacter?: CharacterData;
   createCharacter: (data: CharacterFormData) => Promise<void>;
   updateCharacter: (id: string, data: CharacterFormData) => Promise<void>;
   deleteCharacter: (id: string) => Promise<void>;
@@ -22,12 +22,10 @@ export function CharacterManagement({
   setActiveCharacterId,
 }: CharacterManagementProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<Character | null>(
-    null
-  );
-  const [deletingCharacter, setDeletingCharacter] = useState<Character | null>(
-    null
-  );
+  const [editingCharacter, setEditingCharacter] =
+    useState<CharacterData | null>(null);
+  const [deletingCharacter, setDeletingCharacter] =
+    useState<CharacterData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateCharacter = async (data: CharacterFormData) => {
@@ -56,7 +54,7 @@ export function CharacterManagement({
     }
   };
 
-  const handleEditCharacter = (character: Character) => {
+  const handleEditCharacter = (character: CharacterData) => {
     setEditingCharacter(character);
   };
 

@@ -1,4 +1,4 @@
-import type { Character } from '../../types';
+import type { CharacterData } from '../../types';
 import { formatDuration } from '../../utils';
 import { Button } from '../button';
 import {
@@ -10,7 +10,7 @@ import {
 } from './character-card.styles';
 
 export interface CharacterCardProps {
-  character: Character;
+  character: CharacterData;
   isActive: boolean;
   onSelect: () => void;
   onEdit: () => void;
@@ -26,12 +26,11 @@ export function CharacterCard({
   onDelete,
   interactive = true,
 }: CharacterCardProps) {
-  // Get play time, deaths, zones visited, and current location from character tracking data
-  const playTime = character.trackingData?.summary?.total_play_time || 0;
-  const totalDeaths = character.trackingData?.summary?.total_deaths || 0;
-  const zonesVisited =
-    character.trackingData?.summary?.total_zones_visited || 0;
-  const currentLocation = character.trackingData?.current_location;
+  // Get play time, deaths, zones visited, and current location from character data
+  const playTime = character.summary?.total_play_time || 0;
+  const totalDeaths = character.summary?.total_deaths || 0;
+  const zonesVisited = character.summary?.total_zones_visited || 0;
+  const currentLocation = character.current_location;
 
   // Helper function to format current location
   const formatCurrentLocation = (location: typeof currentLocation) => {
@@ -184,20 +183,8 @@ export function CharacterCard({
             </div>
           )}
 
-          {/* Current Location */}
-          {currentLocation && (
-            <div className='flex items-center justify-between'>
-              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-                Current Location
-              </span>
-              <span className='text-sm font-medium text-zinc-300'>
-                {formatCurrentLocation(currentLocation)}
-              </span>
-            </div>
-          )}
-
-          {/* Last Played */}
-          {character.last_played && (
+          {/* Last Played - only show when character is not active */}
+          {character.last_played && !isActive && (
             <div className='flex items-center justify-between'>
               <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
                 Last Played
@@ -208,17 +195,17 @@ export function CharacterCard({
             </div>
           )}
 
-          {/* Last Location */}
-          {character.last_known_location && (
+          {/* Location - shows "Current Location" when active, "Location" when not active */}
+          {currentLocation && (
             <div className='flex items-center justify-between'>
               <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-                Location
+                {isActive ? 'Current Location' : 'Location'}
               </span>
               <span
                 className='text-sm font-medium text-zinc-300 truncate max-w-32'
-                title={character.last_known_location.location_name}
+                title={formatCurrentLocation(currentLocation)}
               >
-                {character.last_known_location.location_name}
+                {formatCurrentLocation(currentLocation)}
               </span>
             </div>
           )}

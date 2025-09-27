@@ -1,4 +1,4 @@
-import type { Character } from '../../types';
+import type { CharacterData } from '../../types';
 import { Button } from '../button';
 import { Modal } from '../modal';
 import {
@@ -18,7 +18,7 @@ import {
 
 interface DeleteCharacterModalProps {
   isOpen: boolean;
-  character?: Character;
+  character?: CharacterData;
   onConfirm: () => void;
   onCancel: () => void;
   isLoading?: boolean;

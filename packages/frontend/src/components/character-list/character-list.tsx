@@ -1,4 +1,4 @@
-import type { Character } from '../../types';
+import type { CharacterData } from '../../types';
 import { CharacterCard } from '../character-card';
 import { CharacterListHeader } from './character-list-header';
 import {
@@ -8,10 +8,10 @@ import {
 import { EmptyCharacterList } from './empty-character-list';
 
 interface CharacterListProps {
-  characters: Character[];
+  characters: CharacterData[];
   activeCharacterId?: string;
   onSelectCharacter: (characterId: string) => void;
-  onEditCharacter: (character: Character) => void;
+  onEditCharacter: (character: CharacterData) => void;
   onDeleteCharacter: (characterId: string) => void;
   onCreateCharacter: () => void;
 }

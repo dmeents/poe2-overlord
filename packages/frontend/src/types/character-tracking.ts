@@ -1,4 +1,5 @@
-// Character tracking types that match the backend CharacterTrackingData model
+// Character tracking types that match the backend models
+// These types are now embedded within CharacterData in the unified model
 
 export type LocationType = 'Zone' | 'Act' | 'Hideout';
 
@@ -34,6 +35,8 @@ export interface TrackingSummary {
   total_deaths: number;
 }
 
+// Legacy CharacterTrackingData interface for backward compatibility
+// This is now embedded within CharacterData in the unified model
 export interface CharacterTrackingData {
   character_id: string;
   current_location?: LocationState;
@@ -43,6 +46,7 @@ export interface CharacterTrackingData {
 }
 
 // Event types for character tracking data updates
+// Updated to work with the new unified CharacterData model
 export interface CharacterTrackingDataUpdatedEvent {
   character_id: string;
   data: CharacterTrackingData;

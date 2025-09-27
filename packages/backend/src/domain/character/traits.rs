@@ -124,16 +124,6 @@ pub trait CharacterService: Send + Sync {
     /// * `Ok(())` - If successful
     /// * `Err(AppError)` - If character not found
     async fn update_character_level(&self, character_id: &str, level: u32) -> AppResult<()>;
-
-    /// Increments a character's death count and updates last played timestamp.
-    ///
-    /// # Arguments
-    /// * `character_id` - The ID of the character to update
-    ///
-    /// # Returns
-    /// * `Ok(())` - If successful
-    /// * `Err(AppError)` - If character not found
-    async fn increment_character_deaths(&self, character_id: &str) -> AppResult<()>;
 }
 
 /// Trait defining the character repository interface for data persistence operations.

@@ -40,8 +40,6 @@ export interface TimeTrackingSummary {
   total_hideout_time: number;
   total_zones_visited: number;
   total_deaths: number;
-  current_zone?: string;
-  current_act?: string;
 }
 
 export interface CharacterTimeTracking {

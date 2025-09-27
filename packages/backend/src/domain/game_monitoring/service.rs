@@ -1,3 +1,4 @@
+use crate::domain::character_tracking::traits::CharacterTrackingService;
 use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::game_monitoring::{
     models::GameProcessStatus,
@@ -23,6 +24,8 @@ pub struct GameMonitoringServiceImpl {
     event_bus: Arc<EventBus>,
     /// Detector for finding and checking game processes
     process_detector: Arc<dyn ProcessDetector>,
+    /// Character tracking service for finalizing zones when game ends
+    character_tracking_service: Arc<dyn CharacterTrackingService>,
     /// Flag indicating whether monitoring is currently active
     is_monitoring: Arc<RwLock<bool>>,
     /// Current status of the game process (if detected)
@@ -41,13 +44,19 @@ impl GameMonitoringServiceImpl {
     /// # Arguments
     /// * `event_bus` - Event bus for publishing game monitoring events
     /// * `process_detector` - Detector for finding and checking game processes
+    /// * `character_tracking_service` - Character tracking service for finalizing zones
     ///
     /// # Returns
     /// * `Self` - New GameMonitoringServiceImpl instance
-    pub fn new(event_bus: Arc<EventBus>, process_detector: Arc<dyn ProcessDetector>) -> Self {
+    pub fn new(
+        event_bus: Arc<EventBus>,
+        process_detector: Arc<dyn ProcessDetector>,
+        character_tracking_service: Arc<dyn CharacterTrackingService>,
+    ) -> Self {
         Self {
             event_bus,
             process_detector,
+            character_tracking_service,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
             monitoring_task: Arc::new(RwLock::new(None)),
@@ -91,12 +100,21 @@ impl GameMonitoringServiceImpl {
                 // when the character enters/leaves zones during gameplay
             } else {
                 info!("POE2 process stopped");
-                debug!("POE2 process stopped - active zones will remain active until character data is updated");
+                debug!("POE2 process stopped - finalizing active zones");
 
-                // Note: We don't automatically deactivate zones when the game stops
-                // because the time tracking system is zone-based, not process-based.
-                // Zones will be deactivated when the character actually leaves them
-                // or when the next zone change is detected.
+                // Finalize character tracking when game process stops
+                if let Err(e) = self
+                    .character_tracking_service
+                    .finalize_all_active_zones()
+                    .await
+                {
+                    error!(
+                        "Failed to finalize character tracking when game stopped: {}",
+                        e
+                    );
+                } else {
+                    info!("Character tracking finalized after game process stopped");
+                }
             }
         }
 

@@ -177,23 +177,20 @@ pub async fn delete_character(
             }),
     )?;
 
-    // Attempt to clear character tracking data (best effort)
-    match character_tracking_service
-        .clear_character_data(&character_id)
+    // Delete character tracking data
+    if let Err(e) = character_tracking_service
+        .delete_character_data(&character_id)
         .await
     {
-        Ok(_) => {
-            debug!(
-                "Successfully cleared character tracking data for character: {}",
-                character_id
-            );
-        }
-        Err(e) => {
-            warn!(
-                "Failed to clear character tracking data for character {}: {}. Character was still deleted.",
-                character_id, e
-            );
-        }
+        warn!(
+            "Failed to delete character tracking data for character {}: {}. Character was still deleted.",
+            character_id, e
+        );
+    } else {
+        debug!(
+            "Successfully deleted character tracking data for character: {}",
+            character_id
+        );
     }
 
     info!(

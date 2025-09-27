@@ -86,10 +86,18 @@ pub struct LocationState {
     pub scene: Option<String>,
     /// Current act name (Act 1, Act 2, etc.)
     pub act: Option<String>,
+    /// Whether the current location is a town
+    #[serde(default = "default_is_town")]
+    pub is_town: bool,
     /// Type of location (Zone, Act, Hideout)
     pub location_type: LocationType,
     /// Timestamp of the last location update
     pub last_updated: DateTime<Utc>,
+}
+
+/// Default value for is_town field during deserialization
+fn default_is_town() -> bool {
+    false
 }
 
 impl LocationState {
@@ -98,6 +106,7 @@ impl LocationState {
         Self {
             scene: None,
             act: None,
+            is_town: false,
             location_type: LocationType::Zone,
             last_updated: Utc::now(),
         }
@@ -107,11 +116,13 @@ impl LocationState {
     pub fn new_for_location(
         scene: Option<String>,
         act: Option<String>,
+        is_town: bool,
         location_type: LocationType,
     ) -> Self {
         Self {
             scene,
             act,
+            is_town,
             location_type,
             last_updated: Utc::now(),
         }
@@ -175,10 +186,6 @@ pub struct TrackingSummary {
     pub total_zones_visited: usize,
     /// Total number of deaths across all zones
     pub total_deaths: u32,
-    /// Current active zone (if any)
-    pub current_zone: Option<String>,
-    /// Current active act (if any)
-    pub current_act: Option<String>,
 }
 
 impl TrackingSummary {
@@ -190,8 +197,6 @@ impl TrackingSummary {
             total_hideout_time: 0,
             total_zones_visited: 0,
             total_deaths: 0,
-            current_zone: None,
-            current_act: None,
         }
     }
 
@@ -205,19 +210,12 @@ impl TrackingSummary {
             .sum();
         let total_deaths = zones.iter().map(|zone| zone.deaths).sum();
 
-        // Find current active zone and act
-        let active_zones: Vec<&ZoneStats> = zones.iter().filter(|zone| zone.is_active).collect();
-        let current_zone = active_zones.first().map(|zone| zone.location_name.clone());
-        let current_act = active_zones.first().and_then(|zone| zone.act.clone());
-
         Self {
             character_id: character_id.to_string(),
             total_play_time,
             total_hideout_time,
             total_zones_visited: zones.len(),
             total_deaths,
-            current_zone,
-            current_act,
         }
     }
 }
@@ -231,8 +229,11 @@ pub struct ZoneStats {
     pub location_name: String,
     /// Type of location (Zone, Act, Hideout)
     pub location_type: LocationType,
-    /// Act this zone belongs to (1, 2, 3, 4, interlude, atlas)
+    /// Act this zone belongs to (1, 2, 3, 4, interlude, endgame)
     pub act: Option<String>,
+    /// Whether this zone is a town
+    #[serde(default = "default_is_town")]
+    pub is_town: bool,
     /// Total time spent in this zone (seconds)
     pub duration: u64,
     /// Number of deaths in this zone
@@ -245,6 +246,10 @@ pub struct ZoneStats {
     pub last_visited: DateTime<Utc>,
     /// Whether this zone is currently active
     pub is_active: bool,
+    /// Timestamp when character entered this zone (for time tracking)
+    pub entry_timestamp: Option<DateTime<Utc>>,
+    /// Level of the zone (extracted from game logs)
+    pub zone_level: Option<u32>,
 }
 
 impl ZoneStats {
@@ -254,6 +259,7 @@ impl ZoneStats {
         location_name: String,
         location_type: LocationType,
         act: Option<String>,
+        is_town: bool,
     ) -> Self {
         let now = Utc::now();
         Self {
@@ -261,12 +267,15 @@ impl ZoneStats {
             location_name,
             location_type,
             act,
+            is_town,
             duration: 0,
             deaths: 0,
             visits: 0,
             first_visited: now,
             last_visited: now,
             is_active: true,
+            entry_timestamp: Some(now),
+            zone_level: None,
         }
     }
 
@@ -299,6 +308,44 @@ impl ZoneStats {
         self.is_active = false;
         self.last_visited = Utc::now();
     }
+
+    /// Starts the timer for this zone (character enters)
+    pub fn start_timer(&mut self) {
+        self.entry_timestamp = Some(Utc::now());
+    }
+
+    /// Stops the timer and adds the elapsed time to duration
+    /// Returns the time spent in seconds
+    pub fn stop_timer_and_add_time(&mut self) -> u64 {
+        if let Some(entry_time) = self.entry_timestamp {
+            let time_spent = Utc::now()
+                .signed_duration_since(entry_time)
+                .num_seconds()
+                .max(0) as u64;
+            self.add_time(time_spent);
+            self.entry_timestamp = None;
+            time_spent
+        } else {
+            0
+        }
+    }
+
+    /// Gets the current time spent in this zone (if active)
+    pub fn get_current_time_spent(&self) -> u64 {
+        if let Some(entry_time) = self.entry_timestamp {
+            Utc::now()
+                .signed_duration_since(entry_time)
+                .num_seconds()
+                .max(0) as u64
+        } else {
+            0
+        }
+    }
+
+    /// Updates the zone level
+    pub fn update_zone_level(&mut self, level: u32) {
+        self.zone_level = Some(level);
+    }
 }
 
 /// Types of locations that can be tracked in the game
@@ -320,48 +367,6 @@ impl fmt::Display for LocationType {
             LocationType::Act => write!(f, "Act"),
             LocationType::Hideout => write!(f, "Hideout"),
         }
-    }
-}
-
-/// Configuration for detecting different scene types based on keyword matching
-/// Used by the scene type detector to categorize game content
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SceneTypeConfig {
-    /// Keywords that indicate hideout content
-    pub hideout_keywords: Vec<String>,
-    /// Keywords that indicate act content
-    pub act_keywords: Vec<String>,
-    /// Keywords that indicate zone content
-    pub zone_keywords: Vec<String>,
-}
-
-impl SceneTypeConfig {
-    /// Creates a new empty scene type configuration
-    pub fn new() -> Self {
-        Self {
-            hideout_keywords: Vec::new(),
-            act_keywords: Vec::new(),
-            zone_keywords: Vec::new(),
-        }
-    }
-
-    /// Creates a new scene type configuration with provided keywords
-    pub fn with_keywords(
-        hideout_keywords: Vec<String>,
-        act_keywords: Vec<String>,
-        zone_keywords: Vec<String>,
-    ) -> Self {
-        Self {
-            hideout_keywords,
-            act_keywords,
-            zone_keywords,
-        }
-    }
-}
-
-impl Default for SceneTypeConfig {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

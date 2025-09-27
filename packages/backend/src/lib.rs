@@ -33,7 +33,7 @@ pub use domain::character::{
 // Character tracking domain models and services (replaces time_tracking and location_tracking)
 pub use domain::character_tracking::{
     CharacterTrackingData, CharacterTrackingService, CharacterTrackingServiceImpl, LocationState,
-    LocationType, SceneTypeConfig, TrackingSummary, ZoneStats,
+    LocationType, TrackingSummary, ZoneStats,
 };
 
 // Configuration domain models and services
@@ -54,8 +54,6 @@ pub use domain::game_monitoring::{
     GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
 };
 
-// Scene type enum (moved from location_tracking)
-pub use domain::character_tracking::models::LocationType as SceneType;
 
 // Infrastructure services and utilities
 // Note: Server monitoring is now handled by the domain service
@@ -111,17 +109,6 @@ pub fn run() {
             
             // Character tracking commands (location and time)
             get_character_tracking_data,
-            clear_character_tracking_data,
-            get_character_active_zone,
-            get_character_all_zones,
-            get_character_zones_by_time,
-            get_character_total_play_time,
-            get_character_total_hideout_time,
-            get_character_total_deaths,
-            get_character_current_location,
-            get_character_current_scene,
-            get_character_current_act,
-            reset_character_tracking,
             
             // Game process monitoring commands
             get_game_process_status,

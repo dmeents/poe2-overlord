@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// Core character entity representing a Path of Exile 2 character.
-/// 
+///
 /// This struct encapsulates all the essential data for a character including
 /// identity, class information, game mode settings, and progression tracking.
 /// The character serves as the primary entity in the character management domain.
@@ -32,13 +32,10 @@ pub struct Character {
     /// Current level of the character (defaults to 1)
     #[serde(default = "default_level")]
     pub level: u32,
-    /// Number of times this character has died (defaults to 0)
-    #[serde(default = "default_death_count")]
-    pub death_count: u32,
 }
 
 /// Parameters for updating an existing character.
-/// 
+///
 /// This struct contains all the mutable fields that can be updated
 /// when modifying a character's properties. It excludes immutable
 /// fields like ID, creation timestamp, and progression data.
@@ -59,7 +56,7 @@ pub struct CharacterUpdateParams {
 }
 
 /// Base character classes available in Path of Exile 2.
-/// 
+///
 /// Each class represents a different archetype with unique starting attributes
 /// and access to specific ascendency specializations. The serde rename attributes
 /// ensure proper serialization to match the game's naming conventions.
@@ -89,7 +86,7 @@ pub enum CharacterClass {
 }
 
 /// Ascendency specializations available for each character class.
-/// 
+///
 /// Ascendencies provide specialized passive skill trees and unique abilities
 /// that further define a character's playstyle. Each base class has access
 /// to 2-3 specific ascendencies that complement their core archetype.
@@ -162,7 +159,7 @@ pub enum Ascendency {
 }
 
 /// Game leagues/modes available in Path of Exile 2.
-/// 
+///
 /// Leagues represent different game modes with varying rules, mechanics,
 /// and economies. Each league provides a fresh start for characters.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -176,7 +173,7 @@ pub enum League {
 }
 
 /// Container for all character-related data in the application.
-/// 
+///
 /// This struct serves as the root data structure for persistence,
 /// containing all characters and tracking which one is currently active.
 /// It's used by the repository layer for data serialization/deserialization.
@@ -189,15 +186,15 @@ pub struct CharacterData {
 }
 
 /// Validates whether a given ascendency is compatible with a character class.
-/// 
+///
 /// This function enforces the game's business rules by ensuring that only
 /// valid ascendency-class combinations are allowed. Each class has a specific
 /// set of ascendencies they can choose from.
-/// 
+///
 /// # Arguments
 /// * `ascendency` - The ascendency to validate
 /// * `class` - The character class to check compatibility against
-/// 
+///
 /// # Returns
 /// * `true` if the ascendency is valid for the given class
 /// * `false` if the combination is not allowed
@@ -233,14 +230,14 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
 }
 
 /// Returns all available ascendencies for a given character class.
-/// 
+///
 /// This utility function provides a convenient way to get all valid
 /// ascendency options when creating or updating a character of a specific class.
 /// Used primarily by the UI layer to populate dropdown menus and validate selections.
-/// 
+///
 /// # Arguments
 /// * `class` - The character class to get ascendencies for
-/// 
+///
 /// # Returns
 /// A vector containing all ascendencies available to the specified class
 pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
@@ -267,13 +264,12 @@ pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
     }
 }
 
-
 /// Returns all available character classes in the game.
-/// 
+///
 /// This utility function provides a complete list of all character classes
 /// that can be selected when creating a new character. Used by the UI layer
 /// to populate class selection dropdowns.
-/// 
+///
 /// # Returns
 /// A vector containing all available character classes
 pub fn get_all_character_classes() -> Vec<CharacterClass> {
@@ -289,11 +285,11 @@ pub fn get_all_character_classes() -> Vec<CharacterClass> {
 }
 
 /// Returns all available leagues in the game.
-/// 
+///
 /// This utility function provides a complete list of all leagues
 /// that can be selected when creating a new character. Used by the UI layer
 /// to populate league selection dropdowns.
-/// 
+///
 /// # Returns
 /// A vector containing all available leagues
 pub fn get_all_leagues() -> Vec<League> {
@@ -301,21 +297,14 @@ pub fn get_all_leagues() -> Vec<League> {
 }
 
 /// Default level for new characters.
-/// 
+///
 /// All characters start at level 1 when created.
 fn default_level() -> u32 {
     1
 }
 
-/// Default death count for new characters.
-/// 
-/// All characters start with 0 deaths when created.
-fn default_death_count() -> u32 {
-    0
-}
-
 /// Implementation of Display trait for CharacterClass.
-/// 
+///
 /// Provides human-readable string representation of character classes
 /// for display purposes in the UI and logging.
 impl fmt::Display for CharacterClass {

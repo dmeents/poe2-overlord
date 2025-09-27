@@ -14,6 +14,7 @@ pub enum ParserResult {
     ServerConnection(ServerConnectionEvent),
     CharacterLevel((String, CharacterClass, u32)), // (character_name, character_class, level)
     CharacterDeath(String),                        // character_name
+    ZoneLevel(u32),                               // zone level
 }
 
 /// Manages a collection of log parsers for processing game log events
@@ -71,6 +72,9 @@ impl LogParserManager {
                             }
                             ParserResult::CharacterDeath(name) => {
                                 debug!("Character death detected: {} has been slain", name);
+                            }
+                            ParserResult::ZoneLevel(level) => {
+                                debug!("Zone level detected: {}", level);
                             }
                         }
 

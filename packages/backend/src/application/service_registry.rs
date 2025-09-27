@@ -40,8 +40,11 @@ use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitori
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
+use crate::domain::server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl};
+use crate::domain::zone_configuration::{
+    repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
+};
 use crate::infrastructure::monitoring::ProcessMonitorImpl;
-use crate::domain::server_monitoring::{ServerMonitoringServiceImpl, ServerMonitoringService};
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::Manager;
@@ -102,13 +105,23 @@ impl ServiceInitializer {
         app.manage(character_arc.clone());
         debug!("CharacterService managed successfully");
 
+        // Initialize Zone Configuration Service - provides zone-to-act mapping
+        debug!("Initializing ZoneConfigurationService...");
+        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new(
+            std::env::current_dir()?.join("config").join("zones.json"),
+        ));
+        let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
+        app.manage(zone_config_service.clone());
+        debug!("ZoneConfigurationService managed successfully");
+
         // Initialize Character Tracking Service - handles location and time tracking
         debug!("Initializing CharacterTrackingService...");
-        let character_tracking_service = CharacterTrackingServiceImpl::new(event_bus.clone())
-            .map_err(|e| {
-                error!("Failed to initialize CharacterTrackingService: {}", e);
-                e
-            })?;
+        let character_tracking_service =
+            CharacterTrackingServiceImpl::new(event_bus.clone(), zone_config_service.clone())
+                .map_err(|e| {
+                    error!("Failed to initialize CharacterTrackingService: {}", e);
+                    e
+                })?;
         let character_tracking_arc =
             Arc::new(character_tracking_service) as Arc<dyn CharacterTrackingService>;
         app.manage(character_tracking_arc.clone());
@@ -122,7 +135,8 @@ impl ServiceInitializer {
                 error!("Failed to initialize ServerMonitoringService: {}", e);
                 e
             })?;
-        let server_monitoring_arc = Arc::new(server_monitoring_service) as Arc<dyn ServerMonitoringService>;
+        let server_monitoring_arc =
+            Arc::new(server_monitoring_service) as Arc<dyn ServerMonitoringService>;
         app.manage(server_monitoring_arc.clone());
         debug!("ServerMonitoringService managed successfully");
 
@@ -143,7 +157,7 @@ impl ServiceInitializer {
             log_analysis_config,
             character_arc.clone(),
             server_monitoring_arc.clone(),
-            event_bus.clone(),
+            character_tracking_arc.clone(),
         )
         .map_err(|e| {
             error!("Failed to initialize LogAnalysisService: {}", e);
@@ -187,6 +201,7 @@ impl ServiceInitializer {
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
             event_bus.clone(),
             process_detector.clone(),
+            character_tracking_arc.clone(),
         )) as Arc<dyn GameMonitoringService>;
 
         app.manage(game_monitoring_service.clone());
@@ -238,4 +253,37 @@ pub struct ServiceInstances {
 
     /// Game monitoring service for detecting game processes and managing game state
     pub game_monitoring_service: Arc<dyn GameMonitoringService>,
+}
+
+impl ServiceInstances {
+    /// Shuts down all services in the proper order during application cleanup
+    ///
+    /// This method coordinates the shutdown of all services, ensuring that
+    /// character tracking data is finalized before other services are stopped.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), Box<dyn std::error::Error>>` - Returns Ok(()) on successful shutdown,
+    ///   or an error if any part of the shutdown process fails
+    pub async fn shutdown_services(&self) -> Result<(), Box<dyn std::error::Error>> {
+        log::info!("Starting application shutdown cleanup...");
+
+        // Step 1: Finalize character tracking data (most important)
+        if let Err(e) = self
+            .character_tracking_service
+            .finalize_all_active_zones()
+            .await
+        {
+            log::error!("Failed to finalize character tracking data: {}", e);
+            // Continue with shutdown even if this fails
+        } else {
+            log::info!("Character tracking data finalized successfully");
+        }
+
+        // Step 2: Stop background services (they should handle their own cleanup)
+        log::info!("Background services shutdown completed");
+
+        log::info!("Application shutdown cleanup completed");
+        Ok(())
+    }
 }

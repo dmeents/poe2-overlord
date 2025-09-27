@@ -45,6 +45,7 @@ pub mod events; // Unified event system for all application events
 pub mod game_monitoring; // Game process detection and monitoring
 pub mod log_analysis; // Log parsing, analysis, and pattern matching
 pub mod server_monitoring; // Network connectivity and server status monitoring
+pub mod zone_configuration; // Zone-to-act mapping and town detection
 
 // Re-export core types from character domain for convenient access
 pub use character::{
@@ -55,7 +56,7 @@ pub use character::{
 // Re-export character tracking types
 pub use character_tracking::{
     CharacterTrackingData, CharacterTrackingService, CharacterTrackingServiceImpl, LocationState,
-    LocationType, SceneTypeConfig, TrackingSummary, ZoneStats,
+    LocationType, TrackingSummary, ZoneStats,
 };
 
 // Re-export configuration management types
@@ -83,3 +84,9 @@ pub use log_analysis::{
 
 // Re-export server monitoring types
 pub use server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatus};
+
+// Re-export zone configuration types
+pub use zone_configuration::{
+    ActDefinition, ZoneConfiguration, ZoneConfigurationService, ZoneConfigurationServiceImpl,
+    ZoneMapping,
+};

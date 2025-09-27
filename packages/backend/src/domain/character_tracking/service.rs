@@ -1,5 +1,5 @@
 use crate::domain::character_tracking::models::{
-    CharacterTrackingData, LocationState, LocationType, SceneTypeConfig, ZoneStats,
+    CharacterTrackingData, LocationState, LocationType, ZoneStats,
 };
 use crate::domain::character_tracking::traits::{
     CharacterTrackingEventPublisher, CharacterTrackingRepository, CharacterTrackingService,
@@ -27,6 +27,8 @@ pub struct CharacterTrackingServiceImpl {
     event_bus: Arc<EventBus>,
     /// Scene type detection logic
     scene_type_detector: Arc<tokio::sync::RwLock<dyn SceneTypeDetector + Send + Sync>>,
+    /// Zone configuration service for act and town detection
+    zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
     /// Tracks when the PoE process started for time calculations
     poe_process_start_time: Arc<tokio::sync::RwLock<Option<DateTime<Utc>>>>,
 }
@@ -35,7 +37,13 @@ impl Default for CharacterTrackingServiceImpl {
     /// Creates a default service instance, panicking on failure
     fn default() -> Self {
         let event_bus = Arc::new(crate::domain::events::EventBus::new());
-        Self::new(event_bus).unwrap_or_else(|e| {
+        // Create a dummy zone config for default initialization
+        let zone_config = Arc::new(crate::domain::zone_configuration::service::ZoneConfigurationServiceImpl::new(
+            Arc::new(crate::domain::zone_configuration::repository::ZoneConfigurationRepositoryImpl::new(
+                std::path::PathBuf::from("config/zones.json")
+            ))
+        ));
+        Self::new(event_bus, zone_config).unwrap_or_else(|e| {
             log::error!("Failed to create CharacterTrackingServiceImpl: {}", e);
             panic!("Failed to initialize character tracking service");
         })
@@ -43,21 +51,23 @@ impl Default for CharacterTrackingServiceImpl {
 }
 
 impl CharacterTrackingServiceImpl {
-    /// Creates a new character tracking service with default repository
-    pub fn new(event_bus: Arc<EventBus>) -> AppResult<Self> {
+    /// Creates a new character tracking service with zone configuration
+    pub fn new(
+        event_bus: Arc<EventBus>,
+        zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+    ) -> AppResult<Self> {
         let repository = Arc::new(
             crate::domain::character_tracking::repository::CharacterTrackingRepositoryImpl::new()?,
         );
         let scene_type_detector = Arc::new(tokio::sync::RwLock::new(
-            crate::domain::character_tracking::service::SimpleSceneTypeDetector::new(
-                SceneTypeConfig::default(),
-            ),
+            ZoneBasedSceneTypeDetector::new(zone_config.clone()),
         ));
 
         Ok(Self {
             repository,
             event_bus,
             scene_type_detector,
+            zone_config,
             poe_process_start_time: Arc::new(tokio::sync::RwLock::new(None)),
         })
     }
@@ -67,11 +77,13 @@ impl CharacterTrackingServiceImpl {
         repository: Arc<dyn CharacterTrackingRepository>,
         event_bus: Arc<EventBus>,
         scene_type_detector: Arc<tokio::sync::RwLock<dyn SceneTypeDetector + Send + Sync>>,
+        zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
     ) -> Self {
         Self {
             repository,
             event_bus,
             scene_type_detector,
+            zone_config,
             poe_process_start_time: Arc::new(tokio::sync::RwLock::new(None)),
         }
     }
@@ -145,12 +157,24 @@ impl CharacterTrackingServiceImpl {
     }
 
     /// Generates a unique location ID from name and type
+    /// Format: {location_type}_{location_name} in snake_case
+    /// Only supports Zone and Hideout types (acts are filtered out)
     fn generate_location_id(location_name: &str, location_type: &LocationType) -> String {
-        format!(
-            "{}_{}",
-            location_type,
-            location_name.to_lowercase().replace(' ', "_")
-        )
+        let type_prefix = match location_type {
+            LocationType::Zone => "zone",
+            LocationType::Hideout => "hideout",
+            LocationType::Act => "act", // Should not be used since acts are filtered out
+        };
+
+        let snake_case_name = location_name
+            .to_lowercase()
+            .replace(' ', "_")
+            .replace('-', "_")
+            .replace('\'', "")
+            .replace('.', "")
+            .replace(',', "");
+
+        format!("{}_{}", type_prefix, snake_case_name)
     }
 
     /// Converts a scene change to a zone event
@@ -163,9 +187,19 @@ impl CharacterTrackingServiceImpl {
     ) -> AppResult<()> {
         let location_id = Self::generate_location_id(&location_name, &location_type);
 
+        // Get town status from zone configuration
+        let is_town = self.zone_config.is_town_zone(&location_name).await;
+
         // Enter the zone
-        self.enter_zone(character_id, location_id, location_name, location_type, act)
-            .await?;
+        self.enter_zone(
+            character_id,
+            location_id,
+            location_name,
+            location_type,
+            act,
+            is_town,
+        )
+        .await?;
 
         debug!(
             "Converted scene change to zone event for character {}",
@@ -175,7 +209,8 @@ impl CharacterTrackingServiceImpl {
     }
 
     /// Creates a scene change event from content and detected scene type
-    fn create_scene_change_event(
+    /// Uses zone configuration to determine act and town status
+    async fn create_scene_change_event(
         &self,
         content: &str,
         location_type: LocationType,
@@ -187,14 +222,20 @@ impl CharacterTrackingServiceImpl {
                 hideout_name: content.to_string(),
                 timestamp,
             }),
-            LocationType::Act => SceneChangeEvent::Act(ActChangeEvent {
-                act_name: content.to_string(),
-                timestamp,
-            }),
-            LocationType::Zone => SceneChangeEvent::Zone(ZoneChangeEvent {
-                zone_name: content.to_string(),
-                timestamp,
-            }),
+            LocationType::Zone => {
+                // For zones, act information is determined during location state creation
+                SceneChangeEvent::Zone(ZoneChangeEvent {
+                    zone_name: content.to_string(),
+                    timestamp,
+                })
+            }
+            LocationType::Act => {
+                // This should rarely happen with zone-based detection
+                SceneChangeEvent::Act(ActChangeEvent {
+                    act_name: content.to_string(),
+                    timestamp,
+                })
+            }
         }
     }
 
@@ -260,7 +301,15 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
             detector.detect_scene_type(content)
         };
 
-        let event = self.create_scene_change_event(content, location_type.clone());
+        // Filter out act-related content - these should not be processed as scene changes
+        if matches!(location_type, LocationType::Act) {
+            debug!("Filtering out act-related scene change: {}", content);
+            return Ok(None);
+        }
+
+        let event = self
+            .create_scene_change_event(content, location_type.clone())
+            .await;
 
         // Validate if this is an actual scene change
         let result = self
@@ -285,16 +334,27 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
                     SceneChangeEvent::Hideout(hideout_event) => LocationState::new_for_location(
                         Some(hideout_event.hideout_name.clone()),
                         None,
+                        false, // Hideouts are not towns
                         LocationType::Hideout,
                     ),
-                    SceneChangeEvent::Zone(zone_event) => LocationState::new_for_location(
-                        Some(zone_event.zone_name.clone()),
-                        None,
-                        LocationType::Zone,
-                    ),
+                    SceneChangeEvent::Zone(zone_event) => {
+                        // Get act and town status from zone configuration
+                        let act = self
+                            .zone_config
+                            .get_act_for_zone(&zone_event.zone_name)
+                            .await;
+                        let is_town = self.zone_config.is_town_zone(&zone_event.zone_name).await;
+                        LocationState::new_for_location(
+                            Some(zone_event.zone_name.clone()),
+                            act,
+                            is_town,
+                            LocationType::Zone,
+                        )
+                    }
                     SceneChangeEvent::Act(act_event) => LocationState::new_for_location(
                         None,
                         Some(act_event.act_name.clone()),
+                        false, // Acts are not towns
                         LocationType::Act,
                     ),
                 };
@@ -325,40 +385,176 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
         Ok(result)
     }
 
+    async fn process_scene_content_with_zone_level(
+        &self,
+        content: &str,
+        character_id: &str,
+        zone_level: u32,
+    ) -> AppResult<Option<SceneChangeEvent>> {
+        // Detect scene type from content
+        let location_type = {
+            let detector = self.scene_type_detector.read().await;
+            detector.detect_scene_type(content)
+        };
+
+        // Filter out act-related content - these should not be processed as scene changes
+        if matches!(location_type, LocationType::Act) {
+            debug!("Filtering out act-related scene change: {}", content);
+            return Ok(None);
+        }
+
+        let event = self
+            .create_scene_change_event(content, location_type.clone())
+            .await;
+
+        // Validate if this is an actual scene change
+        let result = self
+            .validate_scene_change_event(&event, character_id)
+            .await?;
+
+        match &result {
+            Some(validated_event) => {
+                debug!(
+                    "Scene change with zone level {} validated as actual change: {:?}",
+                    zone_level, validated_event
+                );
+
+                // Update current location state for character
+                let mut data = self
+                    .repository
+                    .load_character_data(character_id)
+                    .await?
+                    .unwrap_or_else(|| CharacterTrackingData::new(character_id.to_string()));
+
+                let location_state = match validated_event {
+                    SceneChangeEvent::Hideout(hideout_event) => LocationState::new_for_location(
+                        Some(hideout_event.hideout_name.clone()),
+                        None,
+                        false, // Hideouts are not towns
+                        LocationType::Hideout,
+                    ),
+                    SceneChangeEvent::Zone(zone_event) => {
+                        // Get act and town status from zone configuration
+                        debug!(
+                            "Looking up zone '{}' in configuration",
+                            zone_event.zone_name
+                        );
+                        let act = self
+                            .zone_config
+                            .get_act_for_zone(&zone_event.zone_name)
+                            .await;
+                        let is_town = self.zone_config.is_town_zone(&zone_event.zone_name).await;
+                        debug!(
+                            "Zone '{}' -> Act: {:?}, Is Town: {}",
+                            zone_event.zone_name, act, is_town
+                        );
+
+                        LocationState::new_for_location(
+                            Some(zone_event.zone_name.clone()),
+                            act,
+                            is_town,
+                            LocationType::Zone,
+                        )
+                    }
+                    SceneChangeEvent::Act(act_event) => LocationState::new_for_location(
+                        None,
+                        Some(act_event.act_name.clone()),
+                        false, // Acts are not towns
+                        LocationType::Act,
+                    ),
+                };
+
+                data.current_location = Some(location_state);
+                data.touch();
+                self.repository.save_character_data(&data).await?;
+
+                // Process the scene change through the tracking system
+                match validated_event {
+                    SceneChangeEvent::Hideout(hideout_event) => {
+                        self.enter_zone(
+                            character_id,
+                            Self::generate_location_id(
+                                &hideout_event.hideout_name,
+                                &LocationType::Hideout,
+                            ),
+                            hideout_event.hideout_name.clone(),
+                            LocationType::Hideout,
+                            None,
+                            false,
+                        )
+                        .await?;
+                    }
+                    SceneChangeEvent::Zone(zone_event) => {
+                        let act = self
+                            .zone_config
+                            .get_act_for_zone(&zone_event.zone_name)
+                            .await;
+                        let is_town = self.zone_config.is_town_zone(&zone_event.zone_name).await;
+
+                        self.enter_zone(
+                            character_id,
+                            Self::generate_location_id(&zone_event.zone_name, &LocationType::Zone),
+                            zone_event.zone_name.clone(),
+                            LocationType::Zone,
+                            act,
+                            is_town,
+                        )
+                        .await?;
+
+                        // Update the zone with the level information
+                        if let Some(mut data) =
+                            self.repository.load_character_data(character_id).await?
+                        {
+                            let location_id = Self::generate_location_id(
+                                &zone_event.zone_name,
+                                &LocationType::Zone,
+                            );
+                            if let Some(active_zone) = data.find_zone_mut(&location_id) {
+                                active_zone.update_zone_level(zone_level);
+                                debug!(
+                                    "Updated zone {} with level {}",
+                                    zone_event.zone_name, zone_level
+                                );
+                            }
+                            self.repository.save_character_data(&data).await?;
+                        }
+                    }
+                    SceneChangeEvent::Act(act_event) => {
+                        debug!("Act change event: {}", act_event.act_name);
+                        // Act changes are handled differently - they don't enter zones
+                    }
+                }
+
+                // Publish the event
+                let scene_type = match validated_event {
+                    SceneChangeEvent::Zone(_) => LocationType::Zone,
+                    SceneChangeEvent::Act(_) => LocationType::Act,
+                    SceneChangeEvent::Hideout(_) => LocationType::Hideout,
+                };
+
+                if let Err(e) = self
+                    .event_bus
+                    .publish(AppEvent::SceneChangeDetected {
+                        scene_type,
+                        scene_name: validated_event.get_name().to_string(),
+                        timestamp: chrono::Utc::now().to_rfc3339(),
+                    })
+                    .await
+                {
+                    log::error!("Failed to publish scene change event: {}", e);
+                }
+            }
+            None => {
+                debug!("Scene change filtered out as no actual change");
+            }
+        }
+
+        Ok(result)
+    }
+
     async fn get_current_location(&self, character_id: &str) -> AppResult<Option<LocationState>> {
         if let Some(data) = self.repository.load_character_data(character_id).await? {
             Ok(data.current_location)
-        } else {
-            Ok(None)
-        }
-    }
-
-    async fn reset_tracking(&self, character_id: &str) -> AppResult<()> {
-        let data = CharacterTrackingData::new(character_id.to_string());
-        self.repository.save_character_data(&data).await?;
-
-        debug!(
-            "Character tracking state reset for character {}",
-            character_id
-        );
-        Ok(())
-    }
-
-    async fn get_current_scene(&self, character_id: &str) -> AppResult<Option<String>> {
-        if let Some(data) = self.repository.load_character_data(character_id).await? {
-            Ok(data
-                .current_location
-                .and_then(|l| l.get_current_scene().cloned()))
-        } else {
-            Ok(None)
-        }
-    }
-
-    async fn get_current_act(&self, character_id: &str) -> AppResult<Option<String>> {
-        if let Some(data) = self.repository.load_character_data(character_id).await? {
-            Ok(data
-                .current_location
-                .and_then(|l| l.get_current_act().cloned()))
         } else {
             Ok(None)
         }
@@ -371,6 +567,10 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
         self.repository.load_character_data(character_id).await
     }
 
+    async fn delete_character_data(&self, character_id: &str) -> AppResult<()> {
+        self.repository.delete_character_data(character_id).await
+    }
+
     async fn enter_zone(
         &self,
         character_id: &str,
@@ -378,14 +578,22 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
         location_name: String,
         location_type: LocationType,
         act: Option<String>,
+        is_town: bool,
     ) -> AppResult<()> {
-        // Deactivate any currently active zone for this character
-        if let Some(active_zone) = self.repository.get_active_zone(character_id).await? {
-            let mut deactivated_zone = active_zone;
-            deactivated_zone.deactivate();
-            self.repository
-                .upsert_zone(character_id, deactivated_zone)
-                .await?;
+        // Deactivate any currently active zone for this character and calculate time spent
+        if let Some(mut data) = self.repository.load_character_data(character_id).await? {
+            if let Some(active_zone) = data.get_active_zone() {
+                let mut deactivated_zone = active_zone.clone();
+                let time_spent = deactivated_zone.stop_timer_and_add_time();
+                deactivated_zone.deactivate();
+                data.upsert_zone(deactivated_zone);
+                self.repository.save_character_data(&data).await?;
+
+                debug!(
+                    "Character {} spent {} seconds in previous zone",
+                    character_id, time_spent
+                );
+            }
         }
 
         // Create or update the new zone
@@ -399,10 +607,12 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
                     location_name.clone(),
                     location_type.clone(),
                     act,
+                    is_town,
                 )
             });
 
         zone.activate();
+        zone.start_timer(); // Start timer for the new zone
         self.repository.upsert_zone(character_id, zone).await?;
 
         debug!(
@@ -414,8 +624,14 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
 
     async fn leave_zone(&self, character_id: &str, location_id: &str) -> AppResult<()> {
         if let Some(mut zone) = self.repository.find_zone(character_id, location_id).await? {
+            let time_spent = zone.stop_timer_and_add_time();
             zone.deactivate();
             self.repository.upsert_zone(character_id, zone).await?;
+
+            debug!(
+                "Character {} left zone {} after spending {} seconds",
+                character_id, location_id, time_spent
+            );
         }
 
         debug!("Character {} left zone {}", character_id, location_id);
@@ -444,61 +660,6 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
             .add_zone_time(character_id, location_id, seconds)
             .await?;
         Ok(())
-    }
-
-    async fn get_active_zone(&self, character_id: &str) -> AppResult<Option<ZoneStats>> {
-        self.repository.get_active_zone(character_id).await
-    }
-
-    async fn get_all_zones(&self, character_id: &str) -> AppResult<Vec<ZoneStats>> {
-        self.repository.get_all_zones(character_id).await
-    }
-
-    async fn get_zones_by_time(&self, character_id: &str) -> AppResult<Vec<ZoneStats>> {
-        self.repository.get_zones_by_time(character_id).await
-    }
-
-    async fn get_total_play_time(&self, character_id: &str) -> AppResult<u64> {
-        self.repository.get_total_play_time(character_id).await
-    }
-
-    async fn get_total_hideout_time(&self, character_id: &str) -> AppResult<u64> {
-        self.repository.get_total_hideout_time(character_id).await
-    }
-
-    async fn get_total_deaths(&self, character_id: &str) -> AppResult<u32> {
-        self.repository.get_total_deaths(character_id).await
-    }
-
-    async fn clear_character_data(&self, character_id: &str) -> AppResult<()> {
-        // Delete from repository (both storage and memory)
-        self.repository.delete_character_data(character_id).await?;
-
-        // Publish data cleared event
-        let event = crate::domain::character_tracking::traits::CharacterTrackingEvent::CharacterTrackingDataCleared(
-            crate::domain::character_tracking::traits::CharacterTrackingDataCleared::new(character_id.to_string())
-        );
-
-        if let Err(e) = self.publish_character_tracking_event(event).await {
-            log::warn!("Failed to publish data cleared event: {}", e);
-        }
-
-        debug!(
-            "Cleared character tracking data for character {}",
-            character_id
-        );
-        Ok(())
-    }
-
-    async fn update_scene_type_config(&self, config: SceneTypeConfig) -> AppResult<()> {
-        let mut detector = self.scene_type_detector.write().await;
-        detector.update_scene_type_config(config);
-        Ok(())
-    }
-
-    async fn get_scene_type_config(&self) -> AppResult<SceneTypeConfig> {
-        let detector = self.scene_type_detector.read().await;
-        Ok(detector.get_scene_type_config().clone())
     }
 
     async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
@@ -535,6 +696,39 @@ impl CharacterTrackingService for CharacterTrackingServiceImpl {
             debug!("Character tracking frontend event emission stopped");
         });
     }
+
+    async fn finalize_all_active_zones(&self) -> AppResult<()> {
+        // Get all character IDs that have tracking data
+        let character_ids = self.repository.get_all_character_ids().await?;
+
+        for character_id in character_ids {
+            if let Some(mut data) = self.repository.load_character_data(&character_id).await? {
+                let mut has_changes = false;
+
+                // Find and finalize any active zones
+                for zone in &mut data.zones {
+                    if zone.is_active {
+                        let time_spent = zone.stop_timer_and_add_time();
+                        zone.deactivate();
+                        has_changes = true;
+
+                        debug!(
+                            "Finalized zone {} for character {} with {} seconds",
+                            zone.location_name, character_id, time_spent
+                        );
+                    }
+                }
+
+                // Update summary if there were changes
+                if has_changes {
+                    data.update_summary();
+                    self.repository.save_character_data(&data).await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -553,22 +747,25 @@ impl CharacterTrackingEventPublisher for CharacterTrackingServiceImpl {
     }
 }
 
-/// Simple implementation of scene type detection using keyword matching
-/// Provides basic scene categorization based on configured keywords
-pub struct SimpleSceneTypeDetector {
-    config: SceneTypeConfig,
+/// Zone-based scene type detector that uses zone configuration for act detection
+/// Replaces keyword-based detection with reliable zone-to-act mapping
+pub struct ZoneBasedSceneTypeDetector {
+    #[allow(dead_code)] // Used in async methods, linter doesn't detect this
+    zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
 }
 
-impl SimpleSceneTypeDetector {
-    /// Creates a new scene type detector with the provided configuration
-    pub fn new(config: SceneTypeConfig) -> Self {
-        Self { config }
+impl ZoneBasedSceneTypeDetector {
+    /// Creates a new zone-based scene type detector
+    pub fn new(
+        zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+    ) -> Self {
+        Self { zone_config }
     }
 }
 
-impl SceneTypeDetector for SimpleSceneTypeDetector {
-    /// Detects scene type by checking keywords in order of specificity
-    /// Hideout -> Act -> Zone (default)
+impl SceneTypeDetector for ZoneBasedSceneTypeDetector {
+    /// Detects scene type by checking for hideouts first, then filtering out act content
+    /// Act detection is now handled by zone configuration lookup
     fn detect_scene_type(&self, content: &str) -> LocationType {
         let lower_content = content.to_lowercase();
 
@@ -576,41 +773,30 @@ impl SceneTypeDetector for SimpleSceneTypeDetector {
             return LocationType::Hideout;
         }
 
+        // Filter out act-related content - these should not be processed as scene changes
         if self.is_act_content(&lower_content) {
-            return LocationType::Act;
+            return LocationType::Act; // This will be filtered out later
         }
 
+        // All other content is treated as zones
+        // Act information is determined by zone configuration lookup
         LocationType::Zone
     }
 
-    /// Checks if content contains hideout keywords
+    /// Checks if content contains hideout keywords (preserves existing logic)
     fn is_hideout_content(&self, lower_content: &str) -> bool {
-        self.config
-            .hideout_keywords
-            .iter()
-            .any(|keyword| lower_content.contains(keyword))
+        lower_content.contains("hideout")
     }
 
-    /// Checks if content contains act keywords
+    /// Checks if content contains act keywords that should be filtered out
     fn is_act_content(&self, lower_content: &str) -> bool {
-        self.config
-            .act_keywords
-            .iter()
-            .any(|keyword| lower_content.contains(keyword))
+        lower_content.contains("act")
+            || lower_content.contains("endgame")
+            || lower_content.contains("interlude")
     }
 
     /// All content is considered zone content by default
     fn is_zone_content(&self, _lower_content: &str) -> bool {
         true
-    }
-
-    /// Gets the current scene type configuration
-    fn get_scene_type_config(&self) -> &SceneTypeConfig {
-        &self.config
-    }
-
-    /// Updates the scene type configuration
-    fn update_scene_type_config(&mut self, config: SceneTypeConfig) {
-        self.config = config;
     }
 }

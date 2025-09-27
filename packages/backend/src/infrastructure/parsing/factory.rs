@@ -1,6 +1,6 @@
 use crate::infrastructure::parsing::manager::ParserResult;
 use crate::infrastructure::parsing::parsers::{
-    CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser,
+    CharacterDeathParser, CharacterLevelParser, SceneChangeParser, ServerConnectionParser, ZoneLevelParser,
 };
 use crate::infrastructure::parsing::{LogParser, ParsersConfig};
 
@@ -20,6 +20,9 @@ impl ParserFactory {
             )),
             "character_death" if config.character_death.enabled => Some(Box::new(
                 CharacterDeathParser::with_config(config.clone()),
+            )),
+            "zone_level" if config.zone_level.enabled => Some(Box::new(
+                ZoneLevelParser::with_config(config.clone()),
             )),
             _ => None,
         }
@@ -48,6 +51,12 @@ impl ParserFactory {
 
         if config.character_death.enabled {
             parsers.push(Box::new(CharacterDeathParser::with_config(
+                config.clone(),
+            )));
+        }
+
+        if config.zone_level.enabled {
+            parsers.push(Box::new(ZoneLevelParser::with_config(
                 config.clone(),
             )));
         }

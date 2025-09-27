@@ -3,10 +3,9 @@
 //! This module defines the core event types and configuration structures
 //! for the unified event system.
 
-use crate::domain::character_tracking::models::{LocationState, LocationType as SceneType};
+use crate::domain::character_tracking::models::{LocationState, LocationType};
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
-use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
 use serde::{Deserialize, Serialize};
 
@@ -16,13 +15,6 @@ use serde::{Deserialize, Serialize};
 /// that can be published or subscribed to in the application.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AppEvent {
-    // Log Analysis Events
-    LogParsed(LogEvent),
-    LogAnalysisError {
-        error_message: String,
-        timestamp: String,
-    },
-
     // Server Monitoring Events
     ServerStatusChanged {
         old_status: Option<ServerStatus>,
@@ -45,7 +37,7 @@ pub enum AppEvent {
         timestamp: String,
     },
     SceneChangeDetected {
-        scene_type: SceneType,
+        scene_type: LocationType,
         scene_name: String,
         timestamp: String,
     },
@@ -85,7 +77,6 @@ impl AppEvent {
     /// Get the event type for this event
     pub fn event_type(&self) -> EventType {
         match self {
-            AppEvent::LogParsed(_) | AppEvent::LogAnalysisError { .. } => EventType::LogAnalysis,
             AppEvent::ServerStatusChanged { .. } | AppEvent::ServerPingCompleted { .. } => {
                 EventType::ServerMonitoring
             }
@@ -103,8 +94,6 @@ impl AppEvent {
     /// Get the timestamp for this event
     pub fn timestamp(&self) -> String {
         match self {
-            AppEvent::LogParsed(_event) => chrono::Utc::now().to_rfc3339(), // LogEvent doesn't have timestamp field
-            AppEvent::LogAnalysisError { timestamp, .. } => timestamp.clone(),
             AppEvent::ServerStatusChanged { timestamp, .. } => timestamp.clone(),
             AppEvent::ServerPingCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::ConfigurationChanged(event) => event.timestamp.to_rfc3339(),
@@ -116,14 +105,6 @@ impl AppEvent {
             AppEvent::GameProcessStatusChanged { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemError { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemShutdown { timestamp, .. } => timestamp.clone(),
-        }
-    }
-
-    /// Create a log analysis error event
-    pub fn log_analysis_error(error_message: String) -> Self {
-        Self::LogAnalysisError {
-            error_message,
-            timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
 
@@ -161,7 +142,7 @@ impl AppEvent {
     }
 
     /// Create a scene change detected event
-    pub fn scene_change_detected(scene_type: SceneType, scene_name: String) -> Self {
+    pub fn scene_change_detected(scene_type: LocationType, scene_name: String) -> Self {
         Self::SceneChangeDetected {
             scene_type,
             scene_name,
@@ -230,7 +211,6 @@ impl AppEvent {
 /// Each event type gets its own broadcast channel with configurable capacity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EventType {
-    LogAnalysis,
     ServerMonitoring,
     Configuration,
     LocationTracking,
@@ -242,7 +222,6 @@ impl EventType {
     /// Get all available event types
     pub fn all() -> Vec<EventType> {
         vec![
-            EventType::LogAnalysis,
             EventType::ServerMonitoring,
             EventType::Configuration,
             EventType::LocationTracking,
@@ -254,7 +233,6 @@ impl EventType {
     /// Get the default channel capacity for this event type
     pub fn default_capacity(&self) -> usize {
         match self {
-            EventType::LogAnalysis => 1000,     // High volume
             EventType::ServerMonitoring => 100, // Medium volume
             EventType::Configuration => 16,     // Low volume
             EventType::LocationTracking => 500, // Medium-high volume

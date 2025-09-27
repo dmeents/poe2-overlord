@@ -67,6 +67,9 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     // Step 1: Initialize all application services through the dependency injection container
     let services = ServiceInitializer::initialize_services(app)?;
 
+    // Register services container for shutdown cleanup
+    app.manage(services.clone());
+
     // Step 2: Load configuration and set up logging
     let config_service = services.config_service.clone();
 
@@ -172,5 +175,23 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     }
 
     info!("Application setup completed successfully");
+
+    // Register shutdown handler for cleanup when main window is closed
+    if let Some(main_window) = app.get_webview_window("main") {
+        let services_clone = services.clone();
+        main_window.on_window_event(move |event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                log::info!("Application shutdown requested");
+
+                // Run shutdown cleanup in a blocking manner
+                tauri::async_runtime::block_on(async {
+                    if let Err(e) = services_clone.shutdown_services().await {
+                        log::error!("Error during application shutdown: {}", e);
+                    }
+                });
+            }
+        });
+    }
+
     Ok(())
 }

@@ -76,8 +76,6 @@ impl TauriEventBridge {
     /// Get the Tauri event name for an AppEvent
     fn get_event_name(event: &AppEvent) -> String {
         match event {
-            AppEvent::LogParsed(_) => "log-event".to_string(),
-            AppEvent::LogAnalysisError { .. } => "log-analysis-error".to_string(),
             AppEvent::ServerStatusChanged { .. } => "server-status-changed".to_string(),
             AppEvent::ServerPingCompleted { .. } => "server-ping-completed".to_string(),
             AppEvent::ConfigurationChanged(_) => "configuration-changed".to_string(),

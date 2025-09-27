@@ -22,5 +22,5 @@ pub mod traits;
 pub use commands::*;
 pub use models::*;
 pub use repository::CharacterTrackingRepositoryImpl;
-pub use service::{CharacterTrackingServiceImpl, SimpleSceneTypeDetector};
+pub use service::{CharacterTrackingServiceImpl, ZoneBasedSceneTypeDetector};
 pub use traits::*;

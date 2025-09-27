@@ -1,7 +1,6 @@
 use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
-use crate::domain::events::{AppEvent, EventBus, EventType};
-use crate::domain::log_analysis::models::LogEvent;
-use crate::domain::log_analysis::models::{LogAnalysisConfig, LogFileInfo};
+use crate::domain::character_tracking::traits::CharacterTrackingService;
+use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
 use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
 use crate::domain::server_monitoring::ServerMonitoringService;
@@ -11,7 +10,7 @@ use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::RwLock;
 use tokio::time;
 
 /// Main implementation of the log analysis service
@@ -21,18 +20,20 @@ pub struct LogAnalysisServiceImpl {
     config: Arc<RwLock<LogAnalysisConfig>>,
     /// Repository for file system operations on log files
     log_file_repository: Arc<dyn LogFileRepository>,
-    /// Event bus for publishing log events
-    event_bus: Arc<EventBus>,
     /// Service for character-related operations
     character_service: Arc<dyn CharacterServiceTrait>,
     /// Service for server monitoring operations
     server_monitoring_service: Arc<dyn ServerMonitoringService>,
+    /// Service for character tracking operations
+    character_tracking_service: Arc<dyn CharacterTrackingService>,
     /// Parser manager for processing log lines
     parser_manager: LogParserManager,
     /// Flag indicating whether log monitoring is currently active
     is_running: Arc<RwLock<bool>>,
     /// Last position read in the log file (for incremental reading)
     last_position: Arc<RwLock<u64>>,
+    /// Cache for zone level information (level, timestamp)
+    zone_level_cache: Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
 }
 
 impl LogAnalysisServiceImpl {
@@ -41,7 +42,7 @@ impl LogAnalysisServiceImpl {
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: Arc<dyn ServerMonitoringService>,
-        event_bus: Arc<EventBus>,
+        character_tracking_service: Arc<dyn CharacterTrackingService>,
     ) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(config));
         let log_file_repository = Arc::new(LogFileRepositoryImpl::new());
@@ -49,12 +50,13 @@ impl LogAnalysisServiceImpl {
         Ok(Self {
             config,
             log_file_repository,
-            event_bus,
             character_service,
             server_monitoring_service,
+            character_tracking_service,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
+            zone_level_cache: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -64,19 +66,20 @@ impl LogAnalysisServiceImpl {
         log_file_repository: Arc<dyn LogFileRepository>,
         character_service: Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: Arc<dyn ServerMonitoringService>,
-        event_bus: Arc<EventBus>,
+        character_tracking_service: Arc<dyn CharacterTrackingService>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
         let parser_manager = LogParserManager::new();
         Self {
             config,
             log_file_repository,
-            event_bus,
             character_service,
             server_monitoring_service,
+            character_tracking_service,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
+            zone_level_cache: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -117,11 +120,12 @@ impl LogAnalysisServiceImpl {
 
         // Clone all necessary dependencies for the spawned task
         let log_file_repository = Arc::clone(&self.log_file_repository);
-        let event_bus = Arc::clone(&self.event_bus);
         let character_service = Arc::clone(&self.character_service);
         let server_monitoring_service = Arc::clone(&self.server_monitoring_service);
+        let character_tracking_service = Arc::clone(&self.character_tracking_service);
         let is_running = Arc::clone(&self.is_running);
         let last_position = Arc::clone(&self.last_position);
+        let zone_level_cache = Arc::clone(&self.zone_level_cache);
         let parser_manager = self.parser_manager.clone();
 
         tokio::spawn(async move {
@@ -146,10 +150,11 @@ impl LogAnalysisServiceImpl {
                                 &parser_manager,
                                 &log_path,
                                 &log_file_repository,
-                                &event_bus,
                                 &character_service,
                                 &server_monitoring_service,
+                                &character_tracking_service,
                                 &last_position,
+                                &zone_level_cache,
                                 last_pos,
                             )
                             .await
@@ -178,10 +183,11 @@ impl LogAnalysisServiceImpl {
         parser_manager: &LogParserManager,
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
-        event_bus: &Arc<EventBus>,
         character_service: &Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: &Arc<dyn ServerMonitoringService>,
+        character_tracking_service: &Arc<dyn CharacterTrackingService>,
         last_position: &Arc<RwLock<u64>>,
+        zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
         start_position: u64,
     ) -> AppResult<()> {
         // Read new lines from the last known position
@@ -198,9 +204,10 @@ impl LogAnalysisServiceImpl {
             if let Err(e) = Self::process_single_line(
                 parser_manager,
                 line,
-                event_bus,
                 character_service,
                 server_monitoring_service,
+                character_tracking_service,
+                zone_level_cache,
             )
             .await
             {
@@ -222,26 +229,59 @@ impl LogAnalysisServiceImpl {
     async fn process_single_line(
         parser_manager: &LogParserManager,
         line: &str,
-        event_bus: &Arc<EventBus>,
         character_service: &Arc<dyn CharacterServiceTrait>,
         server_monitoring_service: &Arc<dyn ServerMonitoringService>,
+        character_tracking_service: &Arc<dyn CharacterTrackingService>,
+        zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     ) -> AppResult<()> {
         // Try to parse the line for known events
         if let Ok(Some(result)) = parser_manager.parse_line(line) {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
-                    // Handle zone change events
-                    let event = LogEvent::SceneChange(
-                        crate::domain::log_analysis::models::SceneChangeEvent::Zone(
-                            crate::domain::log_analysis::models::ZoneChangeEvent {
-                                zone_name: content,
-                                timestamp: chrono::Utc::now().to_rfc3339(),
-                            },
-                        ),
-                    );
-
-                    if let Err(e) = event_bus.publish(AppEvent::LogParsed(event)).await {
-                        warn!("Failed to publish log event: {}", e);
+                    // Process scene changes through character tracking service
+                    if let Some(active_character) = character_service.get_active_character().await {
+                        // Check for cached zone level
+                        let cached_level = {
+                            let cache = zone_level_cache.read().await;
+                            cache.clone()
+                        };
+                        
+                        if let Some((level, _timestamp)) = cached_level {
+                            debug!("Using cached zone level {} for scene change", level);
+                            // Clear the cache after use
+                            {
+                                let mut cache = zone_level_cache.write().await;
+                                *cache = None;
+                            }
+                            
+                            // Process scene change with zone level
+                            if let Err(e) = character_tracking_service
+                                .process_scene_content_with_zone_level(&content, &active_character.id, level)
+                                .await
+                            {
+                                error!("Failed to process scene change with zone level: {}", e);
+                            } else {
+                                debug!(
+                                    "Scene change with zone level {} processed for character {}: {}",
+                                    level, active_character.id, content
+                                );
+                            }
+                        } else {
+                            // Process scene change without zone level
+                            if let Err(e) = character_tracking_service
+                                .process_scene_content(&content, &active_character.id)
+                                .await
+                            {
+                                error!("Failed to process scene change: {}", e);
+                            } else {
+                                debug!(
+                                    "Scene change processed for character {}: {}",
+                                    active_character.id, content
+                                );
+                            }
+                        }
+                    } else {
+                        debug!("Scene change detected but no active character: {}", content);
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
@@ -250,12 +290,11 @@ impl LogAnalysisServiceImpl {
                         .update_server_from_log(event.ip_address.clone(), event.port)
                         .await?;
 
-                    if let Err(e) = event_bus
-                        .publish(AppEvent::LogParsed(LogEvent::ServerConnection(event)))
-                        .await
-                    {
-                        warn!("Failed to publish server connection event: {}", e);
-                    }
+                    // Server monitoring service will publish its own events
+                    debug!(
+                        "Server connection detected in log: {}:{}",
+                        event.ip_address, event.port
+                    );
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterLevel((
                     character_name,
@@ -271,47 +310,92 @@ impl LogAnalysisServiceImpl {
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
 
-                            let level_up_event =
-                                crate::domain::log_analysis::models::CharacterLevelUpEvent {
-                                    character_name: character_name.clone(),
-                                    character_class: character_class.to_string(),
-                                    new_level,
-                                    timestamp: chrono::Utc::now().to_rfc3339(),
-                                };
-
-                            if let Err(e) = event_bus
-                                .publish(AppEvent::LogParsed(LogEvent::CharacterLevelUp(
-                                    level_up_event,
-                                )))
-                                .await
-                            {
-                                warn!("Failed to publish character level up event: {}", e);
-                            }
+                            debug!(
+                                "Character level up detected in log: {} ({} -> {})",
+                                character_name, character_class, new_level
+                            );
                         }
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterDeath(character_name) => {
-                    // Handle character death events
+                    // Handle character death events - track deaths only in character_data.json
                     if let Some(active_character) = character_service.get_active_character().await {
                         if active_character.name == character_name {
-                            character_service
-                                .increment_character_deaths(&active_character.id)
-                                .await?;
+                            debug!(
+                                "Processing death for character: {} (ID: {})",
+                                character_name, active_character.id
+                            );
 
-                            let death_event =
-                                crate::domain::log_analysis::models::CharacterDeathEvent {
-                                    character_name: character_name.clone(),
-                                    timestamp: chrono::Utc::now().to_rfc3339(),
-                                };
-
-                            if let Err(e) = event_bus
-                                .publish(AppEvent::LogParsed(LogEvent::CharacterDeath(death_event)))
+                            // Record death in the current zone via character tracking service
+                            match character_tracking_service
+                                .get_character_data(&active_character.id)
                                 .await
                             {
-                                warn!("Failed to publish character death event: {}", e);
+                                Ok(Some(character_data)) => {
+                                    debug!(
+                                        "Character data loaded successfully for {}",
+                                        character_name
+                                    );
+
+                                    if let Some(active_zone) = character_data.get_active_zone() {
+                                        debug!(
+                                            "Active zone found: {} (ID: {})",
+                                            active_zone.location_name, active_zone.location_id
+                                        );
+
+                                        if let Err(e) = character_tracking_service
+                                            .record_death(
+                                                &active_character.id,
+                                                &active_zone.location_id,
+                                            )
+                                            .await
+                                        {
+                                            error!("Failed to record death in zone: {}", e);
+                                        } else {
+                                            debug!(
+                                                "Death recorded in zone {} for character {}",
+                                                active_zone.location_name, character_name
+                                            );
+                                        }
+                                    } else {
+                                        debug!(
+                                            "Character death detected but no active zone found in character data for: {}",
+                                            character_name
+                                        );
+                                        debug!(
+                                            "Available zones: {:?}",
+                                            character_data
+                                                .zones
+                                                .iter()
+                                                .map(|z| (z.location_name.clone(), z.is_active))
+                                                .collect::<Vec<_>>()
+                                        );
+                                    }
+                                }
+                                Ok(None) => {
+                                    debug!(
+                                        "Character death detected but no character data found for: {}",
+                                        character_name
+                                    );
+                                }
+                                Err(e) => {
+                                    error!(
+                                        "Failed to load character data for death recording: {} - {}",
+                                        character_name, e
+                                    );
+                                }
                             }
+
+                            debug!("Character death detected in log: {}", character_name);
                         }
                     }
+                }
+                crate::infrastructure::parsing::ParserResult::ZoneLevel(level) => {
+                    // Handle zone level events - cache the level for association with scene changes
+                    debug!("Zone level detected: {}", level);
+                    let mut cache = zone_level_cache.write().await;
+                    *cache = Some((level, chrono::Utc::now()));
+                    debug!("Zone level cached: {}", level);
                 }
             }
         }
@@ -355,62 +439,11 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         *self.is_running.read().await
     }
 
-    /// Gets information about the currently monitored log file
-    async fn get_log_file_info(&self) -> AppResult<LogFileInfo> {
-        let config = self.config.read().await;
-        let log_path = config.log_file_path.clone();
-        drop(config);
-
-        if log_path.is_empty() {
-            return Err(AppError::config_error(
-                "get_log_file_info",
-                "Log file path not configured",
-            ));
-        }
-
-        self.log_file_repository.get_file_info(&log_path).await
-    }
-
-    /// Reads a specified number of lines from the log file starting at a given line
-    async fn read_log_lines(&self, start_line: usize, count: usize) -> AppResult<Vec<String>> {
-        let config = self.config.read().await;
-        let log_path = config.log_file_path.clone();
-        drop(config);
-
-        if log_path.is_empty() {
-            return Err(AppError::config_error(
-                "get_log_file_info",
-                "Log file path not configured",
-            ));
-        }
-
-        self.log_file_repository
-            .read_lines(&log_path, start_line, count)
-            .await
-    }
-
-    /// Subscribes to log events published by the service
-    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
-        self.event_bus.get_receiver(EventType::LogAnalysis).await
-    }
-
     /// Updates the path to the log file being monitored
     async fn update_log_path(&self, new_path: String) -> AppResult<()> {
         let mut config = self.config.write().await;
         config.log_file_path = new_path;
         drop(config);
-        Ok(())
-    }
-
-    /// Gets the current log analysis configuration
-    async fn get_config(&self) -> LogAnalysisConfig {
-        self.config.read().await.clone()
-    }
-
-    /// Updates the log analysis configuration
-    async fn update_config(&self, new_config: LogAnalysisConfig) -> AppResult<()> {
-        let mut config = self.config.write().await;
-        *config = new_config;
         Ok(())
     }
 }

@@ -1,8 +1,6 @@
-use crate::domain::events::AppEvent;
-use crate::domain::log_analysis::models::{LogAnalysisConfig, LogFileInfo};
+use crate::domain::log_analysis::models::LogFileInfo;
 use crate::errors::AppResult;
 use async_trait::async_trait;
-use tokio::sync::broadcast;
 
 /// Service trait for log analysis operations
 /// Handles monitoring game log files and extracting meaningful events
@@ -17,23 +15,8 @@ pub trait LogAnalysisService: Send + Sync {
     /// Returns whether log monitoring is currently active
     async fn is_monitoring(&self) -> bool;
 
-    /// Gets information about the currently monitored log file
-    async fn get_log_file_info(&self) -> AppResult<LogFileInfo>;
-
-    /// Reads a specified number of lines from the log file starting at a given line
-    async fn read_log_lines(&self, start_line: usize, count: usize) -> AppResult<Vec<String>>;
-
-    /// Subscribes to log events published by the service
-    async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
-
     /// Updates the path to the log file being monitored
     async fn update_log_path(&self, new_path: String) -> AppResult<()>;
-
-    /// Gets the current log analysis configuration
-    async fn get_config(&self) -> LogAnalysisConfig;
-
-    /// Updates the log analysis configuration
-    async fn update_config(&self, config: LogAnalysisConfig) -> AppResult<()>;
 }
 
 /// Repository trait for file system operations on log files

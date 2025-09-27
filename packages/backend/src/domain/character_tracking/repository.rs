@@ -9,10 +9,10 @@ use log::debug;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// File prefix for character tracking data files
-const CHARACTER_TRACKING_FILE_PREFIX: &str = "character_tracking_";
-/// File suffix for character tracking data files
-const CHARACTER_TRACKING_FILE_SUFFIX: &str = ".json";
+/// File prefix for character data files
+const CHARACTER_DATA_FILE_PREFIX: &str = "character_data_";
+/// File suffix for character data files
+const CHARACTER_DATA_FILE_SUFFIX: &str = ".json";
 
 /// Implementation of character tracking repository with in-memory caching and persistent storage
 #[derive(Clone)]
@@ -26,11 +26,13 @@ pub struct CharacterTrackingRepositoryImpl {
 impl CharacterTrackingRepositoryImpl {
     /// Creates a new character tracking repository with persistent storage
     pub fn new() -> AppResult<Self> {
-        let persistence =
-            ScopedPersistenceRepositoryImpl::<CharacterTrackingData, String>::new_in_data_dir(
-                CHARACTER_TRACKING_FILE_PREFIX,
-                CHARACTER_TRACKING_FILE_SUFFIX,
-            )?;
+        let config_dir =
+            crate::infrastructure::persistence::DirectoryManager::ensure_config_directory()?;
+        let persistence = ScopedPersistenceRepositoryImpl::<CharacterTrackingData, String>::new(
+            config_dir,
+            CHARACTER_DATA_FILE_PREFIX.to_string(),
+            CHARACTER_DATA_FILE_SUFFIX.to_string(),
+        );
 
         // Initialize repository with empty in-memory cache
         let repository = Self {
@@ -84,6 +86,13 @@ impl CharacterTrackingRepository for CharacterTrackingRepositoryImpl {
         Ok(data)
     }
 
+    /// Checks if character tracking data exists for a character in persistent storage
+    async fn character_data_exists(&self, character_id: &str) -> AppResult<bool> {
+        self.persistence
+            .exists_scoped(&character_id.to_string())
+            .await
+    }
+
     /// Deletes all character tracking data for a character from both storage and memory
     async fn delete_character_data(&self, character_id: &str) -> AppResult<()> {
         // Delete from persistent storage
@@ -102,49 +111,6 @@ impl CharacterTrackingRepository for CharacterTrackingRepositoryImpl {
             character_id
         );
         Ok(())
-    }
-
-    /// Checks if character tracking data exists for a character in persistent storage
-    async fn character_data_exists(&self, character_id: &str) -> AppResult<bool> {
-        self.persistence
-            .exists_scoped(&character_id.to_string())
-            .await
-    }
-
-    /// Gets the current active zone for a character (only one can be active at a time)
-    async fn get_active_zone(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Option<crate::domain::character_tracking::models::ZoneStats>> {
-        if let Some(data) = self.load_character_data(character_id).await? {
-            Ok(data.get_active_zone().cloned())
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Gets all zones for a character
-    async fn get_all_zones(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Vec<crate::domain::character_tracking::models::ZoneStats>> {
-        if let Some(data) = self.load_character_data(character_id).await? {
-            Ok(data.zones)
-        } else {
-            Ok(Vec::new())
-        }
-    }
-
-    /// Gets zones sorted by time spent
-    async fn get_zones_by_time(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Vec<crate::domain::character_tracking::models::ZoneStats>> {
-        if let Some(data) = self.load_character_data(character_id).await? {
-            Ok(data.get_zones_by_time().into_iter().cloned().collect())
-        } else {
-            Ok(Vec::new())
-        }
     }
 
     /// Finds a zone by location ID
@@ -204,30 +170,21 @@ impl CharacterTrackingRepository for CharacterTrackingRepositoryImpl {
         Ok(())
     }
 
-    /// Gets total play time for a character
-    async fn get_total_play_time(&self, character_id: &str) -> AppResult<u64> {
-        if let Some(data) = self.load_character_data(character_id).await? {
-            Ok(data.summary.total_play_time)
-        } else {
-            Ok(0)
-        }
-    }
+    /// Gets all character IDs that have tracking data
+    async fn get_all_character_ids(&self) -> AppResult<Vec<String>> {
+        // Get character IDs from in-memory cache first
+        let cache_ids: Vec<String> = {
+            let cache = self.data_cache.read().await;
+            cache.keys().cloned().collect()
+        };
 
-    /// Gets total hideout time for a character
-    async fn get_total_hideout_time(&self, character_id: &str) -> AppResult<u64> {
-        if let Some(data) = self.load_character_data(character_id).await? {
-            Ok(data.summary.total_hideout_time)
+        // If cache is empty, try to get from persistent storage
+        if cache_ids.is_empty() {
+            // For now, return empty vector - in a real implementation,
+            // you might want to scan the persistent storage directory
+            Ok(Vec::new())
         } else {
-            Ok(0)
-        }
-    }
-
-    /// Gets total deaths for a character
-    async fn get_total_deaths(&self, character_id: &str) -> AppResult<u32> {
-        if let Some(data) = self.load_character_data(character_id).await? {
-            Ok(data.summary.total_deaths)
-        } else {
-            Ok(0)
+            Ok(cache_ids)
         }
     }
 }

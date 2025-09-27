@@ -18,6 +18,8 @@ pub struct ParsersConfig {
 
     pub character_death: ParserConfig,
 
+    pub zone_level: ParserConfig,
+
     pub hideout_keywords: Vec<String>,
     pub act_keywords: Vec<String>,
     pub zone_keywords: Vec<String>,
@@ -49,6 +51,10 @@ impl Default for ParsersConfig {
                 patterns: vec!["has been slain".to_string()],
                 enabled: true,
             },
+            zone_level: ParserConfig {
+                patterns: vec!["Generating level".to_string()],
+                enabled: true,
+            },
 
             hideout_keywords: vec!["hideout".to_string()],
 
@@ -56,7 +62,7 @@ impl Default for ParsersConfig {
 
             act_keywords: vec![
                 "act".to_string(),
-                "atlas".to_string(),
+                "endgame".to_string(),
                 "interlude".to_string(),
             ],
         }
@@ -92,6 +98,7 @@ impl ParsersConfig {
             "server_connection" => Ok(&self.server_connection),
             "character_level" => Ok(&self.character_level),
             "character_death" => Ok(&self.character_death),
+            "zone_level" => Ok(&self.zone_level),
             _ => Err(ParseError::unsupported_parser_type(parser_name)),
         }
     }
@@ -118,6 +125,10 @@ impl ParsersConfig {
 
         if self.character_death.enabled {
             parsers.push("character_death");
+        }
+
+        if self.zone_level.enabled {
+            parsers.push("zone_level");
         }
 
         parsers

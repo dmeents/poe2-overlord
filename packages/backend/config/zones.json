@@ -1,0 +1,406 @@
+{
+  "acts": [
+    {
+      "act_name": "Act 1",
+      "act_number": 1,
+      "zones": [{
+        "zone_name": "Clearfell Encampment",
+        "is_town": true
+      }, {
+        "zone_name": "The Riverbank",
+        "is_town": false
+      }, {
+        "zone_name": "Mud Burrow",
+        "is_town": false
+      }, {
+        "zone_name": "Clearfell",
+        "is_town": false
+      }, {
+        "zone_name": "The Red Vale",
+        "is_town": false
+      }, {
+        "zone_name": "The Grelwood",
+        "is_town": false
+      }, {
+        "zone_name": "The Grim Tangle",
+        "is_town": false
+      }, {
+        "zone_name": "Cemetary of the Eternals",
+        "is_town": false
+      }, {
+        "zone_name": "Tomb of the Consort",
+        "is_town": false
+      }, {
+        "zone_name": "Mausoleum of the Praetor",
+        "is_town": false
+      }, {
+        "zone_name": "Hunting Grounds",
+        "is_town": false
+      }, {
+        "zone_name": "Freythron",
+        "is_town": false
+      }, {
+        "zone_name": "Ogham Farmlands",
+        "is_town": false
+      }, {
+        "zone_name": "Ogham Village",
+        "is_town": false
+      }, {
+        "zone_name": "The Manor Ramparts",
+        "is_town": false
+      }, {
+        "zone_name": "Ogham Manor",
+        "is_town": false
+      }]
+    },
+    {
+      "act_name": "Act 2",
+      "act_number": 2,
+      "zones": [
+        {
+          "zone_name": "The Ardura Caravan",
+          "is_town": true
+        },
+        {
+          "zone_name": "Vastiri Outskirts",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Bone Pits",
+          "is_town": false
+        }, 
+        {
+          "zone_name": "Mastadon Badlands",
+          "is_town": false
+        },
+        {
+          "zone_name": "Lightless Passage",
+          "is_town": false
+        }, 
+        {
+          "zone_name": "The Well of Souls",
+          "is_town": false
+        },
+        {
+          "zone_name": "Mawdun Mine",
+          "is_town": false
+        }, 
+        {
+          "zone_name": "Mawdun Quarry",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Titan Grotto",
+          "is_town": false
+        },
+        {
+          "zone_name": "Valley of the Titans",
+          "is_town": false
+        },
+        {
+          "zone_name": "Buried Shrines",
+          "is_town": false
+        },  
+        {
+          "zone_name": "The Lost City",
+          "is_town": false
+        },
+        {
+          "zone_name": "Keth",
+          "is_town": false
+        },
+        {
+          "zone_name": "Traitor's Passage",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Halani Gates",
+          "is_town": false
+        },
+        {
+          "zone_name": "Deshar",
+          "is_town": false
+        },
+        {
+          "zone_name": "Path of Mourning",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Spires of Deshar",
+          "is_town": false
+        },
+        {
+          "zone_name": "Dreadnought Vanguard",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Dreadnought",
+          "is_town": false
+        },
+        {
+          "zone_name": "Trial of Sekhemas",
+          "is_town": false
+        }
+      ]
+    },
+    {
+      "act_name": "Act 3",
+      "act_number": 3,
+      "zones": [
+        {
+          "zone_name": "Ziggurat Encampment",
+          "is_town": true
+        },
+        {
+          "zone_name": "The Temple of Chaos",
+          "is_town": false
+        },
+        {
+          "zone_name": "Jiquani's Sanctum",
+          "is_town": false
+        },
+        {
+          "zone_name": "Jiquani's Machinarium",
+          "is_town": false
+        },
+        {
+          "zone_name": "Chimeral Wetlands",
+          "is_town": false
+        },
+        {
+          "zone_name": "Infested Barrens",
+          "is_town": false
+        },
+        {
+          "zone_name": "Jungle Ruins",
+          "is_town": false
+        },
+        {
+          "zone_name": "Infested Barrens",
+          "is_town": false
+        },
+        {
+          "zone_name": "Sandswept Marsh",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Venom Crypts",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Azak Bog",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Matlan Waterways",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Molten Vault",
+          "is_town": false
+        },
+        {
+          "zone_name": "Temple of Kopec",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Drowned City",
+          "is_town": false
+        },
+        {
+          "zone_name": "Apex of Filth",
+          "is_town": false
+        },
+        {
+          "zone_name": "Utzaal",
+          "is_town": false
+        },
+        {
+          "zone_name": "Aggorat",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Black Chambers",
+          "is_town": false
+        }
+      ]
+    },
+    {
+      "act_name": "Act 4",
+      "act_number": 4,
+      "zones": [
+        {
+          "zone_name": "Kingsmarch",
+          "is_town": true
+        },
+        {
+          "zone_name": "Isle of Kin",
+          "is_town": false
+        },
+        {
+          "zone_name": "Volcanic Warrents",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Excavation",
+          "is_town": false
+        },
+        {
+          "zone_name": "Arastas",
+          "is_town": false
+        },
+        {
+          "zone_name": "Shrike Island",
+          "is_town": false
+        },
+        {
+          "zone_name": "Journey's End",
+          "is_town": false
+        },
+        {
+          "zone_name": "Kedge Bay",
+          "is_town": false
+        },
+        {
+          "zone_name": "Halls of the Dead",
+          "is_town": false
+        },
+        {
+          "zone_name": "Trial of the Ancestors",
+          "is_town": false
+        },
+        {
+          "zone_name": "Eye of Hinekora",
+          "is_town": false
+        },
+        {
+          "zone_name": "Whakapanu Island",
+          "is_town": false
+        },
+        {
+          "zone_name": "Singing Caverns",
+          "is_town": false
+        },
+        {
+          "zone_name": "Ngakanu",
+          "is_town": false
+        },
+        {
+          "zone_name": "Heart of the Tribe",
+          "is_town": false
+        },
+        {
+          "zone_name": "Solitary Confinement",
+          "is_town": false
+        },
+        {
+          "zone_name": "Abandoned Prison",
+          "is_town": false
+        },
+        {
+          "zone_name": "Plunder's Point",
+          "is_town": false
+        }
+      ]
+    },
+    {
+      "act_name": "Interlude",
+      "act_number": 5,
+      "zones": [
+        {
+          "zone_name": "The Refuge",
+          "is_town": true
+        },
+        {
+          "zone_name": "The Khari Bazaar",
+          "is_town": true
+        },
+        {
+          "zone_name": "The Glad",
+          "is_town": true
+        },
+        {
+          "zone_name": "Scorched Farmlands",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Blackwood",
+          "is_town": false
+        },
+        {
+          "zone_name": "Holten",
+          "is_town": false
+        },
+        {
+          "zone_name": "Wolvenhold",
+          "is_town": false
+        },
+        {
+          "zone_name": "Holten Estate",
+          "is_town": false
+        },
+        {
+          "zone_name": "Stones of Serle",
+          "is_town": false
+        },
+        {
+          "zone_name": "Sel Khari Sanctuary",
+          "is_town": false
+        },
+        {
+          "zone_name": "Pools of Khatal",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Khari Crossing",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Galai Gates",
+          "is_town": false
+        },
+        {
+          "zone_name": "Qimah",
+          "is_town": false
+        },
+        {
+          "zone_name": "Qimah Reservoir",
+          "is_town": false
+        },
+        {
+          "zone_name": "Ashen Forest",
+          "is_town": false
+        },
+        {
+          "zone_name": "Kriar Village",
+          "is_town": false
+        },
+        {
+          "zone_name": "Glacial Tarn",
+          "is_town": false
+        },
+        {
+          "zone_name": "Kriar Peaks",
+          "is_town": false
+        },
+        {
+          "zone_name": "Howling Caves",
+          "is_town": false
+        },
+        {
+          "zone_name": "Etched Ravine",
+          "is_town": false
+        },
+        {
+          "zone_name": "The Cuachic Vault",
+          "is_town": false
+        }
+      ]
+    },
+    {
+      "act_name": "Endgame",
+      "act_number": 6,
+      "zones": []
+    }
+  ]
+}

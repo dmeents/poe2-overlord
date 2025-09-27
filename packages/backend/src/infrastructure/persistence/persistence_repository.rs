@@ -1,6 +1,6 @@
 use crate::errors::AppResult;
 use crate::infrastructure::persistence::{
-    AtomicWriter, DirectoryManager, FileLockManager, FileOperations, JsonStorage,
+    AtomicWriter, DirectoryManager, FileOperations, JsonStorage,
 };
 use async_trait::async_trait;
 use log::debug;
@@ -64,31 +64,21 @@ where
     T: Send + Sync + Serialize + DeserializeOwned + Clone + Default,
 {
     async fn save(&self, data: &T) -> AppResult<()> {
-        let file_path = self.file_path.to_string_lossy().to_string();
-        FileLockManager::global()
-            .with_file_lock(&file_path, || async {
-                let json_content = JsonStorage::serialize(data)?;
-                AtomicWriter::write_atomic_async(&self.file_path, &json_content).await?;
-                debug!("Data saved successfully to {:?}", self.file_path);
-                Ok(())
-            })
-            .await
+        let json_content = JsonStorage::serialize(data)?;
+        AtomicWriter::write_atomic_async(&self.file_path, &json_content).await?;
+        debug!("Data saved successfully to {:?}", self.file_path);
+        Ok(())
     }
 
     async fn load(&self) -> AppResult<T> {
-        let file_path = self.file_path.to_string_lossy().to_string();
-        FileLockManager::global()
-            .with_file_lock(&file_path, || async {
-                if !FileOperations::file_exists(&self.file_path) {
-                    debug!("No data file found, returning default");
-                    return Ok(T::default());
-                }
+        if !FileOperations::file_exists(&self.file_path) {
+            debug!("No data file found, returning default");
+            return Ok(T::default());
+        }
 
-                let data: T = JsonStorage::load_from_file(&self.file_path)?;
-                debug!("Data loaded successfully from {:?}", self.file_path);
-                Ok(data)
-            })
-            .await
+        let data: T = JsonStorage::load_from_file(&self.file_path)?;
+        debug!("Data loaded successfully from {:?}", self.file_path);
+        Ok(data)
     }
 
     async fn exists(&self) -> AppResult<bool> {
@@ -177,46 +167,31 @@ where
 {
     async fn save_scoped(&self, key: &K, data: &T) -> AppResult<()> {
         let file_path = self.get_file_path(key);
-        let file_path_str = file_path.to_string_lossy().to_string();
-        FileLockManager::global()
-            .with_file_lock(&file_path_str, || async {
-                let json_content = JsonStorage::serialize(data)?;
-                AtomicWriter::write_atomic_async(&file_path, &json_content).await?;
-                debug!("Scoped data saved successfully to {:?}", file_path);
-                Ok(())
-            })
-            .await
+        let json_content = JsonStorage::serialize(data)?;
+        AtomicWriter::write_atomic_async(&file_path, &json_content).await?;
+        debug!("Scoped data saved successfully to {:?}", file_path);
+        Ok(())
     }
 
     async fn load_scoped(&self, key: &K) -> AppResult<Option<T>> {
         let file_path = self.get_file_path(key);
-        let file_path_str = file_path.to_string_lossy().to_string();
-        FileLockManager::global()
-            .with_file_lock(&file_path_str, || async {
-                if !FileOperations::file_exists(&file_path) {
-                    debug!("No scoped data file found for key: {}", key.to_string());
-                    return Ok(None);
-                }
+        if !FileOperations::file_exists(&file_path) {
+            debug!("No scoped data file found for key: {}", key.to_string());
+            return Ok(None);
+        }
 
-                let data: T = JsonStorage::load_from_file(&file_path)?;
-                debug!("Scoped data loaded successfully from {:?}", file_path);
-                Ok(Some(data))
-            })
-            .await
+        let data: T = JsonStorage::load_from_file(&file_path)?;
+        debug!("Scoped data loaded successfully from {:?}", file_path);
+        Ok(Some(data))
     }
 
     async fn delete_scoped(&self, key: &K) -> AppResult<()> {
         let file_path = self.get_file_path(key);
-        let file_path_str = file_path.to_string_lossy().to_string();
-        FileLockManager::global()
-            .with_file_lock(&file_path_str, || async {
-                if FileOperations::file_exists(&file_path) {
-                    FileOperations::delete_file(&file_path)?;
-                }
-                debug!("Scoped data file deleted: {:?}", file_path);
-                Ok(())
-            })
-            .await
+        if FileOperations::file_exists(&file_path) {
+            FileOperations::delete_file(&file_path)?;
+        }
+        debug!("Scoped data file deleted: {:?}", file_path);
+        Ok(())
     }
 
     async fn exists_scoped(&self, key: &K) -> AppResult<bool> {

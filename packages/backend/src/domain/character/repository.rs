@@ -71,7 +71,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
             .await?
         {
             Some(data) => Ok(data),
-            None => Err(AppError::character_management_error(
+            None => Err(AppError::internal_error(
                 "load_character_data",
                 &format!("Character with ID '{}' not found", character_id),
             )),

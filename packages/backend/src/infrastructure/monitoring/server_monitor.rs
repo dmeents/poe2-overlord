@@ -1,8 +1,8 @@
+use crate::domain::events::EventBus;
 use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::server_monitoring::traits::ServerMonitoringService;
 use crate::errors::{AppError, AppResult};
-use crate::domain::events::EventBus;
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::path::PathBuf;
@@ -63,7 +63,7 @@ impl ServerMonitor {
             })?;
 
         let loaded_status: ServerStatus = serde_json::from_str(&contents).map_err(|e| {
-            AppError::serialization_error("Failed to parse status file: {}", &e.to_string())
+            AppError::internal_error("Failed to parse status file: {}", &e.to_string())
         })?;
 
         let mut status = self.status.write().await;
@@ -190,7 +190,7 @@ impl ServerMonitor {
         }
 
         let json = serde_json::to_string_pretty(status).map_err(|e| {
-            AppError::serialization_error("Failed to serialize status: {}", &e.to_string())
+            AppError::internal_error("Failed to serialize status: {}", &e.to_string())
         })?;
 
         fs::write(&self.status_file_path, json).await.map_err(|e| {
@@ -269,7 +269,10 @@ impl ServerMonitor {
 
                     // Note: ServerMonitor now uses the unified event system
                     // Ping events are published through the server monitoring service
-                    debug!("Periodic server ping completed: {:?}ms", ping_event.latency_ms);
+                    debug!(
+                        "Periodic server ping completed: {:?}ms",
+                        ping_event.latency_ms
+                    );
                 }
             }
         });
@@ -356,7 +359,11 @@ impl ServerMonitoringService for ServerMonitor {
         Ok(())
     }
 
-    async fn subscribe_to_status_changes(&self) -> AppResult<tokio::sync::broadcast::Receiver<crate::domain::events::AppEvent>> {
-        self.event_bus.get_receiver(crate::domain::events::EventType::ServerMonitoring).await
+    async fn subscribe_to_status_changes(
+        &self,
+    ) -> AppResult<tokio::sync::broadcast::Receiver<crate::domain::events::AppEvent>> {
+        self.event_bus
+            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .await
     }
 }

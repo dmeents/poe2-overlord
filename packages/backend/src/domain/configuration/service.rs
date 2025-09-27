@@ -332,7 +332,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
         let config: AppConfig = serde_json::from_str(&content).map_err(|e| {
             error!("Failed to parse config file JSON: {}", e);
             error!("Config file content: {}", content);
-            AppError::serialization_error("parse_config_file", &e.to_string())
+            AppError::internal_error("parse_config_file", &e.to_string())
         })?;
 
         {
@@ -350,7 +350,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
     async fn save_config(&self) -> AppResult<()> {
         let config = self.config.read().await;
         let content = serde_json::to_string_pretty(&*config)
-            .map_err(|e| AppError::serialization_error("serialize_config", &e.to_string()))?;
+            .map_err(|e| AppError::internal_error("serialize_config", &e.to_string()))?;
 
         self.atomic_write(&content).await
     }

@@ -1,7 +1,7 @@
 use crate::errors::{AppError, AppResult};
 use log::debug;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub struct FileOperations;
 
@@ -11,24 +11,15 @@ impl FileOperations {
     }
 
     pub fn get_file_size<P: AsRef<Path>>(path: P) -> AppResult<u64> {
-        let path = path.as_ref();
-
-        if !path.exists() {
-            return Err(AppError::file_system_error(
-                "get_file_size",
-                &format!("File not found: {:?}", path),
-            ));
-        }
-
         let metadata = fs::metadata(path).map_err(|e| {
             AppError::file_system_error(
-                "get_file_metadata",
-                &format!("Failed to get metadata for {:?}: {}", path, e),
+                "get_file_size",
+                &format!("Failed to get file size: {}", e),
             )
         })?;
-
         Ok(metadata.len())
     }
+
 
     pub fn read_file_content<P: AsRef<Path>>(path: P) -> AppResult<String> {
         let path = path.as_ref();
@@ -81,47 +72,4 @@ impl FileOperations {
         Ok(())
     }
 
-    pub fn get_file_metadata<P: AsRef<Path>>(path: P) -> AppResult<std::fs::Metadata> {
-        let path = path.as_ref();
-
-        if !path.exists() {
-            return Err(AppError::file_system_error(
-                "get_file_metadata",
-                &format!("File not found: {:?}", path),
-            ));
-        }
-
-        fs::metadata(path).map_err(|e| {
-            AppError::file_system_error(
-                "get_file_metadata",
-                &format!("Failed to get metadata for {:?}: {}", path, e),
-            )
-        })
-    }
-
-    pub fn is_file<P: AsRef<Path>>(path: P) -> bool {
-        path.as_ref().is_file()
-    }
-
-    pub fn is_directory<P: AsRef<Path>>(path: P) -> bool {
-        path.as_ref().is_dir()
-    }
-
-    pub fn get_file_extension<P: AsRef<Path>>(path: P) -> Option<String> {
-        path.as_ref()
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .map(|s| s.to_string())
-    }
-
-    pub fn get_file_stem<P: AsRef<Path>>(path: P) -> Option<String> {
-        path.as_ref()
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .map(|s| s.to_string())
-    }
-
-    pub fn get_parent_directory<P: AsRef<Path>>(path: P) -> Option<PathBuf> {
-        path.as_ref().parent().map(|p| p.to_path_buf())
-    }
 }

@@ -139,7 +139,4 @@ pub trait CharacterService: Send + Sync {
 
     /// Finalizes all active zones (stops timers and saves data)
     async fn finalize_all_active_zones(&self) -> Result<(), AppError>;
-
-    /// Starts frontend event emission for character tracking events
-    async fn start_frontend_event_emission(&self, window: tauri::WebviewWindow);
 }

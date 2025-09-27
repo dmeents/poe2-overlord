@@ -109,22 +109,12 @@ pub fn start_game_process_monitoring(
 /// - Runs continuously in the background
 /// - Handles frontend communication automatically
 pub fn start_character_tracking_emission(
-    window: WebviewWindow,
-    character_service: Arc<dyn CharacterService>,
-    runtime_manager: Arc<RuntimeManager>,
+    _window: WebviewWindow,
+    _character_service: Arc<dyn CharacterService>,
+    _runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
-    let character_service_clone = character_service.clone();
-
-    // Spawn the character tracking emission task using the runtime manager
-    runtime_manager.spawn_background_task(
-        "character_tracking_emission".to_string(),
-        move || async move {
-            character_service_clone
-                .start_frontend_event_emission(window)
-                .await;
-        },
-    );
+    // Character tracking emission task removed - was placeholder implementation
 }
 
 /// Starts the server ping monitoring service as a background task.

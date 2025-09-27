@@ -47,35 +47,6 @@ impl AtomicWriter {
         Ok(())
     }
 
-    pub fn write_atomic_with_extension<P: AsRef<Path>>(path: P, content: &str, temp_extension: &str) -> AppResult<()> {
-        let path = path.as_ref();
-        let temp_path = path.with_extension(temp_extension);
-
-        fs::write(&temp_path, content).map_err(|e| {
-            error!("Failed to write to temporary file {:?}: {}", temp_path, e);
-            AppError::file_system_error(
-                "write_temp_file",
-                &format!("Failed to write to temporary file {:?}: {}", temp_path, e),
-            )
-        })?;
-
-        fs::rename(&temp_path, path).map_err(|e| {
-            error!("Failed to move temp file {:?} to final location {:?}: {}", temp_path, path, e);
-            
-            if let Err(cleanup_err) = fs::remove_file(&temp_path) {
-                warn!("Failed to clean up temp file {:?}: {}", temp_path, cleanup_err);
-            }
-            
-            AppError::file_system_error(
-                "rename_temp_file",
-                &format!("Failed to move temp file {:?} to final location {:?}: {}", temp_path, path, e),
-            )
-        })?;
-
-        debug!("Successfully wrote file atomically: {:?}", path);
-        Ok(())
-    }
-
     /// Async version of atomic file writing
     /// 
     /// Performs the same atomic write operation but uses spawn_blocking to avoid
@@ -123,64 +94,6 @@ impl AtomicWriter {
             error!("Failed to move temp file {:?} to final location {:?}: {}", temp_path, path, e);
             
             // Attempt cleanup of temp file on failure
-            if let Err(cleanup_err) = fs::remove_file(&temp_path) {
-                warn!("Failed to clean up temp file {:?}: {}", temp_path, cleanup_err);
-            }
-            
-            AppError::file_system_error(
-                "rename_temp_file",
-                &format!("Failed to move temp file {:?} to final location {:?}: {}", temp_path, path, e),
-            )
-        })?;
-
-        debug!("Successfully wrote file atomically: {:?}", path);
-        Ok(())
-    }
-
-    pub async fn write_atomic_async_with_extension<P: AsRef<Path>>(
-        path: P, 
-        content: &str, 
-        temp_extension: &str
-    ) -> AppResult<()> {
-        let path = path.as_ref().to_path_buf();
-        let content = content.to_string();
-        let temp_path = path.with_extension(temp_extension);
-
-        tokio::task::spawn_blocking({
-            let temp_path = temp_path.clone();
-            let content = content.clone();
-            move || fs::write(&temp_path, content)
-        })
-        .await
-        .map_err(|e| {
-            AppError::file_system_error(
-                "spawn_write_task",
-                &format!("Failed to spawn write task: {}", e),
-            )
-        })?
-        .map_err(|e| {
-            error!("Failed to write to temporary file {:?}: {}", temp_path, e);
-            AppError::file_system_error(
-                "write_temp_file",
-                &format!("Failed to write to temporary file {:?}: {}", temp_path, e),
-            )
-        })?;
-
-        tokio::task::spawn_blocking({
-            let temp_path = temp_path.clone();
-            let path = path.clone();
-            move || fs::rename(&temp_path, &path)
-        })
-        .await
-        .map_err(|e| {
-            AppError::file_system_error(
-                "spawn_rename_task",
-                &format!("Failed to spawn rename task: {}", e),
-            )
-        })?
-        .map_err(|e| {
-            error!("Failed to move temp file {:?} to final location {:?}: {}", temp_path, path, e);
-            
             if let Err(cleanup_err) = fs::remove_file(&temp_path) {
                 warn!("Failed to clean up temp file {:?}: {}", temp_path, cleanup_err);
             }

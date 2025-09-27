@@ -71,7 +71,7 @@ impl EventBus {
                     "Failed to publish event of type {:?}: no receivers",
                     event_type
                 );
-                Err(crate::errors::AppError::event_emission_error(
+                Err(crate::errors::AppError::internal_error(
                     "publish_event",
                     &format!("No receivers for event type {:?}", event_type),
                 ))
@@ -99,7 +99,7 @@ impl EventBus {
 
         // Check if the channel is at capacity
         if channel.is_at_capacity() {
-            return Err(crate::errors::AppError::event_emission_error(
+            return Err(crate::errors::AppError::internal_error(
                 "subscribe",
                 &format!("Channel for event type {:?} is at capacity", event_type),
             ));

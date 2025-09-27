@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use log::debug;
 use std::sync::Arc;
 
@@ -17,7 +17,8 @@ use super::traits::{CharacterRepository, CharacterService};
 ///
 /// This service provides business logic for character management using the new
 /// consolidated data model. It coordinates between the repository layer and
-/// enforces business rules. Now includes character tracking functionality.
+/// enforces business rules. Includes character tracking functionality for
+/// monitoring zone visits, time spent, and deaths.
 pub struct CharacterServiceImpl {
     /// Repository for character data persistence
     repository: Arc<dyn CharacterRepository + Send + Sync>,
@@ -25,8 +26,6 @@ pub struct CharacterServiceImpl {
     event_bus: Arc<EventBus>,
     /// Zone configuration service for act and town detection
     zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
-    /// Tracks when the PoE process started for time calculations
-    poe_process_start_time: Arc<tokio::sync::RwLock<Option<DateTime<Utc>>>>,
 }
 
 impl CharacterServiceImpl {
@@ -40,7 +39,6 @@ impl CharacterServiceImpl {
             repository,
             event_bus,
             zone_config,
-            poe_process_start_time: Arc::new(tokio::sync::RwLock::new(None)),
         }
     }
 }
@@ -219,7 +217,7 @@ impl CharacterService for CharacterServiceImpl {
         // Validate character exists (if not None)
         if let Some(id) = character_id {
             if !index.has_character(id) {
-                return Err(AppError::character_management_error(
+                return Err(AppError::internal_error(
                     "set_active_character",
                     &format!("Character with ID '{}' not found", id),
                 ));
@@ -296,6 +294,20 @@ impl CharacterService for CharacterServiceImpl {
 
         // Save updated character data
         self.repository.save_character_data(&character_data).await?;
+
+        // Emit character tracking data updated event
+        let event = crate::domain::events::event_types::AppEvent::character_tracking_data_updated(
+            character_id.to_string(),
+            character_data,
+        );
+        if let Err(e) = self.event_bus.publish(event).await {
+            log::warn!(
+                "❌ LEVEL UP: Failed to publish character tracking data updated event: {}",
+                e
+            );
+        } else {
+            debug!("✅ LEVEL UP: Character tracking data updated event published");
+        }
 
         log::info!("Updated character {} level to {}", character_id, new_level);
         Ok(())
@@ -598,14 +610,6 @@ impl CharacterService for CharacterServiceImpl {
         }
 
         Ok(())
-    }
-
-    /// Starts frontend event emission for character tracking events
-    async fn start_frontend_event_emission(&self, _window: tauri::WebviewWindow) {
-        // For now, this is a placeholder implementation
-        // The actual event emission logic will be implemented when we fully integrate
-        // the tracking functionality
-        log::debug!("Character tracking frontend event emission started (placeholder)");
     }
 }
 

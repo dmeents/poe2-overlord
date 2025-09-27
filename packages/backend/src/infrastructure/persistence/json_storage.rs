@@ -15,7 +15,7 @@ impl JsonStorage {
     /// Converts any serializable type to a formatted JSON string with proper indentation.
     pub fn serialize<T: Serialize>(data: &T) -> AppResult<String> {
         serde_json::to_string_pretty(data).map_err(|e| {
-            AppError::serialization_error(
+            AppError::internal_error(
                 "json_serialize",
                 &format!("Failed to serialize data: {}", e),
             )
@@ -28,7 +28,7 @@ impl JsonStorage {
     /// Returns an error if the JSON is malformed or incompatible with the target type.
     pub fn deserialize<T: DeserializeOwned>(json: &str) -> AppResult<T> {
         serde_json::from_str(json).map_err(|e| {
-            AppError::serialization_error(
+            AppError::internal_error(
                 "json_deserialize",
                 &format!("Failed to deserialize JSON: {}", e),
             )
@@ -91,7 +91,7 @@ impl JsonStorage {
     /// Useful for validating user input or file content before processing.
     pub fn validate_json(json: &str) -> AppResult<()> {
         serde_json::from_str::<serde_json::Value>(json).map_err(|e| {
-            AppError::serialization_error(
+            AppError::internal_error(
                 "validate_json",
                 &format!("Invalid JSON: {}", e),
             )
@@ -105,14 +105,14 @@ impl JsonStorage {
     /// Useful for displaying JSON data in logs or user interfaces.
     pub fn pretty_print(json: &str) -> AppResult<String> {
         let value: serde_json::Value = serde_json::from_str(json).map_err(|e| {
-            AppError::serialization_error(
+            AppError::internal_error(
                 "pretty_print",
                 &format!("Failed to parse JSON for pretty printing: {}", e),
             )
         })?;
 
         serde_json::to_string_pretty(&value).map_err(|e| {
-            AppError::serialization_error(
+            AppError::internal_error(
                 "pretty_print",
                 &format!("Failed to pretty print JSON: {}", e),
             )

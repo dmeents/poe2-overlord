@@ -84,7 +84,7 @@ impl LogAnalysisServiceImpl {
         drop(config);
 
         if log_path.is_empty() {
-            return Err(AppError::config_error(
+            return Err(AppError::internal_error(
                 "get_log_file_info",
                 "Log file path not configured",
             ));

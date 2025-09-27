@@ -11,7 +11,8 @@ pub use application::setup_app;
 pub use domain::character::commands::*;        // Character CRUD operations
 pub use domain::character_tracking::commands::*; // Character tracking (location and time)
 pub use domain::configuration::commands::*;    // Configuration management
-pub use domain::log_analysis::commands::*;     // Log file analysis and monitoring
+pub use domain::game_monitoring::commands::*;   // Game process monitoring
+pub use domain::server_monitoring::commands::*; // Server monitoring
 
 // Core error handling
 pub use errors::*;
@@ -57,7 +58,7 @@ pub use domain::game_monitoring::{
 pub use domain::character_tracking::models::LocationType as SceneType;
 
 // Infrastructure services and utilities
-pub use infrastructure::monitoring::ServerMonitor;  // Server connectivity monitoring
+// Note: Server monitoring is now handled by the domain service
 pub use domain::log_analysis::traits::LogAnalysisService;  // Log parsing and analysis
 pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};  // OS detection and paths
 pub use infrastructure::tauri::TauriEventBridge;  // Tauri event system integration
@@ -96,10 +97,6 @@ pub fn run() {
             get_config_file_info,
             validate_config,
             
-            // Log monitoring commands
-            is_log_monitoring_active,
-            get_log_file_size,
-            read_last_log_lines,
             
             // Character management commands
             create_character,
@@ -125,6 +122,15 @@ pub fn run() {
             get_character_current_scene,
             get_character_current_act,
             reset_character_tracking,
+            
+            // Game process monitoring commands
+            get_game_process_status,
+            
+            // Server monitoring commands
+            get_server_status,
+            ping_server,
+            start_server_monitoring,
+            stop_server_monitoring,
         ])
         // Initialize application services and start background tasks
         .setup(|app| setup_app(app))

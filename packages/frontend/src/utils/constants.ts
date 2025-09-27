@@ -6,6 +6,5 @@ export const APP_CONFIG = {
 
 export const GAME_CONFIG = {
   PROCESS_NAME: 'Path of Exile 2',
-  EVENT_NAME: 'game-process-status',
-  COMMAND_NAME: 'check_game_process',
+  EVENT_NAME: 'game-process-status-changed',
 } as const;

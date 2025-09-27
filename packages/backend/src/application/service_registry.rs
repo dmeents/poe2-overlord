@@ -29,17 +29,19 @@
 //! - Detailed logging provides visibility into initialization progress and failures
 
 use crate::domain::character::service::CharacterService;
+use crate::domain::character_tracking::{
+    service::CharacterTrackingServiceImpl, traits::CharacterTrackingService,
+};
 use crate::domain::configuration::{
     service::ConfigurationServiceImpl, traits::ConfigurationService,
 };
-use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
-use crate::domain::log_analysis::{service::LogAnalysisServiceImpl, traits::LogAnalysisService, models::LogAnalysisConfig};
-use crate::domain::character_tracking::{service::CharacterTrackingServiceImpl, traits::CharacterTrackingService};
-use crate::infrastructure::monitoring::ServerMonitor;
 use crate::domain::events::EventBus;
-use crate::infrastructure::{
-    monitoring::ProcessMonitorImpl,
+use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
+use crate::domain::log_analysis::{
+    models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
+use crate::infrastructure::monitoring::ProcessMonitorImpl;
+use crate::domain::server_monitoring::{ServerMonitoringServiceImpl, ServerMonitoringService};
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::Manager;
@@ -102,26 +104,32 @@ impl ServiceInitializer {
 
         // Initialize Character Tracking Service - handles location and time tracking
         debug!("Initializing CharacterTrackingService...");
-        let character_tracking_service = CharacterTrackingServiceImpl::new(event_bus.clone()).map_err(|e| {
-            error!("Failed to initialize CharacterTrackingService: {}", e);
-            e
-        })?;
-        let character_tracking_arc = Arc::new(character_tracking_service) as Arc<dyn CharacterTrackingService>;
+        let character_tracking_service = CharacterTrackingServiceImpl::new(event_bus.clone())
+            .map_err(|e| {
+                error!("Failed to initialize CharacterTrackingService: {}", e);
+                e
+            })?;
+        let character_tracking_arc =
+            Arc::new(character_tracking_service) as Arc<dyn CharacterTrackingService>;
         app.manage(character_tracking_arc.clone());
         debug!("CharacterTrackingService managed successfully");
 
-        // Initialize Server Monitor - handles network connectivity and server status tracking
+        // Initialize Server Monitoring Service - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
-        debug!("Initializing ServerMonitor...");
-        let server_status_manager = ServerMonitor::new(event_bus.clone());
-        let server_status_arc = Arc::new(server_status_manager);
-        app.manage(server_status_arc.clone());
-        debug!("ServerMonitor managed successfully");
+        debug!("Initializing ServerMonitoringService...");
+        let server_monitoring_service = ServerMonitoringServiceImpl::new(event_bus.clone())
+            .map_err(|e| {
+                error!("Failed to initialize ServerMonitoringService: {}", e);
+                e
+            })?;
+        let server_monitoring_arc = Arc::new(server_monitoring_service) as Arc<dyn ServerMonitoringService>;
+        app.manage(server_monitoring_arc.clone());
+        debug!("ServerMonitoringService managed successfully");
 
         // Initialize Log Analysis Service - processes game logs and extracts events
         // Depends on server monitor for status updates and character service for character operations
         debug!("Initializing LogAnalysisService...");
-        
+
         // Create default log analysis configuration
         let log_analysis_config = LogAnalysisConfig {
             log_file_path: String::new(), // Will be configured from configuration service
@@ -129,18 +137,19 @@ impl ServiceInitializer {
             max_file_size_mb: 100,
             buffer_size: 1000,
         };
-        
+
         // Create the log analysis service
         let log_analysis_service = LogAnalysisServiceImpl::new(
             log_analysis_config,
             character_arc.clone(),
-            server_status_arc.clone(),
+            server_monitoring_arc.clone(),
             event_bus.clone(),
-        ).map_err(|e| {
+        )
+        .map_err(|e| {
             error!("Failed to initialize LogAnalysisService: {}", e);
             e
         })?;
-        
+
         let log_analysis_arc = Arc::new(log_analysis_service) as Arc<dyn LogAnalysisService>;
 
         // Configure the log path from the configuration service
@@ -174,13 +183,11 @@ impl ServiceInitializer {
         // Process detector for identifying game processes
         let process_detector = Arc::new(ProcessMonitorImpl::new());
 
-        // Event publishing removed - using unified event system
-
-        // Game monitoring service that coordinates process detection and character tracking
+        // Game monitoring service that coordinates process detection and event publishing
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(
-            character_tracking_arc.clone(),
+            event_bus.clone(),
             process_detector.clone(),
-        ));
+        )) as Arc<dyn GameMonitoringService>;
 
         app.manage(game_monitoring_service.clone());
         debug!("Game Monitoring services managed successfully");
@@ -194,7 +201,7 @@ impl ServiceInitializer {
             character_service: character_arc,
             character_tracking_service: character_tracking_arc,
             log_analysis_service: log_analysis_arc,
-            server_status: server_status_arc,
+            server_monitoring_service: server_monitoring_arc,
             game_monitoring_service,
         })
     }
@@ -226,8 +233,8 @@ pub struct ServiceInstances {
     /// Log analysis service for processing game logs and extracting events
     pub log_analysis_service: Arc<dyn LogAnalysisService>,
 
-    /// Server monitor for tracking network connectivity and server status
-    pub server_status: Arc<ServerMonitor>,
+    /// Server monitoring service for tracking network connectivity and server status
+    pub server_monitoring_service: Arc<dyn ServerMonitoringService>,
 
     /// Game monitoring service for detecting game processes and managing game state
     pub game_monitoring_service: Arc<dyn GameMonitoringService>,

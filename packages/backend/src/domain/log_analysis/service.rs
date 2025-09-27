@@ -1,16 +1,10 @@
 use crate::domain::character::traits::CharacterService as CharacterServiceTrait;
 use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::domain::log_analysis::models::LogEvent;
-use crate::domain::log_analysis::models::{
-    LogAnalysisConfig, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
-};
-use crate::domain::log_analysis::repository::{
-    LogAnalysisSessionRepositoryImpl, LogAnalysisStatsRepositoryImpl, LogFileRepositoryImpl,
-};
-use crate::domain::log_analysis::traits::{
-    LogAnalysisService, LogAnalysisSessionRepository, LogAnalysisStatsRepository, LogFileRepository,
-};
-use crate::domain::server_monitoring::traits::ServerMonitoringService as ServerMonitoringServiceTrait;
+use crate::domain::log_analysis::models::{LogAnalysisConfig, LogFileInfo};
+use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
+use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
+use crate::domain::server_monitoring::ServerMonitoringService;
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::parsing::LogParserManager;
 use async_trait::async_trait;
@@ -27,22 +21,16 @@ pub struct LogAnalysisServiceImpl {
     config: Arc<RwLock<LogAnalysisConfig>>,
     /// Repository for file system operations on log files
     log_file_repository: Arc<dyn LogFileRepository>,
-    /// Repository for managing log analysis sessions
-    session_repository: Arc<dyn LogAnalysisSessionRepository>,
-    /// Repository for managing log analysis statistics
-    stats_repository: Arc<dyn LogAnalysisStatsRepository>,
     /// Event bus for publishing log events
     event_bus: Arc<EventBus>,
     /// Service for character-related operations
     character_service: Arc<dyn CharacterServiceTrait>,
     /// Service for server monitoring operations
-    server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
+    server_monitoring_service: Arc<dyn ServerMonitoringService>,
     /// Parser manager for processing log lines
     parser_manager: LogParserManager,
     /// Flag indicating whether log monitoring is currently active
     is_running: Arc<RwLock<bool>>,
-    /// The currently active log analysis session
-    current_session: Arc<RwLock<Option<LogAnalysisSession>>>,
     /// Last position read in the log file (for incremental reading)
     last_position: Arc<RwLock<u64>>,
 }
@@ -52,26 +40,20 @@ impl LogAnalysisServiceImpl {
     pub fn new(
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterServiceTrait>,
-        server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
+        server_monitoring_service: Arc<dyn ServerMonitoringService>,
         event_bus: Arc<EventBus>,
     ) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(config));
-        let log_file_repository = Arc::new(LogFileRepositoryImpl::new(String::new()));
-
-        let session_repository = Arc::new(LogAnalysisSessionRepositoryImpl::new()?);
-        let stats_repository = Arc::new(LogAnalysisStatsRepositoryImpl::new()?);
+        let log_file_repository = Arc::new(LogFileRepositoryImpl::new());
         let parser_manager = LogParserManager::new();
         Ok(Self {
             config,
             log_file_repository,
-            session_repository,
-            stats_repository,
             event_bus,
             character_service,
             server_monitoring_service,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
-            current_session: Arc::new(RwLock::new(None)),
             last_position: Arc::new(RwLock::new(0)),
         })
     }
@@ -80,10 +62,8 @@ impl LogAnalysisServiceImpl {
     pub fn with_repositories(
         config: LogAnalysisConfig,
         log_file_repository: Arc<dyn LogFileRepository>,
-        session_repository: Arc<dyn LogAnalysisSessionRepository>,
-        stats_repository: Arc<dyn LogAnalysisStatsRepository>,
         character_service: Arc<dyn CharacterServiceTrait>,
-        server_monitoring_service: Arc<dyn ServerMonitoringServiceTrait>,
+        server_monitoring_service: Arc<dyn ServerMonitoringService>,
         event_bus: Arc<EventBus>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
@@ -91,14 +71,11 @@ impl LogAnalysisServiceImpl {
         Self {
             config,
             log_file_repository,
-            session_repository,
-            stats_repository,
             event_bus,
             character_service,
             server_monitoring_service,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
-            current_session: Arc::new(RwLock::new(None)),
             last_position: Arc::new(RwLock::new(0)),
         }
     }
@@ -123,14 +100,6 @@ impl LogAnalysisServiceImpl {
             *last_pos = file_size;
         }
 
-        // Create and save a new analysis session
-        let session = LogAnalysisSession::new();
-        {
-            let mut current_session = self.current_session.write().await;
-            *current_session = Some(session.clone());
-        }
-        self.session_repository.save_session(&session).await?;
-
         info!("Starting log file monitoring for: {}", log_path);
 
         let monitoring_task = self.create_monitoring_task();
@@ -153,9 +122,6 @@ impl LogAnalysisServiceImpl {
         let server_monitoring_service = Arc::clone(&self.server_monitoring_service);
         let is_running = Arc::clone(&self.is_running);
         let last_position = Arc::clone(&self.last_position);
-        let current_session = Arc::clone(&self.current_session);
-        let session_repository = Arc::clone(&self.session_repository);
-        let stats_repository = Arc::clone(&self.stats_repository);
         let parser_manager = self.parser_manager.clone();
 
         tokio::spawn(async move {
@@ -184,9 +150,6 @@ impl LogAnalysisServiceImpl {
                                 &character_service,
                                 &server_monitoring_service,
                                 &last_position,
-                                &current_session,
-                                &session_repository,
-                                &stats_repository,
                                 last_pos,
                             )
                             .await
@@ -217,11 +180,8 @@ impl LogAnalysisServiceImpl {
         log_file_repository: &Arc<dyn LogFileRepository>,
         event_bus: &Arc<EventBus>,
         character_service: &Arc<dyn CharacterServiceTrait>,
-        server_monitoring_service: &Arc<dyn ServerMonitoringServiceTrait>,
+        server_monitoring_service: &Arc<dyn ServerMonitoringService>,
         last_position: &Arc<RwLock<u64>>,
-        current_session: &Arc<RwLock<Option<LogAnalysisSession>>>,
-        session_repository: &Arc<dyn LogAnalysisSessionRepository>,
-        stats_repository: &Arc<dyn LogAnalysisStatsRepository>,
         start_position: u64,
     ) -> AppResult<()> {
         // Read new lines from the last known position
@@ -241,8 +201,6 @@ impl LogAnalysisServiceImpl {
                 event_bus,
                 character_service,
                 server_monitoring_service,
-                current_session,
-                stats_repository,
             )
             .await
             {
@@ -257,16 +215,6 @@ impl LogAnalysisServiceImpl {
             *pos = current_size;
         }
 
-        // Update the current session with the number of lines processed
-        if let Some(mut session) = current_session.read().await.clone() {
-            session.events_processed += new_lines.len() as u64;
-            session.last_position = current_size;
-            session_repository.update_session(&session).await?;
-
-            let mut current_session_guard = current_session.write().await;
-            *current_session_guard = Some(session);
-        }
-
         Ok(())
     }
 
@@ -276,9 +224,7 @@ impl LogAnalysisServiceImpl {
         line: &str,
         event_bus: &Arc<EventBus>,
         character_service: &Arc<dyn CharacterServiceTrait>,
-        server_monitoring_service: &Arc<dyn ServerMonitoringServiceTrait>,
-        _current_session: &Arc<RwLock<Option<LogAnalysisSession>>>,
-        stats_repository: &Arc<dyn LogAnalysisStatsRepository>,
+        server_monitoring_service: &Arc<dyn ServerMonitoringService>,
     ) -> AppResult<()> {
         // Try to parse the line for known events
         if let Ok(Some(result)) = parser_manager.parse_line(line) {
@@ -297,15 +243,11 @@ impl LogAnalysisServiceImpl {
                     if let Err(e) = event_bus.publish(AppEvent::LogParsed(event)).await {
                         warn!("Failed to publish log event: {}", e);
                     }
-                    stats_repository
-                        .increment_event_count("scene_change")
-                        .await?;
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
                     // Handle server connection events
-                    let server_status = crate::domain::server_monitoring::models::ServerStatus::from_connection_event(&event);
                     server_monitoring_service
-                        .update_status(server_status)
+                        .update_server_from_log(event.ip_address.clone(), event.port)
                         .await?;
 
                     if let Err(e) = event_bus
@@ -314,9 +256,6 @@ impl LogAnalysisServiceImpl {
                     {
                         warn!("Failed to publish server connection event: {}", e);
                     }
-                    stats_repository
-                        .increment_event_count("server_connection")
-                        .await?;
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterLevel((
                     character_name,
@@ -348,9 +287,6 @@ impl LogAnalysisServiceImpl {
                             {
                                 warn!("Failed to publish character level up event: {}", e);
                             }
-                            stats_repository
-                                .increment_event_count("character_level_up")
-                                .await?;
                         }
                     }
                 }
@@ -374,9 +310,6 @@ impl LogAnalysisServiceImpl {
                             {
                                 warn!("Failed to publish character death event: {}", e);
                             }
-                            stats_repository
-                                .increment_event_count("character_death")
-                                .await?;
                         }
                     }
                 }
@@ -412,14 +345,6 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         }
 
         *is_running = false;
-
-        // End the current session if it exists
-        if let Some(mut session) = self.current_session.read().await.clone() {
-            session.end_session();
-            self.session_repository.update_session(&session).await?;
-        }
-
-        self.session_repository.end_current_session().await?;
 
         info!("Log monitoring stopped");
         Ok(())
@@ -462,11 +387,6 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         self.log_file_repository
             .read_lines(&log_path, start_line, count)
             .await
-    }
-
-    /// Gets current statistics about log analysis activity
-    async fn get_analysis_stats(&self) -> AppResult<LogAnalysisStats> {
-        self.stats_repository.load_stats().await
     }
 
     /// Subscribes to log events published by the service

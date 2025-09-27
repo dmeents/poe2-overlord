@@ -23,26 +23,30 @@ impl TauriEventBridge {
     pub fn new(event_bus: Arc<EventBus>, window: WebviewWindow) -> Self {
         Self { event_bus, window }
     }
-    
+
     /// Start forwarding events to the frontend
     ///
     /// This method subscribes to all event types and starts forwarding them
     /// to the Tauri frontend. It runs as a background task.
     pub async fn start_forwarding(&self) -> AppResult<()> {
         info!("Starting Tauri event bridge forwarding");
-        
+
         // Subscribe to all event types
         for event_type in EventType::all() {
-            let subscription = self.event_bus
+            let subscription = self
+                .event_bus
                 .subscribe(event_type, "tauri-bridge".to_string())
                 .await?;
-            
-            debug!("Subscribed to {:?} events with ID: {}", event_type, subscription.subscription_id);
-            
+
+            debug!(
+                "Subscribed to {:?} events with ID: {}",
+                event_type, subscription.subscription_id
+            );
+
             // Start forwarding task for this event type
             let event_bus = Arc::clone(&self.event_bus);
             let window = self.window.clone();
-            
+
             tokio::spawn(async move {
                 if let Ok(mut receiver) = event_bus.get_receiver(event_type).await {
                     while let Ok(event) = receiver.recv().await {
@@ -51,14 +55,14 @@ impl TauriEventBridge {
                 }
             });
         }
-        
+
         Ok(())
     }
-    
+
     /// Forward a single event to the frontend
     async fn forward_event_to_frontend(window: &WebviewWindow, event: &AppEvent) {
         let event_name = Self::get_event_name(event);
-        
+
         match window.emit(&event_name, event) {
             Ok(_) => {
                 debug!("Forwarded event {} to frontend", event_name);
@@ -68,7 +72,7 @@ impl TauriEventBridge {
             }
         }
     }
-    
+
     /// Get the Tauri event name for an AppEvent
     fn get_event_name(event: &AppEvent) -> String {
         match event {
@@ -87,7 +91,7 @@ impl TauriEventBridge {
             AppEvent::SystemShutdown { .. } => "system-shutdown".to_string(),
         }
     }
-    
+
     /// Publish an event through the event bus
     ///
     /// This method provides a convenient way to publish events from Tauri commands
@@ -95,7 +99,7 @@ impl TauriEventBridge {
     pub async fn publish_event(&self, event: AppEvent) -> AppResult<()> {
         self.event_bus.publish(event).await
     }
-    
+
     /// Get the event bus for direct access
     pub fn get_event_bus(&self) -> &Arc<EventBus> {
         &self.event_bus

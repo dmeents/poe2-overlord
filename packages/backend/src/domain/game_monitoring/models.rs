@@ -112,8 +112,10 @@ impl GameProcessStatus {
 /// and the list of process names to search for when detecting POE2 instances.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameMonitoringConfig {
-    /// Interval in seconds between process status checks
-    pub check_interval_seconds: u64,
+    /// Interval in seconds between process status checks when no game is detected (fast detection)
+    pub detection_interval_seconds: u64,
+    /// Interval in seconds between process status checks when game is running (slow monitoring)
+    pub monitoring_interval_seconds: u64,
     /// List of process names to search for when detecting POE2
     pub process_names: Vec<String>,
 }
@@ -121,14 +123,16 @@ pub struct GameMonitoringConfig {
 impl Default for GameMonitoringConfig {
     /// Creates default configuration for POE2 monitoring.
     ///
-    /// Sets up reasonable defaults including a 5-second check interval and
-    /// comprehensive list of common POE2 process names across different platforms.
+    /// Sets up reasonable defaults including fast detection (3s) when no game is running
+    /// and slow monitoring (60s) when game is running, plus comprehensive list of
+    /// common POE2 process names across different platforms.
     ///
     /// # Returns
     /// * `Self` - Default GameMonitoringConfig instance
     fn default() -> Self {
         Self {
-            check_interval_seconds: 5,
+            detection_interval_seconds: 3,   // Fast detection when no game running
+            monitoring_interval_seconds: 60, // Slow monitoring when game is running
             process_names: vec![
                 "pathofexile2".to_string(),
                 "poe2".to_string(),

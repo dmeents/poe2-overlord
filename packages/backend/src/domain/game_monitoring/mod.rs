@@ -18,6 +18,7 @@
 //! - Event management system (publishes status change events)
 //! - Process detection infrastructure (platform-specific process finding)
 
+pub mod commands;
 pub mod models;
 pub mod service;
 pub mod traits;

@@ -1,8 +1,8 @@
+use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::game_monitoring::{
     models::GameProcessStatus,
     traits::{GameMonitoringService, ProcessDetector},
 };
-use crate::domain::character_tracking::traits::CharacterTrackingService;
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::{debug, error, info};
@@ -19,9 +19,8 @@ use tokio::time::interval;
 /// checks for game processes and handles state transitions.
 #[derive(Clone)]
 pub struct GameMonitoringServiceImpl {
-    /// Service for managing character tracking (location and time)
-    character_tracker: Arc<dyn CharacterTrackingService>,
-    // Event publishing removed - using unified event system
+    /// Event bus for publishing game monitoring events
+    event_bus: Arc<EventBus>,
     /// Detector for finding and checking game processes
     process_detector: Arc<dyn ProcessDetector>,
     /// Flag indicating whether monitoring is currently active
@@ -35,23 +34,19 @@ pub struct GameMonitoringServiceImpl {
 impl GameMonitoringServiceImpl {
     /// Creates a new game monitoring service instance.
     ///
-    /// Initializes the service with the required dependencies for time tracking,
-    /// event publishing, and process detection. All internal state is initialized
-    /// to default values (not monitoring, no current status, no active task).
+    /// Initializes the service with the required dependencies for event publishing
+    /// and process detection. All internal state is initialized to default values
+    /// (not monitoring, no current status, no active task).
     ///
     /// # Arguments
-    /// * `character_tracker` - Service for managing character tracking (location and time)
-    /// * `event_publisher` - Publisher for game monitoring events
+    /// * `event_bus` - Event bus for publishing game monitoring events
     /// * `process_detector` - Detector for finding and checking game processes
     ///
     /// # Returns
     /// * `Self` - New GameMonitoringServiceImpl instance
-    pub fn new(
-        character_tracker: Arc<dyn CharacterTrackingService>,
-        process_detector: Arc<dyn ProcessDetector>,
-    ) -> Self {
+    pub fn new(event_bus: Arc<EventBus>, process_detector: Arc<dyn ProcessDetector>) -> Self {
         Self {
-            character_tracker,
+            event_bus,
             process_detector,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
@@ -105,7 +100,17 @@ impl GameMonitoringServiceImpl {
             }
         }
 
-        // Event publishing removed - using unified event system
+        // Publish game process status change event
+        let event = AppEvent::game_process_status_changed(
+            previous_status,
+            current_status.clone(),
+            is_state_change,
+        );
+
+        if let Err(e) = self.event_bus.publish(event).await {
+            error!("Failed to publish game process status change event: {}", e);
+        }
+
         debug!("Game monitoring status updated: {:?}", current_status);
 
         // Update the internal current status
@@ -120,25 +125,72 @@ impl GameMonitoringServiceImpl {
     /// Runs the main monitoring loop that periodically checks for game processes.
     ///
     /// This method implements the core monitoring logic that runs in a background task.
-    /// It periodically checks for game processes at the configured interval and handles
-    /// state changes. The loop continues until the monitoring is stopped.
+    /// It uses adaptive polling: fast detection when no game is running, slow monitoring
+    /// when game is running. The loop continues until the monitoring is stopped.
     ///
     /// # Returns
     /// * `AppResult<()>` - Success or error result
     async fn start_monitoring_loop(&self) -> AppResult<()> {
         let process_detector = self.process_detector.clone();
         let is_monitoring = self.is_monitoring.clone();
+        let config = process_detector.get_config();
 
-        // Set up the monitoring interval based on configuration
-        let check_interval =
-            Duration::from_secs(process_detector.get_config().check_interval_seconds);
-        let mut interval_timer = interval(check_interval);
+        // Start with fast detection interval (when no game is running)
+        let mut current_interval = Duration::from_secs(config.detection_interval_seconds);
+        let mut interval_timer = interval(current_interval);
         let mut previous_status: Option<GameProcessStatus> = None;
 
         info!(
-            "Game monitoring loop started with interval: {:?}",
-            check_interval
+            "Game monitoring loop started with adaptive polling (detection: {}s, monitoring: {}s)",
+            config.detection_interval_seconds, config.monitoring_interval_seconds
         );
+
+        // Publish initial status immediately to handle timing issues
+        debug!("Publishing initial game process status...");
+        match process_detector.check_game_process().await {
+            Ok(initial_status) => {
+                debug!(
+                    "Initial game process status: running={}, pid={}, name={}",
+                    initial_status.running, initial_status.pid, initial_status.name
+                );
+
+                // Publish initial status as a state change
+                if let Err(e) = self
+                    .handle_process_state_change(initial_status.clone(), None)
+                    .await
+                {
+                    error!("Failed to handle initial process status: {}", e);
+                }
+
+                // Set initial interval based on game state
+                let initial_interval = if initial_status.running {
+                    Duration::from_secs(config.monitoring_interval_seconds)
+                } else {
+                    Duration::from_secs(config.detection_interval_seconds)
+                };
+
+                // Update interval if it's different from the default
+                if initial_interval != current_interval {
+                    current_interval = initial_interval;
+                    interval_timer = interval(current_interval);
+                    debug!(
+                        "Set initial polling interval to {} (game running: {})",
+                        if initial_status.running {
+                            "slow"
+                        } else {
+                            "fast"
+                        },
+                        initial_status.running
+                    );
+                }
+
+                // Set as previous status for the loop
+                previous_status = Some(initial_status);
+            }
+            Err(e) => {
+                error!("Failed to get initial game process status: {}", e);
+            }
+        }
 
         // Main monitoring loop
         loop {
@@ -159,9 +211,9 @@ impl GameMonitoringServiceImpl {
                         .map(|prev| current_status_value.is_state_change(prev))
                         .unwrap_or(true);
 
-                    // Handle state changes
+                    // Only log and process state changes, not every check
                     if is_state_change {
-                        debug!(
+                        info!(
                             "Game process state change detected: running={}, pid={}, name={}",
                             current_status_value.running,
                             current_status_value.pid,
@@ -177,6 +229,35 @@ impl GameMonitoringServiceImpl {
                             .await
                         {
                             error!("Failed to handle process status change: {}", e);
+                        }
+
+                        // Switch polling interval based on game state
+                        let new_interval = if current_status_value.running {
+                            Duration::from_secs(config.monitoring_interval_seconds)
+                        } else {
+                            Duration::from_secs(config.detection_interval_seconds)
+                        };
+
+                        // Update interval if it changed
+                        if new_interval != current_interval {
+                            current_interval = new_interval;
+                            interval_timer = interval(current_interval);
+                            debug!(
+                                "Switched to {} polling (game running: {})",
+                                if current_status_value.running {
+                                    "slow"
+                                } else {
+                                    "fast"
+                                },
+                                current_status_value.running
+                            );
+                        }
+                    } else {
+                        // Silently update the internal status for get_current_status()
+                        // No logging for unchanged states to reduce console spam
+                        {
+                            let mut status = self.current_status.write().await;
+                            *status = Some(current_status_value.clone());
                         }
                     }
 
@@ -223,12 +304,19 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
 
         *is_monitoring = true;
         info!("Starting game process monitoring");
+        debug!("Game monitoring service starting monitoring loop...");
 
         // Spawn the monitoring loop in a background task
         let service_clone = Arc::new(self.clone());
         let task_handle = tokio::spawn(async move {
-            if let Err(e) = service_clone.start_monitoring_loop().await {
-                error!("Background monitoring loop failed: {}", e);
+            debug!("Game monitoring background task started");
+            match service_clone.start_monitoring_loop().await {
+                Ok(_) => {
+                    info!("Game monitoring loop completed successfully");
+                }
+                Err(e) => {
+                    error!("Background monitoring loop failed: {}", e);
+                }
             }
         });
 

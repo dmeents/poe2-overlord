@@ -28,7 +28,7 @@
 //! - **Time Tracking Emission**: Periodic emission of time tracking data to frontend
 //! - **Server Ping Monitoring**: Periodic server connectivity checks
 
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use std::sync::Arc;
 use tauri::Manager;
 
@@ -39,6 +39,7 @@ use crate::application::service_orchestrator::{
 use crate::application::service_registry::ServiceInitializer;
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
+use crate::infrastructure::tauri::TauriEventBridge;
 
 /// Sets up the complete application with all services, configuration, and background tasks.
 ///
@@ -126,6 +127,14 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     if let Some(main_window) = app.get_webview_window("main") {
         info!("Starting background services");
 
+        // Initialize Tauri Event Bridge to forward events to frontend
+        let event_bridge = TauriEventBridge::new(services.event_bus.clone(), main_window.clone());
+        if let Err(e) = tauri::async_runtime::block_on(event_bridge.start_forwarding()) {
+            error!("Failed to start Tauri event bridge: {}", e);
+        } else {
+            info!("Tauri event bridge started successfully");
+        }
+
         // Start log monitoring service - analyzes game logs in real-time
         start_log_monitoring(
             services.log_analysis_service.clone(),
@@ -152,7 +161,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         // Start server ping monitoring - periodically checks server connectivity
         start_ping_event_emission(
             main_window.clone(),
-            services.server_status.clone(),
+            services.server_monitoring_service.clone(),
             runtime_manager.clone(),
             task_manager.clone(),
         );

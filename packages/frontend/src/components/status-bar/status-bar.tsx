@@ -1,6 +1,6 @@
 import {
   useCharacterManagement,
-  useGameProcess,
+  useGameProcessEvents,
   useServerStatus,
   useZoneMonitoring,
 } from '@/hooks';
@@ -9,7 +9,6 @@ import {
   ChartBarIcon,
   CogIcon,
   ComputerDesktopIcon,
-  DocumentTextIcon,
   UserIcon,
 } from '@heroicons/react/16/solid';
 import { useNavigate } from '@tanstack/react-router';
@@ -18,7 +17,7 @@ import { StatusIndicator } from '../status-indicator';
 import { statusBarStyles } from './status-bar.styles';
 
 export const StatusBar = () => {
-  const { processInfo } = useGameProcess();
+  const { processInfo } = useGameProcessEvents();
   const { currentZone, currentAct } = useZoneMonitoring();
   const { serverStatus } = useServerStatus();
   const { activeCharacter } = useCharacterManagement();
@@ -27,10 +26,6 @@ export const StatusBar = () => {
 
   const handleSettingsClick = () => {
     navigate({ to: '/settings' });
-  };
-
-  const handleActivityClick = () => {
-    navigate({ to: '/activity' });
   };
 
   const getZoneDisplayText = () => {
@@ -89,11 +84,6 @@ export const StatusBar = () => {
         {getZoneDisplayText()}
       </div>
       <div className={statusBarStyles.rightSection}>
-        <div title='Activity Monitor'>
-          <Button variant='icon' size='xs' onClick={handleActivityClick}>
-            <DocumentTextIcon />
-          </Button>
-        </div>
         <div title='Settings'>
           <Button variant='icon' size='xs' onClick={handleSettingsClick}>
             <CogIcon />

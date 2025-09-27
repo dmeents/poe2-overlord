@@ -11,3 +11,11 @@ export interface ServerStatus {
   latency_ms: number | null;
   timestamp: string;
 }
+
+export interface ServerStatusChangedEvent {
+  ServerStatusChanged: {
+    old_status?: ServerStatus;
+    new_status: ServerStatus;
+    timestamp: string;
+  };
+}

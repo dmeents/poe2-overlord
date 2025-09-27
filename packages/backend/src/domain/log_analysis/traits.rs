@@ -1,7 +1,5 @@
 use crate::domain::events::AppEvent;
-use crate::domain::log_analysis::models::{
-    LogAnalysisConfig, LogAnalysisSession, LogAnalysisStats, LogFileInfo,
-};
+use crate::domain::log_analysis::models::{LogAnalysisConfig, LogFileInfo};
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use tokio::sync::broadcast;
@@ -24,9 +22,6 @@ pub trait LogAnalysisService: Send + Sync {
 
     /// Reads a specified number of lines from the log file starting at a given line
     async fn read_log_lines(&self, start_line: usize, count: usize) -> AppResult<Vec<String>>;
-
-    /// Gets current statistics about log analysis activity
-    async fn get_analysis_stats(&self) -> AppResult<LogAnalysisStats>;
 
     /// Subscribes to log events published by the service
     async fn subscribe_to_events(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
@@ -67,47 +62,4 @@ pub trait LogFileRepository: Send + Sync {
 
     /// Gets the last modified time of a log file
     async fn get_file_modified_time(&self, path: &str) -> AppResult<chrono::DateTime<chrono::Utc>>;
-}
-
-/// Repository trait for managing log analysis sessions
-/// Handles persistence and retrieval of monitoring session data
-#[async_trait]
-pub trait LogAnalysisSessionRepository: Send + Sync {
-    /// Saves a log analysis session to persistent storage
-    async fn save_session(&self, session: &LogAnalysisSession) -> AppResult<()>;
-
-    /// Loads a specific log analysis session by its ID
-    async fn load_session(&self, session_id: &str) -> AppResult<Option<LogAnalysisSession>>;
-
-    /// Gets the currently active log analysis session, if any
-    async fn get_active_session(&self) -> AppResult<Option<LogAnalysisSession>>;
-
-    /// Updates an existing log analysis session
-    async fn update_session(&self, session: &LogAnalysisSession) -> AppResult<()>;
-
-    /// Ends the current active session and marks it as completed
-    async fn end_current_session(&self) -> AppResult<()>;
-
-    /// Gets all stored log analysis sessions
-    async fn get_all_sessions(&self) -> AppResult<Vec<LogAnalysisSession>>;
-}
-
-/// Repository trait for managing log analysis statistics
-/// Handles persistence and updates of analysis performance metrics
-#[async_trait]
-pub trait LogAnalysisStatsRepository: Send + Sync {
-    /// Saves log analysis statistics to persistent storage
-    async fn save_stats(&self, stats: &LogAnalysisStats) -> AppResult<()>;
-
-    /// Loads the current log analysis statistics
-    async fn load_stats(&self) -> AppResult<LogAnalysisStats>;
-
-    /// Updates the log analysis statistics
-    async fn update_stats(&self, stats: &LogAnalysisStats) -> AppResult<()>;
-
-    /// Increments the count for a specific event type
-    async fn increment_event_count(&self, event_type: &str) -> AppResult<()>;
-
-    /// Resets all statistics to their default values
-    async fn reset_stats(&self) -> AppResult<()>;
 }

@@ -1,147 +1,100 @@
-import { invoke } from '@tauri-apps/api/core';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import type { CharacterFormData } from '../components/character-modals/character-form-modal';
-import type { Character } from '../types';
+import {
+  useActiveCharacter,
+  useCharacters,
+  useCreateCharacter,
+  useDeleteCharacter,
+  useSetActiveCharacter,
+  useUpdateCharacter,
+} from './useCharacterQueries';
 
 export function useCharacterManagement() {
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [activeCharacter, setActiveCharacter] = useState<Character | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use React Query hooks for data fetching
+  const {
+    data: characters = [],
+    isLoading: charactersLoading,
+    error: charactersError,
+  } = useCharacters();
 
-  // Load all characters
-  const loadCharacters = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const allCharacters = await invoke<Character[]>('get_all_characters');
-      setCharacters(allCharacters);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to load characters';
-      setError(errorMessage);
-      console.error('Failed to load characters:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data: activeCharacter = null,
+    isLoading: activeCharacterLoading,
+    error: activeCharacterError,
+  } = useActiveCharacter();
 
-  // Load active character
-  const loadActiveCharacter = useCallback(async () => {
-    try {
-      const active = await invoke<Character | null>('get_active_character');
-      setActiveCharacter(active);
-    } catch (err) {
-      console.error('Failed to load active character:', err);
-    }
-  }, []);
+  // Mutation hooks
+  const createCharacterMutation = useCreateCharacter();
+  const updateCharacterMutation = useUpdateCharacter();
+  const deleteCharacterMutation = useDeleteCharacter();
+  const setActiveCharacterMutation = useSetActiveCharacter();
 
-  // Create a new character
+  // Derived state
+  const isLoading = charactersLoading || activeCharacterLoading;
+  const error =
+    charactersError?.message || activeCharacterError?.message || null;
+
+  // Wrapper functions that use mutations
   const createCharacter = useCallback(
-    async (data: CharacterFormData): Promise<Character> => {
+    async (data: CharacterFormData) => {
       try {
-        setError(null);
-        const newCharacter = await invoke<Character>('create_character', {
-          name: data.name,
-          class: data.class,
-          ascendency: data.ascendency,
-          league: data.league,
-          hardcore: data.hardcore,
-          soloSelfFound: data.solo_self_found,
-        });
-
-        // Refresh characters list and active character
-        await loadCharacters();
-        await loadActiveCharacter();
-
-        return newCharacter;
+        return await createCharacterMutation.mutateAsync(data);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to create character';
-        setError(errorMessage);
         throw new Error(errorMessage);
       }
     },
-    [loadCharacters, loadActiveCharacter]
+    [createCharacterMutation]
   );
 
-  // Update an existing character
   const updateCharacter = useCallback(
-    async (
-      characterId: string,
-      data: CharacterFormData
-    ): Promise<Character> => {
+    async (characterId: string, data: CharacterFormData) => {
       try {
-        setError(null);
-        const updatedCharacter = await invoke<Character>('update_character', {
-          characterId,
-          name: data.name,
-          class: data.class,
-          ascendency: data.ascendency,
-          league: data.league,
-          hardcore: data.hardcore,
-          soloSelfFound: data.solo_self_found,
-        });
-
-        // Refresh characters list and active character
-        await loadCharacters();
-        await loadActiveCharacter();
-
-        return updatedCharacter;
+        return await updateCharacterMutation.mutateAsync({ characterId, data });
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to update character';
-        setError(errorMessage);
         throw new Error(errorMessage);
       }
     },
-    [loadCharacters, loadActiveCharacter]
+    [updateCharacterMutation]
   );
 
-  // Set active character
-  const setActiveCharacterId = useCallback(
-    async (characterId: string): Promise<void> => {
-      try {
-        setError(null);
-        await invoke('set_active_character', { characterId });
-        await loadActiveCharacter();
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to set active character';
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      }
-    },
-    [loadActiveCharacter]
-  );
-
-  // Delete a character
   const deleteCharacter = useCallback(
-    async (characterId: string): Promise<void> => {
+    async (characterId: string) => {
       try {
-        setError(null);
-        await invoke('delete_character', { characterId });
-
-        // Refresh characters list and active character
-        await loadCharacters();
-        await loadActiveCharacter();
+        await deleteCharacterMutation.mutateAsync(characterId);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to delete character';
-        setError(errorMessage);
         throw new Error(errorMessage);
       }
     },
-    [loadCharacters, loadActiveCharacter]
+    [deleteCharacterMutation]
   );
 
-  // Load data on mount
-  useEffect(() => {
-    loadCharacters();
-    loadActiveCharacter();
-  }, [loadCharacters, loadActiveCharacter]);
+  const setActiveCharacterId = useCallback(
+    async (characterId: string) => {
+      try {
+        await setActiveCharacterMutation.mutateAsync(characterId);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to set active character';
+        throw new Error(errorMessage);
+      }
+    },
+    [setActiveCharacterMutation]
+  );
+
+  // Legacy functions for backward compatibility (no-op since React Query handles caching)
+  const loadCharacters = useCallback(() => {
+    // No-op: React Query handles this automatically
+  }, []);
+
+  const loadActiveCharacter = useCallback(() => {
+    // No-op: React Query handles this automatically
+  }, []);
 
   return {
     characters,

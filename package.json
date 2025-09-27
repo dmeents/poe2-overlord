@@ -31,5 +31,8 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.2"
   }
 }

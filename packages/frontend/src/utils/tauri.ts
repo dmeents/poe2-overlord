@@ -1,17 +1,7 @@
-import type { AppConfig, ProcessInfo } from '@/types';
+import type { AppConfig } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
-import { GAME_CONFIG } from './constants';
 
 export const tauriUtils = {
-  async checkGameProcess(): Promise<ProcessInfo> {
-    try {
-      return await invoke<ProcessInfo>(GAME_CONFIG.COMMAND_NAME);
-    } catch (error) {
-      console.error('Failed to check game process:', error);
-      throw error;
-    }
-  },
-
   // Configuration commands
   async getConfig(): Promise<AppConfig> {
     try {

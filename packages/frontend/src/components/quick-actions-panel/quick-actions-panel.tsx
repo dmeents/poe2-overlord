@@ -1,5 +1,4 @@
 import {
-  ChartBarIcon,
   ClockIcon,
   Cog6ToothIcon,
   UserGroupIcon,
@@ -39,17 +38,6 @@ export function QuickActionsPanel({ className = '' }: QuickActionsPanelProps) {
             >
               <ClockIcon className='w-5 h-5' />
               Time Tracking
-            </Button>
-          </Link>
-
-          <Link to='/activity' className='block'>
-            <Button
-              variant='secondary'
-              size='md'
-              className={quickActionsPanelStyles.actionButton}
-            >
-              <ChartBarIcon className='w-5 h-5' />
-              Activity Monitor
             </Button>
           </Link>
         </div>

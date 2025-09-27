@@ -39,10 +39,10 @@ use log::{error, info};
 use std::sync::Arc;
 use tauri::WebviewWindow;
 
+use crate::domain::character_tracking::traits::CharacterTrackingService;
 use crate::domain::game_monitoring::traits::GameMonitoringService;
 use crate::domain::log_analysis::traits::LogAnalysisService;
-use crate::domain::character_tracking::traits::CharacterTrackingService;
-use crate::infrastructure::monitoring::ServerMonitor;
+use crate::domain::server_monitoring::ServerMonitoringService;
 use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
 /// Starts the game process monitoring service as a background task.
@@ -77,8 +77,13 @@ pub fn start_game_process_monitoring(
         "game_process_monitoring_setup".to_string(),
         move || async move {
             info!("Automatically starting game monitoring on application startup");
-            if let Err(e) = service_clone.start_monitoring().await {
-                error!("Failed to start game monitoring: {}", e);
+            match service_clone.start_monitoring().await {
+                Ok(_) => {
+                    info!("Game monitoring started successfully");
+                }
+                Err(e) => {
+                    error!("Failed to start game monitoring: {}", e);
+                }
             }
         },
     );
@@ -143,17 +148,22 @@ pub fn start_character_tracking_emission(
 /// - Runs continuously in the background
 pub fn start_ping_event_emission(
     _window: WebviewWindow,
-    server_status: Arc<ServerMonitor>,
+    server_monitoring_service: Arc<dyn ServerMonitoringService>,
     runtime_manager: Arc<RuntimeManager>,
     _task_manager: Arc<TaskManager>,
 ) {
-    let server_status_clone = server_status.clone();
+    let server_monitoring_service_clone = server_monitoring_service.clone();
 
     // Spawn the server ping monitoring task using the runtime manager
     runtime_manager.spawn_background_task(
         "server_ping_monitoring".to_string(),
         move || async move {
-            server_status_clone.start_periodic_ping().await;
+            if let Err(e) = server_monitoring_service_clone
+                .start_ping_monitoring()
+                .await
+            {
+                error!("Failed to start server ping monitoring: {}", e);
+            }
         },
     );
 }

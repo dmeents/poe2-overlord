@@ -1,9 +1,6 @@
 // Game monitoring imports removed - using unified event system
-use crate::errors::AppResult;
 use crate::domain::log_analysis::models::LogEvent;
 use crate::domain::server_monitoring::models::ServerStatus;
-use crate::domain::server_monitoring::traits::ServerMonitoringEventPublisher;
-use crate::errors::AppError;
 use log::error;
 use tauri::{Emitter, WebviewWindow};
 use tokio::sync::broadcast;
@@ -104,11 +101,6 @@ impl Default for EventPublisher {
     }
 }
 
-impl ServerMonitoringEventPublisher for EventPublisher {
-    fn broadcast_ping_event(&self, status: ServerStatus) -> AppResult<()> {
-        self.broadcast_ping_event(status)
-            .map_err(|e| AppError::event_emission_error("broadcast_ping_event", &e.to_string()))
-    }
-}
+// Note: ServerMonitoringEventPublisher implementation removed - using unified event system
 
 // TauriGameMonitoringEventPublisher removed - using unified event system

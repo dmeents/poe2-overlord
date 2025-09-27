@@ -1370,6 +1370,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.90.2":
+  version: 5.90.2
+  resolution: "@tanstack/query-core@npm:5.90.2"
+  checksum: 10c0/695a7450b0bb9f6dd21bebeacfc962dfc886631a3b3a13c33a842ef719b4c3dd30c15febe8c1ade6902a85e0f387c51a97570f430cc8f5c7032ff737d6410597
+  languageName: node
+  linkType: hard
+
 "@tanstack/react-query@npm:^5.86.0":
   version: 5.86.0
   resolution: "@tanstack/react-query@npm:5.86.0"
@@ -1378,6 +1385,17 @@ __metadata:
   peerDependencies:
     react: ^18 || ^19
   checksum: 10c0/46f2ef02cce6a9f6fe81101b59c698c9409f4daeec245e309497ab22d0929d41808c7f4cd9cdacc7c2c6a50dd39ede339c5aa3d4fa4713e759e27beae3813fb6
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.90.2":
+  version: 5.90.2
+  resolution: "@tanstack/react-query@npm:5.90.2"
+  dependencies:
+    "@tanstack/query-core": "npm:5.90.2"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 10c0/22e76626a59890409858521b0e42b49219126a4ea5ed79eaa48a267959175dfdd28b30b9b03a415dccf703d95c18100a9d8917679818f6d2adc26d6c5f96a4d6
   languageName: node
   linkType: hard
 
@@ -3513,6 +3531,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "poe2-overlord@workspace:."
   dependencies:
+    "@tanstack/react-query": "npm:^5.90.2"
     "@tauri-apps/cli": "npm:^2.0.0"
   languageName: unknown
   linkType: soft

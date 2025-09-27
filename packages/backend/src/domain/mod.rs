@@ -78,12 +78,8 @@ pub use game_monitoring::{
 // Re-export log analysis types
 pub use log_analysis::{
     LogAnalysisConfig, LogAnalysisError, LogAnalysisEvent, LogAnalysisService,
-    LogAnalysisServiceImpl, LogAnalysisSession, LogAnalysisStats, LogFileInfo, LogLineAnalysis,
+    LogAnalysisServiceImpl, LogFileInfo, LogLineAnalysis,
 };
 
 // Re-export server monitoring types
-pub use server_monitoring::{
-    NetworkConfig, NetworkConnectivity, ServerInfo, ServerMonitoringConfig,
-    ServerMonitoringService, ServerMonitoringServiceImpl, ServerMonitoringSession,
-    ServerMonitoringStats, ServerStatus,
-};
+pub use server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatus};

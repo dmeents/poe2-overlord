@@ -1,12 +1,16 @@
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { CharacterData } from '../../types';
-import { formatDuration } from '../../utils';
+import { formatDuration, getAscendencyImage } from '../../utils';
 import { Button } from '../button';
 import {
   formatDate,
+  getAscendencyBackgroundStyles,
+  getAscendencyOverlayStyles,
   getClassBgColor,
   getClassBorderColor,
   getClassColor,
   getClassLevelColors,
+  getHeaderSectionBackgroundStyles,
 } from './character-card.styles';
 
 export interface CharacterCardProps {
@@ -16,53 +20,126 @@ export interface CharacterCardProps {
   onEdit: () => void;
   onDelete: () => void;
   interactive?: boolean;
+  showDetails?: boolean;
 }
 
-export function CharacterCard({
+export const CharacterCard = memo(function CharacterCard({
   character,
   isActive,
   onSelect,
   onEdit,
   onDelete,
   interactive = true,
+  showDetails = true,
 }: CharacterCardProps) {
-  // Get play time, deaths, zones visited, and current location from character data
-  const playTime = character.summary?.total_play_time || 0;
-  const totalDeaths = character.summary?.total_deaths || 0;
-  const zonesVisited = character.summary?.total_zones_visited || 0;
+  // State for collapsible details - default to expanded for active characters
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(isActive);
+
+  // Update expanded state when character becomes active/inactive
+  useEffect(() => {
+    setIsDetailsExpanded(isActive);
+  }, [isActive]);
+
+  // Get current location (always needed for header display)
   const currentLocation = character.current_location;
 
-  // Helper function to format current location
-  const formatCurrentLocation = (location: typeof currentLocation) => {
-    if (!location) return 'Unknown';
+  // Memoize expensive computations
+  const ascendencyImage = useMemo(
+    () => getAscendencyImage(character.ascendency),
+    [character.ascendency]
+  );
+  const backgroundStyles = useMemo(
+    () => getAscendencyBackgroundStyles(ascendencyImage),
+    [ascendencyImage]
+  );
+  const overlayStyles = useMemo(() => getAscendencyOverlayStyles(), []);
+  const headerBackgroundStyles = useMemo(
+    () => getHeaderSectionBackgroundStyles(),
+    []
+  );
 
-    const parts = [];
-    if (location.act) parts.push(location.act);
-    if (location.scene) parts.push(location.scene);
+  // Memoize class computations
+  const classColor = useMemo(
+    () => getClassColor(character.class),
+    [character.class]
+  );
+  const classBorderColor = useMemo(
+    () => getClassBorderColor(character.class),
+    [character.class]
+  );
+  const classBgColor = useMemo(
+    () => getClassBgColor(character.class),
+    [character.class]
+  );
+  const classLevelColors = useMemo(
+    () => getClassLevelColors(character.class),
+    [character.class]
+  );
 
-    return parts.length > 0 ? parts.join(' - ') : 'Unknown';
-  };
+  // Memoize helper function
+  const formatCurrentLocation = useCallback(
+    (location: typeof currentLocation) => {
+      if (!location) return 'Unknown';
+
+      const parts = [];
+      if (location.act) parts.push(location.act);
+      if (location.scene) parts.push(location.scene);
+
+      return parts.length > 0 ? parts.join(' - ') : 'Unknown';
+    },
+    []
+  );
+
+  // Memoize event handlers
+  const handleSelect = useCallback(() => {
+    if (interactive) onSelect();
+  }, [interactive, onSelect]);
+
+  const handleEdit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onEdit();
+    },
+    [onEdit]
+  );
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete();
+    },
+    [onDelete]
+  );
+
+  const handleToggleDetails = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDetailsExpanded(prev => !prev);
+  }, []);
+
   return (
     <div
       className={`group relative rounded-xl border transition-all duration-200 overflow-hidden ${
         interactive ? 'cursor-pointer' : ''
       } ${
         isActive
-          ? `${getClassBorderColor(character.class)} bg-gradient-to-br ${getClassBgColor(character.class)}`
+          ? `${classBorderColor} bg-gradient-to-br ${classBgColor}`
           : 'border-zinc-700 bg-gradient-to-br from-zinc-800/50 to-zinc-900/30 hover:border-zinc-600 hover:bg-gradient-to-br hover:from-zinc-800/70 hover:to-zinc-900/50'
       }`}
-      onClick={interactive ? onSelect : undefined}
+      style={backgroundStyles}
+      onClick={handleSelect}
     >
-      {/* Header Section */}
-      <div className='p-5 pb-4'>
+      {/* Ascendency Background Overlay */}
+      {ascendencyImage && (
+        <div className='absolute inset-0 rounded-xl' style={overlayStyles} />
+      )}
+      {/* Header Section with Gradient Background */}
+      <div className='relative p-5 pb-4' style={headerBackgroundStyles}>
         <div className='flex items-center gap-3 mb-5'>
           {/* Character Level */}
           <div
-            className={`w-8 h-8 rounded-full bg-gradient-to-br ${getClassLevelColors(character.class).bg} border ${getClassLevelColors(character.class).border} flex items-center justify-center flex-shrink-0`}
+            className={`w-8 h-8 rounded-full bg-gradient-to-br ${classLevelColors.bg} border ${classLevelColors.border} flex items-center justify-center flex-shrink-0`}
           >
-            <span
-              className={`text-sm font-bold ${getClassLevelColors(character.class).text}`}
-            >
+            <span className={`text-sm font-bold ${classLevelColors.text}`}>
               {character.level}
             </span>
           </div>
@@ -72,10 +149,35 @@ export function CharacterCard({
             {character.name}
           </h3>
 
+          {/* Toggle Details Button */}
+          {showDetails && (
+            <button
+              onClick={handleToggleDetails}
+              className='p-1.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100'
+              title={isDetailsExpanded ? 'Hide details' : 'Show details'}
+            >
+              <svg
+                className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
+                  isDetailsExpanded ? 'rotate-180' : ''
+                }`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+          )}
+
           {/* Action Buttons */}
           {interactive && (
             <div className='flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-              <div onClick={e => e.stopPropagation()}>
+              <div onClick={handleEdit}>
                 <Button
                   onClick={() => onEdit()}
                   variant='outline'
@@ -85,7 +187,7 @@ export function CharacterCard({
                   Edit
                 </Button>
               </div>
-              <div onClick={e => e.stopPropagation()}>
+              <div onClick={handleDelete}>
                 <Button
                   onClick={() => onDelete()}
                   variant='outline'
@@ -105,9 +207,7 @@ export function CharacterCard({
             <div className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
               Class
             </div>
-            <div
-              className={`text-sm font-medium ${getClassColor(character.class)}`}
-            >
+            <div className={`text-sm font-medium ${classColor}`}>
               {character.class}
             </div>
           </div>
@@ -146,69 +246,75 @@ export function CharacterCard({
         )}
       </div>
 
-      {/* Footer Section */}
-      <div className='px-5 py-4 bg-gradient-to-r from-zinc-900/50 to-zinc-800/30 border-t border-zinc-700/50'>
-        <div className='grid grid-cols-1 gap-3'>
-          {/* Play Time */}
-          <div className='flex items-center justify-between'>
-            <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-              Play Time
-            </span>
-            <span className='text-sm font-medium text-zinc-300'>
-              {formatDuration(playTime)}
-            </span>
+      {/* Footer Section - only show when showDetails is true and expanded */}
+      {showDetails && (
+        <div
+          className={`relative overflow-hidden transition-all duration-300 ease-in-out ${
+            isDetailsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className='px-5 py-4 bg-zinc-900 border-t border-zinc-700/50'>
+            <div className='grid grid-cols-1 gap-3'>
+              {/* Play Time */}
+              <div className='flex items-center justify-between'>
+                <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                  Play Time
+                </span>
+                <span className='text-sm font-medium text-zinc-300'>
+                  {formatDuration(character.summary?.total_play_time || 0)}
+                </span>
+              </div>
+
+              {/* Deaths */}
+              <div className='flex items-center justify-between'>
+                <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                  Deaths
+                </span>
+                <span className='text-sm font-medium text-zinc-300'>
+                  {character.summary?.total_deaths || 0}
+                </span>
+              </div>
+
+              {/* Zones Visited */}
+              <div className='flex items-center justify-between'>
+                <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                  Zones Visited
+                </span>
+                <span className='text-sm font-medium text-zinc-300'>
+                  {character.summary?.total_zones_visited || 0}
+                </span>
+              </div>
+
+              {/* Last Played */}
+              {character.last_played && (
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                    Last Played
+                  </span>
+                  <span className='text-sm font-medium text-zinc-300'>
+                    {formatDate(character.last_played)}
+                  </span>
+                </div>
+              )}
+
+              {/* Location */}
+              {currentLocation && (
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                    {isActive ? 'Current Location' : 'Location'}
+                  </span>
+                  <span
+                    className='text-sm font-medium text-zinc-300 truncate max-w-32'
+                    title={formatCurrentLocation(currentLocation)}
+                  >
+                    {formatCurrentLocation(currentLocation)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-
-          {/* Deaths */}
-          <div className='flex items-center justify-between'>
-            <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-              Deaths
-            </span>
-            <span className='text-sm font-medium text-zinc-300'>
-              {totalDeaths}
-            </span>
-          </div>
-
-          {/* Zones Visited */}
-          {zonesVisited > 0 && (
-            <div className='flex items-center justify-between'>
-              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-                Zones Visited
-              </span>
-              <span className='text-sm font-medium text-zinc-300'>
-                {zonesVisited}
-              </span>
-            </div>
-          )}
-
-          {/* Last Played - only show when character is not active */}
-          {character.last_played && !isActive && (
-            <div className='flex items-center justify-between'>
-              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-                Last Played
-              </span>
-              <span className='text-sm font-medium text-zinc-300'>
-                {formatDate(character.last_played)}
-              </span>
-            </div>
-          )}
-
-          {/* Location - shows "Current Location" when active, "Location" when not active */}
-          {currentLocation && (
-            <div className='flex items-center justify-between'>
-              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-                {isActive ? 'Current Location' : 'Location'}
-              </span>
-              <span
-                className='text-sm font-medium text-zinc-300 truncate max-w-32'
-                title={formatCurrentLocation(currentLocation)}
-              >
-                {formatCurrentLocation(currentLocation)}
-              </span>
-            </div>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
-}
+});

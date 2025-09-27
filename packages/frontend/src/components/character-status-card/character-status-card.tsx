@@ -53,6 +53,7 @@ export function CharacterStatusCard({
         onEdit={() => {}} // No-op since interactive is false
         onDelete={() => {}} // No-op since interactive is false
         interactive={false}
+        showDetails={false}
       />
     </div>
   );

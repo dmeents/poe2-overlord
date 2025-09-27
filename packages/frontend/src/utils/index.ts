@@ -1,3 +1,9 @@
+export {
+  getAscendencyImage,
+  getAscendencyImageFilename,
+  getAvailableAscendencyImages,
+  hasAscendencyImage,
+} from './ascendency-assets';
 export { APP_CONFIG, GAME_CONFIG } from './constants';
 export { cn } from './tailwind.ts';
 export { tauriUtils } from './tauri.ts';

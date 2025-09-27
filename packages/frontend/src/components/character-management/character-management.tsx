@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useCharacterFiltering, useCharacterFilters } from '../../hooks';
 import type { CharacterData } from '../../types';
-import { CharacterList } from '../character-list';
+import { CharacterList } from '../character-list/character-list';
 import type { CharacterFormData } from '../character-modals';
 import { CharacterFormModal, DeleteCharacterModal } from '../character-modals';
 
@@ -27,6 +28,21 @@ export function CharacterManagement({
   const [deletingCharacter, setDeletingCharacter] =
     useState<CharacterData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filter and sort state management
+  const {
+    filters,
+    sort,
+    updateFilter,
+    updateSort,
+    clearFilters,
+    resetSort,
+    hasActiveFilters,
+  } = useCharacterFilters();
+
+  // Apply filtering and sorting
+  const { filteredCharacters, characterCount, totalCount } =
+    useCharacterFiltering(characters, filters, sort);
 
   const handleCreateCharacter = async (data: CharacterFormData) => {
     try {
@@ -90,12 +106,21 @@ export function CharacterManagement({
   return (
     <>
       <CharacterList
-        characters={characters}
+        characters={filteredCharacters}
         activeCharacterId={activeCharacter?.id}
         onSelectCharacter={handleSelectCharacter}
         onEditCharacter={handleEditCharacter}
         onDeleteCharacter={handleDeleteCharacter}
         onCreateCharacter={() => setShowCreateModal(true)}
+        filters={filters}
+        onFilterChange={updateFilter}
+        onClearFilters={clearFilters}
+        hasActiveFilters={hasActiveFilters}
+        sort={sort}
+        onSortChange={updateSort}
+        onResetSort={resetSort}
+        characterCount={characterCount}
+        totalCount={totalCount}
       />
 
       {/* Create Character Modal */}

@@ -24,7 +24,7 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
       <div className={`${quickStatsGridStyles.container} ${className}`}>
         <h3 className={quickStatsGridStyles.title}>Quick Stats</h3>
         <div className={quickStatsGridStyles.grid}>
-          {[...Array(3)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <div key={i} className={quickStatsGridStyles.loadingContainer}>
               <div className={quickStatsGridStyles.loadingItem}></div>
               <div className={quickStatsGridStyles.loadingValue}></div>
@@ -37,9 +37,19 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
 
   const todayPlayTime = trackingData?.summary?.total_play_time || 0;
   const totalLocations = trackingData?.summary?.total_zones_visited || 0;
-  const topLocation = trackingData?.zones?.sort(
-    (a, b) => b.duration - a.duration
-  )[0];
+  const totalDeaths = trackingData?.summary?.total_deaths || 0;
+  const currentLocation = trackingData?.current_location;
+
+  // Helper function to format current location
+  const formatCurrentLocation = (location: typeof currentLocation) => {
+    if (!location) return 'Unknown';
+
+    const parts = [];
+    if (location.act) parts.push(location.act);
+    if (location.scene) parts.push(location.scene);
+
+    return parts.length > 0 ? parts.join(' - ') : 'Unknown';
+  };
 
   return (
     <div className={`${quickStatsGridStyles.container} ${className}`}>
@@ -60,20 +70,21 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
           <p className={quickStatsGridStyles.statValue}>{totalLocations}</p>
         </div>
 
-        {/* Most Visited Location */}
+        {/* Death Count */}
         <div className={quickStatsGridStyles.statItem}>
-          <p className={quickStatsGridStyles.statLabel}>Most Visited</p>
+          <p className={quickStatsGridStyles.statLabel}>Deaths</p>
+          <p className={quickStatsGridStyles.statValue}>{totalDeaths}</p>
+        </div>
+
+        {/* Current Zone */}
+        <div className={quickStatsGridStyles.statItem}>
+          <p className={quickStatsGridStyles.statLabel}>Current Zone</p>
           <p
-            className={quickStatsGridStyles.statValueSmall}
-            title={topLocation?.location_name}
+            className={quickStatsGridStyles.statValueZone}
+            title={formatCurrentLocation(currentLocation)}
           >
-            {topLocation?.location_name || 'None'}
+            {formatCurrentLocation(currentLocation)}
           </p>
-          {topLocation && (
-            <p className={quickStatsGridStyles.statSubtext}>
-              {topLocation.visits} visits
-            </p>
-          )}
         </div>
       </div>
     </div>

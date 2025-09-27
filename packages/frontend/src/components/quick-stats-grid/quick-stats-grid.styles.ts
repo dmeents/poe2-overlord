@@ -12,5 +12,6 @@ export const quickStatsGridStyles = {
   statLabel: 'text-zinc-400 text-xs mb-1',
   statValue: 'text-white text-lg font-semibold',
   statValueSmall: 'text-white text-sm font-medium truncate',
+  statValueZone: 'text-white text-sm font-medium break-words leading-tight',
   statSubtext: 'text-zinc-400 text-xs',
 } as const;

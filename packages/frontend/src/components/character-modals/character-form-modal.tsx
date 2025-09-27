@@ -42,7 +42,6 @@ export function CharacterFormModal({
   const {
     characterClasses,
     leagues,
-    ascendencies,
     isLoading: configLoading,
     getAscendenciesForClass,
     getDefaultFormData,
@@ -164,7 +163,6 @@ export function CharacterFormModal({
               value={formData.class}
               onChange={value => handleInputChange('class', value)}
               options={characterClasses}
-              disabled={configLoading}
             />
           </FormField>
           <FormField label='Ascendency'>
@@ -173,7 +171,6 @@ export function CharacterFormModal({
               value={formData.ascendency}
               onChange={value => handleInputChange('ascendency', value)}
               options={availableAscendencies}
-              disabled={configLoading || availableAscendencies.length === 0}
             />
           </FormField>
           <FormField label='League'>
@@ -182,7 +179,6 @@ export function CharacterFormModal({
               value={formData.league}
               onChange={value => handleInputChange('league', value)}
               options={leagues}
-              disabled={configLoading}
             />
           </FormField>
           <CheckboxInput

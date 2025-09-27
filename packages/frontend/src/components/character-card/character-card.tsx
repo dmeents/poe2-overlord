@@ -160,16 +160,14 @@ export function CharacterCard({
           </div>
 
           {/* Deaths */}
-          {totalDeaths > 0 && (
-            <div className='flex items-center justify-between'>
-              <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
-                Deaths
-              </span>
-              <span className='text-sm font-medium text-zinc-300'>
-                {totalDeaths}
-              </span>
-            </div>
-          )}
+          <div className='flex items-center justify-between'>
+            <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+              Deaths
+            </span>
+            <span className='text-sm font-medium text-zinc-300'>
+              {totalDeaths}
+            </span>
+          </div>
 
           {/* Zones Visited */}
           {zonesVisited > 0 && (

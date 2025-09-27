@@ -211,7 +211,7 @@ impl LogParser for CharacterDeathParser {
         let character_name = self.extract_character_name(line)?;
 
         debug!(
-            "Successfully parsed character death: {} has been slain",
+            "✅ DEATH PARSER: Successfully parsed character death: '{}' has been slain",
             character_name
         );
 

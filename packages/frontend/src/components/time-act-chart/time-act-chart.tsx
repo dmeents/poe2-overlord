@@ -1,9 +1,9 @@
-import type { LocationStats } from '@/types';
+import type { ZoneStats } from '@/types';
 import { formatDuration } from '@/utils';
 import { timeActChartStyles } from './time-act-chart.styles';
 
 interface ActTimeChartProps {
-  stats: LocationStats[];
+  stats: ZoneStats[];
   className?: string;
 }
 
@@ -12,7 +12,7 @@ interface ActData {
   totalTimeSeconds: number;
   percentage: number;
   visits: number;
-  averageSessionSeconds: number;
+  averageVisitSeconds: number;
 }
 
 export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
@@ -21,10 +21,11 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
     .filter(stat => stat.location_type === 'Act')
     .map(stat => ({
       name: stat.location_name,
-      totalTimeSeconds: stat.total_time_seconds,
+      totalTimeSeconds: stat.duration,
       percentage: 0, // Will be calculated after we know the total
-      visits: stat.total_visits,
-      averageSessionSeconds: stat.average_session_seconds,
+      visits: stat.visits,
+      averageVisitSeconds:
+        stat.visits > 0 ? Math.round(stat.duration / stat.visits) : 0,
     }))
     .sort((a, b) => {
       // Extract act numbers for chronological sorting
@@ -129,7 +130,7 @@ export function ActTimeChart({ stats, className = '' }: ActTimeChartProps) {
                   </div>
                   <div className={timeActChartStyles.tooltipDetails}>
                     {act.visits} visits • Avg:{' '}
-                    {formatDuration(Math.round(act.averageSessionSeconds))}
+                    {formatDuration(act.averageVisitSeconds)}
                   </div>
                 </div>
               </div>

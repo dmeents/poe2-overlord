@@ -228,9 +228,14 @@ impl LogAnalysisServiceImpl {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
                     // Process scene changes through character tracking service
+                    debug!("🔍 SCENE CHANGE: Scene change detected: '{}'", content);
+                    
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
+                        debug!("🔍 SCENE CHANGE: Active character found: '{}' (ID: {})", 
+                               active_character.name, active_character.id);
+                        
                         // Check for cached zone level
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
@@ -238,7 +243,7 @@ impl LogAnalysisServiceImpl {
                         };
 
                         if let Some((level, _timestamp)) = cached_level {
-                            debug!("Using cached zone level {} for scene change", level);
+                            debug!("🔍 SCENE CHANGE: Using cached zone level {} for scene change", level);
                             // Clear the cache after use
                             {
                                 let mut cache = zone_level_cache.write().await;
@@ -254,29 +259,31 @@ impl LogAnalysisServiceImpl {
                                 )
                                 .await
                             {
-                                error!("Failed to process scene change with zone level: {}", e);
+                                error!("❌ SCENE CHANGE: Failed to process scene change with zone level: {}", e);
                             } else {
                                 debug!(
-                                    "Scene change with zone level {} processed for character {}: {}",
+                                    "✅ SCENE CHANGE: Scene change with zone level {} processed for character {}: '{}'",
                                     level, active_character.id, content
                                 );
                             }
                         } else {
+                            debug!("🔍 SCENE CHANGE: No cached zone level, processing without level");
                             // Process scene change without zone level
                             if let Err(e) = character_service
                                 .process_scene_content(&content, &active_character.id)
                                 .await
                             {
-                                error!("Failed to process scene change: {}", e);
+                                error!("❌ SCENE CHANGE: Failed to process scene change: {}", e);
                             } else {
                                 debug!(
-                                    "Scene change processed for character {}: {}",
+                                    "✅ SCENE CHANGE: Scene change processed for character {}: '{}'",
                                     active_character.id, content
                                 );
                             }
                         }
+                        debug!("✅ SCENE CHANGE: Scene change processing completed for character '{}'", active_character.name);
                     } else {
-                        debug!("Scene change detected but no active character: {}", content);
+                        debug!("❌ SCENE CHANGE: Scene change detected but no active character: '{}'", content);
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
@@ -316,12 +323,17 @@ impl LogAnalysisServiceImpl {
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterDeath(character_name) => {
                     // Handle character death events - track deaths only in character_data.json
+                    debug!("🔍 DEATH PROCESSING: Starting death processing for character: '{}'", character_name);
+                    
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
+                        debug!("🔍 DEATH PROCESSING: Active character found: '{}' (ID: {})", 
+                               active_character.name, active_character.id);
+                        
                         if active_character.name == character_name {
                             debug!(
-                                "Processing death for character: {} (ID: {})",
+                                "✅ DEATH PROCESSING: Character name matches! Processing death for: {} (ID: {})",
                                 character_name, active_character.id
                             );
 
@@ -329,13 +341,14 @@ impl LogAnalysisServiceImpl {
                             match character_service.get_character(&active_character.id).await {
                                 Ok(character_data) => {
                                     debug!(
-                                        "Character data loaded successfully for {}",
+                                        "✅ DEATH PROCESSING: Character data loaded successfully for '{}'",
                                         character_name
                                     );
+                                    debug!("🔍 DEATH PROCESSING: Character has {} zones total", character_data.zones.len());
 
                                     if let Some(active_zone) = character_data.get_active_zone() {
                                         debug!(
-                                            "Active zone found: {} (ID: {})",
+                                            "✅ DEATH PROCESSING: Active zone found: '{}' (ID: '{}')",
                                             active_zone.location_name, active_zone.location_id
                                         );
 
@@ -346,38 +359,44 @@ impl LogAnalysisServiceImpl {
                                             )
                                             .await
                                         {
-                                            error!("Failed to record death in zone: {}", e);
+                                            error!("❌ DEATH PROCESSING: Failed to record death in zone: {}", e);
                                         } else {
                                             debug!(
-                                                "Death recorded in zone {} for character {}",
+                                                "✅ DEATH PROCESSING: Death successfully recorded in zone '{}' for character '{}'",
                                                 active_zone.location_name, character_name
                                             );
                                         }
                                     } else {
                                         debug!(
-                                            "Character death detected but no active zone found in character data for: {}",
+                                            "❌ DEATH PROCESSING: Character death detected but no active zone found for: '{}'",
                                             character_name
                                         );
                                         debug!(
-                                            "Available zones: {:?}",
+                                            "🔍 DEATH PROCESSING: Available zones: {:?}",
                                             character_data
                                                 .zones
                                                 .iter()
-                                                .map(|z| (z.location_name.clone(), z.is_active))
+                                                .map(|z| (z.location_name.clone(), z.is_active, z.location_id.clone()))
                                                 .collect::<Vec<_>>()
                                         );
+                                        debug!("🔍 DEATH PROCESSING: Current location: {:?}", character_data.current_location);
                                     }
                                 }
                                 Err(e) => {
                                     error!(
-                                        "Failed to load character data for death recording: {} - {}",
+                                        "❌ DEATH PROCESSING: Failed to load character data for death recording: '{}' - {}",
                                         character_name, e
                                     );
                                 }
                             }
 
-                            debug!("Character death detected in log: {}", character_name);
+                            debug!("✅ DEATH PROCESSING: Death processing completed for character: '{}'", character_name);
+                        } else {
+                            debug!("❌ DEATH PROCESSING: Character name mismatch! Active: '{}', Death: '{}'", 
+                                   active_character.name, character_name);
                         }
+                    } else {
+                        debug!("❌ DEATH PROCESSING: No active character found when processing death for: '{}'", character_name);
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ZoneLevel(level) => {

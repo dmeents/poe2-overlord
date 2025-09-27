@@ -20,7 +20,6 @@ export * from './status-indicator';
 export * from './time-act-chart';
 export * from './time-display';
 export * from './time-location-stats';
-export * from './time-session-history';
 export * from './time-stat-card';
 export * from './tooltip';
 export * from './window-title';

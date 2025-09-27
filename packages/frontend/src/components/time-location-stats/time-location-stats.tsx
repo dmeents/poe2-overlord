@@ -1,9 +1,9 @@
-import type { LocationStats } from '@/types';
+import type { ZoneStats } from '@/types';
 import { TimeDisplay } from '../time-display';
 import { timeLocationStatsStyles } from './time-location-stats.styles';
 
 interface LocationStatsProps {
-  stats: LocationStats[];
+  stats: ZoneStats[];
   className?: string;
 }
 
@@ -19,10 +19,8 @@ export function LocationStats({ stats, className = '' }: LocationStatsProps) {
     );
   }
 
-  // Sort stats by total time (descending)
-  const sortedStats = [...stats].sort(
-    (a, b) => b.total_time_seconds - a.total_time_seconds
-  );
+  // Sort stats by duration (descending)
+  const sortedStats = [...stats].sort((a, b) => b.duration - a.duration);
 
   return (
     <div className={`${timeLocationStatsStyles.container} ${className}`}>
@@ -45,10 +43,7 @@ export function LocationStats({ stats, className = '' }: LocationStatsProps) {
                 </span>
               </div>
               <div className={timeLocationStatsStyles.statTime}>
-                <TimeDisplay
-                  seconds={stat.total_time_seconds}
-                  showSeconds={false}
-                />
+                <TimeDisplay seconds={stat.duration} showSeconds={false} />
               </div>
             </div>
 
@@ -58,17 +53,15 @@ export function LocationStats({ stats, className = '' }: LocationStatsProps) {
                   Visits
                 </span>
                 <span className={timeLocationStatsStyles.statValue}>
-                  {stat.total_visits}
+                  {stat.visits}
                 </span>
               </div>
               <div>
                 <span className={timeLocationStatsStyles.statLabel}>
-                  Avg Session
+                  Deaths
                 </span>
                 <span className={timeLocationStatsStyles.statValue}>
-                  <TimeDisplay
-                    seconds={Math.round(stat.average_session_seconds)}
-                  />
+                  {stat.deaths}
                 </span>
               </div>
               <div>

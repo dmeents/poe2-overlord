@@ -61,15 +61,15 @@ The domain layer contains eight distinct bounded contexts, each representing a s
 **Purpose**: Comprehensive playtime monitoring and analytics for characters.
 
 **Key Components**:
-- **Models**: `LocationSession`, `TimeTrackingData`, `TimeTrackingSummary`
-- **Service**: Session management and statistics calculation
+- **Models**: `ZoneStats`, `TrackingSummary`, `LocationState`
+- **Service**: Zone tracking and statistics calculation
 - **Repository**: Persistent storage with caching
 - **Events**: Real-time time tracking updates
 
 **Features**:
-- Location-based session tracking (hideout, acts, zones)
+- Zone-based time tracking (hideout, acts, zones)
 - Detailed statistics and analytics
-- Session overlap validation
+- Zone overlap validation
 - Real-time frontend updates
 
 ### 3. Game Monitoring (`domain/game_monitoring/`)
@@ -82,7 +82,7 @@ The domain layer contains eight distinct bounded contexts, each representing a s
 
 **Features**:
 - Automatic game process detection
-- Integration with time tracking (start/stop sessions)
+- Integration with time tracking (zone entry/exit)
 - Real-time game state updates
 - Cross-platform process monitoring
 
@@ -118,8 +118,8 @@ The domain layer contains eight distinct bounded contexts, each representing a s
 **Purpose**: Scene and zone tracking with configurable monitoring rules.
 
 **Key Components**:
-- **Models**: `LocationTrackingSession`, `LocationTrackingStats`, `SceneTypeConfig`
-- **Service**: Location state management and session tracking
+- **Models**: `LocationState`, `ZoneStats`, `SceneTypeConfig`
+- **Service**: Location state management and zone tracking
 - **Events**: Location change notifications
 
 **Features**:
@@ -260,7 +260,7 @@ The infrastructure layer provides concrete implementations of domain traits and 
 **Purpose**: Time calculations and validation.
 
 **Components**:
-- **Duration Calculations**: Session duration and time calculations
+- **Duration Calculations**: Zone duration and time calculations
 - **Validation**: Time data validation and overlap detection
 
 ## Key Architectural Patterns
@@ -358,7 +358,7 @@ The application exposes numerous Tauri commands for frontend integration:
 
 **Time Tracking**:
 - `get_character_time_tracking_data`
-- `get_character_active_sessions`, `get_character_completed_sessions`
+- `get_character_active_zone`, `get_character_zone_stats`
 - `get_character_total_play_time`
 
 **Configuration**:

@@ -24,7 +24,7 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
       <div className={`${quickStatsGridStyles.container} ${className}`}>
         <h3 className={quickStatsGridStyles.title}>Quick Stats</h3>
         <div className={quickStatsGridStyles.grid}>
-          {[...Array(4)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <div key={i} className={quickStatsGridStyles.loadingContainer}>
               <div className={quickStatsGridStyles.loadingItem}></div>
               <div className={quickStatsGridStyles.loadingValue}></div>
@@ -35,8 +35,6 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
     );
   }
 
-  const activeSessionCount =
-    trackingData?.zones?.filter(zone => zone.is_active).length || 0;
   const todayPlayTime = trackingData?.summary?.total_play_time || 0;
   const totalLocations = trackingData?.summary?.total_zones_visited || 0;
   const topLocation = trackingData?.zones?.sort(
@@ -48,12 +46,6 @@ export function QuickStatsGrid({ className = '' }: QuickStatsGridProps) {
       <h3 className={quickStatsGridStyles.title}>Quick Stats</h3>
 
       <div className={quickStatsGridStyles.grid}>
-        {/* Active Sessions */}
-        <div className={quickStatsGridStyles.statItem}>
-          <p className={quickStatsGridStyles.statLabel}>Active Sessions</p>
-          <p className={quickStatsGridStyles.statValue}>{activeSessionCount}</p>
-        </div>
-
         {/* Today's Play Time */}
         <div className={quickStatsGridStyles.statItem}>
           <p className={quickStatsGridStyles.statLabel}>Total Play Time</p>

@@ -1,9 +1,4 @@
-import {
-  ActTimeChart,
-  LocationStats,
-  SessionHistory,
-  StatCard,
-} from '@/components';
+import { ActTimeChart, LocationStats, StatCard } from '@/components';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { PageHeader } from '@/components/page-header';
 import { useCharacterManagement } from '@/hooks';
@@ -44,14 +39,10 @@ function TimeTrackingPage() {
       <div className='container mx-auto px-6 py-8'>
         <div className='space-y-6'>
           {activeCharacter && summary && (
-            <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               <StatCard
                 value={formatDuration(summary.total_play_time)}
                 label='Total Play Time'
-              />
-              <StatCard
-                value={formatDuration(summary.total_play_time)}
-                label='Play Time This Session'
               />
               <StatCard
                 value={formatDuration(summary.total_hideout_time)}
@@ -65,13 +56,8 @@ function TimeTrackingPage() {
           )}
           <ActTimeChart stats={zones} />
           {activeCharacter && (
-            <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-              <div className='space-y-6'>
-                <LocationStats stats={zones} />
-              </div>
-              <div className='space-y-6'>
-                <SessionHistory sessions={[]} />
-              </div>
+            <div className='space-y-6'>
+              <LocationStats stats={zones} />
             </div>
           )}
           {!isLoading && activeCharacter && zones.length === 0 && (

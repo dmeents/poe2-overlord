@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -458,6 +459,12 @@ impl TrackingSummary {
 
     /// Creates summary from zone data
     pub fn from_zones(character_id: &str, zones: &[ZoneStats]) -> Self {
+        debug!(
+            "🔍 SUMMARY CALC: Calculating summary for character '{}' with {} zones",
+            character_id,
+            zones.len()
+        );
+
         let total_play_time = zones.iter().map(|zone| zone.duration).sum();
         let total_hideout_time = zones
             .iter()
@@ -465,6 +472,15 @@ impl TrackingSummary {
             .map(|zone| zone.duration)
             .sum();
         let total_deaths = zones.iter().map(|zone| zone.deaths).sum();
+
+        debug!(
+            "🔍 SUMMARY CALC: Zone death breakdown: {:?}",
+            zones
+                .iter()
+                .map(|z| (z.location_name.clone(), z.deaths))
+                .collect::<Vec<_>>()
+        );
+        debug!("🔍 SUMMARY CALC: Total deaths calculated: {}", total_deaths);
 
         Self {
             character_id: character_id.to_string(),
@@ -543,8 +559,22 @@ impl ZoneStats {
 
     /// Records a death in this zone
     pub fn record_death(&mut self) {
+        debug!(
+            "🔍 ZONE RECORD DEATH: Recording death in zone '{}' (ID: '{}')",
+            self.location_name, self.location_id
+        );
+        debug!(
+            "🔍 ZONE RECORD DEATH: Previous death count: {}",
+            self.deaths
+        );
+
         self.deaths += 1;
         self.last_visited = Utc::now();
+
+        debug!(
+            "✅ ZONE RECORD DEATH: Death recorded! New death count: {}",
+            self.deaths
+        );
     }
 
     /// Records a visit to this zone
@@ -779,4 +809,3 @@ impl Default for League {
         League::Standard
     }
 }
-

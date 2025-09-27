@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use log;
+use log::debug;
 use std::sync::Arc;
 
 use crate::domain::events::EventBus;
@@ -62,7 +62,7 @@ impl CharacterServiceImpl {
         })?;
 
         // Create repository
-        let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir));
+        let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir)?);
 
         // Create service
         Ok(Self::new(repository, event_bus, zone_config))
@@ -345,34 +345,88 @@ impl CharacterService for CharacterServiceImpl {
         act: Option<String>,
         is_town: bool,
     ) -> Result<(), AppError> {
+        debug!(
+            "🔍 ENTER ZONE: Starting zone entry for character '{}'",
+            character_id
+        );
+        debug!(
+            "🔍 ENTER ZONE: Zone details - ID: '{}', Name: '{}', Type: {:?}, Act: {:?}, IsTown: {}",
+            location_id, location_name, location_type, act, is_town
+        );
+
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
+        debug!(
+            "🔍 ENTER ZONE: Character data loaded, currently has {} zones",
+            character_data.zones.len()
+        );
 
         // Deactivate any currently active zone
         if let Some(active_zone) = character_data.get_active_zone() {
+            debug!(
+                "🔍 ENTER ZONE: Deactivating previous active zone: '{}' (ID: '{}')",
+                active_zone.location_name, active_zone.location_id
+            );
+
             let mut deactivated_zone = active_zone.clone();
             let time_spent = deactivated_zone.stop_timer_and_add_time();
             deactivated_zone.deactivate();
+            let zone_name = active_zone.location_name.clone();
             character_data.upsert_zone(deactivated_zone);
 
-            log::debug!(
-                "Character {} spent {} seconds in previous zone",
-                character_id,
-                time_spent
+            debug!(
+                "✅ ENTER ZONE: Character {} spent {} seconds in previous zone '{}'",
+                character_id, time_spent, zone_name
             );
+        } else {
+            debug!("🔍 ENTER ZONE: No previous active zone to deactivate");
         }
 
         // Create or update the new zone
-        let mut zone = ZoneStats::new(
-            location_id.clone(),
-            location_name.clone(),
-            location_type.clone(),
-            act.clone(),
-            is_town,
+        debug!(
+            "🔍 ENTER ZONE: Creating or updating zone stats for '{}'",
+            location_name
         );
-        zone.activate();
-        zone.start_timer();
-        character_data.upsert_zone(zone);
+
+        // Check if zone already exists
+        if let Some(existing_zone) = character_data.find_zone_mut(&location_id) {
+            debug!(
+                "🔍 ENTER ZONE: Updating existing zone '{}' (duration: {}s)",
+                location_name, existing_zone.duration
+            );
+            // Update existing zone properties but preserve duration and other stats
+            existing_zone.location_name = location_name.clone();
+            existing_zone.location_type = location_type.clone();
+            existing_zone.act = act.clone();
+            existing_zone.is_town = is_town;
+            existing_zone.activate();
+            existing_zone.start_timer();
+            debug!(
+                "✅ ENTER ZONE: Existing zone '{}' updated and activated (preserved {}s duration)",
+                location_name, existing_zone.duration
+            );
+            // Update summary after releasing the mutable reference
+            character_data.update_summary();
+        } else {
+            debug!(
+                "🔍 ENTER ZONE: Creating new zone stats for '{}'",
+                location_name
+            );
+            let mut zone = ZoneStats::new(
+                location_id.clone(),
+                location_name.clone(),
+                location_type.clone(),
+                act.clone(),
+                is_town,
+            );
+            zone.activate();
+            zone.start_timer();
+            character_data.upsert_zone(zone);
+            debug!(
+                "✅ ENTER ZONE: New zone '{}' created and activated",
+                location_name
+            );
+        }
 
         // Update current location with the new zone information
         character_data.current_location = Some(LocationState::new_for_location(
@@ -381,15 +435,21 @@ impl CharacterService for CharacterServiceImpl {
             is_town,
             location_type.clone(),
         ));
+        debug!(
+            "✅ ENTER ZONE: Current location updated to '{}'",
+            location_name
+        );
 
         // Save updated character data
         self.repository.save_character_data(&character_data).await?;
+        debug!("✅ ENTER ZONE: Character data saved successfully");
 
         log::debug!(
-            "Character {} entered zone {} ({})",
+            "✅ ENTER ZONE: Character {} successfully entered zone '{}' ({}) - Total zones: {}",
             character_id,
             location_name,
-            location_type
+            location_type,
+            character_data.zones.len()
         );
         Ok(())
     }
@@ -426,21 +486,60 @@ impl CharacterService for CharacterServiceImpl {
 
     /// Records a death in a specific zone
     async fn record_death(&self, character_id: &str, location_id: &str) -> Result<(), AppError> {
+        debug!(
+            "🔍 RECORD DEATH: Starting death recording for character '{}' in zone '{}'",
+            character_id, location_id
+        );
+
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
+        debug!(
+            "🔍 RECORD DEATH: Character data loaded, has {} zones",
+            character_data.zones.len()
+        );
 
         if let Some(zone) = character_data.find_zone_mut(location_id) {
+            debug!(
+                "✅ RECORD DEATH: Found zone '{}' (name: '{}'), current deaths: {}",
+                location_id, zone.location_name, zone.deaths
+            );
+
             zone.record_death();
+            debug!(
+                "✅ RECORD DEATH: Death recorded, new death count: {}",
+                zone.deaths
+            );
+
             character_data.update_summary();
+            debug!(
+                "🔍 RECORD DEATH: Summary updated, total deaths: {}",
+                character_data.summary.total_deaths
+            );
 
             // Save updated character data
             self.repository.save_character_data(&character_data).await?;
+            debug!("✅ RECORD DEATH: Character data saved successfully");
 
             log::debug!(
-                "Recorded death for character {} in zone {}",
+                "✅ RECORD DEATH: Successfully recorded death for character {} in zone {} (total deaths: {})",
                 character_id,
-                location_id
+                location_id,
+                character_data.summary.total_deaths
             );
+        } else {
+            debug!(
+                "❌ RECORD DEATH: Zone '{}' not found for character '{}'",
+                location_id, character_id
+            );
+            debug!(
+                "🔍 RECORD DEATH: Available zones: {:?}",
+                character_data
+                    .zones
+                    .iter()
+                    .map(|z| (z.location_id.clone(), z.location_name.clone()))
+                    .collect::<Vec<_>>()
+            );
+            debug!("❌ RECORD DEATH: Death will be lost - no zone found to record it in!");
         }
 
         Ok(())
@@ -552,27 +651,46 @@ impl CharacterServiceImpl {
         zone_level: Option<u32>,
     ) -> Result<Option<SceneChangeEvent>, AppError> {
         let zone_name = content.trim();
+        debug!(
+            "🔍 SCENE CHANGE: Processing scene change for character '{}'",
+            character_id
+        );
+        debug!("🔍 SCENE CHANGE: Raw content: '{}'", content);
+        debug!("🔍 SCENE CHANGE: Zone name: '{}'", zone_name);
 
         if zone_name.is_empty() {
-            log::debug!("Empty scene content, ignoring");
+            debug!("❌ SCENE CHANGE: Empty scene content, ignoring");
             return Ok(None);
         }
 
         // Look up zone information
+        debug!(
+            "🔍 SCENE CHANGE: Looking up zone information for '{}'",
+            zone_name
+        );
         let act_name = self
             .zone_config
             .get_act_for_zone(zone_name)
             .await
             .unwrap_or_else(|| "Endgame".to_string());
         let is_town = self.zone_config.is_town_zone(zone_name).await;
+        debug!(
+            "🔍 SCENE CHANGE: Zone lookup result - Act: '{}', IsTown: {}",
+            act_name, is_town
+        );
 
         // Determine location type (all zones are LocationType::Zone, towns are just marked with is_town flag)
         let location_type = LocationType::Zone;
 
         // Create proper location ID in format {zone|hideout|town}_{zone_name}
         let location_id = self.generate_location_id(zone_name, is_town);
+        debug!("🔍 SCENE CHANGE: Generated location ID: '{}'", location_id);
 
         // Enter the zone
+        debug!(
+            "🔍 SCENE CHANGE: Calling enter_zone for character '{}'",
+            character_id
+        );
         self.enter_zone(
             character_id,
             location_id,
@@ -582,12 +700,14 @@ impl CharacterServiceImpl {
             is_town,
         )
         .await?;
+        debug!("✅ SCENE CHANGE: Zone entry completed successfully");
 
         // Load character data to get the updated current_location and update last played timestamp
         let mut character_data = self.repository.load_character_data(character_id).await?;
         character_data.last_played = Some(Utc::now());
         character_data.touch();
         self.repository.save_character_data(&character_data).await?;
+        debug!("✅ SCENE CHANGE: Character data updated and saved");
 
         // Create scene change event
         let scene_change_event =
@@ -603,13 +723,15 @@ impl CharacterServiceImpl {
         );
         if let Err(e) = self.event_bus.publish(event).await {
             log::warn!(
-                "Failed to publish character tracking data updated event: {}",
+                "❌ SCENE CHANGE: Failed to publish character tracking data updated event: {}",
                 e
             );
+        } else {
+            debug!("✅ SCENE CHANGE: Character tracking data updated event published");
         }
 
         log::debug!(
-            "Processed scene change for character {}: {} (Act: {}, Town: {}, Level: {:?})",
+            "✅ SCENE CHANGE: Successfully processed scene change for character {}: '{}' (Act: {}, Town: {}, Level: {:?})",
             character_id,
             zone_name,
             act_name,

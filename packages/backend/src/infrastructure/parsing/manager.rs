@@ -2,7 +2,6 @@ use crate::domain::character::models::CharacterClass;
 use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
-use log::debug;
 
 /// Results produced by log parsers
 ///
@@ -46,46 +45,31 @@ impl LogParserManager {
     pub fn parse_line(&self, line: &str) -> Result<Option<ParserResult>, ParseError> {
         for parser in &self.parsers {
             if parser.should_parse(line) {
-                debug!("Parser '{}' matched line", parser.parser_name());
-
                 match parser.parse_line(line) {
                     Ok(result) => {
-                        debug!(
-                            "Parser '{}' successfully parsed event: {:?}",
-                            parser.parser_name(),
-                            result
-                        );
-
                         // Log specific event details for debugging
                         match &result {
-                            ParserResult::SceneChange(content) => {
-                                debug!("Scene change content parsed successfully: {}", content);
+                            ParserResult::SceneChange(_content) => {
+                                // Scene change content parsed successfully
                             }
-                            ParserResult::ServerConnection(event) => {
-                                debug!("Server connection event detected: {:?}", event);
+                            ParserResult::ServerConnection(_event) => {
+                                // Server connection event detected
                             }
-                            ParserResult::CharacterLevel((name, class, level)) => {
-                                debug!(
-                                    "Character level-up detected: {} ({}) -> level {}",
-                                    name, class, level
-                                );
+                            ParserResult::CharacterLevel((_name, _class, _level)) => {
+                                // Character level-up detected
                             }
-                            ParserResult::CharacterDeath(name) => {
-                                debug!("Character death detected: {} has been slain", name);
+                            ParserResult::CharacterDeath(_name) => {
+                                // Character death detected
                             }
-                            ParserResult::ZoneLevel(level) => {
-                                debug!("Zone level detected: {}", level);
+                            ParserResult::ZoneLevel(_level) => {
+                                // Zone level detected
                             }
                         }
 
                         return Ok(Some(result));
                     }
-                    Err(e) => {
-                        debug!(
-                            "Parser '{}' matched but failed to parse line: {}",
-                            parser.parser_name(),
-                            e
-                        );
+                    Err(_e) => {
+                        // Parser matched but failed to parse line
                     }
                 }
             }

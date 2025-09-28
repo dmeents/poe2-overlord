@@ -16,7 +16,6 @@ export const CHARACTER_FORM_VALIDATION = {
     },
   },
 } as const;
-
 /**
  * Get default form data, optionally populated from an existing character
  * Note: This function is now deprecated in favor of useCharacterConfig.getDefaultFormData()

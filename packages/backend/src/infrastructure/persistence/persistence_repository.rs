@@ -3,7 +3,6 @@ use crate::infrastructure::persistence::{
     AtomicWriter, DirectoryManager, FileOperations, JsonStorage,
 };
 use async_trait::async_trait;
-use log::debug;
 use serde::{de::DeserializeOwned, Serialize};
 use std::marker::PhantomData;
 use std::path::PathBuf;
@@ -66,18 +65,15 @@ where
     async fn save(&self, data: &T) -> AppResult<()> {
         let json_content = JsonStorage::serialize(data)?;
         AtomicWriter::write_atomic_async(&self.file_path, &json_content).await?;
-        debug!("Data saved successfully to {:?}", self.file_path);
         Ok(())
     }
 
     async fn load(&self) -> AppResult<T> {
         if !FileOperations::file_exists(&self.file_path) {
-            debug!("No data file found, returning default");
             return Ok(T::default());
         }
 
         let data: T = JsonStorage::load_from_file(&self.file_path)?;
-        debug!("Data loaded successfully from {:?}", self.file_path);
         Ok(data)
     }
 
@@ -89,7 +85,6 @@ where
         if FileOperations::file_exists(&self.file_path) {
             FileOperations::delete_file(&self.file_path)?;
         }
-        debug!("Data file deleted: {:?}", self.file_path);
         Ok(())
     }
 
@@ -169,19 +164,16 @@ where
         let file_path = self.get_file_path(key);
         let json_content = JsonStorage::serialize(data)?;
         AtomicWriter::write_atomic_async(&file_path, &json_content).await?;
-        debug!("Scoped data saved successfully to {:?}", file_path);
         Ok(())
     }
 
     async fn load_scoped(&self, key: &K) -> AppResult<Option<T>> {
         let file_path = self.get_file_path(key);
         if !FileOperations::file_exists(&file_path) {
-            debug!("No scoped data file found for key: {}", key.to_string());
             return Ok(None);
         }
 
         let data: T = JsonStorage::load_from_file(&file_path)?;
-        debug!("Scoped data loaded successfully from {:?}", file_path);
         Ok(Some(data))
     }
 
@@ -190,7 +182,6 @@ where
         if FileOperations::file_exists(&file_path) {
             FileOperations::delete_file(&file_path)?;
         }
-        debug!("Scoped data file deleted: {:?}", file_path);
         Ok(())
     }
 

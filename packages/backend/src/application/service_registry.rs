@@ -43,7 +43,7 @@ use crate::domain::zone_configuration::{
     repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
 };
 use crate::infrastructure::monitoring::ProcessMonitorImpl;
-use log::{debug, error, info};
+use log::{error, info};
 use std::sync::Arc;
 use tauri::Manager;
 
@@ -80,28 +80,21 @@ impl ServiceInitializer {
         info!("Starting service initialization...");
 
         // Initialize Configuration Service first - it has no dependencies and is needed by other services
-        debug!("Initializing ConfigurationService...");
         let config_service = Arc::new(
             ConfigurationServiceImpl::new().expect("Failed to create configuration service"),
         );
         app.manage(config_service.clone());
-        debug!("ConfigurationService managed successfully");
 
         // Initialize Event Bus - provides unified event publishing and subscribing capabilities
-        debug!("Initializing EventBus...");
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
-        debug!("EventBus managed successfully");
 
         // Initialize Zone Configuration Service - provides zone-to-act mapping
-        debug!("Initializing ZoneConfigurationService...");
         let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new());
         let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
         app.manage(zone_config_service.clone());
-        debug!("ZoneConfigurationService managed successfully");
 
         // Initialize Character Service - manages character data persistence and operations
-        debug!("Initializing CharacterService...");
         let character_service =
             crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                 event_bus.clone(),
@@ -131,14 +124,11 @@ impl ServiceInitializer {
         ) as Box<dyn CharacterService + Send + Sync>;
 
         app.manage(character_box);
-        debug!("CharacterService managed successfully");
 
         // Character Tracking functionality is now handled by CharacterService
-        debug!("Character tracking functionality integrated into CharacterService");
 
         // Initialize Server Monitoring Service - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
-        debug!("Initializing ServerMonitoringService...");
         let server_monitoring_service = ServerMonitoringServiceImpl::new(event_bus.clone())
             .map_err(|e| {
                 error!("Failed to initialize ServerMonitoringService: {}", e);
@@ -147,11 +137,9 @@ impl ServiceInitializer {
         let server_monitoring_arc =
             Arc::new(server_monitoring_service) as Arc<dyn ServerMonitoringService>;
         app.manage(server_monitoring_arc.clone());
-        debug!("ServerMonitoringService managed successfully");
 
         // Initialize Log Analysis Service - processes game logs and extracts events
         // Depends on server monitor for status updates and character service for character operations
-        debug!("Initializing LogAnalysisService...");
 
         // Create default log analysis configuration
         let log_analysis_config = LogAnalysisConfig {
@@ -184,10 +172,8 @@ impl ServiceInitializer {
                         if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
                             error!("Failed to update log path in LogAnalysisService: {}", e);
                         } else {
-                            debug!("LogAnalysisService configured with log path: {}", log_path);
                         }
                     } else {
-                        debug!("Log path is empty, LogAnalysisService will wait for configuration");
                     }
                 }
                 Err(e) => {
@@ -197,10 +183,8 @@ impl ServiceInitializer {
         });
 
         app.manage(log_analysis_arc.clone());
-        debug!("LogAnalysisService managed successfully");
 
         // Initialize Game Monitoring services - complex service with multiple dependencies
-        debug!("Initializing Game Monitoring services...");
 
         // Process detector for identifying game processes
         let process_detector = Arc::new(ProcessMonitorImpl::new());
@@ -213,7 +197,6 @@ impl ServiceInitializer {
         )) as Arc<dyn GameMonitoringService>;
 
         app.manage(game_monitoring_service.clone());
-        debug!("Game Monitoring services managed successfully");
 
         info!("Service initialization completed successfully");
 

@@ -52,7 +52,6 @@ impl ServerMonitor {
 
     pub async fn load_status(&self) -> AppResult<()> {
         if !self.status_file_path.exists() {
-            debug!("No server status file found, starting fresh");
             return Ok(());
         }
 
@@ -78,11 +77,6 @@ impl ServerMonitor {
     }
 
     pub async fn update_server_info(&self, event: &ServerConnectionEvent) -> AppResult<()> {
-        debug!(
-            "Updating server info from connection event: {}:{}",
-            event.ip_address, event.port
-        );
-
         let new_status = ServerStatus::from_connection_event(event);
 
         let mut status = self.status.write().await;
@@ -93,7 +87,6 @@ impl ServerMonitor {
             warn!("Failed to save server status: {}", e);
         }
 
-        debug!("Updated server info: {}:{}", event.ip_address, event.port);
         Ok(())
     }
 
@@ -123,17 +116,10 @@ impl ServerMonitor {
         match timeout(timeout_duration, TcpStream::connect(&addr)).await {
             Ok(Ok(_stream)) => {
                 let ping_ms = start.elapsed().as_millis() as u64;
-                debug!("Server ping successful: {}ms to {}:{}", ping_ms, ip, port);
                 Ok(ping_ms)
             }
-            Ok(Err(e)) => {
-                debug!("Server ping failed: {}:{} - {}", ip, port, e);
-                Err(format!("Connection failed: {}", e))
-            }
-            Err(_) => {
-                debug!("Server ping timeout: {}:{}", ip, port);
-                Err("Connection timeout".to_string())
-            }
+            Ok(Err(e)) => Err(format!("Connection failed: {}", e)),
+            Err(_) => Err("Connection timeout".to_string()),
         }
     }
 
@@ -167,7 +153,6 @@ impl ServerMonitor {
 
             // Note: ServerMonitor now uses the unified event system
             // Ping events are published through the server monitoring service
-            debug!("Server ping completed: {:?}ms", ping_event.latency_ms);
 
             if let Some(status_to_save) = self.get_server_status().await {
                 if let Err(e) = self.save_status_to_file(&status_to_save).await {
@@ -177,7 +162,6 @@ impl ServerMonitor {
 
             Ok(latency_ms)
         } else {
-            debug!("No server information available for ping");
             Ok(None)
         }
     }
@@ -197,7 +181,6 @@ impl ServerMonitor {
             AppError::file_system_error("Failed to write status file: {}", &e.to_string())
         })?;
 
-        debug!("Server status saved to file");
         Ok(())
     }
 
@@ -253,7 +236,6 @@ impl ServerMonitor {
                             if let Err(e) = fs::write(&status_file_path, json).await {
                                 warn!("Failed to save server status to file: {}", e);
                             } else {
-                                debug!("Server status saved to file during periodic ping");
                             }
                         }
                     }
@@ -269,10 +251,6 @@ impl ServerMonitor {
 
                     // Note: ServerMonitor now uses the unified event system
                     // Ping events are published through the server monitoring service
-                    debug!(
-                        "Periodic server ping completed: {:?}ms",
-                        ping_event.latency_ms
-                    );
                 }
             }
         });

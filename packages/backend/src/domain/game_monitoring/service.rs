@@ -6,7 +6,7 @@ use crate::domain::game_monitoring::{
 };
 use crate::errors::AppResult;
 use async_trait::async_trait;
-use log::{debug, error, info};
+use log::{error, info};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -100,7 +100,6 @@ impl GameMonitoringServiceImpl {
                 // when the character enters/leaves zones during gameplay
             } else {
                 info!("POE2 process stopped");
-                debug!("POE2 process stopped - finalizing active zones");
 
                 // Finalize character tracking when game process stops
                 if let Err(e) = self
@@ -129,7 +128,6 @@ impl GameMonitoringServiceImpl {
             error!("Failed to publish game process status change event: {}", e);
         }
 
-        debug!("Game monitoring status updated: {:?}", current_status);
 
         // Update the internal current status
         {
@@ -164,13 +162,8 @@ impl GameMonitoringServiceImpl {
         );
 
         // Publish initial status immediately to handle timing issues
-        debug!("Publishing initial game process status...");
         match process_detector.check_game_process().await {
             Ok(initial_status) => {
-                debug!(
-                    "Initial game process status: running={}, pid={}, name={}",
-                    initial_status.running, initial_status.pid, initial_status.name
-                );
 
                 // Publish initial status as a state change
                 if let Err(e) = self
@@ -191,15 +184,6 @@ impl GameMonitoringServiceImpl {
                 if initial_interval != current_interval {
                     current_interval = initial_interval;
                     interval_timer = interval(current_interval);
-                    debug!(
-                        "Set initial polling interval to {} (game running: {})",
-                        if initial_status.running {
-                            "slow"
-                        } else {
-                            "fast"
-                        },
-                        initial_status.running
-                    );
                 }
 
                 // Set as previous status for the loop
@@ -216,7 +200,6 @@ impl GameMonitoringServiceImpl {
 
             // Check if monitoring should continue
             if !*is_monitoring.read().await {
-                debug!("Game monitoring stopped, exiting monitoring loop");
                 break;
             }
 
@@ -260,15 +243,6 @@ impl GameMonitoringServiceImpl {
                         if new_interval != current_interval {
                             current_interval = new_interval;
                             interval_timer = interval(current_interval);
-                            debug!(
-                                "Switched to {} polling (game running: {})",
-                                if current_status_value.running {
-                                    "slow"
-                                } else {
-                                    "fast"
-                                },
-                                current_status_value.running
-                            );
                         }
                     } else {
                         // Silently update the internal status for get_current_status()
@@ -316,18 +290,15 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     async fn start_monitoring(&self) -> AppResult<()> {
         let mut is_monitoring = self.is_monitoring.write().await;
         if *is_monitoring {
-            debug!("Game monitoring is already running");
             return Ok(());
         }
 
         *is_monitoring = true;
         info!("Starting game process monitoring");
-        debug!("Game monitoring service starting monitoring loop...");
 
         // Spawn the monitoring loop in a background task
         let service_clone = Arc::new(self.clone());
         let task_handle = tokio::spawn(async move {
-            debug!("Game monitoring background task started");
             match service_clone.start_monitoring_loop().await {
                 Ok(_) => {
                     info!("Game monitoring loop completed successfully");
@@ -355,7 +326,6 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     async fn stop_monitoring(&self) -> AppResult<()> {
         let mut is_monitoring = self.is_monitoring.write().await;
         if !*is_monitoring {
-            debug!("Game monitoring is not running");
             return Ok(());
         }
 

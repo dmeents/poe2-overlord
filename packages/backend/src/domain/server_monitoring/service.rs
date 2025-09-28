@@ -8,7 +8,7 @@ use crate::domain::server_monitoring::models::{ServerIp, ServerStatus};
 use crate::domain::server_monitoring::repository::{ServerIpRepository, ServerIpRepositoryTrait};
 use crate::errors::AppResult;
 use async_trait::async_trait;
-use log::{debug, error, info};
+use log::{error, info};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -55,10 +55,6 @@ impl ServerMonitoringServiceImpl {
             error!("Failed to publish server status event: {}", e);
         }
 
-        debug!(
-            "Updated server status: {}:{}",
-            status.ip_address, status.port
-        );
         Ok(())
     }
 
@@ -69,7 +65,6 @@ impl ServerMonitoringServiceImpl {
             let status = ServerStatus::new(ip_address.clone(), 6112); // Standard POE2 port
             let mut current = self.current_status.write().await;
             *current = Some(status);
-            debug!("Loaded last known server IP: {}", ip_address);
         }
         Ok(())
     }
@@ -92,15 +87,12 @@ impl ServerMonitoringServiceImpl {
             Ok(result) => {
                 if result.status.success() {
                     let ping_ms = start.elapsed().as_millis() as u64;
-                    debug!("Server ping successful: {}ms to {}", ping_ms, ip_address);
                     Ok(Some(ping_ms))
                 } else {
-                    debug!("Server ping failed: {}", ip_address);
                     Ok(None)
                 }
             }
-            Err(e) => {
-                debug!("Failed to execute ping command: {}", e);
+            Err(_e) => {
                 Ok(None)
             }
         }
@@ -133,7 +125,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         let current_status = self.current_status.read().await;
         if let Some(status) = current_status.as_ref() {
             if status.ip_address.is_empty() {
-                debug!("No server IP available for ping");
                 return Ok(());
             }
 
@@ -158,7 +149,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
                 }
             }
         } else {
-            debug!("No current server status available for ping");
         }
         Ok(())
     }
@@ -167,7 +157,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     async fn start_ping_monitoring(&self) -> AppResult<()> {
         let mut is_active = self.is_monitoring.write().await;
         if *is_active {
-            debug!("Ping monitoring is already active");
             return Ok(());
         }
 
@@ -187,7 +176,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
 
                 // Check if monitoring should continue
                 if !*service.is_monitoring.read().await {
-                    debug!("Ping monitoring stopped, exiting loop");
                     break;
                 }
 
@@ -206,7 +194,6 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     async fn stop_ping_monitoring(&self) -> AppResult<()> {
         let mut is_active = self.is_monitoring.write().await;
         if !*is_active {
-            debug!("Ping monitoring is not active");
             return Ok(());
         }
 

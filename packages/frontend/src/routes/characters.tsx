@@ -8,8 +8,9 @@ import {
   CharacterList,
   DeleteCharacterModal,
   LoadingSpinner,
+  PageLayout,
 } from '../components';
-import type { CharacterFormData } from '../components/character-modals';
+import type { CharacterFormData } from '../components/character/character-modals';
 import { useCharacterFiltering, useCharacterFilters } from '../hooks';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
 import type { CharacterData } from '../types';
@@ -116,95 +117,96 @@ function CharactersPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-zinc-900 text-white'>
-        <div className='px-6 py-8'>
+      <PageLayout
+        leftColumn={
           <div className='flex items-center justify-center h-64'>
             <div className='text-center'>
               <LoadingSpinner />
               <p className='text-zinc-400 mt-4'>Loading characters...</p>
             </div>
           </div>
-        </div>
-      </div>
+        }
+        rightColumn={<div />}
+      />
     );
   }
 
-  return (
-    <div className='min-h-screen bg-zinc-900 text-white'>
-      <div className='px-6 py-8'>
-        {error && (
-          <div className='mb-6'>
-            <AlertMessage type='error' message={error} />
-          </div>
-        )}
+  const leftColumn = (
+    <CharacterList
+      characters={filteredCharacters}
+      activeCharacterId={activeCharacter?.id}
+      onSelectCharacter={handleSelectCharacter}
+      onEditCharacter={handleEditCharacter}
+      onDeleteCharacter={handleDeleteCharacter}
+      onCreateCharacter={() => setShowCreateModal(true)}
+      filters={filters}
+      onFilterChange={updateFilter}
+      onClearFilters={clearFilters}
+      hasActiveFilters={hasActiveFilters}
+      sort={sort}
+      onSortChange={updateSort}
+      onResetSort={resetSort}
+      characterCount={characterCount}
+      totalCount={totalCount}
+    />
+  );
 
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          {/* Left Column - Character Management */}
-          <div className='lg:col-span-2'>
-            <CharacterList
-              characters={filteredCharacters}
-              activeCharacterId={activeCharacter?.id}
-              onSelectCharacter={handleSelectCharacter}
-              onEditCharacter={handleEditCharacter}
-              onDeleteCharacter={handleDeleteCharacter}
-              onCreateCharacter={() => setShowCreateModal(true)}
-              filters={filters}
-              onFilterChange={updateFilter}
-              onClearFilters={clearFilters}
-              hasActiveFilters={hasActiveFilters}
-              sort={sort}
-              onSortChange={updateSort}
-              onResetSort={resetSort}
-              characterCount={characterCount}
-              totalCount={totalCount}
-            />
-          </div>
+  const rightColumn = (
+    <div className='space-y-4'>
+      {/* Insights Card */}
+      <CharacterInsights characters={characters} />
 
-          {/* Right Column - Character Metrics */}
-          <div className='lg:col-span-1'>
-            <div className='space-y-4'>
-              {/* Insights Card */}
-              <CharacterInsights characters={characters} />
-
-              {/* Create Character Button */}
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                variant='primary'
-                size='sm'
-                className='w-full'
-              >
-                Create Character
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Create Character Modal */}
-        <CharacterFormModal
-          isOpen={showCreateModal}
-          onSubmit={handleCreateCharacter}
-          onClose={() => setShowCreateModal(false)}
-          isLoading={isSubmitting}
-        />
-
-        {/* Edit Character Modal */}
-        <CharacterFormModal
-          isOpen={!!editingCharacter}
-          character={editingCharacter || undefined}
-          onSubmit={handleUpdateCharacter}
-          onClose={() => setEditingCharacter(null)}
-          isLoading={isSubmitting}
-        />
-
-        {/* Delete Character Modal */}
-        <DeleteCharacterModal
-          isOpen={!!deletingCharacter}
-          character={deletingCharacter || undefined}
-          onConfirm={confirmDeleteCharacter}
-          onCancel={() => setDeletingCharacter(null)}
-          isLoading={isSubmitting}
-        />
-      </div>
+      {/* Create Character Button */}
+      <Button
+        onClick={() => setShowCreateModal(true)}
+        variant='primary'
+        size='sm'
+        className='w-full'
+      >
+        Create Character
+      </Button>
     </div>
+  );
+
+  return (
+    <PageLayout
+      leftColumn={
+        <>
+          {error && (
+            <div className='mb-6'>
+              <AlertMessage type='error' message={error} />
+            </div>
+          )}
+          {leftColumn}
+        </>
+      }
+      rightColumn={rightColumn}
+    >
+      {/* Create Character Modal */}
+      <CharacterFormModal
+        isOpen={showCreateModal}
+        onSubmit={handleCreateCharacter}
+        onClose={() => setShowCreateModal(false)}
+        isLoading={isSubmitting}
+      />
+
+      {/* Edit Character Modal */}
+      <CharacterFormModal
+        isOpen={!!editingCharacter}
+        character={editingCharacter || undefined}
+        onSubmit={handleUpdateCharacter}
+        onClose={() => setEditingCharacter(null)}
+        isLoading={isSubmitting}
+      />
+
+      {/* Delete Character Modal */}
+      <DeleteCharacterModal
+        isOpen={!!deletingCharacter}
+        character={deletingCharacter || undefined}
+        onConfirm={confirmDeleteCharacter}
+        onCancel={() => setDeletingCharacter(null)}
+        isLoading={isSubmitting}
+      />
+    </PageLayout>
   );
 }

@@ -1,0 +1,486 @@
+{
+    "acts": {
+      "act_4": {
+        "act_name": "Act 4",
+        "act_number": 4,
+        "steps": {
+          "act_4_step_1": {
+            "id": "act_4_step_1",
+            "title": "Obtain Boat Charter and Travel to Whakapanu Island",
+            "description": "Speak with key NPCs in Kingsmarch to obtain the boat charter, then select and travel to Whakapanu Island to begin your island exploration.",
+            "objectives": [
+              {
+                "text": "Speak with required NPCs to get Boat Charter",
+                "details": "Talk to Doryani, then to Alva to receive the boat charter. Then talk with Tujen, Ange, Kanu and finally with Makoru to select an island to travel to.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Kingsmarch",
+            "completion_zone": "Whakapanu Island",
+            "next_step_id": "act_4_step_2",
+            "previous_step_id": null,
+            "wiki_items": ["Doryani", "Alva", "Tujen", "Ange", "Kanu", "Makoru", "Boat Charter", "Kingsmarch", "Whakapanu Island"]
+          },
+          "act_4_step_2": {
+            "id": "act_4_step_2",
+            "title": "Explore Whakapanu Island and Enter Singing Caverns",
+            "description": "Search Whakapanu Island for the Singing Caverns entrance while completing optional encounters for additional rewards.",
+            "objectives": [
+              {
+                "text": "Find and enter the Singing Caverns",
+                "details": "Find the Singing Caverns and enter it.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the crabshell cavern and defeat the rare",
+                "details": "Can be found alongside the beach part of the zone.",
+                "required": false,
+                "rewards": ["Level 4 Uncut Support Gem"],
+                "notes": ""
+              },
+              {
+                "text": "Find the Shark Pit and defeat the Great White One",
+                "details": "Can be found across the island on another beach. Trigger the fight by moving close to the water between the gaps in the rock formation.",
+                "required": false,
+                "rewards": ["Shark Fin"],
+                "notes": ""
+              },
+              {
+                "text": "Find and loot the Petrified Pirate",
+                "details": "The pirate corpse is hidden randomly in the zone.",
+                "required": false,
+                "rewards": ["Torn Map Piece"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Whakapanu Island",
+            "completion_zone": "Singing Caverns",
+            "next_step_id": "act_4_step_3",
+            "previous_step_id": "act_4_step_1",
+            "wiki_items": ["Shark Fin", "Torn Map Piece", "Whakapanu Island", "Singing Caverns"]
+          },
+          "act_4_step_3": {
+            "id": "act_4_step_3",
+            "title": "Complete Singing Caverns and Travel to Shrike Island",
+            "description": "Defeat Diamora in the Chamber of Echoes and complete optional encounters, then proceed to Shrike Island.",
+            "objectives": [
+              {
+                "text": "Find the Chamber of Echoes and kill Diamora",
+                "details": "Find the Chamber of Echoes and kill Diamora. Then return to the ship and go to Shrike Island.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Beckoning Clam",
+                "details": "Optional objective within the Singing Caverns.",
+                "required": false,
+                "rewards": ["Humming Pearl", "Rare Amulet"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Singing Caverns",
+            "completion_zone": "Shrike Island",
+            "next_step_id": "act_4_step_4",
+            "previous_step_id": "act_4_step_2",
+            "wiki_items": ["Diamora", "Humming Pearl", "Singing Caverns", "Shrike Island"]
+          },
+          "act_4_step_4": {
+            "id": "act_4_step_4",
+            "title": "Complete Shrike Island and Travel to Abandoned Prison",
+            "description": "Defeat the Scourge of the Skies by destroying corrupted nests, then travel to the Abandoned Prison.",
+            "objectives": [
+              {
+                "text": "Find the corrupted nests and kill the Scourge of the Skies",
+                "details": "Find the corrupted nests and kill the Scourge of the Skies. Then travel to Abandoned Prison.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Shrike Island",
+            "completion_zone": "Abandoned Prison",
+            "next_step_id": "act_4_step_5",
+            "previous_step_id": "act_4_step_3",
+            "wiki_items": ["Scourge of the Skies", "Shrike Island", "Abandoned Prison"]
+          },
+          "act_4_step_5": {
+            "id": "act_4_step_5",
+            "title": "Obtain Chapel Key and Enter Solitary Confinement",
+            "description": "Defeat monsters to obtain the Chapel Key, then clear the chapel area and proceed to Solitary Confinement.",
+            "objectives": [
+              {
+                "text": "Find Chapel Key then the exit to Solitary Confinement",
+                "details": "Kill monsters until the Chapel Key drops. Open the Chapel Door and kill the rare and it's minions. Then enter Solitary Confinement.",
+                "required": true,
+                "rewards": ["30% increased Mana or Life Recovery from Flasks"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Abandoned Prison",
+            "completion_zone": "Solitary Confinement",
+            "next_step_id": "act_4_step_6",
+            "previous_step_id": "act_4_step_4",
+            "wiki_items": ["Chapel Key", "Abandoned Prison", "Solitary Confinement"]
+          },
+          "act_4_step_6": {
+            "id": "act_4_step_6",
+            "title": "Complete Solitary Confinement and Travel to Isle of Kin",
+            "description": "Defeat The Prisoner and optionally encounter Bronnach the Manhunter for additional rewards, then proceed to Isle of Kin.",
+            "objectives": [
+              {
+                "text": "Find and kill The Prisoner",
+                "details": "Find and kill The Prisoner, then travel to Isle of Kin.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill Bronnach, the Manhunter",
+                "details": "Bronnach is a Rogue Exile",
+                "required": false,
+                "rewards": ["Guarenteed unique item"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Solitary Confinement",
+            "completion_zone": "Isle of Kin",
+            "next_step_id": "act_4_step_7",
+            "previous_step_id": "act_4_step_5",
+            "wiki_items": ["The Prisoner", "Rogue Exile", "Solitary Confinement", "Isle of Kin"]
+          },
+          "act_4_step_7": {
+            "id": "act_4_step_7",
+            "title": "Complete Isle of Kin and Travel to Volcanic Warrens",
+            "description": "Defeat The Blind Beast in the Primal Arena and complete optional encounters, then proceed to Volcanic Warrens.",
+            "objectives": [
+              {
+                "text": "Find the Primal Arena and kill The Blind Beast",
+                "details": "Find the Primal Arena and kill The Blind Beast, before continuing to Volcanic Warrens.",
+                "required": true,
+                "rewards": ["2 Skill Points"],
+                "notes": ""
+              },
+              {
+                "text": "Find the beast pen encounter and free then kill Mimbok the Enslaved",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 12 Uncut Skill Gem", "Level 4 uncut support gem", "Torn Map Piece"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Isle of Kin",
+            "completion_zone": "Volcanic Warrens",
+            "next_step_id": "act_4_step_8",
+            "previous_step_id": "act_4_step_6",
+            "wiki_items": ["The Blind Beast", "Torn Map Piece", "Isle of Kin", "Volcanic Warrens"]
+          },
+          "act_4_step_8": {
+            "id": "act_4_step_8",
+            "title": "Complete Volcanic Warrens and Return to Kingsmarch",
+            "description": "Defeat Krutog, Lord of Kin at the Tyrant's Throne, then speak with Matiki before returning to Kingsmarch.",
+            "objectives": [
+              {
+                "text": "Find the Tyrant's Throne and kill Krutog, Lord of Kin",
+                "details": "Find the Tyrant's Throne and kill Krutog, Lord of Kin. Then speak to Matiki before returning to Kingsmarch.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Volcanic Warrens",
+            "completion_zone": "Kingsmarch",
+            "next_step_id": "act_4_step_9",
+            "previous_step_id": "act_4_step_7",
+            "wiki_items": ["Krutog, Lord of Kin", "Volcanic Warrens", "Kingsmarch"]
+          },
+          "act_4_step_9": {
+            "id": "act_4_step_9",
+            "title": "Speak with Key NPCs and Travel to Journey's End",
+            "description": "Consult with important NPCs in Kingsmarch to gather information, then travel to Journey's End.",
+            "objectives": [
+              {
+                "text": "Speak to Important NPCs, then travel to Journey's End",
+                "details": "Talk to Missionary Lorandis, Tavakai, Makoru, Ange, Tujen, then Matiki.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Kingsmarch",
+            "completion_zone": "Journey's End",
+            "next_step_id": "act_4_step_10",
+            "previous_step_id": "act_4_step_8",
+            "wiki_items": ["Missionary Lorandis", "Tavakai", "Makoru", "Ange", "Tujen", "Matiki", "Kingsmarch", "Journey's End"]
+          },
+          "act_4_step_10": {
+            "id": "act_4_step_10",
+            "title": "Defeat Captain Hartlin and Obtain Verisium",
+            "description": "Summon Tujen, defeat Captain Hartlin to obtain Verisium, and complete optional encounters before returning to Kingsmarch.",
+            "objectives": [
+              {
+                "text": "Summon Tujen, then find the Captain's Chair and kill Captain Hartlin to loot the Verisium",
+                "details": "After killing Captain Hartlin, return to the beginning (via checkpoint) and talk to Freya.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and loot the rigged ship",
+                "details": "it will start a timer once you loot the first chest, and then will blow up. any loot not picked up by then will disappear.",
+                "required": false,
+                "rewards": ["Random Loot"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Journey's End",
+            "completion_zone": "Kingsmarch",
+            "next_step_id": "act_4_step_11",
+            "previous_step_id": "act_4_step_9",
+            "wiki_items": ["Tujen", "Captain Hartlin", "Freya", "Verisium", "Journey's End", "Kingsmarch"]
+          },
+          "act_4_step_11": {
+            "id": "act_4_step_11",
+            "title": "Obtain Verisium Spikes from Dannig",
+            "description": "Speak with Dannig to obtain the Verisium Spikes needed for the upcoming Delirium encounter, then return to Journey's End.",
+            "objectives": [
+              {
+                "text": "Speak with Dannig to get the Verisium Spikes, then return to Journey's End",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Kingsmarch",
+            "completion_zone": "Journey's End",
+            "next_step_id": "act_4_step_12",
+            "previous_step_id": "act_4_step_10",
+            "wiki_items": ["Dannig", "Verisium Spikes", "Kingsmarch", "Journey's End"]
+          },
+          "act_4_step_12": {
+            "id": "act_4_step_12",
+            "title": "Complete Delirium Encounter and Travel to Eye of Hinekora",
+            "description": "Use Verisium Spikes to impale totems, triggering the Delirium encounter, then defeat Omniphobia and proceed to Eye of Hinekora.",
+            "objectives": [
+              {
+                "text": "Impale the totems and finish the Delirium Encounter by killing Omniphobia",
+                "details": "Speak with Freya again, and empale the totems with the Verisium Spikes. This will start the Delirium encounter.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Journey's End",
+            "completion_zone": "Eye of Hinekora",
+            "next_step_id": "act_4_step_13",
+            "previous_step_id": "act_4_step_11",
+            "wiki_items": ["Omniphobia", "Freya", "Verisium Spikes", "Journey's End", "Eye of Hinekora"]
+          },
+          "act_4_step_13": {
+            "id": "act_4_step_13",
+            "title": "Complete Eye of Hinekora and Enter Hall of the Dead",
+            "description": "Navigate through the cavern, complete tests of mettle, find the Silent Hall, and proceed to the Hall of the Dead.",
+            "objectives": [
+              {
+                "text": "Find and enter the Hall of the Dead",
+                "details": "Progress through the cavern and complete each 'test of mettle' encounter, find the Silent Hall and pay your respects, then exit to the Hall of the Dead..",
+                "required": true,
+                "rewards": ["5% increased maximum mana"],
+                "notes": ""
+              },
+              {
+                "text": "Find the rare chest hidden behind a waterfall",
+                "details": "There is a rare chest hidden behind a waterfall.",
+                "required": false,
+                "rewards": ["Level 12 uncut skill gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Eye of Hinekora",
+            "completion_zone": "Hall of the Dead",
+            "next_step_id": "act_4_step_14",
+            "previous_step_id": "act_4_step_12",
+            "wiki_items": ["Eye of Hinekora", "Hall of the Dead"]
+          },
+          "act_4_step_14": {
+            "id": "act_4_step_14",
+            "title": "Complete Hall of the Dead and Enter Trial of the Ancestors",
+            "description": "Complete the three tests of blank tattoos, defeat Yama the White, and obtain the silver coin to proceed to the Trial of the Ancestors.",
+            "objectives": [
+              {
+                "text": "Kill Yama the White and enter the Trial of the Ancestors",
+                "details": "Find the three tests to look blank tattoos and turn in at their respective totems. Then find Yama's Test to defeat Yama the White. Then loot the silver coin.",
+                "required": true,
+                "rewards": ["5 dexterity or 5% Lightning Resistance", "Silver Coin", "5 intelligence or 5% Cold Resistance", "5 strength or 5% Fire Resistance"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Hall of the Dead",
+            "completion_zone": "Trial of the Ancestors",
+            "next_step_id": "act_4_step_15",
+            "previous_step_id": "act_4_step_13",
+            "wiki_items": ["Yama the White", "Hall of the Dead", "Trial of the Ancestors"]
+          },
+          "act_4_step_15": {
+            "id": "act_4_step_15",
+            "title": "Obtain Tattoo of Hinekora and Travel to Arastas",
+            "description": "Speak with Navali to obtain the Tattoo of Hinekora, then return to the ship and navigate to Arastas.",
+            "objectives": [
+              {
+                "text": "Talk to Navali and get the Tattoo of Hinekora",
+                "details": "Afterwards return to the ship and navigate to Arastas",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Trial of the Ancestors",
+            "completion_zone": "Arastas",
+            "next_step_id": "act_4_step_16",
+            "previous_step_id": "act_4_step_14",
+            "wiki_items": ["Navali", "Tattoo of Hinekora", "Trial of the Ancestors", "Arastas"]
+          },
+          "act_4_step_16": {
+            "id": "act_4_step_16",
+            "title": "Complete Arastas and Travel to The Excavation",
+            "description": "Follow Missionary Lorandis, defeat Torvian, Hand of the Saviour, and complete optional encounters before proceeding to The Excavation.",
+            "objectives": [
+              {
+                "text": "Talk to Missionary Lorandis, then kill Torvian, Hand of the Saviour, then exit to The Excavation",
+                "details": "Follow Missionary Lorandis into the church, then exit again. Destroy the forcefield with any attack or spell. Find the Excavated Pit and kill Torvian, Hand of the Saviour.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Loot the Evening and Morning Bell",
+                "details": "",
+                "required": false,
+                "rewards": ["Exalted Orbs", "Regal Orbs"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Arastas",
+            "completion_zone": "The Excavation",
+            "next_step_id": "act_4_step_17",
+            "previous_step_id": "act_4_step_15",
+            "wiki_items": ["Missionary Lorandis", "Torvian", "Hand of the Saviour", "Arastas", "The Excavation"]
+          },
+          "act_4_step_17": {
+            "id": "act_4_step_17",
+            "title": "Complete The Excavation and Return to Kingsmarch",
+            "description": "Defeat Benedictus, First Herald of Utopia at the Precursor Forge, witness lore events, and complete optional encounters before returning to Kingsmarch.",
+            "objectives": [
+              {
+                "text": "Find the Precursor Forge and Defeat Benedictus, First Heral of Utopia",
+                "details": "After killing Benedictus, First Heral of Utopia, witness the lore events then return to Kingsmarch.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Excavated cache",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 4 uncut support gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Excavation",
+            "completion_zone": "Kingsmarch",
+            "next_step_id": "act_4_step_18",
+            "previous_step_id": "act_4_step_16",
+            "wiki_items": ["Benedictus, First Heral of Utopia", "The Excavation", "Kingsmarch"]
+          },
+          "act_4_step_18": {
+            "id": "act_4_step_18",
+            "title": "Travel to Ngakanu Island",
+            "description": "Speak with the Hooded One and Rodri to set sail for Ngakanu, the final island in your journey.",
+            "objectives": [
+              {
+                "text": "Talk to the Hooded One, then to Rodri and set sail for Ngakanu",
+                "details": "Travel to Aggorat after completing the three main islands.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Kingsmarch",
+            "completion_zone": "Ngakanu",
+            "next_step_id": "act_4_step_19",
+            "previous_step_id": "act_4_step_17",
+            "wiki_items": ["Hooded One", "Rodri", "Kingsmarch", "Ngakanu"]
+          },
+          "act_4_step_19": {
+            "id": "act_4_step_19",
+            "title": "Complete Ngakanu and Enter Heart of the Tribe",
+            "description": "Navigate Ngakanu Island, find the Heart of the Tribe, and complete optional encounters for additional lore.",
+            "objectives": [
+              {
+                "text": "Find and enter the Heart of the Tribe",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Medicine Circle, kill the monsters and talk to Kaimana",
+                "details": "",
+                "required": false,
+                "rewards": ["Game lore"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ngakanu",
+            "completion_zone": "Heart of the Tribe",
+            "next_step_id": "act_4_step_20",
+            "previous_step_id": "act_4_step_18",
+            "wiki_items": ["Kaimana", "Ngakanu", "Heart of the Tribe"]
+          },
+          "act_4_step_20": {
+            "id": "act_4_step_20",
+            "title": "Complete Heart of the Tribe and Return to Kingsmarch",
+            "description": "Find the Sacred Interior, defeat Tavakai in the final boss encounter, then return to Kingsmarch.",
+            "objectives": [
+              {
+                "text": "Find the Sacred Interior and defeat Tavakai, then return to Kingsmarch",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Heart of the Tribe",
+            "completion_zone": "Kingsmarch",
+            "next_step_id": "act_4_step_21",
+            "previous_step_id": "act_4_step_19",
+            "wiki_items": ["Tavakai", "Heart of the Tribe", "Kingsmarch"]
+          },
+          "act_4_step_21": {
+            "id": "act_4_step_21",
+            "title": "Begin the Interlude and Travel to The Refuge",
+            "description": "Speak with the Hooded One to begin the interlude sequence and proceed through the linear path to The Refuge, completing Act 4.",
+            "objectives": [
+              {
+                "text": "Talk to the Hooded One, journey to the The Refuge in the interlude",
+                "details": "This is the end of act 4. The interlude is very linear, without optional steps, just clear it in any order.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Kingsmarch",
+            "completion_zone": "The Refuge",
+            "next_step_id": null,
+            "previous_step_id": "act_4_step_20",
+            "wiki_items": ["Hooded One", "Kingsmarch", "The Refuge"]
+          }
+        }
+      }
+    }
+  }

@@ -112,6 +112,9 @@ pub trait CharacterService: Send + Sync {
         character_id: &str,
     ) -> Result<Option<LocationState>, AppError>;
 
+    /// Saves character data directly (used by other services)
+    async fn save_character_data(&self, character_data: &CharacterData) -> Result<(), AppError>;
+
     /// Enters a zone for a character
     async fn enter_zone(
         &self,

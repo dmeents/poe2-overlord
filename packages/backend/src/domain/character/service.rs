@@ -346,6 +346,11 @@ impl CharacterService for CharacterServiceImpl {
         Ok(character_data.current_location)
     }
 
+    /// Saves character data directly (used by other services)
+    async fn save_character_data(&self, character_data: &CharacterData) -> Result<(), AppError> {
+        self.repository.save_character_data(character_data).await
+    }
+
     /// Enters a zone for a character
     async fn enter_zone(
         &self,

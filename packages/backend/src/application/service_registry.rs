@@ -39,6 +39,10 @@ use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
 use crate::domain::server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl};
+use crate::domain::walkthrough::{
+    repository::WalkthroughRepositoryImpl, service::WalkthroughServiceImpl,
+    traits::WalkthroughService,
+};
 use crate::domain::zone_configuration::{
     repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
 };
@@ -125,6 +129,28 @@ impl ServiceInitializer {
 
         app.manage(character_box);
 
+        // Initialize Walkthrough Service - manages walkthrough guide and character progress
+        // Depends on character service for character data access
+        let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(std::path::PathBuf::from(
+            "config/walkthrough_guide.json",
+        )));
+        let walkthrough_service = Arc::new(WalkthroughServiceImpl::new(
+            walkthrough_repo,
+            character_arc.clone(),
+            event_bus.clone(),
+        ));
+
+        // Create a Box for Tauri state management
+        let walkthrough_box = Box::new(WalkthroughServiceImpl::new(
+            Arc::new(WalkthroughRepositoryImpl::new(std::path::PathBuf::from(
+                "config/walkthrough_guide.json",
+            ))),
+            character_arc.clone(),
+            event_bus.clone(),
+        )) as Box<dyn WalkthroughService + Send + Sync>;
+
+        app.manage(walkthrough_box);
+
         // Character Tracking functionality is now handled by CharacterService
 
         // Initialize Server Monitoring Service - handles network connectivity and server status tracking
@@ -154,6 +180,7 @@ impl ServiceInitializer {
             log_analysis_config,
             character_arc.clone(),
             server_monitoring_arc.clone(),
+            walkthrough_service.clone(),
         )
         .map_err(|e| {
             error!("Failed to initialize LogAnalysisService: {}", e);
@@ -205,6 +232,7 @@ impl ServiceInitializer {
             config_service,
             event_bus,
             character_service: character_arc,
+            walkthrough_service,
             log_analysis_service: log_analysis_arc,
             server_monitoring_service: server_monitoring_arc,
             game_monitoring_service,
@@ -231,6 +259,9 @@ pub struct ServiceInstances {
 
     /// Character service for managing character data and operations (includes tracking)
     pub character_service: Arc<dyn CharacterService + Send + Sync>,
+
+    /// Walkthrough service for managing walkthrough guide and character progress
+    pub walkthrough_service: Arc<dyn WalkthroughService + Send + Sync>,
 
     /// Log analysis service for processing game logs and extracting events
     pub log_analysis_service: Arc<dyn LogAnalysisService>,

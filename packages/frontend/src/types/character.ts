@@ -1,5 +1,7 @@
 // Character-related types - Updated to match unified backend CharacterData model
 
+import { WalkthroughProgress } from './walkthrough';
+
 export type CharacterClass =
   | 'Warrior'
   | 'Sorceress'
@@ -97,6 +99,7 @@ export interface CharacterData {
   current_location?: LocationState;
   summary: CharacterSummary;
   zones: ZoneStats[];
+  walkthrough_progress: WalkthroughProgress;
   last_updated: string;
 }
 

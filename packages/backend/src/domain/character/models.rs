@@ -3,6 +3,8 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use crate::domain::walkthrough::models::WalkthroughProgress;
+
 /// Consolidated character data containing all character information in a single structure.
 ///
 /// This struct combines character metadata (name, class, level, etc.) with tracking data
@@ -39,6 +41,9 @@ pub struct CharacterData {
     pub summary: TrackingSummary,
     /// Zone statistics (aggregated data per location)
     pub zones: Vec<ZoneStats>,
+    /// Walkthrough progress for this character
+    #[serde(default)]
+    pub walkthrough_progress: WalkthroughProgress,
     /// Last updated timestamp for tracking data
     pub last_updated: DateTime<Utc>,
 }
@@ -94,6 +99,7 @@ impl Default for CharacterData {
             current_location: None,
             summary: TrackingSummary::new(String::new()),
             zones: Vec::new(),
+            walkthrough_progress: WalkthroughProgress::new(),
             last_updated: Utc::now(),
         }
     }
@@ -125,6 +131,7 @@ impl CharacterData {
             current_location: None,
             summary: TrackingSummary::new(id),
             zones: Vec::new(),
+            walkthrough_progress: WalkthroughProgress::new(),
             last_updated: now,
         }
     }
@@ -174,6 +181,17 @@ impl CharacterData {
         let mut zones: Vec<&ZoneStats> = self.zones.iter().collect();
         zones.sort_by(|a, b| b.duration.cmp(&a.duration));
         zones
+    }
+
+    /// Updates the walkthrough progress for this character
+    pub fn update_walkthrough_progress(&mut self, progress: WalkthroughProgress) {
+        self.walkthrough_progress = progress;
+        self.touch();
+    }
+
+    /// Gets the current walkthrough progress for this character
+    pub fn get_walkthrough_progress(&self) -> &WalkthroughProgress {
+        &self.walkthrough_progress
     }
 }
 

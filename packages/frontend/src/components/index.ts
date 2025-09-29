@@ -24,5 +24,8 @@ export * from './status-indicator';
 export * from './time-display';
 export * from './time-stat-card';
 export * from './tooltip';
+export * from './walkthrough-dashboard';
+export * from './walkthrough-guide-viewer';
+export * from './walkthrough-progress-card';
 export * from './window-title';
 export * from './zone-tracker';

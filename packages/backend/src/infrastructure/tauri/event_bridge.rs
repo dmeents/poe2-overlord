@@ -87,6 +87,14 @@ impl TauriEventBridge {
             AppEvent::CharacterTrackingDataUpdated { .. } => {
                 "character-tracking-data-updated".to_string()
             }
+            AppEvent::WalkthroughProgressUpdated { .. } => {
+                "walkthrough-progress-updated".to_string()
+            }
+            AppEvent::WalkthroughStepCompleted { .. } => "walkthrough-step-completed".to_string(),
+            AppEvent::WalkthroughStepAdvanced { .. } => "walkthrough-step-advanced".to_string(),
+            AppEvent::WalkthroughCampaignCompleted { .. } => {
+                "walkthrough-campaign-completed".to_string()
+            }
             AppEvent::GameProcessStatusChanged { .. } => "game-process-status-changed".to_string(),
             AppEvent::SystemError { .. } => "system-error".to_string(),
             AppEvent::SystemShutdown { .. } => "system-shutdown".to_string(),

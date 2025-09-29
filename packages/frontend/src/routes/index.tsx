@@ -3,6 +3,7 @@ import {
   ActDistributionChart,
   CharacterStatusCard,
   DashboardInsights,
+  WalkthroughDashboard,
 } from '../components';
 import { useCharacterManagement } from '../hooks';
 
@@ -20,6 +21,9 @@ function Index() {
           {/* Left Column - Takes up 2/3 of the space */}
           <div className='lg:col-span-2 space-y-6'>
             <CharacterStatusCard />
+            {activeCharacter && (
+              <WalkthroughDashboard characterId={activeCharacter.id} />
+            )}
           </div>
 
           {/* Right Column - Takes up 1/3 of the space */}

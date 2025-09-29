@@ -4,6 +4,7 @@ use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
 use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
 use crate::domain::server_monitoring::ServerMonitoringService;
+use crate::domain::walkthrough::traits::WalkthroughService;
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::parsing::LogParserManager;
 use async_trait::async_trait;
@@ -24,6 +25,8 @@ pub struct LogAnalysisServiceImpl {
     character_service: Arc<dyn CharacterService>,
     /// Service for server monitoring operations
     server_monitoring_service: Arc<dyn ServerMonitoringService>,
+    /// Service for walkthrough guide and progress tracking
+    walkthrough_service: Arc<dyn WalkthroughService>,
     /// Parser manager for processing log lines
     parser_manager: LogParserManager,
     /// Flag indicating whether log monitoring is currently active
@@ -40,6 +43,7 @@ impl LogAnalysisServiceImpl {
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterService>,
         server_monitoring_service: Arc<dyn ServerMonitoringService>,
+        walkthrough_service: Arc<dyn WalkthroughService>,
     ) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(config));
         let log_file_repository = Arc::new(LogFileRepositoryImpl::new());
@@ -49,6 +53,7 @@ impl LogAnalysisServiceImpl {
             log_file_repository,
             character_service,
             server_monitoring_service,
+            walkthrough_service,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
@@ -62,6 +67,7 @@ impl LogAnalysisServiceImpl {
         log_file_repository: Arc<dyn LogFileRepository>,
         character_service: Arc<dyn CharacterService>,
         server_monitoring_service: Arc<dyn ServerMonitoringService>,
+        walkthrough_service: Arc<dyn WalkthroughService>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
         let parser_manager = LogParserManager::new();
@@ -70,6 +76,7 @@ impl LogAnalysisServiceImpl {
             log_file_repository,
             character_service,
             server_monitoring_service,
+            walkthrough_service,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
@@ -116,6 +123,7 @@ impl LogAnalysisServiceImpl {
         let log_file_repository = Arc::clone(&self.log_file_repository);
         let character_service = Arc::clone(&self.character_service);
         let server_monitoring_service = Arc::clone(&self.server_monitoring_service);
+        let walkthrough_service = Arc::clone(&self.walkthrough_service);
         let is_running = Arc::clone(&self.is_running);
         let last_position = Arc::clone(&self.last_position);
         let zone_level_cache = Arc::clone(&self.zone_level_cache);
@@ -144,6 +152,7 @@ impl LogAnalysisServiceImpl {
                                 &log_file_repository,
                                 &character_service,
                                 &server_monitoring_service,
+                                &walkthrough_service,
                                 &last_position,
                                 &zone_level_cache,
                                 last_pos,
@@ -176,6 +185,7 @@ impl LogAnalysisServiceImpl {
         log_file_repository: &Arc<dyn LogFileRepository>,
         character_service: &Arc<dyn CharacterService>,
         server_monitoring_service: &Arc<dyn ServerMonitoringService>,
+        walkthrough_service: &Arc<dyn WalkthroughService>,
         last_position: &Arc<RwLock<u64>>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
         start_position: u64,
@@ -196,6 +206,7 @@ impl LogAnalysisServiceImpl {
                 line,
                 character_service,
                 server_monitoring_service,
+                walkthrough_service,
                 zone_level_cache,
             )
             .await
@@ -220,6 +231,7 @@ impl LogAnalysisServiceImpl {
         line: &str,
         character_service: &Arc<dyn CharacterService>,
         server_monitoring_service: &Arc<dyn ServerMonitoringService>,
+        walkthrough_service: &Arc<dyn WalkthroughService>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     ) -> AppResult<()> {
         // Try to parse the line for known events
@@ -227,6 +239,7 @@ impl LogAnalysisServiceImpl {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
                     // Process scene changes through character tracking service
+                    let walkthrough_service = walkthrough_service.clone();
                     
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
@@ -256,6 +269,13 @@ impl LogAnalysisServiceImpl {
                             {
                                 error!("❌ SCENE CHANGE: Failed to process scene change with zone level: {}", e);
                             } else {
+                                // Handle walkthrough progress detection
+                                if let Err(e) = walkthrough_service
+                                    .handle_scene_change(&active_character.id, &content)
+                                    .await
+                                {
+                                    error!("❌ WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
+                                }
                             }
                         } else {
                             // Process scene change without zone level
@@ -265,6 +285,13 @@ impl LogAnalysisServiceImpl {
                             {
                                 error!("❌ SCENE CHANGE: Failed to process scene change: {}", e);
                             } else {
+                                // Handle walkthrough progress detection
+                                if let Err(e) = walkthrough_service
+                                    .handle_scene_change(&active_character.id, &content)
+                                    .await
+                                {
+                                    error!("❌ WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
+                                }
                             }
                         }
                     } else {

@@ -7,6 +7,7 @@ use crate::domain::character::models::{CharacterData, LocationState, LocationTyp
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::server_monitoring::models::ServerStatus;
+use crate::domain::walkthrough::models::{WalkthroughProgress, WalkthroughStepResult};
 use serde::{Deserialize, Serialize};
 
 /// All possible events in the application
@@ -61,6 +62,28 @@ pub enum AppEvent {
         timestamp: String,
     },
 
+    // Walkthrough Events
+    WalkthroughProgressUpdated {
+        character_id: String,
+        progress: WalkthroughProgress,
+        timestamp: String,
+    },
+    WalkthroughStepCompleted {
+        character_id: String,
+        step: WalkthroughStepResult,
+        timestamp: String,
+    },
+    WalkthroughStepAdvanced {
+        character_id: String,
+        from_step_id: Option<String>,
+        to_step_id: Option<String>,
+        timestamp: String,
+    },
+    WalkthroughCampaignCompleted {
+        character_id: String,
+        timestamp: String,
+    },
+
     // Game Monitoring Events
     GameProcessStatusChanged {
         old_status: Option<GameProcessStatus>,
@@ -93,7 +116,11 @@ impl AppEvent {
             | AppEvent::ActChangeDetected { .. }
             | AppEvent::ZoneChangeDetected { .. }
             | AppEvent::HideoutChangeDetected { .. }
-            | AppEvent::CharacterTrackingDataUpdated { .. } => EventType::LocationTracking,
+            | AppEvent::CharacterTrackingDataUpdated { .. }
+            | AppEvent::WalkthroughProgressUpdated { .. }
+            | AppEvent::WalkthroughStepCompleted { .. }
+            | AppEvent::WalkthroughStepAdvanced { .. }
+            | AppEvent::WalkthroughCampaignCompleted { .. } => EventType::LocationTracking,
             AppEvent::GameProcessStatusChanged { .. } => EventType::GameMonitoring,
             AppEvent::SystemError { .. } | AppEvent::SystemShutdown { .. } => EventType::System,
         }
@@ -111,6 +138,10 @@ impl AppEvent {
             AppEvent::ZoneChangeDetected { timestamp, .. } => timestamp.clone(),
             AppEvent::HideoutChangeDetected { timestamp, .. } => timestamp.clone(),
             AppEvent::CharacterTrackingDataUpdated { timestamp, .. } => timestamp.clone(),
+            AppEvent::WalkthroughProgressUpdated { timestamp, .. } => timestamp.clone(),
+            AppEvent::WalkthroughStepCompleted { timestamp, .. } => timestamp.clone(),
+            AppEvent::WalkthroughStepAdvanced { timestamp, .. } => timestamp.clone(),
+            AppEvent::WalkthroughCampaignCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::GameProcessStatusChanged { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemError { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemShutdown { timestamp, .. } => timestamp.clone(),
@@ -218,6 +249,46 @@ impl AppEvent {
     /// Create a system shutdown event
     pub fn system_shutdown() -> Self {
         Self::SystemShutdown {
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    /// Create a walkthrough progress updated event
+    pub fn walkthrough_progress_updated(character_id: String, progress: WalkthroughProgress) -> Self {
+        Self::WalkthroughProgressUpdated {
+            character_id,
+            progress,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    /// Create a walkthrough step completed event
+    pub fn walkthrough_step_completed(character_id: String, step: WalkthroughStepResult) -> Self {
+        Self::WalkthroughStepCompleted {
+            character_id,
+            step,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    /// Create a walkthrough step advanced event
+    pub fn walkthrough_step_advanced(
+        character_id: String,
+        from_step_id: Option<String>,
+        to_step_id: Option<String>,
+    ) -> Self {
+        Self::WalkthroughStepAdvanced {
+            character_id,
+            from_step_id,
+            to_step_id,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    /// Create a walkthrough campaign completed event
+    pub fn walkthrough_campaign_completed(character_id: String) -> Self {
+        Self::WalkthroughCampaignCompleted {
+            character_id,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }

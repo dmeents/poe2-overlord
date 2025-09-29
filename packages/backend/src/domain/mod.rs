@@ -44,6 +44,7 @@ pub mod events; // Unified event system for all application events
 pub mod game_monitoring; // Game process detection and monitoring
 pub mod log_analysis; // Log parsing, analysis, and pattern matching
 pub mod server_monitoring; // Network connectivity and server status monitoring
+pub mod walkthrough; // Walkthrough guide and character progress tracking
 pub mod zone_configuration; // Zone-to-act mapping and town detection
 
 // Re-export character types (including tracking types)
@@ -80,6 +81,15 @@ pub use log_analysis::{
 
 // Re-export server monitoring types
 pub use server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatus};
+
+// Re-export walkthrough types
+pub use walkthrough::{
+    advance_character_walkthrough_step, get_character_walkthrough_progress, get_walkthrough_guide,
+    get_walkthrough_step, handle_walkthrough_scene_change, mark_character_campaign_completed,
+    move_character_to_walkthrough_step, CharacterWalkthroughProgress, Objective, WalkthroughAct,
+    WalkthroughGuide, WalkthroughProgress, WalkthroughRepository, WalkthroughRepositoryImpl,
+    WalkthroughService, WalkthroughServiceImpl, WalkthroughStep, WalkthroughStepResult,
+};
 
 // Re-export zone configuration types
 pub use zone_configuration::{

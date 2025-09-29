@@ -1,4 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { useEffect, useRef } from 'react';
 import { formFilterToggleStyles } from './form-filter-toggle.styles';
 
 export interface FilterToggleProps {
@@ -21,9 +22,35 @@ export function FilterToggle({
   children,
 }: FilterToggleProps) {
   const hasActiveFilters = activeCount > 0;
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        if (isExpanded) {
+          onToggle();
+        }
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isExpanded, onToggle]);
 
   return (
-    <div className={`${formFilterToggleStyles.container} ${className}`}>
+    <div
+      className={`${formFilterToggleStyles.container} ${className}`}
+      ref={dropdownRef}
+    >
       <button
         type='button'
         onClick={onToggle}

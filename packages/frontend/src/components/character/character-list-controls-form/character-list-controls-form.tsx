@@ -1,5 +1,12 @@
 import { memo, useEffect, useState } from 'react';
-import { Button, FilterToggle, Input, Select, SortSelect } from '../';
+import {
+  Accordion,
+  Button,
+  FilterToggle,
+  Input,
+  Select,
+  SortSelect,
+} from '../';
 import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
 import type {
   CharacterFilters as CharacterFiltersType,
@@ -12,8 +19,6 @@ import {
   clearButtonClasses,
   filterSectionClasses,
   filterSectionTitleClasses,
-  sortLabelClasses,
-  sortResetButtonClasses,
 } from './character-list-controls-form.styles';
 
 interface CharacterListControlsFormProps {
@@ -55,6 +60,7 @@ export const CharacterListControlsForm = memo(
     totalCount,
   }: CharacterListControlsFormProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isFormCollapsed, setIsFormCollapsed] = useState(false);
     const [availableAscendencies, setAvailableAscendencies] = useState<
       { value: Ascendency; label: string }[]
     >([]);
@@ -154,23 +160,28 @@ export const CharacterListControlsForm = memo(
 
     return (
       <div className='space-y-4'>
-        {/* Inline Search, Filters, and Sort */}
-        <div className='p-4 bg-zinc-800/50 border border-zinc-700/50'>
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
-            {/* Search Field */}
-            <div>
-              <Input
-                id='character-search'
-                value={filters.nameSearch}
-                onChange={(value: string) =>
-                  onFilterChange('nameSearch', value)
-                }
-                type='search'
-                placeholder='Enter character name...'
-                label='Search'
-              />
-            </div>
+        <Accordion
+          title='Character Controls'
+          subtitle={getCharacterCountText()}
+          isExpanded={!isFormCollapsed}
+          onToggle={() => setIsFormCollapsed(!isFormCollapsed)}
+        >
+          {/* First Row: Search Bar */}
+          <div className='mb-4'>
+            <Input
+              id='character-search'
+              value={filters.nameSearch}
+              onChange={(value: string | number | null) =>
+                onFilterChange('nameSearch', value as string)
+              }
+              type='search'
+              placeholder='Enter character name...'
+              label='Search'
+            />
+          </div>
 
+          {/* Second Row: Sorts, Filters, and Reset */}
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
             {/* Filters */}
             <div>
               <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
@@ -182,7 +193,7 @@ export const CharacterListControlsForm = memo(
                 label={hasActiveFilters ? 'Filters Active' : 'All Filters'}
                 activeCount={activeFilterCount}
               >
-                <div className='space-y-3 p-4 bg-zinc-800/95 backdrop-blur-sm border border-zinc-700/50 shadow-xl'>
+                <div className='space-y-3'>
                   {/* League Filter */}
                   <div className={filterSectionClasses}>
                     <Select
@@ -217,7 +228,10 @@ export const CharacterListControlsForm = memo(
                       options={[
                         { value: 'all', label: 'All' },
                         { value: 'hardcore', label: 'Hardcore Only' },
-                        { value: 'non-hardcore', label: 'Non-Hardcore Only' },
+                        {
+                          value: 'non-hardcore',
+                          label: 'Non-Hardcore Only',
+                        },
                       ]}
                       variant='dropdown'
                       label='Hardcore'
@@ -404,38 +418,36 @@ export const CharacterListControlsForm = memo(
 
             {/* Sort */}
             <div>
-              <label className={sortLabelClasses}>Sort</label>
-              <div className='space-y-2'>
-                <div className='flex gap-2'>
-                  <div className='flex-1'>
-                    <SortSelect
-                      id='character-sort'
-                      value={sort.field}
-                      direction={sort.direction}
-                      onChange={handleSortChange}
-                      onReset={onResetSort}
-                      options={SORT_OPTIONS}
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleReset}
-                    variant='outline'
-                    size='sm'
-                    className={sortResetButtonClasses}
-                  >
-                    Reset All
-                  </Button>
+              <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
+                Sort
+              </label>
+              <div className='flex gap-2'>
+                <div className='flex-1'>
+                  <SortSelect
+                    id='character-sort'
+                    value={sort.field}
+                    direction={sort.direction}
+                    onChange={handleSortChange}
+                    onReset={onResetSort}
+                    options={SORT_OPTIONS}
+                  />
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Character Count with Context */}
-          <div className='mt-4 text-sm text-zinc-400 text-center'>
-            {getCharacterCountText()}
+            {/* Reset All Button */}
+            <div className='flex flex-col justify-end'>
+              <div className='h-6'></div>
+              <Button
+                onClick={handleReset}
+                variant='outline'
+                className='h-10 px-4 text-sm'
+              >
+                Reset All
+              </Button>
+            </div>
           </div>
-        </div>
+        </Accordion>
       </div>
     );
   }

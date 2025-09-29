@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Card, EmptyState } from './';
+import { Card, EmptyState } from '../';
 
 interface DataCardProps {
   title: string;

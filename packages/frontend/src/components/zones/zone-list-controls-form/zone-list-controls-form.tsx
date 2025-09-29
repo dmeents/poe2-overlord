@@ -5,15 +5,13 @@ import type {
 import type { LocationType } from '@/types';
 import { memo, useEffect, useRef, useState } from 'react';
 import { FilterToggle, Input, Select, SortSelect } from '../../forms';
-import { Button } from '../../ui/button';
+import { Accordion, Button } from '../../ui';
 import {
   activeFilterChipClasses,
   chipRemoveButtonClasses,
   clearButtonClasses,
   filterSectionClasses,
   filterSectionTitleClasses,
-  sortLabelClasses,
-  sortResetButtonClasses,
 } from './zone-list-controls-form.styles';
 
 interface ZoneListControlsFormProps {
@@ -72,6 +70,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
   totalCount,
 }: ZoneListControlsFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFormCollapsed, setIsFormCollapsed] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -122,23 +121,28 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
 
   return (
     <div className='space-y-4'>
-      {/* Inline Search, Filters, and Sort */}
-      <div className='p-4 bg-zinc-800/50 border border-zinc-700/50'>
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
-          {/* Search Field */}
-          <div>
-            <Input
-              id='zone-search'
-              value={filters.search}
-              onChange={(value: string | number | null) =>
-                onFilterChange('search', value as string)
-              }
-              type='search'
-              placeholder='Search zones, acts, or location types...'
-              label='Search'
-            />
-          </div>
+      <Accordion
+        title='Zone Controls'
+        subtitle={getZoneCountText()}
+        isExpanded={!isFormCollapsed}
+        onToggle={() => setIsFormCollapsed(!isFormCollapsed)}
+      >
+        {/* First Row: Search Bar */}
+        <div className='mb-4'>
+          <Input
+            id='zone-search'
+            value={filters.search}
+            onChange={(value: string | number | null) =>
+              onFilterChange('search', value as string)
+            }
+            type='search'
+            placeholder='Search zones, acts, or location types...'
+            label='Search'
+          />
+        </div>
 
+        {/* Second Row: Sorts, Filters, and Reset */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
           {/* Filters */}
           <div>
             <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
@@ -150,7 +154,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               label={hasActiveFilters ? 'Filters Active' : 'All Filters'}
               activeCount={activeFilterCount}
             >
-              <div className='space-y-3 p-4 bg-zinc-800/95 backdrop-blur-sm border border-zinc-700/50 shadow-xl'>
+              <div className='space-y-3'>
                 {/* Location Type Filter */}
                 <div className={filterSectionClasses}>
                   <Select
@@ -419,38 +423,36 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
 
           {/* Sort */}
           <div>
-            <label className={sortLabelClasses}>Sort</label>
-            <div className='space-y-2'>
-              <div className='flex gap-2'>
-                <div className='flex-1'>
-                  <SortSelect
-                    id='zone-sort'
-                    value={sort.field}
-                    direction={sort.direction}
-                    onChange={handleSortChange}
-                    onReset={onResetSort}
-                    options={SORT_OPTIONS}
-                  />
-                </div>
-
-                <Button
-                  onClick={handleReset}
-                  variant='outline'
-                  size='sm'
-                  className={sortResetButtonClasses}
-                >
-                  Reset All
-                </Button>
+            <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
+              Sort
+            </label>
+            <div className='flex gap-2'>
+              <div className='flex-1'>
+                <SortSelect
+                  id='zone-sort'
+                  value={sort.field}
+                  direction={sort.direction}
+                  onChange={handleSortChange}
+                  onReset={onResetSort}
+                  options={SORT_OPTIONS}
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Zone Count with Context */}
-        <div className='mt-4 text-sm text-zinc-400 text-center'>
-          {getZoneCountText()}
+          {/* Reset All Button */}
+          <div className='flex flex-col justify-end'>
+            <div className='h-6'></div>
+            <Button
+              onClick={handleReset}
+              variant='outline'
+              className='h-10 px-4 text-sm'
+            >
+              Reset All
+            </Button>
+          </div>
         </div>
-      </div>
+      </Accordion>
     </div>
   );
 });

@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   BookOpenIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -14,14 +15,26 @@ import { Button } from '../button/button';
 interface WalkthroughProgressCardProps {
   progress: WalkthroughProgress;
   currentStep?: WalkthroughStepResult;
+  previousStep?: WalkthroughStepResult;
   onAdvanceStep?: () => void;
+  onPreviousStep?: () => void;
   onViewGuide?: () => void;
   className?: string;
 }
 
 export const WalkthroughProgressCard: React.FC<
   WalkthroughProgressCardProps
-> = ({ progress, currentStep, onAdvanceStep, onViewGuide, className = '' }) => {
+> = ({
+  progress,
+  currentStep,
+  previousStep,
+  onAdvanceStep,
+  onPreviousStep,
+  onViewGuide,
+  className = '',
+}) => {
+  // Check if previous step is available
+  const hasPreviousStep = !!previousStep;
   const formatLastUpdated = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
@@ -103,20 +116,9 @@ export const WalkthroughProgressCard: React.FC<
               </h5>
               <ul className='space-y-3'>
                 {currentStep.step.objectives.map((objective, index) => (
-                  <li
-                    key={objective.id || index}
-                    className={`${
-                      objective.completed
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-600 dark:text-gray-400'
-                    }`}
-                  >
+                  <li key={index} className='text-gray-600 dark:text-gray-400'>
                     <div className='flex items-start gap-2'>
-                      <div
-                        className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                          objective.completed ? 'bg-green-500' : 'bg-gray-300'
-                        }`}
-                      />
+                      <div className='w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-gray-300' />
                       <div className='flex-1 space-y-1'>
                         <div className='text-sm font-medium'>
                           {objective.text}
@@ -150,6 +152,17 @@ export const WalkthroughProgressCard: React.FC<
           )}
 
           <div className='flex gap-2 pt-2'>
+            {hasPreviousStep && onPreviousStep && (
+              <Button
+                onClick={onPreviousStep}
+                variant='outline'
+                size='sm'
+                className='flex-1'
+              >
+                <ArrowLeftIcon className='w-4 h-4 mr-2' />
+                Previous Step
+              </Button>
+            )}
             {onAdvanceStep && (
               <Button
                 onClick={onAdvanceStep}

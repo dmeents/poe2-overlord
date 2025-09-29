@@ -162,7 +162,7 @@ function CharactersPage() {
 
           {/* Right Column - Character Metrics */}
           <div className='lg:col-span-1'>
-            <div className='sticky top-8 space-y-4'>
+            <div className='space-y-4'>
               {/* Insights Card */}
               <CharacterInsights characters={characters} />
 

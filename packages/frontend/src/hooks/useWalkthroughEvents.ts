@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
@@ -20,12 +21,51 @@ export function useWalkthroughEvents(characterId: string | null) {
   const [currentStep, setCurrentStep] = useState<WalkthroughStepResult | null>(
     null
   );
+  const [previousStep, setPreviousStep] =
+    useState<WalkthroughStepResult | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [lastEvent, setLastEvent] = useState<string | null>(null);
 
   // Event listener management
   const listenerRef = useRef<(() => void) | null>(null);
   const isListeningRef = useRef(false);
+
+  // Function to fetch previous step data
+  const fetchPreviousStep = useCallback(async (stepId: string) => {
+    try {
+      const step = await invoke<WalkthroughStepResult>('get_walkthrough_step', {
+        stepId,
+      });
+      setPreviousStep(step);
+    } catch (error) {
+      console.error('Failed to fetch previous step:', error);
+    }
+  }, []);
+
+  // Function to fetch current step data
+  const fetchCurrentStep = useCallback(
+    async (stepId: string) => {
+      try {
+        const step = await invoke<WalkthroughStepResult>(
+          'get_walkthrough_step',
+          {
+            stepId,
+          }
+        );
+        setCurrentStep(step);
+
+        // Also fetch previous step if available
+        if (step.step.previous_step_id) {
+          fetchPreviousStep(step.step.previous_step_id);
+        } else {
+          setPreviousStep(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch current step:', error);
+      }
+    },
+    [fetchPreviousStep]
+  );
 
   // Event handler for walkthrough progress updates
   const handleWalkthroughProgressUpdated = useCallback(
@@ -42,11 +82,20 @@ export function useWalkthroughEvents(characterId: string | null) {
           if (progressEvent.character_id === characterId) {
             setProgress(progressEvent.progress);
             setLastEvent('progress_updated');
+
+            // Fetch current step if there is one
+            if (progressEvent.progress.current_step_id) {
+              fetchCurrentStep(progressEvent.progress.current_step_id);
+            } else {
+              // No current step (campaign completed)
+              setCurrentStep(null);
+              setPreviousStep(null);
+            }
           }
         }
       }
     },
-    [characterId]
+    [characterId, fetchCurrentStep]
   );
 
   // Event handler for walkthrough step completed
@@ -64,11 +113,18 @@ export function useWalkthroughEvents(characterId: string | null) {
           if (stepEvent.character_id === characterId) {
             setCurrentStep(stepEvent.step);
             setLastEvent('step_completed');
+
+            // Fetch previous step if there is one
+            if (stepEvent.step.step.previous_step_id) {
+              fetchPreviousStep(stepEvent.step.step.previous_step_id);
+            } else {
+              setPreviousStep(null);
+            }
           }
         }
       }
     },
-    [characterId]
+    [characterId, fetchPreviousStep]
   );
 
   // Event handler for walkthrough step advanced
@@ -87,6 +143,8 @@ export function useWalkthroughEvents(characterId: string | null) {
           if (stepEvent.character_id === characterId) {
             setLastEvent('step_advanced');
             // The progress will be updated via the progress updated event
+            // We need to fetch the new current step since it's not included in this event
+            // This will be handled by the progress updated event
           }
         }
       }
@@ -198,6 +256,7 @@ export function useWalkthroughEvents(characterId: string | null) {
     if (!characterId) {
       setProgress(null);
       setCurrentStep(null);
+      setPreviousStep(null);
       setLastEvent(null);
     }
   }, [characterId]);
@@ -205,9 +264,11 @@ export function useWalkthroughEvents(characterId: string | null) {
   return {
     progress,
     currentStep,
+    previousStep,
     isListening,
     lastEvent,
     setProgress,
     setCurrentStep,
+    setPreviousStep,
   };
 }

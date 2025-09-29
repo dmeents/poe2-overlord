@@ -31,8 +31,15 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
   const [showGuide, setShowGuide] = useState(false);
 
   // Use the walkthrough events hook for real-time updates
-  const { progress, currentStep, isListening, setProgress, setCurrentStep } =
-    useWalkthroughEvents(characterId);
+  const {
+    progress,
+    currentStep,
+    previousStep,
+    isListening,
+    setProgress,
+    setCurrentStep,
+    setPreviousStep,
+  } = useWalkthroughEvents(characterId);
 
   // Load walkthrough guide (progress is handled by events)
   const loadWalkthroughData = useCallback(async () => {
@@ -62,24 +69,45 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
       if (characterProgressResponse.current_step) {
         setCurrentStep(characterProgressResponse.current_step);
       }
+
+      // Set previous step if available
+      if (characterProgressResponse.previous_step) {
+        setPreviousStep(characterProgressResponse.previous_step);
+      }
     } catch (err) {
       console.error('Failed to load walkthrough data:', err);
       setError('Failed to load walkthrough data. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [characterId, setProgress, setCurrentStep]);
+  }, [characterId, setProgress, setCurrentStep, setPreviousStep]);
 
   // Advance to next step
   const handleAdvanceStep = async () => {
     try {
-      await invoke('advance_character_to_next_step', {
+      await invoke('advance_character_walkthrough_step', {
         characterId,
       });
       // Events will handle the UI update
     } catch (err) {
       console.error('Failed to advance step:', err);
       setError('Failed to advance step. Please try again.');
+    }
+  };
+
+  // Go to previous step
+  const handlePreviousStep = async () => {
+    if (!previousStep) return;
+
+    try {
+      await invoke('move_character_to_walkthrough_step', {
+        characterId,
+        stepId: previousStep.step.id,
+      });
+      // Events will handle the UI update
+    } catch (err) {
+      console.error('Failed to go to previous step:', err);
+      setError('Failed to go to previous step. Please try again.');
     }
   };
 
@@ -191,7 +219,9 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
         <WalkthroughProgressCard
           progress={progress}
           currentStep={currentStep ?? undefined}
+          previousStep={previousStep ?? undefined}
           onAdvanceStep={progress.is_completed ? undefined : handleAdvanceStep}
+          onPreviousStep={previousStep ? handlePreviousStep : undefined}
           onViewGuide={() => setShowGuide(true)}
         />
       )}

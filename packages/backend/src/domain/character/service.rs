@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::Utc;
-use log::info;
+use log::{debug, info};
 use std::sync::Arc;
 
 use crate::domain::events::EventBus;
@@ -356,19 +356,16 @@ impl CharacterService for CharacterServiceImpl {
         act: Option<String>,
         is_town: bool,
     ) -> Result<(), AppError> {
-
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
         // Deactivate any currently active zone
         if let Some(active_zone) = character_data.get_active_zone() {
-
             let mut deactivated_zone = active_zone.clone();
             let _time_spent = deactivated_zone.stop_timer_and_add_time();
             deactivated_zone.deactivate();
             let _zone_name = active_zone.location_name.clone();
             character_data.upsert_zone(deactivated_zone);
-
         } else {
         }
 
@@ -411,9 +408,7 @@ impl CharacterService for CharacterServiceImpl {
 
         info!(
             "Character {} entered zone '{}' ({})",
-            character_id,
-            location_name,
-            location_type
+            character_id, location_name, location_type
         );
         Ok(())
     }
@@ -425,7 +420,7 @@ impl CharacterService for CharacterServiceImpl {
 
         if let Some(zone) = character_data.find_zone_mut(location_id) {
             let was_active = zone.is_active;
-                    let _time_spent = zone.stop_timer_and_add_time();
+            let _time_spent = zone.stop_timer_and_add_time();
             zone.deactivate();
             character_data.update_summary();
 
@@ -436,7 +431,6 @@ impl CharacterService for CharacterServiceImpl {
 
             // Save updated character data
             self.repository.save_character_data(&character_data).await?;
-
         }
 
         Ok(())
@@ -444,12 +438,10 @@ impl CharacterService for CharacterServiceImpl {
 
     /// Records a death in a specific zone
     async fn record_death(&self, character_id: &str, location_id: &str) -> Result<(), AppError> {
-
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
         if let Some(zone) = character_data.find_zone_mut(location_id) {
-
             zone.record_death();
 
             character_data.update_summary();
@@ -459,9 +451,7 @@ impl CharacterService for CharacterServiceImpl {
 
             info!(
                 "Character {} died in zone {} (total deaths: {})",
-                character_id,
-                location_id,
-                character_data.summary.total_deaths
+                character_id, location_id, character_data.summary.total_deaths
             );
         } else {
         }
@@ -504,7 +494,6 @@ impl CharacterService for CharacterServiceImpl {
                     let _time_spent = zone.stop_timer_and_add_time();
                     zone.deactivate();
                     has_changes = true;
-
                 }
             }
 
@@ -553,6 +542,25 @@ impl CharacterServiceImpl {
         lower_name.contains("hideout") || lower_name.contains("hide")
     }
 
+    /// Determines if a scene name is an act name that should be filtered out
+    /// Act names should not be tracked as zones as they represent story progression, not playable areas
+    fn is_act_name(&self, scene_name: &str) -> bool {
+        let lower_name = scene_name.to_lowercase();
+
+        // Check for exact act name matches
+        let act_names = ["act 1", "act 2", "act 3", "act 4", "interlude", "endgame"];
+
+        if act_names.iter().any(|act| lower_name == *act) {
+            return true;
+        }
+
+        // Check for act keywords that indicate act transitions
+        let act_keywords = ["act", "endgame", "interlude", "atlas"];
+        act_keywords
+            .iter()
+            .any(|keyword| lower_name.contains(keyword))
+    }
+
     /// Helper method to process scene changes with optional zone level
     async fn process_scene_change(
         &self,
@@ -563,6 +571,15 @@ impl CharacterServiceImpl {
         let zone_name = content.trim();
 
         if zone_name.is_empty() {
+            return Ok(None);
+        }
+
+        // Filter out act names - these should not be tracked as zones
+        if self.is_act_name(zone_name) {
+            debug!(
+                "🔍 SCENE FILTER: Filtering out act name '{}' - not tracking as zone",
+                zone_name
+            );
             return Ok(None);
         }
 
@@ -623,10 +640,7 @@ impl CharacterServiceImpl {
 
         info!(
             "Scene change: character {} entered '{}' (Act: {}, Town: {})",
-            character_id,
-            zone_name,
-            act_name,
-            is_town
+            character_id, zone_name, act_name, is_town
         );
 
         Ok(Some(scene_change_event))

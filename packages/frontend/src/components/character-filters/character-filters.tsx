@@ -101,7 +101,7 @@ export const CharacterFilters = memo(function CharacterFilters({
     <div className='relative' ref={dropdownRef}>
       {/* Filter Toggle Button */}
       <button
-        className='w-full flex items-center justify-between px-3 py-2 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-300 hover:text-white transition-colors'
+        className='w-full flex items-center justify-between px-3 py-2 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 text-zinc-300 hover:text-white transition-colors h-10'
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span className='text-sm font-medium'>
@@ -124,7 +124,7 @@ export const CharacterFilters = memo(function CharacterFilters({
 
       {/* Filter Content Overlay */}
       {isExpanded && (
-        <div className='absolute top-full left-0 right-0 z-50 mt-2 space-y-3 p-4 bg-zinc-800/95 backdrop-blur-sm rounded-lg border border-zinc-700/50 shadow-xl'>
+        <div className='absolute top-full left-0 right-0 z-50 mt-2 space-y-3 p-4 bg-zinc-800/95 backdrop-blur-sm border border-zinc-700/50 shadow-xl'>
           {/* League Filter */}
           <div className={filterSectionClasses}>
             <label className={filterLabelClasses}>League</label>

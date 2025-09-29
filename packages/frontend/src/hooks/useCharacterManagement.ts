@@ -2,7 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterFormData } from '../components/character-modals/character-form-modal';
 import type { CharacterData } from '../types';
-import type { CharacterTrackingData } from '../types/character-tracking';
+import type { CharacterTrackingData } from '../types/character';
 import {
   useActiveCharacter,
   useCharacters,

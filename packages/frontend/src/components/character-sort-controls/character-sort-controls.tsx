@@ -48,12 +48,12 @@ export const CharacterSortControls = memo(function CharacterSortControls({
           value={sort.field}
           onChange={handleFieldChange}
           options={SORT_OPTIONS}
-          className='flex-1 px-3 py-2 bg-zinc-700/50 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors'
+          className='flex-1 h-10'
         />
 
         <button
           onClick={handleDirectionToggle}
-          className='px-3 py-2 h-10 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-300 hover:text-white transition-colors flex items-center justify-center'
+          className='px-3 py-2 h-10 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 text-zinc-300 hover:text-white transition-colors flex items-center justify-center'
           title={`Currently ${getDirectionLabel()}. Click to toggle.`}
         >
           <svg
@@ -78,7 +78,7 @@ export const CharacterSortControls = memo(function CharacterSortControls({
           }}
           variant='outline'
           size='sm'
-          className='px-3 py-2 h-10 text-sm font-medium text-zinc-400 hover:text-white bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 rounded-lg transition-colors flex items-center justify-center'
+          className='h-10 text-sm font-medium text-zinc-400 hover:text-white bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 transition-colors flex items-center justify-center'
         >
           Reset
         </Button>

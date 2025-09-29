@@ -1,11 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import {
-  ActTimeChart,
+  ActDistributionChart,
   CharacterStatusCard,
-  QuickActionsPanel,
-  QuickStatsGrid,
+  DashboardInsights,
 } from '../components';
-import { PageHeader } from '../components/page-header';
 import { useCharacterManagement } from '../hooks';
 
 export const Route = createFileRoute('/')({
@@ -14,24 +12,22 @@ export const Route = createFileRoute('/')({
 
 function Index() {
   const { activeCharacter } = useCharacterManagement();
-  const allStats = activeCharacter?.zones || [];
 
   return (
     <div className='min-h-screen bg-zinc-900 text-white'>
-      <PageHeader
-        title='POE Overlord'
-        subtitle='Your comprehensive Path of Exile 2 monitoring and activity tracking companion.'
-        showBackButton={false}
-      />
-      <div className='max-w-7xl mx-auto px-6 pb-16'>
+      <div className='px-6 py-8 pb-16'>
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+          {/* Left Column - Takes up 2/3 of the space */}
           <div className='lg:col-span-2 space-y-6'>
             <CharacterStatusCard />
-            <QuickStatsGrid />
-            <ActTimeChart stats={allStats} />
           </div>
+
+          {/* Right Column - Takes up 1/3 of the space */}
           <div className='space-y-6'>
-            <QuickActionsPanel />
+            <DashboardInsights />
+            {activeCharacter && (
+              <ActDistributionChart character={activeCharacter} />
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import type {
   CharacterFilters,
   SortOption,
@@ -75,6 +75,24 @@ export const CharacterList = memo(function CharacterList({
     [onDeleteCharacter]
   );
 
+  // Create stable character handlers to prevent unnecessary re-renders
+  const characterHandlers = useMemo(() => {
+    const handlers = new Map();
+    characters.forEach(character => {
+      handlers.set(character.id, {
+        onSelect: () => handleSelectCharacter(character.id),
+        onEdit: () => handleEditCharacter(character),
+        onDelete: () => handleDeleteCharacter(character.id),
+      });
+    });
+    return handlers;
+  }, [
+    characters,
+    handleSelectCharacter,
+    handleEditCharacter,
+    handleDeleteCharacter,
+  ]);
+
   // Only show empty state if there are truly no characters in the system
   // (not just filtered results)
   if (totalCount === 0) {
@@ -84,7 +102,6 @@ export const CharacterList = memo(function CharacterList({
   return (
     <div className={getListContainerClasses()}>
       <CharacterListHeader
-        onCreateCharacter={onCreateCharacter}
         filters={filters}
         onFilterChange={onFilterChange}
         onClearFilters={onClearFilters}
@@ -98,21 +115,24 @@ export const CharacterList = memo(function CharacterList({
 
       {characters.length > 0 ? (
         <div className={getCharacterGridClasses()}>
-          {characters.map(character => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              isActive={character.id === activeCharacterId}
-              onSelect={() => handleSelectCharacter(character.id)}
-              onEdit={() => handleEditCharacter(character)}
-              onDelete={() => handleDeleteCharacter(character.id)}
-              showDetails={true}
-            />
-          ))}
+          {characters.map(character => {
+            const handlers = characterHandlers.get(character.id);
+            return (
+              <CharacterCard
+                key={character.id}
+                character={character}
+                isActive={character.id === activeCharacterId}
+                onSelect={handlers?.onSelect || (() => {})}
+                onEdit={handlers?.onEdit || (() => {})}
+                onDelete={handlers?.onDelete || (() => {})}
+                showDetails={true}
+              />
+            );
+          })}
         </div>
       ) : (
         <div className='flex flex-col items-center justify-center py-16 px-6 text-center'>
-          <div className='w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center mb-4'>
+          <div className='w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4'>
             <svg
               className='w-8 h-8 text-zinc-500'
               fill='none'
@@ -136,7 +156,7 @@ export const CharacterList = memo(function CharacterList({
           </p>
           <button
             onClick={onClearFilters}
-            className='px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg transition-colors'
+            className='px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors'
           >
             Clear All Filters
           </button>

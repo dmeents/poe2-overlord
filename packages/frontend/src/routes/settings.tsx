@@ -1,4 +1,3 @@
-import { PageHeader } from '@/components';
 import { SettingsForm } from '@/components/settings-form';
 import type { AppConfig } from '@/types';
 import { createFileRoute } from '@tanstack/react-router';
@@ -18,11 +17,7 @@ function RouteComponent() {
 
   return (
     <div className='min-h-screen bg-zinc-900 text-white'>
-      <PageHeader
-        title='Settings'
-        subtitle='Configure your POE2 Overlord application preferences and monitoring settings.'
-      />
-      <div className='max-w-7xl mx-auto px-6'>
+      <div className='px-6 py-8'>
         <div className='space-y-6'>
           {/* System Settings */}
           <div className='bg-zinc-900/50 p-6 rounded-lg border border-zinc-800'>

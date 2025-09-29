@@ -8,7 +8,7 @@ export function useCharacterFiltering(
   sort: SortOption
 ) {
   const filteredAndSortedCharacters = useMemo(() => {
-    let filtered = characters.filter(character => {
+    const filtered = characters.filter(character => {
       // League filter
       if (filters.league !== 'All' && character.league !== filters.league) {
         return false;
@@ -62,17 +62,20 @@ export function useCharacterFiltering(
       let comparison = 0;
 
       switch (sort.field) {
-        case 'level':
+        case 'level': {
           comparison = a.level - b.level;
           break;
-        case 'name':
+        }
+        case 'name': {
           comparison = a.name.localeCompare(b.name);
           break;
-        case 'created_at':
+        }
+        case 'created_at': {
           comparison =
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
           break;
-        case 'last_played':
+        }
+        case 'last_played': {
           const aLastPlayed = a.last_played
             ? new Date(a.last_played).getTime()
             : 0;
@@ -81,13 +84,16 @@ export function useCharacterFiltering(
             : 0;
           comparison = aLastPlayed - bLastPlayed;
           break;
-        case 'play_time':
+        }
+        case 'play_time': {
           const aPlayTime = a.summary?.total_play_time || 0;
           const bPlayTime = b.summary?.total_play_time || 0;
           comparison = aPlayTime - bPlayTime;
           break;
-        default:
+        }
+        default: {
           comparison = 0;
+        }
       }
 
       return sort.direction === 'asc' ? comparison : -comparison;

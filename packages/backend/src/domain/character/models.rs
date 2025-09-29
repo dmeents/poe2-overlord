@@ -436,13 +436,37 @@ pub struct TrackingSummary {
     /// Character this summary belongs to
     pub character_id: String,
     /// Total play time across all zones (seconds)
+    #[serde(default)]
     pub total_play_time: u64,
     /// Total time spent in hideouts (seconds)
+    #[serde(default)]
     pub total_hideout_time: u64,
     /// Total number of unique zones visited
+    #[serde(default)]
     pub total_zones_visited: usize,
     /// Total number of deaths across all zones
+    #[serde(default)]
     pub total_deaths: u32,
+
+    // Per-act play time tracking
+    /// Play time in Act 1 (seconds)
+    #[serde(default)]
+    pub play_time_act1: u64,
+    /// Play time in Act 2 (seconds)
+    #[serde(default)]
+    pub play_time_act2: u64,
+    /// Play time in Act 3 (seconds)
+    #[serde(default)]
+    pub play_time_act3: u64,
+    /// Play time in Act 4 (seconds)
+    #[serde(default)]
+    pub play_time_act4: u64,
+    /// Play time in Interlude (seconds)
+    #[serde(default)]
+    pub play_time_interlude: u64,
+    /// Play time in Endgame (seconds)
+    #[serde(default)]
+    pub play_time_endgame: u64,
 }
 
 impl TrackingSummary {
@@ -454,6 +478,12 @@ impl TrackingSummary {
             total_hideout_time: 0,
             total_zones_visited: 0,
             total_deaths: 0,
+            play_time_act1: 0,
+            play_time_act2: 0,
+            play_time_act3: 0,
+            play_time_act4: 0,
+            play_time_interlude: 0,
+            play_time_endgame: 0,
         }
     }
 
@@ -473,6 +503,33 @@ impl TrackingSummary {
             .sum();
         let total_deaths = zones.iter().map(|zone| zone.deaths).sum();
 
+        // Calculate per-act play time
+        let mut play_time_act1 = 0u64;
+        let mut play_time_act2 = 0u64;
+        let mut play_time_act3 = 0u64;
+        let mut play_time_act4 = 0u64;
+        let mut play_time_interlude = 0u64;
+        let mut play_time_endgame = 0u64;
+
+        for zone in zones {
+            let act_time = zone.duration;
+            match zone.act.as_deref() {
+                Some("Act 1") => play_time_act1 += act_time,
+                Some("Act 2") => play_time_act2 += act_time,
+                Some("Act 3") => play_time_act3 += act_time,
+                Some("Act 4") => play_time_act4 += act_time,
+                Some("Interlude") => play_time_interlude += act_time,
+                Some("Endgame") | None => play_time_endgame += act_time,
+                Some(unknown_act) => {
+                    debug!(
+                        "🔍 SUMMARY CALC: Unknown act '{}' for zone '{}', defaulting to Endgame",
+                        unknown_act, zone.location_name
+                    );
+                    play_time_endgame += act_time;
+                }
+            }
+        }
+
         debug!(
             "🔍 SUMMARY CALC: Zone death breakdown: {:?}",
             zones
@@ -481,6 +538,10 @@ impl TrackingSummary {
                 .collect::<Vec<_>>()
         );
         debug!("🔍 SUMMARY CALC: Total deaths calculated: {}", total_deaths);
+        debug!(
+            "🔍 SUMMARY CALC: Act time breakdown - Act1: {}, Act2: {}, Act3: {}, Act4: {}, Interlude: {}, Endgame: {}",
+            play_time_act1, play_time_act2, play_time_act3, play_time_act4, play_time_interlude, play_time_endgame
+        );
 
         Self {
             character_id: character_id.to_string(),
@@ -488,7 +549,68 @@ impl TrackingSummary {
             total_hideout_time,
             total_zones_visited: zones.len(),
             total_deaths,
+            play_time_act1,
+            play_time_act2,
+            play_time_act3,
+            play_time_act4,
+            play_time_interlude,
+            play_time_endgame,
         }
+    }
+
+    /// Gets play time for a specific act
+    /// Returns 0 for unknown acts
+    pub fn get_act_time(&self, act_name: &str) -> u64 {
+        match act_name {
+            "Act 1" => self.play_time_act1,
+            "Act 2" => self.play_time_act2,
+            "Act 3" => self.play_time_act3,
+            "Act 4" => self.play_time_act4,
+            "Interlude" => self.play_time_interlude,
+            "Endgame" => self.play_time_endgame,
+            _ => 0,
+        }
+    }
+
+    /// Gets total story time (Acts 1-4 + Interlude)
+    /// This excludes Endgame content
+    pub fn get_total_story_time(&self) -> u64 {
+        self.play_time_act1
+            + self.play_time_act2
+            + self.play_time_act3
+            + self.play_time_act4
+            + self.play_time_interlude
+    }
+
+    /// Gets a breakdown of all act times as a HashMap
+    /// Useful for UI display and analysis
+    pub fn get_act_breakdown(&self) -> std::collections::HashMap<String, u64> {
+        let mut breakdown = std::collections::HashMap::new();
+        breakdown.insert("Act 1".to_string(), self.play_time_act1);
+        breakdown.insert("Act 2".to_string(), self.play_time_act2);
+        breakdown.insert("Act 3".to_string(), self.play_time_act3);
+        breakdown.insert("Act 4".to_string(), self.play_time_act4);
+        breakdown.insert("Interlude".to_string(), self.play_time_interlude);
+        breakdown.insert("Endgame".to_string(), self.play_time_endgame);
+        breakdown
+    }
+
+    /// Gets the act with the most play time
+    /// Returns (act_name, time_in_seconds)
+    pub fn get_longest_act(&self) -> (String, u64) {
+        let acts = [
+            ("Act 1", self.play_time_act1),
+            ("Act 2", self.play_time_act2),
+            ("Act 3", self.play_time_act3),
+            ("Act 4", self.play_time_act4),
+            ("Interlude", self.play_time_interlude),
+            ("Endgame", self.play_time_endgame),
+        ];
+
+        acts.iter()
+            .max_by_key(|(_, time)| time)
+            .map(|(name, time)| (name.to_string(), *time))
+            .unwrap_or_else(|| ("None".to_string(), 0))
     }
 }
 

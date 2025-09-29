@@ -95,30 +95,23 @@ export const CharacterCard = memo(function CharacterCard({
     if (interactive) onSelect();
   }, [interactive, onSelect]);
 
-  const handleEdit = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onEdit();
-    },
-    [onEdit]
-  );
-
-  const handleDelete = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onDelete();
-    },
-    [onDelete]
-  );
-
   const handleToggleDetails = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDetailsExpanded(prev => !prev);
   }, []);
 
+  // Wrapper functions for Button onClick (Button expects () => void)
+  const handleEditClick = useCallback(() => {
+    onEdit();
+  }, [onEdit]);
+
+  const handleDeleteClick = useCallback(() => {
+    onDelete();
+  }, [onDelete]);
+
   return (
     <div
-      className={`group relative rounded-xl border transition-all duration-200 overflow-hidden ${
+      className={`group relative border transition-all duration-200 overflow-hidden ${
         interactive ? 'cursor-pointer' : ''
       } ${
         isActive
@@ -130,14 +123,14 @@ export const CharacterCard = memo(function CharacterCard({
     >
       {/* Ascendency Background Overlay */}
       {ascendencyImage && (
-        <div className='absolute inset-0 rounded-xl' style={overlayStyles} />
+        <div className='absolute inset-0' style={overlayStyles} />
       )}
       {/* Header Section with Gradient Background */}
       <div className='relative p-5 pb-4' style={headerBackgroundStyles}>
         <div className='flex items-center gap-3 mb-5'>
           {/* Character Level */}
           <div
-            className={`w-8 h-8 rounded-full bg-gradient-to-br ${classLevelColors.bg} border ${classLevelColors.border} flex items-center justify-center flex-shrink-0`}
+            className={`w-8 h-8 bg-gradient-to-br ${classLevelColors.bg} border ${classLevelColors.border} flex items-center justify-center flex-shrink-0`}
           >
             <span className={`text-sm font-bold ${classLevelColors.text}`}>
               {character.level}
@@ -153,7 +146,7 @@ export const CharacterCard = memo(function CharacterCard({
           {showDetails && (
             <button
               onClick={handleToggleDetails}
-              className='p-1.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100'
+              className='p-1.5 bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100'
               title={isDetailsExpanded ? 'Hide details' : 'Show details'}
             >
               <svg
@@ -177,26 +170,22 @@ export const CharacterCard = memo(function CharacterCard({
           {/* Action Buttons */}
           {interactive && (
             <div className='flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-              <div onClick={handleEdit}>
-                <Button
-                  onClick={() => onEdit()}
-                  variant='outline'
-                  size='sm'
-                  className='bg-zinc-800/80 backdrop-blur-sm'
-                >
-                  Edit
-                </Button>
-              </div>
-              <div onClick={handleDelete}>
-                <Button
-                  onClick={() => onDelete()}
-                  variant='outline'
-                  size='sm'
-                  className='text-red-400 hover:text-red-300 hover:border-red-400 bg-zinc-800/80 backdrop-blur-sm'
-                >
-                  Delete
-                </Button>
-              </div>
+              <Button
+                onClick={handleEditClick}
+                variant='outline'
+                size='sm'
+                className='bg-zinc-800/80 backdrop-blur-sm'
+              >
+                Edit
+              </Button>
+              <Button
+                onClick={handleDeleteClick}
+                variant='outline'
+                size='sm'
+                className='text-red-400 hover:text-red-300 hover:border-red-400 bg-zinc-800/80 backdrop-blur-sm'
+              >
+                Delete
+              </Button>
             </div>
           )}
         </div>
@@ -233,12 +222,12 @@ export const CharacterCard = memo(function CharacterCard({
         {(character.hardcore || character.solo_self_found) && (
           <div className='flex gap-2 mb-4'>
             {character.hardcore && (
-              <span className='px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-400 rounded-lg border border-red-500/30'>
+              <span className='px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30'>
                 Hardcore
               </span>
             )}
             {character.solo_self_found && (
-              <span className='px-3 py-1.5 text-xs font-semibold bg-yellow-500/20 text-yellow-400 rounded-lg border border-yellow-500/30'>
+              <span className='px-3 py-1.5 text-xs font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'>
                 SSF
               </span>
             )}

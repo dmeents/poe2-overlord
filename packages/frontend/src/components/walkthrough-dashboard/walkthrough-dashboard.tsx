@@ -8,10 +8,10 @@ import { invoke } from '@tauri-apps/api/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useWalkthroughEvents } from '../../hooks/useWalkthroughEvents';
 import type {
+  CharacterWalkthroughProgress,
   WalkthroughGuide,
-  WalkthroughProgress,
-  WalkthroughStepResult,
 } from '../../types/walkthrough';
+import { WalkthroughService } from '../../utils/walkthrough';
 import { Button } from '../button/button';
 import { WalkthroughGuideViewer } from '../walkthrough-guide-viewer';
 import { WalkthroughProgressCard } from '../walkthrough-progress-card';
@@ -39,7 +39,7 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
     setProgress,
     setCurrentStep,
     setPreviousStep,
-  } = useWalkthroughEvents(characterId);
+  } = useWalkthroughEvents(characterId, guide);
 
   // Load walkthrough guide (progress is handled by events)
   const loadWalkthroughData = useCallback(async () => {
@@ -54,25 +54,30 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
       setGuide(guideResponse);
 
       // Load initial progress (events will handle updates)
-      const characterProgressResponse = await invoke<{
-        progress: WalkthroughProgress;
-        current_step: WalkthroughStepResult | null;
-        next_step: WalkthroughStepResult | null;
-        previous_step: WalkthroughStepResult | null;
-      }>('get_character_walkthrough_progress', {
-        characterId,
-      });
+      const characterProgressResponse =
+        await invoke<CharacterWalkthroughProgress>(
+          'get_character_walkthrough_progress',
+          { characterId }
+        );
 
       setProgress(characterProgressResponse.progress);
 
+      // Get step details from the guide using step IDs
+      const steps = WalkthroughService.getStepsFromGuide(
+        guideResponse,
+        characterProgressResponse.progress.current_step_id,
+        characterProgressResponse.next_step_id,
+        characterProgressResponse.previous_step_id
+      );
+
       // Set current step if available
-      if (characterProgressResponse.current_step) {
-        setCurrentStep(characterProgressResponse.current_step);
+      if (steps.currentStep) {
+        setCurrentStep(steps.currentStep);
       }
 
       // Set previous step if available
-      if (characterProgressResponse.previous_step) {
-        setPreviousStep(characterProgressResponse.previous_step);
+      if (steps.previousStep) {
+        setPreviousStep(steps.previousStep);
       }
     } catch (err) {
       console.error('Failed to load walkthrough data:', err);
@@ -84,9 +89,27 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
 
   // Advance to next step
   const handleAdvanceStep = async () => {
+    if (!currentStep || !progress) return;
+
     try {
-      await invoke('advance_character_walkthrough_step', {
+      // Get the next step ID from the current step
+      const nextStepId = currentStep.step.next_step_id;
+      if (!nextStepId) {
+        setError('No next step available. Campaign may be completed.');
+        return;
+      }
+
+      // Create new progress with next step
+      const newProgress = {
+        ...progress,
+        current_step_id: nextStepId,
+        is_completed: false,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
         characterId,
+        progress: newProgress,
       });
       // Events will handle the UI update
     } catch (err) {
@@ -97,12 +120,20 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
 
   // Go to previous step
   const handlePreviousStep = async () => {
-    if (!previousStep) return;
+    if (!previousStep || !progress) return;
 
     try {
-      await invoke('move_character_to_walkthrough_step', {
+      // Create new progress with previous step
+      const newProgress = {
+        ...progress,
+        current_step_id: previousStep.step.id,
+        is_completed: false,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
         characterId,
-        stepId: previousStep.step.id,
+        progress: newProgress,
       });
       // Events will handle the UI update
     } catch (err) {
@@ -113,9 +144,20 @@ export const WalkthroughDashboard: React.FC<WalkthroughDashboardProps> = ({
 
   // Mark campaign as completed
   const handleCompleteCampaign = async () => {
+    if (!progress) return;
+
     try {
-      await invoke('mark_character_campaign_completed', {
+      // Create new progress marking campaign as completed
+      const newProgress = {
+        ...progress,
+        current_step_id: null,
+        is_completed: true,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
         characterId,
+        progress: newProgress,
       });
       // Events will handle the UI update
     } catch (err) {

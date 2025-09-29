@@ -1,4 +1,4 @@
-use log::{debug, info, warn};
+use log::{debug, info};
 use std::sync::Arc;
 
 use crate::domain::character::traits::CharacterService;
@@ -9,7 +9,12 @@ use crate::domain::walkthrough::models::{
 use crate::domain::walkthrough::traits::{WalkthroughRepository, WalkthroughService};
 use crate::errors::AppError;
 
-/// Implementation of WalkthroughService for business logic
+/// Implementation of the WalkthroughService trait.
+///
+/// This service provides business logic for walkthrough management including
+/// guide loading, progress tracking, and scene change processing. It coordinates
+/// between the repository layer and character service to manage walkthrough
+/// progression through the game's campaign.
 pub struct WalkthroughServiceImpl {
     /// Repository for walkthrough data persistence
     repository: Arc<dyn WalkthroughRepository + Send + Sync>,
@@ -20,7 +25,7 @@ pub struct WalkthroughServiceImpl {
 }
 
 impl WalkthroughServiceImpl {
-    /// Creates a new WalkthroughServiceImpl
+    /// Creates a new WalkthroughServiceImpl instance with required dependencies
     pub fn new(
         repository: Arc<dyn WalkthroughRepository + Send + Sync>,
         character_service: Arc<dyn CharacterService + Send + Sync>,
@@ -33,7 +38,7 @@ impl WalkthroughServiceImpl {
         }
     }
 
-    /// Gets a character's current walkthrough progress
+    /// Gets a character's current walkthrough progress from character data
     async fn get_character_walkthrough_progress(
         &self,
         character_id: &str,
@@ -42,7 +47,7 @@ impl WalkthroughServiceImpl {
         Ok(character_data.get_walkthrough_progress().clone())
     }
 
-    /// Updates a character's walkthrough progress
+    /// Updates a character's walkthrough progress and publishes events
     async fn update_character_walkthrough_progress(
         &self,
         character_id: &str,
@@ -60,10 +65,7 @@ impl WalkthroughServiceImpl {
             AppEvent::walkthrough_progress_updated(character_id.to_string(), progress_clone);
         let _ = self.event_bus.publish(event).await;
 
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Updated character {} walkthrough progress",
-            character_id
-        );
+        debug!("Updated character {} walkthrough progress", character_id);
         Ok(())
     }
 }
@@ -72,100 +74,49 @@ impl WalkthroughServiceImpl {
 impl WalkthroughService for WalkthroughServiceImpl {
     /// Gets the complete walkthrough guide
     async fn get_guide(&self) -> Result<WalkthroughGuide, AppError> {
-        debug!("🔍 WALKTHROUGH SERVICE: Getting walkthrough guide");
-
-        // We need to make this mutable to access the cache
-        // This is a limitation of the current design - we'll need to use Arc<Mutex<>> for the cache
-        // For now, we'll load from repository each time
+        // Load guide from repository (no caching implemented yet)
         let guide = self.repository.load_guide().await?;
-        info!(
-            "✅ WALKTHROUGH SERVICE: Retrieved walkthrough guide with {} acts",
-            guide.acts.len()
-        );
+        info!("Retrieved walkthrough guide with {} acts", guide.acts.len());
         Ok(guide)
     }
 
-    /// Gets a specific step by ID
-    async fn get_step(&self, step_id: &str) -> Result<Option<WalkthroughStepResult>, AppError> {
-        debug!("🔍 WALKTHROUGH SERVICE: Getting step {}", step_id);
-
-        let guide = self.repository.load_guide().await?;
-
-        for (_, act) in &guide.acts {
-            if let Some(step) = act.steps.get(step_id) {
-                let result = WalkthroughStepResult {
-                    step: step.clone(),
-                    act_name: act.act_name.clone(),
-                    act_number: act.act_number,
-                };
-                info!(
-                    "✅ WALKTHROUGH SERVICE: Found step {} in act {}",
-                    step_id, act.act_name
-                );
-                return Ok(Some(result));
-            }
-        }
-
-        warn!("⚠️ WALKTHROUGH SERVICE: Step {} not found", step_id);
-        Ok(None)
-    }
-
-    /// Gets a character's walkthrough progress
+    /// Gets a character's walkthrough progress with navigation context
     async fn get_character_progress(
         &self,
         character_id: &str,
     ) -> Result<CharacterWalkthroughProgress, AppError> {
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Getting character {} progress",
-            character_id
-        );
-
         let progress = self
             .get_character_walkthrough_progress(character_id)
             .await?;
 
-        let current_step = if let Some(step_id) = &progress.current_step_id {
-            self.get_step(step_id).await?
-        } else {
-            None
-        };
+        // Get step IDs from the progress and guide for navigation context
+        let (next_step_id, previous_step_id) = if let Some(step_id) = &progress.current_step_id {
+            // Load guide and find the current step to get next/previous step IDs
+            let guide = self.repository.load_guide().await?;
+            let mut found_step = None;
 
-        let next_step = if let Some(_step_id) = &progress.current_step_id {
-            if let Some(current) = &current_step {
-                self.get_step(&current.step.next_step_id.clone().unwrap_or_default())
-                    .await?
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-
-        let previous_step = if let Some(_step_id) = &progress.current_step_id {
-            if let Some(current) = &current_step {
-                if let Some(prev_id) = &current.step.previous_step_id {
-                    self.get_step(prev_id).await?
-                } else {
-                    None
+            for (_, act) in &guide.acts {
+                if let Some(step) = act.steps.get(step_id) {
+                    found_step = Some(step);
+                    break;
                 }
+            }
+
+            if let Some(step) = found_step {
+                (step.next_step_id.clone(), step.previous_step_id.clone())
             } else {
-                None
+                (None, None)
             }
         } else {
-            None
+            (None, None)
         };
 
         let result = CharacterWalkthroughProgress {
             progress,
-            current_step,
-            next_step,
-            previous_step,
+            next_step_id,
+            previous_step_id,
         };
 
-        info!(
-            "✅ WALKTHROUGH SERVICE: Retrieved character {} progress",
-            character_id
-        );
         Ok(result)
     }
 
@@ -175,155 +126,29 @@ impl WalkthroughService for WalkthroughServiceImpl {
         character_id: &str,
         progress: WalkthroughProgress,
     ) -> Result<(), AppError> {
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Updating character {} progress",
-            character_id
-        );
-
         self.update_character_walkthrough_progress(character_id, progress)
             .await?;
 
-        info!(
-            "✅ WALKTHROUGH SERVICE: Updated character {} progress",
-            character_id
-        );
+        info!("Updated character {} walkthrough progress", character_id);
         Ok(())
     }
 
-    /// Advances a character to the next step
-    async fn advance_character_to_next_step(&self, character_id: &str) -> Result<(), AppError> {
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Advancing character {} to next step",
-            character_id
-        );
-
-        let mut progress = self
-            .get_character_walkthrough_progress(character_id)
-            .await?;
-
-        if progress.is_completed {
-            warn!(
-                "⚠️ WALKTHROUGH SERVICE: Character {} has already completed the campaign",
-                character_id
-            );
-            return Ok(());
-        }
-
-        let current_step = if let Some(step_id) = &progress.current_step_id {
-            self.get_step(step_id).await?
-        } else {
-            return Err(AppError::Validation {
-                message: "Character has no current step".to_string(),
-            });
-        };
-
-        if let Some(current) = current_step {
-            let from_step_id = progress.current_step_id.clone();
-            progress.advance_to_next_step(current.step.next_step_id.clone());
-            let to_step_id = progress.current_step_id.clone();
-            self.update_character_walkthrough_progress(character_id, progress)
-                .await?;
-
-            // Publish step advanced event
-            let event = AppEvent::walkthrough_step_advanced(
-                character_id.to_string(),
-                from_step_id,
-                to_step_id,
-            );
-            let _ = self.event_bus.publish(event).await;
-
-            // If step was completed, publish step completed event
-            let event = AppEvent::walkthrough_step_completed(character_id.to_string(), current);
-            let _ = self.event_bus.publish(event).await;
-
-            info!(
-                "✅ WALKTHROUGH SERVICE: Advanced character {} to next step",
-                character_id
-            );
-        } else {
-            return Err(AppError::Validation {
-                message: "Current step not found".to_string(),
-            });
-        }
-
-        Ok(())
-    }
-
-    /// Moves a character to a specific step
-    async fn move_character_to_step(
-        &self,
-        character_id: &str,
-        step_id: &str,
-    ) -> Result<(), AppError> {
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Moving character {} to step {}",
-            character_id, step_id
-        );
-
-        // Verify the step exists
-        if self.get_step(step_id).await?.is_none() {
-            return Err(AppError::Validation {
-                message: format!("Step {} not found", step_id),
-            });
-        }
-
-        let mut progress = self
-            .get_character_walkthrough_progress(character_id)
-            .await?;
-        progress.set_current_step(step_id.to_string());
-        self.update_character_walkthrough_progress(character_id, progress)
-            .await?;
-
-        info!(
-            "✅ WALKTHROUGH SERVICE: Moved character {} to step {}",
-            character_id, step_id
-        );
-        Ok(())
-    }
-
-    /// Marks a character's campaign as completed
-    async fn mark_character_campaign_completed(&self, character_id: &str) -> Result<(), AppError> {
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Marking character {} campaign as completed",
-            character_id
-        );
-
-        let mut progress = self
-            .get_character_walkthrough_progress(character_id)
-            .await?;
-        progress.mark_completed();
-        self.update_character_walkthrough_progress(character_id, progress)
-            .await?;
-
-        // Publish campaign completed event
-        let event = AppEvent::walkthrough_campaign_completed(character_id.to_string());
-        let _ = self.event_bus.publish(event).await;
-
-        info!(
-            "✅ WALKTHROUGH SERVICE: Marked character {} campaign as completed",
-            character_id
-        );
-        Ok(())
-    }
-
-    /// Handles a scene change for walkthrough progress detection
+    /// Handles a scene change for walkthrough progress detection and advancement
     async fn handle_scene_change(
         &self,
         character_id: &str,
         scene_content: &str,
     ) -> Result<(), AppError> {
-        debug!(
-            "🔍 WALKTHROUGH SERVICE: Handling scene change for character {}",
-            character_id
-        );
-
         let progress = self
             .get_character_walkthrough_progress(character_id)
             .await?;
 
         // If character has completed campaign, skip processing
         if progress.is_completed {
-            debug!("🔍 WALKTHROUGH SERVICE: Character {} has completed campaign, skipping scene change processing", character_id);
+            debug!(
+                "Character {} has completed campaign, skipping scene change processing",
+                character_id
+            );
             return Ok(());
         }
 
@@ -336,18 +161,87 @@ impl WalkthroughService for WalkthroughServiceImpl {
             if scene_event.is_zone() {
                 let zone_name = scene_event.get_name();
                 debug!(
-                    "🔍 WALKTHROUGH SERVICE: Detected zone change to {} for character {}",
+                    "Detected zone change to {} for character {}",
                     zone_name, character_id
                 );
 
                 // Check if this zone matches the current step's completion_zone
                 if let Some(step_id) = &progress.current_step_id {
-                    if let Some(step_result) = self.get_step(step_id).await? {
-                        if step_result.step.completion_zone == zone_name {
-                            debug!("🔍 WALKTHROUGH SERVICE: Zone {} matches completion zone for step {}, advancing", zone_name, step_id);
-                            self.advance_character_to_next_step(character_id).await?;
+                    // Load guide and find the current step
+                    let guide = self.repository.load_guide().await?;
+                    let mut found_step = None;
+                    let mut found_act = None;
+
+                    for (_, act) in &guide.acts {
+                        if let Some(step) = act.steps.get(step_id) {
+                            found_step = Some(step);
+                            found_act = Some(act);
+                            break;
+                        }
+                    }
+
+                    if let (Some(step), Some(act)) = (found_step, found_act) {
+                        if step.completion_zone == zone_name {
+                            debug!(
+                                "Zone {} matches completion zone for step {}, advancing",
+                                zone_name, step_id
+                            );
+
+                            // Create step result for events
+                            let step_result = WalkthroughStepResult {
+                                step: step.clone(),
+                                act_name: act.act_name.clone(),
+                                act_number: act.act_number,
+                            };
+
+                            // Get the next step ID and move to it
+                            if let Some(next_step_id) = &step.next_step_id {
+                                let from_step_id = progress.current_step_id.clone();
+
+                                // Create new progress with next step
+                                let mut new_progress = progress.clone();
+                                new_progress.set_current_step(next_step_id.clone());
+                                self.update_character_walkthrough_progress(
+                                    character_id,
+                                    new_progress,
+                                )
+                                .await?;
+
+                                // Publish step advanced event
+                                let event = AppEvent::walkthrough_step_advanced(
+                                    character_id.to_string(),
+                                    from_step_id,
+                                    Some(next_step_id.clone()),
+                                );
+                                let _ = self.event_bus.publish(event).await;
+
+                                // Publish step completed event
+                                let event = AppEvent::walkthrough_step_completed(
+                                    character_id.to_string(),
+                                    step_result,
+                                );
+                                let _ = self.event_bus.publish(event).await;
+                            } else {
+                                // No next step, mark campaign as completed
+                                let mut new_progress = progress.clone();
+                                new_progress.mark_completed();
+                                self.update_character_walkthrough_progress(
+                                    character_id,
+                                    new_progress,
+                                )
+                                .await?;
+
+                                // Publish campaign completed event
+                                let event = AppEvent::walkthrough_campaign_completed(
+                                    character_id.to_string(),
+                                );
+                                let _ = self.event_bus.publish(event).await;
+                            }
                         } else {
-                            debug!("🔍 WALKTHROUGH SERVICE: Zone {} does not match completion zone {} for step {}", zone_name, step_result.step.completion_zone, step_id);
+                            debug!(
+                                "Zone {} does not match completion zone {} for step {}",
+                                zone_name, step.completion_zone, step_id
+                            );
                         }
                     }
                 }
@@ -355,29 +249,5 @@ impl WalkthroughService for WalkthroughServiceImpl {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_walkthrough_progress_new() {
-        let progress = WalkthroughProgress::new();
-        assert_eq!(progress.current_step_id, Some("act_4_step_1".to_string()));
-        assert!(!progress.is_completed);
-    }
-
-    #[test]
-    fn test_walkthrough_progress_advance() {
-        let mut progress = WalkthroughProgress::new();
-        progress.advance_to_next_step(Some("act_4_step_2".to_string()));
-        assert_eq!(progress.current_step_id, Some("act_4_step_2".to_string()));
-        assert!(!progress.is_completed);
-
-        progress.advance_to_next_step(None);
-        assert_eq!(progress.current_step_id, None);
-        assert!(progress.is_completed);
     }
 }

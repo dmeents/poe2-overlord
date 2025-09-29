@@ -75,3 +75,12 @@ export interface WalkthroughStepResult {
   /** The act this step belongs to */
   act: WalkthroughAct;
 }
+
+export interface CharacterWalkthroughProgress {
+  /** The character's progress */
+  progress: WalkthroughProgress;
+  /** The next step ID (if available) */
+  next_step_id: string | null;
+  /** The previous step ID (if available) */
+  previous_step_id: string | null;
+}

@@ -84,9 +84,8 @@ pub use server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl
 
 // Re-export walkthrough types
 pub use walkthrough::{
-    advance_character_walkthrough_step, get_character_walkthrough_progress, get_walkthrough_guide,
-    get_walkthrough_step, handle_walkthrough_scene_change, mark_character_campaign_completed,
-    move_character_to_walkthrough_step, CharacterWalkthroughProgress, Objective, WalkthroughAct,
+    get_character_walkthrough_progress, get_walkthrough_guide,
+    update_character_walkthrough_progress, CharacterWalkthroughProgress, Objective, WalkthroughAct,
     WalkthroughGuide, WalkthroughProgress, WalkthroughRepository, WalkthroughRepositoryImpl,
     WalkthroughService, WalkthroughServiceImpl, WalkthroughStep, WalkthroughStepResult,
 };

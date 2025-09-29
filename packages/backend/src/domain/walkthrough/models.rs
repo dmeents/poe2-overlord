@@ -2,10 +2,14 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Represents a single objective within a walkthrough step
+/// Represents a single objective within a walkthrough step.
+///
+/// Objectives define specific tasks or goals that must be completed to advance
+/// through a walkthrough step. They can be required or optional, and may include
+/// rewards and additional context information.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Objective {
-    /// The main objective text
+    /// The main objective text describing what needs to be done
     pub text: String,
     /// Additional details about the objective
     pub details: Option<String>,
@@ -17,7 +21,11 @@ pub struct Objective {
     pub notes: Option<String>,
 }
 
-/// Represents a single step in the walkthrough guide
+/// Represents a single step in the walkthrough guide.
+///
+/// Steps are the individual components that make up the walkthrough progression.
+/// Each step contains objectives, zone information, and navigation context
+/// to guide players through the campaign.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughStep {
     /// Unique identifier for this step
@@ -40,7 +48,11 @@ pub struct WalkthroughStep {
     pub wiki_items: Vec<String>,
 }
 
-/// Represents an act in the walkthrough guide
+/// Represents an act in the walkthrough guide.
+///
+/// Acts are major sections of the campaign that contain multiple walkthrough steps.
+/// Each act has a name, number for ordering, and a collection of steps that
+/// guide players through that portion of the campaign.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughAct {
     /// Name of the act (e.g., "Act 4")
@@ -51,14 +63,22 @@ pub struct WalkthroughAct {
     pub steps: HashMap<String, WalkthroughStep>,
 }
 
-/// Represents the complete walkthrough guide structure
+/// Represents the complete walkthrough guide structure.
+///
+/// The walkthrough guide contains all acts and steps that make up the complete
+/// campaign walkthrough. This is the top-level structure loaded from the JSON
+/// configuration file.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughGuide {
     /// All acts in the walkthrough
     pub acts: HashMap<String, WalkthroughAct>,
 }
 
-/// Represents a character's progress through the walkthrough
+/// Represents a character's progress through the walkthrough.
+///
+/// This struct tracks where a character is in their walkthrough progression,
+/// including the current step, completion status, and when progress was last updated.
+/// Progress is stored as part of the character's data and updated as they advance.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughProgress {
     /// Current step ID the character is on (defaults to "act_4_step_1" for initial implementation)
@@ -88,13 +108,6 @@ impl WalkthroughProgress {
         }
     }
 
-    /// Updates the progress to the next step
-    pub fn advance_to_next_step(&mut self, next_step_id: Option<String>) {
-        self.current_step_id = next_step_id.clone();
-        self.is_completed = next_step_id.is_none();
-        self.last_updated = Utc::now();
-    }
-
     /// Updates the progress to a specific step
     pub fn set_current_step(&mut self, step_id: String) {
         self.current_step_id = Some(step_id);
@@ -109,7 +122,7 @@ impl WalkthroughProgress {
         self.last_updated = Utc::now();
     }
 
-    /// Updates the last_updated timestamp
+    /// Updates the last_updated timestamp to current time
     pub fn touch(&mut self) {
         self.last_updated = Utc::now();
     }
@@ -121,7 +134,10 @@ impl Default for WalkthroughProgress {
     }
 }
 
-/// Represents the result of a walkthrough step lookup
+/// Represents the result of a walkthrough step lookup.
+///
+/// This struct combines step data with its act context, providing complete
+/// information about a step including which act it belongs to.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughStepResult {
     /// The step data
@@ -132,62 +148,16 @@ pub struct WalkthroughStepResult {
     pub act_number: u32,
 }
 
-/// Represents the result of getting a character's walkthrough progress
+/// Represents the result of getting a character's walkthrough progress.
+///
+/// This struct combines a character's progress with navigation context,
+/// providing information about the current step and adjacent steps for UI navigation.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CharacterWalkthroughProgress {
     /// The character's progress
     pub progress: WalkthroughProgress,
-    /// The current step data (if not completed)
-    pub current_step: Option<WalkthroughStepResult>,
-    /// The next step data (if available)
-    pub next_step: Option<WalkthroughStepResult>,
-    /// The previous step data (if available)
-    pub previous_step: Option<WalkthroughStepResult>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_walkthrough_progress_new() {
-        let progress = WalkthroughProgress::new();
-        assert_eq!(progress.current_step_id, Some("act_4_step_1".to_string()));
-        assert!(!progress.is_completed);
-    }
-
-    #[test]
-    fn test_walkthrough_progress_completed() {
-        let progress = WalkthroughProgress::completed();
-        assert_eq!(progress.current_step_id, None);
-        assert!(progress.is_completed);
-    }
-
-    #[test]
-    fn test_walkthrough_progress_advance() {
-        let mut progress = WalkthroughProgress::new();
-        progress.advance_to_next_step(Some("act_4_step_2".to_string()));
-        assert_eq!(progress.current_step_id, Some("act_4_step_2".to_string()));
-        assert!(!progress.is_completed);
-
-        progress.advance_to_next_step(None);
-        assert_eq!(progress.current_step_id, None);
-        assert!(progress.is_completed);
-    }
-
-    #[test]
-    fn test_walkthrough_progress_set_current_step() {
-        let mut progress = WalkthroughProgress::new();
-        progress.set_current_step("act_4_step_5".to_string());
-        assert_eq!(progress.current_step_id, Some("act_4_step_5".to_string()));
-        assert!(!progress.is_completed);
-    }
-
-    #[test]
-    fn test_walkthrough_progress_mark_completed() {
-        let mut progress = WalkthroughProgress::new();
-        progress.mark_completed();
-        assert_eq!(progress.current_step_id, None);
-        assert!(progress.is_completed);
-    }
+    /// The next step ID (if available)
+    pub next_step_id: Option<String>,
+    /// The previous step ID (if available)
+    pub previous_step_id: Option<String>,
 }

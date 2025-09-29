@@ -37,24 +37,45 @@ export class WalkthroughService {
   }
 
   /**
-   * Get a specific walkthrough step
+   * Move character to a specific step
    */
-  static async getStep(stepId: string): Promise<WalkthroughStepResult> {
-    return await invoke('get_walkthrough_step', { stepId });
-  }
+  static async moveToStep(characterId: string, stepId: string): Promise<void> {
+    // Get current progress first
+    const currentProgress = await this.getProgress(characterId);
 
-  /**
-   * Advance character to the next step
-   */
-  static async advanceToNextStep(characterId: string): Promise<void> {
-    return await invoke('advance_character_to_next_step', { characterId });
+    // Create new progress with the target step
+    const newProgress = {
+      ...currentProgress,
+      current_step_id: stepId,
+      is_completed: false,
+      last_updated: new Date().toISOString(),
+    };
+
+    return await invoke('update_character_walkthrough_progress', {
+      characterId,
+      progress: newProgress,
+    });
   }
 
   /**
    * Mark character's campaign as completed
    */
   static async markCampaignCompleted(characterId: string): Promise<void> {
-    return await invoke('mark_character_campaign_completed', { characterId });
+    // Get current progress first
+    const currentProgress = await this.getProgress(characterId);
+
+    // Create new progress marking campaign as completed
+    const newProgress = {
+      ...currentProgress,
+      current_step_id: null,
+      is_completed: true,
+      last_updated: new Date().toISOString(),
+    };
+
+    return await invoke('update_character_walkthrough_progress', {
+      characterId,
+      progress: newProgress,
+    });
   }
 
   /**
@@ -65,15 +86,51 @@ export class WalkthroughService {
   }
 
   /**
-   * Set current step for a character
+   * Find a step in the guide by its ID
    */
-  static async setCurrentStep(
-    characterId: string,
+  static findStepInGuide(
+    guide: WalkthroughGuide,
     stepId: string
-  ): Promise<void> {
-    return await invoke('set_character_walkthrough_step', {
-      characterId,
-      stepId,
-    });
+  ): WalkthroughStepResult | null {
+    for (const act of Object.values(guide.acts)) {
+      if (act.steps[stepId]) {
+        return {
+          step: act.steps[stepId],
+          act: act,
+        };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get step details from guide using step ID
+   */
+  static getStepFromGuide(
+    guide: WalkthroughGuide,
+    stepId: string | null
+  ): WalkthroughStepResult | null {
+    if (!stepId) return null;
+    return this.findStepInGuide(guide, stepId);
+  }
+
+  /**
+   * Get multiple steps from guide using step IDs
+   */
+  static getStepsFromGuide(
+    guide: WalkthroughGuide,
+    currentStepId: string | null,
+    nextStepId: string | null,
+    previousStepId: string | null
+  ): {
+    currentStep: WalkthroughStepResult | null;
+    nextStep: WalkthroughStepResult | null;
+    previousStep: WalkthroughStepResult | null;
+  } {
+    return {
+      currentStep: this.getStepFromGuide(guide, currentStepId),
+      nextStep: this.getStepFromGuide(guide, nextStepId),
+      previousStep: this.getStepFromGuide(guide, previousStepId),
+    };
   }
 }

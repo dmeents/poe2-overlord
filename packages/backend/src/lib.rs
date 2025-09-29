@@ -130,12 +130,8 @@ pub fn run() {
             
             // Walkthrough guide commands
             get_walkthrough_guide,
-            get_walkthrough_step,
             get_character_walkthrough_progress,
-            advance_character_walkthrough_step,
-            move_character_to_walkthrough_step,
-            mark_character_campaign_completed,
-            handle_walkthrough_scene_change,
+            update_character_walkthrough_progress,
         ])
         // Initialize application services and start background tasks
         .setup(|app| setup_app(app))

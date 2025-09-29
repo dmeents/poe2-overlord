@@ -1,10 +1,11 @@
-import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
+  WalkthroughGuide,
   WalkthroughProgress,
   WalkthroughStepResult,
 } from '../types/walkthrough';
+import { WalkthroughService } from '../utils/walkthrough';
 
 /**
  * Hook for listening to walkthrough progress updates via Tauri events
@@ -14,9 +15,13 @@ import type {
  * current progress state in local state.
  *
  * @param characterId - The character ID to listen for events for
+ * @param guide - The walkthrough guide for looking up step details
  * @returns Object containing walkthrough progress and event handlers
  */
-export function useWalkthroughEvents(characterId: string | null) {
+export function useWalkthroughEvents(
+  characterId: string | null,
+  guide: WalkthroughGuide | null
+) {
   const [progress, setProgress] = useState<WalkthroughProgress | null>(null);
   const [currentStep, setCurrentStep] = useState<WalkthroughStepResult | null>(
     null
@@ -30,41 +35,22 @@ export function useWalkthroughEvents(characterId: string | null) {
   const listenerRef = useRef<(() => void) | null>(null);
   const isListeningRef = useRef(false);
 
-  // Function to fetch previous step data
-  const fetchPreviousStep = useCallback(async (stepId: string) => {
-    try {
-      const step = await invoke<WalkthroughStepResult>('get_walkthrough_step', {
-        stepId,
-      });
-      setPreviousStep(step);
-    } catch (error) {
-      console.error('Failed to fetch previous step:', error);
-    }
-  }, []);
-
-  // Function to fetch current step data
-  const fetchCurrentStep = useCallback(
-    async (stepId: string) => {
-      try {
-        const step = await invoke<WalkthroughStepResult>(
-          'get_walkthrough_step',
-          {
-            stepId,
-          }
-        );
-        setCurrentStep(step);
-
-        // Also fetch previous step if available
-        if (step.step.previous_step_id) {
-          fetchPreviousStep(step.step.previous_step_id);
-        } else {
-          setPreviousStep(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch current step:', error);
-      }
+  // Function to get previous step data from guide
+  const getPreviousStep = useCallback(
+    (stepId: string) => {
+      if (!guide) return null;
+      return WalkthroughService.getStepFromGuide(guide, stepId);
     },
-    [fetchPreviousStep]
+    [guide]
+  );
+
+  // Function to get current step data from guide
+  const getCurrentStep = useCallback(
+    (stepId: string) => {
+      if (!guide) return null;
+      return WalkthroughService.getStepFromGuide(guide, stepId);
+    },
+    [guide]
   );
 
   // Event handler for walkthrough progress updates
@@ -83,9 +69,22 @@ export function useWalkthroughEvents(characterId: string | null) {
             setProgress(progressEvent.progress);
             setLastEvent('progress_updated');
 
-            // Fetch current step if there is one
+            // Get current step from guide if there is one
             if (progressEvent.progress.current_step_id) {
-              fetchCurrentStep(progressEvent.progress.current_step_id);
+              const currentStepData = getCurrentStep(
+                progressEvent.progress.current_step_id
+              );
+              setCurrentStep(currentStepData);
+
+              // Also get previous step if available
+              if (currentStepData?.step.previous_step_id) {
+                const previousStepData = getPreviousStep(
+                  currentStepData.step.previous_step_id
+                );
+                setPreviousStep(previousStepData);
+              } else {
+                setPreviousStep(null);
+              }
             } else {
               // No current step (campaign completed)
               setCurrentStep(null);
@@ -95,7 +94,7 @@ export function useWalkthroughEvents(characterId: string | null) {
         }
       }
     },
-    [characterId, fetchCurrentStep]
+    [characterId, getCurrentStep, getPreviousStep]
   );
 
   // Event handler for walkthrough step completed
@@ -114,9 +113,12 @@ export function useWalkthroughEvents(characterId: string | null) {
             setCurrentStep(stepEvent.step);
             setLastEvent('step_completed');
 
-            // Fetch previous step if there is one
+            // Get previous step from guide if there is one
             if (stepEvent.step.step.previous_step_id) {
-              fetchPreviousStep(stepEvent.step.step.previous_step_id);
+              const previousStepData = getPreviousStep(
+                stepEvent.step.step.previous_step_id
+              );
+              setPreviousStep(previousStepData);
             } else {
               setPreviousStep(null);
             }
@@ -124,7 +126,7 @@ export function useWalkthroughEvents(characterId: string | null) {
         }
       }
     },
-    [characterId, fetchPreviousStep]
+    [characterId, getPreviousStep]
   );
 
   // Event handler for walkthrough step advanced

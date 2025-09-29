@@ -10,11 +10,13 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
+#[cfg(test)]
+mod tests;
+
 // Re-export commonly used types for convenience
 pub use commands::{
-    advance_character_walkthrough_step, get_character_walkthrough_progress, get_walkthrough_guide,
-    get_walkthrough_step, handle_walkthrough_scene_change, mark_character_campaign_completed,
-    move_character_to_walkthrough_step,
+    get_character_walkthrough_progress, get_walkthrough_guide,
+    update_character_walkthrough_progress,
 };
 pub use models::{
     CharacterWalkthroughProgress, Objective, WalkthroughAct, WalkthroughGuide, WalkthroughProgress,

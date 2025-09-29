@@ -16,6 +16,7 @@ export function useZoneFiltering(
           zone.location_name,
           zone.act || '',
           zone.location_type,
+          zone.zone_level ? `level ${zone.zone_level}` : '',
         ]
           .join(' ')
           .toLowerCase();

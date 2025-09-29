@@ -684,6 +684,33 @@ impl ZoneStats {
         }
     }
 
+    /// Creates new zone stats for a location with zone level
+    pub fn new_with_level(
+        location_id: String,
+        location_name: String,
+        location_type: LocationType,
+        act: Option<String>,
+        is_town: bool,
+        zone_level: Option<u32>,
+    ) -> Self {
+        let now = Utc::now();
+        Self {
+            location_id,
+            location_name,
+            location_type,
+            act,
+            is_town,
+            duration: 0,
+            deaths: 0,
+            visits: 0,
+            first_visited: now,
+            last_visited: now,
+            is_active: true,
+            entry_timestamp: Some(now),
+            zone_level,
+        }
+    }
+
     /// Adds time to the zone duration
     pub fn add_time(&mut self, seconds: u64) {
         self.duration += seconds;

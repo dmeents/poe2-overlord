@@ -355,6 +355,7 @@ impl CharacterService for CharacterServiceImpl {
         location_type: LocationType,
         act: Option<String>,
         is_town: bool,
+        zone_level: Option<u32>,
     ) -> Result<(), AppError> {
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
@@ -378,17 +379,19 @@ impl CharacterService for CharacterServiceImpl {
             existing_zone.location_type = location_type.clone();
             existing_zone.act = act.clone();
             existing_zone.is_town = is_town;
+            existing_zone.zone_level = zone_level;
             existing_zone.activate();
             existing_zone.start_timer();
             // Update summary after releasing the mutable reference
             character_data.update_summary();
         } else {
-            let mut zone = ZoneStats::new(
+            let mut zone = ZoneStats::new_with_level(
                 location_id.clone(),
                 location_name.clone(),
                 location_type.clone(),
                 act.clone(),
                 is_town,
+                zone_level,
             );
             zone.activate();
             zone.start_timer();
@@ -566,7 +569,7 @@ impl CharacterServiceImpl {
         &self,
         content: &str,
         character_id: &str,
-        _zone_level: Option<u32>,
+        zone_level: Option<u32>,
     ) -> Result<Option<SceneChangeEvent>, AppError> {
         let zone_name = content.trim();
 
@@ -609,6 +612,7 @@ impl CharacterServiceImpl {
             location_type,
             Some(act_name.clone()),
             is_town,
+            zone_level,
         )
         .await?;
 

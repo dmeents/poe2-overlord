@@ -121,6 +121,7 @@ pub trait CharacterService: Send + Sync {
         location_type: LocationType,
         act: Option<String>,
         is_town: bool,
+        zone_level: Option<u32>,
     ) -> Result<(), AppError>;
 
     /// Leaves a zone for a character

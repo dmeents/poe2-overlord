@@ -68,7 +68,7 @@ export function ZoneTracker({ zones, className = '' }: ZoneTrackerProps) {
       <div className={zoneTrackerStyles.header}>
         <h3 className={zoneTrackerStyles.title}>
           <MapPinIcon className='w-5 h-5 mr-2 text-zinc-400' />
-          Zone Tracker
+          Zones
         </h3>
         <div className='flex items-center space-x-2'>
           <span className='text-sm text-zinc-400'>

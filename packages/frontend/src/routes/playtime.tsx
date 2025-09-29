@@ -37,9 +37,8 @@ function PlaytimePage() {
           <div className='lg:col-span-2'>
             <CharacterStatusCard />
             {activeCharacter && (
-              <div className='mt-6 grid grid-cols-2 gap-6'>
+              <div className='mt-6'>
                 <ZoneTracker zones={zones} />
-                <ActDistributionChart character={activeCharacter} />
               </div>
             )}
           </div>
@@ -60,6 +59,9 @@ function PlaytimePage() {
                   begin tracking your time in different locations.
                 </p>
               </div>
+            )}
+            {activeCharacter && (
+              <ActDistributionChart character={activeCharacter} />
             )}
           </div>
         </div>

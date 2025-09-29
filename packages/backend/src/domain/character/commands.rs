@@ -189,6 +189,7 @@ pub async fn enter_zone(
     location_type: crate::domain::character::models::LocationType,
     act: Option<String>,
     is_town: bool,
+    zone_level: Option<u32>,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(
@@ -200,6 +201,7 @@ pub async fn enter_zone(
                 location_type,
                 act,
                 is_town,
+                zone_level,
             )
             .await,
     )

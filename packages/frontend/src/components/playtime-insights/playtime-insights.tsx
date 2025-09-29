@@ -77,7 +77,6 @@ export function PlaytimeInsights({
   const totalPlayTime = summary.total_play_time || 0;
   const totalHideoutTime = summary.total_hideout_time || 0;
   const activePlayTime = totalPlayTime - totalHideoutTime;
-  const totalZones = summary.total_zones_visited || 0;
   const totalDeaths = summary.total_deaths || 0;
 
   // Filter out towns and hideouts for average time per zone calculation
@@ -116,34 +115,6 @@ export function PlaytimeInsights({
         <ClockIcon className='w-5 h-5 mr-2 text-zinc-400' />
         Insights
       </h3>
-
-      {/* Zones Section */}
-      <div className='space-y-4'>
-        <h4 className='text-sm font-medium text-zinc-300 mb-3 flex items-center'>
-          <MapPinIcon className='w-4 h-4 mr-2 text-zinc-400' />
-          Visited
-        </h4>
-        <div className={playtimeInsightsStyles.grid}>
-          <div className={playtimeInsightsStyles.statItem}>
-            <div className={playtimeInsightsStyles.statValue}>
-              {zones.length}
-            </div>
-            <div className={playtimeInsightsStyles.statLabel}>Total</div>
-          </div>
-          <div className={playtimeInsightsStyles.statItem}>
-            <div className={playtimeInsightsStyles.statValue}>
-              {zones.filter(zone => zone.is_town).length}
-            </div>
-            <div className={playtimeInsightsStyles.statLabel}>Towns</div>
-          </div>
-          <div className={playtimeInsightsStyles.statItem}>
-            <div className={playtimeInsightsStyles.statValue}>
-              {zones.filter(zone => zone.location_type === 'Hideout').length}
-            </div>
-            <div className={playtimeInsightsStyles.statLabel}>Hideouts</div>
-          </div>
-        </div>
-      </div>
 
       {/* Time Breakdown */}
       <div className={playtimeInsightsStyles.efficiencySection}>

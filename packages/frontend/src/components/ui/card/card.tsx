@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 interface CardProps {
   children: ReactNode;
   title?: string;
+  subtitle?: string;
   icon?: ReactNode;
   className?: string;
   variant?: 'default' | 'insight' | 'featured';
@@ -11,6 +12,7 @@ interface CardProps {
 export function Card({
   children,
   title,
+  subtitle,
   icon,
   className = '',
   variant = 'default',
@@ -24,14 +26,21 @@ export function Card({
   };
 
   const titleClasses =
-    'text-lg font-semibold text-white mb-6 flex items-center';
+    'text-lg font-semibold text-white mb-6 flex items-center justify-between';
 
   return (
     <div className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
       {title && (
         <h3 className={titleClasses}>
-          {icon && <span className='w-5 h-5 mr-2 text-zinc-400'>{icon}</span>}
-          {title}
+          <div className='flex items-center'>
+            {icon && <span className='w-5 h-5 mr-2 text-zinc-400'>{icon}</span>}
+            {title}
+          </div>
+          {subtitle && (
+            <span className='text-sm text-zinc-400 font-normal'>
+              {subtitle}
+            </span>
+          )}
         </h3>
       )}
       {children}

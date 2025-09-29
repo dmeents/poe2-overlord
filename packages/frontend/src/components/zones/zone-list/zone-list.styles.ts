@@ -1,8 +1,8 @@
 /**
- * Character List Styling Functions
+ * Zone List Styling Functions
  *
  * This file contains styling-related functions and constants
- * for the CharacterList components.
+ * for the ZoneList components.
  */
 
 /**
@@ -13,9 +13,9 @@ export function getListContainerClasses(): string {
 }
 
 /**
- * Get character grid classes
+ * Get zone grid classes
  */
-export function getCharacterGridClasses(): string {
+export function getZoneGridClasses(): string {
   return 'grid grid-cols-1 gap-3';
 }
 

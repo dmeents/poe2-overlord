@@ -1,33 +1,41 @@
 import type { ZoneStats } from '@/types';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { open } from '@tauri-apps/plugin-shell';
+import { memo } from 'react';
 import { TimeDisplay } from '../../insights/time-display';
+import {
+  getZoneActiveIndicatorClasses,
+  getZoneActiveTextClasses,
+  getZoneCardClasses,
+  getZoneCardHeaderClasses,
+  getZoneDurationClasses,
+  getZoneMetadataContainerClasses,
+  getZoneMetadataItemsClasses,
+  getZonePillBaseClasses,
+  getZonePillClasses,
+  getZonePillColorClasses,
+  getZoneStatsContainerClasses,
+  getZoneStatusIndicatorClasses,
+  getZoneTitleClasses,
+  getZoneTitleContainerClasses,
+  getZoneWikiButtonClasses,
+} from './zone-card.styles';
 
 interface ZoneCardProps {
   zone: ZoneStats;
   className?: string;
 }
 
-export function ZoneCard({ zone, className = '' }: ZoneCardProps) {
-  const getLocationTypeColor = (type: string) => {
-    switch (type) {
-      case 'Zone':
-        return 'text-blue-400';
-      case 'Act':
-        return 'text-purple-400';
-      case 'Hideout':
-        return 'text-green-400';
-      default:
-        return 'text-zinc-400';
-    }
-  };
-
+export const ZoneCard = memo(function ZoneCard({
+  zone,
+  className = '',
+}: ZoneCardProps) {
   const getStatusIndicator = () => {
     if (zone.is_active) {
       return (
-        <div className='flex items-center space-x-1'>
-          <div className='w-2 h-2 bg-emerald-400 rounded-full animate-pulse'></div>
-          <span className='text-xs text-emerald-400 font-medium'>Active</span>
+        <div className={getZoneStatusIndicatorClasses()}>
+          <div className={getZoneActiveIndicatorClasses()}></div>
+          <span className={getZoneActiveTextClasses()}>Active</span>
         </div>
       );
     }
@@ -76,77 +84,83 @@ export function ZoneCard({ zone, className = '' }: ZoneCardProps) {
   };
 
   return (
-    <div
-      className={`p-4 bg-gradient-to-br from-zinc-800/60 to-zinc-900/40 border border-zinc-700 hover:border-zinc-600 hover:from-zinc-700/60 hover:to-zinc-800/40 transition-all duration-200 ${className}`}
-    >
+    <div className={`${getZoneCardClasses()} ${className}`}>
       {/* Header */}
-      <div className='flex items-center justify-between mb-3'>
-        <div className='flex-1 min-w-0'>
+      <div className={getZoneCardHeaderClasses()}>
+        <div className={getZoneTitleContainerClasses()}>
           <div className='flex items-center space-x-2'>
             {getStatusIndicator()}
-            <h3 className='text-white font-semibold text-lg truncate'>
-              {zone.location_name}
-            </h3>
+            <h3 className={getZoneTitleClasses()}>{zone.location_name}</h3>
           </div>
         </div>
 
-        <div className='text-right'>
-          <div className='text-zinc-400 font-mono text-lg'>
+        <div className={getZoneStatsContainerClasses()}>
+          <div className={getZoneDurationClasses()}>
             <TimeDisplay seconds={zone.duration} showSeconds={false} />
           </div>
         </div>
       </div>
 
       {/* Compact Stats */}
-      <div className='flex items-center justify-between text-sm text-zinc-400'>
-        <div className='flex items-center space-x-2 flex-wrap'>
+      <div className={getZoneMetadataContainerClasses()}>
+        <div className={getZoneMetadataItemsClasses()}>
           {/* Pill-formatted metadata */}
           {zone.is_town && (
-            <span className='text-xs text-yellow-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded'>
+            <span
+              className={`${getZonePillClasses()} ${getZonePillColorClasses('Town')} ${getZonePillBaseClasses()}`}
+            >
               Town
             </span>
           )}
           {zone.location_type === 'Hideout' && (
-            <span className='text-xs text-green-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded'>
+            <span
+              className={`${getZonePillClasses()} ${getZonePillColorClasses('Hideout')} ${getZonePillBaseClasses()}`}
+            >
               Hideout
             </span>
           )}
           {!zone.is_town && zone.location_type !== 'Hideout' && (
             <span
-              className={`text-xs font-medium px-2 py-0.5 rounded ${getLocationTypeColor(zone.location_type)} bg-zinc-700/50`}
+              className={`${getZonePillClasses()} ${getZonePillColorClasses(zone.location_type)} ${getZonePillBaseClasses()}`}
             >
               {zone.location_type}
             </span>
           )}
           {zone.act && (
-            <span className='text-xs text-zinc-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded'>
+            <span
+              className={`${getZonePillClasses()} ${getZonePillBaseClasses()}`}
+            >
               {zone.act}
             </span>
           )}
           {zone.zone_level && (
-            <span className='text-xs text-zinc-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded'>
+            <span
+              className={`${getZonePillClasses()} ${getZonePillBaseClasses()}`}
+            >
               Level {zone.zone_level}
             </span>
           )}
           {/* Wiki link */}
           <button
             onClick={() => handleWikiClick(zone.location_name)}
-            className='text-xs text-zinc-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded hover:bg-zinc-600/50 transition-colors duration-200 flex items-center space-x-1'
+            className={getZoneWikiButtonClasses()}
             title='Open in wiki'
           >
             <span>Wiki</span>
             <ArrowTopRightOnSquareIcon className='w-3 h-3' />
           </button>
           {/* Regular stats */}
-          <span className='text-xs text-zinc-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded'>
+          <span
+            className={`${getZonePillClasses()} ${getZonePillBaseClasses()}`}
+          >
             {zone.visits} visit{zone.visits !== 1 ? 's' : ''}
           </span>
           {/* Only show deaths for zones where characters can actually die */}
           {!zone.is_town && zone.location_type !== 'Hideout' && (
             <span
-              className={`text-xs font-medium px-2 py-0.5 rounded ${
+              className={`${getZonePillClasses()} ${
                 zone.deaths > 0 ? 'text-red-400' : 'text-zinc-400'
-              } bg-zinc-700/50`}
+              } ${getZonePillBaseClasses()}`}
             >
               {zone.deaths} death{zone.deaths !== 1 ? 's' : ''}
             </span>
@@ -160,4 +174,4 @@ export function ZoneCard({ zone, className = '' }: ZoneCardProps) {
       </div>
     </div>
   );
-}
+});

@@ -2,15 +2,16 @@ import { memo, useCallback, useMemo } from 'react';
 import type {
   CharacterFilters,
   SortOption,
-} from '../../hooks/useCharacterFilters';
+} from '../../../hooks/useCharacterFilters';
 import type { CharacterData } from '../../../types';
+import { Button } from '../../ui/button';
+import { EmptyState } from '../../ui/empty-state';
 import { CharacterCard } from '../character-card';
-import { CharacterListControls } from './character-list-controls';
+import { CharacterListControlsForm } from '../character-list-controls-form';
 import {
   getCharacterGridClasses,
   getListContainerClasses,
 } from './character-list.styles';
-import { EmptyCharacterList } from './empty-character-list';
 
 interface CharacterListProps {
   characters: CharacterData[];
@@ -96,12 +97,37 @@ export const CharacterList = memo(function CharacterList({
   // Only show empty state if there are truly no characters in the system
   // (not just filtered results)
   if (totalCount === 0) {
-    return <EmptyCharacterList onCreateCharacter={onCreateCharacter} />;
+    return (
+      <EmptyState
+        icon={
+          <svg
+            className='h-12 w-12'
+            fill='none'
+            viewBox='0 0 24 24'
+            stroke='currentColor'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={1.5}
+              d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+            />
+          </svg>
+        }
+        title='No Characters'
+        description='Create your first character to start tracking your adventures.'
+        action={
+          <Button onClick={onCreateCharacter} variant='primary'>
+            Create Character
+          </Button>
+        }
+      />
+    );
   }
 
   return (
     <div className={getListContainerClasses()}>
-      <CharacterListControls
+      <CharacterListControlsForm
         filters={filters}
         onFilterChange={onFilterChange}
         onClearFilters={onClearFilters}

@@ -1,7 +1,8 @@
 import { ChartBarIcon, MapPinIcon } from '@heroicons/react/24/outline';
-import { Card, SectionHeader, StatGrid } from '../';
+import { StatGrid } from '../';
 import { useCharacterManagement } from '../../../hooks';
 import { formatDuration } from '../../../utils';
+import { DataCard, DataItem, SectionHeader } from '../../ui';
 
 interface DashboardInsightsProps {
   className?: string;
@@ -22,13 +23,14 @@ export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
 
   if (isLoading) {
     return (
-      <Card
+      <DataCard
         title='Character Insights'
         icon={<ChartBarIcon className='w-5 h-5' />}
+        isLoading={true}
         className={className}
       >
-        <StatGrid stats={Array(4).fill({ value: '', label: '' })} columns={2} />
-      </Card>
+        <div></div>
+      </DataCard>
     );
   }
 
@@ -56,7 +58,7 @@ export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
   ];
 
   return (
-    <Card
+    <DataCard
       title='Insights'
       icon={<ChartBarIcon className='w-5 h-5' />}
       className={className}
@@ -66,18 +68,13 @@ export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
 
       {/* Current Location */}
       {currentLocation && (
-        <div className='mt-6 space-y-4'>
-          <SectionHeader
-            title='Current Location'
-            icon={<MapPinIcon className='w-4 h-4' />}
-          />
-          <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-            <span className='text-zinc-300 font-medium'>
-              {formatCurrentLocation(currentLocation)}
-            </span>
-          </div>
-        </div>
+        <SectionHeader
+          title='Current Location'
+          icon={<MapPinIcon className='w-4 h-4' />}
+        >
+          <DataItem label={formatCurrentLocation(currentLocation)} value='' />
+        </SectionHeader>
       )}
-    </Card>
+    </DataCard>
   );
 }

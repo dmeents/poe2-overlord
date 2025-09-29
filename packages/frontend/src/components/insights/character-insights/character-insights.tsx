@@ -5,8 +5,12 @@ import {
   InboxIcon,
 } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import { Card, SectionHeader, StatGrid } from '../';
+import {
+  SectionHeader as CharacterSectionHeader,
+  StatGrid,
+} from '../../character';
 import { ClassDistributionChart } from '../../charts/class-distribution-chart';
+import { DataCard, DataItem, SectionHeader } from '../../ui';
 import type { CharacterInsightsProps } from './character-insights.types';
 
 export function CharacterInsights({ characters }: CharacterInsightsProps) {
@@ -91,17 +95,16 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
   if (characters.length === 0) {
     return (
-      <Card
+      <DataCard
         title='Character Insights'
         icon={<ChartBarIcon className='w-5 h-5' />}
+        isEmpty={true}
+        emptyTitle='No Characters to Analyze'
+        emptyDescription='Create some characters to view insights'
+        emptyIcon={<InboxIcon className='w-8 h-8' />}
       >
-        <div className='text-center py-8'>
-          <div className='w-16 h-16 bg-zinc-800/50 flex items-center justify-center mx-auto mb-4'>
-            <InboxIcon className='w-8 h-8 text-zinc-500' />
-          </div>
-          <p className='text-zinc-400'>No characters to analyze</p>
-        </div>
-      </Card>
+        <div></div>
+      </DataCard>
     );
   }
 
@@ -115,14 +118,16 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
   ];
 
   return (
-    <Card title='Insights' icon={<ChartBarIcon className='w-5 h-5' />}>
+    <DataCard title='Insights' icon={<ChartBarIcon className='w-5 h-5' />}>
       {/* Most Played Character */}
       {metrics.mostPlayedCharacter && (
         <div className='mt-6 mb-4 p-4 bg-zinc-900/80 border border-zinc-700/50'>
-          <SectionHeader
+          <CharacterSectionHeader
             title='Most Played'
             icon={<BoltIcon className='w-4 h-4' />}
-          />
+          >
+            <div></div>
+          </CharacterSectionHeader>
           <div className='text-white font-medium'>
             {metrics.mostPlayedCharacter.name}
           </div>
@@ -146,26 +151,19 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
       {/* League Distribution */}
       {Object.keys(metrics.leagueDistribution).length > 0 && (
-        <div className='mt-6 space-y-4'>
-          <SectionHeader
-            title='Leagues'
-            icon={<GlobeAltIcon className='w-4 h-4' />}
-          />
+        <SectionHeader
+          title='Leagues'
+          icon={<GlobeAltIcon className='w-4 h-4' />}
+        >
           <div className='space-y-2'>
             {Object.entries(metrics.leagueDistribution)
               .sort(([, a], [, b]) => b - a)
               .map(([league, count]) => (
-                <div
-                  key={league}
-                  className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'
-                >
-                  <span className='text-zinc-300 font-medium'>{league}</span>
-                  <span className='text-zinc-400 text-sm'>{count}</span>
-                </div>
+                <DataItem key={league} label={league} value={count} />
               ))}
           </div>
-        </div>
+        </SectionHeader>
       )}
-    </Card>
+    </DataCard>
   );
 }

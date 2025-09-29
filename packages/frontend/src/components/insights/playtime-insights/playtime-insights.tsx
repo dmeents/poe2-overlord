@@ -3,9 +3,9 @@ import {
   ClockIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
-import { Card, SectionHeader } from '../';
 import { useCharacterManagement } from '../../../hooks';
 import type { ZoneStats } from '../../../types';
+import { DataCard, DataItem, SectionHeader } from '../../ui';
 
 // Format duration without seconds, rounding to nearest minute
 function formatDurationMinutes(seconds: number): string {
@@ -39,37 +39,29 @@ export function PlaytimeInsights({
 
   if (isLoading) {
     return (
-      <Card
+      <DataCard
         title='Playtime Insights'
         icon={<ClockIcon className='w-5 h-5' />}
+        isLoading={true}
         className={className}
       >
-        <div className='grid grid-cols-2 gap-4'>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className='animate-pulse'>
-              <div className='h-4 bg-zinc-700 rounded mb-2'></div>
-              <div className='h-6 bg-zinc-700 rounded'></div>
-            </div>
-          ))}
-        </div>
-      </Card>
+        <div></div>
+      </DataCard>
     );
   }
 
   if (!activeCharacter || !summary) {
     return (
-      <Card
+      <DataCard
         title='Playtime Insights'
         icon={<ClockIcon className='w-5 h-5' />}
+        isEmpty={true}
+        emptyTitle='No Character Data Available'
+        emptyDescription='Select a character to view playtime insights'
         className={className}
       >
-        <div className='text-center py-8'>
-          <p>No character data available</p>
-          <p className='text-sm text-zinc-500 mt-2'>
-            Select a character to view playtime insights
-          </p>
-        </div>
-      </Card>
+        <div></div>
+      </DataCard>
     );
   }
 
@@ -110,106 +102,63 @@ export function PlaytimeInsights({
   const activePlayPercentage = 100 - hideoutPercentage;
 
   return (
-    <Card
+    <DataCard
       title='Insights'
       icon={<ClockIcon className='w-5 h-5' />}
       className={className}
     >
       {/* Time Breakdown */}
-      <div className='mt-6 space-y-4'>
-        <SectionHeader
-          title='Breakdown'
-          icon={<ChartBarIcon className='w-4 h-4' />}
-        />
+      <SectionHeader
+        title='Breakdown'
+        icon={<ChartBarIcon className='w-4 h-4' />}
+      >
         <div className='space-y-2'>
-          <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-            <span className='text-zinc-300 font-medium'>Total Play Time</span>
-            <div className='text-right'>
-              <div className='text-zinc-400 text-sm'>
-                {formatDurationMinutes(totalPlayTime)}
-              </div>
-            </div>
-          </div>
-          <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-            <span className='text-zinc-300 font-medium'>Active Play</span>
-            <div className='text-right'>
-              <div className='text-zinc-400 text-sm'>
-                {formatDurationMinutes(activePlayTime)}
-              </div>
-              <div className='text-xs text-zinc-500'>
-                {activePlayPercentage.toFixed(1)}%
-              </div>
-            </div>
-          </div>
-          <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-            <span className='text-zinc-300 font-medium'>Hideout Time</span>
-            <div className='text-right'>
-              <div className='text-zinc-400 text-sm'>
-                {formatDurationMinutes(totalHideoutTime)}
-              </div>
-              <div className='text-xs text-zinc-500'>
-                {hideoutPercentage.toFixed(1)}%
-              </div>
-            </div>
-          </div>
-          <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-            <span className='text-zinc-300 font-medium'>Deaths</span>
-            <div className='text-right'>
-              <div className='text-zinc-400 text-sm'>{totalDeaths}</div>
-              <div className='text-xs text-zinc-500'>
-                {deathRate.toFixed(2)}/hr
-              </div>
-            </div>
-          </div>
-          <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-            <span className='text-zinc-300 font-medium'>Avg per Zone</span>
-            <div className='text-right'>
-              <div className='text-zinc-400 text-sm'>
-                {formatDurationMinutes(Math.round(averageTimePerZone))}
-              </div>
-              <div className='text-xs text-zinc-500'>
-                {nonTownHideoutZones.length} zones
-              </div>
-            </div>
-          </div>
+          <DataItem
+            label='Total Play Time'
+            value={formatDurationMinutes(totalPlayTime)}
+          />
+          <DataItem
+            label='Active Play'
+            value={formatDurationMinutes(activePlayTime)}
+            subValue={`${activePlayPercentage.toFixed(1)}%`}
+          />
+          <DataItem
+            label='Hideout Time'
+            value={formatDurationMinutes(totalHideoutTime)}
+            subValue={`${hideoutPercentage.toFixed(1)}%`}
+          />
+          <DataItem
+            label='Deaths'
+            value={totalDeaths}
+            subValue={`${deathRate.toFixed(2)}/hr`}
+          />
+          <DataItem
+            label='Avg per Zone'
+            value={formatDurationMinutes(Math.round(averageTimePerZone))}
+            subValue={`${nonTownHideoutZones.length} zones`}
+          />
         </div>
-      </div>
+      </SectionHeader>
 
       {/* History Section */}
-      <div className='mt-6 space-y-4'>
-        <SectionHeader
-          title='History'
-          icon={<MapPinIcon className='w-4 h-4' />}
-        />
+      <SectionHeader title='History' icon={<MapPinIcon className='w-4 h-4' />}>
         <div className='space-y-2'>
           {mostTimeSpent && (
-            <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-              <span className='text-zinc-300 font-medium'>Most Time Spent</span>
-              <div className='text-right'>
-                <div className='text-zinc-400 text-sm'>
-                  {mostTimeSpent.location_name}
-                </div>
-                <div className='text-xs text-zinc-500'>
-                  {mostTimeSpentValue}
-                </div>
-              </div>
-            </div>
+            <DataItem
+              label='Most Time Spent'
+              value={mostTimeSpent.location_name}
+              subValue={mostTimeSpentValue}
+            />
           )}
           {hasDeaths && (
-            <div className='flex items-center justify-between p-3 bg-zinc-900/80 border border-zinc-700/50'>
-              <span className='text-zinc-300 font-medium'>Most Deaths</span>
-              <div className='text-right'>
-                <div className='text-zinc-400 text-sm'>
-                  {mostDeaths.location_name}
-                </div>
-                <div className='text-xs text-zinc-500'>
-                  {mostDeaths.deaths} deaths
-                </div>
-              </div>
-            </div>
+            <DataItem
+              label='Most Deaths'
+              value={mostDeaths.location_name}
+              subValue={`${mostDeaths.deaths} deaths`}
+            />
           )}
         </div>
-      </div>
-    </Card>
+      </SectionHeader>
+    </DataCard>
   );
 }

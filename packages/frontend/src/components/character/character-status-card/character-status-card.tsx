@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useCharacterManagement } from '../../../hooks';
+import { EmptyState, LoadingSpinner } from '../../ui';
 import { Button } from '../../ui/button';
 import { CharacterCard } from '../character-card';
 import { characterStatusCardStyles } from './character-status-card.styles';
@@ -16,10 +17,9 @@ export function CharacterStatusCard({
   if (isLoading) {
     return (
       <div className={`${characterStatusCardStyles.container} ${className}`}>
-        <div className={characterStatusCardStyles.loadingContainer}>
-          <div className={characterStatusCardStyles.loadingTitle}></div>
-          <div className={characterStatusCardStyles.loadingSubtitle}></div>
-          <div className={characterStatusCardStyles.loadingText}></div>
+        <h3 className={characterStatusCardStyles.title}>Active Character</h3>
+        <div className='flex items-center justify-center py-8'>
+          <LoadingSpinner message='Loading character data...' />
         </div>
       </div>
     );
@@ -29,17 +29,22 @@ export function CharacterStatusCard({
     return (
       <div className={`${characterStatusCardStyles.container} ${className}`}>
         <h3 className={characterStatusCardStyles.title}>Active Character</h3>
-        <div className={characterStatusCardStyles.emptyState}>
-          <p>No active character selected</p>
-          <p className={characterStatusCardStyles.emptyStateSubtext}>
-            Create or select a character to start tracking
-          </p>
-          <Link to='/characters'>
-            <Button variant='primary' size='sm'>
-              Manage Characters
-            </Button>
-          </Link>
-        </div>
+        <EmptyState
+          icon={
+            <div className='h-12 w-12 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-400 text-xl'>
+              👤
+            </div>
+          }
+          title='No Active Character'
+          description='Create or select a character to start tracking'
+          action={
+            <Link to='/characters'>
+              <Button variant='primary' size='sm'>
+                Manage Characters
+              </Button>
+            </Link>
+          }
+        />
       </div>
     );
   }

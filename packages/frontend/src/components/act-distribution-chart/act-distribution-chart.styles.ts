@@ -2,15 +2,16 @@
 // Centralized styling utilities for the ActDistributionChart component
 
 export const actDistributionChartStyles = {
-  container: 'bg-zinc-800/50 border border-zinc-700/50 p-6 shadow-lg',
+  container: 'bg-zinc-800/50 border border-zinc-700/50 p-6 shadow-lg h-fit',
   title: 'text-lg font-semibold text-white mb-6 flex items-center',
 
   // Chart section
   chartSection: 'space-y-6',
-  donutContainer: 'relative flex items-center justify-center',
+  donutContainer: 'relative flex items-center justify-center h-48',
   donutSvg: 'w-32 h-32 transform -rotate-90',
   segment: 'transition-all duration-300 hover:opacity-80',
-  centerText: 'absolute inset-0 flex flex-col items-center justify-center',
+  centerText:
+    'absolute inset-0 flex flex-col items-center justify-center pointer-events-none',
   centerValue: 'text-2xl font-bold text-white',
   centerLabel: 'text-xs text-zinc-400 uppercase tracking-wide',
 

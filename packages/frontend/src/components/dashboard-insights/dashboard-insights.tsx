@@ -1,8 +1,4 @@
-import {
-  ChartBarIcon,
-  MapPinIcon,
-  UserIcon,
-} from '@heroicons/react/24/outline';
+import { ChartBarIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useCharacterManagement } from '../../hooks';
 import { formatDuration } from '../../utils';
 import { dashboardInsightsStyles } from './dashboard-insights.styles';
@@ -65,23 +61,6 @@ export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
         <ChartBarIcon className='w-5 h-5 mr-2 text-zinc-400' />
         Insights
       </h3>
-
-      {/* Current Character Status */}
-      {activeCharacter && (
-        <div className={dashboardInsightsStyles.featuredSection}>
-          <h4 className={dashboardInsightsStyles.featuredTitle}>
-            <UserIcon className='w-4 h-4 mr-2 text-zinc-400' />
-            Current Character
-          </h4>
-          <div className={dashboardInsightsStyles.featuredValue}>
-            {activeCharacter.name}
-          </div>
-          <div className={dashboardInsightsStyles.featuredSubtext}>
-            {activeCharacter.class} • Level {activeCharacter.level} •{' '}
-            {activeCharacter.league}
-          </div>
-        </div>
-      )}
 
       {/* Main Stats Grid */}
       <div className={dashboardInsightsStyles.grid}>

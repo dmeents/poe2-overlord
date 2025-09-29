@@ -3,9 +3,9 @@ import {
   ChartBarIcon,
   GlobeAltIcon,
   InboxIcon,
-  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
+import { ClassDistributionChart } from '../class-distribution-chart';
 import {
   getDistributionClasses,
   getDistributionItemClasses,
@@ -180,26 +180,9 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         </div>
       </div>
 
-      {/* Class Distribution */}
+      {/* Class Distribution Chart */}
       {Object.keys(metrics.classDistribution).length > 0 && (
-        <div className={getDistributionClasses()}>
-          <h4 className='text-sm font-medium text-zinc-300 mb-3 flex items-center'>
-            <UsersIcon className='w-4 h-4 mr-2 text-zinc-400' />
-            Classes
-          </h4>
-          <div className='space-y-2'>
-            {Object.entries(metrics.classDistribution)
-              .sort(([, a], [, b]) => b - a)
-              .map(([className, count]) => (
-                <div key={className} className={getDistributionItemClasses()}>
-                  <span className={getDistributionLabelClasses()}>
-                    {className}
-                  </span>
-                  <span className={getDistributionValueClasses()}>{count}</span>
-                </div>
-              ))}
-          </div>
-        </div>
+        <ClassDistributionChart classDistribution={metrics.classDistribution} />
       )}
 
       {/* League Distribution */}

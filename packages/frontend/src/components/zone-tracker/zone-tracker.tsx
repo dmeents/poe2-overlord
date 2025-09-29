@@ -1,7 +1,13 @@
 import { useZoneFiltering } from '@/hooks/useZoneFiltering';
 import { useZoneFilters } from '@/hooks/useZoneFilters';
 import type { ZoneStats } from '@/types';
-import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
+import { useState } from 'react';
 import { ZoneCard } from './zone-card';
 import { ZoneFilters } from './zone-filters';
 import { ZoneSort } from './zone-sort';
@@ -13,6 +19,8 @@ interface ZoneTrackerProps {
 }
 
 export function ZoneTracker({ zones, className = '' }: ZoneTrackerProps) {
+  const [isControlsExpanded, setIsControlsExpanded] = useState(false);
+
   const {
     filters,
     sort,
@@ -69,46 +77,97 @@ export function ZoneTracker({ zones, className = '' }: ZoneTrackerProps) {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className={zoneTrackerStyles.controls}>
-        {/* Search */}
-        <div className={zoneTrackerStyles.searchContainer}>
-          <input
-            type='text'
-            value={filters.search}
-            onChange={e => updateFilter('search', e.target.value)}
-            placeholder='Search zones, acts, or location types...'
-            className={zoneTrackerStyles.searchInput}
-          />
-        </div>
+      {/* Controls Toggle */}
+      <div className='mb-4'>
+        <button
+          onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+          className={zoneTrackerStyles.controlsToggle}
+        >
+          <span>Search & Filters</span>
+          {isControlsExpanded ? (
+            <ChevronUpIcon className='w-4 h-4' />
+          ) : (
+            <ChevronDownIcon className='w-4 h-4' />
+          )}
+        </button>
+        {(hasActiveFilters ||
+          sort.field !== 'last_visited' ||
+          sort.direction !== 'desc') && (
+          <div className='mt-2'>
+            <span className='text-xs text-zinc-400'>
+              {hasActiveFilters && (
+                <>
+                  Filters:{' '}
+                  {[
+                    filters.locationType !== 'All'
+                      ? filters.locationType
+                      : null,
+                    filters.act !== 'All' ? filters.act : null,
+                    filters.isTown !== null
+                      ? filters.isTown
+                        ? 'Towns'
+                        : 'Non-towns'
+                      : null,
+                    filters.isActive !== null
+                      ? filters.isActive
+                        ? 'Active'
+                        : 'Inactive'
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}
+                </>
+              )}
+              {hasActiveFilters &&
+              (sort.field !== 'last_visited' || sort.direction !== 'desc')
+                ? ' • '
+                : ''}
+              {sort.field !== 'last_visited' || sort.direction !== 'desc'
+                ? `Sort: ${sort.field.replace('_', ' ')} ${sort.direction === 'asc' ? '↑' : '↓'}`
+                : ''}
+            </span>
+          </div>
+        )}
+      </div>
 
-        {/* Filters, Sort, and Reset */}
-        <div className={zoneTrackerStyles.filterSortContainer}>
-          <ZoneFilters
-            filters={filters}
-            onFilterChange={updateFilter}
-            onClearFilters={clearFilters}
-            hasActiveFilters={hasActiveFilters}
-            zoneCount={zoneCount}
-            totalCount={totalCount}
-          />
-          <ZoneSort
-            sort={sort}
-            onSortChange={updateSort}
-            onResetSort={resetSort}
-          />
-          {(hasActiveFilters ||
-            sort.field !== 'last_visited' ||
-            sort.direction !== 'desc') && (
+      {/* Collapsible Controls */}
+      {isControlsExpanded && (
+        <div className={zoneTrackerStyles.controls}>
+          {/* Search */}
+          <div className={zoneTrackerStyles.searchContainer}>
+            <input
+              type='text'
+              value={filters.search}
+              onChange={e => updateFilter('search', e.target.value)}
+              placeholder='Search zones, acts, or location types...'
+              className={zoneTrackerStyles.searchInput}
+            />
+          </div>
+
+          {/* Filters, Sort, and Reset */}
+          <div className={zoneTrackerStyles.filterSortContainer}>
+            <ZoneFilters
+              filters={filters}
+              onFilterChange={updateFilter}
+              onClearFilters={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+              zoneCount={zoneCount}
+              totalCount={totalCount}
+            />
+            <ZoneSort
+              sort={sort}
+              onSortChange={updateSort}
+              onResetSort={resetSort}
+            />
             <button
               onClick={handleResetAll}
               className={zoneTrackerStyles.resetButton}
             >
               Reset All
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Zone List */}
       {filteredZones.length === 0 ? (

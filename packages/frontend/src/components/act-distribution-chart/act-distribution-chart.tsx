@@ -1,6 +1,7 @@
 import type { CharacterData } from '@/types';
 import { formatDuration } from '@/utils';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { actDistributionChartStyles } from './act-distribution-chart.styles';
 
 interface ActDistributionChartProps {
@@ -92,19 +93,37 @@ export function ActDistributionChart({
     );
   }
 
-  // Calculate donut chart segments
-  let cumulativePercentage = 0;
-  const segments = activeActs.map(act => {
-    const startAngle = (cumulativePercentage / 100) * 360;
-    const endAngle = ((cumulativePercentage + act.percentage) / 100) * 360;
-    cumulativePercentage += act.percentage;
+  // Prepare data for Recharts
+  const chartData = activeActs.map(act => ({
+    name: act.name,
+    value: act.time,
+    percentage: act.percentage,
+    color: act.hexColor,
+  }));
 
-    return {
-      ...act,
-      startAngle,
-      endAngle,
-    };
-  });
+  // Custom tooltip component
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      payload: { name: string; value: number; percentage: number };
+    }>;
+  }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className='bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50'>
+          <p className='text-white font-medium'>{data.name}</p>
+          <p className='text-zinc-300 text-sm'>
+            {formatDuration(data.value)} ({data.percentage.toFixed(1)}%)
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className={`${actDistributionChartStyles.container} ${className}`}>
@@ -117,56 +136,30 @@ export function ActDistributionChart({
       <div className={actDistributionChartStyles.chartSection}>
         {/* Donut Chart */}
         <div className={actDistributionChartStyles.donutContainer}>
-          <svg
-            className={actDistributionChartStyles.donutSvg}
-            viewBox='0 0 100 100'
-            xmlns='http://www.w3.org/2000/svg'
-          >
-            {/* Background circle */}
-            <circle
-              cx='50'
-              cy='50'
-              r='40'
-              fill='none'
-              stroke='rgb(39 39 42)'
-              strokeWidth='8'
-            />
-
-            {/* Act segments */}
-            {segments.map(segment => {
-              const radius = 40;
-              const centerX = 50;
-              const centerY = 50;
-
-              const startAngleRad = (segment.startAngle - 90) * (Math.PI / 180);
-              const endAngleRad = (segment.endAngle - 90) * (Math.PI / 180);
-
-              const largeArcFlag =
-                segment.endAngle - segment.startAngle > 180 ? 1 : 0;
-
-              const x1 = centerX + radius * Math.cos(startAngleRad);
-              const y1 = centerY + radius * Math.sin(startAngleRad);
-              const x2 = centerX + radius * Math.cos(endAngleRad);
-              const y2 = centerY + radius * Math.sin(endAngleRad);
-
-              const pathData = [
-                `M ${x1} ${y1}`,
-                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-              ].join(' ');
-
-              return (
-                <path
-                  key={segment.name}
-                  d={pathData}
-                  fill='none'
-                  stroke={segment.hexColor}
-                  strokeWidth='8'
-                  strokeLinecap='round'
-                  className={actDistributionChartStyles.segment}
-                />
-              );
-            })}
-          </svg>
+          <ResponsiveContainer width='100%' height={200}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx='50%'
+                cy='50%'
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey='value'
+                stroke='none'
+                className='transition-all duration-300'
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    className='transition-all duration-300 hover:opacity-80 cursor-pointer'
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
 
           {/* Center text */}
           <div className={actDistributionChartStyles.centerText}>

@@ -85,7 +85,7 @@ export function ZoneCard({ zone, className = '' }: ZoneCardProps) {
 
   return (
     <div
-      className={`p-4 bg-zinc-800/50 rounded-lg border border-zinc-700 hover:border-zinc-600 transition-colors ${className}`}
+      className={`p-4 bg-gradient-to-br from-zinc-800/60 to-zinc-900/40 border border-zinc-700 hover:border-zinc-600 hover:from-zinc-700/60 hover:to-zinc-800/40 transition-all duration-200 ${className}`}
     >
       {/* Header */}
       <div className='flex items-start justify-between mb-3'>

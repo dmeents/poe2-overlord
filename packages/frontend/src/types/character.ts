@@ -38,7 +38,7 @@ export type Ascendency =
 export type League = 'Standard' | 'Third Edict';
 
 // Location and tracking types
-export type LocationType = 'Zone' | 'Act' | 'Hideout';
+export type LocationType = 'Zone' | 'Hideout';
 
 export interface LocationState {
   scene?: string;

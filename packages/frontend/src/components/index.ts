@@ -7,6 +7,7 @@ export * from './character-list';
 export * from './character-modals';
 export * from './character-sort-controls';
 export * from './character-status-card';
+export * from './class-distribution-chart';
 export * from './dashboard-insights';
 export * from './form-alert-message';
 export * from './form-checkbox-input';

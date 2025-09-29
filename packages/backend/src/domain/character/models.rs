@@ -512,6 +512,17 @@ impl TrackingSummary {
         let mut play_time_endgame = 0u64;
 
         for zone in zones {
+            // Skip towns and hideouts when calculating act time
+            if zone.is_town || zone.location_type == LocationType::Hideout {
+                debug!(
+                    "🔍 SUMMARY CALC: Excluding {} '{}' from act time calculation (duration: {}s)",
+                    if zone.is_town { "town" } else { "hideout" },
+                    zone.location_name,
+                    zone.duration
+                );
+                continue;
+            }
+
             let act_time = zone.duration;
             match zone.act.as_deref() {
                 Some("Act 1") => play_time_act1 += act_time,

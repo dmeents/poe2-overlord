@@ -1,7 +1,6 @@
 import {
   ChartBarIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { useCharacterManagement } from '../../hooks';
@@ -80,7 +79,16 @@ export function PlaytimeInsights({
   const activePlayTime = totalPlayTime - totalHideoutTime;
   const totalZones = summary.total_zones_visited || 0;
   const totalDeaths = summary.total_deaths || 0;
-  const averageTimePerZone = totalZones > 0 ? totalPlayTime / totalZones : 0;
+
+  // Filter out towns and hideouts for average time per zone calculation
+  const nonTownHideoutZones = zones.filter(
+    zone => !zone.is_town && zone.location_type !== 'Hideout'
+  );
+  const averageTimePerZone =
+    nonTownHideoutZones.length > 0
+      ? nonTownHideoutZones.reduce((sum, zone) => sum + zone.duration, 0) /
+        nonTownHideoutZones.length
+      : 0;
   const deathRate =
     totalPlayTime > 0 ? totalDeaths / (totalPlayTime / 3600) : 0; // deaths per hour
 
@@ -113,7 +121,7 @@ export function PlaytimeInsights({
       <div className='space-y-4'>
         <h4 className='text-sm font-medium text-zinc-300 mb-3 flex items-center'>
           <MapPinIcon className='w-4 h-4 mr-2 text-zinc-400' />
-          Zones Visited
+          Visited
         </h4>
         <div className={playtimeInsightsStyles.grid}>
           <div className={playtimeInsightsStyles.statItem}>
@@ -134,12 +142,6 @@ export function PlaytimeInsights({
             </div>
             <div className={playtimeInsightsStyles.statLabel}>Hideouts</div>
           </div>
-          <div className={playtimeInsightsStyles.statItem}>
-            <div className={playtimeInsightsStyles.statValue}>
-              {formatDurationMinutes(Math.round(averageTimePerZone))}
-            </div>
-            <div className={playtimeInsightsStyles.statLabel}>Avg per Zone</div>
-          </div>
         </div>
       </div>
 
@@ -147,7 +149,7 @@ export function PlaytimeInsights({
       <div className={playtimeInsightsStyles.efficiencySection}>
         <h4 className={playtimeInsightsStyles.efficiencyTitle}>
           <ChartBarIcon className='w-4 h-4 mr-2 text-zinc-400' />
-          Time Breakdown
+          Breakdown
         </h4>
         <div className={playtimeInsightsStyles.efficiencyGrid}>
           <div className={playtimeInsightsStyles.efficiencyItem}>
@@ -199,44 +201,61 @@ export function PlaytimeInsights({
               </div>
             </div>
           </div>
+          <div className={playtimeInsightsStyles.efficiencyItem}>
+            <span className={playtimeInsightsStyles.efficiencyLabel}>
+              Avg per Zone
+            </span>
+            <div className='text-right'>
+              <div className={playtimeInsightsStyles.efficiencyValue}>
+                {formatDurationMinutes(Math.round(averageTimePerZone))}
+              </div>
+              <div className='text-xs text-zinc-500'>
+                {nonTownHideoutZones.length} zones
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Most Time Spent Location */}
-      {mostTimeSpent && (
-        <div className={playtimeInsightsStyles.locationSection}>
-          <h4 className={playtimeInsightsStyles.locationTitle}>
-            <MapPinIcon className='w-4 h-4 mr-2 text-zinc-400' />
-            Most Time Spent
-          </h4>
-          <div className={playtimeInsightsStyles.locationItem}>
-            <span className={playtimeInsightsStyles.locationName}>
-              {mostTimeSpent.location_name}
-            </span>
-            <span className={playtimeInsightsStyles.locationTime}>
-              {mostTimeSpentValue}
-            </span>
-          </div>
+      {/* History Section */}
+      <div className={playtimeInsightsStyles.efficiencySection}>
+        <h4 className={playtimeInsightsStyles.efficiencyTitle}>
+          <MapPinIcon className='w-4 h-4 mr-2 text-zinc-400' />
+          History
+        </h4>
+        <div className={playtimeInsightsStyles.efficiencyGrid}>
+          {mostTimeSpent && (
+            <div className={playtimeInsightsStyles.efficiencyItem}>
+              <span className={playtimeInsightsStyles.efficiencyLabel}>
+                Most Time Spent
+              </span>
+              <div className='text-right'>
+                <div className={playtimeInsightsStyles.efficiencyValue}>
+                  {mostTimeSpent.location_name}
+                </div>
+                <div className='text-xs text-zinc-500'>
+                  {mostTimeSpentValue}
+                </div>
+              </div>
+            </div>
+          )}
+          {hasDeaths && (
+            <div className={playtimeInsightsStyles.efficiencyItem}>
+              <span className={playtimeInsightsStyles.efficiencyLabel}>
+                Most Deaths
+              </span>
+              <div className='text-right'>
+                <div className={playtimeInsightsStyles.efficiencyValue}>
+                  {mostDeaths.location_name}
+                </div>
+                <div className='text-xs text-zinc-500'>
+                  {mostDeaths.deaths} deaths
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Most Deaths Location */}
-      {hasDeaths && (
-        <div className={playtimeInsightsStyles.locationSection}>
-          <h4 className={playtimeInsightsStyles.locationTitle}>
-            <ExclamationTriangleIcon className='w-4 h-4 mr-2 text-zinc-400' />
-            Most Deaths
-          </h4>
-          <div className={playtimeInsightsStyles.locationItem}>
-            <span className={playtimeInsightsStyles.locationName}>
-              {mostDeaths.location_name}
-            </span>
-            <span className={playtimeInsightsStyles.locationTime}>
-              {mostDeaths.deaths} deaths
-            </span>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

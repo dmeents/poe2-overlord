@@ -19,7 +19,6 @@ interface ZoneFiltersProps {
 const LOCATION_TYPES: { value: LocationType | 'All'; label: string }[] = [
   { value: 'All', label: 'All Types' },
   { value: 'Zone', label: 'Zones' },
-  { value: 'Act', label: 'Acts' },
   { value: 'Hideout', label: 'Hideouts' },
 ];
 

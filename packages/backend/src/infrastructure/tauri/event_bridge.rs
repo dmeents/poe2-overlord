@@ -77,6 +77,13 @@ impl TauriEventBridge {
     fn get_event_name(event: &AppEvent) -> String {
         match event {
             AppEvent::ServerStatusChanged { .. } => "server-status-changed".to_string(),
+            AppEvent::ServerPingCompleted { .. } => "server-ping-completed".to_string(),
+            AppEvent::ConfigurationChanged(_) => "configuration-changed".to_string(),
+            AppEvent::LocationStateChanged { .. } => "location-state-changed".to_string(),
+            AppEvent::SceneChangeDetected { .. } => "scene-change-detected".to_string(),
+            AppEvent::ActChangeDetected { .. } => "act-change-detected".to_string(),
+            AppEvent::ZoneChangeDetected { .. } => "zone-change-detected".to_string(),
+            AppEvent::HideoutChangeDetected { .. } => "hideout-change-detected".to_string(),
             AppEvent::CharacterTrackingDataUpdated { .. } => {
                 "character-tracking-data-updated".to_string()
             }
@@ -89,8 +96,8 @@ impl TauriEventBridge {
                 "walkthrough-campaign-completed".to_string()
             }
             AppEvent::GameProcessStatusChanged { .. } => "game-process-status-changed".to_string(),
-            // Unused events - not forwarded to frontend
-            _ => "unused-event".to_string(),
+            AppEvent::SystemError { .. } => "system-error".to_string(),
+            AppEvent::SystemShutdown { .. } => "system-shutdown".to_string(),
         }
     }
 

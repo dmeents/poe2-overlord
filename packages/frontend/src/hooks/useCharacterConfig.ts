@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { CharacterFormData } from '../components/character/character-modals/character-form-modal';
+import type { CharacterFormData } from '../components/character/character-form-modal';
 import type {
   Ascendency,
   CharacterClass,

@@ -10,7 +10,7 @@ import {
   LoadingSpinner,
   PageLayout,
 } from '../components';
-import type { CharacterFormData } from '../components/character/character-modals';
+import type { CharacterFormData } from '../components/character/character-form-modal';
 import { useCharacterDataFiltering } from '../hooks/useCharacterDataFiltering';
 import { useCharacterFilters } from '../hooks/useCharacterFilterState';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';

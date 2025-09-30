@@ -38,22 +38,23 @@ export function useServerStatusEvents() {
     }, []);
 
   // Use the generic Tauri event listener
-  const { isListening, error } = useTauriEventListener<ServerStatusChangedEvent>({
-    eventName: 'server-status-changed',
-    handler: handleServerStatusChanged,
-    getInitialData: async () => {
-      // Convert ServerStatus to ServerStatusChangedEvent format
-      const serverStatus = await getInitialServerStatus();
-      if (!serverStatus) return null;
-      
-      return {
-        ServerStatusChanged: {
-          new_status: serverStatus,
-          timestamp: new Date().toISOString(),
-        },
-      };
-    },
-  });
+  const { isListening, error } =
+    useTauriEventListener<ServerStatusChangedEvent>({
+      eventName: 'server-status-changed',
+      handler: handleServerStatusChanged,
+      getInitialData: async () => {
+        // Convert ServerStatus to ServerStatusChangedEvent format
+        const serverStatus = await getInitialServerStatus();
+        if (!serverStatus) return null;
+
+        return {
+          ServerStatusChanged: {
+            new_status: serverStatus,
+            timestamp: new Date().toISOString(),
+          },
+        };
+      },
+    });
 
   return {
     serverStatus,

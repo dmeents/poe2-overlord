@@ -1,5 +1,5 @@
-import { useFilterState, type FilterStateConfig } from './useFilterState';
 import type { Ascendency, CharacterClass, League } from '../types';
+import { useFilterState, type FilterStateConfig } from './useFilterState';
 
 export interface CharacterFilters extends Record<string, unknown> {
   league: League | 'All';
@@ -48,10 +48,10 @@ const config: FilterStateConfig<CharacterFilters, SortOption> = {
 
 /**
  * Hook for managing character filter and sort state
- * 
+ *
  * This hook provides the same interface as the original useCharacterFilters
  * but uses the generic useFilterState implementation internally.
- * 
+ *
  * @returns Object containing filter state and management functions
  */
 export function useCharacterFilters() {

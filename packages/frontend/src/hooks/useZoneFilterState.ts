@@ -1,5 +1,5 @@
-import { useFilterState, type FilterStateConfig } from './useFilterState';
 import type { LocationType } from '../types';
+import { useFilterState, type FilterStateConfig } from './useFilterState';
 
 export interface ZoneFilters extends Record<string, unknown> {
   search: string;
@@ -64,10 +64,10 @@ const config: FilterStateConfig<ZoneFilters, ZoneSortOption> = {
 
 /**
  * Hook for managing zone filter and sort state
- * 
+ *
  * This hook provides the same interface as the original useZoneFilters
  * but uses the generic useFilterState implementation internally.
- * 
+ *
  * @returns Object containing filter state and management functions
  */
 export function useZoneFilters() {

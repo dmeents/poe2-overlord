@@ -8,7 +8,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * @template UpdateData - The type of data needed to update an entity
  * @template ListParams - The type of parameters for listing entities
  */
-export interface CRUDOperations<T extends { id: string }, CreateData, UpdateData, ListParams = void> {
+export interface CRUDOperations<
+  T extends { id: string },
+  CreateData,
+  UpdateData,
+  ListParams = void,
+> {
   /** Get all entities */
   getAll: (params?: ListParams) => Promise<T[]>;
   /** Get a specific entity by ID */
@@ -30,7 +35,12 @@ export interface CRUDOperations<T extends { id: string }, CreateData, UpdateData
  * @template UpdateData - The type of data needed to update an entity
  * @template ListParams - The type of parameters for listing entities
  */
-export interface CRUDOperationsConfig<T extends { id: string }, CreateData, UpdateData, ListParams = void> {
+export interface CRUDOperationsConfig<
+  T extends { id: string },
+  CreateData,
+  UpdateData,
+  ListParams = void,
+> {
   /** The CRUD operations implementation */
   operations: CRUDOperations<T, CreateData, UpdateData, ListParams>;
   /** Query key prefix for React Query caching */
@@ -51,18 +61,18 @@ export interface CRUDOperationsConfig<T extends { id: string }, CreateData, Upda
 
 /**
  * Generic hook for CRUD operations with React Query integration
- * 
+ *
  * This hook provides a reusable pattern for CRUD operations with automatic
  * caching, optimistic updates, and real-time event handling. It can replace
  * the duplicate logic in useCharacterManagement and similar hooks.
- * 
+ *
  * @template T - The type of the entity
  * @template CreateData - The type of data needed to create an entity
  * @template UpdateData - The type of data needed to update an entity
  * @template ListParams - The type of parameters for listing entities
  * @param config - Configuration object for CRUD operations
  * @returns Object containing data, loading states, and CRUD functions
- * 
+ *
  * @example
  * ```typescript
  * interface MyEntity {
@@ -70,12 +80,12 @@ export interface CRUDOperationsConfig<T extends { id: string }, CreateData, Upda
  *   name: string;
  *   value: number;
  * }
- * 
+ *
  * interface CreateData {
  *   name: string;
  *   value: number;
  * }
- * 
+ *
  * const operations: CRUDOperations<MyEntity, CreateData, CreateData> = {
  *   getAll: () => invoke('get_all_entities'),
  *   getById: (id) => invoke('get_entity', { id }),
@@ -83,21 +93,24 @@ export interface CRUDOperationsConfig<T extends { id: string }, CreateData, Upda
  *   update: (id, data) => invoke('update_entity', { id, data }),
  *   delete: (id) => invoke('delete_entity', { id }),
  * };
- * 
+ *
  * const config: CRUDOperationsConfig<MyEntity, CreateData, CreateData> = {
  *   operations,
  *   queryKeyPrefix: 'entities',
  *   enableRealTimeUpdates: true,
  *   updateEventName: 'entity-updated',
  * };
- * 
- * const { entities, activeEntity, isLoading, create, update, delete: deleteEntity } = 
+ *
+ * const { entities, activeEntity, isLoading, create, update, delete: deleteEntity } =
  *   useCRUDOperations(config);
  * ```
  */
-export function useCRUDOperations<T extends { id: string }, CreateData, UpdateData, ListParams = void>(
-  config: CRUDOperationsConfig<T, CreateData, UpdateData, ListParams>
-) {
+export function useCRUDOperations<
+  T extends { id: string },
+  CreateData,
+  UpdateData,
+  ListParams = void,
+>(config: CRUDOperationsConfig<T, CreateData, UpdateData, ListParams>) {
   const {
     operations,
     queryKeyPrefix,
@@ -115,8 +128,7 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
   const queryKeys = {
     all: [queryKeyPrefix] as const,
     lists: () => [...queryKeys.all, 'list'] as const,
-    list: (params?: ListParams) =>
-      [...queryKeys.lists(), { params }] as const,
+    list: (params?: ListParams) => [...queryKeys.lists(), { params }] as const,
     details: () => [...queryKeys.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.details(), id] as const,
     active: () => [...queryKeys.all, 'active'] as const,
@@ -124,7 +136,8 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
 
   // State for real-time updates
   const [entitiesWithUpdates, setEntitiesWithUpdates] = useState<T[]>([]);
-  const [activeEntityWithUpdates, setActiveEntityWithUpdates] = useState<T | null>(null);
+  const [activeEntityWithUpdates, setActiveEntityWithUpdates] =
+    useState<T | null>(null);
   const listenerRef = useRef<(() => void) | null>(null);
   const isListeningRef = useRef(false);
 
@@ -165,17 +178,21 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
     (event: { payload: unknown }) => {
       if (handleUpdateEvent) {
         setEntitiesWithUpdates(prev => handleUpdateEvent(event, prev));
-        
+
         // Update active entity if it's affected
-        if (activeEntity) {
-          const updatedEntities = handleUpdateEvent(event, [activeEntity]);
-          if (updatedEntities.length > 0) {
-            setActiveEntityWithUpdates(updatedEntities[0]);
+        // Use a ref to get the current active entity without causing re-renders
+        setActiveEntityWithUpdates(currentActive => {
+          if (currentActive) {
+            const updatedEntities = handleUpdateEvent(event, [currentActive]);
+            if (updatedEntities.length > 0) {
+              return updatedEntities[0];
+            }
           }
-        }
+          return currentActive;
+        });
       }
     },
-    [handleUpdateEvent, activeEntity]
+    [handleUpdateEvent]
   );
 
   // Set up real-time event listener
@@ -217,7 +234,12 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
       }
       isListeningRef.current = false;
     };
-  }, [enableRealTimeUpdates, updateEventName, handleUpdateEvent, handleRealTimeUpdate]);
+  }, [
+    enableRealTimeUpdates,
+    updateEventName,
+    handleUpdateEvent,
+    handleRealTimeUpdate,
+  ]);
 
   // Mutation hooks
   const createMutation = useMutation({
@@ -230,9 +252,12 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateData }) =>
       operations.update(id, data),
-    onSuccess: (updatedEntity) => {
+    onSuccess: updatedEntity => {
       // Update the specific entity in cache
-      queryClient.setQueryData(queryKeys.detail(updatedEntity.id), updatedEntity);
+      queryClient.setQueryData(
+        queryKeys.detail(updatedEntity.id),
+        updatedEntity
+      );
       // Invalidate lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: queryKeys.lists() });
       if (getActive) {
@@ -364,7 +389,12 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
  * @param options - Optional configuration
  * @returns CRUD operations configuration object
  */
-export function createCRUDOperationsConfig<T extends { id: string }, CreateData, UpdateData, ListParams = void>(
+export function createCRUDOperationsConfig<
+  T extends { id: string },
+  CreateData,
+  UpdateData,
+  ListParams = void,
+>(
   operations: CRUDOperations<T, CreateData, UpdateData, ListParams>,
   queryKeyPrefix: string,
   options?: {

@@ -101,7 +101,7 @@ export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>
 ) {
   return function ErrorBoundaryWrapper(props: P) {
-    const { hasError, error, handleError, resetError } = useErrorBoundary();
+    const { hasError, error, resetError } = useErrorBoundary();
 
     if (hasError && error) {
       return (

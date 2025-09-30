@@ -19,19 +19,19 @@ export { useCacheInvalidation } from './useCacheInvalidation';
 
 // Error handling utilities
 export {
-  ErrorType,
-  type StandardError,
-  type ErrorHandlingConfig,
-  DEFAULT_ERROR_CONFIG,
-  EVENT_ERROR_CONFIG,
-  CRUD_ERROR_CONFIG,
-  useErrorHandling,
-} from './useErrorHandling';
-export {
-  type ErrorBoundaryState,
   useErrorBoundary,
   withErrorBoundary,
+  type ErrorBoundaryState,
 } from './useErrorBoundary';
+export {
+  CRUD_ERROR_CONFIG,
+  DEFAULT_ERROR_CONFIG,
+  EVENT_ERROR_CONFIG,
+  ErrorType,
+  useErrorHandling,
+  type ErrorHandlingConfig,
+  type StandardError,
+} from './useErrorHandling';
 
 // Generic hooks
 export {

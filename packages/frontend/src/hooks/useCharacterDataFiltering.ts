@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { CharacterData } from '../types';
 import type { CharacterFilters, SortOption } from './useCharacterFilterState';
-import { useDataFiltering, FilterHelpers, SortHelpers } from './useDataFiltering';
+import { useDataFiltering } from './useDataFiltering';
 
 /**
  * Character-specific filter function that combines multiple filter criteria

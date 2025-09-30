@@ -83,8 +83,8 @@ export function hasAscendencyImage(ascendency: Ascendency): boolean {
  */
 export function getAvailableAscendencyImages(): Ascendency[] {
   return Object.entries(ASCENDENCY_IMAGES)
-    .filter(([_, image]) => image !== null)
-    .map(([ascendency, _]) => ascendency as Ascendency);
+    .filter(([, image]) => image !== null)
+    .map(([ascendency]) => ascendency as Ascendency);
 }
 
 /**

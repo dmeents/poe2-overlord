@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useState } from 'react';
 import type { WalkthroughGuide } from '../types/walkthrough';
-import { useErrorHandling, DEFAULT_ERROR_CONFIG } from './useErrorHandling';
+import { DEFAULT_ERROR_CONFIG, useErrorHandling } from './useErrorHandling';
 
 /**
  * Hook for loading the walkthrough guide data
@@ -11,20 +11,20 @@ import { useErrorHandling, DEFAULT_ERROR_CONFIG } from './useErrorHandling';
 export function useWalkthroughGuide() {
   const [guide, setGuide] = useState<WalkthroughGuide | null>(null);
   const [loading, setLoading] = useState(true);
-  const { error, handleError, clearError, handleAsyncOperation } = useErrorHandling(DEFAULT_ERROR_CONFIG);
+  const { error, clearError, handleAsyncOperation } =
+    useErrorHandling(DEFAULT_ERROR_CONFIG);
 
   const loadGuide = useCallback(async () => {
     setLoading(true);
     clearError();
 
-    const result = await handleAsyncOperation(
-      async () => {
-        const guideResponse = await invoke<WalkthroughGuide>('get_walkthrough_guide');
-        setGuide(guideResponse);
-        return guideResponse;
-      },
-      'load walkthrough guide'
-    );
+    const result = await handleAsyncOperation(async () => {
+      const guideResponse = await invoke<WalkthroughGuide>(
+        'get_walkthrough_guide'
+      );
+      setGuide(guideResponse);
+      return guideResponse;
+    }, 'load walkthrough guide');
 
     setLoading(false);
     return result;

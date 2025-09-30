@@ -15,6 +15,12 @@ export type FilterFunction<T, F> = (item: T, filters: F) => boolean;
 export type SortFunction<T, S> = (a: T, b: T, sort: S) => number;
 
 /**
+ * Generic summary function type
+ * @template T - The type of the data item
+ */
+export type SummaryFunction<T> = (data: T[], filteredData: T[]) => Record<string, unknown>;
+
+/**
  * Configuration for data filtering and sorting
  * @template T - The type of the data items
  * @template F - The type of the filter object
@@ -32,7 +38,7 @@ export interface DataFilteringConfig<T, F, S> {
   /** Function to sort data items */
   sortFunction: SortFunction<T, S>;
   /** Optional function to calculate summary statistics */
-  summaryFunction?: (data: T[], filteredData: T[]) => any;
+  summaryFunction?: SummaryFunction<T>;
 }
 
 /**
@@ -135,7 +141,7 @@ export class FilterHelpers {
    * @param searchKey - Key in the filter object that contains the search term
    * @returns Filter function for string searching
    */
-  static createStringSearchFilter<T, F extends Record<string, any>>(
+  static createStringSearchFilter<T, F extends Record<string, unknown>>(
     searchFields: (keyof T)[],
     searchKey: keyof F
   ): FilterFunction<T, F> {
@@ -163,10 +169,10 @@ export class FilterHelpers {
    * @param defaultValue - Value to consider as "all" (e.g., 'All', null)
    * @returns Filter function for exact matching
    */
-  static createExactMatchFilter<T, F extends Record<string, any>>(
+  static createExactMatchFilter<T, F extends Record<string, unknown>>(
     field: keyof T,
     filterKey: keyof F,
-    defaultValue: any = 'All'
+    defaultValue: string = 'All'
   ): FilterFunction<T, F> {
     return (item, filters) => {
       const filterValue = filters[filterKey];
@@ -183,7 +189,7 @@ export class FilterHelpers {
    * @param filterKey - Key in the filter object
    * @returns Filter function for boolean matching
    */
-  static createBooleanFilter<T, F extends Record<string, any>>(
+  static createBooleanFilter<T, F extends Record<string, unknown>>(
     field: keyof T,
     filterKey: keyof F
   ): FilterFunction<T, F> {
@@ -203,7 +209,7 @@ export class FilterHelpers {
    * @param maxKey - Key for maximum value in filter object
    * @returns Filter function for numeric range matching
    */
-  static createNumericRangeFilter<T, F extends Record<string, any>>(
+  static createNumericRangeFilter<T, F extends Record<string, unknown>>(
     field: keyof T,
     minKey: keyof F,
     maxKey: keyof F
@@ -225,7 +231,7 @@ export class FilterHelpers {
    * @param filterKey - Key in the filter object that contains the array
    * @returns Filter function for array inclusion
    */
-  static createArrayInclusionFilter<T, F extends Record<string, any>>(
+  static createArrayInclusionFilter<T, F extends Record<string, unknown>>(
     field: keyof T,
     filterKey: keyof F
   ): FilterFunction<T, F> {
@@ -251,7 +257,7 @@ export class SortHelpers {
    * @param directionKey - Key in sort object that contains direction
    * @returns Sort function for string fields
    */
-  static createStringSort<T, S extends Record<string, any>>(
+  static createStringSort<T, S extends Record<string, unknown>>(
     field: keyof T,
     directionKey: keyof S = 'direction'
   ): SortFunction<T, S> {
@@ -269,7 +275,7 @@ export class SortHelpers {
    * @param directionKey - Key in sort object that contains direction
    * @returns Sort function for numeric fields
    */
-  static createNumericSort<T, S extends Record<string, any>>(
+  static createNumericSort<T, S extends Record<string, unknown>>(
     field: keyof T,
     directionKey: keyof S = 'direction'
   ): SortFunction<T, S> {
@@ -287,7 +293,7 @@ export class SortHelpers {
    * @param directionKey - Key in sort object that contains direction
    * @returns Sort function for date fields
    */
-  static createDateSort<T, S extends Record<string, any>>(
+  static createDateSort<T, S extends Record<string, unknown>>(
     field: keyof T,
     directionKey: keyof S = 'direction'
   ): SortFunction<T, S> {
@@ -308,7 +314,7 @@ export class SortHelpers {
    * @param nullValue - Value to use for null/undefined (default: 0)
    * @returns Sort function that handles null values
    */
-  static createConditionalSort<T, S extends Record<string, any>>(
+  static createConditionalSort<T, S extends Record<string, unknown>>(
     field: keyof T,
     directionKey: keyof S = 'direction',
     nullValue: number = 0
@@ -343,7 +349,7 @@ export function createDataFilteringConfig<T, F, S>(
   sort: S,
   filterFunction: FilterFunction<T, F>,
   sortFunction: SortFunction<T, S>,
-  summaryFunction?: (data: T[], filteredData: T[]) => any
+  summaryFunction?: SummaryFunction<T>
 ): DataFilteringConfig<T, F, S> {
   return {
     data,

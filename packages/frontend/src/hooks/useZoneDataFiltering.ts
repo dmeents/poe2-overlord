@@ -1,7 +1,7 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import type { ZoneStats } from '../types';
 import type { ZoneFilters, ZoneSortOption } from './useZoneFilterState';
-import { useDataFiltering, FilterHelpers, SortHelpers } from './useDataFiltering';
+import { useDataFiltering } from './useDataFiltering';
 
 /**
  * Zone-specific filter function that combines multiple filter criteria
@@ -119,8 +119,8 @@ function createZoneSortFunction(): (a: ZoneStats, b: ZoneStats, sort: ZoneSortOp
 /**
  * Zone summary statistics calculation function
  */
-function createZoneSummaryFunction(): (data: ZoneStats[], filteredData: ZoneStats[]) => any {
-  return (data, filteredData) => {
+function createZoneSummaryFunction(): (data: ZoneStats[]) => Record<string, unknown> {
+  return (data) => {
     if (data.length === 0) {
       return {
         totalZones: 0,

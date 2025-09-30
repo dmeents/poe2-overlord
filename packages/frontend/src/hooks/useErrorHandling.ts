@@ -34,20 +34,20 @@ export interface ErrorHandlingConfig {
 
 /**
  * Hook for standardized error handling across all hooks
- * 
+ *
  * Provides consistent error handling patterns, logging, and recovery mechanisms
  * for all hooks in the application.
- * 
+ *
  * @param config - Error handling configuration
  * @returns Object containing error state and error handling functions
- * 
+ *
  * @example
  * ```typescript
  * const { error, handleError, clearError } = useErrorHandling({
  *   enableLogging: true,
  *   enableRecovery: true
  * });
- * 
+ *
  * const handleAsyncOperation = async () => {
  *   try {
  *     await someAsyncOperation();
@@ -77,24 +77,43 @@ export function useErrorHandling(config: ErrorHandlingConfig = {}) {
 
       if (input instanceof Error) {
         originalError = input;
-        message = customErrorMessage ? customErrorMessage(input, context) : input.message;
-        
+        message = customErrorMessage
+          ? customErrorMessage(input, context)
+          : input.message;
+
         // Determine error type based on error message or name
-        if (input.message.includes('network') || input.message.includes('fetch')) {
+        if (
+          input.message.includes('network') ||
+          input.message.includes('fetch')
+        ) {
           type = ErrorType.NETWORK;
-        } else if (input.message.includes('validation') || input.message.includes('invalid')) {
+        } else if (
+          input.message.includes('validation') ||
+          input.message.includes('invalid')
+        ) {
           type = ErrorType.VALIDATION;
-        } else if (input.message.includes('permission') || input.message.includes('unauthorized')) {
+        } else if (
+          input.message.includes('permission') ||
+          input.message.includes('unauthorized')
+        ) {
           type = ErrorType.PERMISSION;
-        } else if (input.message.includes('not found') || input.message.includes('404')) {
+        } else if (
+          input.message.includes('not found') ||
+          input.message.includes('404')
+        ) {
           type = ErrorType.NOT_FOUND;
-        } else if (input.message.includes('server') || input.message.includes('500')) {
+        } else if (
+          input.message.includes('server') ||
+          input.message.includes('500')
+        ) {
           type = ErrorType.SERVER;
         }
       } else if (typeof input === 'string') {
-        message = customErrorMessage ? customErrorMessage(new Error(input), context) : input;
+        message = customErrorMessage
+          ? customErrorMessage(new Error(input), context)
+          : input;
       } else {
-        message = customErrorMessage 
+        message = customErrorMessage
           ? customErrorMessage(new Error('Unknown error'), context)
           : 'An unexpected error occurred';
       }
@@ -116,7 +135,7 @@ export function useErrorHandling(config: ErrorHandlingConfig = {}) {
   const handleError = useCallback(
     (input: unknown, context?: string) => {
       const standardError = createStandardError(input, context);
-      
+
       setError(standardError);
 
       if (enableLogging) {
@@ -172,21 +191,23 @@ export function useErrorHandling(config: ErrorHandlingConfig = {}) {
       case ErrorType.SERVER:
         return 'Server error occurred. Please try again later.';
       default:
-        return error.message || 'An unexpected error occurred. Please try again.';
+        return (
+          error.message || 'An unexpected error occurred. Please try again.'
+        );
     }
   }, []);
 
   /**
    * Check if error is recoverable
    */
-  const isRecoverable = useCallback((error: StandardError): boolean => {
-    if (!enableRecovery) return false;
-    
-    return [
-      ErrorType.NETWORK,
-      ErrorType.SERVER,
-    ].includes(error.type);
-  }, [enableRecovery]);
+  const isRecoverable = useCallback(
+    (error: StandardError): boolean => {
+      if (!enableRecovery) return false;
+
+      return [ErrorType.NETWORK, ErrorType.SERVER].includes(error.type);
+    },
+    [enableRecovery]
+  );
 
   return {
     error,
@@ -213,7 +234,7 @@ export const DEFAULT_ERROR_CONFIG: ErrorHandlingConfig = {
 export const EVENT_ERROR_CONFIG: ErrorHandlingConfig = {
   enableLogging: true,
   enableRecovery: false,
-  customErrorMessage: (error, context) => 
+  customErrorMessage: (error, context) =>
     `Event error${context ? ` in ${context}` : ''}: ${error.message}`,
 };
 

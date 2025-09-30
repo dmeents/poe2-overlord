@@ -1,6 +1,6 @@
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useErrorHandling, EVENT_ERROR_CONFIG } from './useErrorHandling';
+import { EVENT_ERROR_CONFIG, useErrorHandling } from './useErrorHandling';
 
 /**
  * Configuration for a Tauri event listener
@@ -32,21 +32,21 @@ export interface MultiEventListenerConfig<T = unknown> {
 
 /**
  * Generic hook for listening to Tauri events
- * 
+ *
  * This hook provides a reusable pattern for listening to Tauri events with
  * automatic cleanup, error handling, and optional initial data loading.
- * 
+ *
  * @template T - The type of the event payload
  * @param config - Configuration object for the event listener
  * @returns Object containing listening state and data
- * 
+ *
  * @example
  * ```typescript
  * interface MyEventPayload {
  *   data: string;
  *   timestamp: string;
  * }
- * 
+ *
  * const config: EventListenerConfig<MyEventPayload> = {
  *   eventName: 'my-event',
  *   handler: (payload) => {
@@ -57,7 +57,7 @@ export interface MultiEventListenerConfig<T = unknown> {
  *     return await invoke<MyEventPayload>('get_initial_data');
  *   }
  * };
- * 
+ *
  * const { isListening, error } = useTauriEventListener(config);
  * ```
  */
@@ -65,9 +65,10 @@ export function useTauriEventListener<T = unknown>(
   config: EventListenerConfig<T>
 ) {
   const { eventName, handler, getInitialData, enabled = true } = config;
-  
+
   const [isListening, setIsListening] = useState(false);
-  const { error, handleError, clearError } = useErrorHandling(EVENT_ERROR_CONFIG);
+  const { error, handleError, clearError } =
+    useErrorHandling(EVENT_ERROR_CONFIG);
   const listenerRef = useRef<(() => void) | null>(null);
   const isListeningRef = useRef(false);
 
@@ -88,7 +89,7 @@ export function useTauriEventListener<T = unknown>(
 
     try {
       // Set up event listener
-      const unlisten = await listen<T>(eventName, (event) => {
+      const unlisten = await listen<T>(eventName, event => {
         try {
           handler(event.payload);
         } catch (err) {
@@ -115,7 +116,7 @@ export function useTauriEventListener<T = unknown>(
       handleError(err, `setting up listener for ${eventName}`);
       isListeningRef.current = false;
     }
-  }, [eventName, handler, getInitialData, enabled]);
+  }, [eventName, handler, getInitialData, enabled, clearError, handleError]);
 
   useEffect(() => {
     setupListener();
@@ -139,14 +140,14 @@ export function useTauriEventListener<T = unknown>(
 
 /**
  * Generic hook for listening to multiple Tauri events
- * 
+ *
  * This hook provides a reusable pattern for listening to multiple Tauri events
  * with automatic cleanup and error handling.
- * 
+ *
  * @template T - The type of the event payload
  * @param config - Configuration object for multiple event listeners
  * @returns Object containing listening state and errors
- * 
+ *
  * @example
  * ```typescript
  * const config: MultiEventListenerConfig = {
@@ -162,7 +163,7 @@ export function useTauriEventListener<T = unknown>(
  *   ],
  *   enabled: true
  * };
- * 
+ *
  * const { isListening, errors } = useMultiTauriEventListener(config);
  * ```
  */
@@ -170,9 +171,8 @@ export function useMultiTauriEventListener<T = unknown>(
   config: MultiEventListenerConfig<T>
 ) {
   const { listeners, getInitialData, enabled = true } = config;
-  
+
   const [isListening, setIsListening] = useState(false);
-  const { error: globalError, handleError } = useErrorHandling(EVENT_ERROR_CONFIG);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const listenerRefs = useRef<Record<string, (() => void) | null>>({});
   const isListeningRef = useRef(false);
@@ -199,14 +199,15 @@ export function useMultiTauriEventListener<T = unknown>(
       // Set up each event listener
       for (const listenerConfig of listeners) {
         const { eventName, handler } = listenerConfig;
-        
+
         try {
-          const unlisten = await listen<T>(eventName, (event) => {
+          const unlisten = await listen<T>(eventName, event => {
             try {
               handler(event.payload);
             } catch (err) {
               console.error(`Error handling event ${eventName}:`, err);
-              newErrors[eventName] = `Error handling event: ${err instanceof Error ? err.message : 'Unknown error'}`;
+              newErrors[eventName] =
+                `Error handling event: ${err instanceof Error ? err.message : 'Unknown error'}`;
               setErrors(prev => ({ ...prev, ...newErrors }));
             }
           });
@@ -215,7 +216,8 @@ export function useMultiTauriEventListener<T = unknown>(
           unlistenFns.push(unlisten);
         } catch (err) {
           console.error(`Failed to set up listener for ${eventName}:`, err);
-          newErrors[eventName] = `Failed to set up listener: ${err instanceof Error ? err.message : 'Unknown error'}`;
+          newErrors[eventName] =
+            `Failed to set up listener: ${err instanceof Error ? err.message : 'Unknown error'}`;
         }
       }
 

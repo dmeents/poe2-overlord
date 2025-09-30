@@ -49,7 +49,7 @@ export interface FilterStateConfig<T, S> {
  *   useFilterState(config);
  * ```
  */
-export function useFilterState<T extends Record<string, any>, S extends Record<string, any>>(
+export function useFilterState<T extends Record<string, unknown>, S extends Record<string, unknown>>(
   config: FilterStateConfig<T, S>
 ) {
   const { defaultFilters, defaultSort, hasActiveFiltersFn } = config;
@@ -162,7 +162,7 @@ export type CreateFilterStateConfig<T, S> = (
  * @param hasActiveFiltersFn - Optional custom function to check active filters
  * @returns Filter state configuration object
  */
-export const createFilterStateConfig: CreateFilterStateConfig<any, any> = (
+export const createFilterStateConfig: CreateFilterStateConfig<Record<string, unknown>, Record<string, unknown>> = (
   defaultFilters,
   defaultSort,
   hasActiveFiltersFn

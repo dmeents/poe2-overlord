@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import type { CharacterData } from '../types';
 import type { CharacterFilters, SortOption } from './useCharacterFilterState';
 import { useDataFiltering } from './useDataFiltering';
@@ -120,17 +119,13 @@ export function useCharacterDataFiltering(
   filters: CharacterFilters,
   sort: SortOption
 ) {
-  // Create memoized filter and sort functions
-  const filterFunction = useCallback(createCharacterFilterFunction(), []);
-  const sortFunction = useCallback(createCharacterSortFunction(), []);
-
-  // Use the generic data filtering hook
+  // Use the generic data filtering hook with factory functions
   const { filteredData, count, totalCount } = useDataFiltering({
     data: characters,
     filters,
     sort,
-    filterFunction,
-    sortFunction,
+    filterFunction: createCharacterFilterFunction(),
+    sortFunction: createCharacterSortFunction(),
   });
 
   return {

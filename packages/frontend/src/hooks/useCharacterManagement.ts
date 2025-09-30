@@ -1,6 +1,5 @@
-import { listen } from '@tauri-apps/api/event';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CharacterFormData } from '../components/character/character-modals/character-form-modal';
+import { useCallback, useEffect, useState } from 'react';
+import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import type { CharacterData } from '../types';
 import type { CharacterTrackingData } from '../types/character';
 import {
@@ -11,6 +10,7 @@ import {
   useSetActiveCharacter,
   useUpdateCharacter,
 } from './useCharacterQueries';
+import { useTauriEventListener } from './useTauriEventListener';
 
 export function useCharacterManagement() {
   // Use React Query hooks for data fetching
@@ -29,13 +29,9 @@ export function useCharacterManagement() {
   // State for real-time character data updates
   const [charactersWithUpdates, setCharactersWithUpdates] = useState<
     CharacterData[]
-  >([]);
+  >(characters);
   const [activeCharacterWithUpdates, setActiveCharacterWithUpdates] =
-    useState<CharacterData | null>(null);
-
-  // Event listener management
-  const listenerRef = useRef<(() => void) | null>(null);
-  const isListeningRef = useRef(false);
+    useState<CharacterData | null>(activeCharacter);
 
   // Initialize characters with updates when data changes
   useEffect(() => {
@@ -82,38 +78,11 @@ export function useCharacterManagement() {
     [activeCharacter?.id]
   );
 
-  // Set up event listener for character data updates
-  useEffect(() => {
-    // Clean up existing listener
-    if (listenerRef.current) {
-      listenerRef.current();
-      listenerRef.current = null;
-    }
-
-    // Prevent multiple listeners
-    if (isListeningRef.current) {
-      return;
-    }
-
-    isListeningRef.current = true;
-
-    listen('character-tracking-data-updated', handleCharacterDataUpdate)
-      .then(unlisten => {
-        listenerRef.current = unlisten;
-      })
-      .catch(error => {
-        console.error('Failed to set up event listener:', error);
-        isListeningRef.current = false;
-      });
-
-    return () => {
-      if (listenerRef.current) {
-        listenerRef.current();
-        listenerRef.current = null;
-      }
-      isListeningRef.current = false;
-    };
-  }, [handleCharacterDataUpdate]);
+  // Use the generic Tauri event listener for character data updates
+  const { isListening: isListeningToEvents, error: eventError } = useTauriEventListener({
+    eventName: 'character-tracking-data-updated',
+    handler: handleCharacterDataUpdate,
+  });
 
   // Mutation hooks
   const createCharacterMutation = useCreateCharacter();
@@ -124,57 +93,33 @@ export function useCharacterManagement() {
   // Derived state
   const isLoading = charactersLoading || activeCharacterLoading;
   const error =
-    charactersError?.message || activeCharacterError?.message || null;
+    charactersError?.message || activeCharacterError?.message || eventError || null;
 
   // Wrapper functions that use mutations
   const createCharacter = useCallback(
     async (data: CharacterFormData) => {
-      try {
-        return await createCharacterMutation.mutateAsync(data);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to create character';
-        throw new Error(errorMessage);
-      }
+      return await createCharacterMutation.mutateAsync(data);
     },
     [createCharacterMutation]
   );
 
   const updateCharacter = useCallback(
     async (characterId: string, data: CharacterFormData) => {
-      try {
-        return await updateCharacterMutation.mutateAsync({ characterId, data });
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to update character';
-        throw new Error(errorMessage);
-      }
+      return await updateCharacterMutation.mutateAsync({ characterId, data });
     },
     [updateCharacterMutation]
   );
 
   const deleteCharacter = useCallback(
     async (characterId: string) => {
-      try {
-        await deleteCharacterMutation.mutateAsync(characterId);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to delete character';
-        throw new Error(errorMessage);
-      }
+      await deleteCharacterMutation.mutateAsync(characterId);
     },
     [deleteCharacterMutation]
   );
 
   const setActiveCharacterId = useCallback(
     async (characterId: string) => {
-      try {
-        await setActiveCharacterMutation.mutateAsync(characterId);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to set active character';
-        throw new Error(errorMessage);
-      }
+      await setActiveCharacterMutation.mutateAsync(characterId);
     },
     [setActiveCharacterMutation]
   );
@@ -213,8 +158,12 @@ export function useCharacterManagement() {
       : null,
     isLoading,
     error,
+    // Event listening status
+    isListeningToEvents,
+    // Legacy functions for backward compatibility (no-op since React Query handles caching)
     loadCharacters,
     loadActiveCharacter,
+    // CRUD operations
     createCharacter,
     updateCharacter,
     setActiveCharacterId,

@@ -33,28 +33,42 @@ export interface ErrorHandlingConfig {
 }
 
 /**
- * Hook for standardized error handling across all hooks
- *
- * Provides consistent error handling patterns, logging, and recovery mechanisms
- * for all hooks in the application.
- *
- * @param config - Error handling configuration
+ * Hook for standardized error handling across all hooks.
+ * 
+ * This hook provides consistent error handling patterns, logging, and recovery mechanisms
+ * for all hooks in the application. It standardizes error types, provides user-friendly
+ * error messages, and includes automatic error recovery for recoverable errors.
+ * 
+ * @param config - Error handling configuration object
  * @returns Object containing error state and error handling functions
- *
+ * 
  * @example
  * ```typescript
+ * // Basic usage
  * const { error, handleError, clearError } = useErrorHandling({
  *   enableLogging: true,
  *   enableRecovery: true
  * });
- *
- * const handleAsyncOperation = async () => {
- *   try {
- *     await someAsyncOperation();
- *   } catch (err) {
- *     handleError(err, 'Failed to perform operation');
- *   }
+ * 
+ * // With async operations
+ * const { handleAsyncOperation } = useErrorHandling(DEFAULT_ERROR_CONFIG);
+ * 
+ * const loadData = async () => {
+ *   const result = await handleAsyncOperation(
+ *     () => fetchData(),
+ *     'loading data'
+ *   );
+ *   return result;
  * };
+ * 
+ * // Error recovery
+ * const { isRecoverable, retry } = useErrorHandling({
+ *   enableRecovery: true
+ * });
+ * 
+ * if (error && isRecoverable(error)) {
+ *   retry();
+ * }
  * ```
  */
 export function useErrorHandling(config: ErrorHandlingConfig = {}) {

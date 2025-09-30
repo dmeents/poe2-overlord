@@ -4,7 +4,43 @@ import { useCharacterMutations } from './useCharacterMutations';
 
 /**
  * Main character management hook that composes focused hooks.
- * Provides a unified interface for character data, mutations, and events.
+ * 
+ * This hook provides a unified interface for character data, mutations, and events
+ * by composing three focused hooks: useCharacterData, useCharacterMutations, and
+ * useCharacterEvents. It maintains backward compatibility while providing improved
+ * modularity and maintainability.
+ * 
+ * @returns Object containing character data, loading states, error handling, and CRUD operations
+ * 
+ * @example
+ * ```typescript
+ * function CharacterManagement() {
+ *   const {
+ *     characters,
+ *     activeCharacter,
+ *     isLoading,
+ *     error,
+ *     createCharacter,
+ *     updateCharacter,
+ *     deleteCharacter,
+ *     isListeningToEvents
+ *   } = useCharacterManagement();
+ * 
+ *   if (isLoading) return <div>Loading...</div>;
+ *   if (error) return <div>Error: {error}</div>;
+ * 
+ *   return (
+ *     <div>
+ *       <div>Listening to events: {isListeningToEvents ? 'Yes' : 'No'}</div>
+ *       {characters.map(character => (
+ *         <div key={character.id}>
+ *           {character.name} - {character.class}
+ *         </div>
+ *       ))}
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 export function useCharacterManagement() {
   // Use the focused hooks

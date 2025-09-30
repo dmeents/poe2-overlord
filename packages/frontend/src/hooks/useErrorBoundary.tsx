@@ -12,16 +12,16 @@ export interface ErrorBoundaryState {
 
 /**
  * Hook for creating error boundary functionality
- * 
+ *
  * This hook provides error boundary state management and recovery mechanisms
  * that can be used with React error boundaries or custom error handling.
- * 
+ *
  * @returns Object containing error boundary state and functions
- * 
+ *
  * @example
  * ```typescript
  * const { hasError, error, errorInfo, handleError, resetError } = useErrorBoundary();
- * 
+ *
  * // Use in error boundary component
  * if (hasError) {
  *   return <ErrorFallback error={error} resetError={resetError} />;
@@ -75,10 +75,7 @@ export function useErrorBoundary() {
    * Check if the error is recoverable
    */
   const isRecoverable = useCallback((error: StandardError): boolean => {
-    return [
-      ErrorType.NETWORK,
-      ErrorType.SERVER,
-    ].includes(error.type);
+    return [ErrorType.NETWORK, ErrorType.SERVER].includes(error.type);
   }, []);
 
   return {
@@ -93,7 +90,7 @@ export function useErrorBoundary() {
 
 /**
  * Higher-order component for error boundary functionality
- * 
+ *
  * @param Component - The component to wrap with error boundary
  * @returns Component wrapped with error boundary
  */
@@ -105,17 +102,17 @@ export function withErrorBoundary<P extends object>(
 
     if (hasError && error) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[200px] p-6">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-red-600 mb-2">
+        <div className='flex flex-col items-center justify-center min-h-[200px] p-6'>
+          <div className='text-center'>
+            <h2 className='text-xl font-semibold text-red-600 mb-2'>
               Something went wrong
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className='text-gray-600 mb-4'>
               {error.message || 'An unexpected error occurred'}
             </p>
             <button
               onClick={resetError}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
             >
               Try again
             </button>

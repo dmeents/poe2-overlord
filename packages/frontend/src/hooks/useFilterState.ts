@@ -16,15 +16,15 @@ export interface FilterStateConfig<T, S> {
 
 /**
  * Generic hook for managing filter and sort state
- * 
+ *
  * This hook provides a reusable pattern for managing filter state across different
  * components, replacing the duplicate logic in useCharacterFilters and useZoneFilters.
- * 
+ *
  * @template T - The type of the filter object
  * @template S - The type of the sort option object
  * @param config - Configuration object containing defaults and custom logic
  * @returns Object containing filter state and management functions
- * 
+ *
  * @example
  * ```typescript
  * interface MyFilters {
@@ -32,28 +32,29 @@ export interface FilterStateConfig<T, S> {
  *   category: string;
  *   active: boolean | null;
  * }
- * 
+ *
  * interface MySort {
  *   field: 'name' | 'date';
  *   direction: 'asc' | 'desc';
  * }
- * 
+ *
  * const config: FilterStateConfig<MyFilters, MySort> = {
  *   defaultFilters: { search: '', category: 'All', active: null },
  *   defaultSort: { field: 'name', direction: 'asc' },
- *   hasActiveFiltersFn: (filters) => 
+ *   hasActiveFiltersFn: (filters) =>
  *     filters.search !== '' || filters.category !== 'All' || filters.active !== null
  * };
- * 
- * const { filters, sort, updateFilter, updateSort, clearFilters, resetSort, hasActiveFilters } = 
+ *
+ * const { filters, sort, updateFilter, updateSort, clearFilters, resetSort, hasActiveFilters } =
  *   useFilterState(config);
  * ```
  */
-export function useFilterState<T extends Record<string, unknown>, S extends Record<string, unknown>>(
-  config: FilterStateConfig<T, S>
-) {
+export function useFilterState<
+  T extends Record<string, unknown>,
+  S extends Record<string, unknown>,
+>(config: FilterStateConfig<T, S>) {
   const { defaultFilters, defaultSort, hasActiveFiltersFn } = config;
-  
+
   const [filters, setFilters] = useState<T>(defaultFilters);
   const [sort, setSort] = useState<S>(defaultSort);
 
@@ -62,12 +63,9 @@ export function useFilterState<T extends Record<string, unknown>, S extends Reco
    * @param key - The key of the filter to update
    * @param value - The new value for the filter
    */
-  const updateFilter = useCallback(
-    <K extends keyof T>(key: K, value: T[K]) => {
-      setFilters(prev => ({ ...prev, [key]: value }));
-    },
-    []
-  );
+  const updateFilter = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
 
   /**
    * Update sort configuration
@@ -79,7 +77,9 @@ export function useFilterState<T extends Record<string, unknown>, S extends Reco
       setSort(prev => ({
         ...prev,
         field,
-        direction: direction ?? (prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc'),
+        direction:
+          direction ??
+          (prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc'),
       }));
     },
     []
@@ -107,27 +107,30 @@ export function useFilterState<T extends Record<string, unknown>, S extends Reco
     if (hasActiveFiltersFn) {
       return hasActiveFiltersFn(filters);
     }
-    
+
     // Default logic: check if any filter differs from its default value
     return Object.keys(filters).some(key => {
       const currentValue = filters[key];
       const defaultValue = defaultFilters[key];
-      
+
       // Handle arrays
       if (Array.isArray(currentValue) && Array.isArray(defaultValue)) {
         return currentValue.length !== defaultValue.length;
       }
-      
+
       // Handle null/undefined comparison
       if (currentValue === null || currentValue === undefined) {
         return defaultValue !== null && defaultValue !== undefined;
       }
-      
+
       // Handle string comparison (trim for search fields)
-      if (typeof currentValue === 'string' && typeof defaultValue === 'string') {
+      if (
+        typeof currentValue === 'string' &&
+        typeof defaultValue === 'string'
+      ) {
         return currentValue.trim() !== defaultValue.trim();
       }
-      
+
       // Default comparison
       return currentValue !== defaultValue;
     });
@@ -162,11 +165,10 @@ export type CreateFilterStateConfig<T, S> = (
  * @param hasActiveFiltersFn - Optional custom function to check active filters
  * @returns Filter state configuration object
  */
-export const createFilterStateConfig: CreateFilterStateConfig<Record<string, unknown>, Record<string, unknown>> = (
-  defaultFilters,
-  defaultSort,
-  hasActiveFiltersFn
-) => ({
+export const createFilterStateConfig: CreateFilterStateConfig<
+  Record<string, unknown>,
+  Record<string, unknown>
+> = (defaultFilters, defaultSort, hasActiveFiltersFn) => ({
   defaultFilters,
   defaultSort,
   hasActiveFiltersFn,

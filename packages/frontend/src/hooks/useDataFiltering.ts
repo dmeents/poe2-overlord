@@ -18,7 +18,10 @@ export type SortFunction<T, S> = (a: T, b: T, sort: S) => number;
  * Generic summary function type
  * @template T - The type of the data item
  */
-export type SummaryFunction<T> = (data: T[], filteredData: T[]) => Record<string, unknown>;
+export type SummaryFunction<T> = (
+  data: T[],
+  filteredData: T[]
+) => Record<string, unknown>;
 
 /**
  * Configuration for data filtering and sorting
@@ -43,17 +46,17 @@ export interface DataFilteringConfig<T, F, S> {
 
 /**
  * Generic hook for data filtering and sorting
- * 
+ *
  * This hook provides a reusable pattern for filtering and sorting data arrays
  * with memoization for performance optimization. It can replace the duplicate
  * logic in useCharacterFiltering and useZoneFiltering.
- * 
+ *
  * @template T - The type of the data items
  * @template F - The type of the filter object
  * @template S - The type of the sort option object
  * @param config - Configuration object for filtering and sorting
  * @returns Object containing filtered/sorted data and statistics
- * 
+ *
  * @example
  * ```typescript
  * interface MyData {
@@ -61,17 +64,17 @@ export interface DataFilteringConfig<T, F, S> {
  *   name: string;
  *   value: number;
  * }
- * 
+ *
  * interface MyFilters {
  *   search: string;
  *   minValue: number | null;
  * }
- * 
+ *
  * interface MySort {
  *   field: 'name' | 'value';
  *   direction: 'asc' | 'desc';
  * }
- * 
+ *
  * const config: DataFilteringConfig<MyData, MyFilters, MySort> = {
  *   data: myDataArray,
  *   filters: { search: '', minValue: null },
@@ -91,14 +94,15 @@ export interface DataFilteringConfig<T, F, S> {
  *     return sort.direction === 'asc' ? comparison : -comparison;
  *   }
  * };
- * 
+ *
  * const { filteredData, count, totalCount, summary } = useDataFiltering(config);
  * ```
  */
 export function useDataFiltering<T, F, S>(
   config: DataFilteringConfig<T, F, S>
 ) {
-  const { data, filters, sort, filterFunction, sortFunction, summaryFunction } = config;
+  const { data, filters, sort, filterFunction, sortFunction, summaryFunction } =
+    config;
 
   const filteredAndSortedData = useMemo(() => {
     // Filter the data
@@ -147,7 +151,11 @@ export class FilterHelpers {
   ): FilterFunction<T, F> {
     return (item, filters) => {
       const searchTerm = filters[searchKey];
-      if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim() === '') {
+      if (
+        !searchTerm ||
+        typeof searchTerm !== 'string' ||
+        searchTerm.trim() === ''
+      ) {
         return true;
       }
 
@@ -176,7 +184,11 @@ export class FilterHelpers {
   ): FilterFunction<T, F> {
     return (item, filters) => {
       const filterValue = filters[filterKey];
-      if (filterValue === defaultValue || filterValue === null || filterValue === undefined) {
+      if (
+        filterValue === defaultValue ||
+        filterValue === null ||
+        filterValue === undefined
+      ) {
         return true;
       }
       return item[field] === filterValue;

@@ -6,7 +6,10 @@ import { useDataFiltering } from './useDataFiltering';
 /**
  * Character-specific filter function that combines multiple filter criteria
  */
-function createCharacterFilterFunction(): (item: CharacterData, filters: CharacterFilters) => boolean {
+function createCharacterFilterFunction(): (
+  item: CharacterData,
+  filters: CharacterFilters
+) => boolean {
   return (item, filters) => {
     // League filter
     if (filters.league !== 'All' && item.league !== filters.league) {
@@ -19,7 +22,10 @@ function createCharacterFilterFunction(): (item: CharacterData, filters: Charact
     }
 
     // Solo Self Found filter
-    if (filters.soloSelfFound !== null && item.solo_self_found !== filters.soloSelfFound) {
+    if (
+      filters.soloSelfFound !== null &&
+      item.solo_self_found !== filters.soloSelfFound
+    ) {
       return false;
     }
 
@@ -29,7 +35,10 @@ function createCharacterFilterFunction(): (item: CharacterData, filters: Charact
     }
 
     // Ascendency filter
-    if (filters.ascendencies.length > 0 && !filters.ascendencies.includes(item.ascendency)) {
+    if (
+      filters.ascendencies.length > 0 &&
+      !filters.ascendencies.includes(item.ascendency)
+    ) {
       return false;
     }
 
@@ -48,7 +57,11 @@ function createCharacterFilterFunction(): (item: CharacterData, filters: Charact
 /**
  * Character-specific sort function
  */
-function createCharacterSortFunction(): (a: CharacterData, b: CharacterData, sort: SortOption) => number {
+function createCharacterSortFunction(): (
+  a: CharacterData,
+  b: CharacterData,
+  sort: SortOption
+) => number {
   return (a, b, sort) => {
     let comparison = 0;
 
@@ -62,12 +75,17 @@ function createCharacterSortFunction(): (a: CharacterData, b: CharacterData, sor
         break;
       }
       case 'created_at': {
-        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        comparison =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         break;
       }
       case 'last_played': {
-        const aLastPlayed = a.last_played ? new Date(a.last_played).getTime() : 0;
-        const bLastPlayed = b.last_played ? new Date(b.last_played).getTime() : 0;
+        const aLastPlayed = a.last_played
+          ? new Date(a.last_played).getTime()
+          : 0;
+        const bLastPlayed = b.last_played
+          ? new Date(b.last_played).getTime()
+          : 0;
         comparison = aLastPlayed - bLastPlayed;
         break;
       }
@@ -88,10 +106,10 @@ function createCharacterSortFunction(): (a: CharacterData, b: CharacterData, sor
 
 /**
  * Hook for character data filtering and sorting using the generic useDataFiltering
- * 
+ *
  * This hook replaces the old useCharacterFiltering with a more generic approach
  * that leverages the useDataFiltering hook for better maintainability.
- * 
+ *
  * @param characters - Array of character data to filter and sort
  * @param filters - Character filter criteria
  * @param sort - Sort configuration

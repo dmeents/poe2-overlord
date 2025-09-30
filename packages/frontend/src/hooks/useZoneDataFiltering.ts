@@ -1,12 +1,15 @@
 import { useCallback } from 'react';
 import type { ZoneStats } from '../types';
-import type { ZoneFilters, ZoneSortOption } from './useZoneFilterState';
 import { useDataFiltering } from './useDataFiltering';
+import type { ZoneFilters, ZoneSortOption } from './useZoneFilterState';
 
 /**
  * Zone-specific filter function that combines multiple filter criteria
  */
-function createZoneFilterFunction(): (item: ZoneStats, filters: ZoneFilters) => boolean {
+function createZoneFilterFunction(): (
+  item: ZoneStats,
+  filters: ZoneFilters
+) => boolean {
   return (item, filters) => {
     // Search filter
     if (filters.search.trim() !== '') {
@@ -26,7 +29,10 @@ function createZoneFilterFunction(): (item: ZoneStats, filters: ZoneFilters) => 
     }
 
     // Location type filter
-    if (filters.locationType !== 'All' && item.location_type !== filters.locationType) {
+    if (
+      filters.locationType !== 'All' &&
+      item.location_type !== filters.locationType
+    ) {
       return false;
     }
 
@@ -68,20 +74,32 @@ function createZoneFilterFunction(): (item: ZoneStats, filters: ZoneFilters) => 
 /**
  * Zone-specific sort function
  */
-function createZoneSortFunction(): (a: ZoneStats, b: ZoneStats, sort: ZoneSortOption) => number {
+function createZoneSortFunction(): (
+  a: ZoneStats,
+  b: ZoneStats,
+  sort: ZoneSortOption
+) => number {
   return (a, b, sort) => {
     let comparison = 0;
 
     switch (sort.field) {
       case 'last_visited': {
-        const aLastVisited = a.last_visited ? new Date(a.last_visited).getTime() : 0;
-        const bLastVisited = b.last_visited ? new Date(b.last_visited).getTime() : 0;
+        const aLastVisited = a.last_visited
+          ? new Date(a.last_visited).getTime()
+          : 0;
+        const bLastVisited = b.last_visited
+          ? new Date(b.last_visited).getTime()
+          : 0;
         comparison = aLastVisited - bLastVisited;
         break;
       }
       case 'first_visited': {
-        const aFirstVisited = a.first_visited ? new Date(a.first_visited).getTime() : 0;
-        const bFirstVisited = b.first_visited ? new Date(b.first_visited).getTime() : 0;
+        const aFirstVisited = a.first_visited
+          ? new Date(a.first_visited).getTime()
+          : 0;
+        const bFirstVisited = b.first_visited
+          ? new Date(b.first_visited).getTime()
+          : 0;
         comparison = aFirstVisited - bFirstVisited;
         break;
       }
@@ -119,8 +137,10 @@ function createZoneSortFunction(): (a: ZoneStats, b: ZoneStats, sort: ZoneSortOp
 /**
  * Zone summary statistics calculation function
  */
-function createZoneSummaryFunction(): (data: ZoneStats[]) => Record<string, unknown> {
-  return (data) => {
+function createZoneSummaryFunction(): (
+  data: ZoneStats[]
+) => Record<string, unknown> {
+  return data => {
     if (data.length === 0) {
       return {
         totalZones: 0,
@@ -161,10 +181,10 @@ function createZoneSummaryFunction(): (data: ZoneStats[]) => Record<string, unkn
 
 /**
  * Hook for zone data filtering and sorting using the generic useDataFiltering
- * 
+ *
  * This hook replaces the old useZoneFiltering with a more generic approach
  * that leverages the useDataFiltering hook for better maintainability.
- * 
+ *
  * @param zones - Array of zone data to filter and sort
  * @param filters - Zone filter criteria
  * @param sort - Sort configuration

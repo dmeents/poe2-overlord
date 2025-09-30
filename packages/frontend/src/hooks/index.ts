@@ -14,6 +14,9 @@ export { useCharacterData } from './useCharacterData';
 export { useCharacterMutations } from './useCharacterMutations';
 export { useCharacterEvents } from './useCharacterEvents';
 
+// Cache invalidation utilities
+export { useCacheInvalidation } from './useCacheInvalidation';
+
 // Generic hooks
 export { useFilterState, createFilterStateConfig } from './useFilterState';
 export { 

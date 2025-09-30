@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { CharacterFormData } from '../components/character/character-modals/character-form-modal';
 import type { CharacterData, CharacterUpdateParams } from '../types';
+import { useCacheInvalidation } from './useCacheInvalidation';
 
 // Query keys for consistent caching
 export const characterQueryKeys = {

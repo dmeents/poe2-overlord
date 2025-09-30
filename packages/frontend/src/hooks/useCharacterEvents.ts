@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import type { CharacterData } from '../types';
+import { useCacheInvalidation } from './useCacheInvalidation';
+import { characterQueryKeys } from './useCharacterQueries';
 import { useTauriEventListener } from './useTauriEventListener';
 
 /**
@@ -11,6 +13,8 @@ export function useCharacterEvents(
   setCharactersWithUpdates: (updater: (prev: CharacterData[]) => CharacterData[]) => void,
   setActiveCharacterWithUpdates: (character: CharacterData | null) => void
 ) {
+  const { invalidateCharacterQueries, setQueryData } = useCacheInvalidation();
+
   // Event handler for character tracking data updates
   const handleCharacterDataUpdate = useCallback(
     (event: { payload: unknown }) => {
@@ -41,9 +45,16 @@ export function useCharacterEvents(
         if (character_id === activeCharacterId) {
           setActiveCharacterWithUpdates(characterData);
         }
+
+        // Invalidate React Query cache to ensure consistency
+        // Update the specific character in cache with the new data
+        setQueryData(characterQueryKeys.detail(character_id), characterData);
+        
+        // Invalidate character queries to ensure all components see the update
+        invalidateCharacterQueries(character_id);
       }
     },
-    [activeCharacterId, setCharactersWithUpdates, setActiveCharacterWithUpdates]
+    [activeCharacterId, setCharactersWithUpdates, setActiveCharacterWithUpdates, invalidateCharacterQueries, setQueryData]
   );
 
   // Use the generic Tauri event listener for character data updates

@@ -1,5 +1,1949 @@
 {
     "acts": {
+      "act_1": {
+        "act_name": "Act 1",
+        "act_number": 1,
+        "steps": {
+          "act_1_step_1": {
+            "id": "act_1_step_1",
+            "title": "Defeat The Bloated Miller",
+            "description": "Begin your journey by defeating The Bloated Miller in The Riverbank to gain access to the next area.",
+            "objectives": [
+              {
+                "text": "Find and kill The Bloated Miller",
+                "details": "Killing The Bloated Miller grans you access to the next area.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Riverbank",
+            "completion_zone": "Clearfell Encampment",
+            "next_step_id": "act_1_step_2",
+            "previous_step_id": null,
+            "wiki_items": ["The Bloated Miller", "Clearfell Encampment", "The Riverbank"]
+          },
+          "act_1_step_2": {
+            "id": "act_1_step_2",
+            "title": "Enter Clearfell",
+            "description": "Enter Clearfell to continue your progression through Act 1.",
+            "objectives": [
+              {
+                "text": "Enter Clearfell",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Clearfell Encampment",
+            "completion_zone": "Clearfell",
+            "next_step_id": "act_1_step_3",
+            "previous_step_id": "act_1_step_1",
+            "wiki_items": ["Clearfell", "Clearfell Encampment"]
+          },
+          "act_1_step_3": {
+            "id": "act_1_step_3",
+            "title": "Clear Clearfell and Find The Grelwood",
+            "description": "Defeat Beira of the Rotten Pack and locate the exit to The Grelwood. Optionally find the Mysterious Campsite for additional rewards.",
+            "objectives": [
+              {
+                "text": "Find and kill Beira of the Rotten Pack",
+                "details": "Always located to the North/Northest of the Waypoint.",
+                "required": true,
+                "rewards": ["10% Cold Resistance"],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to The Grelwood",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": "If you find the exit to The Grelwood first, keep looking for Beira of the Rotten Pack. Then use the checkpoint to return to the exit."
+              },
+              {
+                "text": "Find the Mysterious Campsite",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 1 Uncut Support Gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Clearfell",
+            "completion_zone": "The Grelwood",
+            "next_step_id": "act_1_step_4",
+            "previous_step_id": "act_1_step_2",
+            "wiki_items": ["The Grelwood", "Beira of the Rotten Pack", "Clearfell"]
+          },
+          "act_1_step_4": {
+            "id": "act_1_step_4",
+            "title": "Explore The Grelwood and Find Red Vale",
+            "description": "Talk to Una, discover exits to The Grim Tangle and Red Vale, and complete optional encounters with Brambleghast and the Witch Hut.",
+            "objectives": [
+              {
+                "text": "Find the waypoint and talk to Una",
+                "details": "Una is located near the center of the zone.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to The Grim Tangle",
+                "details": "Enter the zone, activate the waypoint and return to The Grelwood.",
+                "required": true,
+                "rewards": [],
+                "notes": "" 
+              },
+              {
+                "text": "Find the exit to The Red Vale",
+                "details": "If you've already discovered the waypoint and the exit to The Grim Tangle proceed to The Red Vale. Otherwise, backtrack and complete other objectives.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill Brambleghast",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 1 uncut skill gem"],
+                "notes": ""
+              },
+              {
+                "text": "Find the Cauldron in the Witch Hut",
+                "details": "Defeat the witch and loot the cauldron.",
+                "required": false,
+                "rewards": ["Medium mana flask", "Medium life flask"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Grelwood",
+            "completion_zone": "The Red Vale",
+            "next_step_id": "act_1_step_5",
+            "previous_step_id": "act_1_step_3",
+            "wiki_items": ["Una", "Brambleghast", "The Grelwood", "The Red Vale", "The Grim Tangle"]
+          },
+          "act_1_step_5": {
+            "id": "act_1_step_5",
+            "title": "Complete Red Vale Obelisks and Defeat The Rust King",
+            "description": "Complete the three obelisks in Red Vale, defeat The Rust King, and collect the required quest items before returning to Clearfell Encampment.",
+            "objectives": [
+              {
+                "text": "Find and complete the three obelisks and defeat The Rust King, obtain quest items, then return to Clearfell Encampment",
+                "details": "Pick up the the Runed Girdle, Runed Guard, and the Runed Skull Cap when each obelisk is completed.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Red Vale",
+            "completion_zone": "Clearfell Encampment",
+            "next_step_id": "act_1_step_6",
+            "previous_step_id": "act_1_step_4",
+            "wiki_items": ["The Rust King", "Runed Girdle", "Runed Guard", "Runed Skull Cap", "Red Vale", "Clearfell Encampment"]
+          },
+          "act_1_step_6": {
+            "id": "act_1_step_6",
+            "title": "Obtain Runic Tools from Renly",
+            "description": "Speak with Renly to obtain the Runic Tools quest item, then use the waypoint to return to The Grelwood.",
+            "objectives": [
+              {
+                "text": "Talk to Renly to obtain the Runic Tools quest item",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Use the waypoint to return to The Grelwood.",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Clearfell Encampment",
+            "completion_zone": "The Grelwood",
+            "next_step_id": "act_1_step_7",
+            "previous_step_id": "act_1_step_5",
+            "wiki_items": ["Renly", "Clearfell Encampment", "The Grelwood"]
+          },
+          "act_1_step_7": {
+            "id": "act_1_step_7",
+            "title": "Complete Runic Ritual in The Grelwood",
+            "description": "Use the Runic Tools to impale the spikes on the three runes on the tree roots, then speak with Una before returning to Clearfell Encampment.",
+            "objectives": [
+              {
+                "text": "Empale the spikes on the three runes on the tree roots. Then talk to Una.",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Return to Clearfell Encampment",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Grelwood",
+            "completion_zone": "Clearfell Encampment",
+            "next_step_id": "act_1_step_8",
+            "previous_step_id": "act_1_step_6",
+            "wiki_items": ["The Grim Tangle", "The Grelwood", "Clearfell Encampment", "Una"]
+          },
+          "act_1_step_8": {
+            "id": "act_1_step_8",
+            "title": "Travel to The Grim Tangle",
+            "description": "Speak with Una and take the waypoint to The Grim Tangle to continue your journey.",
+            "objectives": [
+              {
+                "text": "Talk to Una",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Take the waypoint to The Grim Tangle",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Clearfell Encampment",
+            "completion_zone": "The Grim Tangle",
+            "next_step_id": "act_1_step_9",
+            "previous_step_id": "act_1_step_7",
+            "wiki_items": ["Una", "Clearfell Encampment", "The Grim Tangle"]
+          },
+          "act_1_step_9": {
+            "id": "act_1_step_9",
+            "title": "Navigate The Grim Tangle to Cemetery",
+            "description": "Find the exit to Cemetery of the Eternals and optionally defeat The Rotten Druid for additional rewards.",
+            "objectives": [
+              {
+                "text": "Find the exit to Cemetary of the Eternals",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill The Rotten Druid",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 1 Uncut Support Gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Grim Tangle",
+            "completion_zone": "Cemetary of the Eternals",
+            "next_step_id": "act_1_step_10",
+            "previous_step_id": "act_1_step_8",
+            "wiki_items": ["The Rotten Druid", "Cemetary of the Eternals"]
+          },
+          "act_1_step_10": {
+            "id": "act_1_step_10",
+            "title": "Defeat Praetor and Consort in Cemetery",
+            "description": "Defeat Draven, the Eternal Praetor and Asinia, the Praetor's Consort, then unlock the gate and defeat Lachlann of Endless Lament to proceed to Hunting Grounds.",
+            "objectives": [
+              {
+                "text": "Find the Mausoleum of the Praetor and kill Draven, the Eternal Praetor",
+                "details": "Pick up dropped quest items from the Praetor.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Tomb of the Consort and kill Asinia, the Praetor's Consort",
+                "details": "Pick up dropped quest items from the Consort.",
+                "required": true,
+                "rewards": [],
+                "notes": "If both Asinia and Draven have been killed, use checkpoint to teleport to the beginning of the zone. Then use the waypoint to return to the Cemetary of the Eternals."
+              },
+              {
+                "text": "Unlock the gate, follow the NPC then kill Lachlann of Endless Lament",
+                "details": "After defeating Lachlan, enter Hunting Grounds.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+          ],
+            "current_zone": "Cemetary of the Eternals",
+            "completion_zone": "Hunting Grounds",
+            "next_step_id": "act_1_step_14",
+            "previous_step_id": "act_1_step_10",
+            "wiki_items": ["Draven, the Eternal Praetor", "Asinia, the Praetor's Consort", "Lachlann of Endless Lament", "Cemetary of the Eternals", "Hunting Grounds"]
+          },
+          "act_1_step_11": {
+            "id": "act_1_step_11",
+            "title": "Explore Hunting Grounds and Find Exits",
+            "description": "Find Crowbell for skill points, discover exits to Freythorn and Ogham Farmlands, and complete optional encounters including the Ritual Site and Dryad Encounter.",
+            "objectives": [
+              {
+                "text": "Find and Crowbell",
+                "details": "",
+                "required": true,
+                "rewards": ["2 Skill Points"],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to Freythorn",
+                "details": "Enter zone, take waypoint, then return to Hunting Grounds.",
+                "required": true,
+                "rewards": [],
+                "notes": "If you've already discovered Ogham Farmlands, move to the next step."
+              },
+              {
+                "text": "Find the exit to Ogham Farmlands",
+                "details": "Enter zone, take waypoint, then return to Hunting Grounds.",
+                "required": true,
+                "rewards": [],
+                "notes": "If you've already discovered Freythorn, take the Ogham Farmlands wayoint to Freythorn."
+              },
+              {
+                "text": "Find and complete the Ritual Site",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 4 Uncut Skill Gem"],
+                "notes": "If you've already discovered Ogham Farmlands, take the Ogham Village wayoint to Ogham Farmlands."
+              },
+              {
+                "text": "Find and complete the Dryad Encounter",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 1 Uncut Support Gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Hunting Grounds",
+            "completion_zone": "Freythorn",
+            "next_step_id": "act_1_step_12",
+            "previous_step_id": "act_1_step_10",
+            "wiki_items": ["Crowbell", "Freythorn", "Ogham Farmlands", "Hunting Grounds"]
+          },
+          "act_1_step_12": {
+            "id": "act_1_step_12",
+            "title": "Complete Rituals and Defeat The King in the Mists",
+            "description": "Perform all four rituals in Freythorn and defeat The King in the Mists on the fourth ritual, then proceed to Ogham Farmlands.",
+            "objectives": [
+              {
+                "text": "Perform all 4 rituals and kill The King in the Mists on the 4th ritual",
+                "details": "After killing The King in the Mists, enter Ogham Farmlands by portaling to town then use the waypoint",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Freythorn",
+            "completion_zone": "Ogham Farmlands",
+            "next_step_id": "act_1_step_13",
+            "previous_step_id": "act_1_step_11",
+            "wiki_items": ["Freythorn", "Ogham Farmlands", "The King in the Mists"]
+          },
+          "act_1_step_13": {
+            "id": "act_1_step_13",
+            "title": "Find Una's Lute and Enter Ogham Village",
+            "description": "Locate Una's Lute in Ogham Farmlands, find and enter Ogham Village, and optionally defeat the rare monster in the Crop Circle.",
+            "objectives": [
+              {
+                "text": "Find Una's Lute",
+                "details": "Located in a hut near the center of the zone.",
+                "required": true,
+                "rewards": ["2 Skill Points"],
+                "notes": ""
+              },
+              {
+                "text": "Find and enter Ogham Village",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Crop Circle and kill the rare monter",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 4 Uncut Skill Gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ogham Farmlands",
+            "completion_zone": "Ogham Village",
+            "next_step_id": "act_1_step_14",
+            "previous_step_id": "act_1_step_12",
+            "wiki_items": ["Ogham Farmlands", "Ogham Village", "Una's Lute"]
+          },
+          "act_1_step_14": {
+            "id": "act_1_step_14",
+            "title": "Obtain Smithing Tools and Defeat The Executioner",
+            "description": "Find the Smithing Tools to unlock the Salvage Bench, defeat The Executioner, and enter The Manor Ramparts.",
+            "objectives": [
+              {
+                "text": "Find Smithing Tools",
+                "details": "",
+                "required": true,
+                "rewards": ["Salvage Bench"],
+                "notes": "This only needs to be completed on your first character per league."
+              },
+              {
+                "text": "Find and kill The Executioner",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Enter The Manor Ramparts",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ogham Village",
+            "completion_zone": "The Manor Ramparts",
+            "next_step_id": "act_1_step_15",
+            "previous_step_id": "act_1_step_13",
+            "wiki_items": ["Ogham Village", "The Manor Ramparts", "Smithing Tools", "Salvage Bench", "The Executioner"]
+          },
+          "act_1_step_15": {
+            "id": "act_1_step_15",
+            "title": "Enter Ogham Manor and Find Gallows",
+            "description": "Enter Ogham Manor and find the gallows for a skill gem reward.",
+            "objectives": [
+              {
+                "text": "Find and enter Ogham Manor",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the gallows for reward",
+                "details": "",
+                "required": true,
+                "rewards": ["Level 4 Uncut Skill Gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Manor Ramparts",
+            "completion_zone": "Ogham Manor",
+            "next_step_id": "act_1_step_16",
+            "previous_step_id": "act_1_step_14",
+            "wiki_items": ["The Manor Ramparts", "Ogham Manor"]
+          },
+          "act_1_step_16": {
+            "id": "act_1_step_16",
+            "title": "Defeat Manor Bosses and Return to Clearfell",
+            "description": "Defeat Candlemass, the Living Rite on the first floor, then find and defeat Count Geonor on the second floor before returning to Clearfell Encampment.",
+            "objectives": [
+              {
+                "text": "Find and kill Candlemass, the Living Rite",
+                "details": "Candlemass is found on the first floor of the manor.",
+                "required": true,
+                "rewards": ["10% Fire Resistance"],
+                "notes": "If you find the second floor first, enter it take the check point, then return. After killing Candlemass use the checkpoint to return to floor 2."
+              },
+              {
+                "text": "Find and kill Count Geonor then return to Clearfell Encampment",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ogham Manor",
+            "completion_zone": "Clearfell Encampment",
+            "next_step_id": "act_1_step_17",
+            "previous_step_id": "act_1_step_15",
+            "wiki_items": ["Ogham Manor", "Clearfell Encampment", "Candlemass, the Living Rite", "Count Geonor"]
+          },
+          "act_1_step_17": {
+            "id": "act_1_step_17",
+            "title": "Complete Act 1 and Depart for Act 2",
+            "description": "Speak with all important NPCs (Una, The Hooded One, and Renly), then talk to The Hooded One to depart for Act 2 and travel to Vastiri Outskirts.",
+            "objectives": [
+              {
+                "text": "Talk to important NPCs",
+                "details": "Talk to Una, The Hooded One, and Renly",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Talk to The Hooded One to depart for act 2",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Clearfell Encampment",
+            "completion_zone": "Vastiri Outskirts",
+            "next_step_id": "act_2_step_1",
+            "previous_step_id": "act_1_step_16",
+            "wiki_items": ["Clearfell Encampment", "Vastiri Outskirts", "Una", "The Hooded One", "Renly"]
+          }
+        }
+      },
+      "act_2": {
+        "act_name": "Act 2",
+        "act_number": 2,
+        "steps": {
+          "act_2_step_1": {
+            "id": "act_2_step_1",
+            "title": "Defeat Rathbreaker and Enter The Ardura Caravan",
+            "description": "Begin Act 2 by finding and defeating Rathbreaker in Vastiri Outskirts, then portal back to camp and enter The Ardura Caravan.",
+            "objectives": [
+              {
+                "text": "Find and kill Rathbreaker",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Portal back to camp, enter The Ardura Caravan",
+                "details": "Can also go ESC - respawn at checkpoint",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Vastiri Outskirts",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_2",
+            "previous_step_id": null,
+            "wiki_items": ["Rathbreaker", "Vastiri Outskirts", "The Ardura Caravan"]
+          },
+          "act_2_step_2": {
+            "id": "act_2_step_2",
+            "title": "Speak with NPCs and Travel to Mawdun Quarry",
+            "description": "Speak to everyone in The Ardura Caravan and use the desert map to go to Mawdun Quarry.",
+            "objectives": [
+              {
+                "text": "Speak to everyone in The Ardura Caravan",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Use desert map to go to Mawdun Quarry",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "Mawdun Quarry",
+            "next_step_id": "act_2_step_3",
+            "previous_step_id": "act_2_step_1",
+            "wiki_items": ["The Ardura Caravan", "Mawdun Quarry"]
+          },
+          "act_2_step_3": {
+            "id": "act_2_step_3",
+            "title": "Find Exit to Mawdun Mine",
+            "description": "Navigate Mawdun Quarry and find the exit to Mawdun Mine, following the checkpoints.",
+            "objectives": [
+              {
+                "text": "Find exit to Mawdun Mine",
+                "details": "Follow the checkpoints",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Mawdun Quarry",
+            "completion_zone": "Mawdun Mine",
+            "next_step_id": "act_2_step_4",
+            "previous_step_id": "act_2_step_2",
+            "wiki_items": ["Mawdun Quarry", "Mawdun Mine"]
+          },
+          "act_2_step_4": {
+            "id": "act_2_step_4",
+            "title": "Defeat Rudja in Mawdun Mine",
+            "description": "Find and defeat Rudja in Mawdun Mine, then speak with Risu and portal back to town.",
+            "objectives": [
+              {
+                "text": "Find and kill Rudja",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Talk to Risu, portal back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Mawdun Mine",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_5",
+            "previous_step_id": "act_2_step_4",
+            "wiki_items": ["Rudja", "Risu", "Mawdun Mine", "The Ardura Caravan"]
+          },
+          "act_2_step_5": {
+            "id": "act_2_step_5",
+            "title": "Speak with Risu and Travel to Halani Gates",
+            "description": "Talk to Risu, then use the desert map to go to Halani Gates.",
+            "objectives": [
+              {
+                "text": "Talk to Risu, then use desert map to go to Halani Gates",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "The Halani Gates",
+            "next_step_id": "act_2_step_6",
+            "previous_step_id": "act_2_step_4",
+            "wiki_items": ["Risu", "The Ardura Caravan", "The Halani Gates"]
+          },
+          "act_2_step_6": {
+            "id": "act_2_step_6",
+            "title": "Speak with Asala and Travel to Traitor's Passage",
+            "description": "Talk to Asala at the gates, go back to The Ardura Caravan, talk to Risu again, then to Asala again, then use desert map to go to Traitor's Passage.",
+            "objectives": [
+              {
+                "text": "Talk to Asala at the gates, go back to The Ardura Caravan, talk to Risu again, then to Asala again",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Use desert map to go to Traitor's Passage",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Halani Gates",
+            "completion_zone": "Traitor's Passage",
+            "next_step_id": "act_2_step_7",
+            "previous_step_id": "act_2_step_5",
+            "wiki_items": ["Asala", "Risu", "The Halani Gates", "Traitor's Passage"]
+          },
+          "act_2_step_7": {
+            "id": "act_2_step_7",
+            "title": "Defeat Basala and Find Exit to Halani Gates",
+            "description": "Find and defeat Basala, pick up the Djinn Barya quest item, then find the exit to the Halani Gates.",
+            "objectives": [
+              {
+                "text": "Find and kill Basala, pick up the Djinn Barya quest item",
+                "details": "If you find paper on the walls, you are close",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to the Halani Gates",
+                "details": "Stairs up means you are on the right way",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and loot the Bell Chest",
+                "details": "It's in a dead end with a checkpoint, some monsters and already dropped gold on the ground",
+                "required": false,
+                "rewards": ["Two level 6 uncut skill gems"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Traitor's Passage",
+            "completion_zone": "The Halani Gates",
+            "next_step_id": "act_2_step_8",
+            "previous_step_id": "act_2_step_6",
+            "wiki_items": ["Basala", "Djinn Barya", "Bell Chest", "Traitor's Passage", "The Halani Gates"]
+          },
+          "act_2_step_8": {
+            "id": "act_2_step_8",
+            "title": "Defeat Jamanra the Risen King",
+            "description": "Find and defeat Jamanra the Risen King, then go down the stairs and to the bottom right of the zone, then back to town.",
+            "objectives": [
+              {
+                "text": "Find and kill Jamanra the Risen King",
+                "details": "Always keep close to the canyon. Cross the canyon three times to find the boss.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Go down the stairs and to the bottom right of the zone, then back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Halani Gates",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_9",
+            "previous_step_id": "act_2_step_7",
+            "wiki_items": ["Jamanra the Risen King", "The Halani Gates", "The Ardura Caravan"]
+          },
+          "act_2_step_9": {
+            "id": "act_2_step_9",
+            "title": "Complete Zarka's Quest and Travel to Keth",
+            "description": "Speak to Zarka and turn in her quest, then use the desert map to go to the Trial of Sekhemas, and finally travel to Keth.",
+            "objectives": [
+              {
+                "text": "Speak to Zarka and turn in her quest",
+                "details": "",
+                "required": true,
+                "rewards": ["Level 7 uncut skill gems"],
+                "notes": ""
+              },
+              {
+                "text": "Use the desert map to go to the Trial of Sekhemas",
+                "details": "Take waypoint, then go back to town. You can do the first ascendency trial whenever you feel ready from now on.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Talk to everyone, then use desert map to go to Keth",
+                "details": "If it's not possible yet (due to changes in 0.2.0) try to do that at any later point where you are in town",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "Keth",
+            "next_step_id": "act_2_step_10",
+            "previous_step_id": "act_2_step_8",
+            "wiki_items": ["Zarka", "Trial of Sekhemas", "The Ardura Caravan", "Keth"]
+          },
+          "act_2_step_10": {
+            "id": "act_2_step_10",
+            "title": "Defeat Kabala and Find Lost City",
+            "description": "Defeat Kabala, the Constrictor Queen, find the Kabala Clan relic, and locate the exit to The Lost City.",
+            "objectives": [
+              {
+                "text": "Kill Kabala, the Constrictor Queen",
+                "details": "Somewhat on the middle of the zone",
+                "required": true,
+                "rewards": ["2 Skill Points"],
+                "notes": ""
+              },
+              {
+                "text": "Kill snake monsters until you find the Kabala Clan relic",
+                "details": "Can also drop in the lost city",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find exit to The Lost City",
+                "details": "Always bottom right of the zone, after a big bridge. Take checkpoint, do the rest if not yet done",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Keth",
+            "completion_zone": "The Lost City",
+            "next_step_id": "act_2_step_11",
+            "previous_step_id": "act_2_step_9",
+            "wiki_items": ["Kabala, the Constrictor Queen", "Kabala Clan relic", "Keth", "The Lost City"]
+          },
+          "act_2_step_11": {
+            "id": "act_2_step_11",
+            "title": "Navigate The Lost City to Buried Shrines",
+            "description": "Find the exit and go to The Buried Shrines, optionally finding the golden tomb and ninth treasure.",
+            "objectives": [
+              {
+                "text": "Find exit and go to The Buried Shrines",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the golden tomb",
+                "details": "",
+                "required": false,
+                "rewards": ["Uncut spirit gem"],
+                "notes": ""
+              },
+              {
+                "text": "Find the ninth treasure of Keth (big gilded beetle)",
+                "details": "Has an event name 'the galleria' on the map",
+                "required": false,
+                "rewards": ["Random Jewel"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Lost City",
+            "completion_zone": "The Buried Shrines",
+            "next_step_id": "act_2_step_12",
+            "previous_step_id": "act_2_step_10",
+            "wiki_items": ["The Lost City", "The Buried Shrines", "Golden tomb", "Ninth treasure of Keth"]
+          },
+          "act_2_step_12": {
+            "id": "act_2_step_12",
+            "title": "Complete The Buried Shrines and Enter Heart of Keth",
+            "description": "Find the Heart of Keth in The Buried Shrines and complete optional encounters for additional rewards.",
+            "objectives": [
+              {
+                "text": "Find the Heart of Keth",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and loot the guarded sarcophagus",
+                "details": "",
+                "required": false,
+                "rewards": ["Uncut support gem"],
+                "notes": ""
+              },
+              {
+                "text": "Find and complete the Elemental Offering Event",
+                "details": "",
+                "required": false,
+                "rewards": ["Random resistance ring (ruby suggested for upcoming boss fight)"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Buried Shrines",
+            "completion_zone": "Heart of Keth",
+            "next_step_id": "act_2_step_13",
+            "previous_step_id": "act_2_step_11",
+            "wiki_items": ["The Buried Shrines", "Heart of Keth"]
+          },
+          "act_2_step_13": {
+            "id": "act_2_step_13",
+            "title": "Defeat Azarian and Complete Heart of Keth",
+            "description": "Defeat Azarian the Forsaken Son, interact with the goddess, and complete the ritual to obtain the essence of water.",
+            "objectives": [
+              {
+                "text": "Kill Azarian the Forsaken Son",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Talk to the goddess, loot the cinders, burn the goddess, loot the essence of water",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Heart of Keth",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_14",
+            "previous_step_id": "act_2_step_12",
+            "wiki_items": ["Azarian the Forsaken Son", "Heart of Keth", "The Ardura Caravan"]
+          },
+          "act_2_step_14": {
+            "id": "act_2_step_14",
+            "title": "Speak with Zarka and Travel to Mastodon Badlands",
+            "description": "Talk to Zarka to turn in quests and receive rewards, then use the desert map to travel to Mastodon Badlands.",
+            "objectives": [
+              {
+                "text": "Talk to Zarka",
+                "details": "",
+                "required": true,
+                "rewards": ["Uncut support gem"],
+                "notes": ""
+              },
+              {
+                "text": "Use desert map to go to Mastodon Badlands",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "Mastodon Badlands",
+            "next_step_id": "act_2_step_15",
+            "previous_step_id": "act_2_step_13",
+            "wiki_items": ["Zarka", "The Ardura Caravan", "Mastodon Badlands"]
+          },
+          "act_2_step_15": {
+            "id": "act_2_step_15",
+            "title": "Explore Mastodon Badlands and Find Bone Pits",
+            "description": "Find the exit to The Bone Pits, unlock the Well of Souls, and complete optional encounters for additional rewards.",
+            "objectives": [
+              {
+                "text": "Find the exit to The Bone Pits",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Lightless passage to unlock the Well of Souls",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Kill hyena enemies until you find the Sun Clan relic",
+                "details": "Don't stress it, it's more likely to be found in the bone pits anyways",
+                "required": false,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and loot the Shrine of Bones",
+                "details": "It's a rare effigy near a checkpoint",
+                "required": false,
+                "rewards": ["Uncut support gem"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Mastodon Badlands",
+            "completion_zone": "The Bone Pits",
+            "next_step_id": "act_2_step_16",
+            "previous_step_id": "act_2_step_14",
+            "wiki_items": ["Mastodon Badlands", "The Bone Pits", "Sun Clan relic", "Shrine of Bones"]
+          },
+          "act_2_step_16": {
+            "id": "act_2_step_16",
+            "title": "Complete The Bone Pits and Return to Town",
+            "description": "Defeat the zone boss, loot the horn, find the Sun Clan relic, and return to The Ardura Caravan.",
+            "objectives": [
+              {
+                "text": "Find and kill the zone boss and loot the horn",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Kill hyena enemies until you find the Sun Clan relic",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Portal back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Bone Pits",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_17",
+            "previous_step_id": "act_2_step_15",
+            "wiki_items": ["The Bone Pits", "The Ardura Caravan", "Sun Clan relic"]
+          },
+          "act_2_step_17": {
+            "id": "act_2_step_17",
+            "title": "Speak with Zarka and Travel to Valley of Titans",
+            "description": "Talk to Zarka for rewards, then use the desert map to travel to The Valley of the Titans.",
+            "objectives": [
+              {
+                "text": "Talk to Zarka",
+                "details": "",
+                "required": true,
+                "rewards": ["Uncut support gem"],
+                "notes": ""
+              },
+              {
+                "text": "Use desert map to go to The Valley of the Titans",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "The Valley of the Titans",
+            "next_step_id": "act_2_step_18",
+            "previous_step_id": "act_2_step_16",
+            "wiki_items": ["Zarka", "The Ardura Caravan", "The Valley of the Titans"]
+          },
+          "act_2_step_18": {
+            "id": "act_2_step_18",
+            "title": "Complete Valley of Titans and Enter Titan Grotto",
+            "description": "Find and click the three ancient seals, place the two relics in the medallion, and find the exit to Titan Grotto.",
+            "objectives": [
+              {
+                "text": "Find and click the three ancient seals",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the medallion and place the two relics in there",
+                "details": "The waypoint is here. Choose a buff, it can be changed later at any time",
+                "required": true,
+                "rewards": ["One of two permanent buffs"],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to the Titan Grotto",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Valley of the Titans",
+            "completion_zone": "Titan Grotto",
+            "next_step_id": "act_2_step_19",
+            "previous_step_id": "act_2_step_17",
+            "wiki_items": ["The Valley of the Titans", "Titan Grotto", "Ancient seals", "Medallion"]
+          },
+          "act_2_step_19": {
+            "id": "act_2_step_19",
+            "title": "Complete Titan Grotto and Return to Town",
+            "description": "Find and kill the boss in Titan Grotto, then return to The Ardura Caravan.",
+            "objectives": [
+              {
+                "text": "Find and kill the boss, then go back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Titan Grotto",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_20",
+            "previous_step_id": "act_2_step_18",
+            "wiki_items": ["Titan Grotto", "The Ardura Caravan"]
+          },
+          "act_2_step_20": {
+            "id": "act_2_step_20",
+            "title": "Speak with NPCs and Travel to Deshar",
+            "description": "Talk to Zarka and Asala, use the desert map to travel to The Halani Gates, sound the horn, then travel to Deshar.",
+            "objectives": [
+              {
+                "text": "Talk to Zarka, then Asala",
+                "details": "",
+                "required": true,
+                "rewards": ["Uncut support gem"],
+                "notes": ""
+              },
+              {
+                "text": "Use the desert map to travel to The Halani Gates",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Go to the front of the caravan and sound the horn",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Use the desert map to travel to Deshar",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "Deshar",
+            "next_step_id": "act_2_step_21",
+            "previous_step_id": "act_2_step_19",
+            "wiki_items": ["Zarka", "Asala", "The Ardura Caravan", "Deshar"]
+          },
+          "act_2_step_21": {
+            "id": "act_2_step_21",
+            "title": "Complete Deshar and Enter Path of Mourning",
+            "description": "Talk to the abandoned rhoa, find the final letter, and locate the exit to The Path of Mourning.",
+            "objectives": [
+              {
+                "text": "Talk to the abandoned rhoa BECAUSE IT'S THE RIGHT THING TO DO YOU MONSTER",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the final letter on a corpse on the ground",
+                "details": "Near a big tower on the ground",
+                "required": true,
+                "rewards": ["2 skill points on quest turn in"],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to The Path of Mourning",
+                "details": "Enter zone, take waypoint, backtrack to Deshar",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Deshar",
+            "completion_zone": "The Path of Mourning",
+            "next_step_id": "act_2_step_22",
+            "previous_step_id": "act_2_step_20",
+            "wiki_items": ["Deshar", "The Path of Mourning", "Abandoned rhoa", "Final letter"]
+          },
+          "act_2_step_22": {
+            "id": "act_2_step_22",
+            "title": "Navigate Path of Mourning to Spires of Deshar",
+            "description": "Find the exit to The Spires of Deshar and proceed to the next area.",
+            "objectives": [
+              {
+                "text": "Find the exit to The Spires of Deshar",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Path of Mourning",
+            "completion_zone": "The Spires of Deshar",
+            "next_step_id": "act_2_step_23",
+            "previous_step_id": "act_2_step_21",
+            "wiki_items": ["The Path of Mourning", "The Spires of Deshar"]
+          },
+          "act_2_step_23": {
+            "id": "act_2_step_23",
+            "title": "Complete Spires of Deshar and Return to Town",
+            "description": "Find the Sisters of Garukhan, defeat Tor Gul the Defiler, and return to The Ardura Caravan.",
+            "objectives": [
+              {
+                "text": "Find the Sisters of Garukhan",
+                "details": "",
+                "required": true,
+                "rewards": ["10% lightning resistance"],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill Tor Gul, the Defiler",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Portal back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Spires of Deshar",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_24",
+            "previous_step_id": "act_2_step_22",
+            "wiki_items": ["Sisters of Garukhan", "Tor Gul the Defiler", "The Spires of Deshar", "The Ardura Caravan"]
+          },
+          "act_2_step_24": {
+            "id": "act_2_step_24",
+            "title": "Turn in Final Letter and Travel to The Dreadnought",
+            "description": "Turn in the final letter at Shambrin for skill points, talk to everyone, then travel to The Dreadnought.",
+            "objectives": [
+              {
+                "text": "Turn in the final letter at Shambrin",
+                "details": "",
+                "required": true,
+                "rewards": ["2 skill points"],
+                "notes": "Here you will get the second 2 skill points"
+              },
+              {
+                "text": "Talk to everyone, then use desert map to go to The Dreadnought",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "The Dreadnought",
+            "next_step_id": "act_2_step_25",
+            "previous_step_id": "act_2_step_23",
+            "wiki_items": ["Shambrin", "The Ardura Caravan", "The Dreadnought"]
+          },
+          "act_2_step_25": {
+            "id": "act_2_step_25",
+            "title": "Navigate The Dreadnought to Vanguard",
+            "description": "Find the exit to The Dreadnought Vanguard and proceed to the next area.",
+            "objectives": [
+              {
+                "text": "Find the exit to The Dreadnought Vanguard",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Dreadnought",
+            "completion_zone": "The Dreadnought Vanguard",
+            "next_step_id": "act_2_step_26",
+            "previous_step_id": "act_2_step_24",
+            "wiki_items": ["The Dreadnought", "The Dreadnought Vanguard"]
+          },
+          "act_2_step_26": {
+            "id": "act_2_step_26",
+            "title": "Defeat Jamara and Return to Town",
+            "description": "Find and defeat Jamara the Abomination in The Dreadnought Vanguard, then return to The Ardura Caravan.",
+            "objectives": [
+              {
+                "text": "Find and kill Jamara, the Abomination",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Portal back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Dreadnought Vanguard",
+            "completion_zone": "The Ardura Caravan",
+            "next_step_id": "act_2_step_27",
+            "previous_step_id": "act_2_step_25",
+            "wiki_items": ["Jamara the Abomination", "The Dreadnought Vanguard", "The Ardura Caravan"]
+          },
+          "act_2_step_27": {
+            "id": "act_2_step_27",
+            "title": "Complete Act 2 and Depart for Act 3",
+            "description": "Leave the Caravan, talk to The Hooded One, return to the Caravan, and talk to Asala to proceed to Act 3.",
+            "objectives": [
+              {
+                "text": "Leave the Caravan, talk to The Hooded One, go back to the Caravan, Talk to Asala to go to Act 3",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Ardura Caravan",
+            "completion_zone": "Act 3 Starting Zone",
+            "next_step_id": null,
+            "previous_step_id": "act_2_step_26",
+            "wiki_items": ["The Ardura Caravan", "The Hooded One", "Asala"]
+          }
+        }
+      },
+      "act_3": {
+        "act_name": "Act 3",
+        "act_number": 3,
+        "steps": {
+          "act_3_step_1": {
+            "id": "act_3_step_1",
+            "title": "Find Exit to Ziggurat Encampment",
+            "description": "Navigate Sandswept Marsh to find the exit to Ziggurat Encampment, with optional encounters for additional rewards.",
+            "objectives": [
+              {
+                "text": "Find the exit to Ziggurat Encampment",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill Rootredge",
+                "details": "",
+                "required": false,
+                "rewards": ["Level 9 uncut skill gem"],
+                "notes": ""
+              },
+              {
+                "text": "Find the orok campsite and loot the rare basket",
+                "details": "Find 'Azak Campfire', kill the two rares",
+                "required": false,
+                "rewards": ["Lesser jeweller's orb"],
+                "notes": ""
+              },
+              {
+                "text": "Find the hanging tree and loot the magic corpse",
+                "details": "",
+                "required": false,
+                "rewards": ["Random magic ring"],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Sandswept Marsh",
+            "completion_zone": "Ziggurat Encampment",
+            "next_step_id": "act_3_step_2",
+            "previous_step_id": null,
+            "wiki_items": ["Sandswept Marsh", "Ziggurat Encampment", "Rootredge", "Azak Campfire"]
+          },
+          "act_3_step_2": {
+            "id": "act_3_step_2",
+            "title": "Talk to Everyone and Exit to Jungle Ruins",
+            "description": "Speak with all NPCs in Ziggurat Encampment and exit into Jungle Ruins.",
+            "objectives": [
+              {
+                "text": "Talk to everyone and exit into the Jungle Ruins",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ziggurat Encampment",
+            "completion_zone": "Jungle Ruins",
+            "next_step_id": "act_3_step_3",
+            "previous_step_id": "act_3_step_1",
+            "wiki_items": ["Ziggurat Encampment", "Jungle Ruins"]
+          },
+          "act_3_step_3": {
+            "id": "act_3_step_3",
+            "title": "Explore Jungle Ruins and Find Exits",
+            "description": "Find exits to Venom Crypts and Infested Barrens, defeat The Mighty Silverfist, and discover the waypoint.",
+            "objectives": [
+              {
+                "text": "Find the exit to Venom Crypts",
+                "details": "Do NOT go through, only take the checkpoint and waypoint.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill The Mighty Silverfist",
+                "details": "",
+                "required": true,
+                "rewards": ["2 Skill Points"],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to Infested Barrens",
+                "details": "Do NOT go through, only take the checkpoint",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Jungle Ruins",
+            "completion_zone": "Infested Barrens",
+            "next_step_id": "act_3_step_4",
+            "previous_step_id": "act_3_step_2",
+            "wiki_items": ["Jungle Ruins", "Venom Crypts", "Infested Barrens", "The Mighty Silverfist"]
+          },
+          "act_3_step_4": {
+            "id": "act_3_step_4",
+            "title": "Explore Infested Barrens and Find Exits",
+            "description": "Discover exits to Chimeral Wetlands, Azak Bog, and Matlan Waterways, then return to Jungle Ruins.",
+            "objectives": [
+              {
+                "text": "Find the exit to Chimeral Wetlands",
+                "details": "Enter zone, take waypoint, backtrack to Infested Barrens",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to Azak Bog",
+                "details": "Enter zone, take waypoint, backtrack to Infested Barrens",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to Matlan Waterways",
+                "details": "Here is the waypoint of barrens itself",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "From whatever you find last, take the waypoint and portal back to Jungle Ruins",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Infested Barrens",
+            "completion_zone": "Jungle Ruins",
+            "next_step_id": "act_3_step_5",
+            "previous_step_id": "act_3_step_3",
+            "wiki_items": ["Infested Barrens", "Chimeral Wetlands", "Azak Bog", "Matlan Waterways", "Jungle Ruins"]
+          },
+          "act_3_step_5": {
+            "id": "act_3_step_5",
+            "title": "Enter Venom Crypts",
+            "description": "Enter the Venom Crypts to find the venom phial.",
+            "objectives": [
+              {
+                "text": "Enter the Venom Crypts",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Jungle Ruins",
+            "completion_zone": "Venom Crypts",
+            "next_step_id": "act_3_step_6",
+            "previous_step_id": "act_3_step_4",
+            "wiki_items": ["Jungle Ruins", "Venom Crypts"]
+          },
+          "act_3_step_6": {
+            "id": "act_3_step_6",
+            "title": "Find Venom Phial and Return to Town",
+            "description": "Find the corpse for the venom phial, then return to Ziggurat Encampment.",
+            "objectives": [
+              {
+                "text": "Find the corpse for the venom phial, then go back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Venom Crypts",
+            "completion_zone": "Ziggurat Encampment",
+            "next_step_id": "act_3_step_7",
+            "previous_step_id": "act_3_step_5",
+            "wiki_items": ["Venom Crypts", "Ziggurat Encampment", "Venom Phial"]
+          },
+          "act_3_step_7": {
+            "id": "act_3_step_7",
+            "title": "Turn in Venom Phial and Travel to Azak Bog",
+            "description": "Turn in the venom phial at Servi for a permanent reward, then travel to Azak Bog.",
+            "objectives": [
+              {
+                "text": "Go back to town, turn in phial at Servi for a reward",
+                "details": "Reward is permanent and cannot be changed later",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Go to the Azak Bog",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ziggurat Encampment",
+            "completion_zone": "Azak Bog",
+            "next_step_id": "act_3_step_8",
+            "previous_step_id": "act_3_step_6",
+            "wiki_items": ["Ziggurat Encampment", "Servi", "Azak Bog"]
+          },
+          "act_3_step_8": {
+            "id": "act_3_step_8",
+            "title": "Complete Azak Bog and Travel to Chimeral Wetlands",
+            "description": "Defeat Ignagduk, optionally complete the Flameskin ritual, then return to town and travel to Chimeral Wetlands.",
+            "objectives": [
+              {
+                "text": "Find the Flameskin ritual and activate all",
+                "details": "It gives 25% fire res and rarity for the rest of the zone. If you don't find it before the boss, don't search for it, but don't skip it if you do find it before the boss",
+                "required": false,
+                "rewards": ["25% Fire Resistance", "Increased Rarity"],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill Ignagduk",
+                "details": "",
+                "required": true,
+                "rewards": ["30 Spirit"],
+                "notes": ""
+              },
+              {
+                "text": "Go back to town and then to Chimeral Wetlands",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Azak Bog",
+            "completion_zone": "Chimeral Wetlands",
+            "next_step_id": "act_3_step_9",
+            "previous_step_id": "act_3_step_7",
+            "wiki_items": ["Azak Bog", "Ignagduk", "Chimeral Wetlands", "Flameskin ritual"]
+          },
+          "act_3_step_9": {
+            "id": "act_3_step_9",
+            "title": "Complete Chimeral Wetlands and Enter Machinarium",
+            "description": "Find the temple/trial of chaos, defeat the chimera boss, and enter Juquani's Machinarium.",
+            "objectives": [
+              {
+                "text": "Find the temple/trial of chaos",
+                "details": "Enter zone, take waypoint, waypoint back to Wetlands. Do the trial at any point from now on",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill the chimera boss",
+                "details": "Found by following the lefthand border of the zone",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Enter Juquani's Machinarium",
+                "details": "Behind the chimera boss",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Chimeral Wetlands",
+            "completion_zone": "Juquani's Machinarium",
+            "next_step_id": "act_3_step_10",
+            "previous_step_id": "act_3_step_8",
+            "wiki_items": ["Chimeral Wetlands", "Trial of Chaos", "Chimera Boss", "Juquani's Machinarium"]
+          },
+          "act_3_step_10": {
+            "id": "act_3_step_10",
+            "title": "Complete Machinarium and Enter Sanctum",
+            "description": "Find soul cores, open doors, defeat Blackjaw, and proceed to Juquani's Sanctum.",
+            "objectives": [
+              {
+                "text": "Find the first small soul core, then open the door",
+                "details": "Either left or right of Alva",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find two more small soul cores",
+                "details": "There are three in total, but only two are needed. The third door is only some gold and a chest.",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit towards Juquani's sanctum",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill Blackjaw",
+                "details": "",
+                "required": true,
+                "rewards": ["10% Fire Resistance"],
+                "notes": ""
+              },
+              {
+                "text": "Checkpoint port to the exit, then go to Juquani's Sanctum",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Juquani's Machinarium",
+            "completion_zone": "Juquani's Sanctum",
+            "next_step_id": "act_3_step_11",
+            "previous_step_id": "act_3_step_9",
+            "wiki_items": ["Juquani's Machinarium", "Soul Core", "Blackjaw", "Juquani's Sanctum"]
+          },
+          "act_3_step_11": {
+            "id": "act_3_step_11",
+            "title": "Complete Sanctum and Return to Infested Barrens",
+            "description": "Activate waypoint, talk to Alva, find soul cores, activate generators, defeat Zicoatl, and return to Infested Barrens.",
+            "objectives": [
+              {
+                "text": "Don't forget to activate the waypoint right after the entry",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Talk to Alva",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find two medium soul cores",
+                "details": "Soul cores are completely random in the zone",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Activate both generators",
+                "details": "Generators are always to the left and the right back (relative to where Alva is standing)",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Checkpoint back to Alva",
+                "details": "Still need to wait until the second soul core arrived at Alva (red lines on the ground)",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Kill Zicoatl, Warden of the core and loot the large soul core",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Go back to the Infested Barrens waypoint",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Juquani's Sanctum",
+            "completion_zone": "Infested Barrens",
+            "next_step_id": "act_3_step_12",
+            "previous_step_id": "act_3_step_10",
+            "wiki_items": ["Juquani's Sanctum", "Alva", "Soul Core", "Zicoatl", "Infested Barrens"]
+          },
+          "act_3_step_12": {
+            "id": "act_3_step_12",
+            "title": "Insert Soul Core and Navigate Matlan Waterways",
+            "description": "Insert the large soul core and navigate through Matlan Waterways by activating levers.",
+            "objectives": [
+              {
+                "text": "Insert the large soul core and go to Matlan Waterways afterwards",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Activate every single lever to navigate through the zone, then activate the big one at the end",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Port back to town",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Infested Barrens",
+            "completion_zone": "Ziggurat Encampment",
+            "next_step_id": "act_3_step_13",
+            "previous_step_id": "act_3_step_11",
+            "wiki_items": ["Infested Barrens", "Soul Core", "Matlan Waterways", "Ziggurat Encampment"]
+          },
+          "act_3_step_13": {
+            "id": "act_3_step_13",
+            "title": "Go Downstairs and Enter Drowned City",
+            "description": "Go down the stairs near the well/the hooded one, talk to Alva, and enter the Drowned City.",
+            "objectives": [
+              {
+                "text": "Go down the stairs near the well / the hooded one",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Talk to Alva, enter the Drowned City",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ziggurat Encampment",
+            "completion_zone": "The Drowned City",
+            "next_step_id": "act_3_step_14",
+            "previous_step_id": "act_3_step_12",
+            "wiki_items": ["Ziggurat Encampment", "Alva", "The Drowned City"]
+          },
+          "act_3_step_14": {
+            "id": "act_3_step_14",
+            "title": "Find Exits to Molten Vault and Apex of Filth",
+            "description": "Discover exits to Molten Vault and Apex of Filth, then proceed to the appropriate zone based on character progression.",
+            "objectives": [
+              {
+                "text": "Find the exit to the Molten Vault",
+                "details": "It is almost always to the north west of the zone. Enter zone, take waypoint, backtrack to the drowned city. Only needed on first character per league",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to the Apex of Filth",
+                "details": "It is almost always to the north east of the zone. Enter zone, take waypoint, backtrack to the drowned city. Backtracking only needed on first character per league",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Drowned City",
+            "completion_zone": "The Drowned City",
+            "next_step_id": "act_3_step_15",
+            "previous_step_id": "act_3_step_13",
+            "wiki_items": ["The Drowned City", "Molten Vault", "Apex of Filth"]
+          },
+          "act_3_step_15": {
+            "id": "act_3_step_15",
+            "title": "Enter Molten Vault and Apex of Filth",
+            "description": "Enter both the Molten Vault and Apex of Filth to complete the required progression.",
+            "objectives": [
+              {
+                "text": "Enter the Molten Vault",
+                "details": "Only needed on first character per league",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Enter the Apex of Filth",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Drowned City",
+            "completion_zone": "The Apex of Filth",
+            "next_step_id": "act_3_step_16",
+            "previous_step_id": "act_3_step_14",
+            "wiki_items": ["The Drowned City", "Molten Vault", "Apex of Filth"]
+          },
+          "act_3_step_16": {
+            "id": "act_3_step_16",
+            "title": "Complete Molten Vault and Apex of Filth",
+            "description": "Defeat the boss in Molten Vault, talk to Oswald, then defeat the Queen of Filth in Apex of Filth.",
+            "objectives": [
+              {
+                "text": "Find and kill the boss in Molten Vault, then talk to Oswald back in town",
+                "details": "Only needed on first character per league",
+                "required": true,
+                "rewards": ["Unlocks the reforging bench"],
+                "notes": ""
+              },
+              {
+                "text": "Enter the Apex of Filth",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find and kill the Queen of Filth, then portal back to town",
+                "details": "The zone layout is always a huge spiral, either clockwise or counterclockwise. After you travelled a full 360° of that spiral, you will find the boss",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Apex of Filth",
+            "completion_zone": "Ziggurat Encampment",
+            "next_step_id": "act_3_step_17",
+            "previous_step_id": "act_3_step_15",
+            "wiki_items": ["Molten Vault", "Oswald", "Apex of Filth", "Queen of Filth", "Ziggurat Encampment"]
+          },
+          "act_3_step_17": {
+            "id": "act_3_step_17",
+            "title": "Enter Temple of Kopec",
+            "description": "Go down the stairs near the well/the hooded one again, and enter the Temple of Kopec.",
+            "objectives": [
+              {
+                "text": "Go down the stairs near the well / the hooded one again, and enter the Temple of Kopec",
+                "details": "Opposite of the drowned city",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ziggurat Encampment",
+            "completion_zone": "The Temple of Kopec",
+            "next_step_id": "act_3_step_18",
+            "previous_step_id": "act_3_step_16",
+            "wiki_items": ["Ziggurat Encampment", "Temple of Kopec"]
+          },
+          "act_3_step_18": {
+            "id": "act_3_step_18",
+            "title": "Defeat Ketzuli in Temple of Kopec",
+            "description": "Navigate the temple stairs and defeat Ketzuli, High Priest of the Sun.",
+            "objectives": [
+              {
+                "text": "Go up the stairs twice, then kill Ketzuli, High Priest of the Sun",
+                "details": "The stairs are always in either of the corners of the triangle shaped zone. Stay in the shade to not take damage",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Temple of Kopec",
+            "completion_zone": "Ziggurat Encampment",
+            "next_step_id": "act_3_step_19",
+            "previous_step_id": "act_3_step_17",
+            "wiki_items": ["Temple of Kopec", "Ketzuli", "High Priest of the Sun"]
+          },
+          "act_3_step_19": {
+            "id": "act_3_step_19",
+            "title": "Talk to Alva and Travel to Utzaal",
+            "description": "Speak with Alva, ride the elevator up, go through the gateway, then down the stairs to enter Utzaal.",
+            "objectives": [
+              {
+                "text": "Talk to Alva and ride the elevator up",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Go through the gateway, then down the stairs again to enter Utzaal",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Ziggurat Encampment",
+            "completion_zone": "Utzaal",
+            "next_step_id": "act_3_step_20",
+            "previous_step_id": "act_3_step_18",
+            "wiki_items": ["Ziggurat Encampment", "Alva", "Utzaal"]
+          },
+          "act_3_step_20": {
+            "id": "act_3_step_20",
+            "title": "Complete Utzaal and Enter Aggorat",
+            "description": "Search for and defeat Viper Napuatzi, optionally find the sacrificial heart, then enter Aggorat.",
+            "objectives": [
+              {
+                "text": "The sacrificial heart can randomly drop in this zone",
+                "details": "If you don't find it in Utzaal, just go to the next zone, do not farm in this zone until it drops",
+                "required": false,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Search and kill Viper Napuatzi",
+                "details": "She is always towards the right end of the zone, facing north",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit to Aggorat and enter Aggorat",
+                "details": "It is again always to the top right end of the zone, facing north",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Utzaal",
+            "completion_zone": "Aggorat",
+            "next_step_id": "act_3_step_21",
+            "previous_step_id": "act_3_step_19",
+            "wiki_items": ["Utzaal", "Viper Napuatzi", "Sacrificial Heart", "Aggorat"]
+          },
+          "act_3_step_21": {
+            "id": "act_3_step_21",
+            "title": "Complete Aggorat and Enter Black Chambers",
+            "description": "Follow the voices of the trial of Atziri, find exits and sacrificial table, complete the ritual, then enter Black Chambers.",
+            "objectives": [
+              {
+                "text": "Follow the voices of the trial of Atziri (on the big plaza), go through to find the next checkpoint",
+                "details": "Yes, that means having sound on is beneficial in this zone!",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the exit towards the Black Chambers",
+                "details": "After the big plaza, it is always to the top left end of the zone",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Find the Sacrificial table",
+                "details": "After the big plaza, it is always to the top right end of the zone",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "The sacrificial heart can randomly drop in this zone",
+                "details": "If you haven't found it until now, continue to kill monsters until you find it",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Checkpoint port to the sacrificial table, loot the dagger, place the heart, stab the heart",
+                "details": "",
+                "required": true,
+                "rewards": ["2 Skill Points"],
+                "notes": ""
+              },
+              {
+                "text": "Checkpoint port to the black chambers, enter the black chambers",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "Aggorat",
+            "completion_zone": "The Black Chambers",
+            "next_step_id": "act_3_step_22",
+            "previous_step_id": "act_3_step_20",
+            "wiki_items": ["Aggorat", "Trial of Atziri", "Black Chambers", "Sacrificial Table", "Sacrificial Heart"]
+          },
+          "act_3_step_22": {
+            "id": "act_3_step_22",
+            "title": "Defeat Doryani and Complete Act 3",
+            "description": "Find and defeat Doryani, Royal Thaumaturge, then speak with him and other NPCs to complete Act 3.",
+            "objectives": [
+              {
+                "text": "Find and defeat Doryani, Royal Thaumaturge",
+                "details": "He is always to the top left or top right of the zone, depending on which angle the entry to the zone is",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              },
+              {
+                "text": "Go through the Portal to the encampment, speak with Doryani, after the cataclysm speak with him again, then speak with the Sin and eventually Alva to get to Act 4 (Kingsmarch)",
+                "details": "",
+                "required": true,
+                "rewards": [],
+                "notes": ""
+              }
+            ],
+            "current_zone": "The Black Chambers",
+            "completion_zone": "Kingsmarch",
+            "next_step_id": "act_4_step_1",
+            "previous_step_id": "act_3_step_21",
+            "wiki_items": ["The Black Chambers", "Doryani", "Royal Thaumaturge", "The Sin", "Alva", "Kingsmarch"]
+          }
+        }
+      },
       "act_4": {
         "act_name": "Act 4",
         "act_number": 4,
@@ -30,7 +1974,7 @@
             "objectives": [
               {
                 "text": "Find and enter the Singing Caverns",
-                "details": "Find the Singing Caverns and enter it.",
+                "details": "Located approximately on the far end of the island compared to the start point.",
                 "required": true,
                 "rewards": [],
                 "notes": ""
@@ -143,7 +2087,7 @@
                 "text": "Find and kill Bronnach, the Manhunter",
                 "details": "Bronnach is a Rogue Exile",
                 "required": false,
-                "rewards": ["Guarenteed unique item"],
+                "rewards": ["Unique item"],
                 "notes": ""
               }
             ],

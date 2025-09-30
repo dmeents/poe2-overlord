@@ -1,7 +1,7 @@
 import { useFilterState, createFilterStateConfig } from './useFilterState';
 import type { Ascendency, CharacterClass, League } from '../types';
 
-export interface CharacterFilters {
+export interface CharacterFilters extends Record<string, unknown> {
   league: League | 'All';
   hardcore: boolean | null; // null = all, true = hardcore only, false = non-hardcore only
   soloSelfFound: boolean | null; // null = all, true = SSF only, false = non-SSF only

@@ -11,6 +11,12 @@ export { useZoneFilters } from './useZoneFilters';
 
 // Generic hooks
 export { useFilterState, createFilterStateConfig } from './useFilterState';
+export { 
+  useTauriEventListener, 
+  useMultiTauriEventListener,
+  createEventListenerConfig,
+  createMultiEventListenerConfig 
+} from './useTauriEventListener';
 
 // React Query hooks
 export {

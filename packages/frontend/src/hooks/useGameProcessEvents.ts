@@ -1,7 +1,7 @@
 import type { GameProcessStatusChangedEvent, ProcessInfo } from '@/types';
 import { GAME_CONFIG } from '@/utils';
-import { listen } from '@tauri-apps/api/event';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useTauriEventListener } from './useTauriEventListener';
 
 /**
  * Hook for listening to game process status changes via Tauri events
@@ -14,65 +14,48 @@ import { useEffect, useState } from 'react';
  */
 export function useGameProcessEvents() {
   const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);
-  const [isListening, setIsListening] = useState(false);
 
-  useEffect(() => {
-    const unlistenFns: (() => void)[] = [];
-
-    const setupEventListeners = async () => {
-      try {
-        // Listen for game process status updates from Rust backend
-        const unlistenProcess = await listen<GameProcessStatusChangedEvent>(
-          GAME_CONFIG.EVENT_NAME,
-          event => {
-            // Handle the AppEvent structure - the payload is the entire AppEvent
-            const eventPayload = event.payload as {
-              GameProcessStatusChanged?: { new_status?: ProcessInfo };
-            };
-            if (eventPayload && eventPayload.GameProcessStatusChanged) {
-              const gameEvent = eventPayload.GameProcessStatusChanged;
-              if (gameEvent.new_status) {
-                const newProcessInfo: ProcessInfo = {
-                  name: gameEvent.new_status.name,
-                  pid: gameEvent.new_status.pid,
-                  running: gameEvent.new_status.running,
-                };
-                setProcessInfo(newProcessInfo);
-              }
-            }
-          }
-        );
-
-        unlistenFns.push(unlistenProcess);
-        setIsListening(true);
-
-        // Request initial status from backend to handle timing issues
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          const initialStatus = await invoke<ProcessInfo>(
-            'get_game_process_status'
-          );
-          setProcessInfo(initialStatus);
-        } catch {
-          // No initial status available, rely on events only
-        }
-      } catch {
-        // Failed to set up event listeners
+  // Handler for game process status events
+  const handleGameProcessStatusChanged = useCallback((event: GameProcessStatusChangedEvent) => {
+    // Handle the AppEvent structure - the payload is the entire AppEvent
+    const eventPayload = event.payload as {
+      GameProcessStatusChanged?: { new_status?: ProcessInfo };
+    };
+    if (eventPayload && eventPayload.GameProcessStatusChanged) {
+      const gameEvent = eventPayload.GameProcessStatusChanged;
+      if (gameEvent.new_status) {
+        const newProcessInfo: ProcessInfo = {
+          name: gameEvent.new_status.name,
+          pid: gameEvent.new_status.pid,
+          running: gameEvent.new_status.running,
+        };
+        setProcessInfo(newProcessInfo);
       }
-    };
-
-    setupEventListeners();
-
-    // Cleanup listeners
-    return () => {
-      unlistenFns.forEach(unlisten => unlisten());
-      setIsListening(false);
-    };
+    }
   }, []);
+
+  // Get initial game process status
+  const getInitialGameProcessStatus = useCallback(async (): Promise<ProcessInfo | null> => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return await invoke<ProcessInfo>('get_game_process_status');
+    } catch {
+      // No initial status available, rely on events only
+      return null;
+    }
+  }, []);
+
+  // Use the generic Tauri event listener
+  const { isListening, error } = useTauriEventListener({
+    eventName: GAME_CONFIG.EVENT_NAME,
+    handler: handleGameProcessStatusChanged,
+    getInitialData: getInitialGameProcessStatus,
+  });
 
   return {
     processInfo,
     gameRunning: processInfo?.running || false,
     isListening,
+    error,
   };
 }

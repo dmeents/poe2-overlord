@@ -1,11 +1,11 @@
-import { listen } from '@tauri-apps/api/event';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type {
   WalkthroughGuide,
   WalkthroughProgress,
   WalkthroughStepResult,
 } from '../types/walkthrough';
 import { WalkthroughService } from '../utils/walkthrough';
+import { useMultiTauriEventListener } from './useTauriEventListener';
 
 /**
  * Hook for listening to walkthrough progress updates via Tauri events
@@ -26,15 +26,9 @@ export function useWalkthroughEvents(
   const [currentStep, setCurrentStep] = useState<WalkthroughStepResult | null>(
     null
   );
-
   const [previousStep, setPreviousStep] =
     useState<WalkthroughStepResult | null>(null);
-  const [isListening, setIsListening] = useState(false);
   const [lastEvent, setLastEvent] = useState<string | null>(null);
-
-  // Event listener management
-  const listenerRef = useRef<(() => void) | null>(null);
-  const isListeningRef = useRef(false);
 
   // Function to get previous step data from guide
   const getPreviousStep = useCallback(
@@ -196,83 +190,28 @@ export function useWalkthroughEvents(
     [characterId]
   );
 
-  // Set up event listeners for walkthrough events
-  useEffect(() => {
-    // Clean up existing listener
-    if (listenerRef.current) {
-      listenerRef.current();
-      listenerRef.current = null;
-    }
-
-    // Prevent multiple listeners
-    if (isListeningRef.current || !characterId) {
-      return;
-    }
-
-    isListeningRef.current = true;
-
-    const setupEventListeners = async () => {
-      try {
-        const unlistenFns: (() => void)[] = [];
-
-        // Listen for walkthrough progress updates
-        const unlistenProgress = await listen(
-          'walkthrough-progress-updated',
-          handleWalkthroughProgressUpdated
-        );
-        unlistenFns.push(unlistenProgress);
-
-        // Listen for walkthrough step completed
-        const unlistenStepCompleted = await listen(
-          'walkthrough-step-completed',
-          handleWalkthroughStepCompleted
-        );
-        unlistenFns.push(unlistenStepCompleted);
-
-        // Listen for walkthrough step advanced
-        const unlistenStepAdvanced = await listen(
-          'walkthrough-step-advanced',
-          handleWalkthroughStepAdvanced
-        );
-        unlistenFns.push(unlistenStepAdvanced);
-
-        // Listen for walkthrough campaign completed
-        const unlistenCampaignCompleted = await listen(
-          'walkthrough-campaign-completed',
-          handleWalkthroughCampaignCompleted
-        );
-        unlistenFns.push(unlistenCampaignCompleted);
-
-        // Store cleanup function
-        listenerRef.current = () => {
-          unlistenFns.forEach(unlisten => unlisten());
-        };
-
-        setIsListening(true);
-      } catch (error) {
-        console.error('Failed to set up walkthrough event listeners:', error);
-        isListeningRef.current = false;
-      }
-    };
-
-    setupEventListeners();
-
-    // Cleanup listeners
-    return () => {
-      if (listenerRef.current) {
-        listenerRef.current();
-        listenerRef.current = null;
-      }
-      isListeningRef.current = false;
-      setIsListening(false);
-    };
-  }, [
-    characterId,
-    handleWalkthroughProgressUpdated,
-    handleWalkthroughStepCompleted,
-    handleWalkthroughStepAdvanced,
-    handleWalkthroughCampaignCompleted,
-  ]);
+  // Use the generic multi-event Tauri listener
+  const { isListening, errors } = useMultiTauriEventListener({
+    listeners: [
+      {
+        eventName: 'walkthrough-progress-updated',
+        handler: handleWalkthroughProgressUpdated,
+      },
+      {
+        eventName: 'walkthrough-step-completed',
+        handler: handleWalkthroughStepCompleted,
+      },
+      {
+        eventName: 'walkthrough-step-advanced',
+        handler: handleWalkthroughStepAdvanced,
+      },
+      {
+        eventName: 'walkthrough-campaign-completed',
+        handler: handleWalkthroughCampaignCompleted,
+      },
+    ],
+    enabled: !!characterId,
+  });
 
   // Reset state when character changes
   useEffect(() => {
@@ -293,5 +232,6 @@ export function useWalkthroughEvents(
     setProgress,
     setCurrentStep,
     setPreviousStep,
+    errors,
   };
 }

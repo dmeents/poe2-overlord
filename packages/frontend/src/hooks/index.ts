@@ -9,6 +9,11 @@ export { useWalkthroughGuide } from './useWalkthroughGuide';
 export { useZoneDataFiltering } from './useZoneDataFiltering';
 export { useZoneFilters } from './useZoneFilterState';
 
+// Focused character hooks
+export { useCharacterData } from './useCharacterData';
+export { useCharacterMutations } from './useCharacterMutations';
+export { useCharacterEvents } from './useCharacterEvents';
+
 // Generic hooks
 export { useFilterState, createFilterStateConfig } from './useFilterState';
 export { 

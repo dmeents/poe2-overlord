@@ -110,23 +110,12 @@ pub fn run() {
             get_available_leagues,
             get_available_ascendencies_for_class,
             
-            // Character tracking commands (location and time)
-            get_character_tracking_data,
-            get_character_current_location,
-            enter_zone,
-            leave_zone,
-            record_death,
-            add_zone_time,
-            finalize_all_active_zones,
             
             // Game process monitoring commands
             get_game_process_status,
             
             // Server monitoring commands
             get_server_status,
-            ping_server,
-            start_server_monitoring,
-            stop_server_monitoring,
             
             // Walkthrough guide commands
             get_walkthrough_guide,

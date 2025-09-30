@@ -1,4 +1,4 @@
-import type { CharacterFormData } from '../components/character/character-modals/character-form-modal';
+import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import type { CharacterData } from '../types';
 
 /**

@@ -1,5 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export interface AccordionProps {
   title: string;

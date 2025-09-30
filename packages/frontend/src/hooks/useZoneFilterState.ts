@@ -1,7 +1,7 @@
 import { useFilterState, createFilterStateConfig } from './useFilterState';
 import type { LocationType } from '../types';
 
-export interface ZoneFilters {
+export interface ZoneFilters extends Record<string, unknown> {
   search: string;
   locationType: LocationType | 'All';
   act: string | 'All';

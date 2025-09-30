@@ -23,6 +23,10 @@ export {
   SortHelpers, 
   createDataFilteringConfig 
 } from './useDataFiltering';
+export { 
+  useCRUDOperations, 
+  createCRUDOperationsConfig 
+} from './useCRUDOperations';
 
 // React Query hooks
 export {

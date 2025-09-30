@@ -1,4 +1,5 @@
 import { UsersIcon } from '@heroicons/react/24/outline';
+import { useMemo } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { DataItem, SectionHeader } from '../../ui';
 import { classDistributionChartStyles } from './class-distribution-chart.styles';
@@ -8,14 +9,6 @@ interface ClassDistributionChartProps {
   className?: string;
 }
 
-interface ClassData {
-  name: string;
-  value: number;
-  percentage: number;
-  color: string;
-  hexColor: string;
-  [key: string]: string | number;
-}
 
 // Color scheme for character classes - matching character card colors
 // Only base classes, ascendency classes will use their root class color
@@ -33,32 +26,35 @@ export function ClassDistributionChart({
   classDistribution,
   className = '',
 }: ClassDistributionChartProps) {
-  // Convert class distribution to chart data
-  const totalCharacters = Object.values(classDistribution).reduce(
-    (sum, count) => sum + count,
-    0
-  );
+  // Memoize chart data to prevent infinite re-renders
+  const chartData = useMemo(() => {
+    // Convert class distribution to chart data
+    const totalCharacters = Object.values(classDistribution).reduce(
+      (sum, count) => sum + count,
+      0
+    );
 
-  const chartData: ClassData[] = Object.entries(classDistribution)
-    .map(([className, count]) => {
-      const percentage =
-        totalCharacters > 0 ? (count / totalCharacters) * 100 : 0;
-      const classColor = CLASS_COLORS[
-        className as keyof typeof CLASS_COLORS
-      ] || {
-        color: 'bg-zinc-500',
-        hexColor: '#71717a',
-      };
+    return Object.entries(classDistribution)
+      .map(([className, count]) => {
+        const percentage =
+          totalCharacters > 0 ? (count / totalCharacters) * 100 : 0;
+        const classColor = CLASS_COLORS[
+          className as keyof typeof CLASS_COLORS
+        ] || {
+          color: 'bg-zinc-500',
+          hexColor: '#71717a',
+        };
 
-      return {
-        name: className,
-        value: count,
-        percentage,
-        color: classColor.color,
-        hexColor: classColor.hexColor,
-      };
-    })
-    .sort((a, b) => b.value - a.value); // Sort by count descending
+        return {
+          name: className,
+          value: count,
+          percentage,
+          color: classColor.color,
+          hexColor: classColor.hexColor,
+        };
+      })
+      .sort((a, b) => b.value - a.value); // Sort by count descending
+  }, [classDistribution]);
 
   // Custom tooltip component
   const CustomTooltip = ({

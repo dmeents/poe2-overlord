@@ -1,6 +1,7 @@
 import type { CharacterData } from '@/types';
 import { formatDuration } from '@/utils';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
+import { useMemo } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { DataItem, SectionHeader } from '../../ui';
 import { actDistributionChartStyles } from './act-distribution-chart.styles';
@@ -22,55 +23,68 @@ export function ActDistributionChart({
   character,
   className = '',
 }: ActDistributionChartProps) {
-  // Extract act data from character summary
-  const actData: ActData[] = [
-    {
-      name: 'Act 1',
-      time: character.summary.play_time_act1,
-      percentage: 0, // Will be calculated
-      color: 'bg-emerald-500',
-      hexColor: '#10b981',
-    },
-    {
-      name: 'Act 2',
-      time: character.summary.play_time_act2,
-      percentage: 0, // Will be calculated
-      color: 'bg-blue-500',
-      hexColor: '#3b82f6',
-    },
-    {
-      name: 'Act 3',
-      time: character.summary.play_time_act3,
-      percentage: 0, // Will be calculated
-      color: 'bg-purple-500',
-      hexColor: '#8b5cf6',
-    },
-    {
-      name: 'Act 4',
-      time: character.summary.play_time_act4,
-      percentage: 0, // Will be calculated
-      color: 'bg-amber-500',
-      hexColor: '#f59e0b',
-    },
-    {
-      name: 'Interlude',
-      time: character.summary.play_time_interlude,
-      percentage: 0, // Will be calculated
-      color: 'bg-red-500',
-      hexColor: '#ef4444',
-    },
-  ];
+  // Memoize act data to prevent infinite re-renders
+  const { totalTime, activeActs, chartData } = useMemo(() => {
+    // Extract act data from character summary
+    const actData: ActData[] = [
+      {
+        name: 'Act 1',
+        time: character.summary.play_time_act1,
+        percentage: 0, // Will be calculated
+        color: 'bg-emerald-500',
+        hexColor: '#10b981',
+      },
+      {
+        name: 'Act 2',
+        time: character.summary.play_time_act2,
+        percentage: 0, // Will be calculated
+        color: 'bg-blue-500',
+        hexColor: '#3b82f6',
+      },
+      {
+        name: 'Act 3',
+        time: character.summary.play_time_act3,
+        percentage: 0, // Will be calculated
+        color: 'bg-purple-500',
+        hexColor: '#8b5cf6',
+      },
+      {
+        name: 'Act 4',
+        time: character.summary.play_time_act4,
+        percentage: 0, // Will be calculated
+        color: 'bg-amber-500',
+        hexColor: '#f59e0b',
+      },
+      {
+        name: 'Interlude',
+        time: character.summary.play_time_interlude,
+        percentage: 0, // Will be calculated
+        color: 'bg-red-500',
+        hexColor: '#ef4444',
+      },
+    ];
 
-  // Calculate total time for main acts only
-  const totalTime = actData.reduce((sum, act) => sum + act.time, 0);
+    // Calculate total time for main acts only
+    const totalTime = actData.reduce((sum, act) => sum + act.time, 0);
 
-  // Calculate percentages
-  actData.forEach(act => {
-    act.percentage = totalTime > 0 ? (act.time / totalTime) * 100 : 0;
-  });
+    // Calculate percentages
+    actData.forEach(act => {
+      act.percentage = totalTime > 0 ? (act.time / totalTime) * 100 : 0;
+    });
 
-  // Filter out acts with no time
-  const activeActs = actData.filter(act => act.time > 0);
+    // Filter out acts with no time
+    const activeActs = actData.filter(act => act.time > 0);
+
+    // Prepare data for Recharts
+    const chartData = activeActs.map(act => ({
+      name: act.name,
+      value: act.time,
+      percentage: act.percentage,
+      color: act.hexColor,
+    }));
+
+    return { totalTime, activeActs, chartData };
+  }, [character.summary]);
 
   if (activeActs.length === 0) {
     return (
@@ -94,13 +108,6 @@ export function ActDistributionChart({
     );
   }
 
-  // Prepare data for Recharts
-  const chartData = activeActs.map(act => ({
-    name: act.name,
-    value: act.time,
-    percentage: act.percentage,
-    color: act.hexColor,
-  }));
 
   // Custom tooltip component
   const CustomTooltip = ({

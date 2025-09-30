@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CharacterData } from '../types';
 import type { CharacterTrackingData } from '../types/character';
-import {
-  useActiveCharacter,
-  useCharacters,
-} from './useCharacterQueries';
+import { useActiveCharacter, useCharacters } from './useCharacterQueries';
 
 /**
  * Hook for managing character data fetching and state.
@@ -25,9 +22,8 @@ export function useCharacterData() {
   } = useActiveCharacter();
 
   // State for real-time character data updates
-  const [charactersWithUpdates, setCharactersWithUpdates] = useState<
-    CharacterData[]
-  >(characters);
+  const [charactersWithUpdates, setCharactersWithUpdates] =
+    useState<CharacterData[]>(characters);
   const [activeCharacterWithUpdates, setActiveCharacterWithUpdates] =
     useState<CharacterData | null>(activeCharacter);
 
@@ -43,7 +39,8 @@ export function useCharacterData() {
 
   // Derived state
   const isLoading = charactersLoading || activeCharacterLoading;
-  const error = charactersError?.message || activeCharacterError?.message || null;
+  const error =
+    charactersError?.message || activeCharacterError?.message || null;
 
   // Extract tracking data from the unified character data
   const getCharacterTrackingData = useCallback(

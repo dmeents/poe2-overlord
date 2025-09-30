@@ -99,6 +99,32 @@ pub async fn get_active_character(
     to_command_result(character_service.get_active_character().await)
 }
 
+/// Tauri command to get the characters index
+///
+/// This command retrieves the characters index containing all character IDs and active character.
+#[tauri::command]
+pub async fn get_characters_index(
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<crate::domain::character::models::CharactersIndex> {
+    to_command_result(character_service.get_characters_index().await)
+}
+
+/// Tauri command to check if a character name is unique
+///
+/// This command validates that a character name is not already in use.
+#[tauri::command]
+pub async fn is_character_name_unique(
+    name: String,
+    exclude_id: Option<String>,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<bool> {
+    to_command_result(
+        character_service
+            .is_name_unique(&name, exclude_id.as_deref())
+            .await,
+    )
+}
+
 /// Tauri command to get all available character classes
 ///
 /// This command returns all character classes that can be selected when creating a character.
@@ -125,4 +151,117 @@ pub async fn get_available_ascendencies_for_class(
     class: crate::domain::character::models::CharacterClass,
 ) -> CommandResult<Vec<crate::domain::character::models::Ascendency>> {
     Ok(crate::domain::character::models::get_ascendencies_for_class(&class))
+}
+
+// Character Tracking Commands (merged from character_tracking domain)
+
+/// Tauri command to get complete character tracking data for a character
+///
+/// This command retrieves all tracking data including zones, location, and statistics.
+#[tauri::command]
+pub async fn get_character_tracking_data(
+    character_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Option<crate::domain::character::models::CharacterData>> {
+    let result = to_command_result(character_service.get_character(&character_id).await)?;
+    Ok(Some(result))
+}
+
+/// Tauri command to get current location for a character
+///
+/// This command retrieves the current location state of a character.
+#[tauri::command]
+pub async fn get_character_current_location(
+    character_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Option<crate::domain::character::models::LocationState>> {
+    to_command_result(character_service.get_current_location(&character_id).await)
+}
+
+/// Tauri command to enter a zone
+///
+/// This command handles a character entering a zone with time tracking.
+#[tauri::command]
+pub async fn enter_zone(
+    character_id: String,
+    location_id: String,
+    location_name: String,
+    location_type: crate::domain::character::models::LocationType,
+    act: Option<String>,
+    is_town: bool,
+    zone_level: Option<u32>,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .enter_zone(
+                &character_id,
+                location_id,
+                location_name,
+                location_type,
+                act,
+                is_town,
+                zone_level,
+            )
+            .await,
+    )
+}
+
+/// Tauri command to leave a zone
+///
+/// This command handles a character leaving a zone with time calculation.
+#[tauri::command]
+pub async fn leave_zone(
+    character_id: String,
+    location_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .leave_zone(&character_id, &location_id)
+            .await,
+    )
+}
+
+/// Tauri command to record a death in a zone
+///
+/// This command records a character death in a specific zone.
+#[tauri::command]
+pub async fn record_death(
+    character_id: String,
+    location_id: String,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .record_death(&character_id, &location_id)
+            .await,
+    )
+}
+
+/// Tauri command to add time to a zone
+///
+/// This command adds time to a specific zone for a character.
+#[tauri::command]
+pub async fn add_zone_time(
+    character_id: String,
+    location_id: String,
+    seconds: u64,
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(
+        character_service
+            .add_zone_time(&character_id, &location_id, seconds)
+            .await,
+    )
+}
+
+/// Tauri command to finalize all active zones
+///
+/// This command stops all active timers and saves the data.
+#[tauri::command]
+pub async fn finalize_all_active_zones(
+    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<()> {
+    to_command_result(character_service.finalize_all_active_zones().await)
 }

@@ -1,6 +1,6 @@
 // Character-related types - Updated to match unified backend CharacterData model
 
-import type { WalkthroughProgress } from './walkthrough';
+import { WalkthroughProgress } from './walkthrough';
 
 export type CharacterClass =
   | 'Warrior'

@@ -217,7 +217,7 @@ export function useCRUDOperations<T extends { id: string }, CreateData, UpdateDa
       }
       isListeningRef.current = false;
     };
-  }, [enableRealTimeUpdates, updateEventName, handleUpdateEvent]);
+  }, [enableRealTimeUpdates, updateEventName, handleUpdateEvent, handleRealTimeUpdate]);
 
   // Mutation hooks
   const createMutation = useMutation({

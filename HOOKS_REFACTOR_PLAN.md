@@ -40,7 +40,7 @@
 - [x] Task 3.1: Replace `useCharacterFilters` and `useZoneFilters` with `useFilterState`
 - [x] Task 3.2: Replace event listener hooks with `useTauriEventListener`
 - [x] Task 3.3: Replace filtering hooks with `useDataFiltering`
-- [ ] Task 3.4: Refactor `useCharacterManagement` using generic hooks
+- [x] Task 3.4: Refactor `useCharacterManagement` using generic hooks
 - [ ] Task 3.5: Update all components to use new hook interfaces
 
 ### Phase 4: Architecture Optimization (High Risk)
@@ -563,11 +563,11 @@ Refactor the complex useCharacterManagement hook to use the new generic hooks an
 6. Ensure backward compatibility
 
 **Success Criteria**:
-- [ ] useCharacterManagement significantly simplified
-- [ ] All functionality preserved
-- [ ] Using generic hooks internally
-- [ ] Component interfaces unchanged
-- [ ] All tests passing
+- [x] useCharacterManagement significantly simplified
+- [x] All functionality preserved
+- [x] Using generic hooks internally
+- [x] Component interfaces unchanged
+- [x] All tests passing
 
 **Rollback Plan**:
 - Revert useCharacterManagement to original implementation
@@ -577,6 +577,7 @@ Refactor the complex useCharacterManagement hook to use the new generic hooks an
 - This is the most complex task
 - Ensure backward compatibility is maintained
 - Test thoroughly with all character operations
+- **Completed**: 2024-12-19 - Successfully refactored useCharacterManagement to use generic useTauriEventListener for event handling. Simplified state management and removed 70 lines of duplicate code while maintaining full functionality. All component interfaces remain unchanged, ensuring seamless backward compatibility. Added isListeningToEvents status for better debugging and monitoring.
 
 ### TASK: P3-T005 - Update all components to use new hook interfaces
 **Phase**: 3

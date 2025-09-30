@@ -56,6 +56,9 @@ export function useCharacterData() {
     []
   );
 
+  // Debug: Log when activeCharacterWithUpdates changes
+  console.log('useCharacterData activeCharacterWithUpdates changed', activeCharacterWithUpdates?.id, activeCharacterWithUpdates?.summary?.total_play_time);
+  
   // Memoize the active character tracking data to prevent infinite re-renders
   const activeCharacterTrackingData = useMemo(() => {
     return activeCharacterWithUpdates

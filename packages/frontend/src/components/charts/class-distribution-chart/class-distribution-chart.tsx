@@ -9,7 +9,6 @@ interface ClassDistributionChartProps {
   className?: string;
 }
 
-
 // Color scheme for character classes - matching character card colors
 // Only base classes, ascendency classes will use their root class color
 const CLASS_COLORS = {

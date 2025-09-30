@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useCharacterData } from './useCharacterData';
 import { useCharacterEvents } from './useCharacterEvents';
 import { useCharacterMutations } from './useCharacterMutations';
@@ -57,7 +58,8 @@ export function useCharacterManagement() {
   // Combine error states
   const error = characterData.error || characterEvents.eventError || null;
 
-  return {
+  // Memoize the return object to prevent infinite re-renders
+  return useMemo(() => ({
     // Character data
     characters: characterData.characters,
     activeCharacter: characterData.activeCharacter,
@@ -77,5 +79,18 @@ export function useCharacterManagement() {
     updateCharacter: characterMutations.updateCharacter,
     setActiveCharacterId: characterMutations.setActiveCharacterId,
     deleteCharacter: characterMutations.deleteCharacter,
-  };
+  }), [
+    characterData.characters,
+    characterData.activeCharacter,
+    characterData.activeCharacterTrackingData,
+    characterData.isLoading,
+    characterData.loadCharacters,
+    characterData.loadActiveCharacter,
+    error,
+    characterEvents.isListeningToEvents,
+    characterMutations.createCharacter,
+    characterMutations.updateCharacter,
+    characterMutations.setActiveCharacterId,
+    characterMutations.deleteCharacter,
+  ]);
 }

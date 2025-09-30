@@ -7,16 +7,19 @@ This directory contains all React hooks used throughout the POE2 Overlord applic
 The hooks are organized into several categories:
 
 ### Core Data Hooks
+
 - **`useCharacterData`** - Character data fetching and local state management
 - **`useCharacterMutations`** - Character CRUD operations using React Query
 - **`useCharacterEvents`** - Tauri event listeners for character data updates
 - **`useCharacterManagement`** - Main character management hook (composes focused hooks)
 
 ### Query Hooks
+
 - **`useCharacterQueries`** - React Query hooks for character data
 - **`useWalkthroughGuide`** - Walkthrough guide data fetching
 
 ### Event Hooks
+
 - **`useTauriEventListener`** - Generic Tauri event listener
 - **`useMultiTauriEventListener`** - Multiple Tauri event listeners
 - **`useGameProcessEvents`** - Game process monitoring events
@@ -24,6 +27,7 @@ The hooks are organized into several categories:
 - **`useWalkthroughEvents`** - Walkthrough progress events
 
 ### Filtering & State Hooks
+
 - **`useDataFiltering`** - Generic data filtering and sorting
 - **`useFilterState`** - Generic filter and sort state management
 - **`useCharacterDataFiltering`** - Character-specific filtering
@@ -32,6 +36,7 @@ The hooks are organized into several categories:
 - **`useZoneFilterState`** - Zone filter state
 
 ### Utility Hooks
+
 - **`useErrorHandling`** - Standardized error handling
 - **`useErrorBoundary`** - React error boundary functionality
 - **`useCacheInvalidation`** - React Query cache invalidation
@@ -41,25 +46,32 @@ The hooks are organized into several categories:
 ## Key Features
 
 ### 1. Modular Architecture
+
 Hooks are broken down into focused, single-responsibility modules:
+
 - **Data hooks** handle data fetching and state
 - **Mutation hooks** handle data modifications
 - **Event hooks** handle real-time updates
 - **Utility hooks** provide common functionality
 
 ### 2. Type Safety
+
 All hooks are fully typed with TypeScript:
+
 - Generic types for reusability
 - Proper error type definitions
 - Comprehensive JSDoc documentation
 
 ### 3. Error Handling
+
 Standardized error handling across all hooks:
+
 - Consistent error types and messages
 - User-friendly error recovery
 - React error boundary integration
 
 ### 4. Performance Optimization
+
 - React Query for efficient data caching
 - Automatic cache invalidation on events
 - Optimized re-renders with proper dependencies
@@ -144,56 +156,35 @@ function FilteredCharacterList() {
 }
 ```
 
-## Migration Guide
+## Architecture Overview
 
-### From Old to New Architecture
+The hooks use a modular architecture where main hooks compose focused hooks internally:
 
-#### Before (Monolithic Hooks)
 ```typescript
-// Old: Single large hook with multiple responsibilities
-const {
-  characters,
-  activeCharacter,
-  isLoading,
-  error,
-  createCharacter,
-  updateCharacter,
-  deleteCharacter,
-  loadCharacters,
-  // ... many more functions
-} = useCharacterManagement();
-```
+// Main hook composes focused hooks internally
+const characterManagement = useCharacterManagement();
 
-#### After (Focused Hooks)
-```typescript
-// New: Composed focused hooks
+// Or use focused hooks directly for more control
 const characterData = useCharacterData();
 const characterMutations = useCharacterMutations();
 const characterEvents = useCharacterEvents(activeCharacterId, setters);
-
-// Or use the main hook that composes them
-const characterManagement = useCharacterManagement();
 ```
-
-### Breaking Changes
-
-1. **Hook Composition**: Main hooks now compose focused hooks internally
-2. **Error Handling**: Standardized error types and messages
-3. **Event Handling**: Improved event listener management
-4. **Type Safety**: Better TypeScript types throughout
 
 ### Backward Compatibility
 
-The main hooks maintain backward compatibility:
+All main hooks maintain full backward compatibility:
+
 - Same public API
 - Same return values
 - Same function signatures
-- Gradual migration possible
+- No breaking changes for existing components
 
 ## Best Practices
 
 ### 1. Use Focused Hooks
+
 Prefer focused hooks over monolithic ones:
+
 ```typescript
 // Good: Focused responsibility
 const { characters, isLoading } = useCharacterData();
@@ -204,7 +195,9 @@ const characterManagement = useCharacterManagement();
 ```
 
 ### 2. Error Handling
+
 Always handle errors appropriately:
+
 ```typescript
 const { data, error, isLoading } = useCharacterData();
 
@@ -214,17 +207,21 @@ if (error) {
 ```
 
 ### 3. Event Cleanup
+
 Ensure proper event cleanup:
+
 ```typescript
 const { isListening } = useTauriEventListener({
   eventName: 'my-event',
   handler: handleEvent,
-  enabled: shouldListen // Control with state
+  enabled: shouldListen, // Control with state
 });
 ```
 
 ### 4. Type Safety
+
 Use proper TypeScript types:
+
 ```typescript
 const { updateCharacter } = useCharacterMutations();
 // updateCharacter is properly typed with CharacterFormData
@@ -233,12 +230,14 @@ const { updateCharacter } = useCharacterMutations();
 ## Testing
 
 All hooks include comprehensive tests:
+
 - Unit tests for individual hooks
 - Integration tests for composed hooks
 - Error scenario testing
 - Performance testing
 
 Run tests with:
+
 ```bash
 yarn test
 ```
@@ -266,6 +265,7 @@ When adding new hooks:
 ### Debug Mode
 
 Enable debug mode for detailed logging:
+
 ```typescript
 const { data, error } = useCharacterData();
 // Check browser console for detailed error information

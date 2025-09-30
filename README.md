@@ -102,9 +102,9 @@ The frontend uses a modular hook architecture for better maintainability and reu
 - **Filtering Hooks**: Data filtering and sorting
 - **Utility Hooks**: Error handling, caching, configuration
 
-### Migration Guide
+### Hook Architecture
 
-If you're updating from an older version, see the [Migration Guide](./packages/frontend/src/hooks/MIGRATION_GUIDE.md) for step-by-step instructions.
+The application uses a modular hook architecture. See the [Hooks Documentation](./packages/frontend/src/hooks/README.md) for detailed information about the hook system.
 
 ## Development
 
@@ -169,7 +169,6 @@ cargo test
 ## Documentation
 
 - [Hooks Documentation](./packages/frontend/src/hooks/README.md)
-- [Migration Guide](./packages/frontend/src/hooks/MIGRATION_GUIDE.md)
 - [API Documentation](./packages/backend/README.md)
 
 ## Performance

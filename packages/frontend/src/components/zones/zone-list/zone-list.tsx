@@ -1,7 +1,7 @@
 import type {
   ZoneFilters as ZoneFiltersType,
   ZoneSortOption,
-} from '@/hooks/useZoneFilters';
+} from '@/hooks/useZoneFilterState';
 import type { ZoneStats } from '@/types';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { memo, useCallback } from 'react';

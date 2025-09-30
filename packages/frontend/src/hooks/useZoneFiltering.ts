@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { ZoneStats } from '../types';
-import type { ZoneFilters, ZoneSortOption } from './useZoneFilters';
+import type { ZoneFilters, ZoneSortOption } from './useZoneFilterState';
 
 export function useZoneFiltering(
   zones: ZoneStats[],

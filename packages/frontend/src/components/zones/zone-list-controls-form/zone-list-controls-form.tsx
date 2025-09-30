@@ -1,7 +1,7 @@
 import type {
   ZoneFilters as ZoneFiltersType,
   ZoneSortOption,
-} from '@/hooks/useZoneFilters';
+} from '@/hooks/useZoneFilterState';
 import type { LocationType } from '@/types';
 import { memo, useEffect, useRef, useState } from 'react';
 import { FilterToggle, Input, Select, SortSelect } from '../../forms';

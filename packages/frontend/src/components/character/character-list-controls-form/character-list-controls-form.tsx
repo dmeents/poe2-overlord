@@ -11,7 +11,7 @@ import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
 import type {
   CharacterFilters as CharacterFiltersType,
   SortOption,
-} from '../../../hooks/useCharacterFilters';
+} from '../../../hooks/useCharacterFilterState';
 import type { Ascendency, CharacterClass, League } from '../../../types';
 import {
   activeFilterChipClasses,

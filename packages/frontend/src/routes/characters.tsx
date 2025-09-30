@@ -11,7 +11,8 @@ import {
   PageLayout,
 } from '../components';
 import type { CharacterFormData } from '../components/character/character-modals';
-import { useCharacterFiltering, useCharacterFilters } from '../hooks';
+import { useCharacterFiltering } from '../hooks';
+import { useCharacterFilters } from '../hooks/useCharacterFilterState';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
 import type { CharacterData } from '../types';
 

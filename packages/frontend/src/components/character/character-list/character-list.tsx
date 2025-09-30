@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 import type {
   CharacterFilters,
   SortOption,
-} from '../../../hooks/useCharacterFilters';
+} from '../../../hooks/useCharacterFilterState';
 import type { CharacterData } from '../../../types';
 import { Button } from '../../ui/button';
 import { EmptyState } from '../../ui/empty-state';

@@ -1,5 +1,5 @@
 import { useZoneFiltering } from '@/hooks/useZoneFiltering';
-import { useZoneFilters } from '@/hooks/useZoneFilters';
+import { useZoneFilters } from '@/hooks/useZoneFilterState';
 import type { ZoneStats } from '@/types';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { Card } from '../../ui';

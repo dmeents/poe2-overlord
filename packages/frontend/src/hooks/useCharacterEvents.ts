@@ -10,7 +10,9 @@ import { useTauriEventListener } from './useTauriEventListener';
  */
 export function useCharacterEvents(
   activeCharacterId: string | null,
-  setCharactersWithUpdates: (updater: (prev: CharacterData[]) => CharacterData[]) => void,
+  setCharactersWithUpdates: (
+    updater: (prev: CharacterData[]) => CharacterData[]
+  ) => void,
   setActiveCharacterWithUpdates: (character: CharacterData | null) => void
 ) {
   const { invalidateCharacterQueries, setQueryData } = useCacheInvalidation();
@@ -49,19 +51,26 @@ export function useCharacterEvents(
         // Invalidate React Query cache to ensure consistency
         // Update the specific character in cache with the new data
         setQueryData(characterQueryKeys.detail(character_id), characterData);
-        
+
         // Invalidate character queries to ensure all components see the update
         invalidateCharacterQueries(character_id);
       }
     },
-    [activeCharacterId, setCharactersWithUpdates, setActiveCharacterWithUpdates, invalidateCharacterQueries, setQueryData]
+    [
+      activeCharacterId,
+      setCharactersWithUpdates,
+      setActiveCharacterWithUpdates,
+      invalidateCharacterQueries,
+      setQueryData,
+    ]
   );
 
   // Use the generic Tauri event listener for character data updates
-  const { isListening: isListeningToEvents, error: eventError } = useTauriEventListener({
-    eventName: 'character-tracking-data-updated',
-    handler: handleCharacterDataUpdate,
-  });
+  const { isListening: isListeningToEvents, error: eventError } =
+    useTauriEventListener({
+      eventName: 'character-tracking-data-updated',
+      handler: handleCharacterDataUpdate,
+    });
 
   return {
     isListeningToEvents,

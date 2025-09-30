@@ -11,30 +11,46 @@ export { useZoneFilters } from './useZoneFilterState';
 
 // Focused character hooks
 export { useCharacterData } from './useCharacterData';
-export { useCharacterMutations } from './useCharacterMutations';
 export { useCharacterEvents } from './useCharacterEvents';
+export { useCharacterMutations } from './useCharacterMutations';
 
 // Cache invalidation utilities
 export { useCacheInvalidation } from './useCacheInvalidation';
 
+// Error handling utilities
+export {
+  ErrorType,
+  type StandardError,
+  type ErrorHandlingConfig,
+  DEFAULT_ERROR_CONFIG,
+  EVENT_ERROR_CONFIG,
+  CRUD_ERROR_CONFIG,
+  useErrorHandling,
+} from './useErrorHandling';
+export {
+  type ErrorBoundaryState,
+  useErrorBoundary,
+  withErrorBoundary,
+} from './useErrorBoundary';
+
 // Generic hooks
-export { useFilterState, createFilterStateConfig } from './useFilterState';
-export { 
-  useTauriEventListener, 
-  useMultiTauriEventListener,
-  createEventListenerConfig,
-  createMultiEventListenerConfig 
-} from './useTauriEventListener';
-export { 
-  useDataFiltering, 
-  FilterHelpers, 
-  SortHelpers, 
-  createDataFilteringConfig 
-} from './useDataFiltering';
-export { 
-  useCRUDOperations, 
-  createCRUDOperationsConfig 
+export {
+  createCRUDOperationsConfig,
+  useCRUDOperations,
 } from './useCRUDOperations';
+export {
+  FilterHelpers,
+  SortHelpers,
+  createDataFilteringConfig,
+  useDataFiltering,
+} from './useDataFiltering';
+export { createFilterStateConfig, useFilterState } from './useFilterState';
+export {
+  createEventListenerConfig,
+  createMultiEventListenerConfig,
+  useMultiTauriEventListener,
+  useTauriEventListener,
+} from './useTauriEventListener';
 
 // React Query hooks
 export {

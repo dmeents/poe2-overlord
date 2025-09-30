@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { characterQueryKeys } from './useCharacterQueries';
 
 /**
@@ -15,12 +15,14 @@ export function useCacheInvalidation() {
       if (characterId) {
         // Update specific character in cache if we have the data
         // This will be called with the updated data from the event
-        queryClient.invalidateQueries({ queryKey: characterQueryKeys.detail(characterId) });
+        queryClient.invalidateQueries({
+          queryKey: characterQueryKeys.detail(characterId),
+        });
       }
-      
+
       // Always invalidate lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
-      
+
       // Invalidate active character query
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
     },

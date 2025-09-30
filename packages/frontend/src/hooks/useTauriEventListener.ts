@@ -1,5 +1,6 @@
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useErrorHandling, EVENT_ERROR_CONFIG } from './useErrorHandling';
 
 /**
  * Configuration for a Tauri event listener
@@ -66,7 +67,7 @@ export function useTauriEventListener<T = unknown>(
   const { eventName, handler, getInitialData, enabled = true } = config;
   
   const [isListening, setIsListening] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, handleError, clearError } = useErrorHandling(EVENT_ERROR_CONFIG);
   const listenerRef = useRef<(() => void) | null>(null);
   const isListeningRef = useRef(false);
 
@@ -83,7 +84,7 @@ export function useTauriEventListener<T = unknown>(
     }
 
     isListeningRef.current = true;
-    setError(null);
+    clearError();
 
     try {
       // Set up event listener
@@ -91,8 +92,7 @@ export function useTauriEventListener<T = unknown>(
         try {
           handler(event.payload);
         } catch (err) {
-          console.error(`Error handling event ${eventName}:`, err);
-          setError(`Error handling event: ${err instanceof Error ? err.message : 'Unknown error'}`);
+          handleError(err, `handling event ${eventName}`);
         }
       });
 
@@ -112,8 +112,7 @@ export function useTauriEventListener<T = unknown>(
         }
       }
     } catch (err) {
-      console.error(`Failed to set up listener for ${eventName}:`, err);
-      setError(`Failed to set up listener: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      handleError(err, `setting up listener for ${eventName}`);
       isListeningRef.current = false;
     }
   }, [eventName, handler, getInitialData, enabled]);
@@ -134,7 +133,7 @@ export function useTauriEventListener<T = unknown>(
 
   return {
     isListening,
-    error,
+    error: error?.message || null,
   };
 }
 
@@ -173,6 +172,7 @@ export function useMultiTauriEventListener<T = unknown>(
   const { listeners, getInitialData, enabled = true } = config;
   
   const [isListening, setIsListening] = useState(false);
+  const { error: globalError, handleError } = useErrorHandling(EVENT_ERROR_CONFIG);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const listenerRefs = useRef<Record<string, (() => void) | null>>({});
   const isListeningRef = useRef(false);

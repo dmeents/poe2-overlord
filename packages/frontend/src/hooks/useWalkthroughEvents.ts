@@ -26,6 +26,7 @@ export function useWalkthroughEvents(
   const [currentStep, setCurrentStep] = useState<WalkthroughStepResult | null>(
     null
   );
+
   const [previousStep, setPreviousStep] =
     useState<WalkthroughStepResult | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -110,23 +111,14 @@ export function useWalkthroughEvents(
           };
 
           if (stepEvent.character_id === characterId) {
-            setCurrentStep(stepEvent.step);
             setLastEvent('step_completed');
-
-            // Get previous step from guide if there is one
-            if (stepEvent.step.step.previous_step_id) {
-              const previousStepData = getPreviousStep(
-                stepEvent.step.step.previous_step_id
-              );
-              setPreviousStep(previousStepData);
-            } else {
-              setPreviousStep(null);
-            }
+            // Don't update current step here - it should be handled by step-advanced or progress-updated events
+            // The step-completed event contains the step that was just completed, not the new current step
           }
         }
       }
     },
-    [characterId, getPreviousStep]
+    [characterId]
   );
 
   // Event handler for walkthrough step advanced
@@ -144,14 +136,43 @@ export function useWalkthroughEvents(
 
           if (stepEvent.character_id === characterId) {
             setLastEvent('step_advanced');
-            // The progress will be updated via the progress updated event
-            // We need to fetch the new current step since it's not included in this event
-            // This will be handled by the progress updated event
+
+            // Update current step if we have a new step ID
+            if (stepEvent.to_step_id) {
+              const newCurrentStep = getCurrentStep(stepEvent.to_step_id);
+              if (newCurrentStep) {
+                setCurrentStep(newCurrentStep);
+
+                // Also update progress with the new current step ID
+                setProgress(prevProgress => {
+                  if (prevProgress) {
+                    return {
+                      ...prevProgress,
+                      current_step_id: stepEvent.to_step_id!,
+                      last_updated: new Date().toISOString(),
+                    };
+                  }
+                  return prevProgress;
+                });
+              }
+
+              // Update previous step if we have the from step ID
+              if (stepEvent.from_step_id) {
+                const newPreviousStep = getPreviousStep(stepEvent.from_step_id);
+                setPreviousStep(newPreviousStep);
+              } else {
+                setPreviousStep(null);
+              }
+            } else {
+              // No next step (campaign completed)
+              setCurrentStep(null);
+              setPreviousStep(null);
+            }
           }
         }
       }
     },
-    [characterId]
+    [characterId, getCurrentStep, getPreviousStep]
   );
 
   // Event handler for walkthrough campaign completed

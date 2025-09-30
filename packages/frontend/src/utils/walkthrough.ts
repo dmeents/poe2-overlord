@@ -92,14 +92,24 @@ export class WalkthroughService {
     guide: WalkthroughGuide,
     stepId: string
   ): WalkthroughStepResult | null {
+    console.log('Searching for step ID:', stepId);
+    console.log(
+      'Available step IDs in guide:',
+      Object.values(guide.acts)
+        .map(act => Object.keys(act.steps))
+        .flat()
+    );
+
     for (const act of Object.values(guide.acts)) {
       if (act.steps[stepId]) {
+        console.log('Found step:', stepId, 'in act:', act.name);
         return {
           step: act.steps[stepId],
           act: act,
         };
       }
     }
+    console.warn('Step not found:', stepId);
     return null;
   }
 

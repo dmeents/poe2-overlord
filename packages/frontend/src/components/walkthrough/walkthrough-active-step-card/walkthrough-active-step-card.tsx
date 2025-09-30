@@ -40,6 +40,29 @@ export const WalkthroughActiveStepCard: React.FC<
   onWikiClick,
   className = '',
 }) => {
+  // Debug logging
+  console.log('WalkthroughActiveStepCard render:', {
+    progress: progress
+      ? {
+          current_step_id: progress.current_step_id,
+          is_completed: progress.is_completed,
+          last_updated: progress.last_updated,
+        }
+      : null,
+    currentStep: currentStep
+      ? {
+          step_id: currentStep.step.id,
+          title: currentStep.step.title,
+        }
+      : null,
+    previousStep: previousStep
+      ? {
+          step_id: previousStep.step.id,
+          title: previousStep.step.title,
+        }
+      : null,
+  });
+
   // Check if previous step is available
   const hasPreviousStep = !!previousStep;
 

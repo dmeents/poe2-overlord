@@ -59,6 +59,10 @@ function Index() {
 
       // Set current step if available
       if (steps.currentStep) {
+        console.log(
+          'loadWalkthroughData (index) setting current step to:',
+          steps.currentStep.step.title
+        );
         setCurrentStep(steps.currentStep);
       }
 
@@ -140,6 +144,7 @@ function Index() {
       <CharacterStatusCard />
       {activeCharacter && progress && (
         <WalkthroughActiveStepCard
+          key={`${progress.current_step_id}-${progress.last_updated}`}
           progress={progress}
           currentStep={currentStep ?? undefined}
           previousStep={previousStep ?? undefined}

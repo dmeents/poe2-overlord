@@ -164,6 +164,7 @@ function WalkthroughPage() {
           {/* Active Step Card */}
           {progress && (
             <WalkthroughActiveStepCard
+              key={`${progress.current_step_id}-${progress.last_updated}`}
               progress={progress}
               currentStep={currentStep ?? undefined}
               previousStep={previousStep ?? undefined}
@@ -179,7 +180,7 @@ function WalkthroughPage() {
           {guide && (
             <WalkthroughGuide
               guide={guide}
-              currentStepId={undefined} // Will be handled by the dashboard
+              currentStepId={progress?.current_step_id || undefined}
               characterId={activeCharacter.id}
             />
           )}

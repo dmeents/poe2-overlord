@@ -3,12 +3,9 @@ import {
   ChartBarIcon,
   GlobeAltIcon,
   InboxIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import {
-  SectionHeader as CharacterSectionHeader,
-  StatGrid,
-} from '../../character';
 import { ClassDistributionChart } from '../../charts/class-distribution-chart';
 import { DataCard, DataItem, SectionHeader } from '../../ui';
 import type { CharacterInsightsProps } from './character-insights.types';
@@ -108,41 +105,50 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
     );
   }
 
-  const stats = [
-    { value: metrics.totalCharacters, label: 'Characters' },
-    { value: metrics.highestLevel, label: 'Highest Level' },
-    { value: formatPlayTime(metrics.totalPlayTime), label: 'Play Time' },
-    { value: metrics.totalDeaths, label: 'Deaths' },
-    { value: metrics.hardcoreCount, label: 'Hardcore' },
-    { value: metrics.ssfCount, label: 'SSF' },
-  ];
-
   return (
     <DataCard title='Insights' icon={<ChartBarIcon className='w-5 h-5' />}>
-      {/* Most Played Character */}
-      {metrics.mostPlayedCharacter && (
-        <div className='mt-6 mb-4 p-4 bg-zinc-900/80 border border-zinc-700/50'>
-          <CharacterSectionHeader
-            title='Most Played'
-            icon={<BoltIcon className='w-4 h-4' />}
-          >
-            <div></div>
-          </CharacterSectionHeader>
-          <div className='text-white font-medium'>
-            {metrics.mostPlayedCharacter.name}
-          </div>
-          <div className='text-zinc-400 text-sm'>
-            {metrics.mostPlayedCharacter.class} • Level{' '}
-            {metrics.mostPlayedCharacter.level} •{' '}
-            {formatPlayTime(
+      {/* Overview Section */}
+      <SectionHeader
+        title='Overview'
+        icon={<UserGroupIcon className='w-4 h-4' />}
+      />
+      <div className='space-y-2'>
+        {metrics.mostPlayedCharacter && (
+          <DataItem
+            label='Most Played'
+            value={metrics.mostPlayedCharacter.name}
+            subValue={`Level ${metrics.mostPlayedCharacter.level} • ${formatPlayTime(
               metrics.mostPlayedCharacter.summary.total_play_time
-            )}
-          </div>
-        </div>
-      )}
+            )}`}
+          />
+        )}
+        <DataItem label='Total Characters' value={metrics.totalCharacters} />
+        <DataItem label='Highest Level' value={metrics.highestLevel} />
+        <DataItem label='Average Level' value={metrics.averageLevel} />
+      </div>
 
-      {/* Main Stats Grid */}
-      <StatGrid stats={stats} columns={2} />
+      {/* Playtime Section */}
+      <SectionHeader
+        title='Playtime'
+        icon={<ChartBarIcon className='w-4 h-4' />}
+      />
+      <div className='space-y-2'>
+        <DataItem
+          label='Total Play Time'
+          value={formatPlayTime(metrics.totalPlayTime)}
+        />
+        <DataItem label='Total Deaths' value={metrics.totalDeaths} />
+      </div>
+
+      {/* Game Modes Section */}
+      <SectionHeader
+        title='Game Modes'
+        icon={<BoltIcon className='w-4 h-4' />}
+      />
+      <div className='space-y-2'>
+        <DataItem label='Hardcore Characters' value={metrics.hardcoreCount} />
+        <DataItem label='SSF Characters' value={metrics.ssfCount} />
+      </div>
 
       {/* Class Distribution Chart */}
       {Object.keys(metrics.classDistribution).length > 0 && (
@@ -151,10 +157,11 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
       {/* League Distribution */}
       {Object.keys(metrics.leagueDistribution).length > 0 && (
-        <SectionHeader
-          title='Leagues'
-          icon={<GlobeAltIcon className='w-4 h-4' />}
-        >
+        <>
+          <SectionHeader
+            title='Leagues'
+            icon={<GlobeAltIcon className='w-4 h-4' />}
+          />
           <div className='space-y-2'>
             {Object.entries(metrics.leagueDistribution)
               .sort(([, a], [, b]) => b - a)
@@ -162,7 +169,7 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
                 <DataItem key={league} label={league} value={count} />
               ))}
           </div>
-        </SectionHeader>
+        </>
       )}
     </DataCard>
   );

@@ -2,6 +2,7 @@ import type { CharacterData } from '@/types';
 import { formatDuration } from '@/utils';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { DataItem, SectionHeader } from '../../ui';
 import { actDistributionChartStyles } from './act-distribution-chart.styles';
 
 interface ActDistributionChartProps {
@@ -170,41 +171,26 @@ export function ActDistributionChart({
           </div>
         </div>
 
-        {/* Total Campaign Time Row */}
-        <div className={actDistributionChartStyles.totalTimeItem}>
-          <div className={actDistributionChartStyles.totalTimeInfo}>
-            <div className={actDistributionChartStyles.totalTimeName}>
-              Total Campaign Time
-            </div>
-          </div>
-          <div className={actDistributionChartStyles.totalTimeValue}>
-            {formatDuration(totalTime)}
-          </div>
-        </div>
-
         {/* Legend */}
-        <div className={actDistributionChartStyles.legend}>
+        <SectionHeader
+          title='Act Distribution'
+          icon={<ChartPieIcon className='w-4 h-4' />}
+        />
+        <div className='space-y-2'>
           {activeActs.map(act => (
-            <div
+            <DataItem
               key={act.name}
-              className={actDistributionChartStyles.legendItem}
-            >
-              <div
-                className={`${actDistributionChartStyles.legendColor} ${act.color}`}
-              />
-              <div className={actDistributionChartStyles.legendInfo}>
-                <div className={actDistributionChartStyles.legendName}>
-                  {act.name}
-                </div>
-                <div className={actDistributionChartStyles.legendTime}>
-                  {formatDuration(act.time)}
-                </div>
-              </div>
-              <div className={actDistributionChartStyles.legendPercentage}>
-                {act.percentage.toFixed(1)}%
-              </div>
-            </div>
+              label={act.name}
+              value={formatDuration(act.time)}
+              subValue={`${act.percentage.toFixed(1)}%`}
+              color={act.hexColor}
+            />
           ))}
+          <DataItem
+            label='Total Campaign Time'
+            value={formatDuration(totalTime)}
+            className='font-medium'
+          />
         </div>
       </div>
     </div>

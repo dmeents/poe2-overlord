@@ -60,7 +60,7 @@ export const CharacterListControlsForm = memo(
     totalCount,
   }: CharacterListControlsFormProps) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [isFormCollapsed, setIsFormCollapsed] = useState(false);
+    const [isFormCollapsed, setIsFormCollapsed] = useState(true);
     const [availableAscendencies, setAvailableAscendencies] = useState<
       { value: Ascendency; label: string }[]
     >([]);

@@ -1,5 +1,6 @@
 import { UsersIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { DataItem, SectionHeader } from '../../ui';
 import { classDistributionChartStyles } from './class-distribution-chart.styles';
 
 interface ClassDistributionChartProps {
@@ -13,6 +14,7 @@ interface ClassData {
   percentage: number;
   color: string;
   hexColor: string;
+  [key: string]: string | number;
 }
 
 // Color scheme for character classes - matching character card colors
@@ -153,27 +155,19 @@ export function ClassDistributionChart({
         </div>
 
         {/* Legend */}
-        <div className={classDistributionChartStyles.legend}>
+        <SectionHeader
+          title='Classes'
+          icon={<UsersIcon className='w-4 h-4' />}
+        />
+        <div className='space-y-2'>
           {chartData.map(classItem => (
-            <div
+            <DataItem
               key={classItem.name}
-              className={classDistributionChartStyles.legendItem}
-            >
-              <div
-                className={`${classDistributionChartStyles.legendColor} ${classItem.color}`}
-              />
-              <div className={classDistributionChartStyles.legendInfo}>
-                <div className={classDistributionChartStyles.legendName}>
-                  {classItem.name}
-                </div>
-                <div className={classDistributionChartStyles.legendCount}>
-                  {classItem.value} character{classItem.value !== 1 ? 's' : ''}
-                </div>
-              </div>
-              <div className={classDistributionChartStyles.legendPercentage}>
-                {classItem.percentage.toFixed(1)}%
-              </div>
-            </div>
+              label={classItem.name}
+              value={classItem.value}
+              subValue={`${classItem.percentage.toFixed(1)}%`}
+              color={classItem.hexColor}
+            />
           ))}
         </div>
       </div>

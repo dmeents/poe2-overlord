@@ -111,54 +111,55 @@ export function PlaytimeInsights({
       <SectionHeader
         title='Breakdown'
         icon={<ChartBarIcon className='w-4 h-4' />}
-      >
-        <div className='space-y-2'>
-          <DataItem
-            label='Total Play Time'
-            value={formatDurationMinutes(totalPlayTime)}
-          />
-          <DataItem
-            label='Active Play'
-            value={formatDurationMinutes(activePlayTime)}
-            subValue={`${activePlayPercentage.toFixed(1)}%`}
-          />
-          <DataItem
-            label='Hideout Time'
-            value={formatDurationMinutes(totalHideoutTime)}
-            subValue={`${hideoutPercentage.toFixed(1)}%`}
-          />
-          <DataItem
-            label='Deaths'
-            value={totalDeaths}
-            subValue={`${deathRate.toFixed(2)}/hr`}
-          />
-          <DataItem
-            label='Avg per Zone'
-            value={formatDurationMinutes(Math.round(averageTimePerZone))}
-            subValue={`${nonTownHideoutZones.length} zones`}
-          />
-        </div>
-      </SectionHeader>
+      />
+      <div className='space-y-2'>
+        <DataItem
+          label='Total Play Time'
+          value={formatDurationMinutes(totalPlayTime)}
+        />
+        <DataItem
+          label='Active Play'
+          value={formatDurationMinutes(activePlayTime)}
+          subValue={`${activePlayPercentage.toFixed(1)}%`}
+        />
+        <DataItem
+          label='Hideout Time'
+          value={formatDurationMinutes(totalHideoutTime)}
+          subValue={`${hideoutPercentage.toFixed(1)}%`}
+        />
+        <DataItem
+          label='Deaths'
+          value={totalDeaths}
+          subValue={`${deathRate.toFixed(2)}/hr`}
+        />
+        <DataItem
+          label='Avg per Zone'
+          value={formatDurationMinutes(Math.round(averageTimePerZone))}
+          subValue={`${nonTownHideoutZones.length} zones`}
+        />
+      </div>
 
       {/* History Section */}
-      <SectionHeader title='History' icon={<MapPinIcon className='w-4 h-4' />}>
-        <div className='space-y-2'>
-          {mostTimeSpent && (
-            <DataItem
-              label='Most Time Spent'
-              value={mostTimeSpent.location_name}
-              subValue={mostTimeSpentValue}
-            />
-          )}
-          {hasDeaths && (
-            <DataItem
-              label='Most Deaths'
-              value={mostDeaths.location_name}
-              subValue={`${mostDeaths.deaths} deaths`}
-            />
-          )}
-        </div>
-      </SectionHeader>
+      <SectionHeader
+        title='History'
+        icon={<MapPinIcon className='w-4 h-4' />}
+      />
+      <div className='space-y-2'>
+        {mostTimeSpent && (
+          <DataItem
+            label='Most Time Spent'
+            value={mostTimeSpent.location_name}
+            subValue={mostTimeSpentValue}
+          />
+        )}
+        {hasDeaths && (
+          <DataItem
+            label='Most Deaths'
+            value={mostDeaths.location_name}
+            subValue={`${mostDeaths.deaths} deaths`}
+          />
+        )}
+      </div>
     </DataCard>
   );
 }

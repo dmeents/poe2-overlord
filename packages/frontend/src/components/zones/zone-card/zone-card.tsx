@@ -66,7 +66,7 @@ export const ZoneCard = memo(function ZoneCard({
     // Convert zone name to capitalized snake case for wiki URL
     const capitalizedSnakeCase = zoneName
       .replace(/\s+/g, '_') // Replace spaces with underscores
-      .replace(/[^a-zA-Z0-9_]/g, '') // Remove special characters except underscores
+      .replace(/[^a-zA-Z0-9_'-.]/g, '') // Remove special characters except underscores, apostrophes, hyphens, and periods
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('_');

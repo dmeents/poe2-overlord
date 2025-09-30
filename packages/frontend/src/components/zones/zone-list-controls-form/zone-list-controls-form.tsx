@@ -70,7 +70,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
   totalCount,
 }: ZoneListControlsFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isFormCollapsed, setIsFormCollapsed] = useState(false);
+  const [isFormCollapsed, setIsFormCollapsed] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside

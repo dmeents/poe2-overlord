@@ -1,5 +1,9 @@
-import { ChartBarIcon, MapPinIcon } from '@heroicons/react/24/outline';
-import { StatGrid } from '../';
+import {
+  ChartBarIcon,
+  ClockIcon,
+  MapPinIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { useCharacterManagement } from '../../../hooks';
 import { formatDuration } from '../../../utils';
 import { DataCard, DataItem, SectionHeader } from '../../ui';
@@ -50,30 +54,46 @@ export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
     return parts.length > 0 ? parts.join(' - ') : 'Unknown';
   };
 
-  const stats = [
-    { value: formatDuration(todayPlayTime), label: 'Play Time' },
-    { value: totalLocations, label: 'Locations' },
-    { value: totalDeaths, label: 'Deaths' },
-    { value: activeCharacter?.level || 0, label: 'Level' },
-  ];
-
   return (
     <DataCard
       title='Insights'
       icon={<ChartBarIcon className='w-5 h-5' />}
       className={className}
     >
-      {/* Main Stats Grid */}
-      <StatGrid stats={stats} columns={2} />
+      {/* Character Stats Section */}
+      <SectionHeader
+        title='Character Stats'
+        icon={<UserIcon className='w-4 h-4' />}
+      />
+      <div className='space-y-2'>
+        <DataItem label='Level' value={activeCharacter?.level || 0} />
+        <DataItem label='Total Deaths' value={totalDeaths} />
+      </div>
+
+      {/* Playtime Section */}
+      <SectionHeader
+        title='Playtime'
+        icon={<ClockIcon className='w-4 h-4' />}
+      />
+      <div className='space-y-2'>
+        <DataItem
+          label='Total Play Time'
+          value={formatDuration(todayPlayTime)}
+        />
+        <DataItem label='Locations Visited' value={totalLocations} />
+      </div>
 
       {/* Current Location */}
       {currentLocation && (
-        <SectionHeader
-          title='Current Location'
-          icon={<MapPinIcon className='w-4 h-4' />}
-        >
-          <DataItem label={formatCurrentLocation(currentLocation)} value='' />
-        </SectionHeader>
+        <>
+          <SectionHeader
+            title='Current Location'
+            icon={<MapPinIcon className='w-4 h-4' />}
+          />
+          <div className='space-y-2'>
+            <DataItem label={formatCurrentLocation(currentLocation)} value='' />
+          </div>
+        </>
       )}
     </DataCard>
   );

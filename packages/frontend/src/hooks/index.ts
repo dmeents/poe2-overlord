@@ -5,6 +5,7 @@ export { useCharacterManagement } from './useCharacterManagement';
 export { useGameProcessEvents } from './useGameProcessEvents';
 export { useServerStatusEvents as useServerStatus } from './useServerStatusEvents';
 export { useWalkthroughEvents } from './useWalkthroughEvents';
+export { useWalkthroughGuide } from './useWalkthroughGuide';
 export { useZoneFiltering } from './useZoneFiltering';
 export { useZoneFilters } from './useZoneFilters';
 

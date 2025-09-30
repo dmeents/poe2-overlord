@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CharacterData } from '../types';
 import type { CharacterTrackingData } from '../types/character';
 import {
@@ -59,6 +59,13 @@ export function useCharacterData() {
     []
   );
 
+  // Memoize the active character tracking data to prevent infinite re-renders
+  const activeCharacterTrackingData = useMemo(() => {
+    return activeCharacterWithUpdates
+      ? getCharacterTrackingData(activeCharacterWithUpdates)
+      : null;
+  }, [activeCharacterWithUpdates, getCharacterTrackingData]);
+
   // Legacy functions for backward compatibility (no-op since React Query handles caching)
   const loadCharacters = useCallback(() => {
     // No-op: React Query handles this automatically
@@ -74,9 +81,7 @@ export function useCharacterData() {
     // Return active character with real-time updates
     activeCharacter: activeCharacterWithUpdates,
     // Extract tracking data from active character for backward compatibility
-    activeCharacterTrackingData: activeCharacterWithUpdates
-      ? getCharacterTrackingData(activeCharacterWithUpdates)
-      : null,
+    activeCharacterTrackingData,
     isLoading,
     error,
     // Legacy functions for backward compatibility

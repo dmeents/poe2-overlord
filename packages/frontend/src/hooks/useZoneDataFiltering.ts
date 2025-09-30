@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import type { ZoneStats } from '../types';
 import { useDataFiltering } from './useDataFiltering';
 import type { ZoneFilters, ZoneSortOption } from './useZoneFilterState';
@@ -195,19 +194,14 @@ export function useZoneDataFiltering(
   filters: ZoneFilters,
   sort: ZoneSortOption
 ) {
-  // Create memoized filter, sort, and summary functions
-  const filterFunction = useCallback(createZoneFilterFunction(), []);
-  const sortFunction = useCallback(createZoneSortFunction(), []);
-  const summaryFunction = useCallback(createZoneSummaryFunction(), []);
-
-  // Use the generic data filtering hook
+  // Use the generic data filtering hook with factory functions
   const { filteredData, count, totalCount, summary } = useDataFiltering({
     data: zones,
     filters,
     sort,
-    filterFunction,
-    sortFunction,
-    summaryFunction,
+    filterFunction: createZoneFilterFunction(),
+    sortFunction: createZoneSortFunction(),
+    summaryFunction: createZoneSummaryFunction(),
   });
 
   return {

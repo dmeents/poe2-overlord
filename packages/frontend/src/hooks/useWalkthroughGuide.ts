@@ -20,13 +20,6 @@ export function useWalkthroughGuide() {
       const guideResponse = await invoke<WalkthroughGuide>(
         'get_walkthrough_guide'
       );
-      console.log('Loaded walkthrough guide:', guideResponse);
-      console.log(
-        'Available step IDs:',
-        Object.values(guideResponse.acts)
-          .map(act => Object.keys(act.steps))
-          .flat()
-      );
       setGuide(guideResponse);
     } catch (err) {
       console.error('Failed to load walkthrough guide:', err);

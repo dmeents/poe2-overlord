@@ -59,10 +59,6 @@ function Index() {
 
       // Set current step if available
       if (steps.currentStep) {
-        console.log(
-          'loadWalkthroughData (index) setting current step to:',
-          steps.currentStep.step.title
-        );
         setCurrentStep(steps.currentStep);
       }
 

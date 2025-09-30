@@ -18,20 +18,14 @@ export function useGameProcessEvents() {
   // Handler for game process status events
   const handleGameProcessStatusChanged = useCallback(
     (event: GameProcessStatusChangedEvent) => {
-      // Handle the AppEvent structure - the payload is the entire AppEvent
-      const eventPayload = event.payload as {
-        GameProcessStatusChanged?: { new_status?: ProcessInfo };
-      };
-      if (eventPayload && eventPayload.GameProcessStatusChanged) {
-        const gameEvent = eventPayload.GameProcessStatusChanged;
-        if (gameEvent.new_status) {
-          const newProcessInfo: ProcessInfo = {
-            name: gameEvent.new_status.name,
-            pid: gameEvent.new_status.pid,
-            running: gameEvent.new_status.running,
-          };
-          setProcessInfo(newProcessInfo);
-        }
+      // The event is the payload itself, not wrapped in a payload property
+      if (event.new_status) {
+        const newProcessInfo: ProcessInfo = {
+          name: event.new_status.name,
+          pid: event.new_status.pid,
+          running: event.new_status.running,
+        };
+        setProcessInfo(newProcessInfo);
       }
     },
     []
@@ -50,10 +44,26 @@ export function useGameProcessEvents() {
     }, []);
 
   // Use the generic Tauri event listener
-  const { isListening, error } = useTauriEventListener({
+  const { isListening, error } = useTauriEventListener<GameProcessStatusChangedEvent>({
     eventName: GAME_CONFIG.EVENT_NAME,
     handler: handleGameProcessStatusChanged,
-    getInitialData: getInitialGameProcessStatus,
+    getInitialData: async () => {
+      // Convert ProcessInfo to GameProcessStatusChangedEvent format
+      const processInfo = await getInitialGameProcessStatus();
+      if (!processInfo) return null;
+      
+      return {
+        old_status: null,
+        new_status: {
+          name: processInfo.name,
+          pid: processInfo.pid,
+          running: processInfo.running,
+          detected_at: new Date().toISOString(),
+        },
+        is_state_change: true,
+        timestamp: new Date().toISOString(),
+      };
+    },
   });
 
   return {

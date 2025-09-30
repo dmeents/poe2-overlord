@@ -17,15 +17,9 @@ export function useServerStatusEvents() {
   // Handler for server status events
   const handleServerStatusChanged = useCallback(
     (event: ServerStatusChangedEvent) => {
-      // Handle the AppEvent structure - the payload is the entire AppEvent
-      const eventPayload = event.payload as {
-        ServerStatusChanged?: { new_status?: ServerStatus };
-      };
-      if (eventPayload && eventPayload.ServerStatusChanged) {
-        const serverEvent = eventPayload.ServerStatusChanged;
-        if (serverEvent.new_status) {
-          setServerStatus(serverEvent.new_status);
-        }
+      // The event is the payload itself, not wrapped in a payload property
+      if (event.ServerStatusChanged && event.ServerStatusChanged.new_status) {
+        setServerStatus(event.ServerStatusChanged.new_status);
       }
     },
     []
@@ -44,10 +38,21 @@ export function useServerStatusEvents() {
     }, []);
 
   // Use the generic Tauri event listener
-  const { isListening, error } = useTauriEventListener({
+  const { isListening, error } = useTauriEventListener<ServerStatusChangedEvent>({
     eventName: 'server-status-changed',
     handler: handleServerStatusChanged,
-    getInitialData: getInitialServerStatus,
+    getInitialData: async () => {
+      // Convert ServerStatus to ServerStatusChangedEvent format
+      const serverStatus = await getInitialServerStatus();
+      if (!serverStatus) return null;
+      
+      return {
+        ServerStatusChanged: {
+          new_status: serverStatus,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    },
   });
 
   return {

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import type { ErrorType, StandardError } from './useErrorHandling';
+import { ErrorType, type StandardError } from './useErrorHandling';
 
 /**
  * Error boundary state for React error boundaries

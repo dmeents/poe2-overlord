@@ -1,4 +1,4 @@
-import { useFilterState, createFilterStateConfig } from './useFilterState';
+import { useFilterState, type FilterStateConfig } from './useFilterState';
 import type { Ascendency, CharacterClass, League } from '../types';
 
 export interface CharacterFilters extends Record<string, unknown> {
@@ -10,7 +10,7 @@ export interface CharacterFilters extends Record<string, unknown> {
   nameSearch: string;
 }
 
-export interface SortOption {
+export interface SortOption extends Record<string, unknown> {
   field: 'level' | 'last_played' | 'created_at' | 'name' | 'play_time';
   direction: 'asc' | 'desc';
 }
@@ -40,11 +40,11 @@ const hasActiveFiltersFn = (filters: CharacterFilters): boolean => {
   );
 };
 
-const config = createFilterStateConfig(
+const config: FilterStateConfig<CharacterFilters, SortOption> = {
   defaultFilters,
   defaultSort,
-  hasActiveFiltersFn
-);
+  hasActiveFiltersFn,
+};
 
 /**
  * Hook for managing character filter and sort state

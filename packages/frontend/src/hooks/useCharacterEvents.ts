@@ -50,7 +50,7 @@ export function useCharacterEvents(
 
         // Invalidate React Query cache to ensure consistency
         // Update the specific character in cache with the new data
-        setQueryData(characterQueryKeys.detail(character_id), characterData);
+        setQueryData(characterQueryKeys.detail(character_id) as unknown as string[], characterData);
 
         // Invalidate character queries to ensure all components see the update
         invalidateCharacterQueries(character_id);

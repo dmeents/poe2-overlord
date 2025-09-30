@@ -1,4 +1,4 @@
-import { useFilterState, createFilterStateConfig } from './useFilterState';
+import { useFilterState, type FilterStateConfig } from './useFilterState';
 import type { LocationType } from '../types';
 
 export interface ZoneFilters extends Record<string, unknown> {
@@ -13,7 +13,7 @@ export interface ZoneFilters extends Record<string, unknown> {
   maxDeaths: number | null;
 }
 
-export interface ZoneSortOption {
+export interface ZoneSortOption extends Record<string, unknown> {
   field:
     | 'last_visited'
     | 'duration'
@@ -56,11 +56,11 @@ const hasActiveFiltersFn = (filters: ZoneFilters): boolean => {
   );
 };
 
-const config = createFilterStateConfig(
+const config: FilterStateConfig<ZoneFilters, ZoneSortOption> = {
   defaultFilters,
   defaultSort,
-  hasActiveFiltersFn
-);
+  hasActiveFiltersFn,
+};
 
 /**
  * Hook for managing zone filter and sort state

@@ -17,6 +17,12 @@ export {
   createEventListenerConfig,
   createMultiEventListenerConfig 
 } from './useTauriEventListener';
+export { 
+  useDataFiltering, 
+  FilterHelpers, 
+  SortHelpers, 
+  createDataFilteringConfig 
+} from './useDataFiltering';
 
 // React Query hooks
 export {

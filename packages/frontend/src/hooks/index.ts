@@ -9,6 +9,9 @@ export { useWalkthroughGuide } from './useWalkthroughGuide';
 export { useZoneFiltering } from './useZoneFiltering';
 export { useZoneFilters } from './useZoneFilters';
 
+// Generic hooks
+export { useFilterState, createFilterStateConfig } from './useFilterState';
+
 // React Query hooks
 export {
   useActiveCharacter,

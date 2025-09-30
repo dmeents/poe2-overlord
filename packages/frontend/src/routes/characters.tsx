@@ -11,7 +11,7 @@ import {
   PageLayout,
 } from '../components';
 import type { CharacterFormData } from '../components/character/character-modals';
-import { useCharacterFiltering } from '../hooks';
+import { useCharacterDataFiltering } from '../hooks/useCharacterDataFiltering';
 import { useCharacterFilters } from '../hooks/useCharacterFilterState';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
 import type { CharacterData } from '../types';
@@ -53,7 +53,7 @@ function CharactersPage() {
 
   // Apply filtering and sorting
   const { filteredCharacters, characterCount, totalCount } =
-    useCharacterFiltering(characters, filters, sort);
+    useCharacterDataFiltering(characters, filters, sort);
 
   // Event handlers
   const handleCreateCharacter = async (data: CharacterFormData) => {

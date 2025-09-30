@@ -15,29 +15,33 @@ export function useServerStatusEvents() {
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
 
   // Handler for server status events
-  const handleServerStatusChanged = useCallback((event: ServerStatusChangedEvent) => {
-    // Handle the AppEvent structure - the payload is the entire AppEvent
-    const eventPayload = event.payload as {
-      ServerStatusChanged?: { new_status?: ServerStatus };
-    };
-    if (eventPayload && eventPayload.ServerStatusChanged) {
-      const serverEvent = eventPayload.ServerStatusChanged;
-      if (serverEvent.new_status) {
-        setServerStatus(serverEvent.new_status);
+  const handleServerStatusChanged = useCallback(
+    (event: ServerStatusChangedEvent) => {
+      // Handle the AppEvent structure - the payload is the entire AppEvent
+      const eventPayload = event.payload as {
+        ServerStatusChanged?: { new_status?: ServerStatus };
+      };
+      if (eventPayload && eventPayload.ServerStatusChanged) {
+        const serverEvent = eventPayload.ServerStatusChanged;
+        if (serverEvent.new_status) {
+          setServerStatus(serverEvent.new_status);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   // Get initial server status
-  const getInitialServerStatus = useCallback(async (): Promise<ServerStatus | null> => {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      return await invoke<ServerStatus>('get_server_status');
-    } catch {
-      // No initial status available, rely on events only
-      return null;
-    }
-  }, []);
+  const getInitialServerStatus =
+    useCallback(async (): Promise<ServerStatus | null> => {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        return await invoke<ServerStatus>('get_server_status');
+      } catch {
+        // No initial status available, rely on events only
+        return null;
+      }
+    }, []);
 
   // Use the generic Tauri event listener
   const { isListening, error } = useTauriEventListener({

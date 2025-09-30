@@ -16,34 +16,38 @@ export function useGameProcessEvents() {
   const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);
 
   // Handler for game process status events
-  const handleGameProcessStatusChanged = useCallback((event: GameProcessStatusChangedEvent) => {
-    // Handle the AppEvent structure - the payload is the entire AppEvent
-    const eventPayload = event.payload as {
-      GameProcessStatusChanged?: { new_status?: ProcessInfo };
-    };
-    if (eventPayload && eventPayload.GameProcessStatusChanged) {
-      const gameEvent = eventPayload.GameProcessStatusChanged;
-      if (gameEvent.new_status) {
-        const newProcessInfo: ProcessInfo = {
-          name: gameEvent.new_status.name,
-          pid: gameEvent.new_status.pid,
-          running: gameEvent.new_status.running,
-        };
-        setProcessInfo(newProcessInfo);
+  const handleGameProcessStatusChanged = useCallback(
+    (event: GameProcessStatusChangedEvent) => {
+      // Handle the AppEvent structure - the payload is the entire AppEvent
+      const eventPayload = event.payload as {
+        GameProcessStatusChanged?: { new_status?: ProcessInfo };
+      };
+      if (eventPayload && eventPayload.GameProcessStatusChanged) {
+        const gameEvent = eventPayload.GameProcessStatusChanged;
+        if (gameEvent.new_status) {
+          const newProcessInfo: ProcessInfo = {
+            name: gameEvent.new_status.name,
+            pid: gameEvent.new_status.pid,
+            running: gameEvent.new_status.running,
+          };
+          setProcessInfo(newProcessInfo);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   // Get initial game process status
-  const getInitialGameProcessStatus = useCallback(async (): Promise<ProcessInfo | null> => {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      return await invoke<ProcessInfo>('get_game_process_status');
-    } catch {
-      // No initial status available, rely on events only
-      return null;
-    }
-  }, []);
+  const getInitialGameProcessStatus =
+    useCallback(async (): Promise<ProcessInfo | null> => {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        return await invoke<ProcessInfo>('get_game_process_status');
+      } catch {
+        // No initial status available, rely on events only
+        return null;
+      }
+    }, []);
 
   // Use the generic Tauri event listener
   const { isListening, error } = useTauriEventListener({

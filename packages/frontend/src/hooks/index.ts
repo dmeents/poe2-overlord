@@ -1,12 +1,12 @@
 export { useCharacterConfig } from './useCharacterConfig';
-export { useCharacterFiltering } from './useCharacterFiltering';
+export { useCharacterDataFiltering } from './useCharacterDataFiltering';
 export { useCharacterFilters } from './useCharacterFilterState';
 export { useCharacterManagement } from './useCharacterManagement';
 export { useGameProcessEvents } from './useGameProcessEvents';
 export { useServerStatusEvents as useServerStatus } from './useServerStatusEvents';
 export { useWalkthroughEvents } from './useWalkthroughEvents';
 export { useWalkthroughGuide } from './useWalkthroughGuide';
-export { useZoneFiltering } from './useZoneFiltering';
+export { useZoneDataFiltering } from './useZoneDataFiltering';
 export { useZoneFilters } from './useZoneFilterState';
 
 // Generic hooks

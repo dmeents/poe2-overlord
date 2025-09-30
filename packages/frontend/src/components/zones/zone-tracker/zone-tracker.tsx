@@ -1,4 +1,4 @@
-import { useZoneFiltering } from '@/hooks/useZoneFiltering';
+import { useZoneDataFiltering } from '@/hooks/useZoneDataFiltering';
 import { useZoneFilters } from '@/hooks/useZoneFilterState';
 import type { ZoneStats } from '@/types';
 import { MapPinIcon } from '@heroicons/react/24/outline';
@@ -21,7 +21,7 @@ export function ZoneTracker({ zones, className = '' }: ZoneTrackerProps) {
     hasActiveFilters,
   } = useZoneFilters();
 
-  const { filteredZones, zoneCount, totalCount } = useZoneFiltering(
+  const { filteredZones, zoneCount, totalCount } = useZoneDataFiltering(
     zones,
     filters,
     sort

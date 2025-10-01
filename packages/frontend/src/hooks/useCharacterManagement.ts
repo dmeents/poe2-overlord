@@ -59,38 +59,41 @@ export function useCharacterManagement() {
   const error = characterData.error || characterEvents.eventError || null;
 
   // Memoize the return object to prevent infinite re-renders
-  return useMemo(() => ({
-    // Character data
-    characters: characterData.characters,
-    activeCharacter: characterData.activeCharacter,
-    activeCharacterTrackingData: characterData.activeCharacterTrackingData,
-    isLoading: characterData.isLoading,
-    error,
+  return useMemo(
+    () => ({
+      // Character data
+      characters: characterData.characters,
+      activeCharacter: characterData.activeCharacter,
+      activeCharacterTrackingData: characterData.activeCharacterTrackingData,
+      isLoading: characterData.isLoading,
+      error,
 
-    // Event listening status
-    isListeningToEvents: characterEvents.isListeningToEvents,
+      // Event listening status
+      isListeningToEvents: characterEvents.isListeningToEvents,
 
-    // Legacy functions for backward compatibility
-    loadCharacters: characterData.loadCharacters,
-    loadActiveCharacter: characterData.loadActiveCharacter,
+      // Legacy functions for backward compatibility
+      loadCharacters: characterData.loadCharacters,
+      loadActiveCharacter: characterData.loadActiveCharacter,
 
-    // CRUD operations
-    createCharacter: characterMutations.createCharacter,
-    updateCharacter: characterMutations.updateCharacter,
-    setActiveCharacterId: characterMutations.setActiveCharacterId,
-    deleteCharacter: characterMutations.deleteCharacter,
-  }), [
-    characterData.characters,
-    characterData.activeCharacter,
-    characterData.activeCharacterTrackingData,
-    characterData.isLoading,
-    characterData.loadCharacters,
-    characterData.loadActiveCharacter,
-    error,
-    characterEvents.isListeningToEvents,
-    characterMutations.createCharacter,
-    characterMutations.updateCharacter,
-    characterMutations.setActiveCharacterId,
-    characterMutations.deleteCharacter,
-  ]);
+      // CRUD operations
+      createCharacter: characterMutations.createCharacter,
+      updateCharacter: characterMutations.updateCharacter,
+      setActiveCharacterId: characterMutations.setActiveCharacterId,
+      deleteCharacter: characterMutations.deleteCharacter,
+    }),
+    [
+      characterData.characters,
+      characterData.activeCharacter,
+      characterData.activeCharacterTrackingData,
+      characterData.isLoading,
+      characterData.loadCharacters,
+      characterData.loadActiveCharacter,
+      error,
+      characterEvents.isListeningToEvents,
+      characterMutations.createCharacter,
+      characterMutations.updateCharacter,
+      characterMutations.setActiveCharacterId,
+      characterMutations.deleteCharacter,
+    ]
+  );
 }

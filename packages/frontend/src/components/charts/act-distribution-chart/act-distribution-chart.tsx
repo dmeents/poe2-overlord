@@ -23,9 +23,6 @@ export function ActDistributionChart({
   character,
   className = '',
 }: ActDistributionChartProps) {
-  // Debug: Log when component renders
-  console.log('ActDistributionChart render', character?.id, character?.summary?.play_time_act1);
-  
   // Memoize act data to prevent infinite re-renders
   const { totalTime, activeActs, chartData } = useMemo(() => {
     // Extract act data from character summary

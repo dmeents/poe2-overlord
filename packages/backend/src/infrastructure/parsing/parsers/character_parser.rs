@@ -36,8 +36,6 @@ impl CharacterLevelParser {
         &self,
         line: &str,
     ) -> Result<(String, CharacterClassOrAscendency, u32), ParseError> {
-        debug!("Attempting to extract character info from: {}", line.trim());
-
         if let Some(captures) = self.level_regex.captures(line.trim()) {
             if captures.len() == 4 {
                 let character_name = captures.get(1).unwrap().as_str().trim().to_string();
@@ -53,22 +51,13 @@ impl CharacterLevelParser {
 
                 // Try parsing as ascendency first, then fall back to character class
                 let class_or_ascendency = match self.parse_ascendency(class_or_ascendency_str) {
-                    Ok(ascendency) => {
-                        debug!("Parsed as ascendency: {}", class_or_ascendency_str);
-                        CharacterClassOrAscendency::Ascendency(ascendency)
-                    }
+                    Ok(ascendency) => CharacterClassOrAscendency::Ascendency(ascendency),
                     Err(_) => {
                         // Fall back to character class parsing
                         let character_class = self.parse_character_class(class_or_ascendency_str)?;
-                        debug!("Parsed as character class: {}", class_or_ascendency_str);
                         CharacterClassOrAscendency::Class(character_class)
                     }
                 };
-
-                debug!(
-                    "Extracted character info: name='{}', class_or_ascendency='{}', level={}",
-                    character_name, class_or_ascendency_str, level
-                );
 
                 Ok((character_name, class_or_ascendency, level))
             } else {
@@ -136,13 +125,7 @@ impl LogParser for CharacterLevelParser {
     }
 
     fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {
-        debug!(
-            "Character level parser attempting to parse line: {}",
-            line.trim()
-        );
-
         if !self.should_parse(line) {
-            debug!("Line does not match character level patterns");
             return Err(ParseError::no_pattern_match("character_level"));
         }
 
@@ -154,11 +137,6 @@ impl LogParser for CharacterLevelParser {
                 level
             )));
         }
-
-        debug!(
-            "Successfully parsed character level-up: {} ({:?}) -> level {}",
-            character_name, class_or_ascendency, level
-        );
 
         Ok(ParserResult::CharacterLevel((
             character_name,
@@ -237,22 +215,11 @@ impl LogParser for CharacterDeathParser {
     }
 
     fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {
-        debug!(
-            "Character death parser attempting to parse line: {}",
-            line.trim()
-        );
-
         if !self.should_parse(line) {
-            debug!("Line does not match character death patterns");
             return Err(ParseError::no_pattern_match("character_death"));
         }
 
         let character_name = self.extract_character_name(line)?;
-
-        debug!(
-            "✅ DEATH PARSER: Successfully parsed character death: '{}' has been slain",
-            character_name
-        );
 
         Ok(ParserResult::CharacterDeath(character_name))
     }

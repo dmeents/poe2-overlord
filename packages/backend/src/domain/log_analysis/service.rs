@@ -225,6 +225,70 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
+    /// Helper function to process scene change with error handling
+    async fn process_scene_change_with_error_handling(
+        character_service: &Arc<dyn CharacterService>,
+        walkthrough_service: &Arc<dyn WalkthroughService>,
+        content: &str,
+        character_id: &str,
+        zone_level: Option<u32>,
+    ) {
+        let result = if let Some(level) = zone_level {
+            character_service
+                .process_scene_content_with_zone_level(content, character_id, level)
+                .await
+        } else {
+            character_service
+                .process_scene_content(content, character_id)
+                .await
+        };
+
+        if let Err(e) = result {
+            error!("SCENE CHANGE: Failed to process scene change: {}", e);
+            return;
+        }
+
+        // Handle walkthrough progress detection
+        if let Err(e) = walkthrough_service
+            .handle_scene_change(character_id, content)
+            .await
+        {
+            error!("WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
+        }
+    }
+
+    /// Helper function to process character death with error handling
+    async fn process_character_death_with_error_handling(
+        character_service: &Arc<dyn CharacterService>,
+        character_name: &str,
+        character_id: &str,
+    ) {
+        // Record death in the current zone via character service
+        match character_service.get_character(character_id).await {
+            Ok(character_data) => {
+                if let Some(active_zone) = character_data.get_active_zone() {
+                    if let Err(e) = character_service
+                        .record_death(character_id, &active_zone.location_id)
+                        .await
+                    {
+                        error!("DEATH PROCESSING: Failed to record death in zone: {}", e);
+                    } else {
+                        info!(
+                            "Character death: {} in zone '{}'",
+                            character_name, active_zone.location_name
+                        );
+                    }
+                }
+            }
+            Err(e) => {
+                error!(
+                    "DEATH PROCESSING: Failed to load character data for death recording: '{}' - {}",
+                    character_name, e
+                );
+            }
+        }
+    }
+
     /// Processes a single log line and handles any detected events
     async fn process_single_line(
         parser_manager: &LogParserManager,
@@ -239,62 +303,34 @@ impl LogAnalysisServiceImpl {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
                     // Process scene changes through character tracking service
-                    let walkthrough_service = walkthrough_service.clone();
-                    
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        
                         // Check for cached zone level
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
                             cache.clone()
                         };
 
-                        if let Some((level, _timestamp)) = cached_level {
+                        let zone_level = if let Some((level, _timestamp)) = cached_level {
                             // Clear the cache after use
                             {
                                 let mut cache = zone_level_cache.write().await;
                                 *cache = None;
                             }
-
-                            // Process scene change with zone level
-                            if let Err(e) = character_service
-                                .process_scene_content_with_zone_level(
-                                    &content,
-                                    &active_character.id,
-                                    level,
-                                )
-                                .await
-                            {
-                                error!("❌ SCENE CHANGE: Failed to process scene change with zone level: {}", e);
-                            } else {
-                                // Handle walkthrough progress detection
-                                if let Err(e) = walkthrough_service
-                                    .handle_scene_change(&active_character.id, &content)
-                                    .await
-                                {
-                                    error!("❌ WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
-                                }
-                            }
+                            Some(level)
                         } else {
-                            // Process scene change without zone level
-                            if let Err(e) = character_service
-                                .process_scene_content(&content, &active_character.id)
-                                .await
-                            {
-                                error!("❌ SCENE CHANGE: Failed to process scene change: {}", e);
-                            } else {
-                                // Handle walkthrough progress detection
-                                if let Err(e) = walkthrough_service
-                                    .handle_scene_change(&active_character.id, &content)
-                                    .await
-                                {
-                                    error!("❌ WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
-                                }
-                            }
-                        }
-                    } else {
+                            None
+                        };
+
+                        // Process scene change with consolidated error handling
+                        Self::process_scene_change_with_error_handling(
+                            character_service,
+                            walkthrough_service,
+                            &content,
+                            &active_character.id,
+                            zone_level,
+                        ).await;
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
@@ -338,47 +374,16 @@ impl LogAnalysisServiceImpl {
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterDeath(character_name) => {
                     // Handle character death events - track deaths only in character_data.json
-                    
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        
                         if active_character.name == character_name {
-
-                            // Record death in the current zone via character service
-                            match character_service.get_character(&active_character.id).await {
-                                Ok(character_data) => {
-
-                                    if let Some(active_zone) = character_data.get_active_zone() {
-
-                                        if let Err(e) = character_service
-                                            .record_death(
-                                                &active_character.id,
-                                                &active_zone.location_id,
-                                            )
-                                            .await
-                                        {
-                                            error!("❌ DEATH PROCESSING: Failed to record death in zone: {}", e);
-                                        } else {
-                                            info!(
-                                                "Character death: {} in zone '{}'",
-                                                character_name, active_zone.location_name
-                                            );
-                                        }
-                                    } else {
-                                    }
-                                }
-                                Err(e) => {
-                                    error!(
-                                        "❌ DEATH PROCESSING: Failed to load character data for death recording: '{}' - {}",
-                                        character_name, e
-                                    );
-                                }
-                            }
-
-                        } else {
+                            Self::process_character_death_with_error_handling(
+                                character_service,
+                                &character_name,
+                                &active_character.id,
+                            ).await;
                         }
-                    } else {
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ZoneLevel(level) => {

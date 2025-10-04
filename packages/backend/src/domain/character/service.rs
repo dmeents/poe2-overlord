@@ -302,7 +302,7 @@ impl CharacterService for CharacterServiceImpl {
         );
         if let Err(e) = self.event_bus.publish(event).await {
             log::warn!(
-                "❌ LEVEL UP: Failed to publish character tracking data updated event: {}",
+                "LEVEL UP: Failed to publish character tracking data updated event: {}",
                 e
             );
         } else {
@@ -585,7 +585,7 @@ impl CharacterServiceImpl {
         // Filter out act names - these should not be tracked as zones
         if self.is_act_name(zone_name) {
             debug!(
-                "🔍 SCENE FILTER: Filtering out act name '{}' - not tracking as zone",
+                "SCENE FILTER: Filtering out act name '{}' - not tracking as zone",
                 zone_name
             );
             return Ok(None);
@@ -641,7 +641,7 @@ impl CharacterServiceImpl {
         );
         if let Err(e) = self.event_bus.publish(event).await {
             log::warn!(
-                "❌ SCENE CHANGE: Failed to publish character tracking data updated event: {}",
+                "SCENE CHANGE: Failed to publish character tracking data updated event: {}",
                 e
             );
         } else {

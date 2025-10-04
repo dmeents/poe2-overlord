@@ -507,12 +507,6 @@ impl TrackingSummary {
 
     /// Creates summary from zone data
     pub fn from_zones(character_id: &str, zones: &[ZoneStats]) -> Self {
-        debug!(
-            "🔍 SUMMARY CALC: Calculating summary for character '{}' with {} zones",
-            character_id,
-            zones.len()
-        );
-
         let total_play_time = zones.iter().map(|zone| zone.duration).sum();
         let total_hideout_time = zones
             .iter()
@@ -532,12 +526,6 @@ impl TrackingSummary {
         for zone in zones {
             // Skip towns and hideouts when calculating act time
             if zone.is_town || zone.location_type == LocationType::Hideout {
-                debug!(
-                    "🔍 SUMMARY CALC: Excluding {} '{}' from act time calculation (duration: {}s)",
-                    if zone.is_town { "town" } else { "hideout" },
-                    zone.location_name,
-                    zone.duration
-                );
                 continue;
             }
 
@@ -551,26 +539,13 @@ impl TrackingSummary {
                 Some("Endgame") | None => play_time_endgame += act_time,
                 Some(unknown_act) => {
                     debug!(
-                        "🔍 SUMMARY CALC: Unknown act '{}' for zone '{}', defaulting to Endgame",
+                        "SUMMARY CALC: Unknown act '{}' for zone '{}', defaulting to Endgame",
                         unknown_act, zone.location_name
                     );
                     play_time_endgame += act_time;
                 }
             }
         }
-
-        debug!(
-            "🔍 SUMMARY CALC: Zone death breakdown: {:?}",
-            zones
-                .iter()
-                .map(|z| (z.location_name.clone(), z.deaths))
-                .collect::<Vec<_>>()
-        );
-        debug!("🔍 SUMMARY CALC: Total deaths calculated: {}", total_deaths);
-        debug!(
-            "🔍 SUMMARY CALC: Act time breakdown - Act1: {}, Act2: {}, Act3: {}, Act4: {}, Interlude: {}, Endgame: {}",
-            play_time_act1, play_time_act2, play_time_act3, play_time_act4, play_time_interlude, play_time_endgame
-        );
 
         Self {
             character_id: character_id.to_string(),
@@ -737,22 +712,8 @@ impl ZoneStats {
 
     /// Records a death in this zone
     pub fn record_death(&mut self) {
-        debug!(
-            "🔍 ZONE RECORD DEATH: Recording death in zone '{}' (ID: '{}')",
-            self.location_name, self.location_id
-        );
-        debug!(
-            "🔍 ZONE RECORD DEATH: Previous death count: {}",
-            self.deaths
-        );
-
         self.deaths += 1;
         self.last_visited = Utc::now();
-
-        debug!(
-            "✅ ZONE RECORD DEATH: Death recorded! New death count: {}",
-            self.deaths
-        );
     }
 
     /// Records a visit to this zone

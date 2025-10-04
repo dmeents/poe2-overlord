@@ -1,7 +1,14 @@
-use crate::domain::character::models::CharacterClass;
+use crate::domain::character::models::{Ascendency, CharacterClass};
 use crate::domain::log_analysis::models::ServerConnectionEvent;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
+
+/// Represents either a character class or ascendency for flexible parsing
+#[derive(Debug, Clone, PartialEq)]
+pub enum CharacterClassOrAscendency {
+    Class(CharacterClass),
+    Ascendency(Ascendency),
+}
 
 /// Results produced by log parsers
 ///
@@ -11,7 +18,7 @@ use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
 pub enum ParserResult {
     SceneChange(String), // Raw scene change content
     ServerConnection(ServerConnectionEvent),
-    CharacterLevel((String, CharacterClass, u32)), // (character_name, character_class, level)
+    CharacterLevel((String, CharacterClassOrAscendency, u32)), // (character_name, class_or_ascendency, level)
     CharacterDeath(String),                        // character_name
     ZoneLevel(u32),                                // zone level
 }

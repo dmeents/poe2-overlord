@@ -1,4 +1,5 @@
-use crate::domain::character::models::CharacterClass;
+use crate::domain::character::models::{Ascendency, CharacterClass};
+use crate::infrastructure::parsing::manager::CharacterClassOrAscendency;
 use crate::infrastructure::parsing::manager::ParserResult;
 use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
@@ -27,20 +28,20 @@ impl CharacterLevelParser {
     }
 
     fn create_level_regex() -> Regex {
-        Regex::new(r"\[INFO Client \d+\]\s*:\s*(\S.*?)\s+\((.+?)\)\s+is\s+now\s+level\s+(\d+)$")
+        Regex::new(r"\[INFO Client \d+\]\s*:\s*(.+?)\s+\((.+?)\)\s+is\s+now\s+level\s+(\d+)$")
             .expect("Failed to compile character level regex")
     }
 
     fn extract_character_info(
         &self,
         line: &str,
-    ) -> Result<(String, CharacterClass, u32), ParseError> {
+    ) -> Result<(String, CharacterClassOrAscendency, u32), ParseError> {
         debug!("Attempting to extract character info from: {}", line.trim());
 
         if let Some(captures) = self.level_regex.captures(line.trim()) {
             if captures.len() == 4 {
                 let character_name = captures.get(1).unwrap().as_str().trim().to_string();
-                let character_class_str = captures.get(2).unwrap().as_str().trim();
+                let class_or_ascendency_str = captures.get(2).unwrap().as_str().trim();
                 let level_str = captures.get(3).unwrap().as_str().trim();
 
                 let level = level_str.parse::<u32>().map_err(|_| {
@@ -50,14 +51,26 @@ impl CharacterLevelParser {
                     ))
                 })?;
 
-                let character_class = self.parse_character_class(character_class_str)?;
+                // Try parsing as ascendency first, then fall back to character class
+                let class_or_ascendency = match self.parse_ascendency(class_or_ascendency_str) {
+                    Ok(ascendency) => {
+                        debug!("Parsed as ascendency: {}", class_or_ascendency_str);
+                        CharacterClassOrAscendency::Ascendency(ascendency)
+                    }
+                    Err(_) => {
+                        // Fall back to character class parsing
+                        let character_class = self.parse_character_class(class_or_ascendency_str)?;
+                        debug!("Parsed as character class: {}", class_or_ascendency_str);
+                        CharacterClassOrAscendency::Class(character_class)
+                    }
+                };
 
                 debug!(
-                    "Extracted character info: name='{}', class='{}', level={}",
-                    character_name, character_class_str, level
+                    "Extracted character info: name='{}', class_or_ascendency='{}', level={}",
+                    character_name, class_or_ascendency_str, level
                 );
 
-                Ok((character_name, character_class, level))
+                Ok((character_name, class_or_ascendency, level))
             } else {
                 Err(ParseError::content_extraction_failed(
                     "Regex matched but wrong number of capture groups",
@@ -67,6 +80,32 @@ impl CharacterLevelParser {
             Err(ParseError::content_extraction_failed(
                 "Line does not match character level-up pattern",
             ))
+        }
+    }
+
+    fn parse_ascendency(&self, ascendency_str: &str) -> Result<Ascendency, ParseError> {
+        match ascendency_str {
+            "Titan" => Ok(Ascendency::Titan),
+            "Warbringer" => Ok(Ascendency::Warbringer),
+            "Smith of Katava" => Ok(Ascendency::SmithOfKatava),
+            "Stormweaver" => Ok(Ascendency::Stormweaver),
+            "Chronomancer" => Ok(Ascendency::Chronomancer),
+            "Deadeye" => Ok(Ascendency::Deadeye),
+            "Pathfinder" => Ok(Ascendency::Pathfinder),
+            "Ritualist" => Ok(Ascendency::Ritualist),
+            "Amazon" => Ok(Ascendency::Amazon),
+            "Invoker" => Ok(Ascendency::Invoker),
+            "Acolyte of Chayula" => Ok(Ascendency::AcolyteOfChayula),
+            "Gemling Legionnaire" => Ok(Ascendency::GemlingLegionnaire),
+            "Tactitian" => Ok(Ascendency::Tactitian),
+            "Witchhunter" => Ok(Ascendency::Witchhunter),
+            "Blood Mage" => Ok(Ascendency::BloodMage),
+            "Infernalist" => Ok(Ascendency::Infernalist),
+            "Lich" => Ok(Ascendency::Lich),
+            _ => Err(ParseError::content_extraction_failed(&format!(
+                "Invalid ascendency: '{}'",
+                ascendency_str
+            ))),
         }
     }
 
@@ -107,7 +146,7 @@ impl LogParser for CharacterLevelParser {
             return Err(ParseError::no_pattern_match("character_level"));
         }
 
-        let (character_name, character_class, level) = self.extract_character_info(line)?;
+        let (character_name, class_or_ascendency, level) = self.extract_character_info(line)?;
 
         if !(1..=100).contains(&level) {
             return Err(ParseError::content_extraction_failed(&format!(
@@ -117,13 +156,13 @@ impl LogParser for CharacterLevelParser {
         }
 
         debug!(
-            "Successfully parsed character level-up: {} ({}) -> level {}",
-            character_name, character_class, level
+            "Successfully parsed character level-up: {} ({:?}) -> level {}",
+            character_name, class_or_ascendency, level
         );
 
         Ok(ParserResult::CharacterLevel((
             character_name,
-            character_class,
+            class_or_ascendency,
             level,
         )))
     }

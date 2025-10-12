@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::Utc;
-use log::{debug, info};
+use log::{debug, error, info, warn};
 use std::sync::Arc;
 
 use crate::domain::events::EventBus;
@@ -8,8 +8,8 @@ use crate::domain::log_analysis::models::SceneChangeEvent;
 use crate::errors::AppError;
 
 use super::models::{
-    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex, League,
-    LocationState, LocationType, ZoneStats,
+    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams, CharactersIndex, League,
+    LocationState, LocationType, ZoneStats, EnrichedZoneStats,
 };
 use super::traits::{CharacterRepository, CharacterService};
 
@@ -26,6 +26,8 @@ pub struct CharacterServiceImpl {
     event_bus: Arc<EventBus>,
     /// Zone configuration service for act and town detection
     zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+    /// Wiki scraping service for fetching zone data
+    wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
 }
 
 impl CharacterServiceImpl {
@@ -34,12 +36,122 @@ impl CharacterServiceImpl {
         repository: Arc<dyn CharacterRepository + Send + Sync>,
         event_bus: Arc<EventBus>,
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
     ) -> Self {
         Self {
             repository,
             event_bus,
             zone_config,
+            wiki_service,
         }
+    }
+
+
+    /// Triggers background wiki fetch for a zone
+    async fn trigger_wiki_fetch(&self, zone_name: &str) {
+        info!("Triggering wiki fetch for zone: {}", zone_name);
+        let wiki_service = self.wiki_service.clone();
+        let zone_config = self.zone_config.clone();
+        let zone_name = zone_name.to_string();
+        
+        // Spawn background task for wiki fetch
+        tokio::spawn(async move {
+            info!("Starting wiki fetch for zone: {}", zone_name);
+            match wiki_service.fetch_zone_data(&zone_name).await {
+                Ok(wiki_data) => {
+                    info!("Successfully fetched wiki data for zone '{}': act={}, level={:?}, town={}", 
+                          zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town);
+                    
+                    // Get the area_id from the wiki data or generate it from zone name
+                    let area_id = wiki_data.area_id.as_ref()
+                        .map(|id| id.clone())
+                        .unwrap_or_else(|| {
+                            // Generate area_id from zone name if not provided by wiki
+                            zone_name.to_lowercase()
+                                .replace(' ', "_")
+                                .replace('-', "_")
+                                .chars()
+                                .filter(|c| c.is_alphanumeric() || *c == '_')
+                                .collect::<String>()
+                                .trim_matches('_')
+                                .to_string()
+                        });
+                    
+                    // Update zone metadata with wiki data using area_id
+                    info!("Looking up zone '{}' in configuration...", zone_name);
+                    if let Some(zone_metadata) = zone_config.get_zone_metadata(&zone_name).await {
+                        info!("Found zone '{}' in configuration, updating with wiki data", zone_name);
+                        let mut updated_metadata = zone_metadata;
+                        updated_metadata.update_from_wiki_data(&wiki_data);
+                        if let Err(e) = zone_config.update_zone(updated_metadata).await {
+                            error!("Failed to update zone '{}' with wiki data: {}", zone_name, e);
+                        } else {
+                            info!("Successfully updated zone '{}' with wiki data", zone_name);
+                        }
+                    } else {
+                        error!("Zone '{}' not found in configuration after wiki fetch", zone_name);
+                        info!("Available zones in configuration:");
+                        // TODO: Add debug logging to list available zones
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to fetch wiki data for zone '{}': {}", zone_name, e);
+                }
+            }
+        });
+    }
+
+    /// Enters a zone using zone metadata
+    async fn enter_zone_with_metadata(
+        &self,
+        character_id: &str,
+        zone_metadata: &crate::domain::zone_configuration::models::ZoneMetadata,
+        _zone_level: Option<u32>,
+    ) -> Result<(), AppError> {
+        // Load character data
+        let mut character_data = self.repository.load_character_data(character_id).await?;
+
+        // Deactivate any currently active zone
+        if let Some(active_zone) = character_data.get_active_zone() {
+            let mut deactivated_zone = active_zone.clone();
+            let _time_spent = deactivated_zone.stop_timer_and_add_time();
+            deactivated_zone.deactivate();
+            character_data.upsert_zone(deactivated_zone);
+        }
+
+        // Create or update the new zone using area_id
+        let area_id = zone_metadata.area_id.clone().unwrap_or_else(|| zone_metadata.zone_name.clone());
+        
+        if let Some(existing_zone) = character_data.find_zone_by_area_id(&area_id) {
+            // Update existing zone
+            let mut zone = existing_zone.clone();
+            zone.activate();
+            zone.start_timer();
+            character_data.upsert_zone(zone);
+        } else {
+            // Create new zone
+            let mut zone = ZoneStats::new(area_id);
+            zone.activate();
+            zone.start_timer();
+            character_data.upsert_zone(zone);
+        }
+
+        // Update current location
+        character_data.current_location = Some(LocationState::new_for_location(
+            Some(zone_metadata.zone_name.clone()),
+            Some(zone_metadata.act.to_string()),
+            zone_metadata.is_town,
+            if zone_metadata.is_town { LocationType::Zone } else { LocationType::Zone },
+        ));
+
+        // Save updated character data
+        self.repository.save_character_data(&character_data).await?;
+
+        info!(
+            "Character {} entered zone '{}' (act {})",
+            character_id, zone_metadata.zone_name, zone_metadata.act
+        );
+        Ok(())
     }
 }
 
@@ -48,6 +160,7 @@ impl CharacterServiceImpl {
     pub fn with_default_repository(
         event_bus: Arc<EventBus>,
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
     ) -> Result<Self, AppError> {
         // Create data directory path using proper XDG data directory
         let data_dir = crate::infrastructure::persistence::DirectoryManager::ensure_data_directory(
@@ -63,7 +176,7 @@ impl CharacterServiceImpl {
         let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir)?);
 
         // Create service
-        Ok(Self::new(repository, event_bus, zone_config))
+        Ok(Self::new(repository, event_bus, zone_config, wiki_service))
     }
 }
 
@@ -138,6 +251,74 @@ impl CharacterService for CharacterServiceImpl {
     /// Gets all characters
     async fn get_all_characters(&self) -> Result<Vec<CharacterData>, AppError> {
         self.repository.load_all_characters().await
+    }
+
+    /// Gets a character by ID with enriched zone data for frontend
+    async fn get_character_response(&self, character_id: &str) -> Result<CharacterDataResponse, AppError> {
+        let character_data = self.repository.load_character_data(character_id).await?;
+        let mut response = CharacterDataResponse::from(character_data);
+        
+        // Enrich zone stats with zone metadata
+        let mut enriched_zones = Vec::new();
+        for zone_stats in &response.zones {
+            if let Some(zone_metadata) = self.zone_config.get_zone_metadata(&zone_stats.area_id).await {
+                // Convert EnrichedZoneStats back to ZoneStats for the method call
+                let base_zone = ZoneStats {
+                    area_id: zone_stats.area_id.clone(),
+                    duration: zone_stats.duration,
+                    deaths: zone_stats.deaths,
+                    visits: zone_stats.visits,
+                    first_visited: zone_stats.first_visited,
+                    last_visited: zone_stats.last_visited,
+                    is_active: zone_stats.is_active,
+                    entry_timestamp: zone_stats.entry_timestamp,
+                };
+                enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(&base_zone, &zone_metadata));
+            } else {
+                // Keep the minimal enriched zone from the conversion
+                enriched_zones.push(zone_stats.clone());
+            }
+        }
+        
+        response.zones = enriched_zones;
+        Ok(response)
+    }
+
+    /// Gets all characters with enriched zone data for frontend
+    async fn get_all_characters_response(&self) -> Result<Vec<CharacterDataResponse>, AppError> {
+        let characters = self.repository.load_all_characters().await?;
+        let mut enriched_characters = Vec::new();
+        
+        for character_data in characters {
+            let mut response = CharacterDataResponse::from(character_data);
+            
+            // Enrich zone stats with zone metadata
+            let mut enriched_zones = Vec::new();
+            for zone_stats in &response.zones {
+                if let Some(zone_metadata) = self.zone_config.get_zone_metadata(&zone_stats.area_id).await {
+                    // Convert EnrichedZoneStats back to ZoneStats for the method call
+                    let base_zone = ZoneStats {
+                        area_id: zone_stats.area_id.clone(),
+                        duration: zone_stats.duration,
+                        deaths: zone_stats.deaths,
+                        visits: zone_stats.visits,
+                        first_visited: zone_stats.first_visited,
+                        last_visited: zone_stats.last_visited,
+                        is_active: zone_stats.is_active,
+                        entry_timestamp: zone_stats.entry_timestamp,
+                    };
+                    enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(&base_zone, &zone_metadata));
+                } else {
+                    // Keep the minimal enriched zone from the conversion
+                    enriched_zones.push(zone_stats.clone());
+                }
+            }
+            
+            response.zones = enriched_zones;
+            enriched_characters.push(response);
+        }
+        
+        Ok(enriched_characters)
     }
 
     /// Updates an existing character
@@ -351,72 +532,44 @@ impl CharacterService for CharacterServiceImpl {
         self.repository.save_character_data(character_data).await
     }
 
-    /// Enters a zone for a character
+    /// Enters a zone for a character (legacy method - use enter_zone_with_metadata instead)
     async fn enter_zone(
         &self,
         character_id: &str,
         location_id: String,
         location_name: String,
-        location_type: LocationType,
-        act: Option<String>,
-        is_town: bool,
-        zone_level: Option<u32>,
+        _location_type: LocationType,
+        _act: Option<String>,
+        _is_town: bool,
+        _zone_level: Option<u32>,
     ) -> Result<(), AppError> {
-        // Load character data
+        // This is a legacy method that's no longer used
+        // The new system uses enter_zone_with_metadata instead
+        warn!("Legacy enter_zone method called - this should be replaced with enter_zone_with_metadata");
+        
+        // For now, just create a basic zone entry
         let mut character_data = self.repository.load_character_data(character_id).await?;
-
+        
         // Deactivate any currently active zone
         if let Some(active_zone) = character_data.get_active_zone() {
             let mut deactivated_zone = active_zone.clone();
             let _time_spent = deactivated_zone.stop_timer_and_add_time();
             deactivated_zone.deactivate();
-            let _zone_name = active_zone.location_name.clone();
             character_data.upsert_zone(deactivated_zone);
-        } else {
         }
 
-        // Create or update the new zone
-
-        // Check if zone already exists
-        if let Some(existing_zone) = character_data.find_zone_mut(&location_id) {
-            // Update existing zone properties but preserve duration and other stats
-            existing_zone.location_name = location_name.clone();
-            existing_zone.location_type = location_type.clone();
-            existing_zone.act = act.clone();
-            existing_zone.is_town = is_town;
-            existing_zone.zone_level = zone_level;
-            existing_zone.activate();
-            existing_zone.start_timer();
-            // Update summary after releasing the mutable reference
-            character_data.update_summary();
-        } else {
-            let mut zone = ZoneStats::new_with_level(
-                location_id.clone(),
-                location_name.clone(),
-                location_type.clone(),
-                act.clone(),
-                is_town,
-                zone_level,
-            );
-            zone.activate();
-            zone.start_timer();
-            character_data.upsert_zone(zone);
-        }
-
-        // Update current location with the new zone information
-        character_data.current_location = Some(LocationState::new_for_location(
-            Some(location_name.clone()),
-            act,
-            is_town,
-            location_type.clone(),
-        ));
+        // Create new zone with just the area_id
+        let mut zone = ZoneStats::new(location_id.clone());
+        zone.activate();
+        zone.start_timer();
+        character_data.upsert_zone(zone);
 
         // Save updated character data
         self.repository.save_character_data(&character_data).await?;
 
         info!(
-            "Character {} entered zone '{}' ({})",
-            character_id, location_name, location_type
+            "Character {} entered zone '{}' (legacy method)",
+            character_id, location_name
         );
         Ok(())
     }
@@ -517,39 +670,6 @@ impl CharacterService for CharacterServiceImpl {
 }
 
 impl CharacterServiceImpl {
-    /// Generates a proper location ID in the format {zone|hideout|town}_{zone_name}
-    /// where zone_name is converted to snake case
-    fn generate_location_id(&self, zone_name: &str, is_town: bool) -> String {
-        // Convert zone name to snake case
-        let zone_slug = self.to_snake_case(zone_name);
-
-        // Determine the prefix based on zone type
-        let prefix = if is_town {
-            "town"
-        } else if self.is_hideout_zone(zone_name) {
-            "hideout"
-        } else {
-            "zone"
-        };
-
-        format!("{}_{}", prefix, zone_slug)
-    }
-
-    /// Converts a zone name to snake case (all lower, underscores instead of spaces)
-    fn to_snake_case(&self, input: &str) -> String {
-        input
-            .split_whitespace()
-            .map(|word| word.to_lowercase())
-            .collect::<Vec<_>>()
-            .join("_")
-    }
-
-    /// Determines if a zone is a hideout based on zone name patterns
-    fn is_hideout_zone(&self, zone_name: &str) -> bool {
-        let lower_name = zone_name.to_lowercase();
-        lower_name.contains("hideout") || lower_name.contains("hide")
-    }
-
     /// Determines if a scene name is an act name that should be filtered out
     /// Act names should not be tracked as zones as they represent story progression, not playable areas
     fn is_act_name(&self, scene_name: &str) -> bool {
@@ -574,7 +694,7 @@ impl CharacterServiceImpl {
         &self,
         content: &str,
         character_id: &str,
-        zone_level: Option<u32>,
+        _zone_level: Option<u32>,
     ) -> Result<Option<SceneChangeEvent>, AppError> {
         let zone_name = content.trim();
 
@@ -591,35 +711,35 @@ impl CharacterServiceImpl {
             return Ok(None);
         }
 
-        // Look up zone information
-        let act_name = self
-            .zone_config
-            .get_act_for_zone(zone_name)
-            .await
-            .unwrap_or_else(|| "Endgame".to_string());
-        let is_town = self.zone_config.is_town_zone(zone_name).await;
-
-        // Determine location type based on zone characteristics
-        let location_type = if self.is_hideout_zone(zone_name) {
-            LocationType::Hideout
+        // Check if zone exists in configuration, if not create placeholder and trigger wiki fetch
+        let zone_metadata = if let Some(metadata) = self.zone_config.get_zone_metadata(zone_name).await {
+            metadata
         } else {
-            LocationType::Zone
+            // Create placeholder zone metadata
+            let mut placeholder = crate::domain::zone_configuration::models::ZoneMetadata::placeholder(zone_name.to_string());
+            
+            // Try to determine act from context or default to 0 (unknown)
+            // This could be enhanced with better heuristics
+            placeholder.act = 0;
+            
+            // Add to zone configuration
+            if let Err(e) = self.zone_config.add_zone(placeholder.clone()).await {
+                debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
+            }
+            
+            // Trigger background wiki fetch
+            self.trigger_wiki_fetch(zone_name).await;
+            
+            placeholder
         };
 
-        // Create proper location ID in format {zone|hideout|town}_{zone_name}
-        let location_id = self.generate_location_id(zone_name, is_town);
+        // Check if zone needs refresh
+        if zone_metadata.needs_refresh() {
+            self.trigger_wiki_fetch(zone_name).await;
+        }
 
-        // Enter the zone
-        self.enter_zone(
-            character_id,
-            location_id,
-            zone_name.to_string(),
-            location_type,
-            Some(act_name.clone()),
-            is_town,
-            zone_level,
-        )
-        .await?;
+        // Enter the zone using area_id
+        self.enter_zone_with_metadata(character_id, &zone_metadata, _zone_level).await?;
 
         // Load character data to get the updated current_location and update last played timestamp
         let mut character_data = self.repository.load_character_data(character_id).await?;
@@ -647,9 +767,14 @@ impl CharacterServiceImpl {
         } else {
         }
 
+        // Get zone metadata for logging
+        let zone_metadata = self.zone_config.get_zone_metadata(zone_name).await;
+        let act_info = zone_metadata.as_ref().map(|z| z.act.to_string()).unwrap_or_else(|| "Unknown".to_string());
+        let is_town_info = zone_metadata.map(|z| z.is_town).unwrap_or(false);
+
         info!(
             "Scene change: character {} entered '{}' (Act: {}, Town: {})",
-            character_id, zone_name, act_name, is_town
+            character_id, zone_name, act_info, is_town_info
         );
 
         Ok(Some(scene_change_event))

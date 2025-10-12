@@ -268,14 +268,14 @@ impl LogAnalysisServiceImpl {
             Ok(character_data) => {
                 if let Some(active_zone) = character_data.get_active_zone() {
                     if let Err(e) = character_service
-                        .record_death(character_id, &active_zone.location_id)
+                        .record_death(character_id, &active_zone.area_id)
                         .await
                     {
                         error!("DEATH PROCESSING: Failed to record death in zone: {}", e);
                     } else {
                         info!(
                             "Character death: {} in zone '{}'",
-                            character_name, active_zone.location_name
+                            character_name, active_zone.area_id
                         );
                     }
                 }

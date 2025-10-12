@@ -45,6 +45,7 @@ pub mod game_monitoring; // Game process detection and monitoring
 pub mod log_analysis; // Log parsing, analysis, and pattern matching
 pub mod server_monitoring; // Network connectivity and server status monitoring
 pub mod walkthrough; // Walkthrough guide and character progress tracking
+pub mod wiki_scraping; // Wiki data scraping and parsing
 pub mod zone_configuration; // Zone-to-act mapping and town detection
 
 // Re-export character types (including tracking types)
@@ -92,6 +93,5 @@ pub use walkthrough::{
 
 // Re-export zone configuration types
 pub use zone_configuration::{
-    ActDefinition, ZoneConfiguration, ZoneConfigurationService, ZoneConfigurationServiceImpl,
-    ZoneMapping,
+    ZoneConfiguration, ZoneConfigurationService, ZoneConfigurationServiceImpl,
 };

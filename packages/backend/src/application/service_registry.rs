@@ -94,15 +94,20 @@ impl ServiceInitializer {
         app.manage(event_bus.clone());
 
         // Initialize Zone Configuration Service - provides zone-to-act mapping
-        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new());
+        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new()?);
         let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
         app.manage(zone_config_service.clone());
+
+        // Initialize Wiki Scraping Service - fetches zone data from PoE2 wiki
+        let wiki_service = Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new());
+        app.manage(wiki_service.clone());
 
         // Initialize Character Service - manages character data persistence and operations
         let character_service =
             crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                 event_bus.clone(),
                 zone_config_service.clone(),
+                wiki_service.clone(),
             )
             .map_err(|e| {
                 error!("Failed to initialize CharacterService: {}", e);
@@ -117,6 +122,7 @@ impl ServiceInitializer {
             crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                 event_bus.clone(),
                 zone_config_service.clone(),
+                wiki_service.clone(),
             )
             .map_err(|e| {
                 error!(

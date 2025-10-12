@@ -51,11 +51,8 @@ export interface LocationState {
 }
 
 export interface ZoneStats {
-  location_id: string;
-  location_name: string;
-  location_type: LocationType;
-  act?: string;
-  is_town: boolean;
+  // Character tracking
+  area_id: string;
   duration: number;
   deaths: number;
   visits: number;
@@ -63,7 +60,21 @@ export interface ZoneStats {
   last_visited: string;
   is_active: boolean;
   entry_timestamp?: string;
-  zone_level?: number;
+  
+  // Zone metadata (enriched from backend) - all fields available for future use
+  zone_name: string;
+  act?: number;
+  area_level?: number;
+  is_town: boolean;
+  has_waypoint: boolean;
+  bosses: string[];
+  monsters: string[];
+  tags: string[];
+  connected_zones: string[];
+  description?: string;
+  points_of_interest: string[];
+  wiki_url?: string;
+  last_updated?: string;
 }
 
 export interface CharacterSummary {

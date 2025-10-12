@@ -33,8 +33,8 @@ pub async fn create_character(
 pub async fn get_character(
     character_id: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<crate::domain::character::models::CharacterData> {
-    to_command_result(character_service.get_character(&character_id).await)
+) -> CommandResult<crate::domain::character::models::CharacterDataResponse> {
+    to_command_result(character_service.get_character_response(&character_id).await)
 }
 
 /// Tauri command to get all characters
@@ -43,8 +43,8 @@ pub async fn get_character(
 #[tauri::command]
 pub async fn get_all_characters(
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<Vec<crate::domain::character::models::CharacterData>> {
-    to_command_result(character_service.get_all_characters().await)
+) -> CommandResult<Vec<crate::domain::character::models::CharacterDataResponse>> {
+    to_command_result(character_service.get_all_characters_response().await)
 }
 
 /// Tauri command to update a character
@@ -95,8 +95,14 @@ pub async fn set_active_character(
 #[tauri::command]
 pub async fn get_active_character(
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<Option<crate::domain::character::models::CharacterData>> {
-    to_command_result(character_service.get_active_character().await)
+) -> CommandResult<Option<crate::domain::character::models::CharacterDataResponse>> {
+    match to_command_result(character_service.get_active_character().await)? {
+        Some(character) => {
+            let response = to_command_result(character_service.get_character_response(&character.id).await)?;
+            Ok(Some(response))
+        }
+        None => Ok(None),
+    }
 }
 
 /// Tauri command to get the characters index

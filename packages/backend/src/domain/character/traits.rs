@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use crate::errors::AppError;
 
 use super::models::{
-    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex, League,
+    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams, CharactersIndex, League,
     LocationState, LocationType,
 };
 
@@ -57,6 +57,12 @@ pub trait CharacterService: Send + Sync {
 
     /// Gets all characters
     async fn get_all_characters(&self) -> Result<Vec<CharacterData>, AppError>;
+
+    /// Gets a character by ID with enriched zone data for frontend
+    async fn get_character_response(&self, character_id: &str) -> Result<CharacterDataResponse, AppError>;
+
+    /// Gets all characters with enriched zone data for frontend
+    async fn get_all_characters_response(&self) -> Result<Vec<CharacterDataResponse>, AppError>;
 
     /// Updates an existing character
     async fn update_character(

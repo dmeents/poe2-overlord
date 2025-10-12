@@ -100,6 +100,14 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         app.handle().plugin(
             tauri_plugin_log::Builder::default()
                 .level(level_filter)
+                .filter(|metadata| {
+                    // Suppress verbose debug logging from HTML parsing crates
+                    if metadata.target().starts_with("selectors") || 
+                       metadata.target().starts_with("html5ever") {
+                        return false;
+                    }
+                    true
+                })
                 .build(),
         )?;
     }

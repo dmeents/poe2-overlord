@@ -90,7 +90,7 @@ export const ZoneCard = memo(function ZoneCard({
         <div className={getZoneTitleContainerClasses()}>
           <div className='flex items-center space-x-2'>
             {getStatusIndicator()}
-            <h3 className={getZoneTitleClasses()}>{zone.location_name}</h3>
+            <h3 className={getZoneTitleClasses()}>{zone.zone_name}</h3>
           </div>
         </div>
 
@@ -112,37 +112,37 @@ export const ZoneCard = memo(function ZoneCard({
               Town
             </span>
           )}
-          {zone.location_type === 'Hideout' && (
+          {zone.zone_name.toLowerCase().includes('hideout') && (
             <span
               className={`${getZonePillClasses()} ${getZonePillColorClasses('Hideout')} ${getZonePillBaseClasses()}`}
             >
               Hideout
             </span>
           )}
-          {!zone.is_town && zone.location_type !== 'Hideout' && (
+          {!zone.is_town && !zone.zone_name.toLowerCase().includes('hideout') && (
             <span
-              className={`${getZonePillClasses()} ${getZonePillColorClasses(zone.location_type)} ${getZonePillBaseClasses()}`}
+              className={`${getZonePillClasses()} ${getZonePillColorClasses('Zone')} ${getZonePillBaseClasses()}`}
             >
-              {zone.location_type}
+              Zone
             </span>
           )}
           {zone.act && (
             <span
               className={`${getZonePillClasses()} ${getZonePillBaseClasses()}`}
             >
-              {zone.act}
+              Act {zone.act}
             </span>
           )}
-          {zone.zone_level && (
+          {zone.area_level && (
             <span
               className={`${getZonePillClasses()} ${getZonePillBaseClasses()}`}
             >
-              Level {zone.zone_level}
+              Level {zone.area_level}
             </span>
           )}
           {/* Wiki link */}
           <button
-            onClick={() => handleWikiClick(zone.location_name)}
+            onClick={() => handleWikiClick(zone.zone_name)}
             className={getZoneWikiButtonClasses()}
             title='Open in wiki'
           >
@@ -156,7 +156,7 @@ export const ZoneCard = memo(function ZoneCard({
             {zone.visits} visit{zone.visits !== 1 ? 's' : ''}
           </span>
           {/* Only show deaths for zones where characters can actually die */}
-          {!zone.is_town && zone.location_type !== 'Hideout' && (
+          {!zone.is_town && !zone.zone_name.toLowerCase().includes('hideout') && (
             <span
               className={`${getZonePillClasses()} ${
                 zone.deaths > 0 ? 'text-red-400' : 'text-zinc-400'

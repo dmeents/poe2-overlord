@@ -1,5 +1,6 @@
-import { PageLayout, SettingsForm } from '@/components';
-import { Card } from '@/components/ui';
+import { PageLayout } from '@/components/layout/page-layout/page-layout';
+import { SettingsForm } from '@/components/forms/settings-form/settings-form';
+import { Card } from '@/components/ui/card/card';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/settings')({

@@ -4,9 +4,11 @@ import {
   MapPinIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
-import { useCharacterManagement } from '../../../hooks';
-import { formatDuration } from '../../../utils';
-import { DataCard, DataItem, SectionHeader } from '../../ui';
+import { useCharacterManagement } from '../../../hooks/useCharacterManagement';
+import { formatDuration } from '../../../utils/format-duration';
+import { DataCard } from '../../ui/data-card/data-card';
+import { DataItem } from '../../ui/data-item/data-item';
+import { SectionHeader } from '../../ui/section-header/section-header';
 
 interface DashboardInsightsProps {
   className?: string;

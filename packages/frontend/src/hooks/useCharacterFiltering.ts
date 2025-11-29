@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { CharacterData } from '../types';
+import type { CharacterData } from '../types/character';
 import type { CharacterFilters, SortOption } from './useCharacterFilters';
 
 export function useCharacterFiltering(

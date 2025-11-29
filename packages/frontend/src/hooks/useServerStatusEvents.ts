@@ -1,4 +1,4 @@
-import type { ServerStatus, ServerStatusChangedEvent } from '@/types';
+import type { ServerStatus, ServerStatusChangedEvent } from '@/types/server';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 

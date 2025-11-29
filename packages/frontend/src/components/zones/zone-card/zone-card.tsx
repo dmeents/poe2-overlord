@@ -1,4 +1,4 @@
-import type { ZoneStats } from '@/types';
+import type { ZoneStats } from '@/types/character';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { open } from '@tauri-apps/plugin-shell';
 import { memo } from 'react';

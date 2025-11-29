@@ -1,9 +1,9 @@
 import { useZoneFiltering } from '@/hooks/useZoneFiltering';
 import { useZoneFilters } from '@/hooks/useZoneFilters';
-import type { ZoneStats } from '@/types';
+import type { ZoneStats } from '@/types/character';
 import { MapPinIcon } from '@heroicons/react/24/outline';
-import { Card } from '../../ui';
-import { ZoneList } from '../zone-list';
+import { Card } from '../../ui/card/card';
+import { ZoneList } from '../zone-list/zone-list';
 
 interface ZoneTrackerProps {
   zones: ZoneStats[];

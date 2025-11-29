@@ -1,9 +1,13 @@
-import { LoadingSpinner, Tooltip } from '@/components';
-import type { AppConfig } from '@/types';
+import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
+import { Tooltip } from '@/components/ui/tooltip/tooltip';
+import type { AppConfig } from '@/types/app-config';
 import { tauriUtils } from '@/utils/tauri';
 import { useEffect, useState } from 'react';
-import { AlertMessage, FormField, Input, Select } from '../';
-import { Button } from '../../ui/button';
+import { AlertMessage } from '../form-alert-message/form-alert-message';
+import { FormField } from '../form-field/form-field';
+import { Input } from '../form-input/form-input';
+import { Select } from '../form-select/form-select';
+import { Button } from '../../ui/button/button';
 import { settingsFormStyles } from './settings-form.styles';
 
 interface SettingsFormProps {

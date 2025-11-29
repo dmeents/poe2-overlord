@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-import { CheckboxInput, FormField, Input, Select } from '../';
-import { CHARACTER_FORM_VALIDATION } from '../../../config';
-import { useCharacterConfig } from '../../../hooks';
-import type {
-  Ascendency,
-  CharacterClass,
-  CharacterData,
-  League,
-} from '../../../types';
-import { Button } from '../../ui/button';
-import { Modal } from '../../ui/modal';
+import { CheckboxInput } from '../../forms/form-checkbox-input/form-checkbox-input';
+import { FormField } from '../../forms/form-field/form-field';
+import { Input } from '../../forms/form-input/form-input';
+import { Select } from '../../forms/form-select/form-select';
+import { CHARACTER_FORM_VALIDATION } from '../../../config/form-config';
+import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
+import type { Ascendency, CharacterClass, CharacterData, League,  } from '../../../types/character';
+import { Button } from '../../ui/button/button';
+import { Modal } from '../../ui/modal/modal';
 import {
   getFormActionsClasses,
   getFormFieldClasses,

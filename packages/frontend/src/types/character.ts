@@ -1,6 +1,6 @@
 // Character-related types - Updated to match unified backend CharacterData model
 
-import { WalkthroughProgress } from './walkthrough';
+import type { WalkthroughProgress } from './walkthrough';
 
 export type CharacterClass =
   | 'Warrior'
@@ -60,7 +60,7 @@ export interface ZoneStats {
   last_visited: string;
   is_active: boolean;
   entry_timestamp?: string;
-  
+
   // Zone metadata (enriched from backend) - all fields available for future use
   zone_name: string;
   act?: number;

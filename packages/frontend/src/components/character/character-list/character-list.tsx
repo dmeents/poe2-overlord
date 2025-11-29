@@ -3,11 +3,11 @@ import type {
   CharacterFilters,
   SortOption,
 } from '../../../hooks/useCharacterFilters';
-import type { CharacterData } from '../../../types';
-import { Button } from '../../ui/button';
-import { EmptyState } from '../../ui/empty-state';
-import { CharacterCard } from '../character-card';
-import { CharacterListControlsForm } from '../character-list-controls-form';
+import type { CharacterData } from '../../../types/character';
+import { Button } from '../../ui/button/button';
+import { EmptyState } from '../../ui/empty-state/empty-state';
+import { CharacterCard } from '../character-card/character-card';
+import { CharacterListControlsForm } from '../character-list-controls-form/character-list-controls-form';
 import {
   getCharacterGridClasses,
   getListContainerClasses,

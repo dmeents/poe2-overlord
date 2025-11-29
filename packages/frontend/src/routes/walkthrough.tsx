@@ -2,22 +2,18 @@ import { BookOpenIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect } from 'react';
-import {
-  ActDistributionChart,
-  CampaignInsights,
-  CharacterStatusCard,
-  EmptyState,
-  LoadingSpinner,
-  PageLayout,
-  SectionHeader,
-  WalkthroughActiveStepCard,
-  WalkthroughGuide,
-} from '../components';
-import {
-  useCharacterManagement,
-  useWalkthroughEvents,
-  useWalkthroughGuide,
-} from '../hooks';
+import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
+import { CampaignInsights } from '../components/insights/campaign-insights/campaign-insights';
+import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
+import { EmptyState } from '../components/ui/empty-state/empty-state';
+import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
+import { PageLayout } from '../components/layout/page-layout/page-layout';
+import { SectionHeader } from '../components/ui/section-header/section-header';
+import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
+import { WalkthroughGuide } from '../components/walkthrough/walkthrough-guide/walkthrough-guide';
+import { useCharacterManagement } from '../hooks/useCharacterManagement';
+import { useWalkthroughEvents } from '../hooks/useWalkthroughEvents';
+import { useWalkthroughGuide } from '../hooks/useWalkthroughGuide';
 import type { CharacterWalkthroughProgress } from '../types/walkthrough';
 import { WalkthroughService } from '../utils/walkthrough';
 import { handleWikiClick } from '../utils/wiki-utils';

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { WalkthroughAct } from '../../../types/walkthrough';
 import { Accordion } from '../../ui/accordion/accordion';
-import { WalkthroughStepCard } from '../walkthrough-step-card';
+import { WalkthroughStepCard } from '../walkthrough-step-card/walkthrough-step-card';
 
 interface WalkthroughActAccordionProps {
   act: WalkthroughAct;

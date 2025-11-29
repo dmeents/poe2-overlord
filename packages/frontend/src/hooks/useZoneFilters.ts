@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { LocationType } from '../types';
+import type { LocationType } from '../types/character';
 
 export interface ZoneFilters {
   search: string;

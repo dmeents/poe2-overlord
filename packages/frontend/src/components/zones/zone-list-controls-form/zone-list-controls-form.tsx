@@ -2,10 +2,14 @@ import type {
   ZoneFilters as ZoneFiltersType,
   ZoneSortOption,
 } from '@/hooks/useZoneFilters';
-import type { LocationType } from '@/types';
+import type { LocationType } from '@/types/character';
 import { memo, useEffect, useRef, useState } from 'react';
-import { FilterToggle, Input, Select, SortSelect } from '../../forms';
-import { Accordion, Button } from '../../ui';
+import { FilterToggle } from '../../forms/form-filter-toggle/form-filter-toggle';
+import { Input } from '../../forms/form-input/form-input';
+import { Select } from '../../forms/form-select/form-select';
+import { SortSelect } from '../../forms/form-sort-select/form-sort-select';
+import { Accordion } from '../../ui/accordion/accordion';
+import { Button } from '../../ui/button/button';
 import {
   activeFilterChipClasses,
   chipRemoveButtonClasses,

@@ -3,9 +3,11 @@ import {
   ClockIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
-import { useCharacterManagement } from '../../../hooks';
-import type { ZoneStats } from '../../../types';
-import { DataCard, DataItem, SectionHeader } from '../../ui';
+import { useCharacterManagement } from '../../../hooks/useCharacterManagement';
+import type { ZoneStats } from '../../../types/character';
+import { DataCard } from '../../ui/data-card/data-card';
+import { DataItem } from '../../ui/data-item/data-item';
+import { SectionHeader } from '../../ui/section-header/section-header';
 
 // Format duration without seconds, rounding to nearest minute
 function formatDurationMinutes(seconds: number): string {
@@ -73,7 +75,7 @@ export function PlaytimeInsights({
 
   // Filter out towns and hideouts for average time per zone calculation
   const nonTownHideoutZones = zones.filter(
-    zone => !zone.is_town && zone.location_type !== 'Hideout'
+    zone => !zone.is_town && !zone.zone_name.includes('Hideout')
   );
   const averageTimePerZone =
     nonTownHideoutZones.length > 0
@@ -148,14 +150,14 @@ export function PlaytimeInsights({
         {mostTimeSpent && (
           <DataItem
             label='Most Time Spent'
-            value={mostTimeSpent.location_name}
+            value={mostTimeSpent.zone_name}
             subValue={mostTimeSpentValue}
           />
         )}
         {hasDeaths && (
           <DataItem
             label='Most Deaths'
-            value={mostDeaths.location_name}
+            value={mostDeaths.zone_name}
             subValue={`${mostDeaths.deaths} deaths`}
           />
         )}

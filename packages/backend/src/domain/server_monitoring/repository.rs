@@ -73,9 +73,3 @@ impl ServerStatusRepository {
         Ok(Some(status))
     }
 }
-
-impl Default for ServerStatusRepository {
-    fn default() -> Self {
-        Self::new().expect("Failed to create ServerStatusRepository")
-    }
-}

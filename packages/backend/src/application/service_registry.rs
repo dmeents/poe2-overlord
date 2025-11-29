@@ -38,7 +38,9 @@ use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitori
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
-use crate::domain::server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl};
+use crate::domain::server_monitoring::{
+    ServerMonitoringService, ServerMonitoringServiceImpl, SystemPingProvider,
+};
 use crate::domain::walkthrough::{
     repository::WalkthroughRepositoryImpl, service::WalkthroughServiceImpl,
     traits::WalkthroughService,
@@ -162,8 +164,9 @@ impl ServiceInitializer {
 
         // Initialize Server Monitoring Service - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
-        let server_monitoring_service = ServerMonitoringServiceImpl::new(event_bus.clone())
-            .map_err(|e| {
+        let ping_provider = Arc::new(SystemPingProvider::new());
+        let server_monitoring_service =
+            ServerMonitoringServiceImpl::new(event_bus.clone(), ping_provider).map_err(|e| {
                 error!("Failed to initialize ServerMonitoringService: {}", e);
                 e
             })?;

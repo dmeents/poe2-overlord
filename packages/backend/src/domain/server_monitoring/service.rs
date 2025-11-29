@@ -3,7 +3,7 @@
 use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::server_monitoring::repository::ServerStatusRepository;
-use crate::domain::server_monitoring::traits::ServerMonitoringService;
+use crate::domain::server_monitoring::traits::{PingProvider, ServerMonitoringService};
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
@@ -12,34 +12,24 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::time;
 
-const PING_COUNT: &str = "1";
-const PING_TIMEOUT_SECONDS: &str = "5";
 const MONITORING_INTERVAL_SECS: u64 = 30;
-
-#[cfg(target_family = "unix")]
-const PING_COUNT_FLAG: &str = "-c";
-#[cfg(target_family = "windows")]
-const PING_COUNT_FLAG: &str = "-n";
-
-#[cfg(target_family = "unix")]
-const PING_TIMEOUT_FLAG: &str = "-W";
-#[cfg(target_family = "windows")]
-const PING_TIMEOUT_FLAG: &str = "-w";
 
 pub struct ServerMonitoringServiceImpl {
     repository: Arc<ServerStatusRepository>,
     event_bus: Arc<EventBus>,
+    ping_provider: Arc<dyn PingProvider>,
     cached_status: Arc<RwLock<Option<ServerStatus>>>,
     monitoring_active: Arc<RwLock<bool>>,
 }
 
 impl ServerMonitoringServiceImpl {
-    pub fn new(event_bus: Arc<EventBus>) -> AppResult<Self> {
+    pub fn new(event_bus: Arc<EventBus>, ping_provider: Arc<dyn PingProvider>) -> AppResult<Self> {
         let repository = Arc::new(ServerStatusRepository::new()?);
 
         Ok(Self {
             repository,
             event_bus,
+            ping_provider,
             cached_status: Arc::new(RwLock::new(None)),
             monitoring_active: Arc::new(RwLock::new(false)),
         })
@@ -51,6 +41,7 @@ impl Clone for ServerMonitoringServiceImpl {
         Self {
             repository: Arc::clone(&self.repository),
             event_bus: Arc::clone(&self.event_bus),
+            ping_provider: Arc::clone(&self.ping_provider),
             cached_status: Arc::clone(&self.cached_status),
             monitoring_active: Arc::clone(&self.monitoring_active),
         }
@@ -96,28 +87,7 @@ impl ServerMonitoringServiceImpl {
     }
 
     async fn ping_server(&self, ip_address: &str) -> Result<u64, String> {
-        let start = std::time::Instant::now();
-
-        let output = tokio::process::Command::new("ping")
-            .arg(PING_COUNT_FLAG)
-            .arg(PING_COUNT)
-            .arg(PING_TIMEOUT_FLAG)
-            .arg(PING_TIMEOUT_SECONDS)
-            .arg(ip_address)
-            .output()
-            .await;
-
-        match output {
-            Ok(result) => {
-                if result.status.success() {
-                    let ping_ms = start.elapsed().as_millis() as u64;
-                    Ok(ping_ms)
-                } else {
-                    Err("Ping failed: server unreachable".to_string())
-                }
-            }
-            Err(e) => Err(format!("Ping command failed: {}", e)),
-        }
+        self.ping_provider.ping(ip_address).await
     }
 }
 
@@ -201,6 +171,18 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
             }
         });
 
+        Ok(())
+    }
+
+    async fn stop_ping_monitoring(&self) -> AppResult<()> {
+        let mut is_active = self.monitoring_active.write().await;
+        if !*is_active {
+            debug!("Ping monitoring is not active");
+            return Ok(());
+        }
+
+        *is_active = false;
+        info!("Ping monitoring stopped");
         Ok(())
     }
 }

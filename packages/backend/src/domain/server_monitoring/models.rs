@@ -1,6 +1,7 @@
 //! Server monitoring data structures for tracking server status.
 
 use serde::{Deserialize, Serialize};
+use std::net::IpAddr;
 
 pub const DEFAULT_SERVER_PORT: u16 = 6112;
 
@@ -41,7 +42,12 @@ impl ServerStatus {
     }
 
     pub fn is_valid(&self) -> bool {
-        !self.ip_address.is_empty() && self.ip_address != "0.0.0.0"
+        if self.ip_address.is_empty() || self.ip_address == "0.0.0.0" {
+            return false;
+        }
+
+        // Validate IP address format
+        self.ip_address.parse::<IpAddr>().is_ok()
     }
 
     pub fn mark_as_online(&mut self, latency_ms: u64) {

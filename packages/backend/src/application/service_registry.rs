@@ -87,7 +87,8 @@ impl ServiceInitializer {
 
         // Initialize Configuration Service first - it has no dependencies and is needed by other services
         let config_service = Arc::new(
-            ConfigurationServiceImpl::new().expect("Failed to create configuration service"),
+            tauri::async_runtime::block_on(ConfigurationServiceImpl::new())
+                .expect("Failed to create configuration service"),
         );
         app.manage(config_service.clone());
 
@@ -96,7 +97,9 @@ impl ServiceInitializer {
         app.manage(event_bus.clone());
 
         // Initialize Zone Configuration Service - provides zone-to-act mapping
-        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new()?);
+        let zone_config_repo = Arc::new(tauri::async_runtime::block_on(
+            ZoneConfigurationRepositoryImpl::new(),
+        )?);
         let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
         app.manage(zone_config_service.clone());
 
@@ -106,26 +109,29 @@ impl ServiceInitializer {
         app.manage(wiki_service.clone());
 
         // Initialize Character Service - manages character data persistence and operations
-        let character_service =
+        let character_service = tauri::async_runtime::block_on(
             crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                 event_bus.clone(),
                 zone_config_service.clone(),
                 wiki_service.clone(),
-            )
-            .map_err(|e| {
-                error!("Failed to initialize CharacterService: {}", e);
-                e
-            })?;
+            ),
+        )
+        .map_err(|e| {
+            error!("Failed to initialize CharacterService: {}", e);
+            e
+        })?;
 
         // Create a clone for the ServiceInstances (we need Arc for sharing)
         let character_arc = Arc::new(character_service) as Arc<dyn CharacterService + Send + Sync>;
 
         // Create a Box for Tauri state management
         let character_box = Box::new(
-            crate::domain::character::service::CharacterServiceImpl::with_default_repository(
-                event_bus.clone(),
-                zone_config_service.clone(),
-                wiki_service.clone(),
+            tauri::async_runtime::block_on(
+                crate::domain::character::service::CharacterServiceImpl::with_default_repository(
+                    event_bus.clone(),
+                    zone_config_service.clone(),
+                    wiki_service.clone(),
+                ),
             )
             .map_err(|e| {
                 error!(
@@ -165,11 +171,13 @@ impl ServiceInitializer {
         // Initialize Server Monitoring Service - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
         let ping_provider = Arc::new(SystemPingProvider::new());
-        let server_monitoring_service =
-            ServerMonitoringServiceImpl::new(event_bus.clone(), ping_provider).map_err(|e| {
-                error!("Failed to initialize ServerMonitoringService: {}", e);
-                e
-            })?;
+        let server_monitoring_service = tauri::async_runtime::block_on(
+            ServerMonitoringServiceImpl::new(event_bus.clone(), ping_provider),
+        )
+        .map_err(|e| {
+            error!("Failed to initialize ServerMonitoringService: {}", e);
+            e
+        })?;
         let server_monitoring_arc =
             Arc::new(server_monitoring_service) as Arc<dyn ServerMonitoringService>;
         app.manage(server_monitoring_arc.clone());

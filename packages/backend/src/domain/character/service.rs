@@ -8,8 +8,8 @@ use crate::domain::log_analysis::models::SceneChangeEvent;
 use crate::errors::AppError;
 
 use super::models::{
-    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams, CharactersIndex, League,
-    LocationState, LocationType, ZoneStats, EnrichedZoneStats,
+    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
+    CharactersIndex, EnrichedZoneStats, League, LocationState, LocationType, ZoneStats,
 };
 use super::traits::{CharacterRepository, CharacterService};
 
@@ -46,28 +46,32 @@ impl CharacterServiceImpl {
         }
     }
 
-
     /// Triggers background wiki fetch for a zone
     async fn trigger_wiki_fetch(&self, zone_name: &str) {
         info!("Triggering wiki fetch for zone: {}", zone_name);
         let wiki_service = self.wiki_service.clone();
         let zone_config = self.zone_config.clone();
         let zone_name = zone_name.to_string();
-        
+
         // Spawn background task for wiki fetch
         tokio::spawn(async move {
             info!("Starting wiki fetch for zone: {}", zone_name);
             match wiki_service.fetch_zone_data(&zone_name).await {
                 Ok(wiki_data) => {
-                    info!("Successfully fetched wiki data for zone '{}': act={}, level={:?}, town={}", 
-                          zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town);
-                    
+                    info!(
+                        "Successfully fetched wiki data for zone '{}': act={}, level={:?}, town={}",
+                        zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town
+                    );
+
                     // Get the area_id from the wiki data or generate it from zone name
-                    let area_id = wiki_data.area_id.as_ref()
+                    let _area_id = wiki_data
+                        .area_id
+                        .as_ref()
                         .map(|id| id.clone())
                         .unwrap_or_else(|| {
                             // Generate area_id from zone name if not provided by wiki
-                            zone_name.to_lowercase()
+                            zone_name
+                                .to_lowercase()
                                 .replace(' ', "_")
                                 .replace('-', "_")
                                 .chars()
@@ -76,20 +80,29 @@ impl CharacterServiceImpl {
                                 .trim_matches('_')
                                 .to_string()
                         });
-                    
+
                     // Update zone metadata with wiki data using area_id
                     info!("Looking up zone '{}' in configuration...", zone_name);
                     if let Some(zone_metadata) = zone_config.get_zone_metadata(&zone_name).await {
-                        info!("Found zone '{}' in configuration, updating with wiki data", zone_name);
+                        info!(
+                            "Found zone '{}' in configuration, updating with wiki data",
+                            zone_name
+                        );
                         let mut updated_metadata = zone_metadata;
                         updated_metadata.update_from_wiki_data(&wiki_data);
                         if let Err(e) = zone_config.update_zone(updated_metadata).await {
-                            error!("Failed to update zone '{}' with wiki data: {}", zone_name, e);
+                            error!(
+                                "Failed to update zone '{}' with wiki data: {}",
+                                zone_name, e
+                            );
                         } else {
                             info!("Successfully updated zone '{}' with wiki data", zone_name);
                         }
                     } else {
-                        error!("Zone '{}' not found in configuration after wiki fetch", zone_name);
+                        error!(
+                            "Zone '{}' not found in configuration after wiki fetch",
+                            zone_name
+                        );
                         info!("Available zones in configuration:");
                         // TODO: Add debug logging to list available zones
                     }
@@ -120,8 +133,11 @@ impl CharacterServiceImpl {
         }
 
         // Create or update the new zone using area_id
-        let area_id = zone_metadata.area_id.clone().unwrap_or_else(|| zone_metadata.zone_name.clone());
-        
+        let area_id = zone_metadata
+            .area_id
+            .clone()
+            .unwrap_or_else(|| zone_metadata.zone_name.clone());
+
         if let Some(existing_zone) = character_data.find_zone_by_area_id(&area_id) {
             // Update existing zone
             let mut zone = existing_zone.clone();
@@ -141,7 +157,11 @@ impl CharacterServiceImpl {
             Some(zone_metadata.zone_name.clone()),
             Some(zone_metadata.act.to_string()),
             zone_metadata.is_town,
-            if zone_metadata.is_town { LocationType::Zone } else { LocationType::Zone },
+            if zone_metadata.is_town {
+                LocationType::Zone
+            } else {
+                LocationType::Zone
+            },
         ));
 
         // Save updated character data
@@ -157,23 +177,16 @@ impl CharacterServiceImpl {
 
 impl CharacterServiceImpl {
     /// Creates a new CharacterService instance with default repository and dependencies
-    pub fn with_default_repository(
+    pub async fn with_default_repository(
         event_bus: Arc<EventBus>,
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
     ) -> Result<Self, AppError> {
         // Create data directory path using proper XDG data directory
-        let data_dir = crate::infrastructure::persistence::DirectoryManager::ensure_data_directory(
-        )
-        .map_err(|e| {
-            AppError::file_system_error(
-                "ensure_data_directory",
-                &format!("Failed to ensure data directory: {}", e),
-            )
-        })?;
+        let data_dir = crate::infrastructure::persistence::AppPaths::ensure_data_dir().await?;
 
         // Create repository
-        let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir)?);
+        let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir));
 
         // Create service
         Ok(Self::new(repository, event_bus, zone_config, wiki_service))
@@ -254,14 +267,21 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     /// Gets a character by ID with enriched zone data for frontend
-    async fn get_character_response(&self, character_id: &str) -> Result<CharacterDataResponse, AppError> {
+    async fn get_character_response(
+        &self,
+        character_id: &str,
+    ) -> Result<CharacterDataResponse, AppError> {
         let character_data = self.repository.load_character_data(character_id).await?;
         let mut response = CharacterDataResponse::from(character_data);
-        
+
         // Enrich zone stats with zone metadata
         let mut enriched_zones = Vec::new();
         for zone_stats in &response.zones {
-            if let Some(zone_metadata) = self.zone_config.get_zone_metadata(&zone_stats.area_id).await {
+            if let Some(zone_metadata) = self
+                .zone_config
+                .get_zone_metadata(&zone_stats.area_id)
+                .await
+            {
                 // Convert EnrichedZoneStats back to ZoneStats for the method call
                 let base_zone = ZoneStats {
                     area_id: zone_stats.area_id.clone(),
@@ -273,13 +293,16 @@ impl CharacterService for CharacterServiceImpl {
                     is_active: zone_stats.is_active,
                     entry_timestamp: zone_stats.entry_timestamp,
                 };
-                enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(&base_zone, &zone_metadata));
+                enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(
+                    &base_zone,
+                    &zone_metadata,
+                ));
             } else {
                 // Keep the minimal enriched zone from the conversion
                 enriched_zones.push(zone_stats.clone());
             }
         }
-        
+
         response.zones = enriched_zones;
         Ok(response)
     }
@@ -288,14 +311,18 @@ impl CharacterService for CharacterServiceImpl {
     async fn get_all_characters_response(&self) -> Result<Vec<CharacterDataResponse>, AppError> {
         let characters = self.repository.load_all_characters().await?;
         let mut enriched_characters = Vec::new();
-        
+
         for character_data in characters {
             let mut response = CharacterDataResponse::from(character_data);
-            
+
             // Enrich zone stats with zone metadata
             let mut enriched_zones = Vec::new();
             for zone_stats in &response.zones {
-                if let Some(zone_metadata) = self.zone_config.get_zone_metadata(&zone_stats.area_id).await {
+                if let Some(zone_metadata) = self
+                    .zone_config
+                    .get_zone_metadata(&zone_stats.area_id)
+                    .await
+                {
                     // Convert EnrichedZoneStats back to ZoneStats for the method call
                     let base_zone = ZoneStats {
                         area_id: zone_stats.area_id.clone(),
@@ -307,17 +334,20 @@ impl CharacterService for CharacterServiceImpl {
                         is_active: zone_stats.is_active,
                         entry_timestamp: zone_stats.entry_timestamp,
                     };
-                    enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(&base_zone, &zone_metadata));
+                    enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(
+                        &base_zone,
+                        &zone_metadata,
+                    ));
                 } else {
                     // Keep the minimal enriched zone from the conversion
                     enriched_zones.push(zone_stats.clone());
                 }
             }
-            
+
             response.zones = enriched_zones;
             enriched_characters.push(response);
         }
-        
+
         Ok(enriched_characters)
     }
 
@@ -546,10 +576,10 @@ impl CharacterService for CharacterServiceImpl {
         // This is a legacy method that's no longer used
         // The new system uses enter_zone_with_metadata instead
         warn!("Legacy enter_zone method called - this should be replaced with enter_zone_with_metadata");
-        
+
         // For now, just create a basic zone entry
         let mut character_data = self.repository.load_character_data(character_id).await?;
-        
+
         // Deactivate any currently active zone
         if let Some(active_zone) = character_data.get_active_zone() {
             let mut deactivated_zone = active_zone.clone();
@@ -712,26 +742,30 @@ impl CharacterServiceImpl {
         }
 
         // Check if zone exists in configuration, if not create placeholder and trigger wiki fetch
-        let zone_metadata = if let Some(metadata) = self.zone_config.get_zone_metadata(zone_name).await {
-            metadata
-        } else {
-            // Create placeholder zone metadata
-            let mut placeholder = crate::domain::zone_configuration::models::ZoneMetadata::placeholder(zone_name.to_string());
-            
-            // Try to determine act from context or default to 0 (unknown)
-            // This could be enhanced with better heuristics
-            placeholder.act = 0;
-            
-            // Add to zone configuration
-            if let Err(e) = self.zone_config.add_zone(placeholder.clone()).await {
-                debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
-            }
-            
-            // Trigger background wiki fetch
-            self.trigger_wiki_fetch(zone_name).await;
-            
-            placeholder
-        };
+        let zone_metadata =
+            if let Some(metadata) = self.zone_config.get_zone_metadata(zone_name).await {
+                metadata
+            } else {
+                // Create placeholder zone metadata
+                let mut placeholder =
+                    crate::domain::zone_configuration::models::ZoneMetadata::placeholder(
+                        zone_name.to_string(),
+                    );
+
+                // Try to determine act from context or default to 0 (unknown)
+                // This could be enhanced with better heuristics
+                placeholder.act = 0;
+
+                // Add to zone configuration
+                if let Err(e) = self.zone_config.add_zone(placeholder.clone()).await {
+                    debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
+                }
+
+                // Trigger background wiki fetch
+                self.trigger_wiki_fetch(zone_name).await;
+
+                placeholder
+            };
 
         // Check if zone needs refresh
         if zone_metadata.needs_refresh() {
@@ -739,7 +773,8 @@ impl CharacterServiceImpl {
         }
 
         // Enter the zone using area_id
-        self.enter_zone_with_metadata(character_id, &zone_metadata, _zone_level).await?;
+        self.enter_zone_with_metadata(character_id, &zone_metadata, _zone_level)
+            .await?;
 
         // Load character data to get the updated current_location and update last played timestamp
         let mut character_data = self.repository.load_character_data(character_id).await?;
@@ -769,7 +804,10 @@ impl CharacterServiceImpl {
 
         // Get zone metadata for logging
         let zone_metadata = self.zone_config.get_zone_metadata(zone_name).await;
-        let act_info = zone_metadata.as_ref().map(|z| z.act.to_string()).unwrap_or_else(|| "Unknown".to_string());
+        let act_info = zone_metadata
+            .as_ref()
+            .map(|z| z.act.to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
         let is_town_info = zone_metadata.map(|z| z.is_town).unwrap_or(false);
 
         info!(

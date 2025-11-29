@@ -3,89 +3,41 @@ use crate::domain::configuration::models::{
 };
 use crate::domain::configuration::traits::ConfigurationRepository;
 use crate::errors::{AppError, AppResult};
-use crate::infrastructure::persistence::{
-    PersistenceRepository, PersistenceRepositoryImpl,
-};
+use crate::infrastructure::persistence::{AppPaths, FileService};
 use async_trait::async_trait;
 use log::debug;
+use std::path::PathBuf;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
 use tokio::sync::RwLock;
 
-/// Configuration file name used for persistent storage
 const CONFIG_FILE_NAME: &str = "config.json";
 
-/// Concrete implementation of the ConfigurationRepository trait
-/// 
-/// This implementation provides thread-safe configuration management with both
-/// persistent storage and in-memory caching for optimal performance.
-/// 
-/// # Architecture
-/// 
-/// - Uses `PersistenceRepositoryImpl` for file I/O operations
-/// - Maintains in-memory cache with `RwLock` for thread-safe access
-/// - Automatically loads configuration on initialization
-/// - Provides atomic operations for configuration updates
-/// 
-/// # Thread Safety
-/// 
-/// All operations are thread-safe through the use of `RwLock` for in-memory
-/// configuration access and the underlying persistence layer's safety guarantees.
 #[derive(Clone)]
 pub struct ConfigurationRepositoryImpl {
-    /// Thread-safe in-memory configuration cache for fast access
     config: Arc<RwLock<AppConfig>>,
-    
-    /// Persistence layer for configuration file I/O operations
-    persistence: PersistenceRepositoryImpl<AppConfig>,
-    
-    /// Flag to track whether data has been loaded from disk
+    file_path: PathBuf,
     data_loaded: Arc<AtomicBool>,
 }
 
 impl ConfigurationRepositoryImpl {
-    /// Create a new configuration repository instance
-    /// 
-    /// Initializes the repository with the persistence layer and attempts to load
-    /// existing configuration. If loading fails, the repository will use default
-    /// configuration values and log the error.
-    /// 
-    /// # Returns
-    /// 
-    /// * `Ok(ConfigurationRepositoryImpl)` on successful initialization
-    /// * `Err(AppError)` if the persistence layer cannot be initialized
-    /// 
-    /// # Behavior
-    /// 
-    /// - Creates persistence layer in the system config directory
-    /// - Initializes in-memory cache with default values
-    /// - Attempts to load existing configuration from disk
-    /// - Falls back to defaults if loading fails (with debug logging)
-    pub fn new() -> AppResult<Self> {
-        let persistence = PersistenceRepositoryImpl::<AppConfig>::new_in_config_dir(CONFIG_FILE_NAME)?;
+    pub async fn new() -> AppResult<Self> {
+        let config_dir = AppPaths::ensure_config_dir().await?;
+        let file_path = config_dir.join(CONFIG_FILE_NAME);
 
         Ok(Self {
             config: Arc::new(RwLock::new(AppConfig::default())),
-            persistence,
+            file_path,
             data_loaded: Arc::new(AtomicBool::new(false)),
         })
     }
 
-    /// Ensures that data has been loaded from disk.
-    ///
-    /// This method checks if data has already been loaded and loads it if necessary.
-    /// It's safe to call multiple times and will only load data once.
-    ///
-    /// # Returns
-    /// * `Ok(())` - Data is loaded and ready
-    /// * `Err(AppError)` - If data loading fails
     async fn ensure_data_loaded(&self) -> AppResult<()> {
         if !self.data_loaded.load(Ordering::Relaxed) {
             if let Err(e) = self.load().await {
                 debug!("Failed to load configuration, using defaults: {}", e);
-                // Don't return error - allow repository to work with default data
             }
         }
         Ok(())
@@ -94,42 +46,31 @@ impl ConfigurationRepositoryImpl {
 
 #[async_trait]
 impl ConfigurationRepository for ConfigurationRepositoryImpl {
-    /// Save configuration to persistent storage
-    /// 
-    /// Delegates to the underlying persistence layer to write configuration
-    /// data to the file system. Does not update in-memory cache.
     async fn save(&self, config: &AppConfig) -> AppResult<()> {
-        self.persistence.save(config).await
+        FileService::write_json(&self.file_path, config).await
     }
 
-    /// Load configuration from persistent storage and update in-memory cache
-    /// 
-    /// Reads configuration from the file system and updates the in-memory cache
-    /// with the loaded values. This ensures consistency between disk and memory.
-    /// 
-    /// # Returns
-    /// 
-    /// The loaded configuration data
     async fn load(&self) -> AppResult<AppConfig> {
-        let config = self.persistence.load().await?;
-        
+        let config: AppConfig = FileService::read_json_optional(&self.file_path)
+            .await?
+            .unwrap_or_default();
+
         {
             let mut current_config = self.config.write().await;
             *current_config = config.clone();
         }
 
-        // Mark data as loaded
         self.data_loaded.store(true, Ordering::Relaxed);
         debug!("Configuration loaded successfully");
         Ok(config)
     }
 
     async fn exists(&self) -> AppResult<bool> {
-        self.persistence.exists().await
+        Ok(FileService::exists(&self.file_path))
     }
 
     async fn delete(&self) -> AppResult<()> {
-        self.persistence.delete().await?;
+        FileService::delete(&self.file_path).await?;
 
         {
             let mut config = self.config.write().await;
@@ -169,13 +110,9 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
 
     async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo> {
         self.ensure_data_loaded().await?;
-        Ok(ConfigurationFileInfo::new(self.persistence.get_file_path().clone()))
+        Ok(ConfigurationFileInfo::new(self.file_path.clone()))
     }
 
-    /// Set POE client log path and persist to storage
-    /// 
-    /// Updates the in-memory configuration and immediately saves to persistent
-    /// storage to ensure consistency.
     async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
         self.ensure_data_loaded().await?;
         let mut config = self.config.write().await;
@@ -184,14 +121,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         self.save(&self.get_in_memory_config().await?).await
     }
 
-    /// Set log level with validation and persist to storage
-    /// 
-    /// Validates the log level before updating the configuration.
-    /// Updates both in-memory cache and persistent storage atomically.
     async fn set_log_level(&self, level: String) -> AppResult<()> {
         self.ensure_data_loaded().await?;
         self.ensure_valid_log_level(&level).await?;
-        
+
         let mut config = self.config.write().await;
         config.log_level = level;
         drop(config);
@@ -205,25 +138,16 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         self.save(&default_config).await
     }
 
-    async fn validate_config(&self, config: &AppConfig) -> AppResult<ConfigurationValidationResult> {
+    async fn validate_config(
+        &self,
+        config: &AppConfig,
+    ) -> AppResult<ConfigurationValidationResult> {
         match config.validate() {
             Ok(()) => Ok(ConfigurationValidationResult::valid()),
             Err(error) => Ok(ConfigurationValidationResult::invalid(vec![error])),
         }
     }
 
-    /// Validate that a log level string is acceptable
-    /// 
-    /// Checks the provided log level against the list of supported levels.
-    /// This validation is case-insensitive.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `level` - The log level string to validate
-    /// 
-    /// # Supported Levels
-    /// 
-    /// trace, debug, info, warn, warning, error
     async fn ensure_valid_log_level(&self, level: &str) -> AppResult<()> {
         let valid_log_levels = ["trace", "debug", "info", "warn", "warning", "error"];
         if !valid_log_levels.contains(&level.to_lowercase().as_str()) {
@@ -239,14 +163,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(())
     }
 
-    /// Validate that a POE client path is acceptable
-    /// 
-    /// Ensures the path is not empty or whitespace-only. Additional validation
-    /// like file existence checking should be done at a higher level.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `path` - The file path string to validate
     async fn ensure_valid_poe_path(&self, path: &str) -> AppResult<()> {
         if path.trim().is_empty() {
             return Err(AppError::validation_error(

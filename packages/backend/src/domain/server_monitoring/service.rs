@@ -23,8 +23,11 @@ pub struct ServerMonitoringServiceImpl {
 }
 
 impl ServerMonitoringServiceImpl {
-    pub fn new(event_bus: Arc<EventBus>, ping_provider: Arc<dyn PingProvider>) -> AppResult<Self> {
-        let repository = Arc::new(ServerStatusRepository::new()?);
+    pub async fn new(
+        event_bus: Arc<EventBus>,
+        ping_provider: Arc<dyn PingProvider>,
+    ) -> AppResult<Self> {
+        let repository = Arc::new(ServerStatusRepository::new().await?);
 
         Ok(Self {
             repository,

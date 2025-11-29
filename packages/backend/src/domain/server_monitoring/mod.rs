@@ -1,13 +1,11 @@
-//! # Server Monitoring Domain
-//!
-//! This module provides simplified server monitoring functionality.
-//! Handles server status tracking, ping operations, and event publishing.
+//! Server monitoring functionality for tracking server status, ping operations, and event publishing.
 
 pub mod models;
 pub mod repository;
 pub mod service;
+pub mod traits;
 
-// Re-export core types for easy access
 pub use models::ServerStatus;
 pub use repository::ServerStatusRepository;
-pub use service::{ServerMonitoringService, ServerMonitoringServiceImpl};
+pub use service::ServerMonitoringServiceImpl;
+pub use traits::ServerMonitoringService;

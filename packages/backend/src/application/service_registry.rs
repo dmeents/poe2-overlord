@@ -99,7 +99,8 @@ impl ServiceInitializer {
         app.manage(zone_config_service.clone());
 
         // Initialize Wiki Scraping Service - fetches zone data from PoE2 wiki
-        let wiki_service = Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new());
+        let wiki_service =
+            Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new());
         app.manage(wiki_service.clone());
 
         // Initialize Character Service - manages character data persistence and operations
@@ -196,17 +197,20 @@ impl ServiceInitializer {
         let log_analysis_arc = Arc::new(log_analysis_service) as Arc<dyn LogAnalysisService>;
 
         // Configure the log path from the configuration service
+        // Note: This must complete before log monitoring starts to avoid race conditions
         let config_service_clone = config_service.clone();
         let log_analysis_clone = log_analysis_arc.clone();
-        tauri::async_runtime::spawn(async move {
+        tauri::async_runtime::block_on(async move {
             match config_service_clone.get_poe_client_log_path().await {
                 Ok(log_path) => {
                     if !log_path.is_empty() {
                         if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
                             error!("Failed to update log path in LogAnalysisService: {}", e);
                         } else {
+                            info!("Log analysis service configured with path: {}", log_path);
                         }
                     } else {
+                        info!("No POE client log path configured, log monitoring will use default");
                     }
                 }
                 Err(e) => {

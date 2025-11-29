@@ -1,5 +1,5 @@
 //! System-level infrastructure for OS detection and path management
-//! 
+//!
 //! Provides cross-platform utilities for detecting the operating system
 //! and managing platform-specific file paths, particularly for POE2 log files.
 
@@ -8,3 +8,8 @@ pub mod paths;
 
 pub use os_detection::{detect_os, get_os_name, OperatingSystem};
 pub use paths::PoeClientLogPaths;
+
+/// Expands a path that may contain a tilde (~) to represent the home directory
+pub fn expand_tilde<P: AsRef<std::path::Path>>(path: P) -> std::path::PathBuf {
+    PoeClientLogPaths::expand_tilde(path)
+}

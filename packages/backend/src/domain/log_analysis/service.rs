@@ -6,6 +6,7 @@ use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository}
 use crate::domain::server_monitoring::ServerMonitoringService;
 use crate::domain::walkthrough::traits::WalkthroughService;
 use crate::errors::{AppError, AppResult};
+use crate::infrastructure::expand_tilde;
 use crate::infrastructure::parsing::LogParserManager;
 use async_trait::async_trait;
 use log::{error, info, warn};
@@ -92,8 +93,17 @@ impl LogAnalysisServiceImpl {
 
         if log_path.is_empty() {
             return Err(AppError::internal_error(
-                "get_log_file_info",
+                "start_monitoring_loop",
                 "Log file path not configured",
+            ));
+        }
+
+        // Check if the log file exists before attempting to monitor it
+        if !self.log_file_repository.file_exists(&log_path).await {
+            warn!("Log file does not exist at path: {}", log_path);
+            return Err(AppError::file_system_error(
+                "start_monitoring_loop",
+                &format!("Log file does not exist: {}", log_path),
             ));
         }
 
@@ -253,7 +263,10 @@ impl LogAnalysisServiceImpl {
             .handle_scene_change(character_id, content)
             .await
         {
-            error!("WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
+            error!(
+                "WALKTHROUGH: Failed to handle walkthrough scene change: {}",
+                e
+            );
         }
     }
 
@@ -330,7 +343,8 @@ impl LogAnalysisServiceImpl {
                             &content,
                             &active_character.id,
                             zone_level,
-                        ).await;
+                        )
+                        .await;
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
@@ -382,7 +396,8 @@ impl LogAnalysisServiceImpl {
                                 character_service,
                                 &character_name,
                                 &active_character.id,
-                            ).await;
+                            )
+                            .await;
                         }
                     }
                 }
@@ -435,8 +450,12 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
 
     /// Updates the path to the log file being monitored
     async fn update_log_path(&self, new_path: String) -> AppResult<()> {
+        // Expand tilde (~) in the path to handle home directory references
+        let expanded_path = expand_tilde(&new_path);
+        let expanded_path_str = expanded_path.to_string_lossy().to_string();
+
         let mut config = self.config.write().await;
-        config.log_file_path = new_path;
+        config.log_file_path = expanded_path_str;
         drop(config);
         Ok(())
     }

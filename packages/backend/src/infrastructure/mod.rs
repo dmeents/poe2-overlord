@@ -22,7 +22,7 @@ pub mod time;
 // Re-export commonly used infrastructure components
 pub use monitoring::process_monitor::ProcessMonitorImpl;
 pub use runtime::{RuntimeManager, TaskManager};
-pub use system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};
+pub use system::{detect_os, expand_tilde, get_os_name, OperatingSystem, PoeClientLogPaths};
 pub use time::{
     calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,
     calculate_session_duration_seconds, validate_duration, validate_no_session_overlap,

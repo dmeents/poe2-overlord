@@ -2,7 +2,7 @@ import type { ZoneStats } from '@/types/character';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { open } from '@tauri-apps/plugin-shell';
 import { memo } from 'react';
-import { TimeDisplay } from '../../insights/time-display';
+import { TimeDisplay } from '../../insights/time-display/time-display';
 import {
   getZoneActiveIndicatorClasses,
   getZoneActiveTextClasses,
@@ -119,13 +119,14 @@ export const ZoneCard = memo(function ZoneCard({
               Hideout
             </span>
           )}
-          {!zone.is_town && !zone.zone_name.toLowerCase().includes('hideout') && (
-            <span
-              className={`${getZonePillClasses()} ${getZonePillColorClasses('Zone')} ${getZonePillBaseClasses()}`}
-            >
-              Zone
-            </span>
-          )}
+          {!zone.is_town &&
+            !zone.zone_name.toLowerCase().includes('hideout') && (
+              <span
+                className={`${getZonePillClasses()} ${getZonePillColorClasses('Zone')} ${getZonePillBaseClasses()}`}
+              >
+                Zone
+              </span>
+            )}
           {zone.act && (
             <span
               className={`${getZonePillClasses()} ${getZonePillBaseClasses()}`}
@@ -156,15 +157,16 @@ export const ZoneCard = memo(function ZoneCard({
             {zone.visits} visit{zone.visits !== 1 ? 's' : ''}
           </span>
           {/* Only show deaths for zones where characters can actually die */}
-          {!zone.is_town && !zone.zone_name.toLowerCase().includes('hideout') && (
-            <span
-              className={`${getZonePillClasses()} ${
-                zone.deaths > 0 ? 'text-red-400' : 'text-zinc-400'
-              } ${getZonePillBaseClasses()}`}
-            >
-              {zone.deaths} death{zone.deaths !== 1 ? 's' : ''}
-            </span>
-          )}
+          {!zone.is_town &&
+            !zone.zone_name.toLowerCase().includes('hideout') && (
+              <span
+                className={`${getZonePillClasses()} ${
+                  zone.deaths > 0 ? 'text-red-400' : 'text-zinc-400'
+                } ${getZonePillBaseClasses()}`}
+              >
+                {zone.deaths} death{zone.deaths !== 1 ? 's' : ''}
+              </span>
+            )}
         </div>
         <span>
           {zone.last_visited

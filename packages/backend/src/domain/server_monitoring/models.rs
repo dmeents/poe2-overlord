@@ -95,36 +95,38 @@ impl ServerStatus {
         self.latency_ms = None;
         self.timestamp = chrono::Utc::now().to_rfc3339();
     }
-}
 
-/// Simple model for persisting only the last known server IP address
-///
-/// This model is used for lightweight persistence of server IP addresses
-/// discovered from game logs. Only the IP address and discovery timestamp
-/// are persisted, as other status information is transient and measured in real-time.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServerIp {
-    /// The last known server IP address from game logs
-    pub ip_address: String,
-    /// When this IP was last discovered
-    pub discovered_at: String,
-}
-
-impl Default for ServerIp {
-    fn default() -> Self {
-        Self {
-            ip_address: String::new(),
-            discovered_at: chrono::Utc::now().to_rfc3339(),
-        }
+    /// Check if the server status has a valid IP address
+    pub fn is_valid(&self) -> bool {
+        !self.ip_address.is_empty() && self.ip_address != "0.0.0.0"
     }
-}
 
-impl ServerIp {
-    /// Create a new ServerIp with the given IP address
-    pub fn new(ip_address: String) -> Self {
-        Self {
-            ip_address,
-            discovered_at: chrono::Utc::now().to_rfc3339(),
+    /// Update status from ping result
+    pub fn update_from_ping(&mut self, latency: Option<u64>) {
+        match latency {
+            Some(ms) => {
+                self.is_online = true;
+                self.latency_ms = Some(ms);
+            }
+            None => {
+                self.is_online = false;
+                self.latency_ms = None;
+            }
         }
+        self.timestamp = chrono::Utc::now().to_rfc3339();
+    }
+
+    /// Mark the server as online with given latency
+    pub fn mark_as_online(&mut self, latency_ms: u64) {
+        self.is_online = true;
+        self.latency_ms = Some(latency_ms);
+        self.timestamp = chrono::Utc::now().to_rfc3339();
+    }
+
+    /// Mark the server as offline
+    pub fn mark_as_offline(&mut self) {
+        self.is_online = false;
+        self.latency_ms = None;
+        self.timestamp = chrono::Utc::now().to_rfc3339();
     }
 }

@@ -62,6 +62,7 @@ pub use infrastructure::events::{AppEvent, ChannelConfig, ChannelManager, EventB
 // Game monitoring domain services and models
 pub use domain::game_monitoring::{
     GameMonitoringService, GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
+    ProcessDetectorImpl,
 };
 
 // Infrastructure services and utilities

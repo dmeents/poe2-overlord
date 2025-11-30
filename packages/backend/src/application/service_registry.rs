@@ -33,7 +33,9 @@ use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::{
     service::ConfigurationServiceImpl, traits::ConfigurationService,
 };
-use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
+use crate::domain::game_monitoring::{
+    traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
+};
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
@@ -49,7 +51,6 @@ use crate::domain::zone_configuration::{
     repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
 };
 use crate::infrastructure::events::EventBus;
-use crate::infrastructure::monitoring::ProcessMonitorImpl;
 use log::{error, info};
 use std::sync::Arc;
 use tauri::Manager;
@@ -244,7 +245,7 @@ impl ServiceInitializer {
         // Initialize Game Monitoring services - complex service with multiple dependencies
 
         // Process detector for identifying game processes
-        let process_detector = Arc::new(ProcessMonitorImpl::new());
+        let process_detector = Arc::new(ProcessDetectorImpl::new());
 
         // Game monitoring service that coordinates process detection and event publishing
         let game_monitoring_service = Arc::new(GameMonitoringServiceImpl::new(

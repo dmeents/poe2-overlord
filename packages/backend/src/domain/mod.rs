@@ -72,6 +72,7 @@ pub use crate::infrastructure::events::{
 // Re-export game monitoring types
 pub use game_monitoring::{
     GameMonitoringService, GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
+    ProcessDetectorImpl,
 };
 
 // Re-export log analysis types

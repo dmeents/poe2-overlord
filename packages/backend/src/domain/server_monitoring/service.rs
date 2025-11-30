@@ -2,8 +2,9 @@
 
 use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::server_monitoring::models::ServerStatus;
-use crate::domain::server_monitoring::repository::ServerStatusRepository;
-use crate::domain::server_monitoring::traits::{PingProvider, ServerMonitoringService};
+use crate::domain::server_monitoring::traits::{
+    PingProvider, ServerMonitoringService, ServerStatusRepository,
+};
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
@@ -15,7 +16,7 @@ use tokio::time;
 const MONITORING_INTERVAL_SECS: u64 = 30;
 
 pub struct ServerMonitoringServiceImpl {
-    repository: Arc<ServerStatusRepository>,
+    repository: Arc<dyn ServerStatusRepository>,
     event_bus: Arc<EventBus>,
     ping_provider: Arc<dyn PingProvider>,
     cached_status: Arc<RwLock<Option<ServerStatus>>>,
@@ -26,9 +27,8 @@ impl ServerMonitoringServiceImpl {
     pub async fn new(
         event_bus: Arc<EventBus>,
         ping_provider: Arc<dyn PingProvider>,
+        repository: Arc<dyn ServerStatusRepository>,
     ) -> AppResult<Self> {
-        let repository = Arc::new(ServerStatusRepository::new().await?);
-
         Ok(Self {
             repository,
             event_bus,

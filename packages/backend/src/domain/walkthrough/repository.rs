@@ -1,7 +1,7 @@
 use crate::domain::walkthrough::models::WalkthroughGuide;
 use crate::domain::walkthrough::traits::WalkthroughRepository;
 use crate::errors::AppError;
-use crate::infrastructure::persistence::FileService;
+use crate::infrastructure::file_management::FileService;
 use log::info;
 use std::path::PathBuf;
 

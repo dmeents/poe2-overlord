@@ -183,7 +183,7 @@ impl CharacterServiceImpl {
         wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
     ) -> Result<Self, AppError> {
         // Create data directory path using proper XDG data directory
-        let data_dir = crate::infrastructure::persistence::AppPaths::ensure_data_dir().await?;
+        let data_dir = crate::infrastructure::file_management::AppPaths::ensure_data_dir().await?;
 
         // Create repository
         let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir));

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use std::path::PathBuf;
 
 use crate::errors::AppError;
-use crate::infrastructure::persistence::FileService;
+use crate::infrastructure::file_management::FileService;
 
 use super::models::{CharacterData, CharactersIndex};
 use super::traits::CharacterRepository;
@@ -97,6 +97,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
     /// Checks if a character data file exists
     async fn character_exists(&self, character_id: &str) -> Result<bool, AppError> {
         let character_path = self.character_path(character_id);
-        Ok(FileService::exists(&character_path))
+        Ok(FileService::exists(&character_path).await?)
     }
 }

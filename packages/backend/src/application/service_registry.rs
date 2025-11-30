@@ -39,7 +39,8 @@ use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
 use crate::domain::server_monitoring::{
-    ServerMonitoringService, ServerMonitoringServiceImpl, SystemPingProvider,
+    ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatusRepositoryImpl,
+    SystemPingProvider,
 };
 use crate::domain::walkthrough::{
     repository::WalkthroughRepositoryImpl, service::WalkthroughServiceImpl,
@@ -171,13 +172,21 @@ impl ServiceInitializer {
         // Initialize Server Monitoring Service - handles network connectivity and server status tracking
         // Depends on event broadcaster for status change notifications
         let ping_provider = Arc::new(SystemPingProvider::new());
-        let server_monitoring_service = tauri::async_runtime::block_on(
-            ServerMonitoringServiceImpl::new(event_bus.clone(), ping_provider),
-        )
-        .map_err(|e| {
-            error!("Failed to initialize ServerMonitoringService: {}", e);
-            e
-        })?;
+        let server_status_repository =
+            tauri::async_runtime::block_on(ServerStatusRepositoryImpl::new()).map_err(|e| {
+                error!("Failed to initialize ServerStatusRepository: {}", e);
+                e
+            })?;
+        let server_monitoring_service =
+            tauri::async_runtime::block_on(ServerMonitoringServiceImpl::new(
+                event_bus.clone(),
+                ping_provider,
+                Arc::new(server_status_repository),
+            ))
+            .map_err(|e| {
+                error!("Failed to initialize ServerMonitoringService: {}", e);
+                e
+            })?;
         let server_monitoring_arc =
             Arc::new(server_monitoring_service) as Arc<dyn ServerMonitoringService>;
         app.manage(server_monitoring_arc.clone());

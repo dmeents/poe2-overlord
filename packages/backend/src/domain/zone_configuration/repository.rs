@@ -3,7 +3,7 @@ use crate::domain::zone_configuration::{
     traits::ZoneConfigurationRepository,
 };
 use crate::errors::AppResult;
-use crate::infrastructure::persistence::{AppPaths, FileService};
+use crate::infrastructure::file_management::{AppPaths, FileService};
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use serde_json;
@@ -68,7 +68,7 @@ impl ZoneConfigurationRepositoryImpl {
 #[async_trait]
 impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
     async fn load_configuration(&self) -> AppResult<ZoneConfiguration> {
-        if FileService::exists(&self.file_path) {
+        if FileService::exists(&self.file_path).await? {
             debug!("Loading zone configuration from: {:?}", self.file_path);
             let config: ZoneConfiguration = FileService::read_json(&self.file_path).await?;
             info!(

@@ -3,7 +3,7 @@ use crate::domain::configuration::models::{
 };
 use crate::domain::configuration::traits::ConfigurationRepository;
 use crate::errors::{AppError, AppResult};
-use crate::infrastructure::persistence::{AppPaths, FileService};
+use crate::infrastructure::file_management::{AppPaths, FileService};
 use async_trait::async_trait;
 use log::debug;
 use std::path::PathBuf;
@@ -66,7 +66,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn exists(&self) -> AppResult<bool> {
-        Ok(FileService::exists(&self.file_path))
+        Ok(FileService::exists(&self.file_path).await?)
     }
 
     async fn delete(&self) -> AppResult<()> {

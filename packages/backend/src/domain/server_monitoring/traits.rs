@@ -1,7 +1,18 @@
 //! Server monitoring service trait definitions.
 
+use crate::domain::server_monitoring::models::ServerStatus;
 use crate::errors::AppResult;
 use async_trait::async_trait;
+
+/// Trait for abstracting server status persistence operations.
+#[async_trait]
+pub trait ServerStatusRepository: Send + Sync {
+    /// Save server status to persistent storage
+    async fn save(&self, status: &ServerStatus) -> AppResult<()>;
+
+    /// Load server status from persistent storage
+    async fn load(&self) -> AppResult<Option<ServerStatus>>;
+}
 
 /// Trait for abstracting ping operations to allow for testing and alternative implementations.
 #[async_trait]

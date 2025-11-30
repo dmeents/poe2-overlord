@@ -3,17 +3,17 @@
 //! This module contains all the infrastructure concerns including:
 //! - System monitoring (process detection, server monitoring)
 //! - Runtime management (async task orchestration)
-//! - Data persistence (file operations, JSON storage)
+//! - File management (file operations, JSON storage)
 //! - Log parsing and analysis
 //! - Network connectivity
 //! - Tauri integration (events, commands)
 //! - Time calculations and validation
 //! - OS detection and path management
 
+pub mod file_management;
 pub mod monitoring;
 pub mod network;
 pub mod parsing;
-pub mod persistence;
 pub mod runtime;
 pub mod system;
 pub mod tauri;

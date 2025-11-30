@@ -1,8 +1,10 @@
 //! File-based persistence for server status in the app data directory.
 
 use crate::domain::server_monitoring::models::ServerStatus;
+use crate::domain::server_monitoring::traits::ServerStatusRepository as ServerStatusRepositoryTrait;
 use crate::errors::AppResult;
-use crate::infrastructure::persistence::{AppPaths, FileService};
+use crate::infrastructure::file_management::{AppPaths, FileService};
+use async_trait::async_trait;
 use log::debug;
 use std::path::PathBuf;
 
@@ -22,14 +24,17 @@ impl ServerStatusRepository {
 
         Ok(Self { file_path })
     }
+}
 
-    pub async fn save(&self, status: &ServerStatus) -> AppResult<()> {
+#[async_trait]
+impl ServerStatusRepositoryTrait for ServerStatusRepository {
+    async fn save(&self, status: &ServerStatus) -> AppResult<()> {
         FileService::write_json(&self.file_path, status).await?;
         debug!("Server status saved to: {}", self.file_path.display());
         Ok(())
     }
 
-    pub async fn load(&self) -> AppResult<Option<ServerStatus>> {
+    async fn load(&self) -> AppResult<Option<ServerStatus>> {
         let status = FileService::read_json_optional(&self.file_path).await?;
 
         if status.is_some() {

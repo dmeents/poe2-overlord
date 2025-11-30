@@ -1,5 +1,3 @@
-//! Application configuration management
-
 pub mod commands;
 pub mod models;
 pub mod repository;

@@ -34,6 +34,7 @@ impl ConfigurationRepositoryImpl {
         })
     }
 
+    /// Lazy-loads configuration on first access to avoid startup overhead
     async fn ensure_data_loaded(&self) -> AppResult<()> {
         if !self.data_loaded.load(Ordering::Relaxed) {
             if let Err(e) = self.load().await {

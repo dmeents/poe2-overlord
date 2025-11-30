@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use crate::errors::AppError;
 
 use super::models::{
-    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, League, LocationState, LocationType,
+    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex, League,
+    LocationState, LocationType,
 };
 
 #[async_trait]
@@ -40,13 +40,6 @@ pub trait CharacterService: Send + Sync {
 
     async fn get_all_characters(&self) -> Result<Vec<CharacterData>, AppError>;
 
-    async fn get_character_response(
-        &self,
-        character_id: &str,
-    ) -> Result<CharacterDataResponse, AppError>;
-
-    async fn get_all_characters_response(&self) -> Result<Vec<CharacterDataResponse>, AppError>;
-
     async fn update_character(
         &self,
         character_id: &str,
@@ -68,21 +61,6 @@ pub trait CharacterService: Send + Sync {
         character_id: &str,
         new_level: u32,
     ) -> Result<(), AppError>;
-
-    /// Returns None if no actual scene change occurred
-    async fn process_scene_content(
-        &self,
-        content: &str,
-        character_id: &str,
-    ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError>;
-
-    /// Returns None if no actual scene change occurred
-    async fn process_scene_content_with_zone_level(
-        &self,
-        content: &str,
-        character_id: &str,
-        zone_level: u32,
-    ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError>;
 
     async fn get_current_location(
         &self,

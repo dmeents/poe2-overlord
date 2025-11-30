@@ -1,4 +1,3 @@
-// CharacterServiceTrait is no longer needed - using CharacterService directly
 use crate::domain::character::traits::CharacterService;
 use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
@@ -9,42 +8,38 @@ use crate::errors::{AppError, AppResult};
 use crate::infrastructure::expand_tilde;
 use crate::infrastructure::parsing::LogParserManager;
 use async_trait::async_trait;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::time;
 
-/// Main implementation of the log analysis service
-/// Handles monitoring game log files, parsing events, and coordinating with other services
 pub struct LogAnalysisServiceImpl {
-    /// Configuration for log analysis operations
     config: Arc<RwLock<LogAnalysisConfig>>,
-    /// Repository for file system operations on log files
     log_file_repository: Arc<dyn LogFileRepository>,
-    /// Service for character operations (includes tracking)
     character_service: Arc<dyn CharacterService>,
-    /// Service for server monitoring operations
     server_monitoring_service: Arc<dyn ServerMonitoringService>,
-    /// Service for walkthrough guide and progress tracking
     walkthrough_service: Arc<dyn WalkthroughService>,
-    /// Parser manager for processing log lines
+    zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+    wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+    config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+    event_bus: Arc<crate::infrastructure::events::EventBus>,
     parser_manager: LogParserManager,
-    /// Flag indicating whether log monitoring is currently active
     is_running: Arc<RwLock<bool>>,
-    /// Last position read in the log file (for incremental reading)
     last_position: Arc<RwLock<u64>>,
-    /// Cache for zone level information (level, timestamp)
     zone_level_cache: Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
 }
 
 impl LogAnalysisServiceImpl {
-    /// Creates a new LogAnalysisServiceImpl with default repositories
     pub fn new(
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterService>,
         server_monitoring_service: Arc<dyn ServerMonitoringService>,
         walkthrough_service: Arc<dyn WalkthroughService>,
+        zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        event_bus: Arc<crate::infrastructure::events::EventBus>,
     ) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(config));
         let log_file_repository = Arc::new(LogFileRepositoryImpl::new());
@@ -55,6 +50,10 @@ impl LogAnalysisServiceImpl {
             character_service,
             server_monitoring_service,
             walkthrough_service,
+            zone_config,
+            wiki_service,
+            config_service,
+            event_bus,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
@@ -62,13 +61,16 @@ impl LogAnalysisServiceImpl {
         })
     }
 
-    /// Creates a new LogAnalysisServiceImpl with custom repositories (for testing)
     pub fn with_repositories(
         config: LogAnalysisConfig,
         log_file_repository: Arc<dyn LogFileRepository>,
         character_service: Arc<dyn CharacterService>,
         server_monitoring_service: Arc<dyn ServerMonitoringService>,
         walkthrough_service: Arc<dyn WalkthroughService>,
+        zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        event_bus: Arc<crate::infrastructure::events::EventBus>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
         let parser_manager = LogParserManager::new();
@@ -78,6 +80,10 @@ impl LogAnalysisServiceImpl {
             character_service,
             server_monitoring_service,
             walkthrough_service,
+            zone_config,
+            wiki_service,
+            config_service,
+            event_bus,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
@@ -85,7 +91,6 @@ impl LogAnalysisServiceImpl {
         }
     }
 
-    /// Starts the main monitoring loop for log file analysis
     async fn start_monitoring_loop(&self) -> AppResult<()> {
         info!("LOG ANALYSIS: start_monitoring_loop() entered");
 
@@ -103,7 +108,6 @@ impl LogAnalysisServiceImpl {
             ));
         }
 
-        // Check if the log file exists before attempting to monitor it
         info!("LOG ANALYSIS: Checking if log file exists...");
         let file_exists = self.log_file_repository.file_exists(&log_path).await;
         info!("LOG ANALYSIS: File exists check result: {}", file_exists);
@@ -116,7 +120,6 @@ impl LogAnalysisServiceImpl {
             ));
         }
 
-        // Initialize the last position to the current file size
         let file_size = self.log_file_repository.get_file_size(&log_path).await?;
         {
             let mut last_pos = self.last_position.write().await;
@@ -135,18 +138,20 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
-    /// Creates and spawns the background monitoring task
     async fn create_monitoring_task(&self) -> AppResult<()> {
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
         let interval_ms = config.monitoring_interval_ms;
         drop(config);
 
-        // Clone all necessary dependencies for the spawned task
         let log_file_repository = Arc::clone(&self.log_file_repository);
         let character_service = Arc::clone(&self.character_service);
         let server_monitoring_service = Arc::clone(&self.server_monitoring_service);
         let walkthrough_service = Arc::clone(&self.walkthrough_service);
+        let zone_config = Arc::clone(&self.zone_config);
+        let wiki_service = Arc::clone(&self.wiki_service);
+        let config_service = Arc::clone(&self.config_service);
+        let event_bus = Arc::clone(&self.event_bus);
         let is_running = Arc::clone(&self.is_running);
         let last_position = Arc::clone(&self.last_position);
         let zone_level_cache = Arc::clone(&self.zone_level_cache);
@@ -158,29 +163,30 @@ impl LogAnalysisServiceImpl {
             loop {
                 interval.tick().await;
 
-                // Check if monitoring should continue
                 if !*is_running.read().await {
                     info!("LOG ANALYSIS: Monitoring stopped - is_running is false");
                     break;
                 }
 
-                // Check for new content in the log file
                 match log_file_repository.get_file_size(&log_path).await {
                     Ok(current_size) => {
                         let last_pos = *last_position.read().await;
                         if current_size > last_pos {
-                            // New content detected, process it
                             info!(
                                 "LOG ANALYSIS: New content detected - file grew from {} to {} bytes",
                                 last_pos, current_size
                             );
                             if let Err(e) = Self::process_new_lines(
-                                &parser_manager,
                                 &log_path,
                                 &log_file_repository,
+                                &parser_manager,
                                 &character_service,
                                 &server_monitoring_service,
                                 &walkthrough_service,
+                                &zone_config,
+                                &wiki_service,
+                                &config_service,
+                                &event_bus,
                                 &last_position,
                                 &zone_level_cache,
                                 last_pos,
@@ -190,7 +196,6 @@ impl LogAnalysisServiceImpl {
                                 error!("Failed to process new log lines: {}", e);
                             }
                         } else if current_size < last_pos {
-                            // File was truncated, reset position
                             warn!("Log file was truncated, resetting position");
                             let mut pos = last_position.write().await;
                             *pos = current_size;
@@ -206,19 +211,21 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
-    /// Processes new lines that have been added to the log file
     async fn process_new_lines(
-        parser_manager: &LogParserManager,
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
+        parser_manager: &LogParserManager,
         character_service: &Arc<dyn CharacterService>,
         server_monitoring_service: &Arc<dyn ServerMonitoringService>,
         walkthrough_service: &Arc<dyn WalkthroughService>,
+        zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        event_bus: &Arc<crate::infrastructure::events::EventBus>,
         last_position: &Arc<RwLock<u64>>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
         start_position: u64,
     ) -> AppResult<()> {
-        // Read new lines from the last known position
         let new_lines = log_file_repository
             .read_from_position(log_path, start_position)
             .await?;
@@ -232,7 +239,6 @@ impl LogAnalysisServiceImpl {
             new_lines.len()
         );
 
-        // Process each new line
         for line in &new_lines {
             if let Err(e) = Self::process_single_line(
                 parser_manager,
@@ -240,6 +246,10 @@ impl LogAnalysisServiceImpl {
                 character_service,
                 server_monitoring_service,
                 walkthrough_service,
+                zone_config,
+                wiki_service,
+                config_service,
+                event_bus,
                 zone_level_cache,
             )
             .await
@@ -248,7 +258,6 @@ impl LogAnalysisServiceImpl {
             }
         }
 
-        // Update the last position to the current file size
         let current_size = log_file_repository.get_file_size(log_path).await?;
         {
             let mut pos = last_position.write().await;
@@ -258,30 +267,251 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
-    /// Helper function to process scene change with error handling
+    async fn trigger_wiki_fetch(
+        zone_name: &str,
+        wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+    ) {
+        info!("Triggering wiki fetch for zone: {}", zone_name);
+        let wiki_service = wiki_service.clone();
+        let zone_config = zone_config.clone();
+        let zone_name = zone_name.to_string();
+
+        tokio::spawn(async move {
+            info!("Starting wiki fetch for zone: {}", zone_name);
+            match wiki_service.fetch_zone_data(&zone_name).await {
+                Ok(wiki_data) => {
+                    info!(
+                        "Successfully fetched wiki data for zone '{}': act={}, level={:?}, town={}",
+                        zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town
+                    );
+
+                    let _area_id = wiki_data
+                        .area_id
+                        .as_ref()
+                        .map(|id| id.clone())
+                        .unwrap_or_else(|| {
+                            zone_name
+                                .to_lowercase()
+                                .replace(' ', "_")
+                                .replace('-', "_")
+                                .chars()
+                                .filter(|c| c.is_alphanumeric() || *c == '_')
+                                .collect::<String>()
+                                .trim_matches('_')
+                                .to_string()
+                        });
+
+                    info!("Reloading zone configuration before lookup...");
+                    if let Err(e) = zone_config.reload_configuration().await {
+                        error!("Failed to reload zone configuration: {}", e);
+                    }
+
+                    info!("Looking up zone '{}' in configuration...", zone_name);
+                    if let Some(zone_metadata) = zone_config.get_zone_metadata(&zone_name).await {
+                        info!(
+                            "Found zone '{}' in configuration, updating with wiki data",
+                            zone_name
+                        );
+                        info!(
+                            "BEFORE UPDATE: area_id={:?}, act={}, is_town={}",
+                            zone_metadata.area_id, zone_metadata.act, zone_metadata.is_town
+                        );
+
+                        let mut updated_metadata = zone_metadata;
+                        updated_metadata.update_from_wiki_data(&wiki_data);
+
+                        info!(
+                            "AFTER UPDATE: area_id={:?}, act={}, is_town={}",
+                            updated_metadata.area_id,
+                            updated_metadata.act,
+                            updated_metadata.is_town
+                        );
+
+                        if let Err(e) = zone_config.update_zone(updated_metadata).await {
+                            error!("Failed to update zone metadata: {}", e);
+                        } else {
+                            info!("Successfully updated zone metadata for '{}'", zone_name);
+                        }
+                    } else {
+                        warn!(
+                            "Zone '{}' not found in configuration after reload",
+                            zone_name
+                        );
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to fetch wiki data for zone '{}': {}", zone_name, e);
+                }
+            }
+        });
+    }
+
+    fn is_act_name(scene_name: &str) -> bool {
+        let lower_name = scene_name.to_lowercase();
+
+        let act_names = ["act 1", "act 2", "act 3", "act 4", "interlude", "endgame"];
+
+        if act_names.iter().any(|act| lower_name == *act) {
+            return true;
+        }
+
+        let act_keywords = ["act", "endgame", "interlude", "atlas"];
+        act_keywords
+            .iter()
+            .any(|keyword| lower_name.contains(keyword))
+    }
+
+    async fn process_scene_change(
+        character_service: &Arc<dyn CharacterService>,
+        zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        event_bus: &Arc<crate::infrastructure::events::EventBus>,
+        content: &str,
+        character_id: &str,
+        zone_level: Option<u32>,
+    ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError> {
+        let zone_name = content.trim();
+
+        if zone_name.is_empty() {
+            return Ok(None);
+        }
+
+        if Self::is_act_name(zone_name) {
+            debug!(
+                "SCENE FILTER: Filtering out act name '{}' - not tracking as zone",
+                zone_name
+            );
+            return Ok(None);
+        }
+
+        let zone_metadata = if let Some(metadata) = zone_config.get_zone_metadata(zone_name).await {
+            metadata
+        } else {
+            let mut placeholder =
+                crate::domain::zone_configuration::models::ZoneMetadata::placeholder(
+                    zone_name.to_string(),
+                );
+
+            placeholder.act = 0;
+
+            if let Err(e) = zone_config.add_zone(placeholder.clone()).await {
+                debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
+            }
+
+            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config).await;
+
+            placeholder
+        };
+
+        let refresh_interval = config_service
+            .get_zone_refresh_interval()
+            .await
+            .unwrap_or_default()
+            .to_seconds();
+
+        if zone_metadata.needs_refresh(refresh_interval) {
+            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config).await;
+        }
+
+        if let Err(e) = character_service
+            .enter_zone(
+                character_id,
+                zone_name.to_string(),
+                zone_name.to_string(),
+                crate::domain::character::models::LocationType::Zone,
+                Some(zone_metadata.act.to_string()),
+                zone_metadata.is_town,
+                zone_level,
+            )
+            .await
+        {
+            error!("Failed to enter zone '{}': {}", zone_name, e);
+            return Err(e);
+        }
+
+        let character_data = match character_service.get_character(character_id).await {
+            Ok(data) => data,
+            Err(e) => {
+                error!("Failed to load character data: {}", e);
+                return Err(e);
+            }
+        };
+
+        let mut updated_character_data = character_data.clone();
+        updated_character_data.timestamps.last_played = Some(chrono::Utc::now());
+        updated_character_data.touch();
+
+        if let Err(e) = character_service
+            .save_character_data(&updated_character_data)
+            .await
+        {
+            error!("Failed to save character data: {}", e);
+            return Err(e);
+        }
+
+        let scene_change_event = crate::domain::log_analysis::models::SceneChangeEvent::Zone(
+            crate::domain::log_analysis::models::ZoneChangeEvent {
+                zone_name: zone_name.to_string(),
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            },
+        );
+
+        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+            character_id.to_string(),
+            updated_character_data,
+        );
+        if let Err(e) = event_bus.publish(event).await {
+            warn!(
+                "SCENE CHANGE: Failed to publish character tracking data updated event: {}",
+                e
+            );
+        }
+
+        let zone_metadata = zone_config.get_zone_metadata(zone_name).await;
+        let act_info = zone_metadata
+            .as_ref()
+            .map(|z| z.act.to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
+        let is_town_info = zone_metadata.map(|z| z.is_town).unwrap_or(false);
+
+        info!(
+            "Scene change: character {} entered '{}' (Act: {}, Town: {})",
+            character_id, zone_name, act_info, is_town_info
+        );
+
+        Ok(Some(scene_change_event))
+    }
+
     async fn process_scene_change_with_error_handling(
         character_service: &Arc<dyn CharacterService>,
         walkthrough_service: &Arc<dyn WalkthroughService>,
+        zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        event_bus: &Arc<crate::infrastructure::events::EventBus>,
         content: &str,
         character_id: &str,
         zone_level: Option<u32>,
     ) {
-        let result = if let Some(level) = zone_level {
-            character_service
-                .process_scene_content_with_zone_level(content, character_id, level)
-                .await
-        } else {
-            character_service
-                .process_scene_content(content, character_id)
-                .await
-        };
+        let result = Self::process_scene_change(
+            character_service,
+            zone_config,
+            wiki_service,
+            config_service,
+            event_bus,
+            content,
+            character_id,
+            zone_level,
+        )
+        .await;
 
         if let Err(e) = result {
             error!("SCENE CHANGE: Failed to process scene change: {}", e);
             return;
         }
 
-        // Handle walkthrough progress detection
         if let Err(e) = walkthrough_service
             .handle_scene_change(character_id, content)
             .await
@@ -293,25 +523,23 @@ impl LogAnalysisServiceImpl {
         }
     }
 
-    /// Helper function to process character death with error handling
     async fn process_character_death_with_error_handling(
         character_service: &Arc<dyn CharacterService>,
         character_name: &str,
         character_id: &str,
     ) {
-        // Record death in the current zone via character service
         match character_service.get_character(character_id).await {
             Ok(character_data) => {
-                if let Some(active_zone) = character_data.get_active_zone() {
+                if let Some(current_location) = &character_data.current_location {
                     if let Err(e) = character_service
-                        .record_death(character_id, &active_zone.zone_name)
+                        .record_death(character_id, &current_location.zone_name)
                         .await
                     {
                         error!("DEATH PROCESSING: Failed to record death in zone: {}", e);
                     } else {
                         info!(
                             "Character death: {} in zone '{}'",
-                            character_name, active_zone.zone_name
+                            character_name, current_location.zone_name
                         );
                     }
                 }
@@ -325,26 +553,26 @@ impl LogAnalysisServiceImpl {
         }
     }
 
-    /// Processes a single log line and handles any detected events
     async fn process_single_line(
         parser_manager: &LogParserManager,
         line: &str,
         character_service: &Arc<dyn CharacterService>,
         server_monitoring_service: &Arc<dyn ServerMonitoringService>,
         walkthrough_service: &Arc<dyn WalkthroughService>,
+        zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        event_bus: &Arc<crate::infrastructure::events::EventBus>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     ) -> AppResult<()> {
-        // Log every line being processed at debug level
         if line.contains("[SCENE]") {
             info!("LOG ANALYSIS: Processing line with [SCENE]: {}", line);
         }
 
-        // Specifically log INFO level SCENE lines
         if line.contains("[INFO") && line.contains("[SCENE]") {
             info!("LOG ANALYSIS: Found [INFO] + [SCENE] line: {}", line);
         }
 
-        // Try to parse the line for known events
         let parse_result = parser_manager.parse_line(line);
         if let Err(e) = &parse_result {
             if line.contains("[SCENE]") {
@@ -363,7 +591,6 @@ impl LogAnalysisServiceImpl {
                         content
                     );
 
-                    // Process scene changes through character tracking service
                     let active_character_result = character_service.get_active_character().await;
 
                     if let Err(e) = &active_character_result {
@@ -378,7 +605,6 @@ impl LogAnalysisServiceImpl {
                             "LOG ANALYSIS: Processing scene change for active character: {}",
                             active_character.id
                         );
-                        // Check for cached zone level
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
                             cache.clone()
@@ -395,10 +621,13 @@ impl LogAnalysisServiceImpl {
                             None
                         };
 
-                        // Process scene change with consolidated error handling
                         Self::process_scene_change_with_error_handling(
                             character_service,
                             walkthrough_service,
+                            zone_config,
+                            wiki_service,
+                            config_service,
+                            event_bus,
                             &content,
                             &active_character.id,
                             zone_level,
@@ -409,22 +638,18 @@ impl LogAnalysisServiceImpl {
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
-                    // Handle server connection events
                     server_monitoring_service
                         .update_server_from_log(event.ip_address.clone(), event.port)
                         .await?;
-
-                    // Server monitoring service will publish its own events
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterLevel((
                     character_name,
                     new_level,
                 )) => {
-                    // Handle character level up events
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        if active_character.name == character_name {
+                        if active_character.profile.name == character_name {
                             character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
@@ -434,11 +659,10 @@ impl LogAnalysisServiceImpl {
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterDeath(character_name) => {
-                    // Handle character death events - track deaths only in character_data.json
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        if active_character.name == character_name {
+                        if active_character.profile.name == character_name {
                             Self::process_character_death_with_error_handling(
                                 character_service,
                                 &character_name,

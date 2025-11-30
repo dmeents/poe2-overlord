@@ -55,9 +55,6 @@ impl ServiceInitializer {
         let character_service = tauri::async_runtime::block_on(
             crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                 event_bus.clone(),
-                zone_config_service.clone(),
-                wiki_service.clone(),
-                config_service.clone(),
             ),
         )
         .map_err(|e| {
@@ -71,9 +68,6 @@ impl ServiceInitializer {
             tauri::async_runtime::block_on(
                 crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                     event_bus.clone(),
-                    zone_config_service.clone(),
-                    wiki_service.clone(),
-                    config_service.clone(),
                 ),
             )
             .map_err(|e| {
@@ -138,6 +132,10 @@ impl ServiceInitializer {
             character_arc.clone(),
             server_monitoring_arc.clone(),
             walkthrough_service.clone(),
+            zone_config_service.clone(),
+            wiki_service.clone(),
+            config_service.clone(),
+            event_bus.clone(),
         )
         .map_err(|e| {
             error!("Failed to initialize LogAnalysisService: {}", e);

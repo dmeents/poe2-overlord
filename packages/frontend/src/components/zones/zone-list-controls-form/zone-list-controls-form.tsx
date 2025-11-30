@@ -2,7 +2,6 @@ import type {
   ZoneFilters as ZoneFiltersType,
   ZoneSortOption,
 } from '@/hooks/useZoneFilters';
-import type { LocationType } from '@/types/character';
 import { memo, useEffect, useRef, useState } from 'react';
 import { FilterToggle } from '../../forms/form-filter-toggle/form-filter-toggle';
 import { Input } from '../../forms/form-input/form-input';
@@ -36,12 +35,6 @@ interface ZoneListControlsFormProps {
   totalCount: number;
 }
 
-const LOCATION_TYPES = [
-  { value: 'All', label: 'All Types' },
-  { value: 'Zone', label: 'Zones' },
-  { value: 'Hideout', label: 'Hideouts' },
-];
-
 const ACTS = [
   { value: 'All', label: 'All' },
   { value: 'Act 1', label: 'Act 1' },
@@ -57,8 +50,8 @@ const SORT_OPTIONS = [
   { value: 'duration', label: 'Time Spent' },
   { value: 'visits', label: 'Visit Count' },
   { value: 'deaths', label: 'Death Count' },
-  { value: 'zone_level', label: 'Zone Level' },
-  { value: 'location_name', label: 'Zone Name' },
+  { value: 'area_level', label: 'Zone Level' },
+  { value: 'zone_name', label: 'Zone Name' },
   { value: 'first_visited', label: 'First Visited' },
 ];
 
@@ -99,7 +92,6 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
 
   // Calculate active filter count
   const activeFilterCount = [
-    filters.locationType !== 'All',
     filters.act !== 'All',
     filters.isTown !== null,
     filters.isActive !== null,
@@ -159,23 +151,6 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               activeCount={activeFilterCount}
             >
               <div className='space-y-3'>
-                {/* Location Type Filter */}
-                <div className={filterSectionClasses}>
-                  <Select
-                    id='location-type-filter'
-                    value={filters.locationType}
-                    onChange={value =>
-                      onFilterChange(
-                        'locationType',
-                        value as LocationType | 'All'
-                      )
-                    }
-                    options={LOCATION_TYPES}
-                    variant='dropdown'
-                    label='Location Type'
-                  />
-                </div>
-
                 {/* Act Filter */}
                 <div className={filterSectionClasses}>
                   <Select
@@ -303,19 +278,6 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       Active Filters
                     </h4>
                     <div className='flex flex-wrap gap-2'>
-                      {filters.locationType !== 'All' && (
-                        <span className={activeFilterChipClasses}>
-                          Type: {filters.locationType}
-                          <button
-                            onClick={() =>
-                              onFilterChange('locationType', 'All')
-                            }
-                            className={chipRemoveButtonClasses}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      )}
                       {filters.act !== 'All' && (
                         <span className={activeFilterChipClasses}>
                           Act: {filters.act}

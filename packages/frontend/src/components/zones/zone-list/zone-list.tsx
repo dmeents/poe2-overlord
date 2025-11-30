@@ -121,7 +121,7 @@ export const ZoneList = memo(function ZoneList({
           {zones.map(zone => {
             return (
               <ZoneCard
-                key={zone.area_id}
+                key={zone.zone_name}
                 zone={zone}
                 // Add any zone-specific props here if needed in the future
               />

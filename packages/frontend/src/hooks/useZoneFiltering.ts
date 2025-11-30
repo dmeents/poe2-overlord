@@ -13,10 +13,10 @@ export function useZoneFiltering(
       if (filters.search.trim() !== '') {
         const searchTerm = filters.search.toLowerCase().trim();
         const searchableText = [
-          zone.location_name,
-          zone.act || '',
-          zone.location_type,
-          zone.zone_level ? `level ${zone.zone_level}` : '',
+          zone.zone_name,
+          zone.act ? `Act ${zone.act}` : '',
+          zone.is_town ? 'town' : 'zone',
+          zone.area_level ? `level ${zone.area_level}` : '',
         ]
           .join(' ')
           .toLowerCase();
@@ -26,17 +26,12 @@ export function useZoneFiltering(
         }
       }
 
-      // Location type filter
-      if (
-        filters.locationType !== 'All' &&
-        zone.location_type !== filters.locationType
-      ) {
-        return false;
-      }
-
       // Act filter
-      if (filters.act !== 'All' && zone.act !== filters.act) {
-        return false;
+      if (filters.act !== 'All') {
+        const zoneActString = zone.act ? `Act ${zone.act}` : '';
+        if (zoneActString !== filters.act) {
+          return false;
+        }
       }
 
       // Town filter
@@ -105,14 +100,14 @@ export function useZoneFiltering(
           comparison = a.deaths - b.deaths;
           break;
         }
-        case 'zone_level': {
-          const aLevel = a.zone_level || 0;
-          const bLevel = b.zone_level || 0;
+        case 'area_level': {
+          const aLevel = a.area_level || 0;
+          const bLevel = b.area_level || 0;
           comparison = aLevel - bLevel;
           break;
         }
-        case 'location_name': {
-          comparison = a.location_name.localeCompare(b.location_name);
+        case 'zone_name': {
+          comparison = a.zone_name.localeCompare(b.zone_name);
           break;
         }
         default: {

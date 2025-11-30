@@ -1,9 +1,7 @@
 import { useCallback, useState } from 'react';
-import type { LocationType } from '../types/character';
 
 export interface ZoneFilters {
   search: string;
-  locationType: LocationType | 'All';
   act: string | 'All';
   isTown: boolean | null; // null = all, true = towns only, false = non-towns only
   isActive: boolean | null; // null = all, true = active only, false = inactive only
@@ -19,15 +17,14 @@ export interface ZoneSortOption {
     | 'duration'
     | 'visits'
     | 'deaths'
-    | 'zone_level'
-    | 'location_name'
+    | 'area_level'
+    | 'zone_name'
     | 'first_visited';
   direction: 'asc' | 'desc';
 }
 
 const defaultFilters: ZoneFilters = {
   search: '',
-  locationType: 'All',
   act: 'All',
   isTown: null,
   isActive: null,
@@ -79,7 +76,6 @@ export function useZoneFilters() {
   const hasActiveFilters = useCallback(() => {
     return (
       filters.search.trim() !== '' ||
-      filters.locationType !== 'All' ||
       filters.act !== 'All' ||
       filters.isTown !== null ||
       filters.isActive !== null ||

@@ -2,7 +2,6 @@
 //!
 //! This module contains all the infrastructure concerns including:
 //! - System monitoring (process detection, server monitoring)
-//! - Runtime management (async task orchestration)
 //! - File management (file operations, JSON storage)
 //! - Log parsing and analysis
 //! - Tauri integration (events, commands)
@@ -12,14 +11,12 @@
 pub mod file_management;
 pub mod monitoring;
 pub mod parsing;
-pub mod runtime;
 pub mod system;
 pub mod tauri;
 pub mod time;
 
 // Re-export commonly used infrastructure components
 pub use monitoring::process_monitor::ProcessMonitorImpl;
-pub use runtime::{RuntimeManager, TaskManager};
 pub use system::{detect_os, expand_tilde, get_os_name, OperatingSystem, PoeClientLogPaths};
 pub use time::{
     calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,

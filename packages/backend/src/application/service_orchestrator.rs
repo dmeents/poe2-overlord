@@ -1,12 +1,12 @@
 //! # Service Orchestrator
 //!
 //! Manages the lifecycle and coordination of background services in the POE2 Overlord application.
-//! This module provides functions to start and manage long-running background tasks that handle
+//! This module provides functions to start long-running background tasks that handle
 //! monitoring, data processing, and event emission.
 //!
 //! ## Background Services
 //!
-//! The orchestrator manages four main types of background services:
+//! The orchestrator manages three main types of background services:
 //!
 //! ### 1. Game Process Monitoring
 //! - **Purpose**: Detects when Path of Exile 2 is running and monitors game state
@@ -18,32 +18,22 @@
 //! - **Implementation**: File system monitoring with log parsing and event extraction
 //! - **Integration**: Updates character data and server status based on log events
 //!
-//! ### 3. Time Tracking Emission
-//! - **Purpose**: Periodically sends time tracking data to the frontend for display
-//! - **Implementation**: Scheduled emission of character play time data
-//! - **Integration**: Uses time tracking service to gather and format data
-//!
-//! ### 4. Server Ping Monitoring
+//! ### 3. Server Ping Monitoring
 //! - **Purpose**: Monitors server connectivity and network status
 //! - **Implementation**: Periodic ping checks to game servers
 //! - **Integration**: Updates server status and notifies frontend of connectivity changes
 //!
-//! ## Task Management Strategy
+//! ## Task Management
 //!
-//! - **Runtime Manager**: Handles task spawning and lifecycle management
-//! - **Task Manager**: Provides task tracking and coordination capabilities
-//! - **Error Handling**: Comprehensive error handling with logging for all background tasks
-//! - **Graceful Shutdown**: Tasks are designed to handle shutdown signals properly
+//! Services manage their own task lifecycle internally. The orchestrator simply starts
+//! them using Tauri's async runtime. Cleanup is handled via service shutdown methods.
 
 use log::{error, info};
 use std::sync::Arc;
-use tauri::WebviewWindow;
 
-use crate::domain::character::traits::CharacterService;
 use crate::domain::game_monitoring::traits::GameMonitoringService;
 use crate::domain::log_analysis::traits::LogAnalysisService;
 use crate::domain::server_monitoring::ServerMonitoringService;
-use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 
 /// Starts the game process monitoring service as a background task.
 ///
@@ -51,70 +41,24 @@ use crate::infrastructure::runtime::{RuntimeManager, TaskManager};
 /// game processes. When a game process is detected, it automatically starts monitoring
 /// the game state, character activities, and play time tracking.
 ///
+/// The service manages its own task lifecycle internally, including start/stop logic
+/// and graceful shutdown.
+///
 /// # Arguments
 ///
-/// * `_window` - Webview window (unused in current implementation)
 /// * `game_monitoring_service` - The game monitoring service instance
-/// * `runtime_manager` - Runtime manager for task lifecycle management
-/// * `_task_manager` - Task manager (unused in current implementation)
-///
-/// # Behavior
-///
-/// - Automatically starts monitoring on application startup
-/// - Runs continuously in the background
-/// - Handles errors gracefully with logging
-/// - Integrates with time tracking and event publishing services
-pub fn start_game_process_monitoring(
-    _window: WebviewWindow,
-    game_monitoring_service: Arc<dyn GameMonitoringService>,
-    runtime_manager: Arc<RuntimeManager>,
-    _task_manager: Arc<TaskManager>,
-) {
-    let service_clone = game_monitoring_service.clone();
-
-    // Spawn the game monitoring task using the runtime manager
-    let _handle = runtime_manager.spawn_background_task(
-        "game_process_monitoring_setup".to_string(),
-        move || async move {
-            info!("Automatically starting game monitoring on application startup");
-            match service_clone.start_monitoring().await {
-                Ok(_) => {
-                    info!("Game monitoring started successfully");
-                }
-                Err(e) => {
-                    error!("Failed to start game monitoring: {}", e);
-                }
+pub fn start_game_process_monitoring(game_monitoring_service: Arc<dyn GameMonitoringService>) {
+    tauri::async_runtime::spawn(async move {
+        info!("Starting game monitoring on application startup");
+        match game_monitoring_service.start_monitoring().await {
+            Ok(_) => {
+                info!("Game monitoring started successfully");
             }
-        },
-    );
-}
-
-/// Starts the time tracking data emission service as a background task.
-///
-/// This function spawns a background task that periodically emits time tracking data
-/// to the frontend. The service gathers character play time data and sends it to the
-/// frontend for display in the UI.
-///
-/// # Arguments
-///
-/// * `window` - Webview window for sending events to the frontend
-/// * `time_tracking` - The time tracking service instance
-/// * `_runtime_manager` - Runtime manager (unused in current implementation)
-/// * `_task_manager` - Task manager (unused in current implementation)
-///
-/// # Behavior
-///
-/// - Periodically gathers time tracking data from all characters
-/// - Emits data to the frontend via Tauri events
-/// - Runs continuously in the background
-/// - Handles frontend communication automatically
-pub fn start_character_tracking_emission(
-    _window: WebviewWindow,
-    _character_service: Arc<dyn CharacterService>,
-    _runtime_manager: Arc<RuntimeManager>,
-    _task_manager: Arc<TaskManager>,
-) {
-    // Character tracking emission task removed - was placeholder implementation
+            Err(e) => {
+                error!("Failed to start game monitoring: {}", e);
+            }
+        }
+    });
 }
 
 /// Starts the server ping monitoring service as a background task.
@@ -125,37 +69,13 @@ pub fn start_character_tracking_emission(
 ///
 /// # Arguments
 ///
-/// * `_window` - Webview window (unused in current implementation)
-/// * `server_status` - The server monitor service instance
-/// * `_runtime_manager` - Runtime manager (unused in current implementation)
-/// * `_task_manager` - Task manager (unused in current implementation)
-///
-/// # Behavior
-///
-/// - Periodically pings game servers to check connectivity
-/// - Tracks server status and network health
-/// - Emits status change events to the frontend
-/// - Runs continuously in the background
-pub fn start_ping_event_emission(
-    _window: WebviewWindow,
-    server_monitoring_service: Arc<dyn ServerMonitoringService>,
-    runtime_manager: Arc<RuntimeManager>,
-    _task_manager: Arc<TaskManager>,
-) {
-    let server_monitoring_service_clone = server_monitoring_service.clone();
-
-    // Spawn the server ping monitoring task using the runtime manager
-    runtime_manager.spawn_background_task(
-        "server_ping_monitoring".to_string(),
-        move || async move {
-            if let Err(e) = server_monitoring_service_clone
-                .start_ping_monitoring()
-                .await
-            {
-                error!("Failed to start server ping monitoring: {}", e);
-            }
-        },
-    );
+/// * `server_monitoring_service` - The server monitor service instance
+pub fn start_ping_event_emission(server_monitoring_service: Arc<dyn ServerMonitoringService>) {
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = server_monitoring_service.start_ping_monitoring().await {
+            error!("Failed to start server ping monitoring: {}", e);
+        }
+    });
 }
 
 /// Starts the log monitoring service as a background task.
@@ -166,27 +86,10 @@ pub fn start_ping_event_emission(
 ///
 /// # Arguments
 ///
-/// * `log_monitor` - The log analyzer service instance
-/// * `_runtime_manager` - Runtime manager (unused in current implementation)
-/// * `_task_manager` - Task manager (unused in current implementation)
-///
-/// # Behavior
-///
-/// - Monitors game log files for new entries in real-time
-/// - Parses log entries to extract game events and character data
-/// - Updates character information and server status based on log events
-/// - Handles errors gracefully with comprehensive logging
-/// - Runs continuously in the background
-pub fn start_log_monitoring(
-    log_monitor: Arc<dyn LogAnalysisService>,
-    runtime_manager: Arc<RuntimeManager>,
-    _task_manager: Arc<TaskManager>,
-) {
-    let log_monitor_clone = log_monitor.clone();
-
-    // Spawn the log monitoring task using the runtime manager
-    runtime_manager.spawn_background_task("log_monitoring".to_string(), move || async move {
-        if let Err(e) = log_monitor_clone.start_monitoring().await {
+/// * `log_analysis_service` - The log analyzer service instance
+pub fn start_log_monitoring(log_analysis_service: Arc<dyn LogAnalysisService>) {
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = log_analysis_service.start_monitoring().await {
             error!("Failed to start log monitoring: {}", e);
         }
     });

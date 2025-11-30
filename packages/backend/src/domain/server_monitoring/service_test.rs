@@ -2,13 +2,13 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::events::{AppEvent, EventBus};
     use crate::domain::server_monitoring::models::ServerStatus;
     use crate::domain::server_monitoring::service::ServerMonitoringServiceImpl;
     use crate::domain::server_monitoring::traits::{
         PingProvider, ServerMonitoringService, ServerStatusRepository,
     };
     use crate::errors::AppResult;
+    use crate::infrastructure::events::{AppEvent, EventBus};
     use async_trait::async_trait;
     use std::sync::Arc;
     use tokio::sync::RwLock;
@@ -129,7 +129,7 @@ mod tests {
 
         // Subscribe to events
         let mut receiver = event_bus
-            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .get_receiver(crate::infrastructure::events::EventType::ServerMonitoring)
             .await
             .expect("Failed to get receiver");
 
@@ -183,7 +183,7 @@ mod tests {
 
         // Subscribe to events after initial setup
         let mut receiver = event_bus
-            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .get_receiver(crate::infrastructure::events::EventType::ServerMonitoring)
             .await
             .expect("Failed to get receiver");
 
@@ -232,7 +232,7 @@ mod tests {
 
         // Subscribe to events after initial setup
         let mut receiver = event_bus
-            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .get_receiver(crate::infrastructure::events::EventType::ServerMonitoring)
             .await
             .expect("Failed to get receiver");
 
@@ -406,7 +406,7 @@ mod tests {
                 .expect("Failed to create service");
 
         let mut receiver = event_bus
-            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .get_receiver(crate::infrastructure::events::EventType::ServerMonitoring)
             .await
             .expect("Failed to get receiver");
 
@@ -469,7 +469,7 @@ mod tests {
             .expect("Should set server");
 
         let mut receiver = event_bus
-            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .get_receiver(crate::infrastructure::events::EventType::ServerMonitoring)
             .await
             .expect("Failed to get receiver");
 
@@ -522,7 +522,7 @@ mod tests {
             .expect("Should set server");
 
         let mut receiver = event_bus
-            .get_receiver(crate::domain::events::EventType::ServerMonitoring)
+            .get_receiver(crate::infrastructure::events::EventType::ServerMonitoring)
             .await
             .expect("Failed to get receiver");
 

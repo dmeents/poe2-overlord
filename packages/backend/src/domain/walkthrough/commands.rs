@@ -1,7 +1,6 @@
 use crate::domain::walkthrough::models::{CharacterWalkthroughProgress, WalkthroughGuide};
 use crate::domain::walkthrough::traits::WalkthroughService;
-use crate::infrastructure::tauri::to_command_result;
-use crate::infrastructure::tauri::CommandResult;
+use crate::{to_command_result, CommandResult};
 use tauri::State;
 
 /// Tauri command to get the complete walkthrough guide

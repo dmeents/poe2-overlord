@@ -33,7 +33,6 @@ use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::{
     service::ConfigurationServiceImpl, traits::ConfigurationService,
 };
-use crate::domain::events::EventBus;
 use crate::domain::game_monitoring::{traits::GameMonitoringService, GameMonitoringServiceImpl};
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
@@ -49,6 +48,7 @@ use crate::domain::walkthrough::{
 use crate::domain::zone_configuration::{
     repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
 };
+use crate::infrastructure::events::EventBus;
 use crate::infrastructure::monitoring::ProcessMonitorImpl;
 use log::{error, info};
 use std::sync::Arc;

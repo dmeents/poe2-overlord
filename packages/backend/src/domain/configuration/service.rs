@@ -3,8 +3,8 @@ use crate::domain::configuration::models::{
 };
 use crate::domain::configuration::repository::ConfigurationRepositoryImpl;
 use crate::domain::configuration::traits::{ConfigurationRepository, ConfigurationService};
-use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::errors::{AppError, AppResult};
+use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::sync::Arc;

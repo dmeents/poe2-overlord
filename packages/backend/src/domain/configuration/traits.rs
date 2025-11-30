@@ -1,8 +1,8 @@
 use crate::domain::configuration::models::{
     AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
 };
-use crate::domain::events::AppEvent;
 use crate::errors::AppResult;
+use crate::infrastructure::events::AppEvent;
 use async_trait::async_trait;
 use tokio::sync::broadcast;
 
@@ -15,7 +15,7 @@ use tokio::sync::broadcast;
 /// # Responsibilities
 ///
 /// - Configuration CRUD operations with validation
-/// - Event broadcasting for configuration changes  
+/// - Event broadcasting for configuration changes
 /// - Coordination between repository and business logic
 /// - File I/O operations with error handling
 /// - Configuration change notifications

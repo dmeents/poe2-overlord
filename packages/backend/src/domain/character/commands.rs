@@ -2,7 +2,7 @@
 use tauri::State;
 
 use crate::domain::character::traits::CharacterService;
-use crate::infrastructure::tauri::{to_command_result, CommandResult};
+use crate::{to_command_result, CommandResult};
 
 /// Tauri command to create a new character (new domain)
 ///
@@ -34,7 +34,11 @@ pub async fn get_character(
     character_id: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<crate::domain::character::models::CharacterDataResponse> {
-    to_command_result(character_service.get_character_response(&character_id).await)
+    to_command_result(
+        character_service
+            .get_character_response(&character_id)
+            .await,
+    )
 }
 
 /// Tauri command to get all characters
@@ -98,7 +102,11 @@ pub async fn get_active_character(
 ) -> CommandResult<Option<crate::domain::character::models::CharacterDataResponse>> {
     match to_command_result(character_service.get_active_character().await)? {
         Some(character) => {
-            let response = to_command_result(character_service.get_character_response(&character.id).await)?;
+            let response = to_command_result(
+                character_service
+                    .get_character_response(&character.id)
+                    .await,
+            )?;
             Ok(Some(response))
         }
         None => Ok(None),

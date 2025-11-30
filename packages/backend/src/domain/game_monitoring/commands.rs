@@ -17,7 +17,7 @@
 
 use crate::domain::game_monitoring::models::ProcessInfo;
 use crate::domain::game_monitoring::traits::GameMonitoringService;
-use crate::infrastructure::tauri::CommandResult;
+use crate::CommandResult;
 use log::{debug, info};
 use std::sync::Arc;
 use tauri::State;

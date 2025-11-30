@@ -1,41 +1,26 @@
-//! Channel Manager
-//!
-//! This module provides centralized management of broadcast channels for the event system.
-//! It handles channel lifecycle, configuration, and statistics tracking.
+//! Manages broadcast channels for different event types.
 
-use crate::domain::events::event_types::{ChannelConfig, ChannelStats, EventType};
 use crate::errors::AppResult;
+use crate::infrastructure::events::types::{AppEvent, ChannelConfig, ChannelStats, EventType};
 use log::{debug, info};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 
-/// Centralized manager for event channels
-///
-/// This struct manages all broadcast channels in the event system, providing
-/// lifecycle management, configuration, and statistics tracking.
 pub struct ChannelManager {
-    /// Active channels mapped by event type
     channels: Arc<RwLock<HashMap<EventType, Arc<EventChannel>>>>,
-    /// Channel configurations
     configs: Arc<RwLock<HashMap<EventType, ChannelConfig>>>,
-    /// Statistics for each channel
     stats: Arc<RwLock<HashMap<EventType, ChannelStats>>>,
 }
 
-/// Internal representation of an event channel
 #[derive(Debug)]
 pub struct EventChannel {
-    /// The broadcast sender for this channel
-    sender: broadcast::Sender<crate::domain::events::event_types::AppEvent>,
-    /// Configuration for this channel
+    sender: broadcast::Sender<AppEvent>,
     config: ChannelConfig,
-    /// When this channel was created
     created_at: String,
 }
 
 impl EventChannel {
-    /// Create a new event channel
     pub fn new(_event_type: EventType, config: ChannelConfig) -> Self {
         let (sender, _) = broadcast::channel(config.capacity);
 
@@ -46,25 +31,20 @@ impl EventChannel {
         }
     }
 
-    /// Get the number of active subscribers
     pub fn subscriber_count(&self) -> usize {
         self.sender.receiver_count()
     }
 
-    /// Check if the channel is at capacity
     pub fn is_at_capacity(&self) -> bool {
-        // This is a rough estimate - Tokio doesn't expose exact capacity
         self.subscriber_count() >= self.config.capacity
     }
 
-    /// Get the sender for this channel
-    pub fn sender(&self) -> &broadcast::Sender<crate::domain::events::event_types::AppEvent> {
+    pub fn sender(&self) -> &broadcast::Sender<AppEvent> {
         &self.sender
     }
 }
 
 impl ChannelManager {
-    /// Create a new channel manager
     pub fn new() -> Self {
         Self {
             channels: Arc::new(RwLock::new(HashMap::new())),
@@ -73,15 +53,10 @@ impl ChannelManager {
         }
     }
 
-    /// Get or create a channel for the specified event type
-    ///
-    /// If a channel doesn't exist for the event type, it will be created
-    /// with the default configuration for that event type.
     pub async fn get_or_create_channel(
         &self,
         event_type: EventType,
     ) -> AppResult<Arc<EventChannel>> {
-        // Check if channel already exists
         {
             let channels = self.channels.read().await;
             if let Some(channel) = channels.get(&event_type) {
@@ -89,17 +64,14 @@ impl ChannelManager {
             }
         }
 
-        // Create new channel
         let config = self.get_or_create_config(event_type).await;
         let channel = Arc::new(EventChannel::new(event_type, config.clone()));
 
-        // Store the channel
         {
             let mut channels = self.channels.write().await;
             channels.insert(event_type, Arc::clone(&channel));
         }
 
-        // Initialize statistics
         {
             let mut stats = self.stats.write().await;
             stats.insert(
@@ -115,7 +87,6 @@ impl ChannelManager {
             );
         }
 
-        // Store configuration
         {
             let mut configs = self.configs.write().await;
             configs.insert(event_type, config);
@@ -125,13 +96,11 @@ impl ChannelManager {
         Ok(channel)
     }
 
-    /// Get an existing channel for the specified event type
     pub async fn get_channel(&self, event_type: EventType) -> Option<Arc<EventChannel>> {
         let channels = self.channels.read().await;
         channels.get(&event_type).cloned()
     }
 
-    /// Remove a channel for the specified event type
     pub async fn remove_channel(&self, event_type: EventType) -> AppResult<()> {
         {
             let mut channels = self.channels.write().await;
@@ -152,13 +121,11 @@ impl ChannelManager {
         Ok(())
     }
 
-    /// Get all active event types
     pub async fn get_active_event_types(&self) -> Vec<EventType> {
         let channels = self.channels.read().await;
         channels.keys().cloned().collect()
     }
 
-    /// Update configuration for a specific event type
     pub async fn update_config(
         &self,
         event_type: EventType,
@@ -173,25 +140,21 @@ impl ChannelManager {
         Ok(())
     }
 
-    /// Get configuration for a specific event type
     pub async fn get_config(&self, event_type: EventType) -> Option<ChannelConfig> {
         let configs = self.configs.read().await;
         configs.get(&event_type).cloned()
     }
 
-    /// Get statistics for a specific event type
     pub async fn get_stats(&self, event_type: EventType) -> Option<ChannelStats> {
         let stats = self.stats.read().await;
         stats.get(&event_type).cloned()
     }
 
-    /// Get statistics for all channels
     pub async fn get_all_stats(&self) -> Vec<ChannelStats> {
         let stats = self.stats.read().await;
         stats.values().cloned().collect()
     }
 
-    /// Increment published events counter for a channel
     pub async fn increment_published_events(&self, event_type: EventType) {
         if let Some(channel) = self.get_channel(event_type).await {
             let mut stats = self.stats.write().await;
@@ -203,7 +166,6 @@ impl ChannelManager {
         }
     }
 
-    /// Increment received events counter for a channel
     pub async fn increment_received_events(&self, event_type: EventType) {
         if let Some(channel) = self.get_channel(event_type).await {
             let mut stats = self.stats.write().await;
@@ -215,7 +177,6 @@ impl ChannelManager {
         }
     }
 
-    /// Get or create configuration for an event type
     async fn get_or_create_config(&self, event_type: EventType) -> ChannelConfig {
         {
             let configs = self.configs.read().await;
@@ -224,7 +185,6 @@ impl ChannelManager {
             }
         }
 
-        // Create default configuration
         let config = ChannelConfig::for_event_type(event_type);
 
         {

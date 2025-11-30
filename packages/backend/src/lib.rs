@@ -1,8 +1,13 @@
+//! POE2 Overlord Backend Library
+//!
+//! This library provides the core backend functionality for the POE2 Overlord application,
+//! including domain services, infrastructure components, and Tauri command handlers.
+
 // Core application modules
 pub mod application; // Application setup, service orchestration, and service registry
 pub mod domain; // Business logic, models, services, and domain-specific functionality
 pub mod errors; // Centralized error handling and custom error types
-pub mod infrastructure; // External integrations, monitoring, parsing, and system utilities
+pub mod infrastructure; // External integrations, events, monitoring, parsing, and system utilities
 
 // Application setup and initialization
 pub use application::setup_app;
@@ -15,6 +20,13 @@ pub use domain::walkthrough::commands::*; // Walkthrough guide and progress trac
 
 // Core error handling
 pub use errors::*;
+
+// Tauri command utilities
+pub type CommandResult<T> = Result<T, String>;
+
+pub fn to_command_result<T>(result: AppResult<T>) -> CommandResult<T> {
+    result.map_err(|e| e.to_string())
+}
 
 // Game monitoring models and state
 pub use domain::game_monitoring::models::{OverlayState, ProcessInfo};
@@ -45,10 +57,7 @@ pub use domain::configuration::{
 };
 
 // Unified event system
-pub use domain::events::{
-    AppEvent, ChannelConfig, ChannelManager, EventBus, EventPublisher, EventPublisherTrait,
-    EventSubscriber, EventSubscriberTrait, EventType,
-};
+pub use infrastructure::events::{AppEvent, ChannelConfig, ChannelManager, EventBus, EventType};
 
 // Game monitoring domain services and models
 pub use domain::game_monitoring::{
@@ -59,7 +68,8 @@ pub use domain::game_monitoring::{
 // Note: Server monitoring is now handled by the domain service
 pub use domain::log_analysis::traits::LogAnalysisService; // Log parsing and analysis
 
-pub use infrastructure::tauri::TauriEventBridge; // Tauri event system integration
+pub use infrastructure::events::TauriEventBridge; // Tauri event system integration
+                                                  // Infrastructure utilities
 pub use infrastructure::time::{
     // Time calculation and validation utilities
     calculate_active_session_duration_seconds,

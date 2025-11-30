@@ -1,11 +1,11 @@
 //! Server monitoring service for tracking server status, ping operations, and event publishing.
 
-use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::server_monitoring::traits::{
     PingProvider, ServerMonitoringService, ServerStatusRepository,
 };
 use crate::errors::AppResult;
+use crate::infrastructure::events::{AppEvent, EventBus};
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use std::sync::Arc;

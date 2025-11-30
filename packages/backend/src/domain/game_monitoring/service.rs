@@ -1,10 +1,10 @@
 use crate::domain::character::traits::CharacterService;
-use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::game_monitoring::{
     models::GameProcessStatus,
     traits::{GameMonitoringService, ProcessDetector},
 };
 use crate::errors::AppResult;
+use crate::infrastructure::events::{AppEvent, EventBus};
 use async_trait::async_trait;
 use log::{error, info};
 use std::sync::Arc;
@@ -102,11 +102,7 @@ impl GameMonitoringServiceImpl {
                 info!("POE2 process stopped");
 
                 // Finalize character tracking when game process stops
-                if let Err(e) = self
-                    .character_service
-                    .finalize_all_active_zones()
-                    .await
-                {
+                if let Err(e) = self.character_service.finalize_all_active_zones().await {
                     error!(
                         "Failed to finalize character tracking when game stopped: {}",
                         e
@@ -127,7 +123,6 @@ impl GameMonitoringServiceImpl {
         if let Err(e) = self.event_bus.publish(event).await {
             error!("Failed to publish game process status change event: {}", e);
         }
-
 
         // Update the internal current status
         {
@@ -164,7 +159,6 @@ impl GameMonitoringServiceImpl {
         // Publish initial status immediately to handle timing issues
         match process_detector.check_game_process().await {
             Ok(initial_status) => {
-
                 // Publish initial status as a state change
                 if let Err(e) = self
                     .handle_process_state_change(initial_status.clone(), None)

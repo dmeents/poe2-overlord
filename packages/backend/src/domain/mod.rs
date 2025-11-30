@@ -40,7 +40,6 @@
 // Domain module declarations - each represents a distinct bounded context
 pub mod character; // Character management and lifecycle operations (includes tracking)
 pub mod configuration; // Application configuration and settings management
-pub mod events; // Unified event system for all application events
 pub mod game_monitoring; // Game process detection and monitoring
 pub mod log_analysis; // Log parsing, analysis, and pattern matching
 pub mod server_monitoring; // Network connectivity and server status monitoring
@@ -64,9 +63,10 @@ pub use configuration::{
 };
 
 // Re-export unified event system types
-pub use events::{
-    AppEvent, ChannelConfig, ChannelManager, EventBus, EventPublisher, EventPublisherTrait,
-    EventSubscriber, EventSubscriberTrait, EventType,
+// Events module moved to infrastructure::events
+// Re-export for backwards compatibility if needed
+pub use crate::infrastructure::events::{
+    AppEvent, ChannelConfig, ChannelManager, EventBus, EventType,
 };
 
 // Re-export game monitoring types

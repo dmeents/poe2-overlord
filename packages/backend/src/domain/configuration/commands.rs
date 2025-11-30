@@ -29,7 +29,7 @@ use crate::domain::configuration::models::{
 };
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
-use crate::infrastructure::tauri::{to_command_result, CommandResult};
+use crate::{to_command_result, CommandResult};
 use log::{error, info};
 use std::sync::Arc;
 use tauri::State;

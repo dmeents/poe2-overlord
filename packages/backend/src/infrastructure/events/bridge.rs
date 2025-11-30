@@ -1,37 +1,24 @@
-//! Tauri Event Bridge
-//!
-//! This module provides a bridge between the unified event system and the Tauri frontend.
-//! It subscribes to all events and forwards them to the frontend using Tauri's emit functionality.
+//! Forwards events from EventBus to Tauri frontend.
 
-use crate::domain::events::{AppEvent, EventBus, EventType};
 use crate::errors::AppResult;
+use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
 
-/// Bridge between the unified event system and Tauri frontend
-///
-/// This struct subscribes to all events from the EventBus and forwards them
-/// to the Tauri frontend using the WebviewWindow's emit functionality.
 pub struct TauriEventBridge {
     event_bus: Arc<EventBus>,
     window: WebviewWindow,
 }
 
 impl TauriEventBridge {
-    /// Create a new Tauri event bridge
     pub fn new(event_bus: Arc<EventBus>, window: WebviewWindow) -> Self {
         Self { event_bus, window }
     }
 
-    /// Start forwarding events to the frontend
-    ///
-    /// This method subscribes to all event types and starts forwarding them
-    /// to the Tauri frontend. It runs as a background task.
     pub async fn start_forwarding(&self) -> AppResult<()> {
         info!("Starting Tauri event bridge forwarding");
 
-        // Subscribe to all event types
         for event_type in EventType::all() {
             let subscription = self
                 .event_bus
@@ -43,7 +30,6 @@ impl TauriEventBridge {
                 event_type, subscription.subscription_id
             );
 
-            // Start forwarding task for this event type
             let event_bus = Arc::clone(&self.event_bus);
             let window = self.window.clone();
 
@@ -59,7 +45,6 @@ impl TauriEventBridge {
         Ok(())
     }
 
-    /// Forward a single event to the frontend
     async fn forward_event_to_frontend(window: &WebviewWindow, event: &AppEvent) {
         let event_name = Self::get_event_name(event);
 
@@ -73,7 +58,6 @@ impl TauriEventBridge {
         }
     }
 
-    /// Get the Tauri event name for an AppEvent
     fn get_event_name(event: &AppEvent) -> String {
         match event {
             AppEvent::ServerStatusChanged { .. } => "server-status-changed".to_string(),
@@ -101,15 +85,10 @@ impl TauriEventBridge {
         }
     }
 
-    /// Publish an event through the event bus
-    ///
-    /// This method provides a convenient way to publish events from Tauri commands
-    /// that will be forwarded to the frontend.
     pub async fn publish_event(&self, event: AppEvent) -> AppResult<()> {
         self.event_bus.publish(event).await
     }
 
-    /// Get the event bus for direct access
     pub fn get_event_bus(&self) -> &Arc<EventBus> {
         &self.event_bus
     }

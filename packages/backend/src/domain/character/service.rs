@@ -3,9 +3,9 @@ use chrono::Utc;
 use log::{debug, error, info, warn};
 use std::sync::Arc;
 
-use crate::domain::events::EventBus;
 use crate::domain::log_analysis::models::SceneChangeEvent;
 use crate::errors::AppError;
+use crate::infrastructure::events::EventBus;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
@@ -507,7 +507,7 @@ impl CharacterService for CharacterServiceImpl {
         self.repository.save_character_data(&character_data).await?;
 
         // Emit character tracking data updated event
-        let event = crate::domain::events::event_types::AppEvent::character_tracking_data_updated(
+        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
             character_data,
         );
@@ -790,7 +790,7 @@ impl CharacterServiceImpl {
             });
 
         // Emit character tracking data updated event
-        let event = crate::domain::events::event_types::AppEvent::character_tracking_data_updated(
+        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
             character_data,
         );

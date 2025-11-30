@@ -7,10 +7,10 @@
 //! - Tauri integration (events, commands)
 //! - Time calculations and validation
 
+pub mod events;
 pub mod file_management;
 pub mod monitoring;
 pub mod parsing;
-pub mod tauri;
 pub mod time;
 
 // Re-export commonly used infrastructure components

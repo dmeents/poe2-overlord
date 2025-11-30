@@ -32,7 +32,7 @@ use crate::application::service_orchestrator::{
 };
 use crate::application::service_registry::ServiceInitializer;
 use crate::domain::configuration::traits::ConfigurationService;
-use crate::infrastructure::tauri::TauriEventBridge;
+use crate::infrastructure::events::TauriEventBridge;
 
 /// Sets up the complete application with all services, configuration, and background tasks.
 ///

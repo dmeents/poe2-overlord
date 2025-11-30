@@ -1,18 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect } from 'react';
-import {
-  ActDistributionChart,
-  CharacterStatusCard,
-  DashboardInsights,
-  PageLayout,
-  WalkthroughActiveStepCard,
-} from '../components';
-import {
-  useCharacterManagement,
-  useWalkthroughEvents,
-  useWalkthroughGuide,
-} from '../hooks';
+import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
+import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
+import { DashboardInsights } from '../components/insights/dashboard-insights/dashboard-insights';
+import { PageLayout } from '../components/layout/page-layout/page-layout';
+import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
+import { useCharacterManagement } from '../hooks/useCharacterManagement';
+import { useWalkthroughEvents } from '../hooks/useWalkthroughEvents';
+import { useWalkthroughGuide } from '../hooks/useWalkthroughGuide';
 import type { CharacterWalkthroughProgress } from '../types/walkthrough';
 import { WalkthroughService } from '../utils/walkthrough';
 import { handleWikiClick } from '../utils/wiki-utils';

@@ -1,4 +1,4 @@
-import { Button } from '@/components';
+import { Button } from '@/components/ui/button/button';
 import { MinusIcon, WindowIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { windowTitleStyles } from './window-title.styles';

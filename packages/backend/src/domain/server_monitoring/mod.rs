@@ -1,15 +1,18 @@
-//! # Server Monitoring Domain
-//!
-//! This module provides simplified server monitoring functionality.
-//! Handles server status tracking, ping operations, and event publishing.
-
-pub mod commands;
 pub mod models;
+pub mod ping_provider;
 pub mod repository;
 pub mod service;
+pub mod traits;
 
-// Re-export core types for easy access
-pub use commands::*;
-pub use models::{ServerIp, ServerStatus};
-pub use repository::{ServerIpRepository, ServerIpRepositoryTrait};
-pub use service::{ServerMonitoringService, ServerMonitoringServiceImpl};
+#[cfg(test)]
+mod models_test;
+#[cfg(test)]
+mod ping_provider_test;
+#[cfg(test)]
+mod service_test;
+
+pub use models::ServerStatus;
+pub use ping_provider::SystemPingProvider;
+pub use repository::ServerStatusRepository as ServerStatusRepositoryImpl;
+pub use service::ServerMonitoringServiceImpl;
+pub use traits::{PingProvider, ServerMonitoringService, ServerStatusRepository};

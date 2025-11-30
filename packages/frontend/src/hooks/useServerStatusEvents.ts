@@ -1,4 +1,4 @@
-import type { ServerStatus, ServerStatusChangedEvent } from '@/types';
+import type { ServerStatus, ServerStatusChangedEvent } from '@/types/server';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
@@ -40,14 +40,8 @@ export function useServerStatusEvents() {
         unlistenFns.push(unlistenServerStatus);
         setIsListening(true);
 
-        // Request initial status from backend to handle timing issues
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          const initialStatus = await invoke<ServerStatus>('get_server_status');
-          setServerStatus(initialStatus);
-        } catch {
-          // No initial status available, rely on events only
-        }
+        // Backend will emit initial status event on startup if file exists
+        // No need to invoke - rely purely on events
       } catch {
         // Failed to set up event listeners
       }

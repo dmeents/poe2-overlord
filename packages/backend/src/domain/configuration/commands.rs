@@ -1,49 +1,14 @@
-//! Tauri Command Handlers for Configuration Management
-//!
-//! This module contains all Tauri command handlers that expose the configuration
-//! domain functionality to the frontend application. These commands provide a
-//! bridge between the frontend JavaScript/TypeScript code and the backend Rust
-//! configuration service.
-//!
-//! # Command Categories
-//!
-//! - **Configuration CRUD**: Get, update, reset configuration
-//! - **POE Client Path Management**: Get, set, reset POE client log paths
-//! - **Log Level Management**: Get, set application log levels
-//! - **Validation**: Validate configuration settings
-//! - **File Information**: Get configuration file metadata
-//!
-//! # Error Handling
-//!
-//! All commands use the `CommandResult<T>` type for consistent error handling
-//! across the frontend-backend boundary. Errors are properly logged and
-//! converted to user-friendly messages.
-//!
-//! # Logging
-//!
-//! Commands include comprehensive debug and info logging for troubleshooting
-//! and monitoring configuration operations.
-
 use crate::domain::configuration::models::{
-    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
+    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult, ZoneRefreshInterval,
 };
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
-use crate::infrastructure::tauri::{to_command_result, CommandResult};
+use crate::{to_command_result, CommandResult};
 use log::{error, info};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::State;
 
-/// Retrieve the current application configuration
-///
-/// This command provides read access to the current configuration state.
-/// It returns the in-memory configuration which is kept synchronized with
-/// the persistent storage.
-///
-/// # Returns
-///
-/// The current `AppConfig` containing all configuration settings
-///
 #[tauri::command]
 pub async fn get_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -59,31 +24,11 @@ pub async fn get_config(
     Ok(config)
 }
 
-/// Get the default application configuration
-///
-/// Returns a new `AppConfig` instance with all default values.
-/// This is useful for frontend forms and reset operations.
-///
 #[tauri::command]
 pub async fn get_default_config() -> CommandResult<AppConfig> {
     Ok(AppConfig::default())
 }
 
-/// Update the entire application configuration
-///
-/// This command performs a complete configuration update with validation
-/// and persistence. It will validate the new configuration before saving
-/// and broadcast change events to all subscribers.
-///
-/// # Arguments
-///
-/// * `new_config` - The complete new configuration to apply
-///
-/// # Validation
-///
-/// The configuration will be validated before saving. If validation fails,
-/// the command will return an error and no changes will be persisted.
-///
 #[tauri::command]
 pub async fn update_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -132,21 +77,6 @@ pub async fn get_poe_client_log_path(
     Ok(path)
 }
 
-/// Set the Path of Exile client log file path
-///
-/// Updates the POE client log path setting with validation and persistence.
-/// This setting determines where the application looks for POE client log files
-/// to monitor game events.
-///
-/// # Arguments
-///
-/// * `path` - The file system path to the POE client log file
-///
-/// # Validation
-///
-/// The path will be validated to ensure it's not empty. Additional file
-/// existence validation may be performed by the service layer.
-///
 #[tauri::command]
 pub async fn set_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -250,26 +180,6 @@ pub async fn get_config_file_info(
     Ok(file_info)
 }
 
-/// Validate the current configuration
-///
-/// Performs comprehensive validation of the current configuration state
-/// and returns detailed validation results including any error messages.
-///
-/// This command is useful for frontend forms to provide real-time validation
-/// feedback to users before they attempt to save changes.
-///
-/// # Returns
-///
-/// A `ConfigurationValidationResult` containing:
-/// - `is_valid`: Boolean indicating if validation passed
-/// - `errors`: Array of error messages (empty if validation passed)
-///
-/// # Validation Checks
-///
-/// - Log level must be one of the supported values
-/// - POE client log path must not be empty
-/// - Additional domain-specific validation rules
-///
 #[tauri::command]
 pub async fn validate_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
@@ -292,4 +202,64 @@ pub async fn validate_config(
         }))?;
 
     Ok(validation_result)
+}
+
+#[tauri::command]
+pub async fn get_zone_refresh_interval(
+    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+) -> CommandResult<ZoneRefreshInterval> {
+    let interval = to_command_result(config_service.get_zone_refresh_interval().await.map_err(
+        |e| {
+            error!("Failed to get zone refresh interval: {}", e);
+            crate::errors::AppError::internal_error(
+                "get_zone_refresh_interval",
+                &format!("Failed to get zone refresh interval: {}", e),
+            )
+        },
+    ))?;
+
+    Ok(interval)
+}
+
+#[tauri::command]
+pub async fn set_zone_refresh_interval(
+    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    interval: ZoneRefreshInterval,
+) -> CommandResult<()> {
+    to_command_result(
+        config_service
+            .set_zone_refresh_interval(interval)
+            .await
+            .map_err(|e| {
+                error!("Failed to set zone refresh interval: {}", e);
+                crate::errors::AppError::internal_error(
+                    "set_zone_refresh_interval",
+                    &format!("Failed to set zone refresh interval: {}", e),
+                )
+            }),
+    )?;
+
+    info!("Zone refresh interval set to: {}", interval);
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZoneRefreshIntervalOption {
+    pub value: String,
+    pub label: String,
+    pub seconds: i64,
+}
+
+#[tauri::command]
+pub async fn get_zone_refresh_interval_options() -> CommandResult<Vec<ZoneRefreshIntervalOption>> {
+    let options = ZoneRefreshInterval::all_options()
+        .into_iter()
+        .map(|interval| ZoneRefreshIntervalOption {
+            value: format!("{:?}", interval),
+            label: interval.label().to_string(),
+            seconds: interval.to_seconds(),
+        })
+        .collect();
+
+    Ok(options)
 }

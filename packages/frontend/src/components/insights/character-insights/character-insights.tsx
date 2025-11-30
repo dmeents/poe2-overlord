@@ -6,8 +6,10 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import { ClassDistributionChart } from '../../charts/class-distribution-chart';
-import { DataCard, DataItem, SectionHeader } from '../../ui';
+import { ClassDistributionChart } from '../../charts/class-distribution-chart/class-distribution-chart';
+import { DataCard } from '../../ui/data-card/data-card';
+import { DataItem } from '../../ui/data-item/data-item';
+import { SectionHeader } from '../../ui/section-header/section-header';
 import type { CharacterInsightsProps } from './character-insights.types';
 
 export function CharacterInsights({ characters }: CharacterInsightsProps) {

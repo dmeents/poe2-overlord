@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use log::debug;
+use log::warn;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -39,7 +39,7 @@ pub struct CharacterData {
     pub current_location: Option<LocationState>,
     /// Summary statistics
     pub summary: TrackingSummary,
-    /// Zone statistics (aggregated data per location)
+    /// Zone statistics (aggregated data per location) - enriched with zone metadata
     pub zones: Vec<ZoneStats>,
     /// Walkthrough progress for this character
     #[serde(default)]
@@ -147,23 +147,26 @@ impl CharacterData {
         self.touch();
     }
 
-    /// Finds a zone by location ID
-    pub fn find_zone(&self, location_id: &str) -> Option<&ZoneStats> {
-        self.zones
-            .iter()
-            .find(|zone| zone.location_id == location_id)
+    /// Finds a zone by zone name
+    pub fn find_zone(&self, zone_name: &str) -> Option<&ZoneStats> {
+        self.zones.iter().find(|zone| zone.zone_name == zone_name)
     }
 
-    /// Finds a zone by location ID (mutable)
-    pub fn find_zone_mut(&mut self, location_id: &str) -> Option<&mut ZoneStats> {
+    /// Finds a zone by zone name (mutable)
+    pub fn find_zone_mut(&mut self, zone_name: &str) -> Option<&mut ZoneStats> {
         self.zones
             .iter_mut()
-            .find(|zone| zone.location_id == location_id)
+            .find(|zone| zone.zone_name == zone_name)
+    }
+
+    /// Finds a zone by zone name
+    pub fn find_zone_by_zone_name(&self, zone_name: &str) -> Option<&ZoneStats> {
+        self.zones.iter().find(|zone| zone.zone_name == zone_name)
     }
 
     /// Adds or updates a zone with the given statistics
     pub fn upsert_zone(&mut self, zone: ZoneStats) {
-        if let Some(existing_zone) = self.find_zone_mut(&zone.location_id) {
+        if let Some(existing_zone) = self.find_zone_mut(&zone.zone_name) {
             *existing_zone = zone;
         } else {
             self.zones.push(zone);
@@ -508,49 +511,21 @@ impl TrackingSummary {
     /// Creates summary from zone data
     pub fn from_zones(character_id: &str, zones: &[ZoneStats]) -> Self {
         let total_play_time = zones.iter().map(|zone| zone.duration).sum();
-        let total_hideout_time = zones
-            .iter()
-            .filter(|zone| zone.location_type == LocationType::Hideout)
-            .map(|zone| zone.duration)
-            .sum();
         let total_deaths = zones.iter().map(|zone| zone.deaths).sum();
 
-        // Calculate per-act play time
-        let mut play_time_act1 = 0u64;
-        let mut play_time_act2 = 0u64;
-        let mut play_time_act3 = 0u64;
-        let mut play_time_act4 = 0u64;
-        let mut play_time_interlude = 0u64;
-        let mut play_time_endgame = 0u64;
-
-        for zone in zones {
-            // Skip towns and hideouts when calculating act time
-            if zone.is_town || zone.location_type == LocationType::Hideout {
-                continue;
-            }
-
-            let act_time = zone.duration;
-            match zone.act.as_deref() {
-                Some("Act 1") => play_time_act1 += act_time,
-                Some("Act 2") => play_time_act2 += act_time,
-                Some("Act 3") => play_time_act3 += act_time,
-                Some("Act 4") => play_time_act4 += act_time,
-                Some("Interlude") => play_time_interlude += act_time,
-                Some("Endgame") | None => play_time_endgame += act_time,
-                Some(unknown_act) => {
-                    debug!(
-                        "SUMMARY CALC: Unknown act '{}' for zone '{}', defaulting to Endgame",
-                        unknown_act, zone.location_name
-                    );
-                    play_time_endgame += act_time;
-                }
-            }
-        }
+        // For now, we'll calculate basic stats without act filtering
+        // TODO: This should be enhanced when we have zone metadata available
+        let play_time_act1 = 0u64;
+        let play_time_act2 = 0u64;
+        let play_time_act3 = 0u64;
+        let play_time_act4 = 0u64;
+        let play_time_interlude = 0u64;
+        let play_time_endgame = 0u64;
 
         Self {
             character_id: character_id.to_string(),
             total_play_time,
-            total_hideout_time,
+            total_hideout_time: 0, // TODO: Calculate when zone metadata is available
             total_zones_visited: zones.len(),
             total_deaths,
             play_time_act1,
@@ -618,20 +593,11 @@ impl TrackingSummary {
     }
 }
 
-/// Aggregated statistics for a specific zone/location
+/// Character-specific statistics for a zone
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ZoneStats {
-    /// Unique identifier for the location
-    pub location_id: String,
-    /// Human-readable name of the location
-    pub location_name: String,
-    /// Type of location (Zone, Act, Hideout)
-    pub location_type: LocationType,
-    /// Act this zone belongs to (1, 2, 3, 4, interlude, endgame)
-    pub act: Option<String>,
-    /// Whether this zone is a town
-    #[serde(default = "default_is_town")]
-    pub is_town: bool,
+    /// Zone name reference to ZoneMetadata
+    pub zone_name: String,
     /// Total time spent in this zone (seconds)
     pub duration: u64,
     /// Number of deaths in this zone
@@ -646,53 +612,227 @@ pub struct ZoneStats {
     pub is_active: bool,
     /// Timestamp when character entered this zone (for time tracking)
     pub entry_timestamp: Option<DateTime<Utc>>,
-    /// Level of the zone (extracted from game logs)
-    pub zone_level: Option<u32>,
 }
 
-impl ZoneStats {
-    /// Creates new zone stats for a location
-    pub fn new(
-        location_id: String,
-        location_name: String,
-        location_type: LocationType,
-        act: Option<String>,
-        is_town: bool,
-    ) -> Self {
-        let now = Utc::now();
+/// Character data response for frontend with enriched zone information
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CharacterDataResponse {
+    /// Unique identifier for the character, generated using UUID v4
+    pub id: String,
+    /// Display name of the character, must be unique across all characters
+    pub name: String,
+    /// The base character class (e.g., Warrior, Sorceress, etc.)
+    pub class: CharacterClass,
+    /// The specialized ascendency class chosen for this character
+    pub ascendency: Ascendency,
+    /// The league/game mode this character belongs to
+    pub league: League,
+    /// Whether this character is in hardcore mode (permadeath)
+    pub hardcore: bool,
+    /// Whether this character is in solo self-found mode (no trading)
+    pub solo_self_found: bool,
+    /// Current level of the character (defaults to 1)
+    pub level: u32,
+    /// Timestamp when the character was first created
+    pub created_at: DateTime<Utc>,
+    /// Timestamp when the character was last played
+    pub last_played: Option<DateTime<Utc>>,
+    /// Current location state
+    pub current_location: Option<LocationState>,
+    /// Summary statistics
+    pub summary: TrackingSummary,
+    /// Zone statistics with enriched metadata for frontend
+    pub zones: Vec<EnrichedZoneStats>,
+    /// Walkthrough progress for this character
+    pub walkthrough_progress: WalkthroughProgress,
+    /// Last updated timestamp for tracking data
+    pub last_updated: DateTime<Utc>,
+}
+
+impl From<CharacterData> for CharacterDataResponse {
+    fn from(character: CharacterData) -> Self {
         Self {
-            location_id,
-            location_name,
-            location_type,
-            act,
-            is_town,
-            duration: 0,
-            deaths: 0,
-            visits: 0,
-            first_visited: now,
-            last_visited: now,
-            is_active: true,
-            entry_timestamp: Some(now),
-            zone_level: None,
+            id: character.id,
+            name: character.name,
+            class: character.class,
+            ascendency: character.ascendency,
+            league: character.league,
+            hardcore: character.hardcore,
+            solo_self_found: character.solo_self_found,
+            level: character.level,
+            created_at: character.created_at,
+            last_played: character.last_played,
+            current_location: character.current_location,
+            summary: character.summary,
+            zones: character
+                .zones
+                .into_iter()
+                .map(|zone| {
+                    EnrichedZoneStats {
+                        zone_name: zone.zone_name,
+                        duration: zone.duration,
+                        deaths: zone.deaths,
+                        visits: zone.visits,
+                        first_visited: zone.first_visited,
+                        last_visited: zone.last_visited,
+                        is_active: zone.is_active,
+                        entry_timestamp: zone.entry_timestamp,
+                        area_id: None, // Will be populated from zone metadata if available
+                        act: None,
+                        area_level: None,
+                        is_town: false,
+                        has_waypoint: false,
+                        bosses: Vec::new(),
+                        monsters: Vec::new(),
+                        connected_zones: Vec::new(),
+                        description: None,
+                        points_of_interest: Vec::new(),
+                        image_url: None,
+                        wiki_url: None,
+                        last_updated: None,
+                    }
+                })
+                .collect(),
+            walkthrough_progress: character.walkthrough_progress,
+            last_updated: character.last_updated,
+        }
+    }
+}
+
+/// Enriched zone stats that combines character tracking with zone metadata
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct EnrichedZoneStats {
+    // Character-specific tracking
+    pub zone_name: String,
+    pub duration: u64,
+    pub deaths: u32,
+    pub visits: u32,
+    pub first_visited: DateTime<Utc>,
+    pub last_visited: DateTime<Utc>,
+    pub is_active: bool,
+    pub entry_timestamp: Option<DateTime<Utc>>,
+
+    // Zone metadata (joined from ZoneMetadata) - all fields for future frontend use
+    pub area_id: Option<String>,
+    pub act: Option<u32>,
+    pub area_level: Option<u32>,
+    pub is_town: bool,
+    pub has_waypoint: bool,
+    pub bosses: Vec<String>,
+    pub monsters: Vec<String>,
+    pub connected_zones: Vec<String>,
+    pub description: Option<String>,
+    pub points_of_interest: Vec<String>,
+    pub image_url: Option<String>,
+    pub wiki_url: Option<String>,
+    /// Last updated from wiki
+    pub last_updated: Option<DateTime<Utc>>,
+}
+
+impl EnrichedZoneStats {
+    /// Creates enriched zone stats from character stats and zone metadata
+    pub fn from_stats_and_metadata(
+        stats: &ZoneStats,
+        metadata: &crate::domain::zone_configuration::models::ZoneMetadata,
+    ) -> Self {
+        Self {
+            // Character tracking data
+            zone_name: stats.zone_name.clone(),
+            duration: stats.duration,
+            deaths: stats.deaths,
+            visits: stats.visits,
+            first_visited: stats.first_visited,
+            last_visited: stats.last_visited,
+            is_active: stats.is_active,
+            entry_timestamp: stats.entry_timestamp,
+
+            // Enriched metadata
+            area_id: metadata.area_id.clone(),
+            act: Some(metadata.act),
+            area_level: metadata.area_level,
+            is_town: metadata.is_town,
+            has_waypoint: metadata.has_waypoint,
+            bosses: metadata.bosses.clone(),
+            monsters: metadata.monsters.clone(),
+            connected_zones: metadata.connected_zones.clone(),
+            description: metadata.description.clone(),
+            points_of_interest: metadata.points_of_interest.clone(),
+            image_url: metadata.image_url.clone(),
+            wiki_url: metadata.wiki_url.clone(),
+            last_updated: Some(metadata.last_updated),
         }
     }
 
-    /// Creates new zone stats for a location with zone level
-    pub fn new_with_level(
-        location_id: String,
-        location_name: String,
-        location_type: LocationType,
-        act: Option<String>,
-        is_town: bool,
-        zone_level: Option<u32>,
-    ) -> Self {
+    /// Adds time to the zone duration
+    pub fn add_time(&mut self, seconds: u64) {
+        self.duration += seconds;
+        self.last_visited = Utc::now();
+    }
+
+    /// Records a death in this zone
+    pub fn record_death(&mut self) {
+        self.deaths += 1;
+        self.last_visited = Utc::now();
+    }
+
+    /// Records a visit to this zone
+    pub fn record_visit(&mut self) {
+        self.visits += 1;
+        self.last_visited = Utc::now();
+    }
+
+    /// Activates the zone (character enters)
+    pub fn activate(&mut self) {
+        self.is_active = true;
+        self.record_visit();
+    }
+
+    /// Deactivates the zone (character leaves)
+    pub fn deactivate(&mut self) {
+        self.is_active = false;
+        self.last_visited = Utc::now();
+    }
+
+    /// Starts the timer for this zone (character enters)
+    pub fn start_timer(&mut self) {
+        self.entry_timestamp = Some(Utc::now());
+    }
+
+    /// Stops the timer and adds the elapsed time to duration
+    /// Returns the time spent in seconds
+    pub fn stop_timer_and_add_time(&mut self) -> u64 {
+        if let Some(entry_time) = self.entry_timestamp {
+            let time_spent = Utc::now()
+                .signed_duration_since(entry_time)
+                .num_seconds()
+                .max(0) as u64;
+            self.add_time(time_spent);
+            self.entry_timestamp = None;
+            time_spent
+        } else {
+            0
+        }
+    }
+
+    /// Gets the current time spent in this zone (if active)
+    pub fn get_current_time_spent(&self) -> u64 {
+        if let Some(entry_time) = self.entry_timestamp {
+            Utc::now()
+                .signed_duration_since(entry_time)
+                .num_seconds()
+                .max(0) as u64
+        } else {
+            0
+        }
+    }
+}
+
+impl ZoneStats {
+    /// Creates new zone stats for a zone
+    pub fn new(zone_name: String) -> Self {
         let now = Utc::now();
         Self {
-            location_id,
-            location_name,
-            location_type,
-            act,
-            is_town,
+            zone_name,
             duration: 0,
             deaths: 0,
             visits: 0,
@@ -700,7 +840,6 @@ impl ZoneStats {
             last_visited: now,
             is_active: true,
             entry_timestamp: Some(now),
-            zone_level,
         }
     }
 
@@ -767,9 +906,13 @@ impl ZoneStats {
         }
     }
 
-    /// Updates the zone level
-    pub fn update_zone_level(&mut self, level: u32) {
-        self.zone_level = Some(level);
+    /// Updates the zone level (legacy method - zone level is now stored in ZoneMetadata)
+    pub fn update_zone_level(&mut self, _level: u32) {
+        // Zone level is now stored in ZoneMetadata, not in ZoneStats
+        // This method is kept for compatibility but does nothing
+        warn!(
+            "update_zone_level called on ZoneStats - zone level should be stored in ZoneMetadata"
+        );
     }
 }
 

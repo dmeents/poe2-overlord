@@ -1,58 +1,51 @@
-//! # Server Monitoring Repository Implementation
-//!
-//! This module provides a simple repository implementation for server IP persistence.
-//! Uses file-based persistence to store only the last known server IP address.
+//! File-based persistence for server status in the app data directory.
 
-use crate::domain::server_monitoring::models::ServerIp;
+use crate::domain::server_monitoring::models::ServerStatus;
+use crate::domain::server_monitoring::traits::ServerStatusRepository as ServerStatusRepositoryTrait;
 use crate::errors::AppResult;
-use crate::infrastructure::persistence::{PersistenceRepository, PersistenceRepositoryImpl};
+use crate::infrastructure::file_management::{AppPaths, FileService};
 use async_trait::async_trait;
 use log::debug;
+use std::path::PathBuf;
 
-/// Simple repository for server IP persistence.
-///
-/// Uses file-based persistence to store only the last known server IP address.
-pub struct ServerIpRepository {
-    /// File-based persistence layer
-    persistence: PersistenceRepositoryImpl<ServerIp>,
+pub struct ServerStatusRepository {
+    file_path: PathBuf,
 }
 
-impl ServerIpRepository {
-    /// Create a new server IP repository with file-based persistence.
-    pub fn new() -> AppResult<Self> {
-        let persistence =
-            PersistenceRepositoryImpl::<ServerIp>::new_in_config_dir("server_ip.json")?;
+impl ServerStatusRepository {
+    pub async fn new() -> AppResult<Self> {
+        let data_dir = AppPaths::ensure_data_dir().await?;
+        let file_path = data_dir.join("server_status.json");
 
-        Ok(Self { persistence })
+        debug!(
+            "Server status repository initialized at: {}",
+            file_path.display()
+        );
+
+        Ok(Self { file_path })
     }
 }
 
 #[async_trait]
-impl ServerIpRepositoryTrait for ServerIpRepository {
-    async fn save_ip(&self, server_ip: &ServerIp) -> AppResult<()> {
-        self.persistence.save(server_ip).await?;
-        debug!("Server IP saved to file");
+impl ServerStatusRepositoryTrait for ServerStatusRepository {
+    async fn save(&self, status: &ServerStatus) -> AppResult<()> {
+        FileService::write_json(&self.file_path, status).await?;
+        debug!("Server status saved to: {}", self.file_path.display());
         Ok(())
     }
 
-    async fn load_ip(&self) -> AppResult<Option<ServerIp>> {
-        if self.persistence.exists().await? {
-            let server_ip = self.persistence.load().await?;
-            debug!("Loaded server IP from file");
-            Ok(Some(server_ip))
+    async fn load(&self) -> AppResult<Option<ServerStatus>> {
+        let status = FileService::read_json_optional(&self.file_path).await?;
+
+        if status.is_some() {
+            debug!("Server status loaded from: {}", self.file_path.display());
         } else {
-            debug!("No server IP file found");
-            Ok(None)
+            debug!(
+                "Server status file does not exist: {}",
+                self.file_path.display()
+            );
         }
+
+        Ok(status)
     }
-}
-
-/// Trait for server IP repository operations.
-#[async_trait]
-pub trait ServerIpRepositoryTrait: Send + Sync {
-    /// Save server IP to persistence
-    async fn save_ip(&self, server_ip: &ServerIp) -> AppResult<()>;
-
-    /// Load server IP from persistence
-    async fn load_ip(&self) -> AppResult<Option<ServerIp>>;
 }

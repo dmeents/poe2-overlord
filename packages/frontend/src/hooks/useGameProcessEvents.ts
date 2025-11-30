@@ -1,5 +1,5 @@
-import type { GameProcessStatusChangedEvent, ProcessInfo } from '@/types';
-import { GAME_CONFIG } from '@/utils';
+import type { GameProcessStatusChangedEvent, ProcessInfo } from '@/types/process';
+import { GAME_CONFIG } from '@/utils/constants';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 

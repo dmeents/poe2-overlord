@@ -7,7 +7,7 @@ import type {
 } from '../../../types/walkthrough';
 import { handleWikiClick } from '../../../utils/wiki-utils';
 import { SectionHeader } from '../../ui/section-header/section-header';
-import { WalkthroughActAccordion } from '../walkthrough-act-accordion';
+import { WalkthroughActAccordion } from '../walkthrough-act-accordion/walkthrough-act-accordion';
 
 interface WalkthroughGuideProps {
   guide: WalkthroughGuideType;

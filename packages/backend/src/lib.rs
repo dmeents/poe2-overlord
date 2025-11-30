@@ -1,21 +1,32 @@
+//! POE2 Overlord Backend Library
+//!
+//! This library provides the core backend functionality for the POE2 Overlord application,
+//! including domain services, infrastructure components, and Tauri command handlers.
+
 // Core application modules
-pub mod application;  // Application setup, service orchestration, and service registry
-pub mod domain;       // Business logic, models, services, and domain-specific functionality
-pub mod errors;       // Centralized error handling and custom error types
-pub mod infrastructure; // External integrations, monitoring, parsing, and system utilities
+pub mod application; // Application setup, service orchestration, and service registry
+pub mod domain; // Business logic, models, services, and domain-specific functionality
+pub mod errors; // Centralized error handling and custom error types
+pub mod infrastructure; // External integrations, events, monitoring, parsing, and system utilities
 
 // Application setup and initialization
 pub use application::setup_app;
 
 // Tauri command handlers - exposed to the frontend
-pub use domain::character::commands::*;        // Character CRUD operations and tracking
-pub use domain::configuration::commands::*;    // Configuration management
-pub use domain::game_monitoring::commands::*;   // Game process monitoring
-pub use domain::server_monitoring::commands::*; // Server monitoring
-pub use domain::walkthrough::commands::*;      // Walkthrough guide and progress tracking
+pub use domain::character::commands::*; // Character CRUD operations and tracking
+pub use domain::configuration::commands::*; // Configuration management
+pub use domain::game_monitoring::commands::*; // Game process monitoring
+pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
 
 // Core error handling
 pub use errors::*;
+
+// Tauri command utilities
+pub type CommandResult<T> = Result<T, String>;
+
+pub fn to_command_result<T>(result: AppResult<T>) -> CommandResult<T> {
+    result.map_err(|e| e.to_string())
+}
 
 // Game monitoring models and state
 pub use domain::game_monitoring::models::{OverlayState, ProcessInfo};
@@ -27,14 +38,14 @@ pub use domain::log_analysis::models::{
 
 // Character domain models and data structures
 pub use domain::character::{
-    CharacterData, CharacterUpdateParams, CharactersIndex, CharacterClass, Ascendency, League,
+    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex, League,
     LocationState, LocationType, TrackingSummary, ZoneStats,
 };
 
 // Walkthrough domain models and data structures
 pub use domain::walkthrough::{
-    WalkthroughGuide, WalkthroughAct, WalkthroughStep, Objective, WalkthroughProgress,
-    CharacterWalkthroughProgress, WalkthroughStepResult,
+    CharacterWalkthroughProgress, Objective, WalkthroughAct, WalkthroughGuide, WalkthroughProgress,
+    WalkthroughStep, WalkthroughStepResult,
 };
 
 // Character tracking functionality is now part of the character domain
@@ -46,31 +57,34 @@ pub use domain::configuration::{
 };
 
 // Unified event system
-pub use domain::events::{
-    AppEvent, ChannelConfig, ChannelManager, EventBus, EventPublisher,
-    EventPublisherTrait, EventSubscriber, EventSubscriberTrait, EventType,
-};
+pub use infrastructure::events::{AppEvent, ChannelConfig, ChannelManager, EventBus, EventType};
 
 // Game monitoring domain services and models
 pub use domain::game_monitoring::{
-    GameMonitoringService,
-    GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
+    GameMonitoringService, GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
+    ProcessDetectorImpl,
 };
-
 
 // Infrastructure services and utilities
 // Note: Server monitoring is now handled by the domain service
-pub use domain::log_analysis::traits::LogAnalysisService;  // Log parsing and analysis
-pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};  // OS detection and paths
-pub use infrastructure::tauri::TauriEventBridge;  // Tauri event system integration
-pub use infrastructure::time::{  // Time calculation and validation utilities
-    calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,
-    calculate_session_duration_seconds, validate_duration, validate_no_session_overlap,
-    validate_session_data, validate_timestamp_order, ValidationResult,
+pub use domain::log_analysis::traits::LogAnalysisService; // Log parsing and analysis
+
+pub use infrastructure::events::TauriEventBridge; // Tauri event system integration
+                                                  // Infrastructure utilities
+pub use infrastructure::time::{
+    // Time calculation and validation utilities
+    calculate_active_session_duration_seconds,
+    calculate_session_duration_from_timestamps,
+    calculate_session_duration_seconds,
+    validate_duration,
+    validate_no_session_overlap,
+    validate_session_data,
+    validate_timestamp_order,
+    ValidationResult,
 };
 
 /// Main application entry point that configures and runs the Tauri application.
-/// 
+///
 /// This function sets up the Tauri application with:
 /// - Required plugins for shell and process management
 /// - All command handlers exposed to the frontend
@@ -81,7 +95,7 @@ pub fn run() {
         // Initialize Tauri plugins for system integration
         .plugin(tauri_plugin_shell::init())      // Shell operations (file dialogs, etc.)
         .plugin(tauri_plugin_process::init())    // Process management and monitoring
-        
+
         // Register all command handlers that can be called from the frontend
         .invoke_handler(tauri::generate_handler![
             // Configuration management commands
@@ -97,8 +111,11 @@ pub fn run() {
             set_log_level,
             get_config_file_info,
             validate_config,
-            
-            
+            get_zone_refresh_interval,
+            set_zone_refresh_interval,
+            get_zone_refresh_interval_options,
+
+
             // Character management commands
             create_character,
             update_character,
@@ -109,7 +126,7 @@ pub fn run() {
             get_available_character_classes,
             get_available_leagues,
             get_available_ascendencies_for_class,
-            
+
             // Character tracking commands (location and time)
             get_character_tracking_data,
             get_character_current_location,
@@ -118,16 +135,10 @@ pub fn run() {
             record_death,
             add_zone_time,
             finalize_all_active_zones,
-            
+
             // Game process monitoring commands
             get_game_process_status,
-            
-            // Server monitoring commands
-            get_server_status,
-            ping_server,
-            start_server_monitoring,
-            stop_server_monitoring,
-            
+
             // Walkthrough guide commands
             get_walkthrough_guide,
             get_character_walkthrough_progress,

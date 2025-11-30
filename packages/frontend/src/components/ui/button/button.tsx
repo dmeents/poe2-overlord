@@ -1,4 +1,4 @@
-import { cn } from '@/utils';
+import { cn } from '@/utils/tailwind';
 import React from 'react';
 import { buttonStyles } from './button.styles';
 

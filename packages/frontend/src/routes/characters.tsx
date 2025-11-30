@@ -1,19 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import {
-  AlertMessage,
-  Button,
-  CharacterFormModal,
-  CharacterInsights,
-  CharacterList,
-  DeleteCharacterModal,
-  LoadingSpinner,
-  PageLayout,
-} from '../components';
-import type { CharacterFormData } from '../components/character/character-modals';
-import { useCharacterFiltering, useCharacterFilters } from '../hooks';
+import { AlertMessage } from '../components/forms/form-alert-message/form-alert-message';
+import { Button } from '../components/ui/button/button';
+import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
+import { CharacterInsights } from '../components/insights/character-insights/character-insights';
+import { CharacterList } from '../components/character/character-list/character-list';
+import { DeleteCharacterModal } from '../components/character/delete-character-modal/delete-character-modal';
+import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
+import { PageLayout } from '../components/layout/page-layout/page-layout';
+import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
+import { useCharacterFiltering } from '../hooks/useCharacterFiltering';
+import { useCharacterFilters } from '../hooks/useCharacterFilters';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
-import type { CharacterData } from '../types';
+import type { CharacterData } from '../types/character';
 
 export const Route = createFileRoute('/characters')({
   component: CharactersPage,

@@ -2,39 +2,52 @@ use crate::domain::zone_configuration::{
     models::ZoneConfiguration, traits::ZoneConfigurationRepository,
 };
 use crate::errors::AppResult;
+use crate::infrastructure::file_management::{AppPaths, FileService};
 use async_trait::async_trait;
+use log::{debug, info};
 use std::path::PathBuf;
 
-/// Implementation of ZoneConfigurationRepository for embedded data
-/// Loads zone configuration from embedded JSON data
-pub struct ZoneConfigurationRepositoryImpl;
+pub struct ZoneConfigurationRepositoryImpl {
+    file_path: PathBuf,
+}
 
 impl ZoneConfigurationRepositoryImpl {
-    /// Creates a new repository with embedded zone configuration
-    pub fn new() -> Self {
-        Self
+    pub async fn new() -> AppResult<Self> {
+        let data_dir = AppPaths::ensure_data_dir().await?;
+        let file_path = data_dir.join("zones.json");
+
+        debug!("Zone configuration will be stored at: {:?}", file_path);
+
+        Ok(Self { file_path })
     }
 }
 
 #[async_trait]
 impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
-    /// Loads zone configuration from embedded JSON data
     async fn load_configuration(&self) -> AppResult<ZoneConfiguration> {
-        let content = include_str!("../../../config/zones.json");
-        let config: ZoneConfiguration = serde_json::from_str(content)?;
-        Ok(config)
+        if FileService::exists(&self.file_path).await? {
+            debug!("Loading zone configuration from: {:?}", self.file_path);
+            let config: ZoneConfiguration = FileService::read_json(&self.file_path).await?;
+            info!(
+                "Loaded {} zones from configuration file",
+                config.zones.len()
+            );
+            Ok(config)
+        } else {
+            info!("Zone configuration file not found, creating new empty configuration");
+            let config = ZoneConfiguration::new();
+            Ok(config)
+        }
     }
 
-    /// Saves zone configuration (not supported for embedded data)
-    async fn save_configuration(&self, _config: &ZoneConfiguration) -> AppResult<()> {
-        Err(crate::errors::AppError::internal_error(
-            "save_configuration",
-            "Zone configuration is embedded and cannot be modified at runtime",
-        ))
+    async fn save_configuration(&self, config: &ZoneConfiguration) -> AppResult<()> {
+        debug!("Saving zone configuration to: {:?}", self.file_path);
+        FileService::write_json(&self.file_path, config).await?;
+        info!("Saved {} zones to configuration file", config.zones.len());
+        Ok(())
     }
 
-    /// Gets the path to the configuration file (not applicable for embedded data)
     async fn get_configuration_path(&self) -> PathBuf {
-        PathBuf::from("embedded:zones.json")
+        self.file_path.clone()
     }
 }

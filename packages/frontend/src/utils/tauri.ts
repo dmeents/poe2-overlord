@@ -1,4 +1,8 @@
-import type { AppConfig } from '@/types';
+import type {
+  AppConfig,
+  ZoneRefreshInterval,
+  ZoneRefreshIntervalOption,
+} from '@/types/app-config';
 import { invoke } from '@tauri-apps/api/core';
 
 export const tauriUtils = {
@@ -103,6 +107,36 @@ export const tauriUtils = {
       await this.updateConfig(updatedConfig);
     } catch (error) {
       console.error('Failed to reset POE client log path to default:', error);
+      throw error;
+    }
+  },
+
+  // Zone refresh interval commands
+  async getZoneRefreshInterval(): Promise<ZoneRefreshInterval> {
+    try {
+      return await invoke<ZoneRefreshInterval>('get_zone_refresh_interval');
+    } catch (error) {
+      console.error('Failed to get zone refresh interval:', error);
+      throw error;
+    }
+  },
+
+  async setZoneRefreshInterval(interval: ZoneRefreshInterval): Promise<void> {
+    try {
+      await invoke('set_zone_refresh_interval', { interval });
+    } catch (error) {
+      console.error('Failed to set zone refresh interval:', error);
+      throw error;
+    }
+  },
+
+  async getZoneRefreshIntervalOptions(): Promise<ZoneRefreshIntervalOption[]> {
+    try {
+      return await invoke<ZoneRefreshIntervalOption[]>(
+        'get_zone_refresh_interval_options'
+      );
+    } catch (error) {
+      console.error('Failed to get zone refresh interval options:', error);
       throw error;
     }
   },

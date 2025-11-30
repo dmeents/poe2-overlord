@@ -1,6 +1,6 @@
-import type { CharacterData } from '../../../types';
-import { Button } from '../../ui/button';
-import { Modal } from '../../ui/modal';
+import type { CharacterData } from '../../../types/character';
+import { Button } from '../../ui/button/button';
+import { Modal } from '../../ui/modal/modal';
 import {
   getCharacterInfoClasses,
   getCharacterInfoLabelClasses,

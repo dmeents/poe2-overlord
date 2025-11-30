@@ -1,6 +1,6 @@
 // Character-related types - Updated to match unified backend CharacterData model
 
-import { WalkthroughProgress } from './walkthrough';
+import type { WalkthroughProgress } from './walkthrough';
 
 export type CharacterClass =
   | 'Warrior'
@@ -51,11 +51,10 @@ export interface LocationState {
 }
 
 export interface ZoneStats {
-  location_id: string;
-  location_name: string;
-  location_type: LocationType;
-  act?: string;
-  is_town: boolean;
+  // Primary identifier - zone name
+  zone_name: string;
+
+  // Character tracking
   duration: number;
   deaths: number;
   visits: number;
@@ -63,7 +62,22 @@ export interface ZoneStats {
   last_visited: string;
   is_active: boolean;
   entry_timestamp?: string;
-  zone_level?: number;
+
+  // Zone metadata (enriched from backend) - all fields available for future use
+  area_id?: string;
+  act?: number;
+  area_level?: number;
+  is_town: boolean;
+  has_waypoint: boolean;
+  bosses: string[];
+  monsters: string[];
+  npcs: string[];
+  connected_zones: string[];
+  description?: string;
+  points_of_interest: string[];
+  image_url?: string;
+  wiki_url?: string;
+  last_updated?: string;
 }
 
 export interface CharacterSummary {

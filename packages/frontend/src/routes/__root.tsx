@@ -1,4 +1,6 @@
-import { SidebarNavigation, StatusBar, WindowTitle } from '@/components';
+import { SidebarNavigation } from '@/components/layout/sidebar-navigation/sidebar-navigation';
+import { StatusBar } from '@/components/status/status-bar/status-bar';
+import { WindowTitle } from '@/components/layout/window-title/window-title';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import '../globals.css';
 

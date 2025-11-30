@@ -2,12 +2,12 @@ import type {
   ZoneFilters as ZoneFiltersType,
   ZoneSortOption,
 } from '@/hooks/useZoneFilters';
-import type { ZoneStats } from '@/types';
+import type { ZoneStats } from '@/types/character';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { memo, useCallback } from 'react';
-import { EmptyState } from '../../ui/empty-state';
-import { ZoneCard } from '../zone-card';
-import { ZoneListControlsForm } from '../zone-list-controls-form';
+import { EmptyState } from '../../ui/empty-state/empty-state';
+import { ZoneCard } from '../zone-card/zone-card';
+import { ZoneListControlsForm } from '../zone-list-controls-form/zone-list-controls-form';
 import {
   getListContainerClasses,
   getZoneGridClasses,
@@ -121,7 +121,7 @@ export const ZoneList = memo(function ZoneList({
           {zones.map(zone => {
             return (
               <ZoneCard
-                key={zone.location_id}
+                key={zone.zone_name}
                 zone={zone}
                 // Add any zone-specific props here if needed in the future
               />

@@ -1,8 +1,9 @@
-import type { CharacterData } from '@/types';
-import { formatDuration } from '@/utils';
+import type { CharacterData } from '@/types/character';
+import { formatDuration } from '@/utils/format-duration';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { DataItem, SectionHeader } from '../../ui';
+import { DataItem } from '../../ui/data-item/data-item';
+import { SectionHeader } from '../../ui/section-header/section-header';
 import { actDistributionChartStyles } from './act-distribution-chart.styles';
 
 interface ActDistributionChartProps {

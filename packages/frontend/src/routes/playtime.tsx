@@ -1,13 +1,11 @@
-import {
-  ActDistributionChart,
-  CharacterStatusCard,
-  EmptyState,
-  PageLayout,
-  PlaytimeInsights,
-  ZoneTracker,
-} from '@/components';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useCharacterManagement } from '@/hooks';
+import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
+import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
+import { EmptyState } from '@/components/ui/empty-state/empty-state';
+import { PageLayout } from '@/components/layout/page-layout/page-layout';
+import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
+import { ZoneTracker } from '@/components/zones/zone-tracker/zone-tracker';
+import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
+import { useCharacterManagement } from '@/hooks/useCharacterManagement';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 

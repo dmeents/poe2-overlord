@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { Ascendency, CharacterClass, League } from '../types';
+import type { Ascendency, CharacterClass, League } from '../types/character';
 
 export interface CharacterFilters {
   league: League | 'All';

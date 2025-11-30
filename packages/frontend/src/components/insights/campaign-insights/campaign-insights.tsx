@@ -5,7 +5,9 @@ import {
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import type { WalkthroughGuide } from '../../../types/walkthrough';
-import { DataCard, DataItem, SectionHeader } from '../../ui';
+import { DataCard } from '../../ui/data-card/data-card';
+import { DataItem } from '../../ui/data-item/data-item';
+import { SectionHeader } from '../../ui/section-header/section-header';
 
 interface CampaignInsightsProps {
   guide: WalkthroughGuide;

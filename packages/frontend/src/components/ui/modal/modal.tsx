@@ -1,4 +1,4 @@
-import { cn } from '@/utils';
+import { cn } from '@/utils/tailwind';
 import { useEffect, useRef } from 'react';
 import { modalStyles } from './modal.styles';
 

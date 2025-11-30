@@ -1,18 +1,20 @@
 import { memo, useEffect, useState } from 'react';
-import {
-  Accordion,
-  Button,
-  FilterToggle,
-  Input,
-  Select,
-  SortSelect,
-} from '../';
+import { Accordion } from '../../ui/accordion/accordion';
+import { Button } from '../../ui/button/button';
+import { FilterToggle } from '../../forms/form-filter-toggle/form-filter-toggle';
+import { Input } from '../../forms/form-input/form-input';
+import { Select } from '../../forms/form-select/form-select';
+import { SortSelect } from '../../forms/form-sort-select/form-sort-select';
 import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
 import type {
   CharacterFilters as CharacterFiltersType,
   SortOption,
 } from '../../../hooks/useCharacterFilters';
-import type { Ascendency, CharacterClass, League } from '../../../types';
+import type {
+  Ascendency,
+  CharacterClass,
+  League,
+} from '../../../types/character';
 import {
   activeFilterChipClasses,
   chipRemoveButtonClasses,

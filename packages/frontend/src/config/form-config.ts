@@ -1,5 +1,5 @@
 import type { CharacterFormData } from '../components/character/character-modals/character-form-modal';
-import type { CharacterData } from '../types';
+import type { CharacterData } from '../types/character';
 
 /**
  * Validation rules for character form fields

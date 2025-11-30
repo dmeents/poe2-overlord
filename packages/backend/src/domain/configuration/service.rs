@@ -1,110 +1,33 @@
 use crate::domain::configuration::models::{
     AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationValidationResult,
 };
-use crate::domain::configuration::traits::ConfigurationService;
-use crate::domain::events::{AppEvent, EventBus, EventType};
+use crate::domain::configuration::repository::ConfigurationRepositoryImpl;
+use crate::domain::configuration::traits::{ConfigurationRepository, ConfigurationService};
 use crate::errors::{AppError, AppResult};
+use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 use async_trait::async_trait;
-use log::{debug, error, info, warn};
-use serde_json;
-use std::fs;
-use std::path::PathBuf;
+use log::{debug, info, warn};
 use std::sync::Arc;
-use tokio::sync::{broadcast, RwLock};
-use tokio::task;
+use tokio::sync::broadcast;
 
-/// Directory name for application configuration files
-const CONFIG_DIR_NAME: &str = "poe2-overlord";
-
-/// Primary configuration file name
-const CONFIG_FILE_NAME: &str = "config.json";
-
-/// Temporary file extension used during atomic write operations
-const TEMP_FILE_EXTENSION: &str = "tmp";
-
-/// High-level configuration service implementation
-///
-/// This service provides the primary business logic layer for configuration management,
-/// coordinating between file I/O operations, in-memory caching, validation, and event
-/// broadcasting. It implements atomic file operations to prevent data corruption.
-///
-/// # Key Features
-///
-/// - **Atomic File Operations**: Uses temporary files and atomic rename operations
-/// - **Event Broadcasting**: Emits configuration change events to subscribers
-/// - **Thread Safety**: All operations are thread-safe with proper locking
-/// - **Validation**: Comprehensive validation before persisting changes
-/// - **Error Recovery**: Graceful handling of file I/O and serialization errors
-///
-/// # Architecture
-///
-/// The service maintains both in-memory state and persistent storage:
-/// - In-memory configuration for fast access
-/// - Event broadcasting for real-time notifications
-/// - Atomic file writes to prevent corruption
-/// - Automatic directory creation and error recovery
 pub struct ConfigurationServiceImpl {
-    /// Path to the configuration file on disk
-    config_path: PathBuf,
-
-    /// Thread-safe in-memory configuration cache
-    config: Arc<RwLock<AppConfig>>,
-
-    /// Event bus for publishing configuration events
+    repository: Arc<ConfigurationRepositoryImpl>,
     event_bus: Arc<EventBus>,
 }
 
 impl ConfigurationServiceImpl {
-    /// Create a new configuration service instance
-    ///
-    /// Initializes the service with proper directory structure, loads existing
-    /// configuration if available, and sets up event broadcasting capabilities.
-    ///
-    /// # Initialization Process
-    ///
-    /// 1. Determines system configuration directory
-    /// 2. Creates application config directory if needed
-    /// 3. Sets up event broadcasting channel
-    /// 4. Attempts to load existing configuration
-    /// 5. Falls back to defaults if loading fails
-    /// 6. Saves default configuration if needed
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(ConfigurationServiceImpl)` on successful initialization
-    /// * `Err(AppError)` if directory creation fails
-    ///
-    /// # Error Handling
-    ///
-    /// Configuration loading failures are logged but don't prevent initialization.
-    /// The service will use default values and attempt to save them.
-    pub fn new() -> AppResult<Self> {
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(CONFIG_DIR_NAME);
-
-        if !config_dir.exists() {
-            if let Err(e) = fs::create_dir_all(&config_dir) {
-                warn!("Failed to create config directory: {}", e);
-                return Err(AppError::file_system_error(
-                    "create_config_directory",
-                    &e.to_string(),
-                ));
-            }
-        }
-
-        let config_path = config_dir.join(CONFIG_FILE_NAME);
+    pub async fn new() -> AppResult<Self> {
+        let repository = Arc::new(ConfigurationRepositoryImpl::new().await?);
         let event_bus = Arc::new(EventBus::new());
 
         let service = Self {
-            config_path,
-            config: Arc::new(RwLock::new(AppConfig::default())),
+            repository,
             event_bus,
         };
 
-        if let Err(e) = tauri::async_runtime::block_on(service.load_config()) {
+        if let Err(e) = service.load_config().await {
             warn!("Failed to load config, using defaults: {}", e);
-            if let Err(save_err) = tauri::async_runtime::block_on(service.save_config()) {
+            if let Err(save_err) = service.save_config().await {
                 warn!("Failed to save default config: {}", save_err);
             }
         }
@@ -112,16 +35,6 @@ impl ConfigurationServiceImpl {
         Ok(service)
     }
 
-    /// Broadcast configuration change event to all subscribers
-    ///
-    /// Creates and sends a configuration change event with the provided
-    /// configurations. If broadcasting fails (no active receivers), the
-    /// error is logged but not propagated.
-    ///
-    /// # Arguments
-    ///
-    /// * `new_config` - The new configuration state
-    /// * `previous_config` - The previous configuration state
     async fn publish_config_change(&self, new_config: AppConfig, previous_config: AppConfig) {
         let event = AppEvent::ConfigurationChanged(ConfigurationChangedEvent::new(
             new_config,
@@ -131,102 +44,16 @@ impl ConfigurationServiceImpl {
             warn!("Failed to publish configuration change event: {}", e);
         }
     }
-
-    /// Internal configuration validation helper
-    ///
-    /// Validates configuration using the model's built-in validation logic
-    /// and wraps the result in a structured validation result.
-    ///
-    /// # Arguments
-    ///
-    /// * `config` - The configuration to validate
-    ///
-    /// # Returns
-    ///
-    /// A `ConfigurationValidationResult` indicating success or failure
-    fn validate_config_internal(&self, config: &AppConfig) -> ConfigurationValidationResult {
-        match config.validate() {
-            Ok(()) => ConfigurationValidationResult::valid(),
-            Err(error) => ConfigurationValidationResult::invalid(vec![error]),
-        }
-    }
-
-    /// Atomically write content to the configuration file
-    ///
-    /// This method implements atomic file operations to prevent data corruption:
-    /// 1. Writes content to a temporary file
-    /// 2. Atomically renames the temporary file to replace the original
-    ///
-    /// This approach ensures that the configuration file is never in a
-    /// partially written state, even if the process crashes during writing.
-    ///
-    /// # Arguments
-    ///
-    /// * `content` - The string content to write to the file
-    ///
-    /// # Error Handling
-    ///
-    /// Both write and rename operations are performed in blocking tasks
-    /// to avoid blocking the async runtime. All errors are properly
-    /// mapped to `AppError` for consistent error handling.
-    async fn atomic_write(&self, content: &str) -> AppResult<()> {
-        let temp_path = self.config_path.with_extension(TEMP_FILE_EXTENSION);
-
-        task::spawn_blocking({
-            let temp_path = temp_path.clone();
-            let content = content.to_string();
-            move || fs::write(&temp_path, content)
-        })
-        .await
-        .map_err(|e| AppError::file_system_error("spawn_write_task", &e.to_string()))?
-        .map_err(|e| AppError::file_system_error("write_temp_file", &e.to_string()))?;
-
-        task::spawn_blocking({
-            let temp_path = temp_path.clone();
-            let config_path = self.config_path.clone();
-            move || fs::rename(&temp_path, &config_path)
-        })
-        .await
-        .map_err(|e| AppError::file_system_error("spawn_rename_task", &e.to_string()))?
-        .map_err(|e| AppError::file_system_error("rename_temp_file", &e.to_string()))?;
-
-        debug!("Configuration saved successfully to {:?}", self.config_path);
-        Ok(())
-    }
-
-    /// Read configuration file content as a string
-    ///
-    /// Reads the entire configuration file into memory using a blocking task
-    /// to avoid blocking the async runtime during file I/O operations.
-    ///
-    /// # Returns
-    ///
-    /// The file contents as a String
-    ///
-    /// # Error Handling
-    ///
-    /// File reading is performed in a blocking task to prevent blocking
-    /// the async runtime. All I/O errors are mapped to appropriate AppErrors.
-    async fn read_file(&self) -> AppResult<String> {
-        task::spawn_blocking({
-            let config_path = self.config_path.clone();
-            move || fs::read_to_string(&config_path)
-        })
-        .await
-        .map_err(|e| AppError::file_system_error("spawn_read_task", &e.to_string()))?
-        .map_err(|e| AppError::file_system_error("read_config_file", &e.to_string()))
-    }
 }
 
 #[async_trait]
 impl ConfigurationService for ConfigurationServiceImpl {
     async fn get_config(&self) -> AppResult<AppConfig> {
-        let config = self.config.read().await;
-        Ok(config.clone())
+        self.repository.get_in_memory_config().await
     }
 
     async fn update_config(&self, new_config: AppConfig) -> AppResult<()> {
-        let validation_result = self.validate_config_internal(&new_config);
+        let validation_result = self.repository.validate_config(&new_config).await?;
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
                 "validate_config",
@@ -239,12 +66,10 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         let previous_config = self.get_config().await?;
 
-        {
-            let mut config = self.config.write().await;
-            *config = new_config.clone();
-        }
-
-        self.save_config().await?;
+        self.repository
+            .update_in_memory_config(new_config.clone())
+            .await?;
+        self.repository.save(&new_config).await?;
 
         self.publish_config_change(new_config, previous_config)
             .await;
@@ -259,7 +84,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         new_config.poe_client_log_path = path;
 
-        let validation_result = self.validate_config_internal(&new_config);
+        let validation_result = self.repository.validate_config(&new_config).await?;
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
                 "validate_config",
@@ -270,12 +95,10 @@ impl ConfigurationService for ConfigurationServiceImpl {
             ));
         }
 
-        {
-            let mut config = self.config.write().await;
-            *config = new_config.clone();
-        }
-
-        self.save_config().await?;
+        self.repository
+            .update_in_memory_config(new_config.clone())
+            .await?;
+        self.repository.save(&new_config).await?;
 
         self.publish_config_change(new_config, previous_config)
             .await;
@@ -290,7 +113,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         new_config.log_level = level;
 
-        let validation_result = self.validate_config_internal(&new_config);
+        let validation_result = self.repository.validate_config(&new_config).await?;
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
                 "validate_config",
@@ -301,12 +124,10 @@ impl ConfigurationService for ConfigurationServiceImpl {
             ));
         }
 
-        {
-            let mut config = self.config.write().await;
-            *config = new_config.clone();
-        }
-
-        self.save_config().await?;
+        self.repository
+            .update_in_memory_config(new_config.clone())
+            .await?;
+        self.repository.save(&new_config).await?;
 
         self.publish_config_change(new_config, previous_config)
             .await;
@@ -321,83 +142,91 @@ impl ConfigurationService for ConfigurationServiceImpl {
     }
 
     async fn load_config(&self) -> AppResult<()> {
-        if !self.config_path.exists() {
-            info!("No config file found, creating default configuration");
-            self.save_config().await?;
-            return Ok(());
-        }
-
-        let content = self.read_file().await?;
-
-        let config: AppConfig = serde_json::from_str(&content).map_err(|e| {
-            error!("Failed to parse config file JSON: {}", e);
-            error!("Config file content: {}", content);
-            AppError::internal_error("parse_config_file", &e.to_string())
-        })?;
-
-        {
-            let mut current_config = self.config.write().await;
-            *current_config = config;
-        }
-
-        info!(
-            "Configuration loaded successfully from {:?}",
-            self.config_path
-        );
+        self.repository.load().await?;
+        info!("Configuration loaded successfully");
         Ok(())
     }
 
     async fn save_config(&self) -> AppResult<()> {
-        let config = self.config.read().await;
-        let content = serde_json::to_string_pretty(&*config)
-            .map_err(|e| AppError::internal_error("serialize_config", &e.to_string()))?;
-
-        self.atomic_write(&content).await
+        let config = self.repository.get_in_memory_config().await?;
+        self.repository.save(&config).await
     }
 
     async fn validate_config(
         &self,
         config: &AppConfig,
     ) -> AppResult<ConfigurationValidationResult> {
-        Ok(self.validate_config_internal(config))
+        self.repository.validate_config(config).await
     }
 
     async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo> {
-        Ok(ConfigurationFileInfo::new(self.config_path.clone()))
+        self.repository.get_file_info().await
     }
 
     async fn get_poe_client_log_path(&self) -> AppResult<String> {
-        let config = self.config.read().await;
-        let path = &config.poe_client_log_path;
-
-        if path.is_empty() {
-            Ok(AppConfig::get_default_poe_client_log_path())
-        } else {
-            Ok(path.clone())
-        }
+        self.repository.get_poe_client_log_path().await
     }
 
     async fn get_log_level(&self) -> AppResult<String> {
-        let config = self.config.read().await;
-        Ok(config.log_level.clone())
+        self.repository.get_log_level().await
     }
 
     fn get_default_poe_client_log_path(&self) -> String {
-        AppConfig::get_default_poe_client_log_path()
+        tauri::async_runtime::block_on(self.repository.get_default_poe_client_log_path())
     }
 
     async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()> {
-        let default_path = self.get_default_poe_client_log_path();
+        let default_path = AppConfig::get_default_poe_client_log_path();
         self.set_poe_client_log_path(default_path).await
     }
 
     async fn subscribe_to_config_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
         self.event_bus.get_receiver(EventType::Configuration).await
     }
+
+    async fn get_zone_refresh_interval(
+        &self,
+    ) -> AppResult<crate::domain::configuration::models::ZoneRefreshInterval> {
+        let config = self.repository.get_in_memory_config().await?;
+        Ok(config.zone_refresh_interval)
+    }
+
+    async fn set_zone_refresh_interval(
+        &self,
+        interval: crate::domain::configuration::models::ZoneRefreshInterval,
+    ) -> AppResult<()> {
+        let previous_config = self.get_config().await?;
+        let mut new_config = previous_config.clone();
+
+        new_config.zone_refresh_interval = interval;
+
+        let validation_result = self.repository.validate_config(&new_config).await?;
+        if !validation_result.is_valid {
+            return Err(AppError::validation_error(
+                "validate_config",
+                &format!(
+                    "Configuration validation failed: {}",
+                    validation_result.errors.join(", ")
+                ),
+            ));
+        }
+
+        self.repository
+            .update_in_memory_config(new_config.clone())
+            .await?;
+        self.repository.save(&new_config).await?;
+
+        self.publish_config_change(new_config, previous_config)
+            .await;
+
+        debug!("Zone refresh interval updated to: {}", interval);
+        Ok(())
+    }
 }
 
 impl Default for ConfigurationServiceImpl {
     fn default() -> Self {
-        Self::new().expect("Failed to create default configuration service")
+        tauri::async_runtime::block_on(Self::new())
+            .expect("Failed to create default configuration service")
     }
 }

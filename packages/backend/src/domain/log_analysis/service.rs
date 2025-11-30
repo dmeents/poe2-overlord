@@ -6,6 +6,7 @@ use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository}
 use crate::domain::server_monitoring::ServerMonitoringService;
 use crate::domain::walkthrough::traits::WalkthroughService;
 use crate::errors::{AppError, AppResult};
+use crate::infrastructure::expand_tilde;
 use crate::infrastructure::parsing::LogParserManager;
 use async_trait::async_trait;
 use log::{error, info, warn};
@@ -86,14 +87,32 @@ impl LogAnalysisServiceImpl {
 
     /// Starts the main monitoring loop for log file analysis
     async fn start_monitoring_loop(&self) -> AppResult<()> {
+        info!("LOG ANALYSIS: start_monitoring_loop() entered");
+
         let config = self.config.read().await;
         let log_path = config.log_file_path.clone();
         drop(config);
 
+        info!("LOG ANALYSIS: Log path from config: '{}'", log_path);
+
         if log_path.is_empty() {
+            error!("LOG ANALYSIS: Log file path is empty!");
             return Err(AppError::internal_error(
-                "get_log_file_info",
+                "start_monitoring_loop",
                 "Log file path not configured",
+            ));
+        }
+
+        // Check if the log file exists before attempting to monitor it
+        info!("LOG ANALYSIS: Checking if log file exists...");
+        let file_exists = self.log_file_repository.file_exists(&log_path).await;
+        info!("LOG ANALYSIS: File exists check result: {}", file_exists);
+
+        if !file_exists {
+            warn!("Log file does not exist at path: {}", log_path);
+            return Err(AppError::file_system_error(
+                "start_monitoring_loop",
+                &format!("Log file does not exist: {}", log_path),
             ));
         }
 
@@ -105,6 +124,10 @@ impl LogAnalysisServiceImpl {
         }
 
         info!("Starting log file monitoring for: {}", log_path);
+        info!(
+            "LOG ANALYSIS: Monitoring initialized - starting from position: {}",
+            file_size
+        );
 
         let monitoring_task = self.create_monitoring_task();
         monitoring_task.await?;
@@ -137,6 +160,7 @@ impl LogAnalysisServiceImpl {
 
                 // Check if monitoring should continue
                 if !*is_running.read().await {
+                    info!("LOG ANALYSIS: Monitoring stopped - is_running is false");
                     break;
                 }
 
@@ -146,6 +170,10 @@ impl LogAnalysisServiceImpl {
                         let last_pos = *last_position.read().await;
                         if current_size > last_pos {
                             // New content detected, process it
+                            info!(
+                                "LOG ANALYSIS: New content detected - file grew from {} to {} bytes",
+                                last_pos, current_size
+                            );
                             if let Err(e) = Self::process_new_lines(
                                 &parser_manager,
                                 &log_path,
@@ -198,6 +226,11 @@ impl LogAnalysisServiceImpl {
         if new_lines.is_empty() {
             return Ok(());
         }
+
+        info!(
+            "LOG ANALYSIS: Processing {} new lines from log file",
+            new_lines.len()
+        );
 
         // Process each new line
         for line in &new_lines {
@@ -253,7 +286,10 @@ impl LogAnalysisServiceImpl {
             .handle_scene_change(character_id, content)
             .await
         {
-            error!("WALKTHROUGH: Failed to handle walkthrough scene change: {}", e);
+            error!(
+                "WALKTHROUGH: Failed to handle walkthrough scene change: {}",
+                e
+            );
         }
     }
 
@@ -268,14 +304,14 @@ impl LogAnalysisServiceImpl {
             Ok(character_data) => {
                 if let Some(active_zone) = character_data.get_active_zone() {
                     if let Err(e) = character_service
-                        .record_death(character_id, &active_zone.location_id)
+                        .record_death(character_id, &active_zone.zone_name)
                         .await
                     {
                         error!("DEATH PROCESSING: Failed to record death in zone: {}", e);
                     } else {
                         info!(
                             "Character death: {} in zone '{}'",
-                            character_name, active_zone.location_name
+                            character_name, active_zone.zone_name
                         );
                     }
                 }
@@ -298,14 +334,50 @@ impl LogAnalysisServiceImpl {
         walkthrough_service: &Arc<dyn WalkthroughService>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     ) -> AppResult<()> {
+        // Log every line being processed at debug level
+        if line.contains("[SCENE]") {
+            info!("LOG ANALYSIS: Processing line with [SCENE]: {}", line);
+        }
+
+        // Specifically log INFO level SCENE lines
+        if line.contains("[INFO") && line.contains("[SCENE]") {
+            info!("LOG ANALYSIS: Found [INFO] + [SCENE] line: {}", line);
+        }
+
         // Try to parse the line for known events
-        if let Ok(Some(result)) = parser_manager.parse_line(line) {
+        let parse_result = parser_manager.parse_line(line);
+        if let Err(e) = &parse_result {
+            if line.contains("[SCENE]") {
+                warn!(
+                    "LOG ANALYSIS: Failed to parse SCENE line: {} - Error: {:?}",
+                    line, e
+                );
+            }
+        }
+
+        if let Ok(Some(result)) = parse_result {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
+                    info!(
+                        "LOG ANALYSIS: Scene change detected - content: '{}'",
+                        content
+                    );
+
                     // Process scene changes through character tracking service
-                    if let Ok(Some(active_character)) =
-                        character_service.get_active_character().await
-                    {
+                    let active_character_result = character_service.get_active_character().await;
+
+                    if let Err(e) = &active_character_result {
+                        warn!(
+                            "LOG ANALYSIS: Failed to get active character for scene change: {}",
+                            e
+                        );
+                    }
+
+                    if let Ok(Some(active_character)) = active_character_result {
+                        info!(
+                            "LOG ANALYSIS: Processing scene change for active character: {}",
+                            active_character.id
+                        );
                         // Check for cached zone level
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
@@ -330,7 +402,10 @@ impl LogAnalysisServiceImpl {
                             &content,
                             &active_character.id,
                             zone_level,
-                        ).await;
+                        )
+                        .await;
+                    } else {
+                        warn!("LOG ANALYSIS: No active character found for scene change");
                     }
                 }
                 crate::infrastructure::parsing::ParserResult::ServerConnection(event) => {
@@ -343,32 +418,18 @@ impl LogAnalysisServiceImpl {
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterLevel((
                     character_name,
-                    class_or_ascendency,
                     new_level,
                 )) => {
                     // Handle character level up events
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        // Check if the parsed class/ascendency matches the active character
-                        let matches = match &class_or_ascendency {
-                            crate::infrastructure::parsing::manager::CharacterClassOrAscendency::Class(class) => {
-                                active_character.class == *class
-                            }
-                            crate::infrastructure::parsing::manager::CharacterClassOrAscendency::Ascendency(ascendency) => {
-                                active_character.ascendency == *ascendency
-                            }
-                        };
-
-                        if active_character.name == character_name && matches {
+                        if active_character.name == character_name {
                             character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
 
-                            info!(
-                                "Character level up: {} ({:?} -> {})",
-                                character_name, class_or_ascendency, new_level
-                            );
+                            info!("Character level up: {} -> {}", character_name, new_level);
                         }
                     }
                 }
@@ -382,7 +443,8 @@ impl LogAnalysisServiceImpl {
                                 character_service,
                                 &character_name,
                                 &active_character.id,
-                            ).await;
+                            )
+                            .await;
                         }
                     }
                 }
@@ -402,6 +464,14 @@ impl LogAnalysisServiceImpl {
 impl LogAnalysisService for LogAnalysisServiceImpl {
     /// Starts monitoring the configured log file for new events
     async fn start_monitoring(&self) -> AppResult<()> {
+        info!("LOG ANALYSIS: start_monitoring() called");
+
+        let config = self.config.read().await;
+        let log_path = config.log_file_path.clone();
+        drop(config);
+
+        info!("LOG ANALYSIS: Configured log path: '{}'", log_path);
+
         let mut is_running = self.is_running.write().await;
         if *is_running {
             warn!("Log monitoring is already running");
@@ -411,7 +481,16 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         *is_running = true;
         drop(is_running);
 
-        self.start_monitoring_loop().await
+        info!("LOG ANALYSIS: Calling start_monitoring_loop()");
+        let result = self.start_monitoring_loop().await;
+
+        if let Err(e) = &result {
+            error!("LOG ANALYSIS: start_monitoring_loop() failed: {}", e);
+        } else {
+            info!("LOG ANALYSIS: start_monitoring_loop() completed successfully");
+        }
+
+        result
     }
 
     /// Stops the current log monitoring session
@@ -435,8 +514,12 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
 
     /// Updates the path to the log file being monitored
     async fn update_log_path(&self, new_path: String) -> AppResult<()> {
+        // Expand tilde (~) in the path to handle home directory references
+        let expanded_path = expand_tilde(&new_path);
+        let expanded_path_str = expanded_path.to_string_lossy().to_string();
+
         let mut config = self.config.write().await;
-        config.log_file_path = new_path;
+        config.log_file_path = expanded_path_str;
         drop(config);
         Ok(())
     }

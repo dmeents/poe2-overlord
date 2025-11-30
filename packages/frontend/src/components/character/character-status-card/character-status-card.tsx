@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
-import { useCharacterManagement } from '../../../hooks';
-import { EmptyState, LoadingSpinner } from '../../ui';
-import { Button } from '../../ui/button';
-import { CharacterCard } from '../character-card';
+import { useCharacterManagement } from '../../../hooks/useCharacterManagement';
+import { EmptyState } from '../../ui/empty-state/empty-state';
+import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
+import { Button } from '../../ui/button/button';
+import { CharacterCard } from '../character-card/character-card';
 import { characterStatusCardStyles } from './character-status-card.styles';
 
 interface CharacterStatusCardProps {

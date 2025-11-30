@@ -16,6 +16,14 @@ pub enum AppError {
     /// Generic internal errors for unexpected failures
     #[error("Internal error: {message}")]
     Internal { message: String },
+
+    /// Network-related errors (HTTP requests, timeouts, etc.)
+    #[error("Network error: {message}")]
+    Network { message: String },
+
+    /// Serialization/deserialization errors
+    #[error("Serialization error: {message}")]
+    Serialization { message: String },
 }
 
 // Standard library error conversions
@@ -69,6 +77,20 @@ impl AppError {
     /// Convenience constructor for internal errors
     pub fn internal_error(operation: &str, message: &str) -> Self {
         Self::Internal {
+            message: format!("{}: {}", operation, message),
+        }
+    }
+
+    /// Convenience constructor for network errors
+    pub fn network_error(operation: &str, message: &str) -> Self {
+        Self::Network {
+            message: format!("{}: {}", operation, message),
+        }
+    }
+
+    /// Convenience constructor for serialization errors
+    pub fn serialization_error(operation: &str, message: &str) -> Self {
+        Self::Serialization {
             message: format!("{}: {}", operation, message),
         }
     }

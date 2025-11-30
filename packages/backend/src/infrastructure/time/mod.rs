@@ -1,7 +1,4 @@
 //! Time calculation and validation utilities
-//! 
-//! Provides functions for calculating session durations, validating timestamps,
-//! and ensuring data integrity for time-based operations in the application.
 
 pub mod calculations;
 

@@ -1,9 +1,7 @@
-import {
-  useCharacterManagement,
-  useGameProcessEvents,
-  useServerStatus,
-} from '@/hooks';
-import type { ServerStatus } from '@/types';
+import { useCharacterManagement } from '@/hooks/useCharacterManagement';
+import { useGameProcessEvents } from '@/hooks/useGameProcessEvents';
+import { useServerStatusEvents } from '@/hooks/useServerStatusEvents';
+import type { ServerStatus } from '@/types/server';
 import {
   ChartBarIcon,
   CogIcon,
@@ -11,13 +9,13 @@ import {
   UserIcon,
 } from '@heroicons/react/16/solid';
 import { useNavigate } from '@tanstack/react-router';
-import { Button } from '../../ui/button';
-import { StatusIndicator } from '../../status/status-indicator';
+import { Button } from '../../ui/button/button';
+import { StatusIndicator } from '../status-indicator/status-indicator';
 import { statusBarStyles } from './status-bar.styles';
 
 export const StatusBar = () => {
   const { processInfo } = useGameProcessEvents();
-  const { serverStatus } = useServerStatus();
+  const { serverStatus } = useServerStatusEvents();
   const { activeCharacter } = useCharacterManagement();
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;

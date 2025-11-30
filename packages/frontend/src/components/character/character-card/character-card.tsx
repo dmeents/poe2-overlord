@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import type { CharacterData } from '../../../types';
-import { formatDuration, getAscendencyImage } from '../../../utils';
-import { Button } from '../../ui/button';
+import type { CharacterData } from '../../../types/character';
+import { formatDuration } from '../../../utils/format-duration';
+import { getAscendencyImage } from '../../../utils/ascendency-assets';
+import { Button } from '../../ui/button/button';
 import {
   formatDate,
   getAscendencyBackgroundStyles,

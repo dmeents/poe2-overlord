@@ -2,12 +2,12 @@ use log::{debug, info};
 use std::sync::Arc;
 
 use crate::domain::character::traits::CharacterService;
-use crate::domain::events::{AppEvent, EventBus};
 use crate::domain::walkthrough::models::{
     CharacterWalkthroughProgress, WalkthroughGuide, WalkthroughProgress, WalkthroughStepResult,
 };
 use crate::domain::walkthrough::traits::{WalkthroughRepository, WalkthroughService};
 use crate::errors::AppError;
+use crate::infrastructure::events::{AppEvent, EventBus};
 
 /// Implementation of the WalkthroughService trait.
 ///

@@ -1,28 +1,11 @@
-//! Infrastructure layer providing concrete implementations of domain traits
-//!
-//! This module contains all the infrastructure concerns including:
-//! - System monitoring (process detection, server monitoring)
-//! - Runtime management (async task orchestration)
-//! - Data persistence (file operations, JSON storage)
-//! - Log parsing and analysis
-//! - Network connectivity
-//! - Tauri integration (events, commands)
-//! - Time calculations and validation
-//! - OS detection and path management
+//! Infrastructure layer for concrete implementations
 
-pub mod monitoring;
-pub mod network;
+pub mod events;
+pub mod file_management;
 pub mod parsing;
-pub mod persistence;
-pub mod runtime;
-pub mod system;
-pub mod tauri;
 pub mod time;
 
-// Re-export commonly used infrastructure components
-pub use monitoring::process_monitor::ProcessMonitorImpl;
-pub use runtime::{RuntimeManager, TaskManager};
-pub use system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths};
+pub use file_management::expand_tilde;
 pub use time::{
     calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,
     calculate_session_duration_seconds, validate_duration, validate_no_session_overlap,

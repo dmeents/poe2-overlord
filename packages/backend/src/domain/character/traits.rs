@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use crate::errors::AppError;
 
 use super::models::{
-    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex, League,
-    LocationState, LocationType,
+    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
+    CharactersIndex, League, LocationState,
 };
 
 #[async_trait]
@@ -36,9 +36,9 @@ pub trait CharacterService: Send + Sync {
         solo_self_found: bool,
     ) -> Result<CharacterData, AppError>;
 
-    async fn get_character(&self, character_id: &str) -> Result<CharacterData, AppError>;
+    async fn get_character(&self, character_id: &str) -> Result<CharacterDataResponse, AppError>;
 
-    async fn get_all_characters(&self) -> Result<Vec<CharacterData>, AppError>;
+    async fn get_all_characters(&self) -> Result<Vec<CharacterDataResponse>, AppError>;
 
     async fn update_character(
         &self,
@@ -50,7 +50,7 @@ pub trait CharacterService: Send + Sync {
 
     async fn set_active_character(&self, character_id: Option<&str>) -> Result<(), AppError>;
 
-    async fn get_active_character(&self) -> Result<Option<CharacterData>, AppError>;
+    async fn get_active_character(&self) -> Result<Option<CharacterDataResponse>, AppError>;
 
     async fn get_characters_index(&self) -> Result<CharactersIndex, AppError>;
 
@@ -67,27 +67,21 @@ pub trait CharacterService: Send + Sync {
         character_id: &str,
     ) -> Result<Option<LocationState>, AppError>;
 
+    /// Loads raw character data for internal mutations (not enriched)
+    async fn load_character_data(&self, character_id: &str) -> Result<CharacterData, AppError>;
+
     async fn save_character_data(&self, character_data: &CharacterData) -> Result<(), AppError>;
 
-    async fn enter_zone(
-        &self,
-        character_id: &str,
-        location_id: String,
-        location_name: String,
-        location_type: LocationType,
-        act: Option<String>,
-        is_town: bool,
-        zone_level: Option<u32>,
-    ) -> Result<(), AppError>;
+    async fn enter_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
 
-    async fn leave_zone(&self, character_id: &str, location_id: &str) -> Result<(), AppError>;
+    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
 
-    async fn record_death(&self, character_id: &str, location_id: &str) -> Result<(), AppError>;
+    async fn record_death(&self, character_id: &str) -> Result<(), AppError>;
 
     async fn add_zone_time(
         &self,
         character_id: &str,
-        location_id: &str,
+        zone_name: &str,
         seconds: u64,
     ) -> Result<(), AppError>;
 

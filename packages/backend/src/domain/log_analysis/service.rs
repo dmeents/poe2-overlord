@@ -370,7 +370,7 @@ impl LogAnalysisServiceImpl {
         event_bus: &Arc<crate::infrastructure::events::EventBus>,
         content: &str,
         character_id: &str,
-        zone_level: Option<u32>,
+        _zone_level: Option<u32>,
     ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError> {
         let zone_name = content.trim();
 
@@ -415,23 +415,12 @@ impl LogAnalysisServiceImpl {
             Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config).await;
         }
 
-        if let Err(e) = character_service
-            .enter_zone(
-                character_id,
-                zone_name.to_string(),
-                zone_name.to_string(),
-                crate::domain::character::models::LocationType::Zone,
-                Some(zone_metadata.act.to_string()),
-                zone_metadata.is_town,
-                zone_level,
-            )
-            .await
-        {
+        if let Err(e) = character_service.enter_zone(character_id, zone_name).await {
             error!("Failed to enter zone '{}': {}", zone_name, e);
             return Err(e);
         }
 
-        let character_data = match character_service.get_character(character_id).await {
+        let character_data = match character_service.load_character_data(character_id).await {
             Ok(data) => data,
             Err(e) => {
                 error!("Failed to load character data: {}", e);
@@ -531,10 +520,7 @@ impl LogAnalysisServiceImpl {
         match character_service.get_character(character_id).await {
             Ok(character_data) => {
                 if let Some(current_location) = &character_data.current_location {
-                    if let Err(e) = character_service
-                        .record_death(character_id, &current_location.zone_name)
-                        .await
-                    {
+                    if let Err(e) = character_service.record_death(character_id).await {
                         error!("DEATH PROCESSING: Failed to record death in zone: {}", e);
                     } else {
                         info!(
@@ -649,7 +635,7 @@ impl LogAnalysisServiceImpl {
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        if active_character.profile.name == character_name {
+                        if active_character.name == character_name {
                             character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
@@ -662,7 +648,7 @@ impl LogAnalysisServiceImpl {
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        if active_character.profile.name == character_name {
+                        if active_character.name == character_name {
                             Self::process_character_death_with_error_handling(
                                 character_service,
                                 &character_name,

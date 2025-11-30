@@ -171,119 +171,66 @@ impl CharactersIndex {
 // Re-export all the enums and types from the old character domain
 // These will be moved here in a future step, but for now we'll import them
 
-/// Base character classes available in Path of Exile 2.
-///
-/// Each class represents a different archetype with unique starting attributes
-/// and access to specific ascendency specializations. The serde rename attributes
-/// ensure proper serialization to match the game's naming conventions.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CharacterClass {
-    /// Melee-focused class with high strength and durability
     #[serde(rename = "Warrior")]
     Warrior,
-    /// Magic-focused class with high intelligence and spellcasting abilities
     #[serde(rename = "Sorceress")]
     Sorceress,
-    /// Ranged combat class with high dexterity and bow skills
     #[serde(rename = "Ranger")]
     Ranger,
-    /// Hybrid class combining ranged and melee combat with nature magic
     #[serde(rename = "Huntress")]
     Huntress,
-    /// Martial arts class with high dexterity and unarmed combat
     #[serde(rename = "Monk")]
     Monk,
-    /// Versatile class with balanced attributes and weapon mastery
     #[serde(rename = "Mercenary")]
     Mercenary,
-    /// Dark magic class with necromancy and curse abilities
     #[serde(rename = "Witch")]
     Witch,
 }
 
-/// Ascendency specializations available for each character class.
-///
-/// Ascendencies provide specialized passive skill trees and unique abilities
-/// that further define a character's playstyle. Each base class has access
-/// to 2-3 specific ascendencies that complement their core archetype.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Ascendency {
-    // Warrior ascendencies
-    /// Tank-focused ascendency with defensive bonuses and shield skills
     #[serde(rename = "Titan")]
     Titan,
-    /// Berserker ascendency with damage bonuses and rage mechanics
     #[serde(rename = "Warbringer")]
     Warbringer,
-    /// Crafting-focused ascendency with item enhancement abilities
     #[serde(rename = "Smith of Katava")]
     SmithOfKatava,
-
-    // Sorceress ascendencies
-    /// Lightning and storm magic specialist
     #[serde(rename = "Stormweaver")]
     Stormweaver,
-    /// Time manipulation and temporal magic specialist
     #[serde(rename = "Chronomancer")]
     Chronomancer,
-
-    // Ranger ascendencies
-    /// Precision and critical hit specialist
     #[serde(rename = "Deadeye")]
     Deadeye,
-    /// Nature magic and elemental arrow specialist
     #[serde(rename = "Pathfinder")]
     Pathfinder,
-
-    // Huntress ascendencies
-    /// Ritual magic and totem specialist
     #[serde(rename = "Ritualist")]
     Ritualist,
-    /// Physical prowess and spear specialist
     #[serde(rename = "Amazon")]
     Amazon,
-
-    // Monk ascendencies
-    /// Elemental invocation and spell casting specialist
     #[serde(rename = "Invoker")]
     Invoker,
-    /// Dark magic and chaos specialist
     #[serde(rename = "Acolyte of Chayula")]
     AcolyteOfChayula,
-
-    // Mercenary ascendencies
-    /// Gem-based abilities and magical enhancement specialist
     #[serde(rename = "Gemling Legionnaire")]
     GemlingLegionnaire,
-    /// Strategic combat and battlefield control specialist
     #[serde(rename = "Tactitian")]
     Tactitian,
-    /// Anti-magic and spell disruption specialist
     #[serde(rename = "Witchhunter")]
     Witchhunter,
-
-    // Witch ascendencies
-    /// Blood magic and life force manipulation specialist
     #[serde(rename = "Blood Mage")]
     BloodMage,
-    /// Fire and destruction magic specialist
     #[serde(rename = "Infernalist")]
     Infernalist,
-    /// Undead mastery and necromancy specialist
     #[serde(rename = "Lich")]
     Lich,
 }
 
-/// Game leagues/modes available in Path of Exile 2.
-///
-/// Leagues represent different game modes with varying rules, mechanics,
-/// and economies. Each league provides a fresh start for characters.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum League {
-    /// The permanent league with standard game rules and persistent economy
     #[serde(rename = "Standard")]
     Standard,
-    /// A temporary league with unique mechanics and modifiers
     #[serde(rename = "Third Edict")]
     ThirdEdict,
 }
@@ -291,18 +238,17 @@ pub enum League {
 // Re-export tracking-related types (these will be moved here in a future step)
 // For now, we'll define them here to avoid circular dependencies
 
-/// Current location state for a character
-/// Stores only a reference to the current zone - full zone metadata comes from zones.json
+/// Current location state for a character.
+/// Stores only a reference to the current zone - full zone metadata comes from zone configuration.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct LocationState {
-    /// Current zone name (reference to ZoneMetadata in zones.json)
+    /// Current zone name
     pub zone_name: String,
-    /// Timestamp of the last location update
+
     pub last_updated: DateTime<Utc>,
 }
 
 impl LocationState {
-    /// Creates a new location state with current timestamp
     pub fn new(zone_name: String) -> Self {
         Self {
             zone_name,
@@ -322,36 +268,32 @@ impl LocationState {
         }
     }
 
-    /// Gets a reference to the current zone name
     pub fn get_zone_name(&self) -> &String {
         &self.zone_name
     }
 }
 
-/// Enriched location state with zone metadata joined from zones.json
-/// This is used for API responses to provide full location context to the frontend
+/// Enriched location state with zone metadata for API responses
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct EnrichedLocationState {
-    /// Current zone name
     pub zone_name: String,
-    /// Act number (from zone metadata)
+
     pub act: u32,
-    /// Whether the current location is a town (from zone metadata)
+
     pub is_town: bool,
-    /// Type of location (Zone or Hideout)
+
     pub location_type: LocationType,
-    /// Area ID from wiki (from zone metadata)
+
     pub area_id: Option<String>,
-    /// Area level (from zone metadata)
+
     pub area_level: Option<u32>,
-    /// Whether this zone has a waypoint (from zone metadata)
+
     pub has_waypoint: bool,
-    /// Timestamp of the last location update
+
     pub last_updated: DateTime<Utc>,
 }
 
 impl EnrichedLocationState {
-    /// Creates an enriched location state from LocationState and ZoneMetadata
     pub fn from_location_and_metadata(
         location: &LocationState,
         metadata: &crate::domain::zone_configuration::models::ZoneMetadata,
@@ -372,7 +314,6 @@ impl EnrichedLocationState {
         }
     }
 
-    /// Creates an enriched location state with minimal data when zone metadata is not available
     pub fn from_location_minimal(location: &LocationState) -> Self {
         Self {
             zone_name: location.zone_name.clone(),
@@ -387,7 +328,7 @@ impl EnrichedLocationState {
     }
 }
 
-/// Character data response for frontend with enriched zone information
+/// Character data response with enriched zone information for API responses
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CharacterDataResponse {
     pub id: String,
@@ -455,7 +396,7 @@ impl From<CharacterData> for CharacterDataResponse {
     }
 }
 
-/// Enriched zone stats that combines character tracking with zone metadata
+/// Response DTO combining zone stats with metadata
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct EnrichedZoneStats {
     pub zone_name: String,
@@ -510,63 +451,8 @@ impl EnrichedZoneStats {
             last_updated: Some(metadata.last_updated),
         }
     }
-
-    pub fn add_time(&mut self, seconds: u64) {
-        self.duration += seconds;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn record_death(&mut self) {
-        self.deaths += 1;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn record_visit(&mut self) {
-        self.visits += 1;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn activate(&mut self) {
-        self.is_active = true;
-        self.record_visit();
-    }
-
-    pub fn deactivate(&mut self) {
-        self.is_active = false;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn start_timer(&mut self) {
-        self.entry_timestamp = Some(Utc::now());
-    }
-
-    pub fn stop_timer_and_add_time(&mut self) -> u64 {
-        if let Some(entry_time) = self.entry_timestamp {
-            let time_spent = Utc::now()
-                .signed_duration_since(entry_time)
-                .num_seconds()
-                .max(0) as u64;
-            self.add_time(time_spent);
-            self.entry_timestamp = None;
-            time_spent
-        } else {
-            0
-        }
-    }
-
-    pub fn get_current_time_spent(&self) -> u64 {
-        if let Some(entry_time) = self.entry_timestamp {
-            Utc::now()
-                .signed_duration_since(entry_time)
-                .num_seconds()
-                .max(0) as u64
-        } else {
-            0
-        }
-    }
 }
 
-/// Types of locations that can be tracked in the game
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum LocationType {
     /// A playable game zone/area
@@ -588,19 +474,7 @@ impl fmt::Display for LocationType {
     }
 }
 
-/// Validates whether a given ascendency is compatible with a character class.
-///
-/// This function enforces the game's business rules by ensuring that only
-/// valid ascendency-class combinations are allowed. Each class has a specific
-/// set of ascendencies they can choose from.
-///
-/// # Arguments
-/// * `ascendency` - The ascendency to validate
-/// * `class` - The character class to check compatibility against
-///
-/// # Returns
-/// * `true` if the ascendency is valid for the given class
-/// * `false` if the combination is not allowed
+/// Validates whether an ascendency is compatible with a character class
 pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterClass) -> bool {
     match class {
         CharacterClass::Warrior => matches!(
@@ -632,17 +506,6 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
     }
 }
 
-/// Returns all available ascendencies for a given character class.
-///
-/// This utility function provides a convenient way to get all valid
-/// ascendency options when creating or updating a character of a specific class.
-/// Used primarily by the UI layer to populate dropdown menus and validate selections.
-///
-/// # Arguments
-/// * `class` - The character class to get ascendencies for
-///
-/// # Returns
-/// A vector containing all ascendencies available to the specified class
 pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
     match class {
         CharacterClass::Warrior => vec![
@@ -667,14 +530,6 @@ pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
     }
 }
 
-/// Returns all available character classes in the game.
-///
-/// This utility function provides a complete list of all character classes
-/// that can be selected when creating a new character. Used by the UI layer
-/// to populate class selection dropdowns.
-///
-/// # Returns
-/// A vector containing all available character classes
 pub fn get_all_character_classes() -> Vec<CharacterClass> {
     vec![
         CharacterClass::Warrior,
@@ -687,29 +542,14 @@ pub fn get_all_character_classes() -> Vec<CharacterClass> {
     ]
 }
 
-/// Returns all available leagues in the game.
-///
-/// This utility function provides a complete list of all leagues
-/// that can be selected when creating a new character. Used by the UI layer
-/// to populate league selection dropdowns.
-///
-/// # Returns
-/// A vector containing all available leagues
 pub fn get_all_leagues() -> Vec<League> {
     vec![League::Standard, League::ThirdEdict]
 }
 
-/// Default level for new characters.
-///
-/// All characters start at level 1 when created.
 fn default_level() -> u32 {
     1
 }
 
-/// Implementation of Display trait for CharacterClass.
-///
-/// Provides human-readable string representation of character classes
-/// for display purposes in the UI and logging.
 impl fmt::Display for CharacterClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

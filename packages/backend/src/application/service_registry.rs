@@ -55,6 +55,7 @@ impl ServiceInitializer {
         let character_service = tauri::async_runtime::block_on(
             crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                 event_bus.clone(),
+                zone_config_service.clone(),
             ),
         )
         .map_err(|e| {
@@ -68,6 +69,7 @@ impl ServiceInitializer {
             tauri::async_runtime::block_on(
                 crate::domain::character::service::CharacterServiceImpl::with_default_repository(
                     event_bus.clone(),
+                    zone_config_service.clone(),
                 ),
             )
             .map_err(|e| {

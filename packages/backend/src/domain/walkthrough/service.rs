@@ -43,7 +43,10 @@ impl WalkthroughServiceImpl {
         &self,
         character_id: &str,
     ) -> Result<WalkthroughProgress, AppError> {
-        let character_data = self.character_service.get_character(character_id).await?;
+        let character_data = self
+            .character_service
+            .load_character_data(character_id)
+            .await?;
         Ok(character_data.get_walkthrough_progress().clone())
     }
 
@@ -53,7 +56,10 @@ impl WalkthroughServiceImpl {
         character_id: &str,
         progress: WalkthroughProgress,
     ) -> Result<(), AppError> {
-        let mut character_data = self.character_service.get_character(character_id).await?;
+        let mut character_data = self
+            .character_service
+            .load_character_data(character_id)
+            .await?;
         let progress_clone = progress.clone();
         character_data.update_walkthrough_progress(progress);
         self.character_service

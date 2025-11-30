@@ -12,10 +12,14 @@ pub struct ZoneStats {
     pub last_visited: DateTime<Utc>,
     pub is_active: bool,
     pub entry_timestamp: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub act: Option<u32>,
+    #[serde(default)]
+    pub is_town: bool,
 }
 
 impl ZoneStats {
-    pub fn new(zone_name: String) -> Self {
+    pub fn new(zone_name: String, act: Option<u32>, is_town: bool) -> Self {
         let now = Utc::now();
         Self {
             zone_name,
@@ -26,7 +30,13 @@ impl ZoneStats {
             last_visited: now,
             is_active: false,
             entry_timestamp: None,
+            act,
+            is_town,
         }
+    }
+
+    pub fn is_hideout(&self) -> bool {
+        self.zone_name.to_lowercase().contains("hideout")
     }
 
     pub fn add_time(&mut self, seconds: u64) {
@@ -86,6 +96,7 @@ pub struct TrackingSummary {
     pub character_id: String,
     pub total_play_time: u64,
     pub total_hideout_time: u64,
+    pub total_town_time: u64,
     pub total_zones_visited: u32,
     pub total_deaths: u32,
     pub play_time_act1: u64,
@@ -102,6 +113,7 @@ impl TrackingSummary {
             character_id,
             total_play_time: 0,
             total_hideout_time: 0,
+            total_town_time: 0,
             total_zones_visited: 0,
             total_deaths: 0,
             play_time_act1: 0,
@@ -119,6 +131,32 @@ impl TrackingSummary {
         for zone in zones {
             summary.total_play_time += zone.duration;
             summary.total_deaths += zone.deaths;
+
+            // Calculate hideout time
+            if zone.is_hideout() {
+                summary.total_hideout_time += zone.duration;
+            }
+
+            // Calculate town time (excluding hideouts)
+            if zone.is_town && !zone.is_hideout() {
+                summary.total_town_time += zone.duration;
+            }
+
+            // Calculate act-specific time (only for zones with known act)
+            if let Some(act) = zone.act {
+                match act {
+                    1 => summary.play_time_act1 += zone.duration,
+                    2 => summary.play_time_act2 += zone.duration,
+                    3 => summary.play_time_act3 += zone.duration,
+                    4 => summary.play_time_act4 += zone.duration,
+                    6 => summary.play_time_interlude += zone.duration,
+                    10 => summary.play_time_endgame += zone.duration,
+                    _ => {
+                        // Unknown act (0, 5, 7-9, 11+)
+                        // Only counts in total_play_time, not act-specific
+                    }
+                }
+            }
         }
 
         summary.total_zones_visited = zones.len() as u32;

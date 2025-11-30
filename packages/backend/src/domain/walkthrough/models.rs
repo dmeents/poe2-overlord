@@ -81,7 +81,7 @@ pub struct WalkthroughGuide {
 /// Progress is stored as part of the character's data and updated as they advance.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughProgress {
-    /// Current step ID the character is on (defaults to "act_4_step_1" for initial implementation)
+    /// Current step ID the character is on (defaults to "act_1_step_1")
     pub current_step_id: Option<String>,
     /// Whether the character has completed the entire campaign
     pub is_completed: bool,
@@ -93,7 +93,7 @@ impl WalkthroughProgress {
     /// Creates new walkthrough progress for a character starting at the beginning
     pub fn new() -> Self {
         Self {
-            current_step_id: Some("act_4_step_1".to_string()),
+            current_step_id: Some("act_1_step_1".to_string()),
             is_completed: false,
             last_updated: Utc::now(),
         }

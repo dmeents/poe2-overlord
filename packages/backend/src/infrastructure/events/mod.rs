@@ -1,4 +1,4 @@
-//! Unified event system for pub/sub communication and Tauri frontend integration.
+//! Event system for pub/sub communication and Tauri integration
 
 pub mod bridge;
 pub mod bus;

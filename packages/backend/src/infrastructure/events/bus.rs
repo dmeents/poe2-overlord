@@ -1,5 +1,3 @@
-//! Central event bus for pub/sub communication.
-
 use crate::errors::AppResult;
 use crate::infrastructure::events::channels::ChannelManager;
 use crate::infrastructure::events::types::{AppEvent, ChannelConfig, EventSubscription, EventType};

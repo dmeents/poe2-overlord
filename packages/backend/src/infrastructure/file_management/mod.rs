@@ -1,7 +1,4 @@
-//! File management infrastructure for atomic JSON file operations
-//!
-//! Provides a type-safe API for reading and writing JSON files with atomic
-//! write guarantees and XDG-compliant directory path management.
+//! File management infrastructure for atomic JSON operations
 
 pub mod paths;
 pub mod service;

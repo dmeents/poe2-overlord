@@ -1,9 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-/// Configuration for parsing infrastructure
-///
-/// Contains domain-specific keywords used for categorizing and identifying
-/// different types of game locations and content.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParsersConfig {
     pub hideout_keywords: Vec<String>,
@@ -15,9 +11,7 @@ impl Default for ParsersConfig {
     fn default() -> Self {
         Self {
             hideout_keywords: vec!["hideout".to_string()],
-
-            zone_keywords: vec!["*".to_string()], // Wildcard for any content
-
+            zone_keywords: vec!["*".to_string()],
             act_keywords: vec![
                 "act".to_string(),
                 "endgame".to_string(),

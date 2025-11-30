@@ -22,7 +22,6 @@ impl SceneChangeParser {
     }
 
     fn extract_scene_content(&self, line: &str) -> Result<String, ParseError> {
-        // Try each pattern until one succeeds
         for pattern in &self.patterns {
             if let Ok(content) = extract_content_between_delimiters(line, pattern, '[', ']') {
                 return Ok(content.into_owned());

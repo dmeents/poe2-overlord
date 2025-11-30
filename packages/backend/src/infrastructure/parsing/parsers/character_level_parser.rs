@@ -15,7 +15,6 @@ impl CharacterLevelParser {
     }
 
     fn create_level_regex() -> Regex {
-        // Regex captures: (character_name) (class_or_ascendency - ignored) (level)
         Regex::new(r"\[INFO Client \d+\]\s*:\s*(.+?)\s+\(.+?\)\s+is\s+now\s+level\s+(\d+)$")
             .expect("Failed to compile character level regex")
     }

@@ -1,5 +1,3 @@
-//! Forwards events from EventBus to Tauri frontend.
-
 use crate::errors::AppResult;
 use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 use log::{debug, error, info};

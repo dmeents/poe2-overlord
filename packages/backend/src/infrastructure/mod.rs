@@ -1,17 +1,10 @@
-//! Infrastructure layer providing concrete implementations of domain traits
-//!
-//! This module contains all the infrastructure concerns including:
-//! - File management (file operations, JSON storage, path utilities)
-//! - Log parsing and analysis
-//! - Tauri integration (events, commands)
-//! - Time calculations and validation
+//! Infrastructure layer for concrete implementations
 
 pub mod events;
 pub mod file_management;
 pub mod parsing;
 pub mod time;
 
-// Re-export commonly used infrastructure components
 pub use file_management::expand_tilde;
 pub use time::{
     calculate_active_session_duration_seconds, calculate_session_duration_from_timestamps,

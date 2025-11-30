@@ -1,5 +1,3 @@
-//! Manages broadcast channels for different event types.
-
 use crate::errors::AppResult;
 use crate::infrastructure::events::types::{AppEvent, ChannelConfig, ChannelStats, EventType};
 use log::{debug, info};

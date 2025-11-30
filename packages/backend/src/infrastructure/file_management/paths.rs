@@ -3,45 +3,21 @@ use log::debug;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 
-/// Expands a path that may contain a tilde (~) to represent the home directory
-///
-/// This function handles the shell convention of using `~` to represent the user's
-/// home directory. Since Rust's standard library doesn't automatically expand `~`,
-/// this function provides that functionality.
-///
-/// # Arguments
-///
-/// * `path` - A path that may start with `~` or `~/`
-///
-/// # Returns
-///
-/// A `PathBuf` with the tilde expanded to the actual home directory path.
-/// If the path doesn't start with `~`, it's returned as-is.
-/// If the home directory cannot be determined, the path is returned unchanged.
-///
-/// # Examples
-///
-/// ```
-/// let expanded = expand_tilde("~/Documents/file.txt");
-/// // On Linux with user "alice", this would return "/home/alice/Documents/file.txt"
-/// ```
+/// Expands tilde (~) in paths to the user's home directory
 pub fn expand_tilde<P: AsRef<Path>>(path: P) -> PathBuf {
     let path = path.as_ref();
     let path_str = path.to_string_lossy();
 
     if path_str.starts_with("~/") {
-        // Replace ~ with home directory
         if let Some(home) = dirs::home_dir() {
             return home.join(&path_str[2..]);
         }
     } else if path_str == "~" {
-        // Just ~ by itself
         if let Some(home) = dirs::home_dir() {
             return home;
         }
     }
 
-    // Return the path as-is if it doesn't start with ~ or if home dir couldn't be determined
     path.to_path_buf()
 }
 
@@ -125,10 +101,7 @@ mod tests {
         let path = "~/test/file.txt";
         let expanded = expand_tilde(path);
 
-        // Should not contain literal tilde
         assert!(!expanded.to_string_lossy().starts_with("~"));
-
-        // Should end with the same relative path
         assert!(expanded.to_string_lossy().ends_with("test/file.txt"));
     }
 
@@ -137,7 +110,6 @@ mod tests {
         let path = "~";
         let expanded = expand_tilde(path);
 
-        // Should not be just "~"
         assert_ne!(expanded.to_string_lossy(), "~");
     }
 
@@ -146,7 +118,6 @@ mod tests {
         let path = "~test/file.txt";
         let expanded = expand_tilde(path);
 
-        // Should remain unchanged (not a home directory reference)
         assert_eq!(expanded.to_string_lossy(), "~test/file.txt");
     }
 
@@ -155,7 +126,6 @@ mod tests {
         let path = "/absolute/path/file.txt";
         let expanded = expand_tilde(path);
 
-        // Should remain unchanged
         assert_eq!(expanded.to_string_lossy(), "/absolute/path/file.txt");
     }
 }

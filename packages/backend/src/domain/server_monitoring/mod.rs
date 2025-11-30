@@ -1,5 +1,3 @@
-//! Server monitoring functionality for tracking server status, ping operations, and event publishing.
-
 pub mod models;
 pub mod ping_provider;
 pub mod repository;

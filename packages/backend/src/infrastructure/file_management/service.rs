@@ -100,7 +100,7 @@ impl FileService {
         })
     }
 
-    /// Atomic write using write-temp-rename pattern to prevent corruption
+    /// Uses write-temp-rename pattern to prevent corruption
     async fn write(path: &Path, content: &str) -> AppResult<()> {
         let temp_path = Self::get_temp_path(path);
 

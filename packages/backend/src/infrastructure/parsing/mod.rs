@@ -17,7 +17,7 @@ pub mod traits;
 pub mod utils;
 
 // LogAnalyzer has been removed - use LogAnalysisService from domain layer instead
-pub use config::{ParserConfig, ParsersConfig};
+pub use config::ParsersConfig;
 pub use errors::ParseError;
 pub use factory::ParserFactory;
 pub use manager::{LogParserManager, ParserResult};

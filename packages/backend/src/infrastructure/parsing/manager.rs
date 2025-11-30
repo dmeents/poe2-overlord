@@ -1,14 +1,5 @@
-use crate::domain::character::models::{Ascendency, CharacterClass};
 use crate::domain::log_analysis::models::ServerConnectionEvent;
-use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError, ParserFactory};
-
-/// Represents either a character class or ascendency for flexible parsing
-#[derive(Debug, Clone, PartialEq)]
-pub enum CharacterClassOrAscendency {
-    Class(CharacterClass),
-    Ascendency(Ascendency),
-}
 
 /// Results produced by log parsers
 ///
@@ -18,9 +9,9 @@ pub enum CharacterClassOrAscendency {
 pub enum ParserResult {
     SceneChange(String), // Raw scene change content
     ServerConnection(ServerConnectionEvent),
-    CharacterLevel((String, CharacterClassOrAscendency, u32)), // (character_name, class_or_ascendency, level)
-    CharacterDeath(String),                        // character_name
-    ZoneLevel(u32),                                // zone level
+    CharacterLevel((String, u32)), // (character_name, level)
+    CharacterDeath(String),        // character_name
+    ZoneLevel(u32),                // zone level
 }
 
 /// Manages a collection of log parsers for processing game log events
@@ -30,19 +21,12 @@ pub enum ParserResult {
 pub struct LogParserManager {
     /// Collection of active parsers as trait objects
     parsers: Vec<Box<dyn LogParser<Event = ParserResult> + Send + Sync>>,
-    /// Configuration for parser behavior
-    config: ParsersConfig,
 }
 
 impl LogParserManager {
     pub fn new() -> Self {
-        let config = ParsersConfig::default();
-        Self::with_config(config)
-    }
-
-    pub fn with_config(config: ParsersConfig) -> Self {
-        let parsers = ParserFactory::create_all_parsers(&config);
-        Self { parsers, config }
+        let parsers = ParserFactory::create_all_parsers();
+        Self { parsers }
     }
 
     /// Attempts to parse a log line using all available parsers
@@ -62,7 +46,7 @@ impl LogParserManager {
                             ParserResult::ServerConnection(_event) => {
                                 // Server connection event detected
                             }
-                            ParserResult::CharacterLevel((_name, _class, _level)) => {
+                            ParserResult::CharacterLevel((_name, _level)) => {
                                 // Character level-up detected
                             }
                             ParserResult::CharacterDeath(_name) => {
@@ -96,13 +80,13 @@ impl LogParserManager {
         &self,
         parser_name: &str,
     ) -> Option<Box<dyn LogParser<Event = ParserResult> + Send + Sync>> {
-        ParserFactory::create_parser(parser_name, &self.config)
+        ParserFactory::create_parser(parser_name)
     }
 }
 
 impl Clone for LogParserManager {
     fn clone(&self) -> Self {
-        Self::with_config(self.config.clone())
+        Self::new()
     }
 }
 

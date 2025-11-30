@@ -5,14 +5,12 @@
 //! - Runtime management (async task orchestration)
 //! - File management (file operations, JSON storage)
 //! - Log parsing and analysis
-//! - Network connectivity
 //! - Tauri integration (events, commands)
 //! - Time calculations and validation
 //! - OS detection and path management
 
 pub mod file_management;
 pub mod monitoring;
-pub mod network;
 pub mod parsing;
 pub mod runtime;
 pub mod system;

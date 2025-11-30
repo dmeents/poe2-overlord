@@ -357,32 +357,18 @@ impl LogAnalysisServiceImpl {
                 }
                 crate::infrastructure::parsing::ParserResult::CharacterLevel((
                     character_name,
-                    class_or_ascendency,
                     new_level,
                 )) => {
                     // Handle character level up events
                     if let Ok(Some(active_character)) =
                         character_service.get_active_character().await
                     {
-                        // Check if the parsed class/ascendency matches the active character
-                        let matches = match &class_or_ascendency {
-                            crate::infrastructure::parsing::manager::CharacterClassOrAscendency::Class(class) => {
-                                active_character.class == *class
-                            }
-                            crate::infrastructure::parsing::manager::CharacterClassOrAscendency::Ascendency(ascendency) => {
-                                active_character.ascendency == *ascendency
-                            }
-                        };
-
-                        if active_character.name == character_name && matches {
+                        if active_character.name == character_name {
                             character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
 
-                            info!(
-                                "Character level up: {} ({:?} -> {})",
-                                character_name, class_or_ascendency, new_level
-                            );
+                            info!("Character level up: {} -> {}", character_name, new_level);
                         }
                     }
                 }

@@ -1,26 +1,16 @@
 use crate::infrastructure::parsing::manager::ParserResult;
-use crate::infrastructure::parsing::ParsersConfig;
 use crate::infrastructure::parsing::{LogParser, ParseError};
 use regex::Regex;
 
 #[derive(Clone)]
 pub struct ZoneLevelParser {
-    config: ParsersConfig,
     regex: Regex,
 }
 
 impl ZoneLevelParser {
     pub fn new() -> Self {
         Self {
-            config: ParsersConfig::default(),
             regex: Regex::new(r"Generating level (\d+) area").unwrap(),
-        }
-    }
-
-    pub fn with_config(config: ParsersConfig) -> Self {
-        Self {
-            regex: Regex::new(r"Generating level (\d+) area").unwrap(),
-            config,
         }
     }
 
@@ -41,9 +31,7 @@ impl LogParser for ZoneLevelParser {
     type Event = ParserResult;
 
     fn should_parse(&self, line: &str) -> bool {
-        self.config
-            .matches_patterns("zone_level", line)
-            .unwrap_or(false)
+        self.regex.is_match(line)
     }
 
     fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {

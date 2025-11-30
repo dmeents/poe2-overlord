@@ -1,29 +1,34 @@
-use crate::infrastructure::parsing::ParsersConfig;
-use crate::infrastructure::parsing::{LogParser, ParseError};
-use crate::infrastructure::parsing::utils::extract_content_by_patterns;
 use crate::infrastructure::parsing::manager::ParserResult;
+use crate::infrastructure::parsing::utils::extract_content_between_delimiters;
+use crate::infrastructure::parsing::{LogParser, ParseError};
 
 #[derive(Clone)]
 pub struct SceneChangeParser {
-    config: ParsersConfig,
+    patterns: Vec<String>,
 }
 
 impl SceneChangeParser {
     pub fn new() -> Self {
         Self {
-            config: ParsersConfig::default(),
+            patterns: Self::default_patterns(),
         }
     }
 
-    pub fn with_config(config: ParsersConfig) -> Self {
-        Self { config }
+    fn default_patterns() -> Vec<String> {
+        vec![
+            "[SCENE] Set Source [".to_string(),
+            "[SCENE] Load Source [".to_string(),
+        ]
     }
 
     fn extract_scene_content(&self, line: &str) -> Result<String, ParseError> {
-        let content =
-            extract_content_by_patterns(line, &self.config.scene_change.patterns, '[', ']')?;
-
-        Ok(content.into_owned())
+        // Try each pattern until one succeeds
+        for pattern in &self.patterns {
+            if let Ok(content) = extract_content_between_delimiters(line, pattern, '[', ']') {
+                return Ok(content.into_owned());
+            }
+        }
+        Err(ParseError::content_extraction_failed(line))
     }
 }
 
@@ -31,9 +36,7 @@ impl LogParser for SceneChangeParser {
     type Event = ParserResult;
 
     fn should_parse(&self, line: &str) -> bool {
-        self.config
-            .matches_patterns("scene_change", line)
-            .unwrap_or(false)
+        self.patterns.iter().any(|pattern| line.contains(pattern))
     }
 
     fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {

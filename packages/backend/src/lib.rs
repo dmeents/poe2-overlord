@@ -58,7 +58,7 @@ pub use domain::game_monitoring::{
 // Infrastructure services and utilities
 // Note: Server monitoring is now handled by the domain service
 pub use domain::log_analysis::traits::LogAnalysisService; // Log parsing and analysis
-pub use infrastructure::system::{detect_os, get_os_name, OperatingSystem, PoeClientLogPaths}; // OS detection and paths
+
 pub use infrastructure::tauri::TauriEventBridge; // Tauri event system integration
 pub use infrastructure::time::{
     // Time calculation and validation utilities

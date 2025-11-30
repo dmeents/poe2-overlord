@@ -76,7 +76,35 @@ impl AppConfig {
     /// This method retrieves the platform-specific default location where
     /// Path of Exile typically stores its client log files.
     pub fn get_default_poe_client_log_path() -> String {
-        crate::infrastructure::system::paths::PoeClientLogPaths::get_default_path_string()
+        use std::env;
+
+        match env::consts::OS {
+            "windows" => {
+                // Standard Windows installation path
+                "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile 2\\logs\\Client.txt"
+                    .to_string()
+            }
+            "macos" => {
+                // macOS Application Support directory
+                let home = env::var("HOME").unwrap_or_else(|_| "/Users/default".to_string());
+                format!(
+                    "{}/Library/Application Support/Path of Exile 2/logs/Client.txt",
+                    home
+                )
+            }
+            "linux" => {
+                // Linux Steam Flatpak installation path
+                let home = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());
+                format!(
+                    "{}/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Path of Exile 2/logs/Client.txt",
+                    home
+                )
+            }
+            _ => {
+                // Fallback for unknown OS
+                "Client.txt".to_string()
+            }
+        }
     }
 
     /// Check if the current POE client log path is using the system default

@@ -7,6 +7,6 @@ pub mod paths;
 pub mod service;
 pub mod traits;
 
-pub use paths::AppPaths;
+pub use paths::{expand_tilde, AppPaths};
 pub use service::FileService;
 pub use traits::FileOperations;

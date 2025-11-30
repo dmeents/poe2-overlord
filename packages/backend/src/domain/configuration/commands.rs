@@ -10,6 +10,7 @@
 //! - **Configuration CRUD**: Get, update, reset configuration
 //! - **POE Client Path Management**: Get, set, reset POE client log paths
 //! - **Log Level Management**: Get, set application log levels
+//! - **Zone Refresh Interval Management**: Get, set zone refresh intervals
 //! - **Validation**: Validate configuration settings
 //! - **File Information**: Get configuration file metadata
 //!
@@ -25,12 +26,13 @@
 //! and monitoring configuration operations.
 
 use crate::domain::configuration::models::{
-    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
+    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult, ZoneRefreshInterval,
 };
 use crate::domain::configuration::service::ConfigurationServiceImpl;
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::{to_command_result, CommandResult};
 use log::{error, info};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::State;
 
@@ -292,4 +294,92 @@ pub async fn validate_config(
         }))?;
 
     Ok(validation_result)
+}
+
+/// Get the current zone refresh interval setting
+///
+/// Returns the configured interval for how often zone metadata should be
+/// refreshed from the wiki.
+///
+/// # Returns
+///
+/// The current `ZoneRefreshInterval` enum value
+///
+#[tauri::command]
+pub async fn get_zone_refresh_interval(
+    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+) -> CommandResult<ZoneRefreshInterval> {
+    let interval = to_command_result(config_service.get_zone_refresh_interval().await.map_err(
+        |e| {
+            error!("Failed to get zone refresh interval: {}", e);
+            crate::errors::AppError::internal_error(
+                "get_zone_refresh_interval",
+                &format!("Failed to get zone refresh interval: {}", e),
+            )
+        },
+    ))?;
+
+    Ok(interval)
+}
+
+/// Set the zone refresh interval
+///
+/// Updates the zone refresh interval setting with validation and persistence.
+/// This setting determines how often zone metadata should be refreshed from the wiki.
+///
+/// # Arguments
+///
+/// * `interval` - The zone refresh interval to set
+///
+#[tauri::command]
+pub async fn set_zone_refresh_interval(
+    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    interval: ZoneRefreshInterval,
+) -> CommandResult<()> {
+    to_command_result(
+        config_service
+            .set_zone_refresh_interval(interval)
+            .await
+            .map_err(|e| {
+                error!("Failed to set zone refresh interval: {}", e);
+                crate::errors::AppError::internal_error(
+                    "set_zone_refresh_interval",
+                    &format!("Failed to set zone refresh interval: {}", e),
+                )
+            }),
+    )?;
+
+    info!("Zone refresh interval set to: {}", interval);
+    Ok(())
+}
+
+/// Zone refresh interval option for frontend display
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZoneRefreshIntervalOption {
+    pub value: String,
+    pub label: String,
+    pub seconds: i64,
+}
+
+/// Get all available zone refresh interval options
+///
+/// Returns a list of all available zone refresh interval options with their
+/// labels and values for frontend display.
+///
+/// # Returns
+///
+/// A vector of `ZoneRefreshIntervalOption` containing value, label, and seconds
+///
+#[tauri::command]
+pub async fn get_zone_refresh_interval_options() -> CommandResult<Vec<ZoneRefreshIntervalOption>> {
+    let options = ZoneRefreshInterval::all_options()
+        .into_iter()
+        .map(|interval| ZoneRefreshIntervalOption {
+            value: format!("{:?}", interval),
+            label: interval.label().to_string(),
+            seconds: interval.to_seconds(),
+        })
+        .collect();
+
+    Ok(options)
 }

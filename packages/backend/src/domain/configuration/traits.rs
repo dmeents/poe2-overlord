@@ -35,6 +35,15 @@ pub trait ConfigurationService: Send + Sync {
 
     async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()>;
 
+    async fn get_zone_refresh_interval(
+        &self,
+    ) -> AppResult<crate::domain::configuration::models::ZoneRefreshInterval>;
+
+    async fn set_zone_refresh_interval(
+        &self,
+        interval: crate::domain::configuration::models::ZoneRefreshInterval,
+    ) -> AppResult<()>;
+
     async fn subscribe_to_config_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
 }
 

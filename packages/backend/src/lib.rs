@@ -111,6 +111,9 @@ pub fn run() {
             set_log_level,
             get_config_file_info,
             validate_config,
+            get_zone_refresh_interval,
+            set_zone_refresh_interval,
+            get_zone_refresh_interval_options,
 
 
             // Character management commands

@@ -81,10 +81,7 @@ impl ZoneConfiguration {
 
     /// Gets all zones for a specific act
     pub fn get_act_zones(&self, act: u32) -> Vec<&ZoneMetadata> {
-        self.zones
-            .values()
-            .filter(|zone| zone.act == act)
-            .collect()
+        self.zones.values().filter(|zone| zone.act == act).collect()
     }
 
     /// Gets the act for a specific zone by area_id
@@ -119,7 +116,10 @@ impl ZoneConfiguration {
 
     /// Gets all zone names
     pub fn get_all_zone_names(&self) -> Vec<String> {
-        self.zones.values().map(|zone| zone.zone_name.clone()).collect()
+        self.zones
+            .values()
+            .map(|zone| zone.zone_name.clone())
+            .collect()
     }
 
     /// Gets zones that need refresh (older than 1 week)
@@ -177,7 +177,10 @@ impl ZoneMetadata {
     }
 
     /// Updates zone metadata from wiki data
-    pub fn update_from_wiki_data(&mut self, wiki_data: &crate::domain::wiki_scraping::models::WikiZoneData) {
+    pub fn update_from_wiki_data(
+        &mut self,
+        wiki_data: &crate::domain::wiki_scraping::models::WikiZoneData,
+    ) {
         self.area_id = wiki_data.area_id.clone();
         self.act = wiki_data.act;
         self.area_level = wiki_data.area_level;
@@ -193,10 +196,14 @@ impl ZoneMetadata {
         self.last_updated = Utc::now();
     }
 
-    /// Checks if this zone needs refresh (older than 1 week)
-    pub fn needs_refresh(&self) -> bool {
-        let week_ago = Utc::now() - chrono::Duration::weeks(1);
-        self.last_updated < week_ago
+    /// Checks if this zone needs refresh based on a custom duration
+    ///
+    /// # Arguments
+    ///
+    /// * `refresh_interval_seconds` - The refresh interval in seconds
+    pub fn needs_refresh(&self, refresh_interval_seconds: i64) -> bool {
+        let threshold = Utc::now() - chrono::Duration::seconds(refresh_interval_seconds);
+        self.last_updated < threshold
     }
 }
 

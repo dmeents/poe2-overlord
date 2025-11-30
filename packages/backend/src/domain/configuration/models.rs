@@ -1,6 +1,86 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+/// Zone refresh interval options for wiki data updates
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ZoneRefreshInterval {
+    /// 5 minutes - useful for testing and development
+    FiveMinutes,
+    /// 1 hour - frequent updates
+    OneHour,
+    /// 12 hours - moderate updates
+    TwelveHours,
+    /// 24 hours - daily updates
+    TwentyFourHours,
+    /// 3 days - occasional updates
+    ThreeDays,
+    /// 7 days - weekly updates (default)
+    SevenDays,
+}
+
+impl ZoneRefreshInterval {
+    /// Convert the interval to a duration in seconds
+    pub fn to_seconds(&self) -> i64 {
+        match self {
+            ZoneRefreshInterval::FiveMinutes => 5 * 60,
+            ZoneRefreshInterval::OneHour => 60 * 60,
+            ZoneRefreshInterval::TwelveHours => 12 * 60 * 60,
+            ZoneRefreshInterval::TwentyFourHours => 24 * 60 * 60,
+            ZoneRefreshInterval::ThreeDays => 3 * 24 * 60 * 60,
+            ZoneRefreshInterval::SevenDays => 7 * 24 * 60 * 60,
+        }
+    }
+
+    /// Get all available interval options
+    pub fn all_options() -> Vec<ZoneRefreshInterval> {
+        vec![
+            ZoneRefreshInterval::FiveMinutes,
+            ZoneRefreshInterval::OneHour,
+            ZoneRefreshInterval::TwelveHours,
+            ZoneRefreshInterval::TwentyFourHours,
+            ZoneRefreshInterval::ThreeDays,
+            ZoneRefreshInterval::SevenDays,
+        ]
+    }
+
+    /// Get a human-readable label for this interval
+    pub fn label(&self) -> &'static str {
+        match self {
+            ZoneRefreshInterval::FiveMinutes => "5 Minutes",
+            ZoneRefreshInterval::OneHour => "1 Hour",
+            ZoneRefreshInterval::TwelveHours => "12 Hours",
+            ZoneRefreshInterval::TwentyFourHours => "24 Hours",
+            ZoneRefreshInterval::ThreeDays => "3 Days",
+            ZoneRefreshInterval::SevenDays => "7 Days",
+        }
+    }
+
+    /// Parse from a string value
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "FiveMinutes" => Some(ZoneRefreshInterval::FiveMinutes),
+            "OneHour" => Some(ZoneRefreshInterval::OneHour),
+            "TwelveHours" => Some(ZoneRefreshInterval::TwelveHours),
+            "TwentyFourHours" => Some(ZoneRefreshInterval::TwentyFourHours),
+            "ThreeDays" => Some(ZoneRefreshInterval::ThreeDays),
+            "SevenDays" => Some(ZoneRefreshInterval::SevenDays),
+            _ => None,
+        }
+    }
+}
+
+impl Default for ZoneRefreshInterval {
+    fn default() -> Self {
+        ZoneRefreshInterval::SevenDays
+    }
+}
+
+impl std::fmt::Display for ZoneRefreshInterval {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.label())
+    }
+}
+
 /// Main application configuration structure
 ///
 /// This struct contains all user-configurable settings for the POE2 Overlord application.
@@ -23,6 +103,12 @@ pub struct AppConfig {
     /// Controls the verbosity of application logs. Valid values are:
     /// "trace", "debug", "info", "warn", "warning", "error"
     pub log_level: String,
+
+    /// Zone refresh interval for wiki data updates
+    ///
+    /// Controls how often zone metadata should be refreshed from the wiki.
+    /// Useful for testing and development to see updates more frequently.
+    pub zone_refresh_interval: ZoneRefreshInterval,
 }
 
 impl AppConfig {
@@ -41,6 +127,7 @@ impl AppConfig {
         Self {
             poe_client_log_path,
             log_level,
+            zone_refresh_interval: ZoneRefreshInterval::default(),
         }
     }
 
@@ -123,6 +210,7 @@ impl Default for AppConfig {
         Self {
             poe_client_log_path: Self::get_default_poe_client_log_path(),
             log_level: "info".to_string(),
+            zone_refresh_interval: ZoneRefreshInterval::default(),
         }
     }
 }

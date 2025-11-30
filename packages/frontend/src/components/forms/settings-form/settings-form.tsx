@@ -1,6 +1,6 @@
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
-import type { AppConfig } from '@/types/app-config';
+import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
 import { tauriUtils } from '@/utils/tauri';
 import { useEffect, useState } from 'react';
 import { AlertMessage } from '../form-alert-message/form-alert-message';
@@ -18,15 +18,20 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   const [config, setConfig] = useState<AppConfig>({
     poe_client_log_path: '',
     log_level: 'info',
+    zone_refresh_interval: 'SevenDays',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [zoneRefreshOptions, setZoneRefreshOptions] = useState<
+    ZoneRefreshIntervalOption[]
+  >([]);
 
-  // Load configuration on component mount
+  // Load configuration and options on component mount
   useEffect(() => {
     loadConfig();
+    loadZoneRefreshOptions();
   }, []);
 
   const loadConfig = async () => {
@@ -40,6 +45,15 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       console.error('Error loading config:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadZoneRefreshOptions = async () => {
+    try {
+      const options = await tauriUtils.getZoneRefreshIntervalOptions();
+      setZoneRefreshOptions(options);
+    } catch (err) {
+      console.error('Error loading zone refresh options:', err);
     }
   };
 
@@ -229,13 +243,70 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
           </Tooltip>
         }
         htmlFor='log-level'
-        className='last-form-item'
       >
         <Select
           id='log-level'
           value={config.log_level}
           onChange={value => handleInputChange('log_level', value)}
           options={logLevelOptions}
+          variant='dropdown'
+        />
+      </FormField>
+
+      {/* Zone Refresh Interval */}
+      <FormField
+        label={
+          <Tooltip
+            content={
+              <div>
+                <p className='mb-2'>
+                  <strong>Zone Refresh Interval:</strong> Controls how often
+                  zone metadata should be refreshed from the POE wiki.
+                </p>
+                <div className='space-y-1 text-zinc-300'>
+                  <p>
+                    <strong>5 Minutes:</strong> Very frequent updates (useful
+                    for testing)
+                  </p>
+                  <p>
+                    <strong>1 Hour:</strong> Frequent updates for active
+                    development
+                  </p>
+                  <p>
+                    <strong>12 Hours:</strong> Twice daily updates
+                  </p>
+                  <p>
+                    <strong>24 Hours:</strong> Daily updates
+                  </p>
+                  <p>
+                    <strong>3 Days:</strong> Occasional updates
+                  </p>
+                  <p>
+                    <strong>7 Days:</strong> Weekly updates (recommended for
+                    normal use)
+                  </p>
+                </div>
+                <p className='mt-2 text-zinc-300'>
+                  Use shorter intervals for testing zone data updates, or longer
+                  intervals to reduce wiki requests.
+                </p>
+              </div>
+            }
+          >
+            Zone Refresh Interval
+          </Tooltip>
+        }
+        htmlFor='zone-refresh-interval'
+        className='last-form-item'
+      >
+        <Select
+          id='zone-refresh-interval'
+          value={config.zone_refresh_interval}
+          onChange={value => handleInputChange('zone_refresh_interval', value)}
+          options={zoneRefreshOptions.map(opt => ({
+            value: opt.value,
+            label: opt.label,
+          }))}
           variant='dropdown'
         />
       </FormField>

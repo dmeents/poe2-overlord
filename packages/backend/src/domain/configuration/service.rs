@@ -183,6 +183,45 @@ impl ConfigurationService for ConfigurationServiceImpl {
     async fn subscribe_to_config_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
         self.event_bus.get_receiver(EventType::Configuration).await
     }
+
+    async fn get_zone_refresh_interval(
+        &self,
+    ) -> AppResult<crate::domain::configuration::models::ZoneRefreshInterval> {
+        let config = self.repository.get_in_memory_config().await?;
+        Ok(config.zone_refresh_interval)
+    }
+
+    async fn set_zone_refresh_interval(
+        &self,
+        interval: crate::domain::configuration::models::ZoneRefreshInterval,
+    ) -> AppResult<()> {
+        let previous_config = self.get_config().await?;
+        let mut new_config = previous_config.clone();
+
+        new_config.zone_refresh_interval = interval;
+
+        let validation_result = self.repository.validate_config(&new_config).await?;
+        if !validation_result.is_valid {
+            return Err(AppError::validation_error(
+                "validate_config",
+                &format!(
+                    "Configuration validation failed: {}",
+                    validation_result.errors.join(", ")
+                ),
+            ));
+        }
+
+        self.repository
+            .update_in_memory_config(new_config.clone())
+            .await?;
+        self.repository.save(&new_config).await?;
+
+        self.publish_config_change(new_config, previous_config)
+            .await;
+
+        debug!("Zone refresh interval updated to: {}", interval);
+        Ok(())
+    }
 }
 
 impl Default for ConfigurationServiceImpl {

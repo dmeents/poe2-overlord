@@ -28,6 +28,8 @@ pub struct CharacterServiceImpl {
     zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
     /// Wiki scraping service for fetching zone data
     wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+    /// Configuration service for application settings
+    config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
 }
 
 impl CharacterServiceImpl {
@@ -37,12 +39,14 @@ impl CharacterServiceImpl {
         event_bus: Arc<EventBus>,
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
     ) -> Self {
         Self {
             repository,
             event_bus,
             zone_config,
             wiki_service,
+            config_service,
         }
     }
 
@@ -181,6 +185,7 @@ impl CharacterServiceImpl {
         event_bus: Arc<EventBus>,
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
+        config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
     ) -> Result<Self, AppError> {
         // Create data directory path using proper XDG data directory
         let data_dir = crate::infrastructure::file_management::AppPaths::ensure_data_dir().await?;
@@ -189,7 +194,13 @@ impl CharacterServiceImpl {
         let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(data_dir));
 
         // Create service
-        Ok(Self::new(repository, event_bus, zone_config, wiki_service))
+        Ok(Self::new(
+            repository,
+            event_bus,
+            zone_config,
+            wiki_service,
+            config_service,
+        ))
     }
 }
 
@@ -767,8 +778,15 @@ impl CharacterServiceImpl {
                 placeholder
             };
 
-        // Check if zone needs refresh
-        if zone_metadata.needs_refresh() {
+        // Check if zone needs refresh based on configured interval
+        let refresh_interval = self
+            .config_service
+            .get_zone_refresh_interval()
+            .await
+            .unwrap_or_default()
+            .to_seconds();
+
+        if zone_metadata.needs_refresh(refresh_interval) {
             self.trigger_wiki_fetch(zone_name).await;
         }
 

@@ -57,6 +57,7 @@ impl ServiceInitializer {
                 event_bus.clone(),
                 zone_config_service.clone(),
                 wiki_service.clone(),
+                config_service.clone(),
             ),
         )
         .map_err(|e| {
@@ -72,6 +73,7 @@ impl ServiceInitializer {
                     event_bus.clone(),
                     zone_config_service.clone(),
                     wiki_service.clone(),
+                    config_service.clone(),
                 ),
             )
             .map_err(|e| {

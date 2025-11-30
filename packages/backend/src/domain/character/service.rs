@@ -10,7 +10,8 @@ use crate::infrastructure::events::EventBus;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, EnrichedZoneStats, League, LocationState, LocationType, ZoneStats,
+    CharactersIndex, EnrichedLocationState, EnrichedZoneStats, League, LocationState, LocationType,
+    ZoneStats,
 };
 use super::traits::{CharacterRepository, CharacterService};
 
@@ -234,17 +235,8 @@ impl CharacterServiceImpl {
             character_data.upsert_zone(zone);
         }
 
-        // Update current location
-        character_data.current_location = Some(LocationState::new_for_location(
-            Some(zone_metadata.zone_name.clone()),
-            Some(zone_metadata.act.to_string()),
-            zone_metadata.is_town,
-            if zone_metadata.is_town {
-                LocationType::Zone
-            } else {
-                LocationType::Zone
-            },
-        ));
+        // Update current location - just store the zone name reference
+        character_data.current_location = Some(LocationState::new(zone_metadata.zone_name.clone()));
 
         // Save updated character data
         self.repository.save_character_data(&character_data).await?;
@@ -361,7 +353,24 @@ impl CharacterService for CharacterServiceImpl {
         character_id: &str,
     ) -> Result<CharacterDataResponse, AppError> {
         let character_data = self.repository.load_character_data(character_id).await?;
-        let mut response = CharacterDataResponse::from(character_data);
+        let mut response = CharacterDataResponse::from(character_data.clone());
+
+        // Enrich current location with zone metadata
+        if let Some(ref location) = character_data.current_location {
+            if let Some(zone_metadata) = self
+                .zone_config
+                .get_zone_metadata(&location.zone_name)
+                .await
+            {
+                response.current_location = Some(
+                    EnrichedLocationState::from_location_and_metadata(location, &zone_metadata),
+                );
+            } else {
+                // Zone metadata not available, use minimal enrichment
+                response.current_location =
+                    Some(EnrichedLocationState::from_location_minimal(location));
+            }
+        }
 
         // Enrich zone stats with zone metadata
         let mut enriched_zones = Vec::new();
@@ -402,7 +411,24 @@ impl CharacterService for CharacterServiceImpl {
         let mut enriched_characters = Vec::new();
 
         for character_data in characters {
-            let mut response = CharacterDataResponse::from(character_data);
+            let mut response = CharacterDataResponse::from(character_data.clone());
+
+            // Enrich current location with zone metadata
+            if let Some(ref location) = character_data.current_location {
+                if let Some(zone_metadata) = self
+                    .zone_config
+                    .get_zone_metadata(&location.zone_name)
+                    .await
+                {
+                    response.current_location = Some(
+                        EnrichedLocationState::from_location_and_metadata(location, &zone_metadata),
+                    );
+                } else {
+                    // Zone metadata not available, use minimal enrichment
+                    response.current_location =
+                        Some(EnrichedLocationState::from_location_minimal(location));
+                }
+            }
 
             // Enrich zone stats with zone metadata
             let mut enriched_zones = Vec::new();

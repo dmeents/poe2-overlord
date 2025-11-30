@@ -357,97 +357,98 @@ pub enum League {
 // For now, we'll define them here to avoid circular dependencies
 
 /// Current location state for a character
-/// Simplified to focus on current location without complex session management
+/// Stores only a reference to the current zone - full zone metadata comes from zones.json
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct LocationState {
-    /// Current scene/zone name (hideout, zone, etc.)
-    pub scene: Option<String>,
-    /// Current act name (Act 1, Act 2, etc.)
-    pub act: Option<String>,
-    /// Whether the current location is a town
-    #[serde(default = "default_is_town")]
-    pub is_town: bool,
-    /// Type of location (Zone, Act, Hideout)
-    pub location_type: LocationType,
+    /// Current zone name (reference to ZoneMetadata in zones.json)
+    pub zone_name: String,
     /// Timestamp of the last location update
     pub last_updated: DateTime<Utc>,
 }
 
-/// Default value for is_town field during deserialization
-fn default_is_town() -> bool {
-    false
-}
-
 impl LocationState {
     /// Creates a new location state with current timestamp
-    pub fn new() -> Self {
+    pub fn new(zone_name: String) -> Self {
         Self {
-            scene: None,
-            act: None,
-            is_town: false,
-            location_type: LocationType::Zone,
+            zone_name,
             last_updated: Utc::now(),
         }
     }
 
-    /// Creates a new location state for a specific location
-    pub fn new_for_location(
-        scene: Option<String>,
-        act: Option<String>,
-        is_town: bool,
-        location_type: LocationType,
+    /// Updates the current zone and returns true if it actually changed
+    /// Returns false if the zone is the same as the current one
+    pub fn update_zone(&mut self, new_zone_name: String) -> bool {
+        if self.zone_name != new_zone_name {
+            self.zone_name = new_zone_name;
+            self.last_updated = Utc::now();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Gets a reference to the current zone name
+    pub fn get_zone_name(&self) -> &String {
+        &self.zone_name
+    }
+}
+
+/// Enriched location state with zone metadata joined from zones.json
+/// This is used for API responses to provide full location context to the frontend
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct EnrichedLocationState {
+    /// Current zone name
+    pub zone_name: String,
+    /// Act number (from zone metadata)
+    pub act: u32,
+    /// Whether the current location is a town (from zone metadata)
+    pub is_town: bool,
+    /// Type of location (Zone or Hideout)
+    pub location_type: LocationType,
+    /// Area ID from wiki (from zone metadata)
+    pub area_id: Option<String>,
+    /// Area level (from zone metadata)
+    pub area_level: Option<u32>,
+    /// Whether this zone has a waypoint (from zone metadata)
+    pub has_waypoint: bool,
+    /// Timestamp of the last location update
+    pub last_updated: DateTime<Utc>,
+}
+
+impl EnrichedLocationState {
+    /// Creates an enriched location state from LocationState and ZoneMetadata
+    pub fn from_location_and_metadata(
+        location: &LocationState,
+        metadata: &crate::domain::zone_configuration::models::ZoneMetadata,
     ) -> Self {
         Self {
-            scene,
-            act,
-            is_town,
-            location_type,
-            last_updated: Utc::now(),
+            zone_name: location.zone_name.clone(),
+            act: metadata.act,
+            is_town: metadata.is_town,
+            location_type: if metadata.is_town {
+                LocationType::Zone // Towns are still zones
+            } else {
+                LocationType::Zone
+            },
+            area_id: metadata.area_id.clone(),
+            area_level: metadata.area_level,
+            has_waypoint: metadata.has_waypoint,
+            last_updated: location.last_updated,
         }
     }
 
-    /// Updates the current scene and returns true if it actually changed
-    /// Returns false if the scene is the same as the current one
-    pub fn update_scene(&mut self, new_scene: String, location_type: LocationType) -> bool {
-        if self.scene.as_ref() != Some(&new_scene) || self.location_type != location_type {
-            self.scene = Some(new_scene);
-            self.location_type = location_type;
-            self.last_updated = Utc::now();
-            true
-        } else {
-            false
+    /// Creates an enriched location state with minimal data when zone metadata is not available
+    pub fn from_location_minimal(location: &LocationState) -> Self {
+        Self {
+            zone_name: location.zone_name.clone(),
+            act: 0, // Unknown act
+            is_town: false,
+            location_type: LocationType::Zone,
+            area_id: None,
+            area_level: None,
+            has_waypoint: false,
+            last_updated: location.last_updated,
         }
-    }
-
-    /// Updates the current act and returns true if it actually changed
-    /// Returns false if the act is the same as the current one
-    pub fn update_act(&mut self, new_act: String) -> bool {
-        if self.act.as_ref() != Some(&new_act) {
-            self.act = Some(new_act);
-            self.last_updated = Utc::now();
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Resets the location state to initial values
-    /// Clears scene and act, updates timestamps
-    pub fn reset(&mut self) {
-        self.scene = None;
-        self.act = None;
-        self.location_type = LocationType::Zone;
-        self.last_updated = Utc::now();
-    }
-
-    /// Gets a reference to the current scene name
-    pub fn get_current_scene(&self) -> Option<&String> {
-        self.scene.as_ref()
-    }
-
-    /// Gets a reference to the current act name
-    pub fn get_current_act(&self) -> Option<&String> {
-        self.act.as_ref()
     }
 }
 
@@ -637,8 +638,8 @@ pub struct CharacterDataResponse {
     pub created_at: DateTime<Utc>,
     /// Timestamp when the character was last played
     pub last_played: Option<DateTime<Utc>>,
-    /// Current location state
-    pub current_location: Option<LocationState>,
+    /// Current location state (enriched with zone metadata for frontend)
+    pub current_location: Option<EnrichedLocationState>,
     /// Summary statistics
     pub summary: TrackingSummary,
     /// Zone statistics with enriched metadata for frontend
@@ -662,7 +663,7 @@ impl From<CharacterData> for CharacterDataResponse {
             level: character.level,
             created_at: character.created_at,
             last_played: character.last_played,
-            current_location: character.current_location,
+            current_location: None, // Will be enriched in service layer with zone metadata
             summary: character.summary,
             zones: character
                 .zones

@@ -11,8 +11,8 @@ pub mod zone_configuration;
 
 pub use character::{
     Ascendency, CharacterClass, CharacterData, CharacterRepositoryImpl, CharacterService,
-    CharacterServiceImpl, CharacterUpdateParams, CharactersIndex, League, LocationState,
-    LocationType, TrackingSummary, ZoneStats,
+    CharacterServiceImpl, CharacterUpdateParams, CharactersIndex, EnrichedLocationState, League,
+    LocationState, LocationType, TrackingSummary, ZoneStats,
 };
 
 pub use configuration::{

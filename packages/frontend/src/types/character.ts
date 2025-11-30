@@ -42,11 +42,22 @@ export type League = 'Standard' | 'Third Edict';
 // Location and tracking types
 export type LocationType = 'Zone' | 'Hideout';
 
+// Simplified LocationState - only stores zone reference
+// Full zone data comes from joining with zones.json
 export interface LocationState {
-  scene?: string;
-  act?: string;
+  zone_name: string;
+  last_updated: string;
+}
+
+// EnrichedLocationState - returned by API with full zone metadata
+export interface EnrichedLocationState {
+  zone_name: string;
+  act: number;
   is_town: boolean;
   location_type: LocationType;
+  area_id?: string;
+  area_level?: number;
+  has_waypoint: boolean;
   last_updated: string;
 }
 
@@ -110,7 +121,8 @@ export interface CharacterData {
   last_played?: string;
 
   // Embedded tracking data (consolidated from character_tracking domain)
-  current_location?: LocationState;
+  // Note: API responses return EnrichedLocationState with full zone metadata
+  current_location?: EnrichedLocationState;
   summary: CharacterSummary;
   zones: ZoneStats[];
   walkthrough_progress: WalkthroughProgress;
@@ -148,7 +160,7 @@ export interface CreateCharacterRequest {
 // This is now embedded within CharacterData in the unified model
 export interface CharacterTrackingData {
   character_id: string;
-  current_location?: LocationState;
+  current_location?: EnrichedLocationState;
   summary: CharacterSummary;
   zones: ZoneStats[];
   last_updated: string;

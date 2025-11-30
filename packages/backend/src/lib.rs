@@ -38,8 +38,8 @@ pub use domain::log_analysis::models::{
 
 // Character domain models and data structures
 pub use domain::character::{
-    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex, League,
-    LocationState, LocationType, TrackingSummary, ZoneStats,
+    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex,
+    EnrichedLocationState, League, LocationState, LocationType, TrackingSummary, ZoneStats,
 };
 
 // Walkthrough domain models and data structures

@@ -19,27 +19,15 @@ export const StatusBar = () => {
   const { activeCharacter } = useCharacterManagement();
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;
-
   const currentLocation = activeCharacter?.current_location;
-
-  const handleSettingsClick = () => {
-    navigate({ to: '/settings' });
-  };
 
   const getZoneDisplayText = () => {
     const characterName = activeCharacter?.name || 'No active character';
 
     if (currentLocation) {
       const parts = [characterName];
-
-      if (currentLocation.act) {
-        parts.push(currentLocation.act);
-      }
-
-      if (currentLocation.scene) {
-        parts.push(currentLocation.scene);
-      }
-
+      if (currentLocation.act) parts.push(`Act ${currentLocation.act}`);
+      if (currentLocation.zone_name) parts.push(currentLocation.zone_name);
       return parts.join(' - ');
     }
 
@@ -91,7 +79,11 @@ export const StatusBar = () => {
       </div>
       <div className={statusBarStyles.rightSection}>
         <div title='Settings'>
-          <Button variant='icon' size='xs' onClick={handleSettingsClick}>
+          <Button
+            variant='icon'
+            size='xs'
+            onClick={() => navigate({ to: '/settings' })}
+          >
             <CogIcon />
           </Button>
         </div>

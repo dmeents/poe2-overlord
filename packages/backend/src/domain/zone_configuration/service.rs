@@ -30,31 +30,40 @@ impl ZoneConfigurationServiceImpl {
     /// Ensures the lookup cache is populated using OnceCell for thread-safe initialization
     async fn ensure_cache_loaded(&self) -> AppResult<()> {
         // Load the full configuration first
-        self.zone_config.get_or_try_init(|| async {
-            debug!("Zone configuration not cached, loading from repository...");
-            self.repository.load_configuration().await
-        }).await.map_err(|e: AppError| {
-            error!("Failed to load zone configuration: {}", e);
-            e
-        })?;
+        self.zone_config
+            .get_or_try_init(|| async {
+                debug!("Zone configuration not cached, loading from repository...");
+                self.repository.load_configuration().await
+            })
+            .await
+            .map_err(|e: AppError| {
+                error!("Failed to load zone configuration: {}", e);
+                e
+            })?;
 
         // Then initialize the lookup cache
-        self.zone_lookup.get_or_try_init(|| async {
-            debug!("Zone lookup cache not initialized, building lookup map...");
-            let config = self.zone_config.get().unwrap();
-            let mut lookup = HashMap::new();
-            
-            for (area_id, zone_metadata) in &config.zones {
-                lookup.insert(area_id.clone(), (zone_metadata.act, zone_metadata.is_town));
-            }
-            
-            debug!("Built zone lookup cache with {} zones", lookup.len());
-            Ok(lookup)
-        }).await.map_err(|e: AppError| {
-            error!("Failed to initialize zone lookup cache: {}", e);
-            e
-        })?;
-        
+        self.zone_lookup
+            .get_or_try_init(|| async {
+                debug!("Zone lookup cache not initialized, building lookup map...");
+                let config = self.zone_config.get().unwrap();
+                let mut lookup = HashMap::new();
+
+                for (zone_name, zone_metadata) in &config.zones {
+                    lookup.insert(
+                        zone_name.clone(),
+                        (zone_metadata.act, zone_metadata.is_town),
+                    );
+                }
+
+                debug!("Built zone lookup cache with {} zones", lookup.len());
+                Ok(lookup)
+            })
+            .await
+            .map_err(|e: AppError| {
+                error!("Failed to initialize zone lookup cache: {}", e);
+                e
+            })?;
+
         Ok(())
     }
 
@@ -63,11 +72,14 @@ impl ZoneConfigurationServiceImpl {
         // Reload the configuration and rebuild the cache
         let config = self.repository.load_configuration().await?;
         let mut lookup = HashMap::new();
-        
-        for (area_id, zone_metadata) in &config.zones {
-            lookup.insert(area_id.clone(), (zone_metadata.act, zone_metadata.is_town));
+
+        for (zone_name, zone_metadata) in &config.zones {
+            lookup.insert(
+                zone_name.clone(),
+                (zone_metadata.act, zone_metadata.is_town),
+            );
         }
-        
+
         // Force reinitialize the cache with new data
         // Note: OnceCell doesn't support reinitialization, so we need to work around this
         // For now, just ensure cache is loaded - the new data will be available on next access
@@ -77,39 +89,39 @@ impl ZoneConfigurationServiceImpl {
 
 #[async_trait]
 impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
-    /// Gets the act number for a specific zone by area_id using cached lookup
+    /// Gets the act number for a specific zone by zone name using cached lookup
     /// Returns None for unknown zones
-    async fn get_act_for_zone(&self, area_id: &str) -> Option<u32> {
+    async fn get_act_for_zone(&self, zone_name: &str) -> Option<u32> {
         if let Err(_) = self.ensure_cache_loaded().await {
             debug!(
-                "Failed to load zone configuration cache for area_id: {}",
-                area_id
+                "Failed to load zone configuration cache for zone_name: {}",
+                zone_name
             );
             return None;
         }
 
         let cache = self.zone_lookup.get().unwrap();
-        let result = cache.get(area_id).map(|(act, _)| *act);
+        let result = cache.get(zone_name).map(|(act, _)| *act);
 
         debug!(
-            "Zone lookup for area_id '{}': {:?} (cache size: {})",
-            area_id,
+            "Zone lookup for zone_name '{}': {:?} (cache size: {})",
+            zone_name,
             result,
             cache.len()
         );
         result
     }
 
-    /// Checks if a zone is a town by area_id using cached lookup
+    /// Checks if a zone is a town by zone name using cached lookup
     /// Returns false for unknown zones (they are not explicitly marked as towns)
-    async fn is_town_zone(&self, area_id: &str) -> bool {
+    async fn is_town_zone(&self, zone_name: &str) -> bool {
         if let Err(_) = self.ensure_cache_loaded().await {
             return false;
         }
 
         let cache = self.zone_lookup.get().unwrap();
         cache
-            .get(area_id)
+            .get(zone_name)
             .map(|(_, is_town)| *is_town)
             .unwrap_or(false)
     }
@@ -117,7 +129,10 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
     /// Gets zone metadata by zone name
     async fn get_zone_metadata(&self, zone_name: &str) -> Option<ZoneMetadata> {
         if let Err(_) = self.ensure_cache_loaded().await {
-            debug!("Failed to load zone configuration cache for zone: {}", zone_name);
+            debug!(
+                "Failed to load zone configuration cache for zone: {}",
+                zone_name
+            );
             return None;
         }
 

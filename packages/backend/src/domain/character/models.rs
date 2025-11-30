@@ -147,30 +147,26 @@ impl CharacterData {
         self.touch();
     }
 
-    /// Finds a zone by location ID
-    pub fn find_zone(&self, area_id: &str) -> Option<&ZoneStats> {
-        self.zones
-            .iter()
-            .find(|zone| zone.area_id == area_id)
+    /// Finds a zone by zone name
+    pub fn find_zone(&self, zone_name: &str) -> Option<&ZoneStats> {
+        self.zones.iter().find(|zone| zone.zone_name == zone_name)
     }
 
-    /// Finds a zone by location ID (mutable)
-    pub fn find_zone_mut(&mut self, location_id: &str) -> Option<&mut ZoneStats> {
+    /// Finds a zone by zone name (mutable)
+    pub fn find_zone_mut(&mut self, zone_name: &str) -> Option<&mut ZoneStats> {
         self.zones
             .iter_mut()
-            .find(|zone| zone.area_id == location_id)
+            .find(|zone| zone.zone_name == zone_name)
     }
 
-    /// Finds a zone by area ID
-    pub fn find_zone_by_area_id(&self, area_id: &str) -> Option<&ZoneStats> {
-        self.zones
-            .iter()
-            .find(|zone| zone.area_id == area_id)
+    /// Finds a zone by zone name
+    pub fn find_zone_by_zone_name(&self, zone_name: &str) -> Option<&ZoneStats> {
+        self.zones.iter().find(|zone| zone.zone_name == zone_name)
     }
 
     /// Adds or updates a zone with the given statistics
     pub fn upsert_zone(&mut self, zone: ZoneStats) {
-        if let Some(existing_zone) = self.find_zone_mut(&zone.area_id) {
+        if let Some(existing_zone) = self.find_zone_mut(&zone.zone_name) {
             *existing_zone = zone;
         } else {
             self.zones.push(zone);
@@ -600,8 +596,8 @@ impl TrackingSummary {
 /// Character-specific statistics for a zone
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ZoneStats {
-    /// Area ID reference to ZoneMetadata
-    pub area_id: String,
+    /// Zone name reference to ZoneMetadata
+    pub zone_name: String,
     /// Total time spent in this zone (seconds)
     pub duration: u64,
     /// Number of deaths in this zone
@@ -668,32 +664,35 @@ impl From<CharacterData> for CharacterDataResponse {
             last_played: character.last_played,
             current_location: character.current_location,
             summary: character.summary,
-            zones: character.zones.into_iter().map(|zone| {
-                let area_id = zone.area_id.clone();
-                EnrichedZoneStats {
-                    area_id: zone.area_id,
-                    duration: zone.duration,
-                    deaths: zone.deaths,
-                    visits: zone.visits,
-                    first_visited: zone.first_visited,
-                    last_visited: zone.last_visited,
-                    is_active: zone.is_active,
-                    entry_timestamp: zone.entry_timestamp,
-                    zone_name: area_id, // Use area_id as fallback
-                    act: None,
-                    area_level: None,
-                    is_town: false,
-                    has_waypoint: false,
-                    bosses: Vec::new(),
-                    monsters: Vec::new(),
-                    tags: Vec::new(),
-                    connected_zones: Vec::new(),
-                    description: None,
-                    points_of_interest: Vec::new(),
-                    wiki_url: None,
-                    last_updated: None,
-                }
-            }).collect(),
+            zones: character
+                .zones
+                .into_iter()
+                .map(|zone| {
+                    EnrichedZoneStats {
+                        zone_name: zone.zone_name,
+                        duration: zone.duration,
+                        deaths: zone.deaths,
+                        visits: zone.visits,
+                        first_visited: zone.first_visited,
+                        last_visited: zone.last_visited,
+                        is_active: zone.is_active,
+                        entry_timestamp: zone.entry_timestamp,
+                        area_id: None, // Will be populated from zone metadata if available
+                        act: None,
+                        area_level: None,
+                        is_town: false,
+                        has_waypoint: false,
+                        bosses: Vec::new(),
+                        monsters: Vec::new(),
+                        connected_zones: Vec::new(),
+                        description: None,
+                        points_of_interest: Vec::new(),
+                        image_url: None,
+                        wiki_url: None,
+                        last_updated: None,
+                    }
+                })
+                .collect(),
             walkthrough_progress: character.walkthrough_progress,
             last_updated: character.last_updated,
         }
@@ -704,7 +703,7 @@ impl From<CharacterData> for CharacterDataResponse {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct EnrichedZoneStats {
     // Character-specific tracking
-    pub area_id: String,
+    pub zone_name: String,
     pub duration: u64,
     pub deaths: u32,
     pub visits: u32,
@@ -712,20 +711,21 @@ pub struct EnrichedZoneStats {
     pub last_visited: DateTime<Utc>,
     pub is_active: bool,
     pub entry_timestamp: Option<DateTime<Utc>>,
-    
+
     // Zone metadata (joined from ZoneMetadata) - all fields for future frontend use
-    pub zone_name: String,
+    pub area_id: Option<String>,
     pub act: Option<u32>,
     pub area_level: Option<u32>,
     pub is_town: bool,
     pub has_waypoint: bool,
     pub bosses: Vec<String>,
     pub monsters: Vec<String>,
-    pub tags: Vec<String>,
     pub connected_zones: Vec<String>,
     pub description: Option<String>,
     pub points_of_interest: Vec<String>,
+    pub image_url: Option<String>,
     pub wiki_url: Option<String>,
+    /// Last updated from wiki
     pub last_updated: Option<DateTime<Utc>>,
 }
 
@@ -737,7 +737,7 @@ impl EnrichedZoneStats {
     ) -> Self {
         Self {
             // Character tracking data
-            area_id: stats.area_id.clone(),
+            zone_name: stats.zone_name.clone(),
             duration: stats.duration,
             deaths: stats.deaths,
             visits: stats.visits,
@@ -745,19 +745,19 @@ impl EnrichedZoneStats {
             last_visited: stats.last_visited,
             is_active: stats.is_active,
             entry_timestamp: stats.entry_timestamp,
-            
-            // Zone metadata
-            zone_name: metadata.zone_name.clone(),
+
+            // Enriched metadata
+            area_id: metadata.area_id.clone(),
             act: Some(metadata.act),
             area_level: metadata.area_level,
             is_town: metadata.is_town,
             has_waypoint: metadata.has_waypoint,
             bosses: metadata.bosses.clone(),
             monsters: metadata.monsters.clone(),
-            tags: metadata.tags.clone(),
             connected_zones: metadata.connected_zones.clone(),
             description: metadata.description.clone(),
             points_of_interest: metadata.points_of_interest.clone(),
+            image_url: metadata.image_url.clone(),
             wiki_url: metadata.wiki_url.clone(),
             last_updated: Some(metadata.last_updated),
         }
@@ -828,11 +828,11 @@ impl EnrichedZoneStats {
 }
 
 impl ZoneStats {
-    /// Creates new zone stats for a location
-    pub fn new(area_id: String) -> Self {
+    /// Creates new zone stats for a zone
+    pub fn new(zone_name: String) -> Self {
         let now = Utc::now();
         Self {
-            area_id,
+            zone_name,
             duration: 0,
             deaths: 0,
             visits: 0,
@@ -910,7 +910,9 @@ impl ZoneStats {
     pub fn update_zone_level(&mut self, _level: u32) {
         // Zone level is now stored in ZoneMetadata, not in ZoneStats
         // This method is kept for compatibility but does nothing
-        warn!("update_zone_level called on ZoneStats - zone level should be stored in ZoneMetadata");
+        warn!(
+            "update_zone_level called on ZoneStats - zone level should be stored in ZoneMetadata"
+        );
     }
 }
 

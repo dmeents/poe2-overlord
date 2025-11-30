@@ -4,6 +4,7 @@ use log::{debug, error, info, warn};
 use std::sync::Arc;
 
 use crate::domain::log_analysis::models::SceneChangeEvent;
+use crate::domain::zone_configuration::ZoneMetadata;
 use crate::errors::AppError;
 use crate::infrastructure::events::EventBus;
 
@@ -85,30 +86,110 @@ impl CharacterServiceImpl {
                                 .to_string()
                         });
 
-                    // Update zone metadata with wiki data using area_id
+                    // Reload configuration to get the latest data (placeholder might have just been created)
+                    info!("Reloading zone configuration before lookup...");
+                    if let Err(e) = zone_config.reload_configuration().await {
+                        error!("Failed to reload zone configuration: {}", e);
+                    }
+
+                    // Update zone metadata with wiki data
                     info!("Looking up zone '{}' in configuration...", zone_name);
                     if let Some(zone_metadata) = zone_config.get_zone_metadata(&zone_name).await {
                         info!(
                             "Found zone '{}' in configuration, updating with wiki data",
                             zone_name
                         );
+                        info!(
+                            "BEFORE UPDATE: area_id={:?}, act={}, is_town={}",
+                            zone_metadata.area_id, zone_metadata.act, zone_metadata.is_town
+                        );
+
                         let mut updated_metadata = zone_metadata;
                         updated_metadata.update_from_wiki_data(&wiki_data);
-                        if let Err(e) = zone_config.update_zone(updated_metadata).await {
+
+                        info!(
+                            "AFTER UPDATE: area_id={:?}, act={}, is_town={}",
+                            updated_metadata.area_id,
+                            updated_metadata.act,
+                            updated_metadata.is_town
+                        );
+
+                        // Log parsed zone data before saving
+                        info!(
+                            "=== PARSED ZONE DATA FOR '{}' ===\n\
+                             Zone Name: {}\n\
+                             Area ID: {:?}\n\
+                             Act: {}\n\
+                             Area Level: {:?}\n\
+                             Is Town: {}\n\
+                             Has Waypoint: {}\n\
+                             Bosses: {:?}\n\
+                             Monsters: {:?}\n\
+                             Connected Zones: {:?}\n\
+                             Description: {:?}\n\
+                             Points of Interest: {:?}\n\
+                             Wiki URL: {:?}\n\
+                             ================================",
+                            zone_name,
+                            updated_metadata.zone_name,
+                            updated_metadata.area_id,
+                            updated_metadata.act,
+                            updated_metadata.area_level,
+                            updated_metadata.is_town,
+                            updated_metadata.has_waypoint,
+                            updated_metadata.bosses,
+                            updated_metadata.monsters,
+                            updated_metadata.connected_zones,
+                            updated_metadata.description,
+                            updated_metadata.points_of_interest,
+                            updated_metadata.wiki_url
+                        );
+
+                        info!("Calling zone_config.update_zone() for '{}'", zone_name);
+                        match zone_config.update_zone(updated_metadata).await {
+                            Ok(_) => {
+                                info!("Successfully updated zone '{}' with wiki data", zone_name);
+
+                                // Verify the update by reading back
+                                if let Some(verify) =
+                                    zone_config.get_zone_metadata(&zone_name).await
+                                {
+                                    info!(
+                                        "VERIFICATION: area_id={:?}, act={}, is_town={}",
+                                        verify.area_id, verify.act, verify.is_town
+                                    );
+                                } else {
+                                    error!(
+                                        "VERIFICATION FAILED: Could not read back zone '{}'",
+                                        zone_name
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                error!(
+                                    "Failed to update zone '{}' with wiki data: {}",
+                                    zone_name, e
+                                );
+                            }
+                        }
+                    } else {
+                        // Zone not found even after reload - create new zone from wiki data
+                        info!(
+                            "Zone '{}' not found in configuration, creating new zone from wiki data",
+                            zone_name
+                        );
+
+                        let mut new_zone = ZoneMetadata::new(zone_name.clone());
+                        new_zone.update_from_wiki_data(&wiki_data);
+
+                        if let Err(e) = zone_config.add_zone(new_zone).await {
                             error!(
-                                "Failed to update zone '{}' with wiki data: {}",
+                                "Failed to create zone '{}' from wiki data: {}",
                                 zone_name, e
                             );
                         } else {
-                            info!("Successfully updated zone '{}' with wiki data", zone_name);
+                            info!("Successfully created zone '{}' from wiki data", zone_name);
                         }
-                    } else {
-                        error!(
-                            "Zone '{}' not found in configuration after wiki fetch",
-                            zone_name
-                        );
-                        info!("Available zones in configuration:");
-                        // TODO: Add debug logging to list available zones
                     }
                 }
                 Err(e) => {
@@ -136,13 +217,10 @@ impl CharacterServiceImpl {
             character_data.upsert_zone(deactivated_zone);
         }
 
-        // Create or update the new zone using area_id
-        let area_id = zone_metadata
-            .area_id
-            .clone()
-            .unwrap_or_else(|| zone_metadata.zone_name.clone());
+        // Create or update the new zone using zone_name
+        let zone_name = zone_metadata.zone_name.clone();
 
-        if let Some(existing_zone) = character_data.find_zone_by_area_id(&area_id) {
+        if let Some(existing_zone) = character_data.find_zone_by_zone_name(&zone_name) {
             // Update existing zone
             let mut zone = existing_zone.clone();
             zone.activate();
@@ -150,7 +228,7 @@ impl CharacterServiceImpl {
             character_data.upsert_zone(zone);
         } else {
             // Create new zone
-            let mut zone = ZoneStats::new(area_id);
+            let mut zone = ZoneStats::new(zone_name);
             zone.activate();
             zone.start_timer();
             character_data.upsert_zone(zone);
@@ -290,12 +368,12 @@ impl CharacterService for CharacterServiceImpl {
         for zone_stats in &response.zones {
             if let Some(zone_metadata) = self
                 .zone_config
-                .get_zone_metadata(&zone_stats.area_id)
+                .get_zone_metadata(&zone_stats.zone_name)
                 .await
             {
                 // Convert EnrichedZoneStats back to ZoneStats for the method call
                 let base_zone = ZoneStats {
-                    area_id: zone_stats.area_id.clone(),
+                    zone_name: zone_stats.zone_name.clone(),
                     duration: zone_stats.duration,
                     deaths: zone_stats.deaths,
                     visits: zone_stats.visits,
@@ -331,12 +409,12 @@ impl CharacterService for CharacterServiceImpl {
             for zone_stats in &response.zones {
                 if let Some(zone_metadata) = self
                     .zone_config
-                    .get_zone_metadata(&zone_stats.area_id)
+                    .get_zone_metadata(&zone_stats.zone_name)
                     .await
                 {
                     // Convert EnrichedZoneStats back to ZoneStats for the method call
                     let base_zone = ZoneStats {
-                        area_id: zone_stats.area_id.clone(),
+                        zone_name: zone_stats.zone_name.clone(),
                         duration: zone_stats.duration,
                         deaths: zone_stats.deaths,
                         visits: zone_stats.visits,

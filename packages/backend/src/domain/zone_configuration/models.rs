@@ -5,7 +5,7 @@ use std::collections::HashMap;
 /// Main zone configuration containing all zone metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZoneConfiguration {
-    /// Map of area_id to their metadata
+    /// Map of zone_name to their metadata
     pub zones: HashMap<String, ZoneMetadata>,
 }
 
@@ -28,14 +28,18 @@ pub struct ZoneMetadata {
     pub bosses: Vec<String>,
     /// List of monsters in this zone
     pub monsters: Vec<String>,
-    /// Tags associated with this zone
-    pub tags: Vec<String>,
+    /// List of NPCs in this zone
+    #[serde(default)]
+    pub npcs: Vec<String>,
     /// Connected zones
     pub connected_zones: Vec<String>,
     /// Zone description
     pub description: Option<String>,
     /// Points of interest in the zone
     pub points_of_interest: Vec<String>,
+    /// URL to the zone screenshot/image
+    #[serde(default)]
+    pub image_url: Option<String>,
     /// When this zone was first discovered by the player
     pub first_discovered: DateTime<Utc>,
     /// When this zone data was last updated from wiki
@@ -54,29 +58,27 @@ impl ZoneConfiguration {
 
     /// Adds or updates a zone in the configuration
     pub fn add_zone(&mut self, zone: ZoneMetadata) {
-        if let Some(area_id) = &zone.area_id {
-            self.zones.insert(area_id.clone(), zone);
-        }
+        self.zones.insert(zone.zone_name.clone(), zone);
     }
 
-    /// Gets zone metadata by area_id
-    pub fn get_zone(&self, area_id: &str) -> Option<&ZoneMetadata> {
-        self.zones.get(area_id)
+    /// Gets zone metadata by zone name
+    pub fn get_zone(&self, zone_name: &str) -> Option<&ZoneMetadata> {
+        self.zones.get(zone_name)
     }
 
-    /// Gets zone metadata by area_id (mutable)
-    pub fn get_zone_mut(&mut self, area_id: &str) -> Option<&mut ZoneMetadata> {
-        self.zones.get_mut(area_id)
+    /// Gets zone metadata by zone name (mutable)
+    pub fn get_zone_mut(&mut self, zone_name: &str) -> Option<&mut ZoneMetadata> {
+        self.zones.get_mut(zone_name)
     }
 
-    /// Checks if a zone exists by area_id
-    pub fn has_zone(&self, area_id: &str) -> bool {
-        self.zones.contains_key(area_id)
+    /// Checks if a zone exists by zone name
+    pub fn has_zone(&self, zone_name: &str) -> bool {
+        self.zones.contains_key(zone_name)
     }
 
-    /// Gets zone metadata by zone name (searches through all zones)
+    /// Gets zone metadata by zone name (alias for get_zone)
     pub fn get_zone_by_name(&self, zone_name: &str) -> Option<&ZoneMetadata> {
-        self.zones.values().find(|zone| zone.zone_name == zone_name)
+        self.get_zone(zone_name)
     }
 
     /// Gets all zones for a specific act
@@ -84,9 +86,9 @@ impl ZoneConfiguration {
         self.zones.values().filter(|zone| zone.act == act).collect()
     }
 
-    /// Gets the act for a specific zone by area_id
-    pub fn get_act_for_zone(&self, area_id: &str) -> Option<u32> {
-        self.zones.get(area_id).map(|zone| zone.act)
+    /// Gets the act for a specific zone by zone name
+    pub fn get_act_for_zone(&self, zone_name: &str) -> Option<u32> {
+        self.zones.get(zone_name).map(|zone| zone.act)
     }
 
     /// Gets the act for a specific zone by zone name
@@ -94,10 +96,10 @@ impl ZoneConfiguration {
         self.get_zone_by_name(zone_name).map(|zone| zone.act)
     }
 
-    /// Checks if a zone is a town by area_id
-    pub fn is_town_zone(&self, area_id: &str) -> bool {
+    /// Checks if a zone is a town by zone name
+    pub fn is_town_zone(&self, zone_name: &str) -> bool {
         self.zones
-            .get(area_id)
+            .get(zone_name)
             .map(|zone| zone.is_town)
             .unwrap_or(false)
     }
@@ -109,8 +111,8 @@ impl ZoneConfiguration {
             .unwrap_or(false)
     }
 
-    /// Gets all area_ids
-    pub fn get_all_area_ids(&self) -> Vec<String> {
+    /// Gets all zone names
+    pub fn get_all_zone_names_as_keys(&self) -> Vec<String> {
         self.zones.keys().cloned().collect()
     }
 
@@ -128,47 +130,34 @@ impl ZoneConfiguration {
         self.zones
             .iter()
             .filter(|(_, zone)| zone.last_updated < week_ago)
-            .map(|(area_id, _)| area_id.clone())
+            .map(|(zone_name, _)| zone_name.clone())
             .collect()
     }
 }
 
 impl ZoneMetadata {
     /// Creates a new zone metadata with minimal data
+    /// area_id will be None until populated from wiki data
     pub fn new(zone_name: String) -> Self {
         let now = Utc::now();
         Self {
-            zone_name: zone_name.clone(),
-            area_id: Some(Self::generate_area_id(&zone_name)),
+            zone_name,
+            area_id: None,
             act: 0,
             area_level: None,
             is_town: false,
             has_waypoint: false,
             bosses: Vec::new(),
             monsters: Vec::new(),
-            tags: Vec::new(),
+            npcs: Vec::new(),
             connected_zones: Vec::new(),
             description: None,
             points_of_interest: Vec::new(),
+            image_url: None,
             first_discovered: now,
             last_updated: now,
             wiki_url: None,
         }
-    }
-
-    /// Generates a consistent area_id from zone name
-    /// Format: lowercase with underscores instead of spaces
-    /// Examples: "Clearfell" -> "clearfell", "Felled Hideout" -> "felled_hideout"
-    pub fn generate_area_id(zone_name: &str) -> String {
-        zone_name
-            .to_lowercase()
-            .replace(' ', "_")
-            .replace('-', "_")
-            .chars()
-            .filter(|c| c.is_alphanumeric() || *c == '_')
-            .collect::<String>()
-            .trim_matches('_')
-            .to_string()
     }
 
     /// Creates a placeholder zone metadata for unknown zones
@@ -188,10 +177,11 @@ impl ZoneMetadata {
         self.has_waypoint = wiki_data.has_waypoint;
         self.bosses = wiki_data.bosses.clone();
         self.monsters = wiki_data.monsters.clone();
-        self.tags = wiki_data.tags.clone();
+        self.npcs = wiki_data.npcs.clone();
         self.connected_zones = wiki_data.connected_zones.clone();
         self.description = wiki_data.description.clone();
         self.points_of_interest = wiki_data.points_of_interest.clone();
+        self.image_url = wiki_data.image_url.clone();
         self.wiki_url = Some(wiki_data.wiki_url.clone());
         self.last_updated = Utc::now();
     }

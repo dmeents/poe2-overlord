@@ -1,12 +1,10 @@
 use crate::domain::zone_configuration::{
-    models::{ZoneConfiguration, ZoneMetadata},
-    traits::ZoneConfigurationRepository,
+    models::ZoneConfiguration, traits::ZoneConfigurationRepository,
 };
 use crate::errors::AppResult;
 use crate::infrastructure::file_management::{AppPaths, FileService};
 use async_trait::async_trait;
-use log::{debug, info, warn};
-use serde_json;
+use log::{debug, info};
 use std::path::PathBuf;
 
 pub struct ZoneConfigurationRepositoryImpl {
@@ -22,47 +20,6 @@ impl ZoneConfigurationRepositoryImpl {
 
         Ok(Self { file_path })
     }
-
-    fn load_embedded_zones() -> AppResult<ZoneConfiguration> {
-        let content = include_str!("../../../config/zones.json");
-
-        #[derive(serde::Deserialize)]
-        struct OldZoneConfig {
-            acts: Vec<OldActDefinition>,
-        }
-
-        #[derive(serde::Deserialize)]
-        struct OldActDefinition {
-            #[allow(dead_code)]
-            act_name: String,
-            act_number: u32,
-            zones: Vec<OldZoneMapping>,
-        }
-
-        #[derive(serde::Deserialize)]
-        struct OldZoneMapping {
-            zone_name: String,
-            is_town: bool,
-        }
-
-        let old_config: OldZoneConfig = serde_json::from_str(content)?;
-        let mut new_config = ZoneConfiguration::new();
-
-        for act in old_config.acts {
-            for zone in act.zones {
-                let mut zone_metadata = ZoneMetadata::new(zone.zone_name);
-                zone_metadata.act = act.act_number;
-                zone_metadata.is_town = zone.is_town;
-                new_config.add_zone(zone_metadata);
-            }
-        }
-
-        info!(
-            "Converted {} zones from embedded configuration",
-            new_config.zones.len()
-        );
-        Ok(new_config)
-    }
 }
 
 #[async_trait]
@@ -77,13 +34,8 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
             );
             Ok(config)
         } else {
-            warn!("Zone configuration file not found, creating from embedded data");
-            let config = Self::load_embedded_zones()?;
-
-            if let Err(e) = self.save_configuration(&config).await {
-                warn!("Failed to save converted zone configuration: {}", e);
-            }
-
+            info!("Zone configuration file not found, creating new empty configuration");
+            let config = ZoneConfiguration::new();
             Ok(config)
         }
     }

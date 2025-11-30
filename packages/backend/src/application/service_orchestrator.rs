@@ -29,8 +29,14 @@ pub fn start_ping_event_emission(server_monitoring_service: Arc<dyn ServerMonito
 
 pub fn start_log_monitoring(log_analysis_service: Arc<dyn LogAnalysisService>) {
     tauri::async_runtime::spawn(async move {
-        if let Err(e) = log_analysis_service.start_monitoring().await {
-            error!("Failed to start log monitoring: {}", e);
+        info!("Starting log monitoring on application startup");
+        match log_analysis_service.start_monitoring().await {
+            Ok(_) => {
+                info!("Log monitoring started successfully");
+            }
+            Err(e) => {
+                error!("Failed to start log monitoring: {}", e);
+            }
         }
     });
 }

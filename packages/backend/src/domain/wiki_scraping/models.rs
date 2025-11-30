@@ -20,14 +20,17 @@ pub struct WikiZoneData {
     pub bosses: Vec<String>,
     /// List of monsters in this zone
     pub monsters: Vec<String>,
-    /// Tags associated with this zone
-    pub tags: Vec<String>,
+    /// List of NPCs in this zone
+    #[serde(default)]
+    pub npcs: Vec<String>,
     /// Connected zones
     pub connected_zones: Vec<String>,
     /// Zone description
     pub description: Option<String>,
     /// Points of interest in the zone
     pub points_of_interest: Vec<String>,
+    /// URL to the zone screenshot/image
+    pub image_url: Option<String>,
     /// URL to the wiki page
     pub wiki_url: String,
     /// When this data was scraped
@@ -46,10 +49,11 @@ impl WikiZoneData {
             has_waypoint: false,
             bosses: Vec::new(),
             monsters: Vec::new(),
-            tags: Vec::new(),
+            npcs: Vec::new(),
             connected_zones: Vec::new(),
             description: None,
             points_of_interest: Vec::new(),
+            image_url: None,
             wiki_url,
             scraped_at: Utc::now(),
         }

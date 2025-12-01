@@ -114,7 +114,7 @@ export function ZoneDetailsModal({
       <div className='space-y-6'>
         {/* Unvisited Zone Message */}
         {isUnvisitedZone && (
-          <div className='bg-zinc-900/80 border border-zinc-700 rounded-lg p-6 text-center'>
+          <div className='bg-zinc-800/50 border border-zinc-700/50 p-6 text-center'>
             <div className='flex flex-col items-center gap-3'>
               <div className='w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center'>
                 <MapIcon className='w-6 h-6 text-zinc-500' />
@@ -131,7 +131,7 @@ export function ZoneDetailsModal({
         )}
         {/* Zone Image */}
         {!isUnvisitedZone && zone.image_url && (
-          <div className='relative w-full h-64 overflow-hidden rounded-lg bg-zinc-800'>
+          <div className='relative w-full h-64 overflow-hidden bg-zinc-800'>
             <img
               src={zone.image_url}
               alt=''
@@ -145,7 +145,7 @@ export function ZoneDetailsModal({
 
         {/* Description */}
         {!isUnvisitedZone && zone.description && (
-          <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+          <div className='bg-zinc-800/50 p-4 border border-zinc-700/50'>
             <h3 className='text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2'>
               <SparklesIcon className='w-4 h-4' />
               Description
@@ -157,7 +157,7 @@ export function ZoneDetailsModal({
         )}
 
         {/* Zone Metadata Section - Always show */}
-        <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+        <div className='bg-zinc-800/50 p-4 border border-zinc-700/50'>
           <h3 className='text-sm font-medium text-zinc-300 mb-3'>
             Zone Information
           </h3>
@@ -225,7 +225,7 @@ export function ZoneDetailsModal({
 
         {/* Player Statistics Section - Only show if visited */}
         {!isUnvisitedZone && (
-          <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+          <div className='bg-zinc-800/50 p-4 border border-zinc-700/50'>
             <h3 className='text-sm font-medium text-zinc-300 mb-3'>
               Your Statistics
             </h3>
@@ -278,7 +278,7 @@ export function ZoneDetailsModal({
 
         {/* Bosses - Always show if data exists */}
         {zone.bosses && zone.bosses.length > 0 && (
-          <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+          <div className='bg-zinc-900/80 p-4 border border-zinc-700/50'>
             <h3 className='text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2'>
               <FlagIcon className='w-4 h-4' />
               Bosses ({zone.bosses.length})
@@ -298,7 +298,7 @@ export function ZoneDetailsModal({
 
         {/* NPCs - Always show if data exists */}
         {zone.npcs && zone.npcs.length > 0 && (
-          <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+          <div className='bg-zinc-800/50 p-4 border border-zinc-700/50'>
             <h3 className='text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2'>
               <UserGroupIcon className='w-4 h-4' />
               NPCs ({zone.npcs.length})
@@ -318,7 +318,7 @@ export function ZoneDetailsModal({
 
         {/* Points of Interest - Always show if data exists */}
         {zone.points_of_interest && zone.points_of_interest.length > 0 && (
-          <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+          <div className='bg-zinc-900/80 p-4 border border-zinc-700/50'>
             <h3 className='text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2'>
               <MapIcon className='w-4 h-4' />
               Points of Interest ({zone.points_of_interest.length})
@@ -338,7 +338,7 @@ export function ZoneDetailsModal({
 
         {/* Connected Zones - Always show if data exists */}
         {zone.connected_zones && zone.connected_zones.length > 0 && (
-          <div className='bg-zinc-900/50 p-4 rounded-lg border border-zinc-800'>
+          <div className='bg-zinc-800/50 p-4 border border-zinc-700/50'>
             <h3 className='text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2'>
               <LinkIcon className='w-4 h-4' />
               Connected Zones ({zone.connected_zones.length})

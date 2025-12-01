@@ -1,12 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useState } from 'react';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { DashboardInsights } from '../components/insights/dashboard-insights/dashboard-insights';
+import { ZoneCard } from '../components/zones/zone-card/zone-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
 import { ZoneDetailsModal } from '../components/zones/zone-details-modal/zone-details-modal';
+import { Card } from '../components/ui/card/card';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
 import { useWalkthroughEvents } from '../hooks/useWalkthroughEvents';
 import { useWalkthroughGuide } from '../hooks/useWalkthroughGuide';
@@ -190,9 +193,37 @@ function Index() {
     setSelectedZone(zone);
   }, []);
 
+  // Find the current active zone
+  const activeZone = activeCharacter?.zones?.find(zone => zone.is_active);
+
   const leftColumn = (
     <>
       <CharacterStatusCard />
+      {activeCharacter && (
+        <>
+          {activeZone ? (
+            <ZoneCard
+              zone={activeZone}
+              allZones={activeCharacter.zones || []}
+              className='mt-6'
+            />
+          ) : (
+            <Card
+              title='Current Location'
+              icon={<MapPinIcon className='w-5 h-5' />}
+              className='mt-6'
+            >
+              <div className='flex flex-col items-center justify-center py-8 text-zinc-400'>
+                <MapPinIcon className='w-12 h-12 mb-3 opacity-50' />
+                <p className='text-sm'>No active zone</p>
+                <p className='text-xs text-zinc-500 mt-1'>
+                  Start playing to track your location
+                </p>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
       {activeCharacter && progress && (
         <WalkthroughActiveStepCard
           key={`${progress.current_step_id}-${progress.last_updated}`}

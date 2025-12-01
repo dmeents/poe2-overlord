@@ -4,9 +4,8 @@
 export const modalStyles = {
   overlay: 'fixed inset-0 z-50 overflow-y-auto',
   container: 'flex min-h-full items-center justify-center p-4',
-  backdrop: 'fixed inset-0 bg-black/50 transition-opacity',
-  modal:
-    'relative w-full bg-zinc-800 rounded-lg shadow-xl border border-zinc-700',
+  backdrop: 'fixed inset-0 bg-black/60 transition-opacity',
+  modal: 'relative w-full bg-zinc-900 shadow-xl border border-zinc-700/50',
   content: 'p-6',
   header: 'flex items-center justify-between mb-6',
   headerContent: 'flex items-center gap-3',

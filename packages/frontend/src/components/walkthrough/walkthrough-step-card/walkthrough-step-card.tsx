@@ -4,7 +4,7 @@ import {
   MapPinIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { WalkthroughStep } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
 import { Card } from '../../ui/card/card';
@@ -14,6 +14,7 @@ interface WalkthroughStepCardProps {
   step: WalkthroughStep;
   isCurrent: boolean;
   onWikiClick: (itemName: string) => void;
+  onZoneClick?: (zoneName: string) => void;
   onSkipToStep?: (stepId: string) => void;
 }
 
@@ -21,8 +22,29 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
   step,
   isCurrent,
   onWikiClick,
+  onZoneClick,
   onSkipToStep,
 }) => {
+  // Filter out zone names from wiki items so they don't become wiki links
+  const filteredWikiItems = useMemo(() => {
+    if (!onZoneClick) return step.wiki_items;
+
+    const zoneNames = [step.current_zone, step.completion_zone].filter(Boolean);
+
+    return step.wiki_items.filter(item => !zoneNames.includes(item));
+  }, [step, onZoneClick]);
+
+  // Custom handler that checks if clicked item is a zone
+  const handleItemClick = (itemName: string) => {
+    const zoneNames = [step.current_zone, step.completion_zone];
+
+    if (onZoneClick && zoneNames.includes(itemName)) {
+      onZoneClick(itemName);
+    } else {
+      onWikiClick(itemName);
+    }
+  };
+
   return (
     <Card
       className={`${isCurrent ? 'border-blue-500 bg-blue-500/10' : ''} pb-1`}
@@ -38,15 +60,24 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
         </div>
         <div className='flex items-center gap-1 text-sm text-zinc-400'>
           <MapPinIcon className='w-3 h-3' />
-          {step.current_zone}
+          {onZoneClick ? (
+            <button
+              onClick={() => onZoneClick(step.current_zone)}
+              className='hover:text-zinc-200 hover:underline cursor-pointer transition-colors'
+            >
+              {step.current_zone}
+            </button>
+          ) : (
+            step.current_zone
+          )}
         </div>
       </div>
 
       <p className='text-sm text-zinc-300 mb-3'>
         <ParsedText
           text={step.description}
-          wikiItems={step.wiki_items}
-          onWikiClick={onWikiClick}
+          wikiItems={filteredWikiItems}
+          onWikiClick={handleItemClick}
         />
       </p>
 
@@ -55,11 +86,20 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
           label={
             <span className='text-zinc-300 font-medium'>
               Enter{' '}
-              <ParsedText
-                text={step.completion_zone}
-                wikiItems={step.wiki_items}
-                onWikiClick={onWikiClick}
-              />
+              {onZoneClick ? (
+                <button
+                  onClick={() => onZoneClick(step.completion_zone)}
+                  className='text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium'
+                >
+                  {step.completion_zone}
+                </button>
+              ) : (
+                <ParsedText
+                  text={step.completion_zone}
+                  wikiItems={step.wiki_items}
+                  onWikiClick={onWikiClick}
+                />
+              )}
             </span>
           }
           value=''
@@ -91,8 +131,8 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
                         )}
                         <ParsedText
                           text={objective.text}
-                          wikiItems={step.wiki_items}
-                          onWikiClick={onWikiClick}
+                          wikiItems={filteredWikiItems}
+                          onWikiClick={handleItemClick}
                         />
                       </div>
                       {(objective.details ||
@@ -104,8 +144,8 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
                             <div className='text-xs text-zinc-500'>
                               <ParsedText
                                 text={objective.details}
-                                wikiItems={step.wiki_items}
-                                onWikiClick={onWikiClick}
+                                wikiItems={filteredWikiItems}
+                                onWikiClick={handleItemClick}
                               />
                             </div>
                           )}
@@ -114,8 +154,8 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
                               Note:{' '}
                               <ParsedText
                                 text={objective.notes}
-                                wikiItems={step.wiki_items}
-                                onWikiClick={onWikiClick}
+                                wikiItems={filteredWikiItems}
+                                onWikiClick={handleItemClick}
                               />
                             </div>
                           )}
@@ -128,8 +168,8 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
                                 />
                                 <ParsedText
                                   text={objective.rewards.join(', ')}
-                                  wikiItems={step.wiki_items}
-                                  onWikiClick={onWikiClick}
+                                  wikiItems={filteredWikiItems}
+                                  onWikiClick={handleItemClick}
                                 />
                               </div>
                             )}

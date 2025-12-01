@@ -1,14 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { invoke } from '@tauri-apps/api/core';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { DashboardInsights } from '../components/insights/dashboard-insights/dashboard-insights';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
+import { ZoneDetailsModal } from '../components/zones/zone-details-modal/zone-details-modal';
 import { useCharacterManagement } from '../hooks/useCharacterManagement';
 import { useWalkthroughEvents } from '../hooks/useWalkthroughEvents';
 import { useWalkthroughGuide } from '../hooks/useWalkthroughGuide';
+import type { ZoneStats } from '../types/character';
 import type { CharacterWalkthroughProgress } from '../types/walkthrough';
 import { WalkthroughService } from '../utils/walkthrough';
 import { handleWikiClick } from '../utils/wiki-utils';
@@ -20,6 +22,10 @@ export const Route = createFileRoute('/')({
 function Index() {
   const { activeCharacter } = useCharacterManagement();
   const { guide } = useWalkthroughGuide();
+
+  // Zone modal state
+  const [selectedZone, setSelectedZone] = useState<ZoneStats | null>(null);
+  const [isZoneModalOpen, setIsZoneModalOpen] = useState(false);
 
   // Use the walkthrough events hook for real-time updates
   const {
@@ -131,6 +137,59 @@ function Index() {
     }
   };
 
+  // Handle zone click from walkthrough cards
+  const handleZoneClick = useCallback(
+    (zoneName: string) => {
+      if (!activeCharacter?.zones) return;
+
+      // Find the zone in the active character's zones
+      const zone = activeCharacter.zones.find(z => z.zone_name === zoneName);
+
+      if (zone) {
+        // Zone found in character's visited zones
+        setSelectedZone(zone);
+      } else {
+        // Zone not visited yet - create a placeholder
+        const placeholderZone: ZoneStats = {
+          zone_name: zoneName,
+          duration: 0,
+          deaths: 0,
+          visits: 0,
+          first_visited: new Date().toISOString(),
+          last_visited: new Date().toISOString(),
+          is_active: false,
+          entry_timestamp: undefined,
+          area_id: undefined,
+          act: undefined,
+          area_level: undefined,
+          is_town: false,
+          has_waypoint: false,
+          bosses: [],
+          monsters: [],
+          npcs: [],
+          connected_zones: [],
+          description: undefined,
+          points_of_interest: [],
+          image_url: undefined,
+          wiki_url: undefined,
+          last_updated: undefined,
+        };
+        setSelectedZone(placeholderZone);
+      }
+
+      setIsZoneModalOpen(true);
+    },
+    [activeCharacter?.zones]
+  );
+
+  const handleZoneModalClose = useCallback(() => {
+    setIsZoneModalOpen(false);
+  }, []);
+
+  const handleZoneChange = useCallback((zone: ZoneStats | null) => {
+    setSelectedZone(zone);
+  }, []);
+
   const leftColumn = (
     <>
       <CharacterStatusCard />
@@ -143,6 +202,7 @@ function Index() {
           onAdvanceStep={progress.is_completed ? undefined : handleAdvanceStep}
           onPreviousStep={previousStep ? handlePreviousStep : undefined}
           onWikiClick={handleWikiClick}
+          onZoneClick={handleZoneClick}
           className='mt-6'
         />
       )}
@@ -156,5 +216,16 @@ function Index() {
     </>
   );
 
-  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />;
+  return (
+    <>
+      <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />
+      <ZoneDetailsModal
+        zone={selectedZone}
+        isOpen={isZoneModalOpen}
+        onClose={handleZoneModalClose}
+        allZones={activeCharacter?.zones || []}
+        onZoneChange={handleZoneChange}
+      />
+    </>
+  );
 }

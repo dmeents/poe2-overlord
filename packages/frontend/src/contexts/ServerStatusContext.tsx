@@ -1,0 +1,38 @@
+/* eslint-disable react-refresh/only-export-components */
+import type { ServerStatus } from '@/types/server';
+import { useAppEventListener } from '@/hooks/useAppEventListener';
+import { createContext, useContext, useState } from 'react';
+
+interface ServerStatusContextValue {
+  serverStatus: ServerStatus | null;
+  isListening: boolean;
+}
+
+const ServerStatusContext = createContext<ServerStatusContextValue | undefined>(
+  undefined
+);
+
+export function ServerStatusProvider({ children }: React.PropsWithChildren) {
+  const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
+
+  const { isListening } = useAppEventListener(
+    'ServerStatusChanged',
+    payload => {
+      setServerStatus(payload.new_status);
+    }
+  );
+
+  return (
+    <ServerStatusContext.Provider value={{ serverStatus, isListening }}>
+      {children}
+    </ServerStatusContext.Provider>
+  );
+}
+
+export function useServerStatus() {
+  const context = useContext(ServerStatusContext);
+  if (context === undefined) {
+    throw new Error('useServerStatus must be used within ServerStatusProvider');
+  }
+  return context;
+}

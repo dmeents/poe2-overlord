@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import type { ServerStatus } from '@/types/server';
+import type { ServerStatus, ServerStatusChangedEvent } from '@/types/server';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { createContext, useContext, useState } from 'react';
+import type { ExtractPayload } from '@/utils/events/registry';
 
 interface ServerStatusContextValue {
   serverStatus: ServerStatus | null;
@@ -15,12 +16,16 @@ const ServerStatusContext = createContext<ServerStatusContextValue | undefined>(
 export function ServerStatusProvider({ children }: React.PropsWithChildren) {
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
 
-  const { isListening } = useAppEventListener(
-    'ServerStatusChanged',
-    payload => {
-      setServerStatus(payload.new_status);
-    }
-  );
+  const { isListening } = useAppEventListener([
+    {
+      eventType: 'ServerStatusChanged',
+      handler: (payload: unknown) => {
+        const { new_status } =
+          payload as ExtractPayload<ServerStatusChangedEvent>;
+        setServerStatus(new_status);
+      },
+    },
+  ]);
 
   return (
     <ServerStatusContext.Provider value={{ serverStatus, isListening }}>

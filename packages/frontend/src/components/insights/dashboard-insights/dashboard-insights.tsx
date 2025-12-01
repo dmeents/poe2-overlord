@@ -4,7 +4,7 @@ import {
   MapPinIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
-import { useCharacterManagement } from '../../../hooks/useCharacterManagement';
+import { useCharacter } from '../../../contexts/CharacterContext';
 import { formatDuration } from '../../../utils/format-duration';
 import { DataCard } from '../../ui/data-card/data-card';
 import { DataItem } from '../../ui/data-item/data-item';
@@ -15,7 +15,7 @@ interface DashboardInsightsProps {
 }
 
 export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
-  const { activeCharacter, isLoading } = useCharacterManagement();
+  const { activeCharacter, isLoading } = useCharacter();
   // Extract tracking data from the unified character data
   const trackingData = activeCharacter
     ? {

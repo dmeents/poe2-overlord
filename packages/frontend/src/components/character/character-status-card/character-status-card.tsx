@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { useCharacterManagement } from '../../../hooks/useCharacterManagement';
+import { useCharacter } from '../../../contexts/CharacterContext';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
 import { Button } from '../../ui/button/button';
@@ -13,7 +13,7 @@ interface CharacterStatusCardProps {
 export function CharacterStatusCard({
   className = '',
 }: CharacterStatusCardProps) {
-  const { activeCharacter, isLoading } = useCharacterManagement();
+  const { activeCharacter, isLoading } = useCharacter();
 
   if (isLoading) {
     return (

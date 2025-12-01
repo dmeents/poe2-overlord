@@ -3,7 +3,7 @@ import {
   ClockIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
-import { useCharacterManagement } from '../../../hooks/useCharacterManagement';
+import { useCharacter } from '../../../contexts/CharacterContext';
 import type { ZoneStats } from '../../../types/character';
 import { DataCard } from '../../ui/data-card/data-card';
 import { DataItem } from '../../ui/data-item/data-item';
@@ -35,7 +35,7 @@ export function PlaytimeInsights({
   className = '',
   zones: propZones,
 }: PlaytimeInsightsProps) {
-  const { activeCharacter, isLoading } = useCharacterManagement();
+  const { activeCharacter, isLoading } = useCharacter();
   const summary = activeCharacter?.summary;
   const zones = propZones || activeCharacter?.zones || [];
 

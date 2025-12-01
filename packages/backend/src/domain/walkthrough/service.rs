@@ -60,15 +60,20 @@ impl WalkthroughServiceImpl {
             .character_service
             .load_character_data(character_id)
             .await?;
-        let progress_clone = progress.clone();
         character_data.update_walkthrough_progress(progress);
+        character_data.touch();
+
+        // Save character data
         self.character_service
             .save_character_data(&character_data)
             .await?;
 
-        // Publish walkthrough progress updated event
+        // Get enriched character data for event
+        let enriched_data = self.character_service.get_character(character_id).await?;
+
+        // Emit character tracking data updated event (includes walkthrough progress)
         let event =
-            AppEvent::walkthrough_progress_updated(character_id.to_string(), progress_clone);
+            AppEvent::character_tracking_data_updated(character_id.to_string(), enriched_data);
         let _ = self.event_bus.publish(event).await;
 
         debug!("Updated character {} walkthrough progress", character_id);

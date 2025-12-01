@@ -1,5 +1,7 @@
 import type { GameProcessStatusChangedEvent } from '@/types/process';
 import type { ServerStatusChangedEvent } from '@/types/server';
+import type { CharacterData } from '@/types/character';
+import type { WalkthroughStepResult } from '@/types/walkthrough';
 
 /**
  * Centralized registry mapping AppEvent variants to their Tauri event names.
@@ -16,7 +18,7 @@ export const APP_EVENTS = {
   HideoutChangeDetected: 'hideout-change-detected',
   ConfigurationChanged: 'configuration-changed',
   ServerPingCompleted: 'server-ping-completed',
-  WalkthroughProgressUpdated: 'walkthrough-progress-updated',
+
   WalkthroughStepCompleted: 'walkthrough-step-completed',
   WalkthroughStepAdvanced: 'walkthrough-step-advanced',
   WalkthroughCampaignCompleted: 'walkthrough-campaign-completed',
@@ -29,10 +31,51 @@ export type ExtractPayload<T> = T extends { [K in keyof T]: infer P }
   ? P
   : never;
 
+/** Event type for character tracking data updates */
+export type CharacterTrackingDataUpdatedEvent = {
+  CharacterTrackingDataUpdated: {
+    character_id: string;
+    data: CharacterData;
+    timestamp: string;
+  };
+};
+
+/** Event type for walkthrough step completed */
+export type WalkthroughStepCompletedEvent = {
+  WalkthroughStepCompleted: {
+    character_id: string;
+    step: WalkthroughStepResult;
+    timestamp: string;
+  };
+};
+
+/** Event type for walkthrough step advanced */
+export type WalkthroughStepAdvancedEvent = {
+  WalkthroughStepAdvanced: {
+    character_id: string;
+    from_step_id: string | null;
+    to_step_id: string | null;
+    timestamp: string;
+  };
+};
+
+/** Event type for walkthrough campaign completed */
+export type WalkthroughCampaignCompletedEvent = {
+  WalkthroughCampaignCompleted: {
+    character_id: string;
+    timestamp: string;
+  };
+};
+
 /** Maps AppEvent variant names to their TypeScript types. */
 export type AppEventRegistry = {
   GameProcessStatusChanged: GameProcessStatusChangedEvent;
   ServerStatusChanged: ServerStatusChangedEvent;
+  CharacterTrackingDataUpdated: CharacterTrackingDataUpdatedEvent;
+
+  WalkthroughStepCompleted: WalkthroughStepCompletedEvent;
+  WalkthroughStepAdvanced: WalkthroughStepAdvancedEvent;
+  WalkthroughCampaignCompleted: WalkthroughCampaignCompletedEvent;
   // Add other event types as they're defined
 };
 

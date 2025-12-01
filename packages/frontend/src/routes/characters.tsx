@@ -11,7 +11,13 @@ import { PageLayout } from '../components/layout/page-layout/page-layout';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import { useCharacterFiltering } from '../hooks/useCharacterFiltering';
 import { useCharacterFilters } from '../hooks/useCharacterFilters';
-import { useCharacterManagement } from '../hooks/useCharacterManagement';
+import { useCharacter } from '../contexts/CharacterContext';
+import {
+  useCreateCharacter,
+  useUpdateCharacter,
+  useDeleteCharacter,
+  useSetActiveCharacter,
+} from '../hooks/useCharacterQueries';
 import type { CharacterData } from '../types/character';
 
 export const Route = createFileRoute('/characters')({
@@ -19,16 +25,13 @@ export const Route = createFileRoute('/characters')({
 });
 
 function CharactersPage() {
-  const {
-    characters,
-    activeCharacter,
-    isLoading,
-    error,
-    createCharacter,
-    updateCharacter,
-    setActiveCharacterId,
-    deleteCharacter,
-  } = useCharacterManagement();
+  const { characters, activeCharacter, isLoading, error } = useCharacter();
+
+  // React Query mutation hooks
+  const createCharacterMutation = useCreateCharacter();
+  const updateCharacterMutation = useUpdateCharacter();
+  const deleteCharacterMutation = useDeleteCharacter();
+  const setActiveCharacterMutation = useSetActiveCharacter();
 
   // Modal and form state management
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -57,7 +60,7 @@ function CharactersPage() {
   const handleCreateCharacter = async (data: CharacterFormData) => {
     try {
       setIsSubmitting(true);
-      await createCharacter(data);
+      await createCharacterMutation.mutateAsync(data);
       setShowCreateModal(false);
     } catch {
       // Error is handled by the parent component
@@ -71,7 +74,10 @@ function CharactersPage() {
 
     try {
       setIsSubmitting(true);
-      await updateCharacter(editingCharacter.id, data);
+      await updateCharacterMutation.mutateAsync({
+        characterId: editingCharacter.id,
+        data,
+      });
       setEditingCharacter(null);
     } catch {
       // Error is handled by the parent component
@@ -96,7 +102,7 @@ function CharactersPage() {
 
     try {
       setIsSubmitting(true);
-      await deleteCharacter(deletingCharacter.id);
+      await deleteCharacterMutation.mutateAsync(deletingCharacter.id);
       setDeletingCharacter(null);
     } catch {
       // Error is handled by the parent component
@@ -107,7 +113,7 @@ function CharactersPage() {
 
   const handleSelectCharacter = async (characterId: string) => {
     try {
-      await setActiveCharacterId(characterId);
+      await setActiveCharacterMutation.mutateAsync(characterId);
     } catch {
       // Error is handled by the parent component
     }

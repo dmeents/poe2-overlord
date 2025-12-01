@@ -1,6 +1,6 @@
 import { useGameProcess } from '@/contexts/GameProcessContext';
 import { useServerStatus } from '@/contexts/ServerStatusContext';
-import { useCharacterManagement } from '@/hooks/useCharacterManagement';
+import { useCharacter } from '@/contexts/CharacterContext';
 import type { ServerStatus } from '@/types/server';
 import {
   ChartBarIcon,
@@ -16,7 +16,7 @@ import { statusBarStyles } from './status-bar.styles';
 export const StatusBar = () => {
   const { processInfo } = useGameProcess();
   const { serverStatus } = useServerStatus();
-  const { activeCharacter } = useCharacterManagement();
+  const { activeCharacter } = useCharacter();
   const navigate = useNavigate();
   const isOnline = processInfo?.running || false;
   const currentLocation = activeCharacter?.current_location;

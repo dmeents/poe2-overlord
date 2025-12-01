@@ -5,7 +5,7 @@ import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
 import { ZoneTracker } from '@/components/zones/zone-tracker/zone-tracker';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
-import { useCharacterManagement } from '@/hooks/useCharacterManagement';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute('/playtime')({
 });
 
 function PlaytimePage() {
-  const { activeCharacter, isLoading } = useCharacterManagement();
+  const { activeCharacter, isLoading } = useCharacter();
   const zones = activeCharacter?.zones || [];
 
   if (isLoading) {

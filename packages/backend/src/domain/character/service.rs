@@ -269,10 +269,13 @@ impl CharacterService for CharacterServiceImpl {
         // Save updated character data
         self.repository.save_character_data(&character_data).await?;
 
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
         // Emit character tracking data updated event
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            character_data,
+            enriched_data,
         );
         if let Err(e) = self.event_bus.publish(event).await {
             log::warn!(
@@ -326,10 +329,13 @@ impl CharacterService for CharacterServiceImpl {
         // Save character data
         self.repository.save_character_data(&character_data).await?;
 
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
         // Publish event
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            character_data,
+            enriched_data,
         );
         self.event_bus.publish(event).await?;
 
@@ -355,10 +361,13 @@ impl CharacterService for CharacterServiceImpl {
         // Save character data
         self.repository.save_character_data(&character_data).await?;
 
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
         // Publish event
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            character_data,
+            enriched_data,
         );
         self.event_bus.publish(event).await?;
 
@@ -376,10 +385,13 @@ impl CharacterService for CharacterServiceImpl {
         // Save character data
         self.repository.save_character_data(&character_data).await?;
 
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
         // Publish event
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            character_data,
+            enriched_data,
         );
         self.event_bus.publish(event).await?;
 
@@ -403,10 +415,13 @@ impl CharacterService for CharacterServiceImpl {
         // Save character data
         self.repository.save_character_data(&character_data).await?;
 
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
         // Publish event
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            character_data,
+            enriched_data,
         );
         self.event_bus.publish(event).await?;
 
@@ -425,10 +440,13 @@ impl CharacterService for CharacterServiceImpl {
             // Save character data
             self.repository.save_character_data(&character_data).await?;
 
+            // Enrich character data before emitting event
+            let enriched_data = self.enrich_character_data(character_data).await;
+
             // Publish event
             let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
-                character_data.id.clone(),
-                character_data,
+                enriched_data.id.clone(),
+                enriched_data,
             );
             self.event_bus.publish(event).await?;
         }
@@ -469,10 +487,13 @@ impl CharacterService for CharacterServiceImpl {
         // Save character data
         self.repository.save_character_data(&character_data).await?;
 
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
         // Publish event
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            character_data,
+            enriched_data,
         );
         self.event_bus.publish(event).await?;
 

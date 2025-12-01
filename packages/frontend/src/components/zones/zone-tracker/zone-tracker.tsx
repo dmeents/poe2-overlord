@@ -36,6 +36,7 @@ export function ZoneTracker({ zones, className = '' }: ZoneTrackerProps) {
     >
       <ZoneList
         zones={filteredZones}
+        allZones={zones}
         filters={filters}
         onFilterChange={updateFilter}
         onClearFilters={clearFilters}

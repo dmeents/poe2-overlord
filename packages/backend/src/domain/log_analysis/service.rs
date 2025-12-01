@@ -479,9 +479,18 @@ impl LogAnalysisServiceImpl {
             },
         );
 
+        // Get enriched character data for the event
+        let enriched_data = match character_service.get_character(character_id).await {
+            Ok(data) => data,
+            Err(e) => {
+                warn!("SCENE CHANGE: Failed to get enriched character data: {}", e);
+                return Ok(Some(scene_change_event));
+            }
+        };
+
         let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
             character_id.to_string(),
-            updated_character_data,
+            enriched_data,
         );
         if let Err(e) = event_bus.publish(event).await {
             warn!(

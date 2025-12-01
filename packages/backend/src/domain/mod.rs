@@ -8,11 +8,12 @@ pub mod server_monitoring;
 pub mod walkthrough;
 pub mod wiki_scraping;
 pub mod zone_configuration;
+pub mod zone_tracking;
 
 pub use character::{
     Ascendency, CharacterClass, CharacterData, CharacterRepositoryImpl, CharacterService,
-    CharacterServiceImpl, CharacterUpdateParams, CharactersIndex, League, LocationState,
-    LocationType, TrackingSummary, ZoneStats,
+    CharacterServiceImpl, CharacterUpdateParams, CharactersIndex, EnrichedLocationState, League,
+    LocationState, LocationType,
 };
 
 pub use configuration::{
@@ -46,3 +47,5 @@ pub use walkthrough::{
 pub use zone_configuration::{
     ZoneConfiguration, ZoneConfigurationService, ZoneConfigurationServiceImpl,
 };
+
+pub use zone_tracking::{TrackingSummary, ZoneStats, ZoneTrackingService, ZoneTrackingServiceImpl};

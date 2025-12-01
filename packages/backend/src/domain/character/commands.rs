@@ -1,5 +1,6 @@
 use tauri::State;
 
+use crate::domain::character::models::CharacterDataResponse;
 use crate::domain::character::traits::CharacterService;
 use crate::{to_command_result, CommandResult};
 
@@ -24,19 +25,15 @@ pub async fn create_character(
 pub async fn get_character(
     character_id: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<crate::domain::character::models::CharacterDataResponse> {
-    to_command_result(
-        character_service
-            .get_character_response(&character_id)
-            .await,
-    )
+) -> CommandResult<CharacterDataResponse> {
+    to_command_result(character_service.get_character(&character_id).await)
 }
 
 #[tauri::command]
 pub async fn get_all_characters(
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<Vec<crate::domain::character::models::CharacterDataResponse>> {
-    to_command_result(character_service.get_all_characters_response().await)
+) -> CommandResult<Vec<CharacterDataResponse>> {
+    to_command_result(character_service.get_all_characters().await)
 }
 
 #[tauri::command]
@@ -75,18 +72,8 @@ pub async fn set_active_character(
 #[tauri::command]
 pub async fn get_active_character(
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<Option<crate::domain::character::models::CharacterDataResponse>> {
-    match to_command_result(character_service.get_active_character().await)? {
-        Some(character) => {
-            let response = to_command_result(
-                character_service
-                    .get_character_response(&character.id)
-                    .await,
-            )?;
-            Ok(Some(response))
-        }
-        None => Ok(None),
-    }
+) -> CommandResult<Option<CharacterDataResponse>> {
+    to_command_result(character_service.get_active_character().await)
 }
 
 #[tauri::command]
@@ -132,7 +119,7 @@ pub async fn get_available_ascendencies_for_class(
 pub async fn get_character_tracking_data(
     character_id: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<Option<crate::domain::character::models::CharacterData>> {
+) -> CommandResult<Option<CharacterDataResponse>> {
     let result = to_command_result(character_service.get_character(&character_id).await)?;
     Ok(Some(result))
 }
@@ -148,25 +135,12 @@ pub async fn get_character_current_location(
 #[tauri::command]
 pub async fn enter_zone(
     character_id: String,
-    location_id: String,
-    location_name: String,
-    location_type: crate::domain::character::models::LocationType,
-    act: Option<String>,
-    is_town: bool,
-    zone_level: Option<u32>,
+    zone_name: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(
         character_service
-            .enter_zone(
-                &character_id,
-                location_id,
-                location_name,
-                location_type,
-                act,
-                is_town,
-                zone_level,
-            )
+            .enter_zone(&character_id, &zone_name)
             .await,
     )
 }
@@ -174,12 +148,12 @@ pub async fn enter_zone(
 #[tauri::command]
 pub async fn leave_zone(
     character_id: String,
-    location_id: String,
+    zone_name: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(
         character_service
-            .leave_zone(&character_id, &location_id)
+            .leave_zone(&character_id, &zone_name)
             .await,
     )
 }
@@ -187,26 +161,21 @@ pub async fn leave_zone(
 #[tauri::command]
 pub async fn record_death(
     character_id: String,
-    location_id: String,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
-    to_command_result(
-        character_service
-            .record_death(&character_id, &location_id)
-            .await,
-    )
+    to_command_result(character_service.record_death(&character_id).await)
 }
 
 #[tauri::command]
 pub async fn add_zone_time(
     character_id: String,
-    location_id: String,
+    zone_name: String,
     seconds: u64,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(
         character_service
-            .add_zone_time(&character_id, &location_id, seconds)
+            .add_zone_time(&character_id, &zone_name, seconds)
             .await,
     )
 }

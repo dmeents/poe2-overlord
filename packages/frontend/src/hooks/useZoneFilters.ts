@@ -9,6 +9,9 @@ export interface ZoneFilters {
   maxVisits: number | null;
   minDeaths: number | null;
   maxDeaths: number | null;
+  hasBosses: boolean | null; // null = all, true = has bosses, false = no bosses
+  hasWaypoint: boolean | null; // null = all, true = has waypoint, false = no waypoint
+  hasNpcs: boolean | null; // null = all, true = has NPCs, false = no NPCs
 }
 
 export interface ZoneSortOption {
@@ -32,6 +35,9 @@ const defaultFilters: ZoneFilters = {
   maxVisits: null,
   minDeaths: null,
   maxDeaths: null,
+  hasBosses: null,
+  hasWaypoint: null,
+  hasNpcs: null,
 };
 
 const defaultSort: ZoneSortOption = {
@@ -82,7 +88,10 @@ export function useZoneFilters() {
       filters.minVisits !== null ||
       filters.maxVisits !== null ||
       filters.minDeaths !== null ||
-      filters.maxDeaths !== null
+      filters.maxDeaths !== null ||
+      filters.hasBosses !== null ||
+      filters.hasWaypoint !== null ||
+      filters.hasNpcs !== null
     );
   }, [filters]);
 

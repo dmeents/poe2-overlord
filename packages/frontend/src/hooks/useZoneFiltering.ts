@@ -9,7 +9,7 @@ export function useZoneFiltering(
 ) {
   const filteredAndSortedZones = useMemo(() => {
     const filtered = zones.filter(zone => {
-      // Search filter
+      // Search filter - now includes bosses, NPCs, and description
       if (filters.search.trim() !== '') {
         const searchTerm = filters.search.toLowerCase().trim();
         const searchableText = [
@@ -17,6 +17,10 @@ export function useZoneFiltering(
           zone.act ? `Act ${zone.act}` : '',
           zone.is_town ? 'town' : 'zone',
           zone.area_level ? `level ${zone.area_level}` : '',
+          zone.description || '',
+          ...(zone.bosses || []),
+          ...(zone.npcs || []),
+          ...(zone.points_of_interest || []),
         ]
           .join(' ')
           .toLowerCase();
@@ -58,6 +62,30 @@ export function useZoneFiltering(
       }
       if (filters.maxDeaths !== null && zone.deaths > filters.maxDeaths) {
         return false;
+      }
+
+      // Bosses filter
+      if (filters.hasBosses !== null) {
+        const hasBosses = zone.bosses && zone.bosses.length > 0;
+        if (hasBosses !== filters.hasBosses) {
+          return false;
+        }
+      }
+
+      // Waypoint filter
+      if (
+        filters.hasWaypoint !== null &&
+        zone.has_waypoint !== filters.hasWaypoint
+      ) {
+        return false;
+      }
+
+      // NPCs filter
+      if (filters.hasNpcs !== null) {
+        const hasNpcs = zone.npcs && zone.npcs.length > 0;
+        if (hasNpcs !== filters.hasNpcs) {
+          return false;
+        }
       }
 
       return true;

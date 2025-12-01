@@ -1,4 +1,4 @@
-use crate::domain::character::models::{CharacterData, LocationState, LocationType};
+use crate::domain::character::models::{CharacterDataResponse, LocationState, LocationType};
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::server_monitoring::models::ServerStatus;
@@ -45,7 +45,7 @@ pub enum AppEvent {
 
     CharacterTrackingDataUpdated {
         character_id: String,
-        data: CharacterData,
+        data: CharacterDataResponse,
         timestamp: String,
     },
 
@@ -189,7 +189,10 @@ impl AppEvent {
         }
     }
 
-    pub fn character_tracking_data_updated(character_id: String, data: CharacterData) -> Self {
+    pub fn character_tracking_data_updated(
+        character_id: String,
+        data: CharacterDataResponse,
+    ) -> Self {
         Self::CharacterTrackingDataUpdated {
             character_id,
             data,

@@ -43,7 +43,10 @@ impl WalkthroughServiceImpl {
         &self,
         character_id: &str,
     ) -> Result<WalkthroughProgress, AppError> {
-        let character_data = self.character_service.get_character(character_id).await?;
+        let character_data = self
+            .character_service
+            .load_character_data(character_id)
+            .await?;
         Ok(character_data.get_walkthrough_progress().clone())
     }
 
@@ -53,7 +56,10 @@ impl WalkthroughServiceImpl {
         character_id: &str,
         progress: WalkthroughProgress,
     ) -> Result<(), AppError> {
-        let mut character_data = self.character_service.get_character(character_id).await?;
+        let mut character_data = self
+            .character_service
+            .load_character_data(character_id)
+            .await?;
         let progress_clone = progress.clone();
         character_data.update_walkthrough_progress(progress);
         self.character_service
@@ -152,97 +158,85 @@ impl WalkthroughService for WalkthroughServiceImpl {
             return Ok(());
         }
 
-        // Process the scene change content to get the zone name
-        if let Some(scene_event) = self
-            .character_service
-            .process_scene_content(scene_content, character_id)
-            .await?
-        {
-            if scene_event.is_zone() {
-                let zone_name = scene_event.get_name();
-                debug!(
-                    "Detected zone change to {} for character {}",
-                    zone_name, character_id
-                );
+        // scene_content is already the zone name
+        let zone_name = scene_content.trim();
 
-                // Check if this zone matches the current step's completion_zone
-                if let Some(step_id) = &progress.current_step_id {
-                    // Load guide and find the current step
-                    let guide = self.repository.load_guide().await?;
-                    let mut found_step = None;
-                    let mut found_act = None;
+        if !zone_name.is_empty() {
+            debug!(
+                "Detected zone change to {} for character {}",
+                zone_name, character_id
+            );
 
-                    for (_, act) in &guide.acts {
-                        if let Some(step) = act.steps.get(step_id) {
-                            found_step = Some(step);
-                            found_act = Some(act);
-                            break;
-                        }
+            // Check if this zone matches the current step's completion_zone
+            if let Some(step_id) = &progress.current_step_id {
+                // Load guide and find the current step
+                let guide = self.repository.load_guide().await?;
+                let mut found_step = None;
+                let mut found_act = None;
+
+                for (_, act) in &guide.acts {
+                    if let Some(step) = act.steps.get(step_id) {
+                        found_step = Some(step);
+                        found_act = Some(act);
+                        break;
                     }
+                }
 
-                    if let (Some(step), Some(act)) = (found_step, found_act) {
-                        if step.completion_zone == zone_name {
-                            debug!(
-                                "Zone {} matches completion zone for step {}, advancing",
-                                zone_name, step_id
+                if let (Some(step), Some(act)) = (found_step, found_act) {
+                    if step.completion_zone == zone_name {
+                        debug!(
+                            "Zone {} matches completion zone for step {}, advancing",
+                            zone_name, step_id
+                        );
+
+                        // Create step result for events
+                        let step_result = WalkthroughStepResult {
+                            step: step.clone(),
+                            act_name: act.act_name.clone(),
+                            act_number: act.act_number,
+                        };
+
+                        // Get the next step ID and move to it
+                        if let Some(next_step_id) = &step.next_step_id {
+                            let from_step_id = progress.current_step_id.clone();
+
+                            // Create new progress with next step
+                            let mut new_progress = progress.clone();
+                            new_progress.set_current_step(next_step_id.clone());
+                            self.update_character_walkthrough_progress(character_id, new_progress)
+                                .await?;
+
+                            // Publish step advanced event
+                            let event = AppEvent::walkthrough_step_advanced(
+                                character_id.to_string(),
+                                from_step_id,
+                                Some(next_step_id.clone()),
                             );
+                            let _ = self.event_bus.publish(event).await;
 
-                            // Create step result for events
-                            let step_result = WalkthroughStepResult {
-                                step: step.clone(),
-                                act_name: act.act_name.clone(),
-                                act_number: act.act_number,
-                            };
-
-                            // Get the next step ID and move to it
-                            if let Some(next_step_id) = &step.next_step_id {
-                                let from_step_id = progress.current_step_id.clone();
-
-                                // Create new progress with next step
-                                let mut new_progress = progress.clone();
-                                new_progress.set_current_step(next_step_id.clone());
-                                self.update_character_walkthrough_progress(
-                                    character_id,
-                                    new_progress,
-                                )
-                                .await?;
-
-                                // Publish step advanced event
-                                let event = AppEvent::walkthrough_step_advanced(
-                                    character_id.to_string(),
-                                    from_step_id,
-                                    Some(next_step_id.clone()),
-                                );
-                                let _ = self.event_bus.publish(event).await;
-
-                                // Publish step completed event
-                                let event = AppEvent::walkthrough_step_completed(
-                                    character_id.to_string(),
-                                    step_result,
-                                );
-                                let _ = self.event_bus.publish(event).await;
-                            } else {
-                                // No next step, mark campaign as completed
-                                let mut new_progress = progress.clone();
-                                new_progress.mark_completed();
-                                self.update_character_walkthrough_progress(
-                                    character_id,
-                                    new_progress,
-                                )
-                                .await?;
-
-                                // Publish campaign completed event
-                                let event = AppEvent::walkthrough_campaign_completed(
-                                    character_id.to_string(),
-                                );
-                                let _ = self.event_bus.publish(event).await;
-                            }
+                            // Publish step completed event
+                            let event = AppEvent::walkthrough_step_completed(
+                                character_id.to_string(),
+                                step_result,
+                            );
+                            let _ = self.event_bus.publish(event).await;
                         } else {
-                            debug!(
-                                "Zone {} does not match completion zone {} for step {}",
-                                zone_name, step.completion_zone, step_id
-                            );
+                            // No next step, mark campaign as completed
+                            let mut new_progress = progress.clone();
+                            new_progress.mark_completed();
+                            self.update_character_walkthrough_progress(character_id, new_progress)
+                                .await?;
+
+                            // Publish campaign completed event
+                            let event =
+                                AppEvent::walkthrough_campaign_completed(character_id.to_string());
+                            let _ = self.event_bus.publish(event).await;
                         }
+                    } else {
+                        debug!(
+                            "Zone {} does not match completion zone {} for step {}",
+                            zone_name, step.completion_zone, step_id
+                        );
                     }
                 }
             }

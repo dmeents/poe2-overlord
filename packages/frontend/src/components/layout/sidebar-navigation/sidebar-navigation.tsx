@@ -35,16 +35,16 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             <HomeIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
-        <Link to='/characters' className='block'>
+        <Link to='/walkthrough' className='block'>
           <div
-            title='Characters'
+            title='Walkthrough'
             className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/characters')
+              isActive('/walkthrough')
                 ? sidebarNavigationStyles.navButtonActive
                 : sidebarNavigationStyles.navButtonInactive
             }`}
           >
-            <UserGroupIcon className={sidebarNavigationStyles.icon} />
+            <BookOpenIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
         <Link to='/playtime' className='block'>
@@ -59,22 +59,22 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             <ClockIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
-        <Link to='/walkthrough' className='block'>
-          <div
-            title='Walkthrough'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/walkthrough')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <BookOpenIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
       </nav>
 
       {/* Secondary Navigation (Settings) */}
       <nav className={sidebarNavigationStyles.secondaryNav}>
+        <Link to='/characters' className='block'>
+          <div
+            title='Characters'
+            className={`${sidebarNavigationStyles.navButton} ${
+              isActive('/characters')
+                ? sidebarNavigationStyles.navButtonActive
+                : sidebarNavigationStyles.navButtonInactive
+            }`}
+          >
+            <UserGroupIcon className={sidebarNavigationStyles.icon} />
+          </div>
+        </Link>
         <Link to='/settings' className='block'>
           <div
             title='Settings'

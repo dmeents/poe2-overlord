@@ -12,7 +12,8 @@ export const modalStyles = {
   headerContent: 'flex items-center gap-3',
   icon: 'flex-shrink-0',
   title: 'text-2xl font-bold text-white',
-  closeButton: 'text-zinc-400 hover:text-white transition-colors',
+  closeButton:
+    'text-zinc-400 hover:text-white transition-colors cursor-pointer',
   closeIcon: 'h-6 w-6',
   sizeClasses: {
     sm: 'max-w-sm',

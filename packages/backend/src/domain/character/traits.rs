@@ -4,7 +4,7 @@ use crate::errors::AppError;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, League, LocationState, LocationType,
+    CharactersIndex, League, LocationState,
 };
 
 #[async_trait]
@@ -36,16 +36,9 @@ pub trait CharacterService: Send + Sync {
         solo_self_found: bool,
     ) -> Result<CharacterData, AppError>;
 
-    async fn get_character(&self, character_id: &str) -> Result<CharacterData, AppError>;
+    async fn get_character(&self, character_id: &str) -> Result<CharacterDataResponse, AppError>;
 
-    async fn get_all_characters(&self) -> Result<Vec<CharacterData>, AppError>;
-
-    async fn get_character_response(
-        &self,
-        character_id: &str,
-    ) -> Result<CharacterDataResponse, AppError>;
-
-    async fn get_all_characters_response(&self) -> Result<Vec<CharacterDataResponse>, AppError>;
+    async fn get_all_characters(&self) -> Result<Vec<CharacterDataResponse>, AppError>;
 
     async fn update_character(
         &self,
@@ -57,7 +50,7 @@ pub trait CharacterService: Send + Sync {
 
     async fn set_active_character(&self, character_id: Option<&str>) -> Result<(), AppError>;
 
-    async fn get_active_character(&self) -> Result<Option<CharacterData>, AppError>;
+    async fn get_active_character(&self) -> Result<Option<CharacterDataResponse>, AppError>;
 
     async fn get_characters_index(&self) -> Result<CharactersIndex, AppError>;
 
@@ -69,49 +62,31 @@ pub trait CharacterService: Send + Sync {
         new_level: u32,
     ) -> Result<(), AppError>;
 
-    /// Returns None if no actual scene change occurred
-    async fn process_scene_content(
-        &self,
-        content: &str,
-        character_id: &str,
-    ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError>;
-
-    /// Returns None if no actual scene change occurred
-    async fn process_scene_content_with_zone_level(
-        &self,
-        content: &str,
-        character_id: &str,
-        zone_level: u32,
-    ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError>;
-
     async fn get_current_location(
         &self,
         character_id: &str,
     ) -> Result<Option<LocationState>, AppError>;
 
+    /// Loads raw character data for internal mutations (not enriched)
+    async fn load_character_data(&self, character_id: &str) -> Result<CharacterData, AppError>;
+
     async fn save_character_data(&self, character_data: &CharacterData) -> Result<(), AppError>;
 
-    async fn enter_zone(
-        &self,
-        character_id: &str,
-        location_id: String,
-        location_name: String,
-        location_type: LocationType,
-        act: Option<String>,
-        is_town: bool,
-        zone_level: Option<u32>,
-    ) -> Result<(), AppError>;
+    async fn enter_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
 
-    async fn leave_zone(&self, character_id: &str, location_id: &str) -> Result<(), AppError>;
+    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
 
-    async fn record_death(&self, character_id: &str, location_id: &str) -> Result<(), AppError>;
+    async fn record_death(&self, character_id: &str) -> Result<(), AppError>;
 
     async fn add_zone_time(
         &self,
         character_id: &str,
-        location_id: &str,
+        zone_name: &str,
         seconds: u64,
     ) -> Result<(), AppError>;
 
     async fn finalize_all_active_zones(&self) -> Result<(), AppError>;
+
+    /// Syncs zone metadata (act, is_town) for all zones in a character's data with current zone configuration
+    async fn sync_zone_metadata(&self, character_id: &str) -> Result<(), AppError>;
 }

@@ -99,6 +99,9 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
     filters.maxVisits !== null,
     filters.minDeaths !== null,
     filters.maxDeaths !== null,
+    filters.hasBosses !== null,
+    filters.hasWaypoint !== null,
+    filters.hasNpcs !== null,
     filters.search.trim() !== '',
   ].filter(Boolean).length;
 
@@ -212,6 +215,84 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                     ]}
                     variant='dropdown'
                     label='Status'
+                  />
+                </div>
+
+                {/* Bosses Filter */}
+                <div className={filterSectionClasses}>
+                  <Select
+                    id='bosses-filter'
+                    value={
+                      filters.hasBosses === null
+                        ? 'All'
+                        : filters.hasBosses
+                          ? 'HasBosses'
+                          : 'NoBosses'
+                    }
+                    onChange={value => {
+                      const newValue =
+                        value === 'All' ? null : value === 'HasBosses';
+                      onFilterChange('hasBosses', newValue);
+                    }}
+                    options={[
+                      { value: 'All', label: 'All' },
+                      { value: 'HasBosses', label: 'Has Bosses' },
+                      { value: 'NoBosses', label: 'No Bosses' },
+                    ]}
+                    variant='dropdown'
+                    label='Bosses'
+                  />
+                </div>
+
+                {/* Waypoint Filter */}
+                <div className={filterSectionClasses}>
+                  <Select
+                    id='waypoint-filter'
+                    value={
+                      filters.hasWaypoint === null
+                        ? 'All'
+                        : filters.hasWaypoint
+                          ? 'HasWaypoint'
+                          : 'NoWaypoint'
+                    }
+                    onChange={value => {
+                      const newValue =
+                        value === 'All' ? null : value === 'HasWaypoint';
+                      onFilterChange('hasWaypoint', newValue);
+                    }}
+                    options={[
+                      { value: 'All', label: 'All' },
+                      { value: 'HasWaypoint', label: 'Has Waypoint' },
+                      { value: 'NoWaypoint', label: 'No Waypoint' },
+                    ]}
+                    variant='dropdown'
+                    label='Waypoint'
+                  />
+                </div>
+
+                {/* NPCs Filter */}
+                <div className={filterSectionClasses}>
+                  <Select
+                    id='npcs-filter'
+                    value={
+                      filters.hasNpcs === null
+                        ? 'All'
+                        : filters.hasNpcs
+                          ? 'HasNpcs'
+                          : 'NoNpcs'
+                    }
+                    onChange={value => {
+                      const newValue =
+                        value === 'All' ? null : value === 'HasNpcs';
+                      onFilterChange('hasNpcs', newValue);
+                    }}
+                    options={[
+                      { value: 'All', label: 'All' },
+                      { value: 'HasNpcs', label: 'Has NPCs' },
+                      { value: 'NoNpcs', label: 'No NPCs' },
+                    ]}
+                    variant='dropdown'
+                    label='NPCs'
                   />
                 </div>
 
@@ -360,6 +441,39 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           Search: {filters.search}
                           <button
                             onClick={() => onFilterChange('search', '')}
+                            className={chipRemoveButtonClasses}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                      {filters.hasBosses !== null && (
+                        <span className={activeFilterChipClasses}>
+                          {filters.hasBosses ? 'Has Bosses' : 'No Bosses'}
+                          <button
+                            onClick={() => onFilterChange('hasBosses', null)}
+                            className={chipRemoveButtonClasses}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                      {filters.hasWaypoint !== null && (
+                        <span className={activeFilterChipClasses}>
+                          {filters.hasWaypoint ? 'Has Waypoint' : 'No Waypoint'}
+                          <button
+                            onClick={() => onFilterChange('hasWaypoint', null)}
+                            className={chipRemoveButtonClasses}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                      {filters.hasNpcs !== null && (
+                        <span className={activeFilterChipClasses}>
+                          {filters.hasNpcs ? 'Has NPCs' : 'No NPCs'}
+                          <button
+                            onClick={() => onFilterChange('hasNpcs', null)}
                             className={chipRemoveButtonClasses}
                           >
                             ×

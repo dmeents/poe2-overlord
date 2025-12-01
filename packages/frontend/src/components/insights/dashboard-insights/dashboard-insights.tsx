@@ -50,8 +50,8 @@ export function DashboardInsights({ className = '' }: DashboardInsightsProps) {
     if (!location) return 'Unknown';
 
     const parts = [];
-    if (location.act) parts.push(location.act);
-    if (location.scene) parts.push(location.scene);
+    if (location.act) parts.push(`Act ${location.act}`);
+    if (location.zone_name) parts.push(location.zone_name);
 
     return parts.length > 0 ? parts.join(' - ') : 'Unknown';
   };

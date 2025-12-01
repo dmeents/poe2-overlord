@@ -15,6 +15,7 @@ import {
 
 interface ZoneListProps {
   zones: ZoneStats[];
+  allZones: ZoneStats[];
   filters: ZoneFiltersType;
   onFilterChange: <K extends keyof ZoneFiltersType>(
     key: K,
@@ -34,6 +35,7 @@ interface ZoneListProps {
 
 export const ZoneList = memo(function ZoneList({
   zones,
+  allZones,
   filters,
   onFilterChange,
   onClearFilters,
@@ -120,11 +122,7 @@ export const ZoneList = memo(function ZoneList({
         <div className={getZoneGridClasses()}>
           {zones.map(zone => {
             return (
-              <ZoneCard
-                key={zone.zone_name}
-                zone={zone}
-                // Add any zone-specific props here if needed in the future
-              />
+              <ZoneCard key={zone.zone_name} zone={zone} allZones={allZones} />
             );
           })}
         </div>

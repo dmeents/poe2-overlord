@@ -2,19 +2,19 @@ use crate::domain::zone_configuration::{
     models::{ZoneConfiguration, ZoneMetadata},
     traits::{ZoneConfigurationRepository, ZoneConfigurationService},
 };
-use crate::errors::{AppError, AppResult};
+use crate::errors::AppResult;
 use async_trait::async_trait;
-use log::{debug, error, info};
+use log::{debug, info};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::OnceCell;
+use tokio::sync::RwLock;
 
 /// Implementation of ZoneConfigurationService with caching for performance
 /// Uses a cached lookup map for fast O(1) zone-to-act resolution
 pub struct ZoneConfigurationServiceImpl {
     repository: Arc<dyn ZoneConfigurationRepository>,
-    zone_lookup: Arc<OnceCell<HashMap<String, (u32, bool)>>>,
-    zone_config: Arc<OnceCell<ZoneConfiguration>>,
+    zone_lookup: Arc<RwLock<Option<HashMap<String, (u32, bool)>>>>,
+    zone_config: Arc<RwLock<Option<ZoneConfiguration>>>,
 }
 
 impl ZoneConfigurationServiceImpl {
@@ -22,47 +22,47 @@ impl ZoneConfigurationServiceImpl {
     pub fn new(repository: Arc<dyn ZoneConfigurationRepository>) -> Self {
         Self {
             repository,
-            zone_lookup: Arc::new(OnceCell::new()),
-            zone_config: Arc::new(OnceCell::new()),
+            zone_lookup: Arc::new(RwLock::new(None)),
+            zone_config: Arc::new(RwLock::new(None)),
         }
     }
 
-    /// Ensures the lookup cache is populated using OnceCell for thread-safe initialization
+    /// Ensures the lookup cache is populated
     async fn ensure_cache_loaded(&self) -> AppResult<()> {
-        // Load the full configuration first
-        self.zone_config
-            .get_or_try_init(|| async {
-                debug!("Zone configuration not cached, loading from repository...");
-                self.repository.load_configuration().await
-            })
-            .await
-            .map_err(|e: AppError| {
-                error!("Failed to load zone configuration: {}", e);
-                e
-            })?;
+        // Check if cache is already loaded
+        {
+            let config_guard = self.zone_config.read().await;
+            if config_guard.is_some() {
+                return Ok(());
+            }
+        }
 
-        // Then initialize the lookup cache
-        self.zone_lookup
-            .get_or_try_init(|| async {
-                debug!("Zone lookup cache not initialized, building lookup map...");
-                let config = self.zone_config.get().unwrap();
-                let mut lookup = HashMap::new();
+        // Cache not loaded, acquire write lock and load
+        let mut config_guard = self.zone_config.write().await;
+        let mut lookup_guard = self.zone_lookup.write().await;
 
-                for (zone_name, zone_metadata) in &config.zones {
-                    lookup.insert(
-                        zone_name.clone(),
-                        (zone_metadata.act, zone_metadata.is_town),
-                    );
-                }
+        // Double-check in case another thread loaded while we were waiting
+        if config_guard.is_some() {
+            return Ok(());
+        }
 
-                debug!("Built zone lookup cache with {} zones", lookup.len());
-                Ok(lookup)
-            })
-            .await
-            .map_err(|e: AppError| {
-                error!("Failed to initialize zone lookup cache: {}", e);
-                e
-            })?;
+        debug!("Zone configuration not cached, loading from repository...");
+        let config = self.repository.load_configuration().await?;
+
+        debug!("Zone lookup cache not initialized, building lookup map...");
+        let mut lookup = HashMap::new();
+
+        for (zone_name, zone_metadata) in &config.zones {
+            lookup.insert(
+                zone_name.clone(),
+                (zone_metadata.act, zone_metadata.is_town),
+            );
+        }
+
+        debug!("Built zone lookup cache with {} zones", lookup.len());
+
+        *config_guard = Some(config);
+        *lookup_guard = Some(lookup);
 
         Ok(())
     }
@@ -70,6 +70,7 @@ impl ZoneConfigurationServiceImpl {
     /// Updates the cached lookup map from the current configuration
     async fn update_lookup_cache(&self) -> AppResult<()> {
         // Reload the configuration and rebuild the cache
+        debug!("Reloading zone configuration from repository...");
         let config = self.repository.load_configuration().await?;
         let mut lookup = HashMap::new();
 
@@ -80,10 +81,17 @@ impl ZoneConfigurationServiceImpl {
             );
         }
 
-        // Force reinitialize the cache with new data
-        // Note: OnceCell doesn't support reinitialization, so we need to work around this
-        // For now, just ensure cache is loaded - the new data will be available on next access
-        self.ensure_cache_loaded().await
+        debug!("Updating cache with {} zones", lookup.len());
+
+        // Update both caches with new data
+        let mut config_guard = self.zone_config.write().await;
+        let mut lookup_guard = self.zone_lookup.write().await;
+
+        *config_guard = Some(config);
+        *lookup_guard = Some(lookup);
+
+        debug!("Cache successfully updated");
+        Ok(())
     }
 }
 
@@ -100,14 +108,15 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
             return None;
         }
 
-        let cache = self.zone_lookup.get().unwrap();
-        let result = cache.get(zone_name).map(|(act, _)| *act);
+        let cache = self.zone_lookup.read().await;
+        let cache_ref = cache.as_ref()?;
+        let result = cache_ref.get(zone_name).map(|(act, _)| *act);
 
         debug!(
             "Zone lookup for zone_name '{}': {:?} (cache size: {})",
             zone_name,
             result,
-            cache.len()
+            cache_ref.len()
         );
         result
     }
@@ -119,10 +128,10 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
             return false;
         }
 
-        let cache = self.zone_lookup.get().unwrap();
+        let cache = self.zone_lookup.read().await;
         cache
-            .get(zone_name)
-            .map(|(_, is_town)| *is_town)
+            .as_ref()
+            .and_then(|c| c.get(zone_name).map(|(_, is_town)| *is_town))
             .unwrap_or(false)
     }
 
@@ -136,8 +145,8 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
             return None;
         }
 
-        let config = self.zone_config.get().unwrap();
-        config.get_zone_by_name(zone_name).cloned()
+        let config = self.zone_config.read().await;
+        config.as_ref()?.get_zone_by_name(zone_name).cloned()
     }
 
     /// Gets all zones for a specific act
@@ -147,8 +156,11 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
             return Vec::new();
         }
 
-        let config = self.zone_config.get().unwrap();
-        config.get_act_zones(act).into_iter().cloned().collect()
+        let config = self.zone_config.read().await;
+        config
+            .as_ref()
+            .map(|c| c.get_act_zones(act).into_iter().cloned().collect())
+            .unwrap_or_default()
     }
 
     /// Adds or updates a zone

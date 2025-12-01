@@ -42,6 +42,9 @@ impl ZoneTrackingService for ZoneTrackingServiceImpl {
             .iter_mut()
             .find(|z| z.zone_name == zone_name)
         {
+            // Update act and is_town info in case it was updated from wiki data
+            zone.act = act;
+            zone.is_town = is_town;
             zone.activate();
             zone.start_timer();
         } else {
@@ -153,5 +156,26 @@ impl ZoneTrackingService for ZoneTrackingServiceImpl {
     fn update_summary(&self, character_data: &mut CharacterData) {
         character_data.summary =
             TrackingSummary::from_zones(&character_data.id, &character_data.zones);
+    }
+
+    fn update_zone_metadata(
+        &self,
+        character_data: &mut CharacterData,
+        zone_name: &str,
+        act: Option<u32>,
+        is_town: bool,
+    ) {
+        if let Some(zone) = character_data
+            .zones
+            .iter_mut()
+            .find(|z| z.zone_name == zone_name)
+        {
+            zone.act = act;
+            zone.is_town = is_town;
+
+            // Update summary to reflect the changes
+            character_data.summary =
+                TrackingSummary::from_zones(&character_data.id, &character_data.zones);
+        }
     }
 }

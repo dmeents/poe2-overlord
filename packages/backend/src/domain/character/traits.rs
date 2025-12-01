@@ -86,4 +86,7 @@ pub trait CharacterService: Send + Sync {
     ) -> Result<(), AppError>;
 
     async fn finalize_all_active_zones(&self) -> Result<(), AppError>;
+
+    /// Syncs zone metadata (act, is_town) for all zones in a character's data with current zone configuration
+    async fn sync_zone_metadata(&self, character_id: &str) -> Result<(), AppError>;
 }

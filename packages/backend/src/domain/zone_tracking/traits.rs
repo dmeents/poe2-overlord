@@ -37,4 +37,13 @@ pub trait ZoneTrackingService: Send + Sync {
 
     /// Updates the summary statistics from zone data (modifies character_data in place)
     fn update_summary(&self, character_data: &mut CharacterData);
+
+    /// Updates zone metadata (act and is_town) for a specific zone in character data
+    fn update_zone_metadata(
+        &self,
+        character_data: &mut CharacterData,
+        zone_name: &str,
+        act: Option<u32>,
+        is_town: bool,
+    );
 }

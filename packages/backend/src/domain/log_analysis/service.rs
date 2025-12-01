@@ -271,10 +271,12 @@ impl LogAnalysisServiceImpl {
         zone_name: &str,
         wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
+        character_service: &Arc<dyn CharacterService>,
     ) {
         info!("Triggering wiki fetch for zone: {}", zone_name);
         let wiki_service = wiki_service.clone();
         let zone_config = zone_config.clone();
+        let character_service = character_service.clone();
         let zone_name = zone_name.to_string();
 
         tokio::spawn(async move {
@@ -332,6 +334,31 @@ impl LogAnalysisServiceImpl {
                             error!("Failed to update zone metadata: {}", e);
                         } else {
                             info!("Successfully updated zone metadata for '{}'", zone_name);
+
+                            // Sync zone metadata for all characters that have visited this zone
+                            match character_service.get_all_characters().await {
+                                Ok(characters) => {
+                                    for character in characters {
+                                        // Check if character has visited this zone
+                                        if character.zones.iter().any(|z| z.zone_name == zone_name)
+                                        {
+                                            info!(
+                                                "Syncing zone metadata for character {}",
+                                                character.id
+                                            );
+                                            if let Err(e) = character_service
+                                                .sync_zone_metadata(&character.id)
+                                                .await
+                                            {
+                                                error!("Failed to sync zone metadata for character {}: {}", character.id, e);
+                                            }
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    error!("Failed to get all characters for zone sync: {}", e);
+                                }
+                            }
                         }
                     } else {
                         warn!(
@@ -360,6 +387,10 @@ impl LogAnalysisServiceImpl {
         act_keywords
             .iter()
             .any(|keyword| lower_name.contains(keyword))
+    }
+
+    fn is_hideout(zone_name: &str) -> bool {
+        zone_name.to_lowercase().contains("hideout")
     }
 
     async fn process_scene_change(
@@ -394,13 +425,14 @@ impl LogAnalysisServiceImpl {
                     zone_name.to_string(),
                 );
 
-            placeholder.act = 0;
+            // Set hideouts to act 10 (endgame) to separate them from act playtimes
+            placeholder.act = if Self::is_hideout(zone_name) { 10 } else { 0 };
 
             if let Err(e) = zone_config.add_zone(placeholder.clone()).await {
                 debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
             }
 
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config).await;
+            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
 
             placeholder
         };
@@ -412,7 +444,7 @@ impl LogAnalysisServiceImpl {
             .to_seconds();
 
         if zone_metadata.needs_refresh(refresh_interval) {
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config).await;
+            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
         }
 
         if let Err(e) = character_service.enter_zone(character_id, zone_name).await {

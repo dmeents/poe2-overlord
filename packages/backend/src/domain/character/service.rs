@@ -303,12 +303,17 @@ impl CharacterService for CharacterServiceImpl {
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
         // Look up zone metadata to get act and is_town
-        let (act, is_town) =
+        let (mut act, is_town) =
             if let Some(metadata) = self.zone_config.get_zone_metadata(zone_name).await {
                 (Some(metadata.act), metadata.is_town)
             } else {
                 (None, false)
             };
+
+        // Override act to 10 for hideouts to separate them from act playtimes
+        if zone_name.to_lowercase().contains("hideout") {
+            act = Some(10);
+        }
 
         // Apply zone tracking business logic
         self.zone_tracking
@@ -427,6 +432,49 @@ impl CharacterService for CharacterServiceImpl {
             );
             self.event_bus.publish(event).await?;
         }
+
+        Ok(())
+    }
+
+    async fn sync_zone_metadata(&self, character_id: &str) -> Result<(), AppError> {
+        // Load character data
+        let mut character_data = self.repository.load_character_data(character_id).await?;
+
+        // Update metadata for each zone from current zone configuration
+        let zone_names: Vec<String> = character_data
+            .zones
+            .iter()
+            .map(|z| z.zone_name.clone())
+            .collect();
+
+        for zone_name in zone_names {
+            let (mut act, is_town) =
+                if let Some(metadata) = self.zone_config.get_zone_metadata(&zone_name).await {
+                    (Some(metadata.act), metadata.is_town)
+                } else {
+                    (None, false)
+                };
+
+            // Override act to 10 for hideouts to separate them from act playtimes
+            if zone_name.to_lowercase().contains("hideout") {
+                act = Some(10);
+            }
+
+            self.zone_tracking
+                .update_zone_metadata(&mut character_data, &zone_name, act, is_town);
+        }
+
+        character_data.touch();
+
+        // Save character data
+        self.repository.save_character_data(&character_data).await?;
+
+        // Publish event
+        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+            character_id.to_string(),
+            character_data,
+        );
+        self.event_bus.publish(event).await?;
 
         Ok(())
     }

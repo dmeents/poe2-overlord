@@ -2,6 +2,7 @@ use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::{
     service::ConfigurationServiceImpl, traits::ConfigurationService,
 };
+use crate::domain::economy::EconomyService;
 use crate::domain::game_monitoring::{
     traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
 };
@@ -41,6 +42,9 @@ impl ServiceInitializer {
 
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
+
+        let economy_service = EconomyService::new();
+        app.manage(economy_service);
 
         let zone_config_repo = Arc::new(tauri::async_runtime::block_on(
             ZoneConfigurationRepositoryImpl::new(),

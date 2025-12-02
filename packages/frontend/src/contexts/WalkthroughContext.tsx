@@ -22,7 +22,7 @@ import {
   type WalkthroughStepAdvancedEvent,
   type WalkthroughCampaignCompletedEvent,
 } from '@/utils/events/registry';
-import { useWalkthroughGuide } from '@/hooks/useWalkthroughQueries';
+import { useWalkthroughGuide } from '@/queries/walkthrough';
 
 interface WalkthroughContextValue {
   // Guide data

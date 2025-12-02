@@ -2,6 +2,7 @@ import {
   BookOpenIcon,
   ClockIcon,
   Cog6ToothIcon,
+  CurrencyDollarIcon,
   HomeIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -57,6 +58,18 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             }`}
           >
             <ClockIcon className={sidebarNavigationStyles.icon} />
+          </div>
+        </Link>
+        <Link to='/economy' className='block'>
+          <div
+            title='Economy'
+            className={`${sidebarNavigationStyles.navButton} ${
+              isActive('/economy')
+                ? sidebarNavigationStyles.navButtonActive
+                : sidebarNavigationStyles.navButtonInactive
+            }`}
+          >
+            <CurrencyDollarIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
       </nav>

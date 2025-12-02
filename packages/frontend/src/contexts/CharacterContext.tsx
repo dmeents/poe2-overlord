@@ -2,7 +2,7 @@
 import type { CharacterData } from '@/types/character';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useActiveCharacter, useCharacters } from '@/hooks/useCharacterQueries';
+import { useActiveCharacter, useCharacters } from '@/queries/characters';
 import {
   EVENT_KEYS,
   type ExtractPayload,

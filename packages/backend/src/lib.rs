@@ -15,6 +15,7 @@ pub use application::setup_app;
 // Tauri command handlers - exposed to the frontend
 pub use domain::character::commands::*; // Character CRUD operations and tracking
 pub use domain::configuration::commands::*; // Configuration management
+pub use domain::economy::commands::*; // Economy and currency exchange data
 pub use domain::game_monitoring::commands::*; // Game process monitoring
 pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
 
@@ -127,6 +128,9 @@ pub fn run() {
             delete_character,
             set_active_character,
             get_active_character,
+
+            // Economy commands
+            get_currency_exchange_data,
 
             // Game process monitoring commands
             get_game_process_status,

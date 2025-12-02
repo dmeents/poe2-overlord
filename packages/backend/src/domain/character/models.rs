@@ -231,8 +231,8 @@ pub enum Ascendency {
 pub enum League {
     #[serde(rename = "Standard")]
     Standard,
-    #[serde(rename = "Third Edict")]
-    ThirdEdict,
+    #[serde(rename = "Rise of the Abyssal")]
+    RiseOfTheAbyssal,
 }
 
 // Re-export tracking-related types (these will be moved here in a future step)

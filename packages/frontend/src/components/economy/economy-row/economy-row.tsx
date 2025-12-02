@@ -1,0 +1,150 @@
+import type { CurrencyExchangeRate } from '@/types/economy';
+import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
+import { Tooltip } from '@/components/ui/tooltip/tooltip';
+
+interface EconomyRowProps {
+  currency: CurrencyExchangeRate;
+  onClick?: (currency: CurrencyExchangeRate) => void;
+}
+
+export function EconomyRow({ currency, onClick }: EconomyRowProps) {
+  const { display_value } = currency;
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick(currency);
+    }
+  };
+
+  const formattedValue = display_value.value.toFixed(
+    display_value.value >= 10 ? 1 : 2
+  );
+
+  const tooltipContent = (
+    <div className='space-y-1 text-xs'>
+      <div className='font-semibold border-b border-zinc-600 pb-1 mb-2'>
+        Raw Values
+      </div>
+      {currency.raw_divine_value !== null && (
+        <div className='flex justify-between gap-4'>
+          <span className='text-zinc-400'>Divine:</span>
+          <span className='text-white font-mono'>
+            {currency.raw_divine_value.toFixed(6)}
+          </span>
+        </div>
+      )}
+      {currency.raw_chaos_value !== null && (
+        <div className='flex justify-between gap-4'>
+          <span className='text-zinc-400'>Chaos:</span>
+          <span className='text-white font-mono'>
+            {currency.raw_chaos_value.toFixed(4)}
+          </span>
+        </div>
+      )}
+      {currency.raw_exalted_value !== null && (
+        <div className='flex justify-between gap-4'>
+          <span className='text-zinc-400'>Exalted:</span>
+          <span className='text-white font-mono'>
+            {currency.raw_exalted_value.toFixed(2)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div
+      onClick={handleClick}
+      className={`flex items-center justify-between py-3 px-6 border-b border-zinc-700/50 transition-colors ${
+        onClick ? 'cursor-pointer hover:bg-zinc-800/30' : ''
+      }`}
+    >
+      <div className='flex items-center gap-3 flex-1 min-w-0'>
+        <img
+          src={currency.image_url}
+          alt={currency.name}
+          className='w-8 h-8 flex-shrink-0'
+          onError={e => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+        <div className='flex-1 min-w-0'>
+          <div className='text-white font-medium truncate'>{currency.name}</div>
+          <div className='flex items-center gap-3 text-xs text-zinc-400 mt-1'>
+            {currency.volume !== null && (
+              <span>Vol: {currency.volume.toFixed(2)}</span>
+            )}
+            {currency.change_percent !== null && (
+              <span
+                className={`font-semibold ${
+                  currency.change_percent >= 0
+                    ? 'text-emerald-400'
+                    : 'text-red-400'
+                }`}
+              >
+                {currency.change_percent >= 0 ? '+' : ''}
+                {currency.change_percent.toFixed(2)}%
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Tooltip content={tooltipContent}>
+        <div className='text-right'>
+          <div className='flex items-center gap-2 justify-end text-base font-semibold text-zinc-200'>
+            {display_value.inverted ? (
+              <>
+                <span>{formattedValue}</span>
+                <img
+                  src={currency.image_url}
+                  alt={currency.name}
+                  className='w-5 h-5'
+                  title={currency.name}
+                  onError={e => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <ArrowsRightLeftIcon className='w-4 h-4 text-zinc-500' />
+                <span>1</span>
+                <img
+                  src={display_value.currency_image_url}
+                  alt={display_value.currency_name}
+                  className='w-5 h-5'
+                  title={display_value.currency_name}
+                  onError={e => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <span>{formattedValue}</span>
+                <img
+                  src={display_value.currency_image_url}
+                  alt={display_value.currency_name}
+                  className='w-5 h-5'
+                  title={display_value.currency_name}
+                  onError={e => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <ArrowsRightLeftIcon className='w-4 h-4 text-zinc-500' />
+                <span>1</span>
+                <img
+                  src={currency.image_url}
+                  alt={currency.name}
+                  className='w-5 h-5'
+                  title={currency.name}
+                  onError={e => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </Tooltip>
+    </div>
+  );
+}

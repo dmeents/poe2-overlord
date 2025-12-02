@@ -37,6 +37,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 regex = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 scraper = "0.17"
+urlencoding = "2.1"
 
 [dev-dependencies]
 tempfile = "3.8"

@@ -1,10 +1,4 @@
-// Character-related types - Updated to match unified backend CharacterData model
-
 import type { WalkthroughProgress } from './walkthrough';
-
-// ============================================================================
-// Static Character Data Constants
-// ============================================================================
 
 export const CHARACTER_CLASSES = [
   'Warrior',
@@ -16,38 +10,27 @@ export const CHARACTER_CLASSES = [
   'Witch',
 ] as const;
 
-export const LEAGUES = ['Standard', 'Third Edict'] as const;
+export const LEAGUES = ['Standard', 'Rise of the Abyssal'] as const;
 
 export const ALL_ASCENDENCIES = [
-  // Warrior ascendencies
   'Titan',
   'Warbringer',
   'Smith of Katava',
-  // Sorceress ascendencies
   'Stormweaver',
   'Chronomancer',
-  // Ranger ascendencies
   'Deadeye',
   'Pathfinder',
-  // Huntress ascendencies
   'Ritualist',
   'Amazon',
-  // Monk ascendencies
   'Invoker',
   'Acolyte of Chayula',
-  // Mercenary ascendencies
   'Gemling Legionnaire',
   'Tactitian',
   'Witchhunter',
-  // Witch ascendencies
   'Blood Mage',
   'Infernalist',
   'Lich',
 ] as const;
-
-// ============================================================================
-// Character Type Definitions (derived from constants)
-// ============================================================================
 
 export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
 export type League = (typeof LEAGUES)[number];
@@ -66,14 +49,12 @@ export const ASCENDENCIES_BY_CLASS: Record<
   Witch: ['Blood Mage', 'Infernalist', 'Lich'],
 };
 
-// Helper function to get valid ascendencies for a character class
 export function getAscendenciesForClass(
   characterClass: CharacterClass
 ): readonly Ascendency[] {
   return ASCENDENCIES_BY_CLASS[characterClass] || [];
 }
 
-// Helper function to validate ascendency/class combination
 export function isValidAscendencyForClass(
   ascendency: Ascendency,
   characterClass: CharacterClass
@@ -81,17 +62,13 @@ export function isValidAscendencyForClass(
   return getAscendenciesForClass(characterClass).includes(ascendency);
 }
 
-// Location and tracking types
-export type LocationType = 'Zone' | 'Hideout';
+export type LocationType = 'Zone' | 'Hideout' | 'Town';
 
-// Simplified LocationState - only stores zone reference
-// Full zone data comes from joining with zones.json
 export interface LocationState {
   zone_name: string;
   last_updated: string;
 }
 
-// EnrichedLocationState - returned by API with full zone metadata
 export interface EnrichedLocationState {
   zone_name: string;
   act: number;
@@ -104,10 +81,7 @@ export interface EnrichedLocationState {
 }
 
 export interface ZoneStats {
-  // Primary identifier - zone name
   zone_name: string;
-
-  // Character tracking
   duration: number;
   deaths: number;
   visits: number;
@@ -115,8 +89,6 @@ export interface ZoneStats {
   last_visited: string;
   is_active: boolean;
   entry_timestamp?: string;
-
-  // Zone metadata (enriched from backend) - all fields available for future use
   area_id?: string;
   act?: number;
   area_level?: number;
@@ -139,8 +111,6 @@ export interface CharacterSummary {
   total_hideout_time: number;
   total_zones_visited: number;
   total_deaths: number;
-
-  // Per-act play time tracking (in seconds)
   play_time_act1: number;
   play_time_act2: number;
   play_time_act3: number;
@@ -149,7 +119,6 @@ export interface CharacterSummary {
   play_time_endgame: number;
 }
 
-// Unified character data model that matches the backend CharacterData
 export interface CharacterData {
   id: string;
   name: string;
@@ -161,9 +130,6 @@ export interface CharacterData {
   level: number;
   created_at: string;
   last_played?: string;
-
-  // Embedded tracking data (consolidated from character_tracking domain)
-  // Note: API responses return EnrichedLocationState with full zone metadata
   current_location?: EnrichedLocationState;
   summary: CharacterSummary;
   zones: ZoneStats[];

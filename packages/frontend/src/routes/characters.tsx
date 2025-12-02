@@ -18,7 +18,7 @@ import {
   useUpdateCharacter,
   useDeleteCharacter,
   useSetActiveCharacter,
-} from '../hooks/useCharacterQueries';
+} from '../queries/characters';
 import type { CharacterData } from '../types/character';
 
 export const Route = createFileRoute('/characters')({

@@ -6,9 +6,15 @@ interface TooltipProps {
   content: string | React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  showIcon?: boolean;
 }
 
-export function Tooltip({ content, children, className = '' }: TooltipProps) {
+export function Tooltip({
+  content,
+  children,
+  className = '',
+  showIcon = false,
+}: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -19,7 +25,7 @@ export function Tooltip({ content, children, className = '' }: TooltipProps) {
         onMouseLeave={() => setIsVisible(false)}
       >
         {children}
-        <InformationCircleIcon className={tooltipStyles.icon} />
+        {showIcon && <InformationCircleIcon className={tooltipStyles.icon} />}
       </div>
 
       {isVisible && (

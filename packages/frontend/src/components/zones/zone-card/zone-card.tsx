@@ -4,6 +4,7 @@ import { memo, useState } from 'react';
 import { TimeDisplay } from '../../insights/time-display/time-display';
 import { ZoneDetailsModal } from '../zone-details-modal/zone-details-modal';
 import { getZonePillBaseClasses, getZonePillClasses } from './zone-card.styles';
+import { formatTimeAgo } from '@/utils/format-time-ago';
 
 interface ZoneCardProps {
   zone: ZoneStats;
@@ -21,26 +22,6 @@ export const ZoneCard = memo(function ZoneCard({
 
   const getActiveBorderClass = () => {
     return zone.is_active ? 'border-emerald-500' : 'border-zinc-700';
-  };
-
-  const formatLastVisited = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60)
-      return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30)
-      return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
   };
 
   const handleCardClick = () => {
@@ -172,7 +153,7 @@ export const ZoneCard = memo(function ZoneCard({
                 </div>
                 <div className='text-sm text-zinc-300 drop-shadow-lg'>
                   {zone.last_visited
-                    ? formatLastVisited(zone.last_visited)
+                    ? formatTimeAgo(zone.last_visited)
                     : 'Never visited'}
                 </div>
               </div>

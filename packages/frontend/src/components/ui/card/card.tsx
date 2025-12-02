@@ -37,7 +37,7 @@ export function Card({
             {title}
           </div>
           {subtitle && (
-            <span className='text-sm text-zinc-400 font-normal'>
+            <span className='text-xs text-zinc-400 font-normal'>
               {subtitle}
             </span>
           )}

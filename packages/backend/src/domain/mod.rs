@@ -2,6 +2,7 @@
 
 pub mod character;
 pub mod configuration;
+pub mod economy;
 pub mod game_monitoring;
 pub mod log_analysis;
 pub mod server_monitoring;
@@ -19,6 +20,10 @@ pub use character::{
 pub use configuration::{
     AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationService,
     ConfigurationServiceImpl, ConfigurationValidationResult,
+};
+
+pub use economy::{
+    CurrencyExchangeData, CurrencyExchangeRate, CurrencyInfo, EconomyService, EconomyType,
 };
 
 pub use crate::infrastructure::events::{

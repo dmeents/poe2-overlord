@@ -201,7 +201,7 @@ pub(crate) struct TierConfig {
 impl Default for TierConfig {
     fn default() -> Self {
         Self {
-            secondary_threshold_min: 0.05,
+            secondary_threshold_min: 0.003,
             primary_threshold_min: 0.05,
         }
     }
@@ -246,7 +246,7 @@ impl CurrencyExchangeRate {
         }
     }
 
-    fn build_display_value(
+    pub(crate) fn build_display_value(
         primary_value: f64,
         tier: CurrencyTier,
         secondary_rate: f64,
@@ -365,15 +365,30 @@ impl CurrencyExchangeApiResponse {
                     &config,
                 );
 
-                let display_currency_info = match tier {
-                    CurrencyTier::Primary => &primary_currency,
-                    CurrencyTier::Secondary => &secondary_currency,
-                    CurrencyTier::Tertiary => &tertiary_currency,
+                // Special case: when the item itself is one of the core currencies,
+                // we need to show its exchange with a different currency to avoid "1 primary <-> 1 primary"
+                let (display_currency_info, display_tier) = if line.id == primary_currency.id {
+                    // Primary currency should be exchanged with Secondary
+                    (&secondary_currency, CurrencyTier::Secondary)
+                } else if line.id == secondary_currency.id {
+                    // Secondary currency should be exchanged with Primary
+                    (&primary_currency, CurrencyTier::Primary)
+                } else if line.id == tertiary_currency.id {
+                    // Tertiary currency should be exchanged with Secondary
+                    (&secondary_currency, CurrencyTier::Secondary)
+                } else {
+                    // Normal case: use the tier-based selection
+                    let currency_info = match tier {
+                        CurrencyTier::Primary => &primary_currency,
+                        CurrencyTier::Secondary => &secondary_currency,
+                        CurrencyTier::Tertiary => &tertiary_currency,
+                    };
+                    (currency_info, tier)
                 };
 
                 let display_value = CurrencyExchangeRate::build_display_value(
                     primary_value,
-                    tier,
+                    display_tier,
                     secondary_rate,
                     tertiary_rate,
                     display_currency_info,

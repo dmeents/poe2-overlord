@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
-import type { CharacterData, CharacterUpdateParams } from '../types/character';
+import type { CharacterData } from '../types/character';
 
 // Query keys for consistent caching
 export const characterQueryKeys = {
@@ -84,19 +84,17 @@ export function useUpdateCharacter() {
       characterId: string;
       data: CharacterFormData;
     }): Promise<CharacterData> => {
-      const updateParams: CharacterUpdateParams = {
-        name: data.name,
-        class: data.class,
-        ascendency: data.ascendency,
-        league: data.league,
-        hardcore: data.hardcore,
-        solo_self_found: data.solo_self_found,
-        level: 1, // Default level for now - can be updated later if needed
-      };
-
       return await invoke<CharacterData>('update_character', {
         characterId,
-        updateParams,
+        updateParams: {
+          name: data.name,
+          class: data.class,
+          ascendency: data.ascendency,
+          league: data.league,
+          hardcore: data.hardcore,
+          solo_self_found: data.solo_self_found,
+          level: 1, // Default level for now - can be updated later if needed
+        },
       });
     },
     onSuccess: updatedCharacter => {

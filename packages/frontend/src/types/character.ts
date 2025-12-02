@@ -2,42 +2,84 @@
 
 import type { WalkthroughProgress } from './walkthrough';
 
-export type CharacterClass =
-  | 'Warrior'
-  | 'Sorceress'
-  | 'Ranger'
-  | 'Huntress'
-  | 'Monk'
-  | 'Mercenary'
-  | 'Witch';
+// ============================================================================
+// Static Character Data Constants
+// ============================================================================
 
-export type Ascendency =
+export const CHARACTER_CLASSES = [
+  'Warrior',
+  'Sorceress',
+  'Ranger',
+  'Huntress',
+  'Monk',
+  'Mercenary',
+  'Witch',
+] as const;
+
+export const LEAGUES = ['Standard', 'Third Edict'] as const;
+
+export const ALL_ASCENDENCIES = [
   // Warrior ascendencies
-  | 'Titan'
-  | 'Warbringer'
-  | 'Smith of Katava'
+  'Titan',
+  'Warbringer',
+  'Smith of Katava',
   // Sorceress ascendencies
-  | 'Stormweaver'
-  | 'Chronomancer'
+  'Stormweaver',
+  'Chronomancer',
   // Ranger ascendencies
-  | 'Deadeye'
-  | 'Pathfinder'
+  'Deadeye',
+  'Pathfinder',
   // Huntress ascendencies
-  | 'Ritualist'
-  | 'Amazon'
+  'Ritualist',
+  'Amazon',
   // Monk ascendencies
-  | 'Invoker'
-  | 'Acolyte of Chayula'
+  'Invoker',
+  'Acolyte of Chayula',
   // Mercenary ascendencies
-  | 'Gemling Legionnaire'
-  | 'Tactitian'
-  | 'Witchhunter'
+  'Gemling Legionnaire',
+  'Tactitian',
+  'Witchhunter',
   // Witch ascendencies
-  | 'Blood Mage'
-  | 'Infernalist'
-  | 'Lich';
+  'Blood Mage',
+  'Infernalist',
+  'Lich',
+] as const;
 
-export type League = 'Standard' | 'Third Edict';
+// ============================================================================
+// Character Type Definitions (derived from constants)
+// ============================================================================
+
+export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
+export type League = (typeof LEAGUES)[number];
+export type Ascendency = (typeof ALL_ASCENDENCIES)[number];
+
+export const ASCENDENCIES_BY_CLASS: Record<
+  CharacterClass,
+  readonly Ascendency[]
+> = {
+  Warrior: ['Titan', 'Warbringer', 'Smith of Katava'],
+  Sorceress: ['Stormweaver', 'Chronomancer'],
+  Ranger: ['Deadeye', 'Pathfinder'],
+  Huntress: ['Ritualist', 'Amazon'],
+  Monk: ['Invoker', 'Acolyte of Chayula'],
+  Mercenary: ['Gemling Legionnaire', 'Tactitian', 'Witchhunter'],
+  Witch: ['Blood Mage', 'Infernalist', 'Lich'],
+};
+
+// Helper function to get valid ascendencies for a character class
+export function getAscendenciesForClass(
+  characterClass: CharacterClass
+): readonly Ascendency[] {
+  return ASCENDENCIES_BY_CLASS[characterClass] || [];
+}
+
+// Helper function to validate ascendency/class combination
+export function isValidAscendencyForClass(
+  ascendency: Ascendency,
+  characterClass: CharacterClass
+): boolean {
+  return getAscendenciesForClass(characterClass).includes(ascendency);
+}
 
 // Location and tracking types
 export type LocationType = 'Zone' | 'Hideout';
@@ -127,49 +169,4 @@ export interface CharacterData {
   zones: ZoneStats[];
   walkthrough_progress: WalkthroughProgress;
   last_updated: string;
-}
-
-// Characters index for managing character IDs and active character
-export interface CharactersIndex {
-  character_ids: string[];
-  active_character_id?: string;
-}
-
-// Parameters for updating an existing character
-export interface CharacterUpdateParams {
-  name: string;
-  class: CharacterClass;
-  ascendency: Ascendency;
-  league: League;
-  hardcore: boolean;
-  solo_self_found: boolean;
-  level: number;
-}
-
-// Helper type for character creation
-export interface CreateCharacterRequest {
-  name: string;
-  class: CharacterClass;
-  ascendency: Ascendency;
-  league: League;
-  hardcore: boolean;
-  solo_self_found: boolean;
-}
-
-// Legacy CharacterTrackingData interface for backward compatibility
-// This is now embedded within CharacterData in the unified model
-export interface CharacterTrackingData {
-  character_id: string;
-  current_location?: EnrichedLocationState;
-  summary: CharacterSummary;
-  zones: ZoneStats[];
-  last_updated: string;
-}
-
-// Event types for character tracking data updates
-// Updated to work with the new unified CharacterData model
-export interface CharacterTrackingDataUpdatedEvent {
-  character_id: string;
-  data: CharacterTrackingData;
-  timestamp: string;
 }

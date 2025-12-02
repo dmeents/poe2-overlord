@@ -509,46 +509,6 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
     }
 }
 
-pub fn get_ascendencies_for_class(class: &CharacterClass) -> Vec<Ascendency> {
-    match class {
-        CharacterClass::Warrior => vec![
-            Ascendency::Titan,
-            Ascendency::Warbringer,
-            Ascendency::SmithOfKatava,
-        ],
-        CharacterClass::Sorceress => vec![Ascendency::Stormweaver, Ascendency::Chronomancer],
-        CharacterClass::Ranger => vec![Ascendency::Deadeye, Ascendency::Pathfinder],
-        CharacterClass::Huntress => vec![Ascendency::Ritualist, Ascendency::Amazon],
-        CharacterClass::Monk => vec![Ascendency::Invoker, Ascendency::AcolyteOfChayula],
-        CharacterClass::Mercenary => vec![
-            Ascendency::GemlingLegionnaire,
-            Ascendency::Tactitian,
-            Ascendency::Witchhunter,
-        ],
-        CharacterClass::Witch => vec![
-            Ascendency::BloodMage,
-            Ascendency::Infernalist,
-            Ascendency::Lich,
-        ],
-    }
-}
-
-pub fn get_all_character_classes() -> Vec<CharacterClass> {
-    vec![
-        CharacterClass::Warrior,
-        CharacterClass::Sorceress,
-        CharacterClass::Ranger,
-        CharacterClass::Huntress,
-        CharacterClass::Monk,
-        CharacterClass::Mercenary,
-        CharacterClass::Witch,
-    ]
-}
-
-pub fn get_all_leagues() -> Vec<League> {
-    vec![League::Standard, League::ThirdEdict]
-}
-
 fn default_level() -> u32 {
     1
 }

@@ -121,23 +121,12 @@ pub fn run() {
 
             // Character management commands
             create_character,
-            update_character,
+            get_character,
             get_all_characters,
-            get_active_character,
-            set_active_character,
+            update_character,
             delete_character,
-            get_available_character_classes,
-            get_available_leagues,
-            get_available_ascendencies_for_class,
-
-            // Character tracking commands (location and time)
-            get_character_tracking_data,
-            get_character_current_location,
-            enter_zone,
-            leave_zone,
-            record_death,
-            add_zone_time,
-            finalize_all_active_zones,
+            set_active_character,
+            get_active_character,
 
             // Game process monitoring commands
             get_game_process_status,

@@ -66,14 +66,9 @@ export const CharacterListControlsForm = memo(
     const [availableAscendencies, setAvailableAscendencies] = useState<
       { value: Ascendency; label: string }[]
     >([]);
-    const [isLoadingAscendencies, setIsLoadingAscendencies] = useState(false);
 
-    const {
-      leagues,
-      characterClasses,
-      getAscendenciesForClass,
-      isLoading: configLoading,
-    } = useCharacterConfig();
+    const { leagues, characterClasses, getAscendenciesForClass } =
+      useCharacterConfig();
 
     // Add "All" options to the dynamic data
     const leagueOptions = [{ value: 'All', label: 'All Leagues' }, ...leagues];
@@ -83,47 +78,31 @@ export const CharacterListControlsForm = memo(
       ...characterClasses,
     ];
 
-    // Load ascendencies when a class is selected
+    // Update ascendencies when a class is selected
     useEffect(() => {
-      const loadAscendencies = async () => {
-        if (filters.classes.length > 0) {
-          setIsLoadingAscendencies(true);
-          try {
-            const ascendencies = await getAscendenciesForClass(
-              filters.classes[0] as CharacterClass
-            );
-            setAvailableAscendencies(ascendencies);
+      if (filters.classes.length > 0) {
+        const ascendencies = getAscendenciesForClass(
+          filters.classes[0] as CharacterClass
+        );
+        setAvailableAscendencies(ascendencies);
 
-            // Clear ascendency filter if current selection is not valid for the new class
-            if (filters.ascendencies.length > 0) {
-              const currentAscendency = filters.ascendencies[0];
-              const isValidAscendency = ascendencies.some(
-                asc => asc.value === currentAscendency
-              );
-              if (!isValidAscendency) {
-                onFilterChange('ascendencies', []);
-              }
-            }
-          } catch (error) {
-            console.error('Failed to load ascendencies:', error);
-            setAvailableAscendencies([]);
-            // Clear ascendency filter on error
-            if (filters.ascendencies.length > 0) {
-              onFilterChange('ascendencies', []);
-            }
-          } finally {
-            setIsLoadingAscendencies(false);
-          }
-        } else {
-          setAvailableAscendencies([]);
-          // Clear ascendency filter when no class is selected
-          if (filters.ascendencies.length > 0) {
+        // Clear ascendency filter if current selection is not valid for the new class
+        if (filters.ascendencies.length > 0) {
+          const currentAscendency = filters.ascendencies[0];
+          const isValidAscendency = ascendencies.some(
+            asc => asc.value === currentAscendency
+          );
+          if (!isValidAscendency) {
             onFilterChange('ascendencies', []);
           }
         }
-      };
-
-      loadAscendencies();
+      } else {
+        setAvailableAscendencies([]);
+        // Clear ascendency filter when no class is selected
+        if (filters.ascendencies.length > 0) {
+          onFilterChange('ascendencies', []);
+        }
+      }
     }, [
       filters.classes,
       getAscendenciesForClass,
@@ -207,7 +186,6 @@ export const CharacterListControlsForm = memo(
                       options={leagueOptions}
                       variant='dropdown'
                       label='League'
-                      disabled={configLoading}
                     />
                   </div>
 
@@ -284,7 +262,6 @@ export const CharacterListControlsForm = memo(
                       options={characterClassOptions}
                       variant='dropdown'
                       label='Character Class'
-                      disabled={configLoading}
                     />
                   </div>
 
@@ -307,17 +284,11 @@ export const CharacterListControlsForm = memo(
                       options={ascendencyOptions}
                       variant='dropdown'
                       label='Ascendency'
-                      disabled={
-                        configLoading ||
-                        isLoadingAscendencies ||
-                        filters.classes.length === 0
-                      }
+                      disabled={filters.classes.length === 0}
                       placeholder={
                         filters.classes.length === 0
                           ? 'Select a class first'
-                          : isLoadingAscendencies
-                            ? 'Loading ascendencies...'
-                            : 'Select ascendency'
+                          : 'Select ascendency'
                       }
                     />
                   </div>

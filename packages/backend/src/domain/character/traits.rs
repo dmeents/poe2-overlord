@@ -74,16 +74,7 @@ pub trait CharacterService: Send + Sync {
 
     async fn enter_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
 
-    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
-
     async fn record_death(&self, character_id: &str) -> Result<(), AppError>;
-
-    async fn add_zone_time(
-        &self,
-        character_id: &str,
-        zone_name: &str,
-        seconds: u64,
-    ) -> Result<(), AppError>;
 
     async fn finalize_all_active_zones(&self) -> Result<(), AppError>;
 

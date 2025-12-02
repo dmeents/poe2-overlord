@@ -342,74 +342,12 @@ impl CharacterService for CharacterServiceImpl {
         Ok(())
     }
 
-    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError> {
-        // Load character data
-        let mut character_data = self.repository.load_character_data(character_id).await?;
-
-        // Apply zone tracking business logic
-        self.zone_tracking
-            .leave_zone(&mut character_data, zone_name)?;
-
-        // Clear current location if it matches the zone we're leaving
-        if let Some(loc) = &character_data.current_location {
-            if loc.zone_name == zone_name {
-                character_data.current_location = None;
-            }
-        }
-        character_data.touch();
-
-        // Save character data
-        self.repository.save_character_data(&character_data).await?;
-
-        // Enrich character data before emitting event
-        let enriched_data = self.enrich_character_data(character_data).await;
-
-        // Publish event
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
-            character_id.to_string(),
-            enriched_data,
-        );
-        self.event_bus.publish(event).await?;
-
-        Ok(())
-    }
-
     async fn record_death(&self, character_id: &str) -> Result<(), AppError> {
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
         // Apply zone tracking business logic
         self.zone_tracking.record_death(&mut character_data)?;
-        character_data.touch();
-
-        // Save character data
-        self.repository.save_character_data(&character_data).await?;
-
-        // Enrich character data before emitting event
-        let enriched_data = self.enrich_character_data(character_data).await;
-
-        // Publish event
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
-            character_id.to_string(),
-            enriched_data,
-        );
-        self.event_bus.publish(event).await?;
-
-        Ok(())
-    }
-
-    async fn add_zone_time(
-        &self,
-        character_id: &str,
-        zone_name: &str,
-        seconds: u64,
-    ) -> Result<(), AppError> {
-        // Load character data
-        let mut character_data = self.repository.load_character_data(character_id).await?;
-
-        // Apply zone tracking business logic
-        self.zone_tracking
-            .add_zone_time(&mut character_data, zone_name, seconds)?;
         character_data.touch();
 
         // Save character data

@@ -5,7 +5,12 @@ import { Input } from '../../forms/form-input/form-input';
 import { Select } from '../../forms/form-select/form-select';
 import { CHARACTER_FORM_VALIDATION } from '../../../config/form-config';
 import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
-import type { Ascendency, CharacterClass, CharacterData, League,  } from '../../../types/character';
+import type {
+  Ascendency,
+  CharacterClass,
+  CharacterData,
+  League,
+} from '../../../types/character';
 import { Button } from '../../ui/button/button';
 import { Modal } from '../../ui/modal/modal';
 import {
@@ -40,7 +45,6 @@ export function CharacterFormModal({
   const {
     characterClasses,
     leagues,
-    isLoading: configLoading,
     getAscendenciesForClass,
     getDefaultFormData,
   } = useCharacterConfig();
@@ -59,7 +63,7 @@ export function CharacterFormModal({
     { value: Ascendency; label: string }[]
   >([]);
 
-  // Reset form data when character prop changes or config loads
+  // Reset form data when character prop changes
   useEffect(() => {
     if (character) {
       setFormData({
@@ -70,39 +74,30 @@ export function CharacterFormModal({
         hardcore: character.hardcore,
         solo_self_found: character.solo_self_found,
       });
-    } else if (!configLoading && characterClasses.length > 0) {
+    } else {
       setFormData(getDefaultFormData());
     }
     setErrors({});
-  }, [character, configLoading, characterClasses.length, getDefaultFormData]);
+  }, [character, getDefaultFormData]);
 
-  // Load ascendencies when class changes
+  // Update ascendencies when class changes
   useEffect(() => {
-    const loadAscendencies = async () => {
-      if (formData.class && characterClasses.length > 0) {
-        const ascendencyOptions = await getAscendenciesForClass(formData.class);
-        setAvailableAscendencies(ascendencyOptions);
+    if (formData.class) {
+      const ascendencyOptions = getAscendenciesForClass(formData.class);
+      setAvailableAscendencies(ascendencyOptions);
 
-        // Reset ascendency if current one is not valid for the new class
-        if (
-          ascendencyOptions.length > 0 &&
-          !ascendencyOptions.some(opt => opt.value === formData.ascendency)
-        ) {
-          setFormData(prev => ({
-            ...prev,
-            ascendency: ascendencyOptions[0].value,
-          }));
-        }
+      // Reset ascendency if current one is not valid for the new class
+      if (
+        ascendencyOptions.length > 0 &&
+        !ascendencyOptions.some(opt => opt.value === formData.ascendency)
+      ) {
+        setFormData(prev => ({
+          ...prev,
+          ascendency: ascendencyOptions[0].value,
+        }));
       }
-    };
-
-    loadAscendencies();
-  }, [
-    formData.class,
-    characterClasses,
-    getAscendenciesForClass,
-    formData.ascendency,
-  ]);
+    }
+  }, [formData.class, getAscendenciesForClass, formData.ascendency]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<CharacterFormData> = {};
@@ -146,7 +141,7 @@ export function CharacterFormModal({
       onClose={onClose}
       size='2xl'
       title={character ? 'Edit Character' : 'Create Character'}
-      disabled={isLoading || configLoading}
+      disabled={isLoading}
     >
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className={getFormFieldClasses()}>
@@ -212,18 +207,12 @@ export function CharacterFormModal({
           >
             Cancel
           </Button>
-          <Button
-            type='submit'
-            variant='primary'
-            disabled={isLoading || configLoading}
-          >
+          <Button type='submit' variant='primary' disabled={isLoading}>
             {isLoading
               ? 'Saving...'
-              : configLoading
-                ? 'Loading...'
-                : character
-                  ? 'Update Character'
-                  : 'Create Character'}
+              : character
+                ? 'Update Character'
+                : 'Create Character'}
           </Button>
         </div>
       </form>

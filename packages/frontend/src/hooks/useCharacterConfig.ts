@@ -1,9 +1,16 @@
-import { invoke } from '@tauri-apps/api/core';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { CharacterFormData } from '../components/character/character-modals/character-form-modal';
-import type { Ascendency, CharacterClass, CharacterData, League,  } from '../types/character';
+import { useMemo } from 'react';
+import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
+import {
+  CHARACTER_CLASSES,
+  LEAGUES,
+  getAscendenciesForClass,
+  type CharacterClass,
+  type CharacterData,
+  type Ascendency,
+  type League,
+} from '../types/character';
 
-// Backend response types
+// Option types for form components
 interface CharacterClassOption {
   value: CharacterClass;
   label: string;
@@ -19,152 +26,82 @@ interface AscendencyOption {
   label: string;
 }
 
+/**
+ * Hook for managing character configuration data (classes, leagues, ascendencies).
+ * Now uses static frontend constants instead of backend commands.
+ */
 export function useCharacterConfig() {
-  const [characterClasses, setCharacterClasses] = useState<
-    CharacterClassOption[]
-  >([]);
-  const [leagues, setLeagues] = useState<LeagueOption[]>([]);
-  const [ascendencies, setAscendencies] = useState<
-    Record<CharacterClass, AscendencyOption[]>
-  >({} as Record<CharacterClass, AscendencyOption[]>);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Load character classes
-  const loadCharacterClasses = useCallback(async () => {
-    try {
-      const classes = await invoke<CharacterClass[]>(
-        'get_available_character_classes'
-      );
-      const classOptions: CharacterClassOption[] = classes.map(cls => ({
+  // Convert static constants to option format for form components
+  const characterClasses = useMemo<CharacterClassOption[]>(
+    () =>
+      CHARACTER_CLASSES.map(cls => ({
         value: cls,
-        label: cls, // Use the enum value as label for now
-      }));
-      setCharacterClasses(classOptions);
-    } catch (err) {
-      console.error('Failed to load character classes:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to load character classes'
-      );
-    }
-  }, []);
-
-  // Load leagues
-  const loadLeagues = useCallback(async () => {
-    try {
-      const leagueData = await invoke<League[]>('get_available_leagues');
-      const leagueOptions: LeagueOption[] = leagueData.map(league => ({
-        value: league,
-        label: league, // Use the enum value as label for now
-      }));
-      setLeagues(leagueOptions);
-    } catch (err) {
-      console.error('Failed to load leagues:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load leagues');
-    }
-  }, []);
-
-  // Load ascendencies for a specific class
-  const loadAscendenciesForClass = useCallback(
-    async (characterClass: CharacterClass) => {
-      try {
-        const ascendencyData = await invoke<Ascendency[]>(
-          'get_available_ascendencies_for_class',
-          {
-            class: characterClass,
-          }
-        );
-        const ascendencyOptions: AscendencyOption[] = ascendencyData.map(
-          ascendency => ({
-            value: ascendency,
-            label: ascendency, // Use the enum value as label for now
-          })
-        );
-
-        setAscendencies(prev => ({
-          ...prev,
-          [characterClass]: ascendencyOptions,
-        }));
-      } catch (err) {
-        console.error(
-          `Failed to load ascendencies for class ${characterClass}:`,
-          err
-        );
-        setError(
-          err instanceof Error
-            ? err.message
-            : `Failed to load ascendencies for ${characterClass}`
-        );
-      }
-    },
+        label: cls,
+      })),
     []
   );
 
-  // Load data on mount
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        await Promise.all([loadCharacterClasses(), loadLeagues()]);
-      } catch (err) {
-        console.error('Failed to load character configuration:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadInitialData();
-  }, [loadCharacterClasses, loadLeagues]);
-
-  // Get ascendencies for a class (load if not cached)
-  const getAscendenciesForClass = useCallback(
-    async (characterClass: CharacterClass): Promise<AscendencyOption[]> => {
-      if (ascendencies[characterClass]) {
-        return ascendencies[characterClass];
-      }
-
-      await loadAscendenciesForClass(characterClass);
-      return ascendencies[characterClass] || [];
-    },
-    [ascendencies, loadAscendenciesForClass]
+  const leagues = useMemo<LeagueOption[]>(
+    () =>
+      LEAGUES.map(league => ({
+        value: league,
+        label: league,
+      })),
+    []
   );
 
-  // Refresh all data
-  const refreshData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      await Promise.all([loadCharacterClasses(), loadLeagues()]);
-    } catch (err) {
-      console.error('Failed to refresh character configuration:', err);
-    } finally {
-      setIsLoading(false);
+  // Pre-compute all ascendencies by class
+  const ascendencies = useMemo<
+    Record<CharacterClass, AscendencyOption[]>
+  >(() => {
+    const result: Record<CharacterClass, AscendencyOption[]> = {} as Record<
+      CharacterClass,
+      AscendencyOption[]
+    >;
+
+    for (const characterClass of CHARACTER_CLASSES) {
+      result[characterClass] = getAscendenciesForClass(characterClass).map(
+        ascendency => ({
+          value: ascendency,
+          label: ascendency,
+        })
+      );
     }
-  }, [loadCharacterClasses, loadLeagues]);
+
+    return result;
+  }, []);
+
+  // Helper to get ascendencies for a specific class
+  const getAscendenciesForClassOptions = useMemo(
+    () =>
+      (characterClass: CharacterClass): AscendencyOption[] => {
+        return ascendencies[characterClass] || [];
+      },
+    [ascendencies]
+  );
+
+  // Helper to get default form data for character creation/editing
+  const getDefaultFormData = useMemo(
+    () =>
+      (character?: CharacterData): CharacterFormData => ({
+        name: character?.name || '',
+        class: character?.class || 'Warrior',
+        ascendency: character?.ascendency || 'Titan',
+        league: character?.league || 'Standard',
+        hardcore: character?.hardcore || false,
+        solo_self_found: character?.solo_self_found || false,
+      }),
+    []
+  );
 
   return {
+    // Static data (always available, no loading needed)
     characterClasses,
     leagues,
     ascendencies,
-    isLoading,
-    error,
-    loadCharacterClasses,
-    loadLeagues,
-    loadAscendenciesForClass,
-    getAscendenciesForClass,
-    getDefaultFormData: useMemo(
-      () =>
-        (character?: CharacterData): CharacterFormData => ({
-          name: character?.name || '',
-          class: character?.class || 'Warrior',
-          ascendency: character?.ascendency || 'Titan',
-          league: character?.league || 'Standard',
-          hardcore: character?.hardcore || false,
-          solo_self_found: character?.solo_self_found || false,
-        }),
-      []
-    ),
-    refreshData,
+
+    // Helpers
+    getAscendenciesForClass: getAscendenciesForClassOptions,
+    getDefaultFormData,
   };
 }

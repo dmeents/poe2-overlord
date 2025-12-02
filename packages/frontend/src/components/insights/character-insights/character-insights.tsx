@@ -6,7 +6,6 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import { ClassDistributionChart } from '../../charts/class-distribution-chart/class-distribution-chart';
 import { DataCard } from '../../ui/data-card/data-card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { SectionHeader } from '../../ui/section-header/section-header';
@@ -23,7 +22,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         totalDeaths: 0,
         hardcoreCount: 0,
         ssfCount: 0,
-        classDistribution: {},
         leagueDistribution: {},
         mostPlayedCharacter: null,
       };
@@ -48,14 +46,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
     const hardcoreCount = characters.filter(c => c.hardcore).length;
     const ssfCount = characters.filter(c => c.solo_self_found).length;
 
-    const classDistribution = characters.reduce(
-      (acc, c) => {
-        acc[c.class] = (acc[c.class] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
     const leagueDistribution = characters.reduce(
       (acc, c) => {
         acc[c.league] = (acc[c.league] || 0) + 1;
@@ -76,7 +66,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
       totalDeaths,
       hardcoreCount,
       ssfCount,
-      classDistribution,
       leagueDistribution,
       mostPlayedCharacter,
     };
@@ -151,11 +140,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label='Hardcore Characters' value={metrics.hardcoreCount} />
         <DataItem label='SSF Characters' value={metrics.ssfCount} />
       </div>
-
-      {/* Class Distribution Chart */}
-      {Object.keys(metrics.classDistribution).length > 0 && (
-        <ClassDistributionChart classDistribution={metrics.classDistribution} />
-      )}
 
       {/* League Distribution */}
       {Object.keys(metrics.leagueDistribution).length > 0 && (

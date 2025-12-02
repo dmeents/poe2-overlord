@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button/button';
 import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
 import { CharacterInsights } from '../components/insights/character-insights/character-insights';
 import { CharacterList } from '../components/character/character-list/character-list';
+import { ClassDistributionInsights } from '../components/insights/class-distribution-insights/class-distribution-insights';
 import { DeleteCharacterModal } from '../components/character/delete-character-modal/delete-character-modal';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
@@ -158,9 +159,6 @@ function CharactersPage() {
 
   const rightColumn = (
     <div className='space-y-4'>
-      {/* Insights Card */}
-      <CharacterInsights characters={characters} />
-
       {/* Create Character Button */}
       <Button
         onClick={() => setShowCreateModal(true)}
@@ -170,6 +168,12 @@ function CharactersPage() {
       >
         Create Character
       </Button>
+
+      {/* Insights Card */}
+      <CharacterInsights characters={characters} />
+
+      {/* Class Distribution Card */}
+      <ClassDistributionInsights characters={characters} />
     </div>
   );
 

@@ -1,6 +1,7 @@
 import type { CurrencyExchangeRate } from '@/types/economy';
 import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
+import { useEconomy } from '@/contexts/EconomyContext';
 
 interface EconomyRowProps {
   currency: CurrencyExchangeRate;
@@ -9,6 +10,7 @@ interface EconomyRowProps {
 
 export function EconomyRow({ currency, onClick }: EconomyRowProps) {
   const { display_value } = currency;
+  const { currencyData } = useEconomy();
 
   const handleClick = () => {
     if (onClick) {
@@ -16,41 +18,54 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
     }
   };
 
-  const formattedValue = display_value.value.toFixed(
-    display_value.value >= 10 ? 1 : 2
-  );
+  const formattedValue = display_value.value.toLocaleString('en-US', {
+    minimumFractionDigits: display_value.value >= 10 ? 1 : 2,
+    maximumFractionDigits: display_value.value >= 10 ? 1 : 2,
+  });
 
-  const tooltipContent = (
+  // Calculate items sold per hour (volume / primary_value)
+  const calculateItemsSoldPerHour = (
+    volume: number,
+    primaryValue: number
+  ): string => {
+    const itemsSold = volume / primaryValue;
+    return itemsSold.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const tooltipContent = currencyData ? (
     <div className='space-y-1 text-xs'>
       <div className='font-semibold border-b border-zinc-600 pb-1 mb-2'>
         Raw Values
       </div>
-      {currency.raw_divine_value !== null && (
-        <div className='flex justify-between gap-4'>
-          <span className='text-zinc-400'>Divine:</span>
-          <span className='text-white font-mono'>
-            {currency.raw_divine_value.toFixed(6)}
-          </span>
-        </div>
-      )}
-      {currency.raw_chaos_value !== null && (
-        <div className='flex justify-between gap-4'>
-          <span className='text-zinc-400'>Chaos:</span>
-          <span className='text-white font-mono'>
-            {currency.raw_chaos_value.toFixed(4)}
-          </span>
-        </div>
-      )}
-      {currency.raw_exalted_value !== null && (
-        <div className='flex justify-between gap-4'>
-          <span className='text-zinc-400'>Exalted:</span>
-          <span className='text-white font-mono'>
-            {currency.raw_exalted_value.toFixed(2)}
-          </span>
-        </div>
-      )}
+      <div className='flex justify-between gap-4'>
+        <span className='text-zinc-400'>
+          {currencyData.primary_currency.name}:
+        </span>
+        <span className='text-white font-mono'>
+          {currency.primary_value.toFixed(6)}
+        </span>
+      </div>
+      <div className='flex justify-between gap-4'>
+        <span className='text-zinc-400'>
+          {currencyData.secondary_currency.name}:
+        </span>
+        <span className='text-white font-mono'>
+          {currency.secondary_value.toFixed(4)}
+        </span>
+      </div>
+      <div className='flex justify-between gap-4'>
+        <span className='text-zinc-400'>
+          {currencyData.tertiary_currency.name}:
+        </span>
+        <span className='text-white font-mono'>
+          {currency.tertiary_value.toFixed(2)}
+        </span>
+      </div>
     </div>
-  );
+  ) : null;
 
   return (
     <div
@@ -71,8 +86,14 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
         <div className='flex-1 min-w-0'>
           <div className='text-white font-medium truncate'>{currency.name}</div>
           <div className='flex items-center gap-3 text-xs text-zinc-400 mt-1'>
-            {currency.volume !== null && (
-              <span>Vol: {currency.volume.toFixed(2)}</span>
+            {currency.volume !== null && currencyData && (
+              <span title='Number of items sold per hour'>
+                {calculateItemsSoldPerHour(
+                  currency.volume,
+                  currency.primary_value
+                )}{' '}
+                / hr
+              </span>
             )}
             {currency.change_percent !== null && (
               <span

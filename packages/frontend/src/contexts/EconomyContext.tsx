@@ -1,8 +1,17 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState } from 'react';
-import { useCurrencyExchange } from '@/queries/economy';
+import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useCurrencyExchange,
+  useAggregatedTopCurrencies,
+  economyQueryKeys,
+} from '@/queries/economy';
 import { useCharacter } from './CharacterContext';
-import type { CurrencyExchangeData, EconomyType } from '@/types/economy';
+import type {
+  CurrencyExchangeData,
+  EconomyType,
+  TopCurrencyItem,
+} from '@/types/economy';
 
 interface EconomyContextValue {
   currencyData: CurrencyExchangeData | undefined;
@@ -12,6 +21,8 @@ interface EconomyContextValue {
   selectedEconomyType: EconomyType;
   setSelectedEconomyType: (type: EconomyType) => void;
   league: string;
+  aggregatedTopCurrencies: TopCurrencyItem[];
+  isLoadingAggregated: boolean;
 }
 
 const EconomyContext = createContext<EconomyContextValue | undefined>(
@@ -21,6 +32,7 @@ const EconomyContext = createContext<EconomyContextValue | undefined>(
 export function EconomyProvider({ children }: React.PropsWithChildren) {
   // Get active character to determine league
   const { activeCharacter } = useCharacter();
+  const queryClient = useQueryClient();
 
   // State for selected economy type (defaults to Currency)
   const [selectedEconomyType, setSelectedEconomyType] =
@@ -37,6 +49,19 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
     error,
   } = useCurrencyExchange(league, selectedEconomyType);
 
+  // Fetch aggregated top currencies across all types
+  const { data: aggregatedTopCurrencies = [], isLoading: isLoadingAggregated } =
+    useAggregatedTopCurrencies(league);
+
+  // Invalidate aggregated query when currency data changes (cache was updated)
+  useEffect(() => {
+    if (currencyData) {
+      queryClient.invalidateQueries({
+        queryKey: economyQueryKeys.aggregatedTop(league),
+      });
+    }
+  }, [currencyData, league, queryClient]);
+
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
     () => ({
@@ -47,8 +72,19 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
       selectedEconomyType,
       setSelectedEconomyType,
       league,
+      aggregatedTopCurrencies,
+      isLoadingAggregated,
     }),
-    [currencyData, isLoading, isError, error, selectedEconomyType, league]
+    [
+      currencyData,
+      isLoading,
+      isError,
+      error,
+      selectedEconomyType,
+      league,
+      aggregatedTopCurrencies,
+      isLoadingAggregated,
+    ]
   );
 
   return (

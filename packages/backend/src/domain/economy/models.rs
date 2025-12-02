@@ -161,12 +161,36 @@ pub struct CurrencyExchangeRate {
     pub name: String,
     pub image_url: String,
     pub display_value: DisplayValue,
-    pub raw_divine_value: Option<f64>,
-    pub raw_chaos_value: Option<f64>,
-    pub raw_exalted_value: Option<f64>,
+    pub primary_value: f64,
+    pub secondary_value: f64,
+    pub tertiary_value: f64,
     pub volume: Option<f64>,
     pub change_percent: Option<f64>,
     pub price_history: Vec<Option<f64>>,
+}
+
+/// Lightweight item for top currencies aggregation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TopCurrencyItem {
+    pub id: String,
+    pub name: String,
+    pub image_url: String,
+    pub economy_type: EconomyType,
+    pub primary_value: f64,
+    pub primary_currency_name: String,
+    pub primary_currency_image_url: String,
+    pub volume: Option<f64>,
+    pub change_percent: Option<f64>,
+    pub cached_at: String,
+}
+
+/// Single-file cache structure for all economy types of a league
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LeagueTopCurrenciesCache {
+    pub league: String,
+    pub types: HashMap<String, Vec<TopCurrencyItem>>,
+    pub last_updated: String,
+    pub primary_currency_name: String,
 }
 
 pub(crate) struct TierConfig {
@@ -331,9 +355,8 @@ impl CurrencyExchangeApiResponse {
                 let item = self.items.iter().find(|item| item.id == line.id)?;
                 let primary_value = line.primary_value?;
 
-                let raw_divine_value = Some(primary_value);
-                let raw_chaos_value = Some(primary_value * secondary_rate);
-                let raw_exalted_value = Some(primary_value * tertiary_rate);
+                let secondary_value = primary_value * secondary_rate;
+                let tertiary_value = primary_value * tertiary_rate;
 
                 let tier = CurrencyExchangeRate::select_optimal_tier(
                     primary_value,
@@ -361,9 +384,9 @@ impl CurrencyExchangeApiResponse {
                     name: item.name.clone(),
                     image_url: format!("https://web.poecdn.com{}", item.image),
                     display_value,
-                    raw_divine_value,
-                    raw_chaos_value,
-                    raw_exalted_value,
+                    primary_value,
+                    secondary_value,
+                    tertiary_value,
                     volume: line.volume_primary_value,
                     change_percent: line.sparkline.total_change,
                     price_history: line.sparkline.data.clone(),

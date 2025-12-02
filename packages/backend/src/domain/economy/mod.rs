@@ -8,5 +8,7 @@ mod models_test;
 mod service_test;
 
 pub use commands::*;
-pub use models::{CurrencyExchangeData, CurrencyExchangeRate, CurrencyInfo, EconomyType};
+pub use models::{
+    CurrencyExchangeData, CurrencyExchangeRate, CurrencyInfo, EconomyType, TopCurrencyItem,
+};
 pub use service::EconomyService;

@@ -10,9 +10,25 @@ import {
   ECONOMY_TYPES,
 } from '@/utils/economy-icons';
 import { EconomyList } from '@/components/economy/economy-list/economy-list';
-import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowPathIcon,
+  ArrowTrendingUpIcon,
+} from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { formatTimeAgo } from '@/utils/format-time-ago';
+import type { TopCurrencyItem } from '@/types/economy';
+
+// Calculate items sold per hour (volume / primary_value)
+const calculateItemsSoldPerHour = (
+  volume: number,
+  primaryValue: number
+): string => {
+  const itemsSold = volume / primaryValue;
+  return itemsSold.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 export const Route = createFileRoute('/economy')({
   component: EconomyPage,
@@ -27,58 +43,20 @@ function EconomyPage() {
     selectedEconomyType,
     setSelectedEconomyType,
     league,
+    aggregatedTopCurrencies,
+    isLoadingAggregated,
   } = useEconomy();
 
-  if (isLoading) {
-    return (
-      <div className='min-h-screen bg-zinc-900 text-white'>
-        <div className='px-6 py-8'>
-          <div className='flex items-center justify-center py-12'>
-            <LoadingSpinner />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    console.error('Economy data error:', error);
-    return (
-      <div className='min-h-screen bg-zinc-900 text-white'>
-        <div className='px-6 py-8'>
-          <div className='flex items-center justify-center py-12'>
-            <div className='text-red-400 max-w-2xl'>
-              <p className='font-bold mb-2'>Error loading economy data:</p>
-              <p className='text-sm'>
-                {error?.message || String(error) || 'Unknown error'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currencyData) {
-    return (
-      <div className='min-h-screen bg-zinc-900 text-white'>
-        <div className='px-6 py-8'>
-          <div className='flex items-center justify-center py-12'>
-            <div className='text-zinc-400'>No economy data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const sortedCurrencies = [...currencyData.currencies].sort(
-    (a, b) => (b.raw_divine_value || 0) - (a.raw_divine_value || 0)
-  );
+  const sortedCurrencies = currencyData
+    ? [...currencyData.currencies].sort(
+        (a, b) => b.primary_value - a.primary_value
+      )
+    : [];
 
   const leftColumn = (
     <>
       <CharacterStatusCard />
-      <Card title='Economy Type' subtitle={league} className='mt-6'>
+      <Card title='Category' subtitle={league} className='mt-6'>
         <div className='flex flex-wrap gap-2'>
           {ECONOMY_TYPES.map(type => (
             <Button
@@ -101,113 +79,163 @@ function EconomyPage() {
         </div>
       </Card>
       <Card
-        title={`${ECONOMY_TYPE_LABELS[selectedEconomyType]} (${currencyData.currencies.length})`}
-        subtitle={`Updated ${formatTimeAgo(currencyData.fetched_at)}`}
+        title={`${ECONOMY_TYPE_LABELS[selectedEconomyType]}${currencyData ? ` (${currencyData.currencies.length})` : ''}`}
+        subtitle={
+          currencyData
+            ? `Updated ${formatTimeAgo(currencyData.fetched_at)}`
+            : undefined
+        }
         className='mt-6'
       >
-        <EconomyList currencies={sortedCurrencies} />
+        {isLoading ? (
+          <div className='flex items-center justify-center py-12'>
+            <LoadingSpinner />
+          </div>
+        ) : isError ? (
+          <div className='text-red-400 text-center py-8'>
+            <p className='font-bold mb-2'>Error loading economy data:</p>
+            <p className='text-sm'>
+              {error?.message || String(error) || 'Unknown error'}
+            </p>
+          </div>
+        ) : !currencyData ? (
+          <div className='text-zinc-400 text-center py-8'>
+            No economy data available
+          </div>
+        ) : (
+          <EconomyList currencies={sortedCurrencies} />
+        )}
       </Card>
     </>
   );
 
   const rightColumn = (
     <>
-      <Card
-        title='Currency Exchange Rates'
-        icon={<CurrencyDollarIcon />}
-        className='mb-6'
-      >
-        <div className='flex items-center justify-center gap-6 py-4'>
-          <div className='flex flex-col items-center gap-2'>
-            <img
-              src={currencyData.primary_currency.image_url}
-              alt={currencyData.primary_currency.name}
-              className='w-8 h-8'
-            />
-            <span className='text-white font-semibold text-lg'>1</span>
-            <span className='text-xs text-zinc-500 -mt-1'>
-              {currencyData.primary_currency.name}
-            </span>
+      <Card title='Exchange Rates' icon={<ArrowPathIcon />} className='mb-6'>
+        {isLoading ? (
+          <div className='flex items-center justify-center py-8'>
+            <LoadingSpinner />
           </div>
+        ) : currencyData ? (
+          <div className='flex items-center justify-center gap-6 py-4'>
+            <div className='flex flex-col items-center gap-2'>
+              <img
+                src={currencyData.primary_currency.image_url}
+                alt={currencyData.primary_currency.name}
+                className='w-8 h-8'
+              />
+              <span className='text-white font-semibold text-lg'>1</span>
+              <span className='text-xs text-zinc-500 -mt-1'>
+                {currencyData.primary_currency.name}
+              </span>
+            </div>
 
-          <span className='text-zinc-500 text-xl'>↔</span>
+            <span className='text-zinc-500 text-xl'>↔</span>
 
-          <div className='flex flex-col items-center gap-2'>
-            <img
-              src={currencyData.secondary_currency.image_url}
-              alt={currencyData.secondary_currency.name}
-              className='w-8 h-8'
-            />
-            <span className='text-white font-semibold text-lg'>
-              {currencyData.secondary_rate.toFixed(2)}
-            </span>
-            <span className='text-xs text-zinc-500 -mt-1'>
-              {currencyData.secondary_currency.name}
-            </span>
+            <div className='flex flex-col items-center gap-2'>
+              <img
+                src={currencyData.secondary_currency.image_url}
+                alt={currencyData.secondary_currency.name}
+                className='w-8 h-8'
+              />
+              <span className='text-white font-semibold text-lg'>
+                {currencyData.secondary_rate.toFixed(2)}
+              </span>
+              <span className='text-xs text-zinc-500 -mt-1'>
+                {currencyData.secondary_currency.name}
+              </span>
+            </div>
+
+            <span className='text-zinc-500 text-xl'>↔</span>
+
+            <div className='flex flex-col items-center gap-2'>
+              <img
+                src={currencyData.tertiary_currency.image_url}
+                alt={currencyData.tertiary_currency.name}
+                className='w-8 h-8'
+              />
+              <span className='text-white font-semibold text-lg'>
+                {currencyData.tertiary_rate.toFixed(0)}
+              </span>
+              <span className='text-xs text-zinc-500 -mt-1'>
+                {currencyData.tertiary_currency.name}
+              </span>
+            </div>
           </div>
-
-          <span className='text-zinc-500 text-xl'>↔</span>
-
-          <div className='flex flex-col items-center gap-2'>
-            <img
-              src={currencyData.tertiary_currency.image_url}
-              alt={currencyData.tertiary_currency.name}
-              className='w-8 h-8'
-            />
-            <span className='text-white font-semibold text-lg'>
-              {currencyData.tertiary_rate.toFixed(0)}
-            </span>
-            <span className='text-xs text-zinc-500 -mt-1'>
-              {currencyData.tertiary_currency.name}
-            </span>
+        ) : (
+          <div className='text-zinc-400 text-sm text-center py-8'>
+            No exchange rate data available
           </div>
-        </div>
+        )}
       </Card>
 
-      <Card
-        title='Top Currencies'
-        icon={<CurrencyDollarIcon />}
-        className='mb-6'
-      >
-        <div className='space-y-2'>
-          {currencyData.currencies
-            .slice()
-            .sort(
-              (a, b) => (b.raw_divine_value || 0) - (a.raw_divine_value || 0)
-            )
-            .slice(0, 10)
-            .map(currency => (
+      <Card title='Top Items' icon={<ArrowTrendingUpIcon />} className='mb-6'>
+        {isLoadingAggregated ? (
+          <div className='flex items-center justify-center py-8'>
+            <LoadingSpinner />
+          </div>
+        ) : aggregatedTopCurrencies.length > 0 ? (
+          <div className='space-y-2'>
+            {aggregatedTopCurrencies.map((currency: TopCurrencyItem) => (
               <div
-                key={currency.id}
-                className='flex items-center justify-between text-sm p-2 rounded hover:bg-zinc-700/30'
+                key={`${currency.economy_type}-${currency.id}`}
+                className='flex items-start justify-between text-sm p-2 hover:bg-zinc-700/30'
               >
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 flex-1 min-w-0'>
                   <img
                     src={currency.image_url}
                     alt={currency.name}
-                    className='w-6 h-6'
+                    className='w-6 h-6 flex-shrink-0'
                   />
-                  <span className='text-white'>{currency.name}</span>
+                  <div className='flex-1 min-w-0'>
+                    <div className='text-white truncate'>{currency.name}</div>
+                    <div className='flex items-center gap-3 text-xs text-zinc-400 mt-0.5'>
+                      {currency.volume !== null && (
+                        <span title='Number of items sold per hour'>
+                          {calculateItemsSoldPerHour(
+                            currency.volume,
+                            currency.primary_value
+                          )}{' '}
+                          / hr
+                        </span>
+                      )}
+                      {currency.change_percent !== null && (
+                        <span
+                          className={`font-semibold ${
+                            currency.change_percent >= 0
+                              ? 'text-emerald-400'
+                              : 'text-red-400'
+                          }`}
+                        >
+                          {currency.change_percent >= 0 ? '+' : ''}
+                          {currency.change_percent.toFixed(0)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className='text-right'>
-                  <div className='text-zinc-300 flex items-center gap-1'>
-                    <span>{currency.display_value.value.toFixed(2)}</span>
+                  <div className='text-zinc-300 font-semibold flex items-center justify-end gap-1'>
+                    {currency.primary_value.toLocaleString('en-US', {
+                      maximumFractionDigits: 0,
+                    })}
                     <img
-                      src={currency.display_value.currency_image_url}
-                      alt={currency.display_value.currency_name}
+                      src={currency.primary_currency_image_url}
+                      alt={currency.primary_currency_name}
                       className='w-4 h-4'
-                      title={currency.display_value.currency_name}
+                      title={currency.primary_currency_name}
                     />
                   </div>
-                  {currency.raw_divine_value && (
-                    <div className='text-xs text-zinc-500'>
-                      {currency.raw_divine_value.toFixed(6)} divine
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
-        </div>
+          </div>
+        ) : (
+          <div className='text-zinc-400 text-sm text-center py-8'>
+            No aggregated data yet. Browse different economy types to populate
+            this list.
+          </div>
+        )}
       </Card>
 
       <div className='text-xs text-zinc-500 text-center'>

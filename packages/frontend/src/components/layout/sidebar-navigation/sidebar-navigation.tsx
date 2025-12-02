@@ -1,8 +1,8 @@
 import {
+  BanknotesIcon,
   BookOpenIcon,
   ClockIcon,
   Cog6ToothIcon,
-  CurrencyDollarIcon,
   HomeIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -69,7 +69,7 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
                 : sidebarNavigationStyles.navButtonInactive
             }`}
           >
-            <CurrencyDollarIcon className={sidebarNavigationStyles.icon} />
+            <BanknotesIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
       </nav>

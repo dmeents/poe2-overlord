@@ -65,12 +65,12 @@ export interface CurrencyExchangeRate {
   /** Smart display value (automatically selects best tier and direction) */
   display_value: DisplayValue;
 
-  /** Raw value in Divine (primary currency) - for advanced users */
-  raw_divine_value: number | null;
-  /** Raw value in Chaos (secondary currency) - for advanced users */
-  raw_chaos_value: number | null;
-  /** Raw value in Exalted (tertiary currency) - for advanced users */
-  raw_exalted_value: number | null;
+  /** Value in primary currency (dynamic based on economy type) */
+  primary_value: number;
+  /** Value in secondary currency (dynamic based on economy type) */
+  secondary_value: number;
+  /** Value in tertiary currency (dynamic based on economy type) */
+  tertiary_value: number;
 
   /** Trading volume in primary currency */
   volume: number | null;
@@ -78,6 +78,22 @@ export interface CurrencyExchangeRate {
   change_percent: number | null;
   /** Historical price data points (can contain null for missing data) */
   price_history: (number | null)[];
+}
+
+/**
+ * Lightweight item for top currencies aggregation across all economy types
+ */
+export interface TopCurrencyItem {
+  id: string;
+  name: string;
+  image_url: string;
+  economy_type: EconomyType;
+  primary_value: number;
+  primary_currency_name: string;
+  primary_currency_image_url: string;
+  volume: number | null;
+  change_percent: number | null;
+  cached_at: string; // RFC3339 timestamp
 }
 
 /**

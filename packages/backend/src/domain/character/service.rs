@@ -272,8 +272,8 @@ impl CharacterService for CharacterServiceImpl {
         // Enrich character data before emitting event
         let enriched_data = self.enrich_character_data(character_data).await;
 
-        // Emit character tracking data updated event
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+        // Emit character updated event
+        let event = crate::infrastructure::events::AppEvent::character_updated(
             character_id.to_string(),
             enriched_data,
         );
@@ -333,7 +333,7 @@ impl CharacterService for CharacterServiceImpl {
         let enriched_data = self.enrich_character_data(character_data).await;
 
         // Publish event
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+        let event = crate::infrastructure::events::AppEvent::character_updated(
             character_id.to_string(),
             enriched_data,
         );
@@ -357,7 +357,7 @@ impl CharacterService for CharacterServiceImpl {
         let enriched_data = self.enrich_character_data(character_data).await;
 
         // Publish event
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+        let event = crate::infrastructure::events::AppEvent::character_updated(
             character_id.to_string(),
             enriched_data,
         );
@@ -382,7 +382,7 @@ impl CharacterService for CharacterServiceImpl {
             let enriched_data = self.enrich_character_data(character_data).await;
 
             // Publish event
-            let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+            let event = crate::infrastructure::events::AppEvent::character_updated(
                 enriched_data.id.clone(),
                 enriched_data,
             );
@@ -429,7 +429,7 @@ impl CharacterService for CharacterServiceImpl {
         let enriched_data = self.enrich_character_data(character_data).await;
 
         // Publish event
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+        let event = crate::infrastructure::events::AppEvent::character_updated(
             character_id.to_string(),
             enriched_data,
         );

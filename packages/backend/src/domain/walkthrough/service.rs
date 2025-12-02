@@ -71,9 +71,8 @@ impl WalkthroughServiceImpl {
         // Get enriched character data for event
         let enriched_data = self.character_service.get_character(character_id).await?;
 
-        // Emit character tracking data updated event (includes walkthrough progress)
-        let event =
-            AppEvent::character_tracking_data_updated(character_id.to_string(), enriched_data);
+        // Emit character updated event (includes walkthrough progress)
+        let event = AppEvent::character_updated(character_id.to_string(), enriched_data);
         let _ = self.event_bus.publish(event).await;
 
         debug!("Updated character {} walkthrough progress", character_id);

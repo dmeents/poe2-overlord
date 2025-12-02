@@ -3,9 +3,10 @@ import type { CharacterData } from '@/types/character';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useActiveCharacter, useCharacters } from '@/hooks/useCharacterQueries';
-import type {
-  ExtractPayload,
-  CharacterTrackingDataUpdatedEvent,
+import {
+  EVENT_KEYS,
+  type ExtractPayload,
+  type CharacterUpdatedEvent,
 } from '@/utils/events/registry';
 
 interface CharacterContextValue {
@@ -55,10 +56,10 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
   const { isListening } = useAppEventListener(
     [
       {
-        eventType: 'CharacterTrackingDataUpdated',
+        eventType: EVENT_KEYS.CharacterUpdated,
         handler: (payload: unknown) => {
           const { character_id, data: characterData } =
-            payload as ExtractPayload<CharacterTrackingDataUpdatedEvent>;
+            payload as ExtractPayload<CharacterUpdatedEvent>;
 
           setCharactersWithUpdates(prev =>
             prev.map(char => (char.id === character_id ? characterData : char))

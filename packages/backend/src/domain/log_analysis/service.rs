@@ -488,13 +488,13 @@ impl LogAnalysisServiceImpl {
             }
         };
 
-        let event = crate::infrastructure::events::AppEvent::character_tracking_data_updated(
+        let event = crate::infrastructure::events::AppEvent::character_updated(
             character_id.to_string(),
             enriched_data,
         );
         if let Err(e) = event_bus.publish(event).await {
             warn!(
-                "SCENE CHANGE: Failed to publish character tracking data updated event: {}",
+                "SCENE CHANGE: Failed to publish character updated event: {}",
                 e
             );
         }

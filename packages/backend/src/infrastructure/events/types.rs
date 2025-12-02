@@ -1,4 +1,4 @@
-use crate::domain::character::models::{CharacterDataResponse, LocationState, LocationType};
+use crate::domain::character::models::CharacterDataResponse;
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::server_monitoring::models::ServerStatus;
@@ -20,30 +20,7 @@ pub enum AppEvent {
 
     ConfigurationChanged(ConfigurationChangedEvent),
 
-    LocationStateChanged {
-        old_state: Option<LocationState>,
-        new_state: LocationState,
-        timestamp: String,
-    },
-    SceneChangeDetected {
-        scene_type: LocationType,
-        scene_name: String,
-        timestamp: String,
-    },
-    ActChangeDetected {
-        act_name: String,
-        timestamp: String,
-    },
-    ZoneChangeDetected {
-        zone_name: String,
-        timestamp: String,
-    },
-    HideoutChangeDetected {
-        hideout_name: String,
-        timestamp: String,
-    },
-
-    CharacterTrackingDataUpdated {
+    CharacterUpdated {
         character_id: String,
         data: CharacterDataResponse,
         timestamp: String,
@@ -94,16 +71,11 @@ impl AppEvent {
                 EventType::ServerMonitoring
             }
             AppEvent::ConfigurationChanged(_) => EventType::Configuration,
-            AppEvent::LocationStateChanged { .. }
-            | AppEvent::SceneChangeDetected { .. }
-            | AppEvent::ActChangeDetected { .. }
-            | AppEvent::ZoneChangeDetected { .. }
-            | AppEvent::HideoutChangeDetected { .. }
-            | AppEvent::CharacterTrackingDataUpdated { .. }
+            AppEvent::CharacterUpdated { .. }
             | AppEvent::WalkthroughProgressUpdated { .. }
             | AppEvent::WalkthroughStepCompleted { .. }
             | AppEvent::WalkthroughStepAdvanced { .. }
-            | AppEvent::WalkthroughCampaignCompleted { .. } => EventType::LocationTracking,
+            | AppEvent::WalkthroughCampaignCompleted { .. } => EventType::CharacterTracking,
             AppEvent::GameProcessStatusChanged { .. } => EventType::GameMonitoring,
             AppEvent::SystemError { .. } | AppEvent::SystemShutdown { .. } => EventType::System,
         }
@@ -114,12 +86,7 @@ impl AppEvent {
             AppEvent::ServerStatusChanged { timestamp, .. } => timestamp.clone(),
             AppEvent::ServerPingCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::ConfigurationChanged(event) => event.timestamp.to_rfc3339(),
-            AppEvent::LocationStateChanged { timestamp, .. } => timestamp.clone(),
-            AppEvent::SceneChangeDetected { timestamp, .. } => timestamp.clone(),
-            AppEvent::ActChangeDetected { timestamp, .. } => timestamp.clone(),
-            AppEvent::ZoneChangeDetected { timestamp, .. } => timestamp.clone(),
-            AppEvent::HideoutChangeDetected { timestamp, .. } => timestamp.clone(),
-            AppEvent::CharacterTrackingDataUpdated { timestamp, .. } => timestamp.clone(),
+            AppEvent::CharacterUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughProgressUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughStepCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughStepAdvanced { timestamp, .. } => timestamp.clone(),
@@ -149,51 +116,8 @@ impl AppEvent {
         }
     }
 
-    pub fn location_state_changed(
-        old_state: Option<LocationState>,
-        new_state: LocationState,
-    ) -> Self {
-        Self::LocationStateChanged {
-            old_state,
-            new_state,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn scene_change_detected(scene_type: LocationType, scene_name: String) -> Self {
-        Self::SceneChangeDetected {
-            scene_type,
-            scene_name,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn act_change_detected(act_name: String) -> Self {
-        Self::ActChangeDetected {
-            act_name,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn zone_change_detected(zone_name: String) -> Self {
-        Self::ZoneChangeDetected {
-            zone_name,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn hideout_change_detected(hideout_name: String) -> Self {
-        Self::HideoutChangeDetected {
-            hideout_name,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn character_tracking_data_updated(
-        character_id: String,
-        data: CharacterDataResponse,
-    ) -> Self {
-        Self::CharacterTrackingDataUpdated {
+    pub fn character_updated(character_id: String, data: CharacterDataResponse) -> Self {
+        Self::CharacterUpdated {
             character_id,
             data,
             timestamp: chrono::Utc::now().to_rfc3339(),
@@ -271,7 +195,7 @@ impl AppEvent {
 pub enum EventType {
     ServerMonitoring,
     Configuration,
-    LocationTracking,
+    CharacterTracking,
     GameMonitoring,
     System,
 }
@@ -281,7 +205,7 @@ impl EventType {
         vec![
             EventType::ServerMonitoring,
             EventType::Configuration,
-            EventType::LocationTracking,
+            EventType::CharacterTracking,
             EventType::GameMonitoring,
             EventType::System,
         ]
@@ -291,7 +215,7 @@ impl EventType {
         match self {
             EventType::ServerMonitoring => 100,
             EventType::Configuration => 16,
-            EventType::LocationTracking => 500,
+            EventType::CharacterTracking => 500,
             EventType::GameMonitoring => 100,
             EventType::System => 50,
         }

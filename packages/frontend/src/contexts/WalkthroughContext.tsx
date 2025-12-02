@@ -15,11 +15,12 @@ import {
   useMemo,
 } from 'react';
 import { WalkthroughService } from '@/utils/walkthrough';
-import type { ExtractPayload } from '@/utils/events/registry';
-import type {
-  WalkthroughStepCompletedEvent,
-  WalkthroughStepAdvancedEvent,
-  WalkthroughCampaignCompletedEvent,
+import {
+  EVENT_KEYS,
+  type ExtractPayload,
+  type WalkthroughStepCompletedEvent,
+  type WalkthroughStepAdvancedEvent,
+  type WalkthroughCampaignCompletedEvent,
 } from '@/utils/events/registry';
 import { useWalkthroughGuide } from '@/hooks/useWalkthroughQueries';
 
@@ -110,7 +111,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
   const { isListening } = useAppEventListener(
     [
       {
-        eventType: 'WalkthroughStepCompleted',
+        eventType: EVENT_KEYS.WalkthroughStepCompleted,
         handler: (payload: unknown) => {
           const { character_id } =
             payload as ExtractPayload<WalkthroughStepCompletedEvent>;
@@ -123,7 +124,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
         },
       },
       {
-        eventType: 'WalkthroughStepAdvanced',
+        eventType: EVENT_KEYS.WalkthroughStepAdvanced,
         handler: (payload: unknown) => {
           const { character_id, from_step_id } =
             payload as ExtractPayload<WalkthroughStepAdvancedEvent>;
@@ -141,7 +142,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
         },
       },
       {
-        eventType: 'WalkthroughCampaignCompleted',
+        eventType: EVENT_KEYS.WalkthroughCampaignCompleted,
         handler: (payload: unknown) => {
           const { character_id } =
             payload as ExtractPayload<WalkthroughCampaignCompletedEvent>;

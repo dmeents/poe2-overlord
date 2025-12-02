@@ -10,12 +10,7 @@ import type { WalkthroughStepResult } from '@/types/walkthrough';
 export const APP_EVENTS = {
   GameProcessStatusChanged: 'game-process-status-changed',
   ServerStatusChanged: 'server-status-changed',
-  CharacterTrackingDataUpdated: 'character-tracking-data-updated',
-  LocationStateChanged: 'location-state-changed',
-  SceneChangeDetected: 'scene-change-detected',
-  ActChangeDetected: 'act-change-detected',
-  ZoneChangeDetected: 'zone-change-detected',
-  HideoutChangeDetected: 'hideout-change-detected',
+  CharacterUpdated: 'character-updated',
   ConfigurationChanged: 'configuration-changed',
   ServerPingCompleted: 'server-ping-completed',
 
@@ -26,14 +21,32 @@ export const APP_EVENTS = {
   SystemShutdown: 'system-shutdown',
 } as const;
 
+/**
+ * Type-safe event keys for use with useAppEventListener.
+ * Maps each event to its PascalCase key name.
+ * The `satisfies` clause ensures this stays in sync with APP_EVENTS.
+ */
+export const EVENT_KEYS = {
+  GameProcessStatusChanged: 'GameProcessStatusChanged',
+  ServerStatusChanged: 'ServerStatusChanged',
+  CharacterUpdated: 'CharacterUpdated',
+  ConfigurationChanged: 'ConfigurationChanged',
+  ServerPingCompleted: 'ServerPingCompleted',
+  WalkthroughStepCompleted: 'WalkthroughStepCompleted',
+  WalkthroughStepAdvanced: 'WalkthroughStepAdvanced',
+  WalkthroughCampaignCompleted: 'WalkthroughCampaignCompleted',
+  SystemError: 'SystemError',
+  SystemShutdown: 'SystemShutdown',
+} as const satisfies { [K in keyof typeof APP_EVENTS]: K };
+
 /** Extracts the payload type from an AppEvent tagged union wrapper. */
 export type ExtractPayload<T> = T extends { [K in keyof T]: infer P }
   ? P
   : never;
 
-/** Event type for character tracking data updates */
-export type CharacterTrackingDataUpdatedEvent = {
-  CharacterTrackingDataUpdated: {
+/** Event type for character updates */
+export type CharacterUpdatedEvent = {
+  CharacterUpdated: {
     character_id: string;
     data: CharacterData;
     timestamp: string;
@@ -71,7 +84,7 @@ export type WalkthroughCampaignCompletedEvent = {
 export type AppEventRegistry = {
   GameProcessStatusChanged: GameProcessStatusChangedEvent;
   ServerStatusChanged: ServerStatusChangedEvent;
-  CharacterTrackingDataUpdated: CharacterTrackingDataUpdatedEvent;
+  CharacterUpdated: CharacterUpdatedEvent;
 
   WalkthroughStepCompleted: WalkthroughStepCompletedEvent;
   WalkthroughStepAdvanced: WalkthroughStepAdvancedEvent;

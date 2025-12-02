@@ -5,7 +5,7 @@ import type {
 } from '@/types/process';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { createContext, useContext, useState } from 'react';
-import type { ExtractPayload } from '@/utils/events/registry';
+import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 
 interface GameProcessContextValue {
   processInfo: GameProcessStatus | null;
@@ -24,7 +24,7 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
 
   const { isListening } = useAppEventListener([
     {
-      eventType: 'GameProcessStatusChanged',
+      eventType: EVENT_KEYS.GameProcessStatusChanged,
       handler: (payload: unknown) => {
         const { new_status } =
           payload as ExtractPayload<GameProcessStatusChangedEvent>;

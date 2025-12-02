@@ -61,14 +61,7 @@ impl TauriEventBridge {
             AppEvent::ServerStatusChanged { .. } => "server-status-changed".to_string(),
             AppEvent::ServerPingCompleted { .. } => "server-ping-completed".to_string(),
             AppEvent::ConfigurationChanged(_) => "configuration-changed".to_string(),
-            AppEvent::LocationStateChanged { .. } => "location-state-changed".to_string(),
-            AppEvent::SceneChangeDetected { .. } => "scene-change-detected".to_string(),
-            AppEvent::ActChangeDetected { .. } => "act-change-detected".to_string(),
-            AppEvent::ZoneChangeDetected { .. } => "zone-change-detected".to_string(),
-            AppEvent::HideoutChangeDetected { .. } => "hideout-change-detected".to_string(),
-            AppEvent::CharacterTrackingDataUpdated { .. } => {
-                "character-tracking-data-updated".to_string()
-            }
+            AppEvent::CharacterUpdated { .. } => "character-updated".to_string(),
             AppEvent::WalkthroughProgressUpdated { .. } => {
                 "walkthrough-progress-updated".to_string()
             }

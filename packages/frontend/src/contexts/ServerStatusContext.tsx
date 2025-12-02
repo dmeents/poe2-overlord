@@ -2,7 +2,7 @@
 import type { ServerStatus, ServerStatusChangedEvent } from '@/types/server';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { createContext, useContext, useState } from 'react';
-import type { ExtractPayload } from '@/utils/events/registry';
+import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 
 interface ServerStatusContextValue {
   serverStatus: ServerStatus | null;
@@ -18,7 +18,7 @@ export function ServerStatusProvider({ children }: React.PropsWithChildren) {
 
   const { isListening } = useAppEventListener([
     {
-      eventType: 'ServerStatusChanged',
+      eventType: EVENT_KEYS.ServerStatusChanged,
       handler: (payload: unknown) => {
         const { new_status } =
           payload as ExtractPayload<ServerStatusChangedEvent>;

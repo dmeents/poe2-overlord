@@ -43,6 +43,8 @@ function EconomyPage() {
     selectedEconomyType,
     setSelectedEconomyType,
     league,
+    isHardcore,
+    isSoloSelfFound,
     aggregatedTopCurrencies,
     isLoadingAggregated,
   } = useEconomy();
@@ -56,7 +58,15 @@ function EconomyPage() {
   const leftColumn = (
     <>
       <CharacterStatusCard />
-      <Card title='Category' subtitle={league} className='mt-6'>
+      <Card
+        title='Category'
+        subtitle={
+          isSoloSelfFound
+            ? `${league} - Trading not available in SSF`
+            : `${isHardcore ? 'HC ' : ''}${league}`
+        }
+        className='mt-6'
+      >
         <div className='flex flex-wrap gap-2'>
           {ECONOMY_TYPES.map(type => (
             <Button
@@ -146,21 +156,25 @@ function EconomyPage() {
               </span>
             </div>
 
-            <span className='text-zinc-500 text-xl'>↔</span>
+            {currencyData.tertiary_currency && currencyData.tertiary_rate && (
+              <>
+                <span className='text-zinc-500 text-xl'>↔</span>
 
-            <div className='flex flex-col items-center gap-2'>
-              <img
-                src={currencyData.tertiary_currency.image_url}
-                alt={currencyData.tertiary_currency.name}
-                className='w-8 h-8'
-              />
-              <span className='text-white font-semibold text-lg'>
-                {currencyData.tertiary_rate.toFixed(0)}
-              </span>
-              <span className='text-xs text-zinc-500 -mt-1'>
-                {currencyData.tertiary_currency.name}
-              </span>
-            </div>
+                <div className='flex flex-col items-center gap-2'>
+                  <img
+                    src={currencyData.tertiary_currency.image_url}
+                    alt={currencyData.tertiary_currency.name}
+                    className='w-8 h-8'
+                  />
+                  <span className='text-white font-semibold text-lg'>
+                    {currencyData.tertiary_rate.toFixed(0)}
+                  </span>
+                  <span className='text-xs text-zinc-500 -mt-1'>
+                    {currencyData.tertiary_currency.name}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className='text-zinc-400 text-sm text-center py-8'>

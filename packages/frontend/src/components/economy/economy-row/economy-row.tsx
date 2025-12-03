@@ -56,14 +56,16 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
           {currency.secondary_value.toFixed(4)}
         </span>
       </div>
-      <div className='flex justify-between gap-4'>
-        <span className='text-zinc-400'>
-          {currencyData.tertiary_currency.name}:
-        </span>
-        <span className='text-white font-mono'>
-          {currency.tertiary_value.toFixed(2)}
-        </span>
-      </div>
+      {currencyData.tertiary_currency && (
+        <div className='flex justify-between gap-4'>
+          <span className='text-zinc-400'>
+            {currencyData.tertiary_currency.name}:
+          </span>
+          <span className='text-white font-mono'>
+            {currency.tertiary_value.toFixed(2)}
+          </span>
+        </div>
+      )}
     </div>
   ) : null;
 

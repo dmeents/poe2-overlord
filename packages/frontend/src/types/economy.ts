@@ -104,12 +104,12 @@ export interface CurrencyExchangeData {
   primary_currency: CurrencyInfo;
   /** Secondary currency info (usually Chaos Orb) */
   secondary_currency: CurrencyInfo;
-  /** Tertiary currency info (usually Exalted Orb) */
-  tertiary_currency: CurrencyInfo;
+  /** Tertiary currency info (usually Exalted Orb) - optional, may not exist for some leagues */
+  tertiary_currency: CurrencyInfo | null;
   /** Exchange rate from primary to secondary (e.g., 1 Divine = X Chaos) */
   secondary_rate: number;
-  /** Exchange rate from primary to tertiary (e.g., 1 Divine = X Exalted) */
-  tertiary_rate: number;
+  /** Exchange rate from primary to tertiary (e.g., 1 Divine = X Exalted) - optional */
+  tertiary_rate: number | null;
   /** All currency exchange rates */
   currencies: CurrencyExchangeRate[];
   /** Timestamp of when this data was fetched (RFC3339 format) */

@@ -9,27 +9,38 @@ import type {
 // Query keys for consistent caching
 export const economyQueryKeys = {
   all: ['economy'] as const,
-  currencyExchange: (league: string, economyType: EconomyType) =>
+  currencyExchange: (
+    league: string,
+    isHardcore: boolean,
+    economyType: EconomyType
+  ) =>
     [
       ...economyQueryKeys.all,
       'currency-exchange',
       league,
+      isHardcore,
       economyType,
     ] as const,
-  aggregatedTop: (league: string) =>
-    [...economyQueryKeys.all, 'aggregated-top', league] as const,
+  aggregatedTop: (league: string, isHardcore: boolean) =>
+    [...economyQueryKeys.all, 'aggregated-top', league, isHardcore] as const,
 };
 
 // Hook to get currency exchange data via Tauri backend
 export function useCurrencyExchange(
   league: string = 'Rise of the Abyssal',
+  isHardcore: boolean = false,
   economyType: EconomyType = 'Currency'
 ) {
   return useQuery({
-    queryKey: economyQueryKeys.currencyExchange(league, economyType),
+    queryKey: economyQueryKeys.currencyExchange(
+      league,
+      isHardcore,
+      economyType
+    ),
     queryFn: async (): Promise<CurrencyExchangeData> => {
       return await invoke<CurrencyExchangeData>('get_currency_exchange_data', {
         league,
+        isHardcore,
         economyType: economyType,
       });
     },
@@ -42,13 +53,15 @@ export function useCurrencyExchange(
 
 // Hook to get aggregated top currencies across all economy types
 export function useAggregatedTopCurrencies(
-  league: string = 'Rise of the Abyssal'
+  league: string = 'Rise of the Abyssal',
+  isHardcore: boolean = false
 ) {
   return useQuery({
-    queryKey: economyQueryKeys.aggregatedTop(league),
+    queryKey: economyQueryKeys.aggregatedTop(league, isHardcore),
     queryFn: async (): Promise<TopCurrencyItem[]> => {
       return await invoke<TopCurrencyItem[]>('get_aggregated_top_currencies', {
         league,
+        isHardcore,
       });
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

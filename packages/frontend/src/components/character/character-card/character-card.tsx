@@ -53,10 +53,13 @@ export const CharacterCard = memo(function CharacterCard({
     () => getAscendencyBackgroundStyles(ascendencyImage),
     [ascendencyImage]
   );
-  const overlayStyles = useMemo(() => getAscendencyOverlayStyles(), []);
+  const overlayStyles = useMemo(
+    () => getAscendencyOverlayStyles(character.hardcore),
+    [character.hardcore]
+  );
   const headerBackgroundStyles = useMemo(
-    () => getHeaderSectionBackgroundStyles(),
-    []
+    () => getHeaderSectionBackgroundStyles(character.hardcore),
+    [character.hardcore]
   );
 
   // Memoize class computations
@@ -213,27 +216,13 @@ export const CharacterCard = memo(function CharacterCard({
             <div className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
               League
             </div>
-            <div className='text-sm text-zinc-300 font-medium'>
+            <div className={`text-sm font-medium text-zinc-300`}>
+              {character.hardcore && 'HC '}
+              {character.solo_self_found && 'SSF '}
               {character.league}
             </div>
           </div>
         </div>
-
-        {/* Special Modes */}
-        {(character.hardcore || character.solo_self_found) && (
-          <div className='flex gap-2 mb-4'>
-            {character.hardcore && (
-              <span className='px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30'>
-                Hardcore
-              </span>
-            )}
-            {character.solo_self_found && (
-              <span className='px-3 py-1.5 text-xs font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'>
-                SSF
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Footer Section - only show when showDetails is true and expanded */}

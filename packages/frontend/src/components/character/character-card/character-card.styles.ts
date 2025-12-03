@@ -170,22 +170,25 @@ export function getAscendencyBackgroundStyles(ascendencyImage: string | null): {
 /**
  * Get overlay styles for ascendency background images
  * Provides a smooth gradient overlay that transitions from solid to transparent
+ * Uses deep red for hardcore characters, black otherwise
  */
-export function getAscendencyOverlayStyles(): {
+export function getAscendencyOverlayStyles(isHardcore: boolean = false): {
   background: string;
   boxShadow: string;
   border: string;
 } {
+  const overlayColor = isHardcore ? '40, 0, 0' : '0, 0, 0'; // deep red or black
+
   return {
     background: `
       linear-gradient(90deg,
-        rgba(0, 0, 0, 0.95) 0%,
-        rgba(0, 0, 0, 0.85) 15%,
-        rgba(0, 0, 0, 0.7) 30%,
-        rgba(0, 0, 0, 0.5) 45%,
-        rgba(0, 0, 0, 0.3) 60%,
-        rgba(0, 0, 0, 0.15) 75%,
-        rgba(0, 0, 0, 0.05) 90%,
+        rgba(${overlayColor}, 0.95) 0%,
+        rgba(${overlayColor}, 0.85) 15%,
+        rgba(${overlayColor}, 0.7) 30%,
+        rgba(${overlayColor}, 0.5) 45%,
+        rgba(${overlayColor}, 0.3) 60%,
+        rgba(${overlayColor}, 0.15) 75%,
+        rgba(${overlayColor}, 0.05) 90%,
         transparent 100%
       ),
       linear-gradient(135deg,
@@ -205,18 +208,21 @@ export function getAscendencyOverlayStyles(): {
 /**
  * Get header section background styles for better transition with ascendency images
  * Creates a solid background that gradually fades to reveal the background image
+ * Uses deep red for hardcore characters, black otherwise
  */
-export function getHeaderSectionBackgroundStyles(): {
+export function getHeaderSectionBackgroundStyles(isHardcore: boolean = false): {
   background: string;
 } {
+  const overlayColor = isHardcore ? '40, 0, 0' : '0, 0, 0'; // deep red or black
+
   return {
     background: `
       linear-gradient(90deg,
-        rgba(0, 0, 0, 0.95) 0%,
-        rgba(0, 0, 0, 0.9) 20%,
-        rgba(0, 0, 0, 0.8) 40%,
-        rgba(0, 0, 0, 0.6) 60%,
-        rgba(0, 0, 0, 0.3) 80%,
+        rgba(${overlayColor}, 0.95) 0%,
+        rgba(${overlayColor}, 0.9) 20%,
+        rgba(${overlayColor}, 0.8) 40%,
+        rgba(${overlayColor}, 0.6) 60%,
+        rgba(${overlayColor}, 0.3) 80%,
         transparent 100%
       )
     `,

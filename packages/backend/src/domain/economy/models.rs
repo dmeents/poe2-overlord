@@ -141,9 +141,9 @@ pub struct CurrencyItem {
 pub struct CurrencyExchangeData {
     pub primary_currency: CurrencyInfo,
     pub secondary_currency: CurrencyInfo,
-    pub tertiary_currency: CurrencyInfo,
+    pub tertiary_currency: Option<CurrencyInfo>,
     pub secondary_rate: f64,
-    pub tertiary_rate: f64,
+    pub tertiary_rate: Option<f64>,
     pub currencies: Vec<CurrencyExchangeRate>,
     pub fetched_at: String,
 }
@@ -311,16 +311,14 @@ impl CurrencyExchangeApiResponse {
                 image_url: format!("https://web.poecdn.com{}", item.image),
             })?;
 
-        let tertiary_item = self
-            .core
-            .get_tertiary_currency()
-            .ok_or_else(|| "No tertiary currency found in core items".to_string())?;
-
-        let tertiary_currency = CurrencyInfo {
-            id: tertiary_item.id.clone(),
-            name: tertiary_item.name.clone(),
-            image_url: format!("https://web.poecdn.com{}", tertiary_item.image),
-        };
+        let tertiary_currency =
+            self.core
+                .get_tertiary_currency()
+                .map(|tertiary_item| CurrencyInfo {
+                    id: tertiary_item.id.clone(),
+                    name: tertiary_item.name.clone(),
+                    image_url: format!("https://web.poecdn.com{}", tertiary_item.image),
+                });
 
         let secondary_rate = self
             .core
@@ -334,17 +332,9 @@ impl CurrencyExchangeApiResponse {
                 )
             })?;
 
-        let tertiary_rate = self
-            .core
-            .rates
-            .get(&tertiary_currency.id)
-            .copied()
-            .ok_or_else(|| {
-                format!(
-                    "Missing exchange rate for tertiary currency: {}",
-                    tertiary_currency.id
-                )
-            })?;
+        let tertiary_rate = tertiary_currency
+            .as_ref()
+            .and_then(|tc| self.core.rates.get(&tc.id).copied());
 
         let config = TierConfig::default();
 
@@ -356,12 +346,14 @@ impl CurrencyExchangeApiResponse {
                 let primary_value = line.primary_value?;
 
                 let secondary_value = primary_value * secondary_rate;
-                let tertiary_value = primary_value * tertiary_rate;
+                let tertiary_value = tertiary_rate
+                    .map(|rate| primary_value * rate)
+                    .unwrap_or(0.0);
 
                 let tier = CurrencyExchangeRate::select_optimal_tier(
                     primary_value,
                     secondary_rate,
-                    tertiary_rate,
+                    tertiary_rate.unwrap_or(0.0),
                     &config,
                 );
 
@@ -373,15 +365,21 @@ impl CurrencyExchangeApiResponse {
                 } else if line.id == secondary_currency.id {
                     // Secondary currency should be exchanged with Primary
                     (&primary_currency, CurrencyTier::Primary)
-                } else if line.id == tertiary_currency.id {
+                } else if tertiary_currency
+                    .as_ref()
+                    .map_or(false, |tc| line.id == tc.id)
+                {
                     // Tertiary currency should be exchanged with Secondary
                     (&secondary_currency, CurrencyTier::Secondary)
                 } else {
                     // Normal case: use the tier-based selection
+                    // If tertiary currency is not available, default to secondary for tertiary tier
                     let currency_info = match tier {
                         CurrencyTier::Primary => &primary_currency,
                         CurrencyTier::Secondary => &secondary_currency,
-                        CurrencyTier::Tertiary => &tertiary_currency,
+                        CurrencyTier::Tertiary => {
+                            tertiary_currency.as_ref().unwrap_or(&secondary_currency)
+                        }
                     };
                     (currency_info, tier)
                 };
@@ -390,7 +388,7 @@ impl CurrencyExchangeApiResponse {
                     primary_value,
                     display_tier,
                     secondary_rate,
-                    tertiary_rate,
+                    tertiary_rate.unwrap_or(0.0),
                     display_currency_info,
                 );
 

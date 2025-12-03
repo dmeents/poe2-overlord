@@ -355,4 +355,35 @@ mod tests {
         assert!((display_value.value - 3.606).abs() < 0.01);
         assert_eq!(display_value.inverted, true);
     }
+
+    #[test]
+    fn test_tertiary_currency_optional() {
+        // When there's no tertiary currency (only 2 items in core),
+        // the system should handle it gracefully
+        let divine_item = CurrencyItem {
+            id: "divine".to_string(),
+            name: "Divine Orb".to_string(),
+            image: "/image/divine.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "divine-orb".to_string(),
+        };
+
+        let chaos_item = CurrencyItem {
+            id: "chaos".to_string(),
+            name: "Chaos Orb".to_string(),
+            image: "/image/chaos.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "chaos-orb".to_string(),
+        };
+
+        let core = CurrencyCore {
+            items: vec![divine_item.clone(), chaos_item.clone()],
+            rates: HashMap::new(),
+            primary: "divine".to_string(),
+            secondary: "chaos".to_string(),
+        };
+
+        let tertiary = core.get_tertiary_currency();
+        assert!(tertiary.is_none());
+    }
 }

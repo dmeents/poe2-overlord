@@ -26,18 +26,32 @@ impl EconomyService {
     pub async fn fetch_currency_exchange_data(
         &self,
         league: &str,
+        is_hardcore: bool,
         economy_type: EconomyType,
     ) -> AppResult<CurrencyExchangeData> {
+        // Handle league name for hardcore economies
+        // Special case: Standard + hardcore = "Hardcore"
+        let league_name = if is_hardcore {
+            if league.eq_ignore_ascii_case("Standard") {
+                "Hardcore".to_string()
+            } else {
+                format!("HC {}", league)
+            }
+        } else {
+            league.to_string()
+        };
+
         let url = format!(
             "{}?league={}&type={}",
             POE_NINJA_API_BASE,
-            urlencoding::encode(league),
+            urlencoding::encode(&league_name),
             economy_type.as_str()
         );
 
         log::info!(
-            "Fetching economy data from poe.ninja - league: {}, type: {}",
-            league,
+            "Fetching economy data from poe.ninja - league: {}, hardcore: {}, type: {}",
+            league_name,
+            is_hardcore,
             economy_type
         );
 
@@ -82,7 +96,7 @@ impl EconomyService {
 
         // Cache top 10 currencies (don't fail if caching fails)
         if let Err(e) = self
-            .save_top_currencies_to_cache(league, economy_type, &data)
+            .save_top_currencies_to_cache(league, is_hardcore, economy_type, &data)
             .await
         {
             log::warn!("Failed to cache top currencies: {}", e);
@@ -95,11 +109,12 @@ impl EconomyService {
     pub async fn save_top_currencies_to_cache(
         &self,
         league: &str,
+        is_hardcore: bool,
         economy_type: EconomyType,
         data: &CurrencyExchangeData,
     ) -> AppResult<()> {
         // Get cache file path
-        let cache_path = Self::get_cache_path(league).await?;
+        let cache_path = Self::get_cache_path(league, is_hardcore).await?;
 
         // Load existing cache or create new one
         let mut cache = FileService::read_json_optional::<LeagueTopCurrenciesCache>(&cache_path)
@@ -159,8 +174,9 @@ impl EconomyService {
     pub async fn load_aggregated_top_currencies(
         &self,
         league: &str,
+        is_hardcore: bool,
     ) -> AppResult<Vec<TopCurrencyItem>> {
-        let cache_path = Self::get_cache_path(league).await?;
+        let cache_path = Self::get_cache_path(league, is_hardcore).await?;
 
         // Load cache file
         let cache =
@@ -194,16 +210,19 @@ impl EconomyService {
         Ok(all_items)
     }
 
-    async fn get_cache_path(league: &str) -> AppResult<PathBuf> {
+    pub(crate) async fn get_cache_path(league: &str, is_hardcore: bool) -> AppResult<PathBuf> {
         let data_dir = AppPaths::ensure_data_dir().await?;
         let cache_dir = data_dir.join("economy_cache");
 
         // Ensure cache directory exists
         AppPaths::ensure_dir(&cache_dir).await?;
 
+        // Prepend "HC_" to filename for hardcore leagues
+        let league_prefix = if is_hardcore { "HC_" } else { "" };
+
         // Sanitize league name for filename
         let safe_league_name = league.replace(" ", "_").replace("/", "-");
-        let filename = format!("{}.json", safe_league_name);
+        let filename = format!("{}{}.json", league_prefix, safe_league_name);
 
         Ok(cache_dir.join(filename))
     }

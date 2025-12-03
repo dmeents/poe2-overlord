@@ -21,6 +21,8 @@ interface EconomyContextValue {
   selectedEconomyType: EconomyType;
   setSelectedEconomyType: (type: EconomyType) => void;
   league: string;
+  isHardcore: boolean;
+  isSoloSelfFound: boolean;
   aggregatedTopCurrencies: TopCurrencyItem[];
   isLoadingAggregated: boolean;
 }
@@ -38,8 +40,10 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
   const [selectedEconomyType, setSelectedEconomyType] =
     useState<EconomyType>('Currency');
 
-  // Determine league from active character or default to standard league
+  // Determine league and hardcore status from active character or default to standard league
   const league = activeCharacter?.league || 'Rise of the Abyssal';
+  const isHardcore = activeCharacter?.hardcore || false;
+  const isSoloSelfFound = activeCharacter?.solo_self_found || false;
 
   // Fetch currency exchange data from poe.ninja via backend
   const {
@@ -47,20 +51,20 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
     isLoading,
     isError,
     error,
-  } = useCurrencyExchange(league, selectedEconomyType);
+  } = useCurrencyExchange(league, isHardcore, selectedEconomyType);
 
   // Fetch aggregated top currencies across all types
   const { data: aggregatedTopCurrencies = [], isLoading: isLoadingAggregated } =
-    useAggregatedTopCurrencies(league);
+    useAggregatedTopCurrencies(league, isHardcore);
 
   // Invalidate aggregated query when currency data changes (cache was updated)
   useEffect(() => {
     if (currencyData) {
       queryClient.invalidateQueries({
-        queryKey: economyQueryKeys.aggregatedTop(league),
+        queryKey: economyQueryKeys.aggregatedTop(league, isHardcore),
       });
     }
-  }, [currencyData, league, queryClient]);
+  }, [currencyData, league, isHardcore, queryClient]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -72,6 +76,8 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
       selectedEconomyType,
       setSelectedEconomyType,
       league,
+      isHardcore,
+      isSoloSelfFound,
       aggregatedTopCurrencies,
       isLoadingAggregated,
     }),
@@ -82,6 +88,8 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
       error,
       selectedEconomyType,
       league,
+      isHardcore,
+      isSoloSelfFound,
       aggregatedTopCurrencies,
       isLoadingAggregated,
     ]

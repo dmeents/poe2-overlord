@@ -50,13 +50,14 @@ export const ZoneCard = memo(function ZoneCard({
         className={`bg-zinc-900/80 border overflow-hidden cursor-pointer hover:border-zinc-600 transition-colors ${getActiveBorderClass()} ${className}`}
       >
         {/* Zone Image with Overlaid Header */}
-        <div className='relative w-full h-32 overflow-hidden bg-zinc-800'>
+        <div className='relative w-full h-20 overflow-hidden bg-zinc-800'>
           {/* Background Image */}
           {zone.image_url ? (
             <img
               src={zone.image_url}
               alt=''
-              className='absolute inset-0 w-full h-full object-cover opacity-100'
+              className='absolute inset-0 w-full h-full object-cover opacity-60'
+              style={{ objectPosition: '70% center' }}
               onError={e => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -65,14 +66,15 @@ export const ZoneCard = memo(function ZoneCard({
             <div className='absolute inset-0 bg-zinc-800' />
           )}
 
-          {/* Gradient Overlay - Solid black bottom 25%, gradual transition to transparent */}
-          <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent'></div>
+          {/* Gradient Overlay - Left to right fade and bottom to top */}
+          <div className='absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent'></div>
+          <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent'></div>
 
           {/* Header Content - Overlaid */}
           <div className='relative h-full flex flex-col justify-between p-3'>
             {/* Top Section - Title only */}
             <div className='flex items-center space-x-2 min-w-0'>
-              <h3 className='text-white font-semibold text-lg truncate drop-shadow-lg'>
+              <h3 className='text-zinc-300 font-medium text-base truncate drop-shadow-md'>
                 {zone.zone_name}
               </h3>
             </div>
@@ -85,14 +87,14 @@ export const ZoneCard = memo(function ZoneCard({
                   {/* Zone Metadata Pills */}
                   {zone.is_town && (
                     <span
-                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                     >
                       Town
                     </span>
                   )}
                   {zone.zone_name.toLowerCase().includes('hideout') && (
                     <span
-                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                     >
                       Hideout
                     </span>
@@ -100,28 +102,28 @@ export const ZoneCard = memo(function ZoneCard({
                   {!zone.is_town &&
                     !zone.zone_name.toLowerCase().includes('hideout') && (
                       <span
-                        className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                        className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                       >
                         Zone
                       </span>
                     )}
                   {zone.act && (
                     <span
-                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                     >
                       Act {zone.act}
                     </span>
                   )}
                   {zone.area_level && (
                     <span
-                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                     >
                       Level {zone.area_level}
                     </span>
                   )}
                   {zone.has_waypoint && (
                     <span
-                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} text-blue-400 backdrop-blur-sm bg-zinc-900/70`}
+                      className={`${getZonePillClasses()} ${getZonePillBaseClasses()} text-blue-400 backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                       title='Has Waypoint'
                     >
                       <MapIcon className='w-3 h-3 inline-block mr-1' />
@@ -130,12 +132,12 @@ export const ZoneCard = memo(function ZoneCard({
                   )}
                   {/* Player Stats Pills */}
                   <span
-                    className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 font-mono`}
+                    className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 font-mono opacity-30 hover:opacity-100 transition-opacity`}
                   >
                     <TimeDisplay seconds={zone.duration} showSeconds={false} />
                   </span>
                   <span
-                    className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                    className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                   >
                     {zone.visits} visit{zone.visits !== 1 ? 's' : ''}
                   </span>
@@ -143,15 +145,13 @@ export const ZoneCard = memo(function ZoneCard({
                   {!zone.is_town &&
                     !zone.zone_name.toLowerCase().includes('hideout') && (
                       <span
-                        className={`${getZonePillClasses()} ${
-                          zone.deaths > 0 ? 'text-red-400' : 'text-zinc-400'
-                        } ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70`}
+                        className={`${getZonePillClasses()} ${getZonePillBaseClasses()} backdrop-blur-sm bg-zinc-900/70 opacity-30 hover:opacity-100 transition-opacity`}
                       >
                         {zone.deaths} death{zone.deaths !== 1 ? 's' : ''}
                       </span>
                     )}
                 </div>
-                <div className='text-sm text-zinc-300 drop-shadow-lg'>
+                <div className='text-xs text-zinc-500 drop-shadow-md'>
                   {zone.last_visited
                     ? formatTimeAgo(zone.last_visited)
                     : 'Never visited'}

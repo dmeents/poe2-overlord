@@ -172,23 +172,13 @@ export function getAscendencyBackgroundStyles(ascendencyImage: string | null): {
  * Provides a smooth gradient overlay that transitions from solid to transparent
  * Adds a narrow red accent gradient for hardcore characters
  */
-export function getAscendencyOverlayStyles(isHardcore: boolean = false): {
+export function getAscendencyOverlayStyles(): {
   background: string;
   boxShadow: string;
   border: string;
 } {
-  const hardcoreGradient = isHardcore
-    ? `linear-gradient(90deg,
-        rgba(139, 0, 0, 0.g6) 0%,
-        rgba(139, 0, 0, 0.4) 5%,
-        rgba(139, 0, 0, 0.2) 10%,
-        transparent 15%
-      ),`
-    : '';
-
   return {
     background: `
-      ${hardcoreGradient}
       linear-gradient(90deg,
         rgba(0, 0, 0, 0.95) 0%,
         rgba(0, 0, 0, 0.85) 15%,
@@ -222,12 +212,18 @@ export function getHeaderSectionBackgroundStyles(isHardcore: boolean = false): {
   background: string;
 } {
   const hardcoreGradient = isHardcore
-    ? `linear-gradient(90deg,
+    ? `linear-gradient(0deg,
         rgba(139, 0, 0, 0.5) 0%,
         rgba(139, 0, 0, 0.2) 5%,
         rgba(139, 0, 0, 0.1) 10%,
         transparent 15%
-      ),`
+      ),
+      linear-gradient(180deg,
+          rgba(139, 0, 0, 0.5) 0%,
+          rgba(139, 0, 0, 0.2) 5%,
+          rgba(139, 0, 0, 0.1) 10%,
+          transparent 15%
+        ),`
     : '';
 
   return {

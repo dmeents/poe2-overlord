@@ -53,10 +53,8 @@ export const CharacterCard = memo(function CharacterCard({
     () => getAscendencyBackgroundStyles(ascendencyImage),
     [ascendencyImage]
   );
-  const overlayStyles = useMemo(
-    () => getAscendencyOverlayStyles(character.hardcore),
-    [character.hardcore]
-  );
+  const overlayStyles = useMemo(() => getAscendencyOverlayStyles(), []);
+
   const headerBackgroundStyles = useMemo(
     () => getHeaderSectionBackgroundStyles(character.hardcore),
     [character.hardcore]
@@ -283,7 +281,7 @@ export const CharacterCard = memo(function CharacterCard({
                     {isActive ? 'Current Location' : 'Location'}
                   </span>
                   <span
-                    className='text-sm font-medium text-zinc-300 truncate max-w-32'
+                    className='text-sm font-medium text-zinc-300'
                     title={formatCurrentLocation(currentLocation)}
                   >
                     {formatCurrentLocation(currentLocation)}

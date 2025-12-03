@@ -66,7 +66,7 @@ export const ZoneCard = memo(function ZoneCard({
           )}
 
           {/* Gradient Overlay - Solid black bottom 25%, gradual transition to transparent */}
-          <div className='absolute inset-0 bg-gradient-to-t from-black from-25% via-black/70 via-40% via-black/40 via-55% to-transparent'></div>
+          <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent'></div>
 
           {/* Header Content - Overlaid */}
           <div className='relative h-full flex flex-col justify-between p-3'>

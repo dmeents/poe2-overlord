@@ -86,8 +86,8 @@ export const CharacterCard = memo(function CharacterCard({
       if (!location) return 'Unknown';
 
       const parts = [];
-      if (location.act) parts.push(location.act);
-      if (location.scene) parts.push(location.scene);
+      if (location.act) parts.push(`Act ${location.act}`);
+      if (location.zone_name) parts.push(location.zone_name);
 
       return parts.length > 0 ? parts.join(' - ') : 'Unknown';
     },
@@ -217,8 +217,8 @@ export const CharacterCard = memo(function CharacterCard({
               League
             </div>
             <div className={`text-sm font-medium text-zinc-300`}>
-              {character.hardcore && 'HC '}
               {character.solo_self_found && 'SSF '}
+              {character.hardcore && 'HC '}
               {character.league}
             </div>
           </div>

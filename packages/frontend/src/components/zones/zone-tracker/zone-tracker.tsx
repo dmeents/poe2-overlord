@@ -1,5 +1,4 @@
-import { useZoneFiltering } from '@/hooks/useZoneFiltering';
-import { useZoneFilters } from '@/hooks/useZoneFilters';
+import { useZoneList } from '@/hooks/useZoneList';
 import type { ZoneStats } from '@/types/character';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { Card } from '../../ui/card/card';
@@ -19,13 +18,10 @@ export function ZoneTracker({ zones, className = '' }: ZoneTrackerProps) {
     clearFilters,
     resetSort,
     hasActiveFilters,
-  } = useZoneFilters();
-
-  const { filteredZones, zoneCount, totalCount } = useZoneFiltering(
-    zones,
-    filters,
-    sort
-  );
+    filteredZones,
+    zoneCount,
+    totalCount,
+  } = useZoneList(zones);
 
   return (
     <Card

@@ -1,14 +1,9 @@
 import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
 import { Card } from '@/components/ui/card/card';
-import { Button } from '@/components/ui/button/button';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useEconomy } from '@/contexts/EconomyContext';
-import {
-  ECONOMY_TYPE_ICONS,
-  ECONOMY_TYPE_LABELS,
-  ECONOMY_TYPES,
-} from '@/utils/economy-icons';
+import { ECONOMY_TYPE_LABELS } from '@/utils/economy-icons';
 import { EconomyList } from '@/components/economy/economy-list/economy-list';
 import {
   ArrowPathIcon,
@@ -41,7 +36,6 @@ function EconomyPage() {
     isError,
     error,
     selectedEconomyType,
-    setSelectedEconomyType,
     league,
     isHardcore,
     isSoloSelfFound,
@@ -49,51 +43,17 @@ function EconomyPage() {
     isLoadingAggregated,
   } = useEconomy();
 
-  const sortedCurrencies = currencyData
-    ? [...currencyData.currencies].sort(
-        (a, b) => b.primary_value - a.primary_value
-      )
-    : [];
-
   const leftColumn = (
     <>
       <CharacterStatusCard />
       <Card
-        title='Category'
+        title={ECONOMY_TYPE_LABELS[selectedEconomyType]}
         subtitle={
           isSoloSelfFound
             ? `${league} - Trading not available in SSF`
-            : `${isHardcore ? 'HC ' : ''}${league}`
-        }
-        className='mt-6'
-      >
-        <div className='flex flex-wrap gap-2'>
-          {ECONOMY_TYPES.map(type => (
-            <Button
-              key={type}
-              variant={selectedEconomyType === type ? 'primary' : 'outline'}
-              size='sm'
-              onClick={() => setSelectedEconomyType(type)}
-            >
-              <img
-                src={ECONOMY_TYPE_ICONS[type]}
-                alt={ECONOMY_TYPE_LABELS[type]}
-                className='w-4 h-4 mr-2'
-                onError={e => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              {ECONOMY_TYPE_LABELS[type]}
-            </Button>
-          ))}
-        </div>
-      </Card>
-      <Card
-        title={`${ECONOMY_TYPE_LABELS[selectedEconomyType]}${currencyData ? ` (${currencyData.currencies.length})` : ''}`}
-        subtitle={
-          currencyData
-            ? `Updated ${formatTimeAgo(currencyData.fetched_at)}`
-            : undefined
+            : currencyData
+              ? `${isHardcore ? 'HC ' : ''}${league} • Updated ${formatTimeAgo(currencyData.fetched_at)}`
+              : `${isHardcore ? 'HC ' : ''}${league}`
         }
         className='mt-6'
       >
@@ -113,7 +73,7 @@ function EconomyPage() {
             No economy data available
           </div>
         ) : (
-          <EconomyList currencies={sortedCurrencies} />
+          <EconomyList currencies={currencyData.currencies} />
         )}
       </Card>
     </>

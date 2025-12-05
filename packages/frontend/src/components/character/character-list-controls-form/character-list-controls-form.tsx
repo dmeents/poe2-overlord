@@ -9,7 +9,7 @@ import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
 import type {
   CharacterFilters as CharacterFiltersType,
   SortOption,
-} from '../../../hooks/useCharacterFilters';
+} from '../../../hooks/useCharacterList';
 import type {
   Ascendency,
   CharacterClass,

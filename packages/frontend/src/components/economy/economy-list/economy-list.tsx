@@ -1,5 +1,7 @@
 import type { CurrencyExchangeRate } from '@/types/economy';
+import { useCurrencyList } from '@/hooks/useCurrencyList';
 import { EconomyRow } from '../economy-row/economy-row';
+import { CurrencyListControlsForm } from '../currency-list-controls-form/currency-list-controls-form';
 
 interface EconomyListProps {
   currencies: CurrencyExchangeRate[];
@@ -7,23 +9,56 @@ interface EconomyListProps {
 }
 
 export function EconomyList({ currencies, onCurrencyClick }: EconomyListProps) {
-  if (currencies.length === 0) {
-    return (
-      <div className='text-center py-8 text-zinc-400'>
-        No currency data available
-      </div>
-    );
-  }
+  // Currency list with filtering and sorting
+  const {
+    filters,
+    sort,
+    updateFilter,
+    updateSort,
+    clearFilters,
+    resetSort,
+    hasActiveFilters,
+    filteredCurrencies,
+    currencyCount,
+    totalCount,
+  } = useCurrencyList(currencies);
 
   return (
-    <div className='-mx-6'>
-      {currencies.map(currency => (
-        <EconomyRow
-          key={currency.id}
-          currency={currency}
-          onClick={onCurrencyClick}
+    <div>
+      {/* Controls */}
+      <div className='mb-4'>
+        <CurrencyListControlsForm
+          filters={filters}
+          onFilterChange={updateFilter}
+          onClearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+          sort={sort}
+          onSortChange={updateSort}
+          onResetSort={resetSort}
+          currencyCount={currencyCount}
+          totalCount={totalCount}
         />
-      ))}
+      </div>
+
+      {/* Currency List */}
+      {filteredCurrencies.length === 0 ? (
+        <div className='text-center py-8 text-zinc-400'>
+          {hasActiveFilters
+            ? 'No currencies match your search'
+            : 'No currency data available'}
+        </div>
+      ) : (
+        <div className='-mx-6'>
+          {filteredCurrencies.map((currency, index) => (
+            <div
+              key={currency.id}
+              className={index === 0 ? 'border-t border-zinc-700/50' : ''}
+            >
+              <EconomyRow currency={currency} onClick={onCurrencyClick} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -10,8 +10,7 @@ import { DeleteCharacterModal } from '../components/character/delete-character-m
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
-import { useCharacterFiltering } from '../hooks/useCharacterFiltering';
-import { useCharacterFilters } from '../hooks/useCharacterFilters';
+import { useCharacterList } from '../hooks/useCharacterList';
 import { useCharacter } from '../contexts/CharacterContext';
 import {
   useCreateCharacter,
@@ -42,7 +41,7 @@ function CharactersPage() {
     useState<CharacterData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filter and sort state management
+  // Filter, sort, and list management
   const {
     filters,
     sort,
@@ -51,11 +50,10 @@ function CharactersPage() {
     clearFilters,
     resetSort,
     hasActiveFilters,
-  } = useCharacterFilters();
-
-  // Apply filtering and sorting
-  const { filteredCharacters, characterCount, totalCount } =
-    useCharacterFiltering(characters, filters, sort);
+    filteredCharacters,
+    characterCount,
+    totalCount,
+  } = useCharacterList(characters);
 
   // Event handlers
   const handleCreateCharacter = async (data: CharacterFormData) => {

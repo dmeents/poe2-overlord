@@ -6,10 +6,8 @@ import {
   getCharacterInfoLabelClasses,
   getCharacterInfoTextClasses,
   getDeleteButtonClasses,
-  getHardcoreClasses,
   getModalActionsClasses,
   getModalContentClasses,
-  getSSFClasses,
   getWarningContainerClasses,
   getWarningIconClasses,
   getWarningStrongClasses,
@@ -78,18 +76,10 @@ export function DeleteCharacterModal({
             </div>
             <div>
               <span className={getCharacterInfoLabelClasses()}>League:</span>{' '}
+              {character.solo_self_found && 'SSF '}
+              {character.hardcore && 'HC '}
               {character.league}
             </div>
-            {character.hardcore && (
-              <div>
-                <span className={getHardcoreClasses()}>Hardcore</span>
-              </div>
-            )}
-            {character.solo_self_found && (
-              <div>
-                <span className={getSSFClasses()}>Solo Self-Found</span>
-              </div>
-            )}
           </div>
         </div>
 

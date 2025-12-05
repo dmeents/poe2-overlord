@@ -17,6 +17,9 @@ import {
   getFormActionsClasses,
   getFormFieldClasses,
 } from './character-form-modal.styles';
+import { generateFantasyName } from '../../../utils/name-generator/name-generator';
+import { MarsIcon } from '../../icons/mars-icon';
+import { VenusIcon } from '../../icons/venus-icon';
 
 interface CharacterFormModalProps {
   isOpen: boolean;
@@ -135,6 +138,15 @@ export function CharacterFormModal({
     }
   };
 
+  const handleGenerateName = (gender: 'male' | 'female') => {
+    const newName = generateFantasyName({
+      minLength: 3,
+      maxLength: 15,
+      gender,
+    });
+    handleInputChange('name', newName);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -146,15 +158,44 @@ export function CharacterFormModal({
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className={getFormFieldClasses()}>
           <FormField label='Character Name'>
-            <Input
-              id='character-name'
-              value={formData.name}
-              onChange={value => handleInputChange('name', value as string)}
-              type='text'
-              placeholder='Enter character name'
-              isValid={!errors.name}
-              warningMessage={errors.name}
-            />
+            <div className='flex gap-2'>
+              <div className='flex-1'>
+                <Input
+                  id='character-name'
+                  value={formData.name}
+                  onChange={value => handleInputChange('name', value as string)}
+                  type='text'
+                  placeholder='Enter character name'
+                  isValid={!errors.name}
+                  warningMessage={errors.name}
+                />
+              </div>
+              <div className='flex items-center gap-1 border border-gray-700 bg-gray-800/50 px-2'>
+                <span className='text-xs text-gray-400'>Generate:</span>
+                <Button
+                  type='button'
+                  variant='icon'
+                  size='sm'
+                  onClick={() => handleGenerateName('male')}
+                  disabled={isLoading}
+                  title='Generate masculine name'
+                  className='shrink-0'
+                >
+                  <MarsIcon className='h-4 w-4' />
+                </Button>
+                <Button
+                  type='button'
+                  variant='icon'
+                  size='sm'
+                  onClick={() => handleGenerateName('female')}
+                  disabled={isLoading}
+                  title='Generate feminine name'
+                  className='shrink-0'
+                >
+                  <VenusIcon className='h-4 w-4' />
+                </Button>
+              </div>
+            </div>
           </FormField>
           <FormField label='Class'>
             <Select

@@ -41,20 +41,6 @@ export function getCharacterInfoLabelClasses(): string {
 }
 
 /**
- * Get hardcore indicator classes
- */
-export function getHardcoreClasses(): string {
-  return 'text-red-400';
-}
-
-/**
- * Get SSF indicator classes
- */
-export function getSSFClasses(): string {
-  return 'text-yellow-400';
-}
-
-/**
  * Get warning container classes
  */
 export function getWarningContainerClasses(): string {

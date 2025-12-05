@@ -265,6 +265,7 @@ const arcaneStyle: NameStyle = {
     'ran',
     'ron',
     'len',
+    'un',
   ],
   suffixes: [
     'ion',
@@ -323,6 +324,7 @@ const arcaneStyle: NameStyle = {
     'Kaela',
     'Thera',
     'Vyra',
+    'Lyl',
   ],
   femaleSuffixes: [
     'ia',
@@ -351,6 +353,7 @@ const arcaneStyle: NameStyle = {
     'issa',
     'ielle',
     'aera',
+    'in',
   ],
 };
 

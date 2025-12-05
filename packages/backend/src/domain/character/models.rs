@@ -187,6 +187,8 @@ pub enum CharacterClass {
     Mercenary,
     #[serde(rename = "Witch")]
     Witch,
+    #[serde(rename = "Druid")]
+    Druid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -225,6 +227,10 @@ pub enum Ascendency {
     Infernalist,
     #[serde(rename = "Lich")]
     Lich,
+    #[serde(rename = "Shaman")]
+    Shaman,
+    #[serde(rename = "Oracle")]
+    Oracle,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -233,6 +239,8 @@ pub enum League {
     Standard,
     #[serde(rename = "Rise of the Abyssal")]
     RiseOfTheAbyssal,
+    #[serde(rename = "The Fate of the Vaal")]
+    TheFateOfTheVaal,
 }
 
 // Re-export tracking-related types (these will be moved here in a future step)
@@ -506,6 +514,7 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
             ascendency,
             Ascendency::BloodMage | Ascendency::Infernalist | Ascendency::Lich
         ),
+        CharacterClass::Druid => matches!(ascendency, Ascendency::Shaman | Ascendency::Oracle),
     }
 }
 
@@ -523,6 +532,7 @@ impl fmt::Display for CharacterClass {
             CharacterClass::Monk => write!(f, "Monk"),
             CharacterClass::Mercenary => write!(f, "Mercenary"),
             CharacterClass::Witch => write!(f, "Witch"),
+            CharacterClass::Druid => write!(f, "Druid"),
         }
     }
 }

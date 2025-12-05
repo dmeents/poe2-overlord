@@ -1,5 +1,6 @@
 import { UsersIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { getClassHexColor } from '../../../utils/class-colors';
 import { DataItem } from '../../ui/data-item/data-item';
 import { SectionHeader } from '../../ui/section-header/section-header';
 import { classDistributionChartStyles } from './class-distribution-chart.styles';
@@ -13,22 +14,9 @@ interface ClassData {
   name: string;
   value: number;
   percentage: number;
-  color: string;
   hexColor: string;
   [key: string]: string | number;
 }
-
-// Color scheme for character classes - matching character card colors
-// Only base classes, ascendency classes will use their root class color
-const CLASS_COLORS = {
-  Warrior: { color: 'bg-red-500', hexColor: '#ef4444' },
-  Sorceress: { color: 'bg-blue-500', hexColor: '#3b82f6' },
-  Ranger: { color: 'bg-green-500', hexColor: '#22c55e' },
-  Huntress: { color: 'bg-yellow-500', hexColor: '#eab308' },
-  Monk: { color: 'bg-purple-500', hexColor: '#a855f7' },
-  Mercenary: { color: 'bg-orange-500', hexColor: '#f97316' },
-  Witch: { color: 'bg-pink-500', hexColor: '#ec4899' },
-} as const;
 
 export function ClassDistributionChart({
   classDistribution,
@@ -44,19 +32,13 @@ export function ClassDistributionChart({
     .map(([className, count]) => {
       const percentage =
         totalCharacters > 0 ? (count / totalCharacters) * 100 : 0;
-      const classColor = CLASS_COLORS[
-        className as keyof typeof CLASS_COLORS
-      ] || {
-        color: 'bg-zinc-500',
-        hexColor: '#71717a',
-      };
+      const hexColor = getClassHexColor(className);
 
       return {
         name: className,
         value: count,
         percentage,
-        color: classColor.color,
-        hexColor: classColor.hexColor,
+        hexColor,
       };
     })
     .sort((a, b) => b.value - a.value); // Sort by count descending

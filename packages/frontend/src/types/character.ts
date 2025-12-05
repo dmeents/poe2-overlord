@@ -8,9 +8,14 @@ export const CHARACTER_CLASSES = [
   'Monk',
   'Mercenary',
   'Witch',
+  'Druid',
 ] as const;
 
-export const LEAGUES = ['Standard', 'Rise of the Abyssal'] as const;
+export const LEAGUES = [
+  'Standard',
+  'Rise of the Abyssal',
+  'The Fate of the Vaal',
+] as const;
 
 export const ALL_ASCENDENCIES = [
   'Titan',
@@ -30,6 +35,8 @@ export const ALL_ASCENDENCIES = [
   'Blood Mage',
   'Infernalist',
   'Lich',
+  'Shaman',
+  'Oracle',
 ] as const;
 
 export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
@@ -47,6 +54,7 @@ export const ASCENDENCIES_BY_CLASS: Record<
   Monk: ['Invoker', 'Acolyte of Chayula'],
   Mercenary: ['Gemling Legionnaire', 'Tactitian', 'Witchhunter'],
   Witch: ['Blood Mage', 'Infernalist', 'Lich'],
+  Druid: ['Shaman', 'Oracle'],
 };
 
 export function getAscendenciesForClass(

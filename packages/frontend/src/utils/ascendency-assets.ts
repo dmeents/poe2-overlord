@@ -25,6 +25,8 @@ import tacticianImage from '../assets/ascendencies/tactician.webp';
 import titanImage from '../assets/ascendencies/titan.jpeg';
 import warbringerImage from '../assets/ascendencies/warbringer.jpeg';
 import witchHunterImage from '../assets/ascendencies/witch_hunter.jpeg';
+import oracleImage from '../assets/ascendencies/oracle.png';
+import shamanImage from '../assets/ascendencies/shaman.png';
 
 /**
  * Mapping of ascendency names to their corresponding image assets
@@ -61,6 +63,10 @@ const ASCENDENCY_IMAGES: Record<Ascendency, string | null> = {
   'Blood Mage': bloodMageImage,
   Infernalist: infernalistImage,
   Lich: lichImage,
+
+  // Druid ascendencies
+  Shaman: shamanImage,
+  Oracle: oracleImage,
 };
 
 /**
@@ -83,8 +89,8 @@ export function hasAscendencyImage(ascendency: Ascendency): boolean {
  */
 export function getAvailableAscendencyImages(): Ascendency[] {
   return Object.entries(ASCENDENCY_IMAGES)
-    .filter(([_, image]) => image !== null)
-    .map(([ascendency, _]) => ascendency as Ascendency);
+    .filter(([, image]) => image !== null)
+    .map(([ascendency]) => ascendency as Ascendency);
 }
 
 /**
@@ -123,6 +129,10 @@ export function getAscendencyImageFilename(ascendency: Ascendency): string {
     'Blood Mage': 'blood_mage.jpeg',
     Infernalist: 'infernalist.jpeg',
     Lich: 'lich.webp',
+
+    // Druid ascendencies
+    Shaman: 'shaman.png',
+    Oracle: 'oracle.png',
   };
 
   return (

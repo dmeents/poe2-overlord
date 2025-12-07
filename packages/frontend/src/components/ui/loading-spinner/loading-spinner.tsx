@@ -6,13 +6,15 @@ interface LoadingSpinnerProps {
 }
 
 export function LoadingSpinner({
-  message = 'Loading...',
+  message,
   className = '',
 }: LoadingSpinnerProps) {
   return (
     <div className={`${loadingSpinnerStyles.container} ${className}`}>
       <div className={loadingSpinnerStyles.spinner}></div>
-      <span className={loadingSpinnerStyles.message}>{message}</span>
+      {message && (
+        <span className={loadingSpinnerStyles.message}>{message}</span>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { UsersIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { getClassHexColor } from '../../../utils/class-colors';
 import { DataItem } from '../../ui/data-item/data-item';
+import { EmptyState } from '../../ui/empty-state/empty-state';
 import { SectionHeader } from '../../ui/section-header/section-header';
 import { classDistributionChartStyles } from './class-distribution-chart.styles';
 
@@ -75,17 +76,11 @@ export function ClassDistributionChart({
           <UsersIcon className='w-4 h-4 mr-2 text-zinc-400' />
           Classes
         </h4>
-        <div className={classDistributionChartStyles.emptyState}>
-          <div className={classDistributionChartStyles.emptyIcon}>
-            <UsersIcon className='w-8 h-8' />
-          </div>
-          <div className={classDistributionChartStyles.emptyTitle}>
-            No Class Data
-          </div>
-          <div className={classDistributionChartStyles.emptySubtitle}>
-            Create characters to see class distribution
-          </div>
-        </div>
+        <EmptyState
+          icon={<UsersIcon className='w-8 h-8' />}
+          title='No Class Data'
+          description='Create characters to see class distribution'
+        />
       </div>
     );
   }

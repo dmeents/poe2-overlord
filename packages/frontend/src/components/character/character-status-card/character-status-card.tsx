@@ -19,9 +19,7 @@ export function CharacterStatusCard({
     return (
       <div className={`${characterStatusCardStyles.container} ${className}`}>
         <h3 className={characterStatusCardStyles.title}>Active Character</h3>
-        <div className='flex items-center justify-center py-8'>
-          <LoadingSpinner message='Loading character data...' />
-        </div>
+        <LoadingSpinner message='Loading character data...' className='py-8' />
       </div>
     );
   }

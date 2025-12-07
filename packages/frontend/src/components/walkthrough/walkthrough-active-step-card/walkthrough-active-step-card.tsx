@@ -8,40 +8,29 @@ import {
   MapPinIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import { invoke } from '@tauri-apps/api/core';
 import React, { useMemo } from 'react';
-import type {
-  WalkthroughProgress,
-  WalkthroughStepResult,
-} from '../../../types/walkthrough';
+import { useCharacter } from '../../../contexts/CharacterContext';
+import { useWalkthrough } from '../../../contexts/WalkthroughContext';
+import { useZone } from '../../../contexts/ZoneContext';
 import { ParsedText } from '../../../utils/text-parser';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 
 interface WalkthroughActiveStepCardProps {
-  progress: WalkthroughProgress;
-  currentStep?: WalkthroughStepResult;
-  previousStep?: WalkthroughStepResult;
-  onAdvanceStep?: () => void;
-  onPreviousStep?: () => void;
-  onViewGuide?: () => void;
   onWikiClick: (itemName: string) => void;
-  onZoneClick?: (zoneName: string) => void;
+  onViewGuide?: () => void;
   className?: string;
 }
 
 export const WalkthroughActiveStepCard: React.FC<
   WalkthroughActiveStepCardProps
-> = ({
-  progress,
-  currentStep,
-  previousStep,
-  onAdvanceStep,
-  onPreviousStep,
-  onViewGuide,
-  onWikiClick,
-  onZoneClick,
-  className = '',
-}) => {
+> = ({ onWikiClick, onViewGuide, className = '' }) => {
+  // Get data from contexts
+  const { activeCharacter } = useCharacter();
+  const { progress, currentStep, previousStep } = useWalkthrough();
+  const { openZone } = useZone();
+
   // Check if previous step is available
   const hasPreviousStep = !!previousStep;
 
@@ -50,9 +39,62 @@ export const WalkthroughActiveStepCard: React.FC<
     return date.toLocaleString();
   };
 
+  // Advance to next step
+  const handleAdvanceStep = async () => {
+    if (!currentStep || !progress || !activeCharacter) return;
+
+    try {
+      // Get the next step ID from the current step
+      const nextStepId = currentStep.step.next_step_id;
+      if (!nextStepId) {
+        console.error('No next step available. Campaign may be completed.');
+        return;
+      }
+
+      // Create new progress with next step
+      const newProgress = {
+        ...progress,
+        current_step_id: nextStepId,
+        is_completed: false,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
+        characterId: activeCharacter.id,
+        progress: newProgress,
+      });
+      // Events will handle the UI update
+    } catch (err) {
+      console.error('Failed to advance step:', err);
+    }
+  };
+
+  // Go to previous step
+  const handlePreviousStep = async () => {
+    if (!previousStep || !progress || !activeCharacter) return;
+
+    try {
+      // Create new progress with previous step
+      const newProgress = {
+        ...progress,
+        current_step_id: previousStep.step.id,
+        is_completed: false,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
+        characterId: activeCharacter.id,
+        progress: newProgress,
+      });
+      // Events will handle the UI update
+    } catch (err) {
+      console.error('Failed to go to previous step:', err);
+    }
+  };
+
   // Filter out zone names from wiki items so they don't become wiki links
   const filteredWikiItems = useMemo(() => {
-    if (!currentStep || !onZoneClick) return currentStep?.step.wiki_items || [];
+    if (!currentStep) return [];
 
     const zoneNames = [
       currentStep.step.current_zone,
@@ -62,7 +104,7 @@ export const WalkthroughActiveStepCard: React.FC<
     return currentStep.step.wiki_items.filter(
       item => !zoneNames.includes(item)
     );
-  }, [currentStep, onZoneClick]);
+  }, [currentStep]);
 
   // Custom handler that checks if clicked item is a zone
   const handleItemClick = (itemName: string) => {
@@ -73,12 +115,17 @@ export const WalkthroughActiveStepCard: React.FC<
       currentStep.step.completion_zone,
     ];
 
-    if (onZoneClick && zoneNames.includes(itemName)) {
-      onZoneClick(itemName);
+    if (zoneNames.includes(itemName)) {
+      openZone(itemName);
     } else {
       onWikiClick(itemName);
     }
   };
+
+  // Early return if no progress available
+  if (!progress) {
+    return null;
+  }
 
   return (
     <Card
@@ -108,16 +155,12 @@ export const WalkthroughActiveStepCard: React.FC<
             </div>
             <div className='flex items-center gap-1 text-sm text-zinc-400'>
               <MapPinIcon className='w-3 h-3' />
-              {onZoneClick ? (
-                <button
-                  onClick={() => onZoneClick(currentStep.step.current_zone)}
-                  className='hover:text-zinc-200 hover:underline cursor-pointer transition-colors'
-                >
-                  {currentStep.step.current_zone}
-                </button>
-              ) : (
-                currentStep.step.current_zone
-              )}
+              <button
+                onClick={() => openZone(currentStep.step.current_zone)}
+                className='hover:text-zinc-200 hover:underline cursor-pointer transition-colors'
+              >
+                {currentStep.step.current_zone}
+              </button>
             </div>
           </div>
 
@@ -134,22 +177,12 @@ export const WalkthroughActiveStepCard: React.FC<
               label={
                 <span className='text-zinc-300 font-medium'>
                   Enter{' '}
-                  {onZoneClick ? (
-                    <button
-                      onClick={() =>
-                        onZoneClick(currentStep.step.completion_zone)
-                      }
-                      className='text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium'
-                    >
-                      {currentStep.step.completion_zone}
-                    </button>
-                  ) : (
-                    <ParsedText
-                      text={currentStep.step.completion_zone}
-                      wikiItems={currentStep.step.wiki_items}
-                      onWikiClick={onWikiClick}
-                    />
-                  )}
+                  <button
+                    onClick={() => openZone(currentStep.step.completion_zone)}
+                    className='text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium'
+                  >
+                    {currentStep.step.completion_zone}
+                  </button>
                 </span>
               }
               value=''
@@ -265,9 +298,9 @@ export const WalkthroughActiveStepCard: React.FC<
         </div>
 
         <div className='flex gap-2'>
-          {hasPreviousStep && onPreviousStep && (
+          {hasPreviousStep && (
             <button
-              onClick={onPreviousStep}
+              onClick={handlePreviousStep}
               className='inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors cursor-pointer'
               title='Previous step'
             >
@@ -275,9 +308,9 @@ export const WalkthroughActiveStepCard: React.FC<
               Previous
             </button>
           )}
-          {onAdvanceStep && (
+          {!progress.is_completed && (
             <button
-              onClick={onAdvanceStep}
+              onClick={handleAdvanceStep}
               className='inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors cursor-pointer'
               title='Next step'
             >

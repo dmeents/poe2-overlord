@@ -56,7 +56,7 @@ export const ZoneCard = memo(function ZoneCard({
             <img
               src={zone.image_url}
               alt=''
-              className='absolute inset-0 w-full h-full object-cover opacity-60'
+              className='absolute inset-0 w-full h-full object-cover'
               style={{ objectPosition: '70% center' }}
               onError={e => {
                 e.currentTarget.style.display = 'none';
@@ -66,12 +66,48 @@ export const ZoneCard = memo(function ZoneCard({
             <div className='absolute inset-0 bg-zinc-800' />
           )}
 
-          {/* Gradient Overlay - Left to right fade and bottom to top */}
-          <div className='absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent'></div>
-          <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent'></div>
+          {/* Base Overlay - Left to right fade with diagonal highlight */}
+          <div
+            className='absolute inset-0'
+            style={{
+              background: `
+                linear-gradient(90deg,
+                  rgba(0, 0, 0, 0.95) 0%,
+                  rgba(0, 0, 0, 0.9) 25%,
+                  rgba(0, 0, 0, 0.8) 40%,
+                  rgba(0, 0, 0, 0.6) 50%,
+                  rgba(0, 0, 0, 0.4) 65%,
+                  rgba(0, 0, 0, 0.2) 80%,
+                  rgba(0, 0, 0, 0.05) 90%,
+                  transparent 100%
+                ),
+                linear-gradient(135deg,
+                  rgba(255, 255, 255, 0.1) 0%,
+                  rgba(255, 255, 255, 0.05) 25%,
+                  transparent 50%,
+                  rgba(255, 255, 255, 0.02) 75%,
+                  transparent 100%
+                )
+              `,
+            }}
+          ></div>
 
-          {/* Header Content - Overlaid */}
-          <div className='relative h-full flex flex-col justify-between p-3'>
+          {/* Header Content - Overlaid with additional gradient */}
+          <div
+            className='relative h-full flex flex-col justify-between p-3'
+            style={{
+              background: `
+                linear-gradient(90deg,
+                  rgba(0, 0, 0, 0.95) 0%,
+                  rgba(0, 0, 0, 0.9) 30%,
+                  rgba(0, 0, 0, 0.8) 45%,
+                  rgba(0, 0, 0, 0.6) 55%,
+                  rgba(0, 0, 0, 0.3) 70%,
+                  transparent 100%
+                )
+              `,
+            }}
+          >
             {/* Top Section - Title only */}
             <div className='flex items-center space-x-2 min-w-0'>
               <h3 className='text-zinc-300 font-medium text-base truncate drop-shadow-md'>

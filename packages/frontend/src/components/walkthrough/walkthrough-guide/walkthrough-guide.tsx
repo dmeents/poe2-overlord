@@ -13,7 +13,6 @@ interface WalkthroughGuideProps {
   guide: WalkthroughGuideType;
   currentStepId?: string;
   characterId?: string;
-  onZoneClick?: (zoneName: string) => void;
   className?: string;
 }
 
@@ -21,7 +20,6 @@ export const WalkthroughGuide: React.FC<WalkthroughGuideProps> = ({
   guide,
   currentStepId,
   characterId,
-  onZoneClick,
   className = '',
 }) => {
   const [expandedActs, setExpandedActs] = useState<Set<string>>(new Set());
@@ -76,7 +74,6 @@ export const WalkthroughGuide: React.FC<WalkthroughGuideProps> = ({
               currentStepId={currentStepId}
               onToggle={toggleAct}
               onWikiClick={handleWikiClick}
-              onZoneClick={onZoneClick}
               onSkipToStep={handleSkipToStep}
             />
           ))}

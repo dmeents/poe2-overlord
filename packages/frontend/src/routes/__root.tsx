@@ -1,6 +1,7 @@
 import { SidebarNavigation } from '@/components/layout/sidebar-navigation/sidebar-navigation';
 import { StatusBar } from '@/components/status/status-bar/status-bar';
 import { WindowTitle } from '@/components/layout/window-title/window-title';
+import { ZoneDetailsModal } from '@/components/zones/zone-details-modal/zone-details-modal';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import '../globals.css';
 
@@ -15,6 +16,7 @@ export const Route = createRootRoute({
         </div>
       </div>
       <StatusBar />
+      <ZoneDetailsModal />
     </div>
   ),
 });

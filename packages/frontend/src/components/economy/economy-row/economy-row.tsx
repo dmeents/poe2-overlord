@@ -97,18 +97,6 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
                 / hr
               </span>
             )}
-            {currency.change_percent !== null && (
-              <span
-                className={`font-semibold ${
-                  currency.change_percent >= 0
-                    ? 'text-emerald-400'
-                    : 'text-red-400'
-                }`}
-              >
-                {currency.change_percent >= 0 ? '+' : ''}
-                {currency.change_percent.toFixed(2)}%
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -166,6 +154,20 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
               </>
             )}
           </div>
+          {currency.change_percent !== null && (
+            <div className='text-xs text-zinc-400 mt-1 flex justify-end'>
+              <span
+                className={`font-semibold opacity-60 ${
+                  currency.change_percent >= 0
+                    ? 'text-emerald-400'
+                    : 'text-red-400'
+                }`}
+              >
+                {currency.change_percent >= 0 ? '+' : ''}
+                {currency.change_percent.toFixed(2)}%
+              </span>
+            </div>
+          )}
         </div>
       </Tooltip>
     </div>

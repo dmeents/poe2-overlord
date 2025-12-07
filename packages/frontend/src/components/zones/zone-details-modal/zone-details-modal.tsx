@@ -1,4 +1,3 @@
-import type { ZoneStats } from '@/types/character';
 import {
   ArrowTopRightOnSquareIcon,
   FlagIcon,
@@ -8,24 +7,20 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import { open } from '@tauri-apps/plugin-shell';
+import { useZone } from '@/contexts/ZoneContext';
+import { createPlaceholderZone } from '@/utils/zone-utils';
 import { TimeDisplay } from '../../insights/time-display/time-display';
 import { Modal } from '../../ui/modal/modal';
 
-interface ZoneDetailsModalProps {
-  zone: ZoneStats | null;
-  isOpen: boolean;
-  onClose: () => void;
-  allZones?: ZoneStats[];
-  onZoneChange?: (zone: ZoneStats | null) => void;
-}
+export function ZoneDetailsModal() {
+  const {
+    selectedZone: zone,
+    isModalOpen,
+    closeModal,
+    navigateToZone,
+    allZones,
+  } = useZone();
 
-export function ZoneDetailsModal({
-  zone,
-  isOpen,
-  onClose,
-  allZones = [],
-  onZoneChange,
-}: ZoneDetailsModalProps) {
   const handleWikiClick = async () => {
     if (!zone || !zone.wiki_url) return;
 
@@ -40,42 +35,12 @@ export function ZoneDetailsModal({
     // Find the zone in the player's data
     const foundZone = allZones.find(z => z.zone_name === zoneName);
 
-    // If zone not found, create a placeholder unvisited zone
-    if (!foundZone) {
-      const placeholderZone: ZoneStats = {
-        zone_name: zoneName,
-        duration: 0,
-        deaths: 0,
-        visits: 0,
-        first_visited: new Date().toISOString(),
-        last_visited: new Date().toISOString(),
-        is_active: false,
-        entry_timestamp: undefined,
-        area_id: undefined,
-        act: undefined,
-        area_level: undefined,
-        is_town: false,
-        has_waypoint: false,
-        bosses: [],
-        monsters: [],
-        npcs: [],
-        connected_zones: [],
-        description: undefined,
-        points_of_interest: [],
-        image_url: undefined,
-        wiki_url: undefined,
-        last_updated: undefined,
-      };
-
-      if (onZoneChange) {
-        onZoneChange(placeholderZone);
-      }
-      return;
-    }
-
-    // If onZoneChange callback is provided, call it with found zone
-    if (onZoneChange) {
-      onZoneChange(foundZone);
+    if (foundZone) {
+      // If zone found, navigate to it
+      navigateToZone(foundZone);
+    } else {
+      // If zone not found, create a placeholder unvisited zone
+      navigateToZone(createPlaceholderZone(zoneName));
     }
   };
 
@@ -105,8 +70,8 @@ export function ZoneDetailsModal({
 
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={onClose}
+      isOpen={isModalOpen}
+      onClose={closeModal}
       size='2xl'
       title={zone.zone_name}
       icon={<MapIcon className='w-6 h-6' />}
@@ -349,7 +314,7 @@ export function ZoneDetailsModal({
                   key={connectedZone}
                   onClick={() => handleConnectedZoneClick(connectedZone)}
                   className='px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors cursor-pointer'
-                  title='Click to navigate (coming soon)'
+                  title='Click to view zone details'
                 >
                   {connectedZone}
                 </button>

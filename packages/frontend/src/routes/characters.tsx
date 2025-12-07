@@ -26,14 +26,10 @@ export const Route = createFileRoute('/characters')({
 
 function CharactersPage() {
   const { characters, activeCharacter, isLoading, error } = useCharacter();
-
-  // React Query mutation hooks
   const createCharacterMutation = useCreateCharacter();
   const updateCharacterMutation = useUpdateCharacter();
   const deleteCharacterMutation = useDeleteCharacter();
   const setActiveCharacterMutation = useSetActiveCharacter();
-
-  // Modal and form state management
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCharacter, setEditingCharacter] =
     useState<CharacterData | null>(null);
@@ -41,7 +37,6 @@ function CharactersPage() {
     useState<CharacterData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filter, sort, and list management
   const {
     filters,
     sort,
@@ -123,12 +118,7 @@ function CharactersPage() {
     return (
       <PageLayout
         leftColumn={
-          <div className='flex items-center justify-center h-64'>
-            <div className='text-center'>
-              <LoadingSpinner />
-              <p className='text-zinc-400 mt-4'>Loading characters...</p>
-            </div>
-          </div>
+          <LoadingSpinner message='Loading characters...' className='h-64' />
         }
         rightColumn={<div />}
       />
@@ -157,7 +147,6 @@ function CharactersPage() {
 
   const rightColumn = (
     <div className='space-y-4'>
-      {/* Create Character Button */}
       <Button
         onClick={() => setShowCreateModal(true)}
         variant='primary'
@@ -166,11 +155,7 @@ function CharactersPage() {
       >
         Create Character
       </Button>
-
-      {/* Insights Card */}
       <CharacterInsights characters={characters} />
-
-      {/* Class Distribution Card */}
       <ClassDistributionInsights characters={characters} />
     </div>
   );
@@ -189,15 +174,12 @@ function CharactersPage() {
       }
       rightColumn={rightColumn}
     >
-      {/* Create Character Modal */}
       <CharacterFormModal
         isOpen={showCreateModal}
         onSubmit={handleCreateCharacter}
         onClose={() => setShowCreateModal(false)}
         isLoading={isSubmitting}
       />
-
-      {/* Edit Character Modal */}
       <CharacterFormModal
         isOpen={!!editingCharacter}
         character={editingCharacter || undefined}
@@ -205,8 +187,6 @@ function CharactersPage() {
         onClose={() => setEditingCharacter(null)}
         isLoading={isSubmitting}
       />
-
-      {/* Delete Character Modal */}
       <DeleteCharacterModal
         isOpen={!!deletingCharacter}
         character={deletingCharacter || undefined}

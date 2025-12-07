@@ -3,6 +3,7 @@ import { formatDuration } from '@/utils/format-duration';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { DataItem } from '../../ui/data-item/data-item';
+import { EmptyState } from '../../ui/empty-state/empty-state';
 import { SectionHeader } from '../../ui/section-header/section-header';
 import { actDistributionChartStyles } from './act-distribution-chart.styles';
 
@@ -80,17 +81,11 @@ export function ActDistributionChart({
           <ChartPieIcon className='w-5 h-5 mr-2 text-zinc-400' />
           Act Distribution
         </h3>
-        <div className={actDistributionChartStyles.emptyState}>
-          <div className={actDistributionChartStyles.emptyIcon}>
-            <ChartPieIcon className='w-8 h-8' />
-          </div>
-          <div className={actDistributionChartStyles.emptyTitle}>
-            No Act Data
-          </div>
-          <div className={actDistributionChartStyles.emptySubtitle}>
-            Start playing to see act distribution
-          </div>
-        </div>
+        <EmptyState
+          icon={<ChartPieIcon className='w-8 h-8' />}
+          title='No Act Data'
+          description='Start playing to see act distribution'
+        />
       </div>
     );
   }

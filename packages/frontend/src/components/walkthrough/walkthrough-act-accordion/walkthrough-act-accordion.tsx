@@ -10,7 +10,6 @@ interface WalkthroughActAccordionProps {
   currentStepId?: string;
   onToggle: (actKey: string) => void;
   onWikiClick: (itemName: string) => void;
-  onZoneClick?: (zoneName: string) => void;
   onSkipToStep?: (stepId: string) => void;
 }
 
@@ -23,7 +22,6 @@ export const WalkthroughActAccordion: React.FC<
   currentStepId,
   onToggle,
   onWikiClick,
-  onZoneClick,
   onSkipToStep,
 }) => {
   const isCurrentStep = (stepId: string) => currentStepId === stepId;
@@ -50,7 +48,6 @@ export const WalkthroughActAccordion: React.FC<
               step={step}
               isCurrent={isCurrentStep(step.id)}
               onWikiClick={onWikiClick}
-              onZoneClick={onZoneClick}
               onSkipToStep={onSkipToStep}
             />
           ))}

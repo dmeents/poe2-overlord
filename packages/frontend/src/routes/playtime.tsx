@@ -21,9 +21,7 @@ function PlaytimePage() {
     return (
       <div className='min-h-screen bg-zinc-900 text-white'>
         <div className='px-6 py-8'>
-          <div className='flex items-center justify-center py-12'>
-            <LoadingSpinner />
-          </div>
+          <LoadingSpinner className='py-12' />
         </div>
       </div>
     );

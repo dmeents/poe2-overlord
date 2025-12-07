@@ -10,11 +10,8 @@ import {
 } from '@/utils/events/registry';
 
 interface CharacterContextValue {
-  // Character data
   characters: CharacterData[];
   activeCharacter: CharacterData | null;
-
-  // Loading & status states
   isLoading: boolean;
   error: string | null;
   isListening: boolean;
@@ -25,7 +22,6 @@ const CharacterContext = createContext<CharacterContextValue | undefined>(
 );
 
 export function CharacterProvider({ children }: React.PropsWithChildren) {
-  // React Query hooks for data fetching
   const {
     data: characters = [],
     isLoading: charactersLoading,
@@ -38,7 +34,6 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     error: activeCharacterError,
   } = useActiveCharacter();
 
-  // State for real-time character data updates
   const [charactersWithUpdates, setCharactersWithUpdates] = useState<
     CharacterData[]
   >([]);
@@ -74,7 +69,6 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     [activeCharacterWithUpdates?.id]
   );
 
-  // Derived state
   const isLoading = charactersLoading || activeCharacterLoading;
   const error =
     charactersError?.message || activeCharacterError?.message || null;

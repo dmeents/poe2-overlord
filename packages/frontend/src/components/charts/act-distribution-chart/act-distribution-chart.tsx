@@ -5,7 +5,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { SectionHeader } from '../../ui/section-header/section-header';
-import { actDistributionChartStyles } from './act-distribution-chart.styles';
+import { Card } from '../../ui/card/card';
 
 interface ActDistributionChartProps {
   character: CharacterData;
@@ -76,17 +76,17 @@ export function ActDistributionChart({
 
   if (activeActs.length === 0) {
     return (
-      <div className={`${actDistributionChartStyles.container} ${className}`}>
-        <h3 className={actDistributionChartStyles.title}>
-          <ChartPieIcon className='w-5 h-5 mr-2 text-zinc-400' />
-          Act Distribution
-        </h3>
+      <Card
+        title='Act Distribution'
+        icon={<ChartPieIcon />}
+        className={className}
+      >
         <EmptyState
           icon={<ChartPieIcon className='w-8 h-8' />}
           title='No Act Data'
           description='Start playing to see act distribution'
         />
-      </div>
+      </Card>
     );
   }
 
@@ -123,16 +123,13 @@ export function ActDistributionChart({
   };
 
   return (
-    <div className={`${actDistributionChartStyles.container} ${className}`}>
-      <h3 className={actDistributionChartStyles.title}>
-        <ChartPieIcon className='w-5 h-5 mr-2 text-zinc-400' />
-        Act Distribution
-      </h3>
-
-      {/* Chart and Legend */}
-      <div className={actDistributionChartStyles.chartSection}>
-        {/* Donut Chart */}
-        <div className={actDistributionChartStyles.donutContainer}>
+    <Card
+      title='Act Distribution'
+      icon={<ChartPieIcon />}
+      className={className}
+    >
+      <div className='space-y-6'>
+        <div className='relative flex items-center justify-center h-48'>
           <ResponsiveContainer width='100%' height={200}>
             <PieChart>
               <Pie
@@ -159,19 +156,18 @@ export function ActDistributionChart({
           </ResponsiveContainer>
 
           {/* Center text */}
-          <div className={actDistributionChartStyles.centerText}>
-            <div className={actDistributionChartStyles.centerValue}>
+          <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
+            <div className='text-2xl font-bold text-white'>
               {activeActs.length}
             </div>
-            <div className={actDistributionChartStyles.centerLabel}>Acts</div>
+            <div className='text-xs text-zinc-400 uppercase tracking-wide'>
+              Acts
+            </div>
           </div>
         </div>
 
         {/* Legend */}
-        <SectionHeader
-          title='Act Distribution'
-          icon={<ChartPieIcon className='w-4 h-4' />}
-        />
+        <SectionHeader title='Act Distribution' />
         <div>
           {activeActs.map(act => (
             <DataItem
@@ -189,6 +185,6 @@ export function ActDistributionChart({
           />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

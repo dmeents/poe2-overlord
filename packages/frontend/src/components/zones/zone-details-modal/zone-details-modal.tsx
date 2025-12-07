@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { open } from '@tauri-apps/plugin-shell';
 import { useZone } from '@/contexts/ZoneContext';
-import { createPlaceholderZone } from '@/utils/zone-utils';
+import { createPlaceholderZone, getDisplayAct } from '@/utils/zone-utils';
 import { TimeDisplay } from '../../ui/time-display/time-display';
 import { Modal } from '../../ui/modal/modal';
 
@@ -140,10 +140,12 @@ export function ZoneDetailsModal() {
             </div>
 
             {/* Act */}
-            {zone.act && (
+            {getDisplayAct(zone) && (
               <div>
                 <span className='text-zinc-500'>Act:</span>
-                <span className='ml-2 text-zinc-300'>Act {zone.act}</span>
+                <span className='ml-2 text-zinc-300'>
+                  {getDisplayAct(zone)}
+                </span>
               </div>
             )}
 

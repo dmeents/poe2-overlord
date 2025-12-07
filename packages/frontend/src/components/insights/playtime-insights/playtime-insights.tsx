@@ -1,7 +1,8 @@
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import type { ZoneStats } from '../../../types/character';
-import { DataCard } from '../../ui/data-card/data-card';
+import { Card } from '../../ui/card/card';
+import { EmptyState } from '../../ui/empty-state/empty-state';
 import { DataItem } from '../../ui/data-item/data-item';
 import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
 import { SectionHeader } from '../../ui/section-header/section-header';
@@ -38,28 +39,29 @@ export function PlaytimeInsights({
 
   if (isLoading) {
     return (
-      <DataCard
+      <Card
         title='Playtime Insights'
-        icon={<ClockIcon className='w-5 h-5' />}
+        icon={<ClockIcon />}
         className={className}
       >
         <LoadingSpinner message='Loading playtime insights...' />
-      </DataCard>
+      </Card>
     );
   }
 
   if (!activeCharacter || !summary) {
     return (
-      <DataCard
+      <Card
         title='Playtime Insights'
-        icon={<ClockIcon className='w-5 h-5' />}
-        isEmpty={true}
-        emptyTitle='No Character Data Available'
-        emptyDescription='Select a character to view playtime insights'
+        icon={<ClockIcon />}
         className={className}
       >
-        <div></div>
-      </DataCard>
+        <EmptyState
+          icon={<ClockIcon className='w-8 h-8' />}
+          title='No Character Data Available'
+          description='Select a character to view playtime insights'
+        />
+      </Card>
     );
   }
 
@@ -100,12 +102,7 @@ export function PlaytimeInsights({
   const activePlayPercentage = 100 - hideoutPercentage;
 
   return (
-    <DataCard
-      title='Insights'
-      icon={<ClockIcon className='w-5 h-5' />}
-      className={className}
-    >
-      {/* Time Breakdown */}
+    <Card title='Insights' icon={<ClockIcon />} className={className}>
       <SectionHeader title='Breakdown' />
       <div>
         <DataItem
@@ -150,6 +147,6 @@ export function PlaytimeInsights({
           />
         )}
       </div>
-    </DataCard>
+    </Card>
   );
 }

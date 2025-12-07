@@ -3,10 +3,12 @@ import { CharacterStatusCard } from '@/components/character/character-status-car
 import { EmptyState } from '@/components/ui/empty-state/empty-state';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
-import { ZoneTracker } from '@/components/zones/zone-tracker/zone-tracker';
+import { ZoneList } from '@/components/zones/zone-list/zone-list';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
+import { Card } from '@/components/ui/card/card';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { ClockIcon } from '@heroicons/react/24/outline';
+import { useZoneList } from '@/hooks/useZoneList';
+import { ClockIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/playtime')({
@@ -16,6 +18,19 @@ export const Route = createFileRoute('/playtime')({
 function PlaytimePage() {
   const { activeCharacter, isLoading } = useCharacter();
   const zones = activeCharacter?.zones || [];
+
+  const {
+    filters,
+    sort,
+    updateFilter,
+    updateSort,
+    clearFilters,
+    resetSort,
+    hasActiveFilters,
+    filteredZones,
+    zoneCount,
+    totalCount,
+  } = useZoneList(zones);
 
   if (isLoading) {
     return (
@@ -32,7 +47,24 @@ function PlaytimePage() {
       <CharacterStatusCard />
       {activeCharacter && (
         <div className='mt-6'>
-          <ZoneTracker zones={zones} />
+          <Card
+            title='Zones'
+            subtitle={`${zoneCount} of ${totalCount} zones`}
+            icon={<MapPinIcon className='w-5 h-5' />}
+          >
+            <ZoneList
+              zones={filteredZones}
+              filters={filters}
+              onFilterChange={updateFilter}
+              onClearFilters={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+              sort={sort}
+              onSortChange={updateSort}
+              onResetSort={resetSort}
+              zoneCount={zoneCount}
+              totalCount={totalCount}
+            />
+          </Card>
         </div>
       )}
     </>

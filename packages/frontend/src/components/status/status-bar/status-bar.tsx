@@ -12,6 +12,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { Button } from '../../ui/button/button';
 import { StatusIndicator } from '../status-indicator/status-indicator';
 import { statusBarStyles } from './status-bar.styles';
+import { getDisplayAct } from '@/utils/zone-utils';
 
 export const StatusBar = () => {
   const { processInfo } = useGameProcess();
@@ -26,7 +27,8 @@ export const StatusBar = () => {
 
     if (currentLocation) {
       const parts = [characterName];
-      if (currentLocation.act) parts.push(`Act ${currentLocation.act}`);
+      const displayAct = getDisplayAct(currentLocation);
+      if (displayAct) parts.push(displayAct);
       if (currentLocation.zone_name) parts.push(currentLocation.zone_name);
       return parts.join(' - ');
     }

@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button/button';
 import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
 import { CharacterInsights } from '../components/insights/character-insights/character-insights';
 import { CharacterList } from '../components/character/character-list/character-list';
-import { ClassDistributionInsights } from '../components/insights/class-distribution-insights/class-distribution-insights';
+import { ClassDistributionChart } from '../components/charts/class-distribution-chart/class-distribution-chart';
 import { DeleteCharacterModal } from '../components/character/delete-character-modal/delete-character-modal';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
@@ -145,6 +145,15 @@ function CharactersPage() {
     />
   );
 
+  // Compute class distribution
+  const classDistribution = characters.reduce(
+    (acc, c) => {
+      acc[c.class] = (acc[c.class] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   const rightColumn = (
     <div className='space-y-4'>
       <Button
@@ -156,7 +165,7 @@ function CharactersPage() {
         Create Character
       </Button>
       <CharacterInsights characters={characters} />
-      <ClassDistributionInsights characters={characters} />
+      <ClassDistributionChart classDistribution={classDistribution} />
     </div>
   );
 

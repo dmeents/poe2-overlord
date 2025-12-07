@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { CharacterData } from '../../../types/character';
 import { formatDuration } from '../../../utils/format-duration';
 import { getAscendencyImage } from '../../../utils/ascendency-assets';
+import { getDisplayAct } from '../../../utils/zone-utils';
 import { Button } from '../../ui/button/button';
 import {
   formatDate,
@@ -84,7 +85,8 @@ export const CharacterCard = memo(function CharacterCard({
       if (!location) return 'Unknown';
 
       const parts = [];
-      if (location.act) parts.push(`Act ${location.act}`);
+      const displayAct = getDisplayAct(location);
+      if (displayAct) parts.push(displayAct);
       if (location.zone_name) parts.push(location.zone_name);
 
       return parts.length > 0 ? parts.join(' - ') : 'Unknown';

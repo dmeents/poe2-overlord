@@ -1,8 +1,9 @@
 import { ChartBarIcon, InboxIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
 import type { CharacterData } from '../../../types/character';
-import { DataCard } from '../../ui/data-card/data-card';
+import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
+import { EmptyState } from '../../ui/empty-state/empty-state';
 import { SectionHeader } from '../../ui/section-header/section-header';
 
 interface CharacterInsightsProps {
@@ -81,21 +82,18 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
   if (characters.length === 0) {
     return (
-      <DataCard
-        title='Character Insights'
-        icon={<ChartBarIcon className='w-5 h-5' />}
-        isEmpty={true}
-        emptyTitle='No Characters to Analyze'
-        emptyDescription='Create some characters to view insights'
-        emptyIcon={<InboxIcon className='w-8 h-8' />}
-      >
-        <div></div>
-      </DataCard>
+      <Card title='Character Insights' icon={<ChartBarIcon />}>
+        <EmptyState
+          icon={<InboxIcon className='w-8 h-8' />}
+          title='No Characters to Analyze'
+          description='Create some characters to view insights'
+        />
+      </Card>
     );
   }
 
   return (
-    <DataCard title='Insights' icon={<ChartBarIcon className='w-5 h-5' />}>
+    <Card title='Insights' icon={<ChartBarIcon />}>
       <SectionHeader title='Overview' />
       <div>
         {metrics.mostPlayedCharacter && (
@@ -136,6 +134,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
           </div>
         </>
       )}
-    </DataCard>
+    </Card>
   );
 }

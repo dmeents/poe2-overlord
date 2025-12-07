@@ -4,7 +4,7 @@ import { buttonStyles } from './button.styles';
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'icon';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'text' | 'icon';
   size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   disabled?: boolean;
@@ -25,7 +25,6 @@ export function Button({
   id,
   title,
 }: ButtonProps) {
-  // Special handling for icon variant sizes
   const getSizeClasses = () => {
     if (variant === 'icon') {
       return buttonStyles.iconSizes[size];

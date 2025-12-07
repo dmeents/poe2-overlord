@@ -3,19 +3,14 @@ import type {
   ZoneSortOption,
 } from '@/hooks/useZoneList';
 import type { ZoneStats } from '@/types/character';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { memo, useCallback } from 'react';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { ZoneCard } from '../zone-card/zone-card';
 import { ZoneListControlsForm } from '../zone-list-controls-form/zone-list-controls-form';
-import {
-  getListContainerClasses,
-  getZoneGridClasses,
-} from './zone-list.styles';
 
 interface ZoneListProps {
   zones: ZoneStats[];
-  allZones: ZoneStats[];
   filters: ZoneFiltersType;
   onFilterChange: <K extends keyof ZoneFiltersType>(
     key: K,
@@ -35,7 +30,6 @@ interface ZoneListProps {
 
 export const ZoneList = memo(function ZoneList({
   zones,
-  allZones,
   filters,
   onFilterChange,
   onClearFilters,
@@ -46,7 +40,6 @@ export const ZoneList = memo(function ZoneList({
   zoneCount,
   totalCount,
 }: ZoneListProps) {
-  // Memoize event handlers to prevent unnecessary re-renders
   const handleFilterChange = useCallback(
     <K extends keyof ZoneFiltersType>(key: K, value: ZoneFiltersType[K]) => {
       onFilterChange(key, value);
@@ -72,32 +65,10 @@ export const ZoneList = memo(function ZoneList({
     onResetSort();
   }, [onResetSort]);
 
-  // Only show empty state if there are truly no zones in the system
-  // (not just filtered results)
   if (totalCount === 0) {
     return (
       <EmptyState
-        icon={
-          <svg
-            className='h-12 w-12'
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={1.5}
-              d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
-            />
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={1.5}
-              d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
-            />
-          </svg>
-        }
+        icon={<MapPinIcon className='h-12 w-12' />}
         title='No Zone Data Available'
         description='Start playing Path of Exile 2 to begin tracking your time in different locations.'
       />
@@ -105,7 +76,7 @@ export const ZoneList = memo(function ZoneList({
   }
 
   return (
-    <div className={getListContainerClasses()}>
+    <div className='space-y-4'>
       <ZoneListControlsForm
         filters={filters}
         onFilterChange={handleFilterChange}
@@ -119,10 +90,27 @@ export const ZoneList = memo(function ZoneList({
       />
 
       {zones.length > 0 ? (
-        <div className={getZoneGridClasses()}>
-          {zones.map(zone => {
+        <div className='bg-zinc-900/50 border border-zinc-700/50 overflow-hidden'>
+          <div
+            className='grid gap-2 px-4 py-2 bg-zinc-800/50 border-b border-zinc-700/50 text-xs font-medium text-zinc-400 uppercase tracking-wider'
+            style={{
+              gridTemplateColumns: '5fr 1fr 1fr 1fr 1fr 1fr',
+            }}
+          >
+            <div>Zone</div>
+            <div className='text-right'>Act</div>
+            <div className='text-right'>Level</div>
+            <div className='text-right'>Visits</div>
+            <div className='text-right'>Deaths</div>
+            <div className='text-right'>Duration</div>
+          </div>
+          {zones.map((zone, index) => {
             return (
-              <ZoneCard key={zone.zone_name} zone={zone} allZones={allZones} />
+              <ZoneCard
+                key={zone.zone_name}
+                zone={zone}
+                isEven={index % 2 === 0}
+              />
             );
           })}
         </div>

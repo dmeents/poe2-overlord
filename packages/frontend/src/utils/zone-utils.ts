@@ -1,4 +1,39 @@
-import type { ZoneStats } from '../types/character';
+import type { ZoneStats, EnrichedLocationState } from '../types/character';
+
+/**
+ * Maps a zone to its display act name.
+ *
+ * @param zone - The zone stats object or enriched location state
+ * @returns The display name for the act (e.g., "Endgame", "Interlude", "Act 1")
+ *
+ * @example
+ * getDisplayAct(hideoutZone) // "Endgame"
+ * getDisplayAct(act10Zone) // "Endgame"
+ * getDisplayAct(act6Zone) // "Interlude"
+ * getDisplayAct(act3Zone) // "Act 3"
+ */
+export function getDisplayAct(
+  zone: ZoneStats | EnrichedLocationState
+): string | undefined {
+  // Hideouts are always endgame
+  if (zone.zone_name.toLowerCase().includes('hideout')) {
+    return 'Endgame';
+  }
+
+  // Act-based mapping
+  if (zone.act !== undefined) {
+    switch (zone.act) {
+      case 10:
+        return 'Endgame';
+      case 6:
+        return 'Interlude';
+      default:
+        return `${zone.act}`;
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * Creates a placeholder ZoneStats object for zones that haven't been visited yet.

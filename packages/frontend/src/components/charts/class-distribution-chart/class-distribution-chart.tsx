@@ -4,7 +4,7 @@ import { getClassHexColor } from '../../../utils/class-colors';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { SectionHeader } from '../../ui/section-header/section-header';
-import { classDistributionChartStyles } from './class-distribution-chart.styles';
+import { Card } from '../../ui/card/card';
 
 interface ClassDistributionChartProps {
   classDistribution: Record<string, number>;
@@ -23,7 +23,6 @@ export function ClassDistributionChart({
   classDistribution,
   className = '',
 }: ClassDistributionChartProps) {
-  // Convert class distribution to chart data
   const totalCharacters = Object.values(classDistribution).reduce(
     (sum, count) => sum + count,
     0
@@ -44,7 +43,6 @@ export function ClassDistributionChart({
     })
     .sort((a, b) => b.value - a.value); // Sort by count descending
 
-  // Custom tooltip component
   const CustomTooltip = ({
     active,
     payload,
@@ -71,31 +69,20 @@ export function ClassDistributionChart({
 
   if (chartData.length === 0) {
     return (
-      <div className={`${classDistributionChartStyles.container} ${className}`}>
-        <h4 className={classDistributionChartStyles.title}>
-          <UsersIcon className='w-4 h-4 mr-2 text-zinc-400' />
-          Classes
-        </h4>
+      <Card title='Classes' icon={<UsersIcon />} className={className}>
         <EmptyState
           icon={<UsersIcon className='w-8 h-8' />}
           title='No Class Data'
           description='Create characters to see class distribution'
         />
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className={`${classDistributionChartStyles.container} ${className}`}>
-      <h4 className={classDistributionChartStyles.title}>
-        <UsersIcon className='w-4 h-4 mr-2 text-zinc-400' />
-        Classes
-      </h4>
-
-      {/* Chart and Legend */}
-      <div className={classDistributionChartStyles.chartSection}>
-        {/* Donut Chart */}
-        <div className={classDistributionChartStyles.donutContainer}>
+    <Card title='Classes' icon={<UsersIcon />} className={className}>
+      <div className='space-y-6'>
+        <div className='relative flex items-center justify-center h-40'>
           <ResponsiveContainer width='100%' height={160}>
             <PieChart>
               <Pie
@@ -120,23 +107,16 @@ export function ClassDistributionChart({
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-
-          {/* Center text */}
-          <div className={classDistributionChartStyles.centerText}>
-            <div className={classDistributionChartStyles.centerValue}>
+          <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
+            <div className='text-2xl font-bold text-white'>
               {chartData.length}
             </div>
-            <div className={classDistributionChartStyles.centerLabel}>
+            <div className='text-xs text-zinc-400 uppercase tracking-wide'>
               Classes
             </div>
           </div>
         </div>
-
-        {/* Legend */}
-        <SectionHeader
-          title='Classes'
-          icon={<UsersIcon className='w-4 h-4' />}
-        />
+        <SectionHeader title='Classes' />
         <div>
           {chartData.map(classItem => (
             <DataItem
@@ -149,6 +129,6 @@ export function ClassDistributionChart({
           ))}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

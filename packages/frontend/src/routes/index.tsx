@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
-import { ZoneCard } from '../components/zones/zone-card/zone-card';
+import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
 import { Card } from '../components/ui/card/card';
@@ -38,15 +38,11 @@ function Index() {
       {activeCharacter && (
         <>
           {activeZone ? (
-            <ZoneCard
-              zone={activeZone}
-              allZones={activeCharacter.zones || []}
-            />
+            <CurrentZoneCard zone={activeZone} />
           ) : (
             <Card
               title='Current Location'
               icon={<MapPinIcon className='w-5 h-5' />}
-              className='mt-6'
             >
               <EmptyState
                 icon={<MapPinIcon className='w-12 h-12' />}

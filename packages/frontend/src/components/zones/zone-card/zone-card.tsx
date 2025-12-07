@@ -1,7 +1,7 @@
 import type { ZoneStats } from '@/types/character';
 import { MapIcon } from '@heroicons/react/24/outline';
 import { memo, useState } from 'react';
-import { TimeDisplay } from '../../insights/time-display/time-display';
+import { TimeDisplay } from '../../ui/time-display/time-display';
 import { ZoneDetailsModal } from '../zone-details-modal/zone-details-modal';
 import { getZonePillBaseClasses, getZonePillClasses } from './zone-card.styles';
 import { formatTimeAgo } from '@/utils/format-time-ago';

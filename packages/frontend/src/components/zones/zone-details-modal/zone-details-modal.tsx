@@ -9,7 +9,7 @@ import {
 import { open } from '@tauri-apps/plugin-shell';
 import { useZone } from '@/contexts/ZoneContext';
 import { createPlaceholderZone } from '@/utils/zone-utils';
-import { TimeDisplay } from '../../insights/time-display/time-display';
+import { TimeDisplay } from '../../ui/time-display/time-display';
 import { Modal } from '../../ui/modal/modal';
 
 export function ZoneDetailsModal() {

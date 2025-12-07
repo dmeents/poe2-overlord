@@ -137,7 +137,7 @@ export function ClassDistributionChart({
           title='Classes'
           icon={<UsersIcon className='w-4 h-4' />}
         />
-        <div className='space-y-2'>
+        <div>
           {chartData.map(classItem => (
             <DataItem
               key={classItem.name}

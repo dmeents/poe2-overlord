@@ -1,15 +1,13 @@
-import {
-  BoltIcon,
-  ChartBarIcon,
-  GlobeAltIcon,
-  InboxIcon,
-  UserGroupIcon,
-} from '@heroicons/react/24/outline';
+import { ChartBarIcon, InboxIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
+import type { CharacterData } from '../../../types/character';
 import { DataCard } from '../../ui/data-card/data-card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { SectionHeader } from '../../ui/section-header/section-header';
-import type { CharacterInsightsProps } from './character-insights.types';
+
+interface CharacterInsightsProps {
+  characters: CharacterData[];
+}
 
 export function CharacterInsights({ characters }: CharacterInsightsProps) {
   const metrics = useMemo(() => {
@@ -98,12 +96,8 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
   return (
     <DataCard title='Insights' icon={<ChartBarIcon className='w-5 h-5' />}>
-      {/* Overview Section */}
-      <SectionHeader
-        title='Overview'
-        icon={<UserGroupIcon className='w-4 h-4' />}
-      />
-      <div className='space-y-2'>
+      <SectionHeader title='Overview' />
+      <div>
         {metrics.mostPlayedCharacter && (
           <DataItem
             label='Most Played'
@@ -117,38 +111,23 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label='Highest Level' value={metrics.highestLevel} />
         <DataItem label='Average Level' value={metrics.averageLevel} />
       </div>
-
-      {/* Playtime Section */}
-      <SectionHeader
-        title='Playtime'
-        icon={<ChartBarIcon className='w-4 h-4' />}
-      />
-      <div className='space-y-2'>
+      <SectionHeader title='Playtime' />
+      <div>
         <DataItem
           label='Total Play Time'
           value={formatPlayTime(metrics.totalPlayTime)}
         />
         <DataItem label='Total Deaths' value={metrics.totalDeaths} />
       </div>
-
-      {/* Game Modes Section */}
-      <SectionHeader
-        title='Game Modes'
-        icon={<BoltIcon className='w-4 h-4' />}
-      />
-      <div className='space-y-2'>
+      <SectionHeader title='Game Modes' />
+      <div>
         <DataItem label='Hardcore Characters' value={metrics.hardcoreCount} />
         <DataItem label='SSF Characters' value={metrics.ssfCount} />
       </div>
-
-      {/* League Distribution */}
       {Object.keys(metrics.leagueDistribution).length > 0 && (
         <>
-          <SectionHeader
-            title='Leagues'
-            icon={<GlobeAltIcon className='w-4 h-4' />}
-          />
-          <div className='space-y-2'>
+          <SectionHeader title='Leagues' />
+          <div>
             {Object.entries(metrics.leagueDistribution)
               .sort(([, a], [, b]) => b - a)
               .map(([league, count]) => (

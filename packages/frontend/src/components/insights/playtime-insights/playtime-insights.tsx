@@ -1,12 +1,9 @@
-import {
-  ChartBarIcon,
-  ClockIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/outline';
+import { ClockIcon } from '@heroicons/react/24/outline';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import type { ZoneStats } from '../../../types/character';
 import { DataCard } from '../../ui/data-card/data-card';
 import { DataItem } from '../../ui/data-item/data-item';
+import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
 import { SectionHeader } from '../../ui/section-header/section-header';
 
 // Format duration without seconds, rounding to nearest minute
@@ -44,10 +41,9 @@ export function PlaytimeInsights({
       <DataCard
         title='Playtime Insights'
         icon={<ClockIcon className='w-5 h-5' />}
-        isLoading={true}
         className={className}
       >
-        <div></div>
+        <LoadingSpinner message='Loading playtime insights...' />
       </DataCard>
     );
   }
@@ -110,11 +106,8 @@ export function PlaytimeInsights({
       className={className}
     >
       {/* Time Breakdown */}
-      <SectionHeader
-        title='Breakdown'
-        icon={<ChartBarIcon className='w-4 h-4' />}
-      />
-      <div className='space-y-2'>
+      <SectionHeader title='Breakdown' />
+      <div>
         <DataItem
           label='Total Play Time'
           value={formatDurationMinutes(totalPlayTime)}
@@ -140,13 +133,8 @@ export function PlaytimeInsights({
           subValue={`${nonTownHideoutZones.length} zones`}
         />
       </div>
-
-      {/* History Section */}
-      <SectionHeader
-        title='History'
-        icon={<MapPinIcon className='w-4 h-4' />}
-      />
-      <div className='space-y-2'>
+      <SectionHeader title='History' />
+      <div>
         {mostTimeSpent && (
           <DataItem
             label='Most Time Spent'

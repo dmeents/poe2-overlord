@@ -172,7 +172,7 @@ export function ActDistributionChart({
           title='Act Distribution'
           icon={<ChartPieIcon className='w-4 h-4' />}
         />
-        <div className='space-y-2'>
+        <div>
           {activeActs.map(act => (
             <DataItem
               key={act.name}

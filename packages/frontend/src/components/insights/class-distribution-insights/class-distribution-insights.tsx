@@ -1,8 +1,8 @@
 import { UsersIcon, InboxIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
+import type { CharacterData } from '../../../types/character';
 import { ClassDistributionChart } from '../../charts/class-distribution-chart/class-distribution-chart';
 import { DataCard } from '../../ui/data-card/data-card';
-import type { CharacterData } from '../../../types/character';
 
 interface ClassDistributionInsightsProps {
   characters: CharacterData[];

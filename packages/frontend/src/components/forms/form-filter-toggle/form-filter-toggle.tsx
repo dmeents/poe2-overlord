@@ -1,5 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formFilterToggleStyles } from './form-filter-toggle.styles';
 
 export interface FilterToggleProps {
@@ -23,6 +23,19 @@ export function FilterToggle({
 }: FilterToggleProps) {
   const hasActiveFilters = activeCount > 0;
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  // Calculate dropdown position when opened
+  useEffect(() => {
+    if (isExpanded && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+      });
+    }
+  }, [isExpanded]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -52,6 +65,7 @@ export function FilterToggle({
       ref={dropdownRef}
     >
       <button
+        ref={buttonRef}
         type='button'
         onClick={onToggle}
         disabled={disabled}
@@ -68,7 +82,15 @@ export function FilterToggle({
       </button>
 
       {isExpanded && children && (
-        <div className={formFilterToggleStyles.content}>{children}</div>
+        <div
+          className={formFilterToggleStyles.content}
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+          }}
+        >
+          {children}
+        </div>
       )}
     </div>
   );

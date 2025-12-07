@@ -17,7 +17,7 @@ export const formSortSelectStyles = {
 
   // Dropdown
   dropdown:
-    'absolute top-full left-0 mt-2 bg-zinc-800 border border-zinc-700 shadow-2xl z-10 p-4 w-64 min-w-max',
+    'fixed mt-2 bg-zinc-800 border border-zinc-700 shadow-2xl z-50 p-4 w-64 min-w-max',
   header: 'flex items-center justify-between mb-3',
   headerTitle: 'text-sm font-medium text-zinc-300',
   resetButton: 'text-xs text-zinc-400 hover:text-white transition-colors',

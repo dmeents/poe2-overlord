@@ -1,5 +1,5 @@
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formSortSelectStyles } from './form-sort-select.styles';
 
 export interface SortOption {
@@ -32,6 +32,24 @@ export function SortSelect({
 }: SortSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+
+  // Calculate dropdown position when opened
+  useLayoutEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -88,7 +106,7 @@ export function SortSelect({
         </label>
       )}
 
-      <div className={formSortSelectStyles.triggerContainer}>
+      <div className={formSortSelectStyles.triggerContainer} ref={triggerRef}>
         <button
           type='button'
           className={formSortSelectStyles.trigger}
@@ -112,7 +130,14 @@ export function SortSelect({
       </div>
 
       {isOpen && (
-        <div className={formSortSelectStyles.dropdown}>
+        <div
+          className={formSortSelectStyles.dropdown}
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            minWidth: `${dropdownPosition.width}px`,
+          }}
+        >
           <div className={formSortSelectStyles.header}>
             <h4 className={formSortSelectStyles.headerTitle}>Sort Options</h4>
             <button

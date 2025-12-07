@@ -1,5 +1,5 @@
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef, useState } from 'react';
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formSelectStyles } from './form-select.styles';
 
 export interface SelectOption {
@@ -54,6 +54,24 @@ export function Select({
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+
+  // Calculate dropdown position when opened (only for dropdown variant)
+  useLayoutEffect(() => {
+    if (variant === 'dropdown' && isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isOpen, variant]);
 
   // Close dropdown when clicking outside (only for dropdown variant)
   useEffect(() => {
@@ -183,19 +201,7 @@ export function Select({
       aria-selected={isSelected}
     >
       <span className={formSelectStyles.optionLabel}>{option.label}</span>
-      {isSelected && (
-        <svg
-          className='w-4 h-4 text-emerald-400'
-          fill='currentColor'
-          viewBox='0 0 20 20'
-        >
-          <path
-            fillRule='evenodd'
-            d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-            clipRule='evenodd'
-          />
-        </svg>
-      )}
+      {isSelected && <CheckIcon className='w-4 h-4 text-emerald-400' />}
     </div>
   );
 
@@ -210,14 +216,21 @@ export function Select({
         </label>
       )}
 
-      <div className={formSelectStyles.triggerContainer}>
+      <div className={formSelectStyles.triggerContainer} ref={triggerRef}>
         {renderTrigger
           ? renderTrigger(isOpen, selectedOption)
           : defaultRenderTrigger(isOpen, selectedOption)}
       </div>
 
       {isOpen && (
-        <div className={`${formSelectStyles.dropdown} ${dropdownClassName}`}>
+        <div
+          className={`${formSelectStyles.dropdown} ${dropdownClassName}`}
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            minWidth: `${dropdownPosition.width}px`,
+          }}
+        >
           <div className={formSelectStyles.optionsList} role='listbox'>
             {options.length === 0 ? (
               <div className={formSelectStyles.emptyState}>

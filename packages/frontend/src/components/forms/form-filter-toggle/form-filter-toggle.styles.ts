@@ -8,5 +8,5 @@ export const formFilterToggleStyles = {
   toggleText: 'text-sm font-medium',
   chevron: 'w-4 h-4 text-zinc-400 transition-transform',
   content:
-    'absolute top-full left-0 right-0 z-50 mt-2 space-y-3 p-4 bg-zinc-800 border border-zinc-700/50 shadow-xl',
+    'fixed z-50 mt-2 space-y-3 p-4 bg-zinc-800 border border-zinc-700/50 shadow-xl min-w-[300px] max-w-[400px]',
 } as const;

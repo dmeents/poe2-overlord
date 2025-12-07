@@ -73,7 +73,11 @@ export function Card({
                   className={`w-2 h-2 ${accentDotColors[accentColor]} rounded-full animate-pulse`}
                 />
               )}
-              {icon && <span className='w-4 h-4 text-zinc-400'>{icon}</span>}
+              {icon && (
+                <span className={`${accentTextColors[accentColor]} w-4 h-4`}>
+                  {icon}
+                </span>
+              )}
               <span
                 className={`text-xs ${accentTextColors[accentColor]} font-medium uppercase tracking-wider`}
               >

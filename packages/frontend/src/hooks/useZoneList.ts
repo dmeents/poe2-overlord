@@ -148,8 +148,15 @@ export function useZoneList(zones: ZoneStats[]) {
         // Act filter
         if (filters.act !== 'All') {
           const zoneActString = getDisplayAct(zone) || '';
-          if (zoneActString !== filters.act) {
-            return false;
+
+          switch (filters.act) {
+            case 'Endgame':
+            case 'Interlude':
+              if (zoneActString !== filters.act) return false;
+              break;
+            default:
+              if (`Act ${zoneActString}` !== filters.act) return false;
+              break;
           }
         }
 

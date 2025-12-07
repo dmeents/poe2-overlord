@@ -38,6 +38,7 @@ function Index() {
     <>
       {activeCharacter && (
         <>
+          <ExchangeRatesCard />
           {activeZone ? (
             <CurrentZoneCard zone={activeZone} />
           ) : (
@@ -54,7 +55,6 @@ function Index() {
           )}
         </>
       )}
-      <ExchangeRatesCard />
     </>
   );
 

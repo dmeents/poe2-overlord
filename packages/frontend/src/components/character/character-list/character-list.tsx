@@ -12,6 +12,7 @@ import {
   getCharacterGridClasses,
   getListContainerClasses,
 } from './character-list.styles';
+import { UserIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface CharacterListProps {
   characters: CharacterData[];
@@ -33,7 +34,6 @@ interface CharacterListProps {
     direction?: SortOption['direction']
   ) => void;
   onResetSort: () => void;
-  characterCount: number;
   totalCount: number;
 }
 
@@ -51,7 +51,6 @@ export const CharacterList = memo(function CharacterList({
   sort,
   onSortChange,
   onResetSort,
-  characterCount,
   totalCount,
 }: CharacterListProps) {
   // Memoize event handlers to prevent unnecessary re-renders
@@ -99,21 +98,7 @@ export const CharacterList = memo(function CharacterList({
   if (totalCount === 0) {
     return (
       <EmptyState
-        icon={
-          <svg
-            className='h-12 w-12'
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={1.5}
-              d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-            />
-          </svg>
-        }
+        icon={<UserIcon className='h-12 w-12' />}
         title='No Characters'
         description='Create your first character to start tracking your adventures.'
         action={
@@ -135,8 +120,6 @@ export const CharacterList = memo(function CharacterList({
         sort={sort}
         onSortChange={onSortChange}
         onResetSort={onResetSort}
-        characterCount={characterCount}
-        totalCount={totalCount}
       />
 
       {characters.length > 0 ? (
@@ -159,19 +142,7 @@ export const CharacterList = memo(function CharacterList({
       ) : (
         <div className='flex flex-col items-center justify-center py-16 px-6 text-center'>
           <div className='w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4'>
-            <svg
-              className='w-8 h-8 text-zinc-500'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-              />
-            </svg>
+            <MagnifyingGlassIcon className='w-8 h-8 text-zinc-500' />
           </div>
           <h3 className='text-lg font-medium text-zinc-300 mb-2'>
             No characters found

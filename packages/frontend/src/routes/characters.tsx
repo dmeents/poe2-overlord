@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { AlertMessage } from '../components/forms/form-alert-message/form-alert-message';
-import { Button } from '../components/ui/button/button';
+import { Card } from '../components/ui/card/card';
 import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
 import { CharacterInsights } from '../components/insights/character-insights/character-insights';
 import { CharacterList } from '../components/character/character-list/character-list';
@@ -19,6 +19,7 @@ import {
   useSetActiveCharacter,
 } from '../queries/characters';
 import type { CharacterData } from '../types/character';
+import { UsersIcon } from '@heroicons/react/24/outline';
 
 export const Route = createFileRoute('/characters')({
   component: CharactersPage,
@@ -46,7 +47,6 @@ function CharactersPage() {
     resetSort,
     hasActiveFilters,
     filteredCharacters,
-    characterCount,
     totalCount,
   } = useCharacterList(characters);
 
@@ -126,23 +126,32 @@ function CharactersPage() {
   }
 
   const leftColumn = (
-    <CharacterList
-      characters={filteredCharacters}
-      activeCharacterId={activeCharacter?.id}
-      onSelectCharacter={handleSelectCharacter}
-      onEditCharacter={handleEditCharacter}
-      onDeleteCharacter={handleDeleteCharacter}
-      onCreateCharacter={() => setShowCreateModal(true)}
-      filters={filters}
-      onFilterChange={updateFilter}
-      onClearFilters={clearFilters}
-      hasActiveFilters={hasActiveFilters}
-      sort={sort}
-      onSortChange={updateSort}
-      onResetSort={resetSort}
-      characterCount={characterCount}
-      totalCount={totalCount}
-    />
+    <Card
+      title='Characters'
+      subtitle={`${filteredCharacters.length} of ${totalCount} characters`}
+      icon={<UsersIcon className='w-5 h-5' />}
+      rightAction={{
+        label: 'Create Character',
+        onClick: () => setShowCreateModal(true),
+      }}
+    >
+      <CharacterList
+        characters={filteredCharacters}
+        activeCharacterId={activeCharacter?.id}
+        onSelectCharacter={handleSelectCharacter}
+        onEditCharacter={handleEditCharacter}
+        onDeleteCharacter={handleDeleteCharacter}
+        onCreateCharacter={() => setShowCreateModal(true)}
+        filters={filters}
+        onFilterChange={updateFilter}
+        onClearFilters={clearFilters}
+        hasActiveFilters={hasActiveFilters}
+        sort={sort}
+        onSortChange={updateSort}
+        onResetSort={resetSort}
+        totalCount={totalCount}
+      />
+    </Card>
   );
 
   // Compute class distribution
@@ -156,14 +165,6 @@ function CharactersPage() {
 
   const rightColumn = (
     <div className='space-y-4'>
-      <Button
-        onClick={() => setShowCreateModal(true)}
-        variant='primary'
-        size='sm'
-        className='w-full'
-      >
-        Create Character
-      </Button>
       <CharacterInsights characters={characters} />
       <ClassDistributionChart classDistribution={classDistribution} />
     </div>

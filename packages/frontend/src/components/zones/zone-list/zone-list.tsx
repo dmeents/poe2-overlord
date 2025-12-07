@@ -24,7 +24,6 @@ interface ZoneListProps {
     direction?: ZoneSortOption['direction']
   ) => void;
   onResetSort: () => void;
-  zoneCount: number;
   totalCount: number;
 }
 
@@ -37,7 +36,6 @@ export const ZoneList = memo(function ZoneList({
   sort,
   onSortChange,
   onResetSort,
-  zoneCount,
   totalCount,
 }: ZoneListProps) {
   const handleFilterChange = useCallback(
@@ -85,10 +83,7 @@ export const ZoneList = memo(function ZoneList({
         sort={sort}
         onSortChange={handleSortChange}
         onResetSort={handleResetSort}
-        zoneCount={zoneCount}
-        totalCount={totalCount}
       />
-
       {zones.length > 0 ? (
         <div className='bg-zinc-900/50 border border-zinc-700/50 overflow-hidden'>
           <div

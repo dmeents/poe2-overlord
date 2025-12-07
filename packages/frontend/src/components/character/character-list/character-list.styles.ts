@@ -16,7 +16,7 @@ export function getListContainerClasses(): string {
  * Get character grid classes
  */
 export function getCharacterGridClasses(): string {
-  return 'grid grid-cols-1 gap-3';
+  return 'grid grid-cols-1';
 }
 
 /**

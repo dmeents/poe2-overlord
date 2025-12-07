@@ -15,7 +15,6 @@ import type { ZoneStats, EnrichedLocationState } from '../types/character';
 export function getDisplayAct(
   zone: ZoneStats | EnrichedLocationState
 ): string | undefined {
-  // Hideouts are always endgame
   if (zone.zone_name.toLowerCase().includes('hideout')) {
     return 'Endgame';
   }

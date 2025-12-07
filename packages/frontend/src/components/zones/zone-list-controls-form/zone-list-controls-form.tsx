@@ -7,7 +7,6 @@ import { FilterToggle } from '../../forms/form-filter-toggle/form-filter-toggle'
 import { Input } from '../../forms/form-input/form-input';
 import { Select } from '../../forms/form-select/form-select';
 import { SortSelect } from '../../forms/form-sort-select/form-sort-select';
-import { Accordion } from '../../ui/accordion/accordion';
 import { Button } from '../../ui/button/button';
 import {
   activeFilterChipClasses,
@@ -31,8 +30,6 @@ interface ZoneListControlsFormProps {
     direction?: ZoneSortOption['direction']
   ) => void;
   onResetSort: () => void;
-  zoneCount: number;
-  totalCount: number;
 }
 
 const ACTS = [
@@ -63,11 +60,8 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
   sort,
   onSortChange,
   onResetSort,
-  zoneCount,
-  totalCount,
 }: ZoneListControlsFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isFormCollapsed, setIsFormCollapsed] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -105,10 +99,6 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
     filters.search.trim() !== '',
   ].filter(Boolean).length;
 
-  const getZoneCountText = () => {
-    return `Showing ${zoneCount} of ${totalCount} zones`;
-  };
-
   const handleSortChange = (field: string, direction?: 'asc' | 'desc') => {
     onSortChange(field as ZoneSortOption['field'], direction);
   };
@@ -119,13 +109,9 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
   };
 
   return (
-    <div className='space-y-4'>
-      <Accordion
-        title='Zone Controls'
-        subtitle={getZoneCountText()}
-        isExpanded={!isFormCollapsed}
-        onToggle={() => setIsFormCollapsed(!isFormCollapsed)}
-      >
+    <div className='space-y-4 p-4'>
+      {/* Controls */}
+      <div className='space-y-4'>
         {/* First Row: Search Bar */}
         <div className='mb-4'>
           <Input
@@ -500,8 +486,6 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               </div>
             </FilterToggle>
           </div>
-
-          {/* Sort */}
           <div>
             <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
               Sort
@@ -519,8 +503,6 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               </div>
             </div>
           </div>
-
-          {/* Reset All Button */}
           <div className='flex flex-col justify-end'>
             <div className='h-6'></div>
             <Button
@@ -532,7 +514,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
             </Button>
           </div>
         </div>
-      </Accordion>
+      </div>
     </div>
   );
 });

@@ -7,7 +7,7 @@ export function ExchangeRatesCard() {
   const { currencyData, isLoading } = useEconomy();
 
   return (
-    <Card title='Exchange Rates' icon={<ArrowPathIcon />}>
+    <Card title='Exchange Rates' accentColor='amber' icon={<ArrowPathIcon />}>
       {isLoading ? (
         <LoadingSpinner />
       ) : currencyData ? (

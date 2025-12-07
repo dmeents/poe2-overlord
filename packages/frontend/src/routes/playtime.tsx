@@ -61,7 +61,6 @@ function PlaytimePage() {
               sort={sort}
               onSortChange={updateSort}
               onResetSort={resetSort}
-              zoneCount={zoneCount}
               totalCount={totalCount}
             />
           </Card>

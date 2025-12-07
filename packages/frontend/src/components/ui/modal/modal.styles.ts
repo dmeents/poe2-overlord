@@ -9,8 +9,8 @@ export const modalStyles = {
   content: 'p-6',
   header: 'flex items-center justify-between mb-6',
   headerContent: 'flex items-center gap-3',
-  icon: 'flex-shrink-0',
-  title: 'text-2xl font-bold text-white',
+  icon: 'flex-shrink-0 text-zinc-100',
+  title: 'text-2xl font-bold text-zinc-100',
   closeButton:
     'text-zinc-400 hover:text-white transition-colors cursor-pointer',
   closeIcon: 'h-6 w-6',

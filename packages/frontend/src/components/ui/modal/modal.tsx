@@ -82,10 +82,7 @@ export function Modal({
   return (
     <div className={modalStyles.overlay}>
       <div className={modalStyles.container}>
-        {/* Backdrop */}
         <div className={modalStyles.backdrop} onClick={handleBackdropClick} />
-
-        {/* Modal */}
         <div
           ref={modalRef}
           className={cn(
@@ -95,7 +92,6 @@ export function Modal({
           )}
         >
           <div className={modalStyles.content}>
-            {/* Header */}
             {(title || icon || showCloseButton) && (
               <div className={modalStyles.header}>
                 <div className={modalStyles.headerContent}>

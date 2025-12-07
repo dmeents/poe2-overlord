@@ -50,7 +50,6 @@ function CharactersPage() {
     totalCount,
   } = useCharacterList(characters);
 
-  // Event handlers
   const handleCreateCharacter = async (data: CharacterFormData) => {
     try {
       setIsSubmitting(true);
@@ -129,7 +128,7 @@ function CharactersPage() {
     <Card
       title='Characters'
       subtitle={`${filteredCharacters.length} of ${totalCount} characters`}
-      icon={<UsersIcon className='w-5 h-5' />}
+      icon={<UsersIcon />}
       rightAction={{
         label: 'Create Character',
         onClick: () => setShowCreateModal(true),

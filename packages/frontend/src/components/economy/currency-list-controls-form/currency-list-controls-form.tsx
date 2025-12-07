@@ -58,8 +58,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
 }: CurrencyListControlsFormProps) {
   const { selectedEconomyType, setSelectedEconomyType } = useEconomy();
   return (
-    <div className='space-y-4'>
-      {/* Category Selection */}
+    <div className='space-y-4 p-4'>
       <div className='flex flex-wrap gap-2'>
         {ECONOMY_TYPES.map(type => (
           <Button
@@ -80,10 +79,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
           </Button>
         ))}
       </div>
-
-      {/* Search and Sort Controls */}
       <div className={controlsContainerClasses}>
-        {/* Search Input */}
         <div className={searchInputContainerClasses}>
           <Input
             id='currency-search'
@@ -93,8 +89,6 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             onChange={value => onFilterChange('search', String(value || ''))}
           />
         </div>
-
-        {/* Sort Select */}
         <div className={sortSelectContainerClasses}>
           <SortSelect
             id='currency-sort'
@@ -108,8 +102,6 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
           />
         </div>
       </div>
-
-      {/* Count Display and Clear Button */}
       <div className='flex items-center'>
         {hasActiveFilters && (
           <button

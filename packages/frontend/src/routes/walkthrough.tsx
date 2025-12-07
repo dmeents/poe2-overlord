@@ -7,7 +7,7 @@ import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { SectionHeader } from '../components/ui/section-header/section-header';
-import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
+import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { WalkthroughGuide } from '../components/walkthrough/walkthrough-guide/walkthrough-guide';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
@@ -41,8 +41,9 @@ function WalkthroughPage() {
             icon={<ChartBarIcon className='w-4 h-4' />}
           />
           {progress && (
-            <WalkthroughActiveStepCard
+            <WalkthroughStepCard
               key={`${progress.current_step_id}-${progress.last_updated}`}
+              variant='active'
               onWikiClick={handleWikiClick}
               className='mb-6'
             />

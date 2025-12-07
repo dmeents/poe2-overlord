@@ -98,7 +98,7 @@ export function Card({
           </div>
         </div>
       )}
-      <div className='p-6'>{children}</div>
+      <div>{children}</div>
     </div>
   );
 }

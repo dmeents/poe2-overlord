@@ -7,11 +7,11 @@ export function ExchangeRatesCard() {
   const { currencyData, isLoading } = useEconomy();
 
   return (
-    <Card title='Exchange Rates' icon={<ArrowPathIcon />} className='mb-6'>
+    <Card title='Exchange Rates' icon={<ArrowPathIcon />}>
       {isLoading ? (
         <LoadingSpinner />
       ) : currencyData ? (
-        <div className='flex items-center justify-center gap-6 py-4'>
+        <div className='flex items-center justify-center gap-6 py-6'>
           <div className='flex flex-col items-center gap-2'>
             <img
               src={currencyData.primary_currency.image_url}

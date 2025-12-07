@@ -48,7 +48,7 @@ export function EconomyList({ currencies, onCurrencyClick }: EconomyListProps) {
             : 'No currency data available'}
         </div>
       ) : (
-        <div className='-mx-6'>
+        <div>
           {filteredCurrencies.map((currency, index) => (
             <div
               key={currency.id}

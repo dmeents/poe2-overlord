@@ -1,40 +1,95 @@
 import {
+  ArrowLeftIcon,
   ArrowRightIcon,
+  BookOpenIcon,
+  CheckCircleIcon,
+  ClockIcon,
   GiftIcon,
   MapPinIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import { invoke } from '@tauri-apps/api/core';
 import React, { useMemo } from 'react';
-import type { WalkthroughStep } from '../../../types/walkthrough';
+import type {
+  WalkthroughStep,
+  WalkthroughStepResult,
+} from '../../../types/walkthrough';
+import { useCharacter } from '../../../contexts/CharacterContext';
+import { useWalkthrough } from '../../../contexts/WalkthroughContext';
 import { useZone } from '../../../contexts/ZoneContext';
 import { ParsedText } from '../../../utils/text-parser';
 import { Card } from '../../ui/card/card';
-import { DataItem } from '../../ui/data-item/data-item';
+import { Button } from '../../ui/button/button';
 
 interface WalkthroughStepCardProps {
-  step: WalkthroughStep;
-  isCurrent: boolean;
+  // Data sources (mutually exclusive with variant)
+  step?: WalkthroughStep;
+  stepResult?: WalkthroughStepResult;
+
+  // Display mode
+  variant?: 'active' | 'preview';
+
+  // State flags
+  isCurrent?: boolean;
+
+  // Callbacks
   onWikiClick: (itemName: string) => void;
   onSkipToStep?: (stepId: string) => void;
+  onViewGuide?: () => void;
+
+  // Style
+  className?: string;
 }
 
 export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
-  step,
-  isCurrent,
+  step: stepProp,
+  stepResult,
+  variant,
+  isCurrent = false,
   onWikiClick,
   onSkipToStep,
+  onViewGuide,
+  className = '',
 }) => {
   const { openZone } = useZone();
-  // Filter out zone names from wiki items so they don't become wiki links
+
+  // Determine if this is active variant (uses context)
+  const isActiveVariant =
+    variant === 'active' || (!stepProp && !stepResult && variant !== 'preview');
+
+  // Only use context when in active variant
+  const contextData = isActiveVariant
+    ? // eslint-disable-next-line react-hooks/rules-of-hooks
+      useWalkthrough()
+    : { progress: null, currentStep: null, previousStep: null };
+
+  const { activeCharacter } = isActiveVariant
+    ? // eslint-disable-next-line react-hooks/rules-of-hooks
+      useCharacter()
+    : { activeCharacter: null };
+
+  const { progress, currentStep, previousStep } = contextData;
+
+  // Determine the step data to use
+  const stepData = stepProp || stepResult?.step || currentStep?.step;
+  const hasPreviousStep = isActiveVariant && !!previousStep;
+
+  // Wiki items filtering
   const filteredWikiItems = useMemo(() => {
-    const zoneNames = [step.current_zone, step.completion_zone].filter(Boolean);
+    if (!stepData) return [];
 
-    return step.wiki_items.filter(item => !zoneNames.includes(item));
-  }, [step]);
+    const zoneNames = [stepData.current_zone, stepData.completion_zone].filter(
+      Boolean
+    );
 
-  // Custom handler that checks if clicked item is a zone
+    return stepData.wiki_items.filter(item => !zoneNames.includes(item));
+  }, [stepData]);
+
+  // Handle item clicks (zones vs wiki)
   const handleItemClick = (itemName: string) => {
-    const zoneNames = [step.current_zone, step.completion_zone];
+    if (!stepData) return;
+
+    const zoneNames = [stepData.current_zone, stepData.completion_zone];
 
     if (zoneNames.includes(itemName)) {
       openZone(itemName);
@@ -43,68 +98,174 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
     }
   };
 
+  // Navigation handlers (active variant only)
+  const handleAdvanceStep = async () => {
+    if (!isActiveVariant || !stepData || !progress || !activeCharacter) return;
+
+    try {
+      const nextStepId = stepData.next_step_id;
+      if (!nextStepId) {
+        console.error('No next step available. Campaign may be completed.');
+        return;
+      }
+
+      const newProgress = {
+        ...progress,
+        current_step_id: nextStepId,
+        is_completed: false,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
+        characterId: activeCharacter.id,
+        progress: newProgress,
+      });
+    } catch (err) {
+      console.error('Failed to advance step:', err);
+    }
+  };
+
+  const handlePreviousStep = async () => {
+    if (!isActiveVariant || !previousStep || !progress || !activeCharacter)
+      return;
+
+    try {
+      const newProgress = {
+        ...progress,
+        current_step_id: previousStep.step.id,
+        is_completed: false,
+        last_updated: new Date().toISOString(),
+      };
+
+      await invoke('update_character_walkthrough_progress', {
+        characterId: activeCharacter.id,
+        progress: newProgress,
+      });
+    } catch (err) {
+      console.error('Failed to go to previous step:', err);
+    }
+  };
+
+  const formatLastUpdated = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
+
+  // Active variant: Check for special states
+  if (isActiveVariant) {
+    if (!progress) return null;
+
+    // Completion state
+    if (progress.is_completed) {
+      return (
+        <Card className={`${className} border-green-500 bg-green-500/10`}>
+          <div className='flex items-center gap-4 p-4'>
+            <CheckCircleIcon className='w-8 h-8 text-green-500' />
+            <h4 className='text-xl font-semibold text-white'>
+              Campaign Complete!
+            </h4>
+          </div>
+          <div className='flex justify-between items-center pt-3 pb-1 px-4 border-t border-zinc-700/30'>
+            <div className='flex items-center gap-2 text-xs text-zinc-500'>
+              <ClockIcon className='w-3 h-3' />
+              Last updated: {formatLastUpdated(progress.last_updated)}
+            </div>
+            {onViewGuide && (
+              <Button
+                onClick={onViewGuide}
+                variant='text'
+                size='xs'
+                title='View guide'
+              >
+                <BookOpenIcon className='w-3 h-3' />
+                Guide
+              </Button>
+            )}
+          </div>
+        </Card>
+      );
+    }
+
+    // No active step state
+    if (!stepData) {
+      return (
+        <Card className={`${className} border-blue-500 bg-blue-500/10`}>
+          <div className='text-center py-8'>
+            <BookOpenIcon className='w-16 h-16 text-zinc-400 mx-auto mb-4' />
+            <h4 className='text-lg font-semibold text-white mb-2'>
+              No Active Step
+            </h4>
+            <p className='text-zinc-300 mb-4'>
+              Start your walkthrough to begin tracking progress.
+            </p>
+            {onViewGuide && (
+              <Button onClick={onViewGuide} variant='primary' size='md'>
+                <BookOpenIcon className='w-4 h-4' />
+                View Walkthrough Guide
+              </Button>
+            )}
+          </div>
+        </Card>
+      );
+    }
+  }
+
+  // No step data in preview mode
+  if (!stepData) return null;
+
+  // Determine card styling
+  const isActiveStep = isActiveVariant || isCurrent;
+  const cardBorderClass = isActiveStep ? 'border-blue-500 bg-blue-500/10' : '';
+
   return (
     <Card
-      className={`${isCurrent ? 'border-blue-500 bg-blue-500/10' : ''} pb-1`}
+      className={`${className} ${cardBorderClass}`}
+      title={stepData.title}
+      subtitle={stepData.current_zone}
+      icon={<MapPinIcon />}
+      accentColor={isActiveStep ? 'blue' : 'zinc'}
     >
-      <div className='flex items-start justify-between mb-2'>
-        <div className='flex items-center gap-2'>
-          <h4 className='font-medium text-white'>{step.title}</h4>
-          {isCurrent && (
-            <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400'>
-              Current
-            </span>
-          )}
-        </div>
-        <div className='flex items-center gap-1 text-sm text-zinc-400'>
-          <MapPinIcon className='w-3 h-3' />
-          <button
-            onClick={() => openZone(step.current_zone)}
-            className='hover:text-zinc-200 hover:underline cursor-pointer transition-colors'
-          >
-            {step.current_zone}
-          </button>
-        </div>
-      </div>
-
-      <p className='text-sm text-zinc-300 mb-3'>
-        <ParsedText
-          text={step.description}
-          wikiItems={filteredWikiItems}
-          onWikiClick={handleItemClick}
-        />
-      </p>
-
-      <div className='space-y-6 mb-8'>
-        <DataItem
-          label={
-            <span className='text-zinc-300 font-medium'>
+      <div className='p-4 space-y-4'>
+        {/* Completion Zone */}
+        <div className='bg-blue-500/5 border border-blue-500/20 p-3'>
+          <div className='flex items-center gap-2'>
+            <MapPinIcon className='w-4 h-4 text-blue-400 flex-shrink-0' />
+            <span className='text-zinc-300 font-medium text-sm'>
               Enter{' '}
               <button
-                onClick={() => openZone(step.completion_zone)}
+                onClick={() => openZone(stepData.completion_zone)}
                 className='text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium'
               >
-                {step.completion_zone}
+                {stepData.completion_zone}
               </button>
             </span>
-          }
-          value=''
-          icon={<MapPinIcon className='w-4 h-4 text-blue-400' />}
-          className='rounded-none'
-        />
+          </div>
+        </div>
 
-        {step.objectives.length > 0 && (
-          <div>
-            <h5 className='text-xs font-medium text-zinc-300 mb-2'>
-              Objectives ({step.objectives.length}):
+        {/* Description */}
+        <div className='bg-zinc-800/30 border border-zinc-700/20 p-3'>
+          <p className='text-sm text-zinc-300'>
+            <ParsedText
+              text={stepData.description}
+              wikiItems={filteredWikiItems}
+              onWikiClick={handleItemClick}
+            />
+          </p>
+        </div>
+
+        {/* Objectives */}
+        {stepData.objectives.length > 0 && (
+          <div className='bg-zinc-800/40 p-4 border border-zinc-700/30'>
+            <h5 className='text-sm font-medium text-zinc-200 mb-3'>
+              Objectives ({stepData.objectives.length}):
             </h5>
-            <ul className='space-y-2'>
-              {step.objectives.map((objective, index) => (
+            <ul className='space-y-4'>
+              {stepData.objectives.map((objective, index) => (
                 <li key={index} className='text-xs'>
                   <div className='flex items-start gap-2'>
                     <div className='w-1.5 h-1.5 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0' />
                     <div className='flex-1 space-y-1'>
-                      <div className='font-medium text-zinc-300 flex items-center gap-2'>
+                      <div className='font-medium text-zinc-200 flex items-center gap-2'>
                         {objective.required !== undefined && (
                           <StarIcon
                             className={`w-3 h-3 ${
@@ -125,9 +286,9 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
                         objective.notes ||
                         (objective.rewards &&
                           objective.rewards.length > 0)) && (
-                        <div className='border-l-2 border-zinc-600 pl-2 ml-1.5 space-y-1'>
+                        <div className='border-l-2 border-zinc-500 pl-2 ml-1.5 space-y-1'>
                           {objective.details && (
-                            <div className='text-xs text-zinc-500'>
+                            <div className='text-xs text-zinc-400'>
                               <ParsedText
                                 text={objective.details}
                                 wikiItems={filteredWikiItems}
@@ -170,20 +331,66 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
         )}
       </div>
 
-      {/* Skip Button */}
-      {onSkipToStep && !isCurrent && (
-        <div className='flex justify-end pt-1 border-t border-zinc-700/30'>
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              onSkipToStep(step.id);
-            }}
-            className='inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors cursor-pointer'
-            title='Go to this step'
-          >
-            <ArrowRightIcon className='w-3 h-3' />
-            Go Here
-          </button>
+      {/* Footer */}
+      {(isActiveVariant || (onSkipToStep && !isCurrent)) && (
+        <div className='flex justify-between items-center py-2 px-4 border-t border-zinc-700/30'>
+          {isActiveVariant && progress ? (
+            <>
+              <div className='flex items-center gap-2 text-xs text-zinc-500'>
+                <ClockIcon className='w-3 h-3' />
+                Last updated: {formatLastUpdated(progress.last_updated)}
+              </div>
+              <div className='flex gap-2'>
+                {hasPreviousStep && (
+                  <Button
+                    onClick={handlePreviousStep}
+                    variant='text'
+                    size='xs'
+                    title='Previous step'
+                  >
+                    <ArrowLeftIcon className='mr-1 w-3 h-3' />
+                    Previous
+                  </Button>
+                )}
+                {!progress.is_completed && (
+                  <Button
+                    onClick={handleAdvanceStep}
+                    variant='text'
+                    size='xs'
+                    title='Next step'
+                  >
+                    Next
+                    <ArrowRightIcon className='ml-1 w-3 h-3' />
+                  </Button>
+                )}
+                {onViewGuide && (
+                  <Button
+                    onClick={onViewGuide}
+                    variant='text'
+                    size='xs'
+                    className='gap-1'
+                    title='View guide'
+                  >
+                    <BookOpenIcon className='w-3 h-3' />
+                    Guide
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className='flex justify-end w-full'>
+              <Button
+                onClick={() => onSkipToStep?.(stepData.id)}
+                variant='text'
+                size='xs'
+                className='gap-1'
+                title='Go to this step'
+              >
+                <ArrowRightIcon className='w-3 h-3' />
+                Go Here
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </Card>

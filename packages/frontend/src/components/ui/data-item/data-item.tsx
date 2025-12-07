@@ -1,4 +1,13 @@
-import type { DataItemProps } from './data-item.types';
+import type { ReactNode } from 'react';
+
+export interface DataItemProps {
+  label: string | ReactNode;
+  value: string | number;
+  subValue?: string;
+  className?: string;
+  color?: string;
+  icon?: ReactNode;
+}
 
 export function DataItem({
   label,
@@ -10,19 +19,29 @@ export function DataItem({
 }: DataItemProps) {
   return (
     <div
-      className={`flex items-center justify-between h-12 px-2 border-l-2 border-zinc-700 hover:border-zinc-700 hover:bg-zinc-900/20 transition-all  odd:bg-zinc-900/60 ${className}`}
-      style={{ borderLeftColor: color }}
+      className={`
+        flex items-center justify-between
+        px-4 h-12
+        border-l-2 border-transparent
+        transition-all
+        hover:bg-zinc-800/70
+        odd:bg-zinc-900/60 even:bg-zinc-900/30
+        ${className}
+      `}
+      style={color ? { borderLeftColor: color } : undefined}
     >
-      <div className='flex items-center gap-2'>
+      <div className='flex items-center gap-2 min-w-0'>
         {icon && (
-          <div className='flex-shrink-0 text-zinc-400 text-sm'>{icon}</div>
+          <div className='flex-shrink-0 w-3.5 h-3.5 text-zinc-400'>{icon}</div>
         )}
-        <div className='text-zinc-300 text-sm'>{label}</div>
+        <span className='text-zinc-200 text-sm truncate'>{label}</span>
       </div>
-      <div className='text-right pl-3'>
-        <div className='text-zinc-100 text-sm font-semibold'>{value}</div>
+      <div className='text-right flex-shrink-0 pl-3'>
+        <div className='text-zinc-200 text-sm font-semibold'>{value}</div>
         {subValue && (
-          <div className='text-xs text-zinc-500 leading-tight'>{subValue}</div>
+          <div className='text-xs text-zinc-400 leading-tight font-mono'>
+            {subValue}
+          </div>
         )}
       </div>
     </div>

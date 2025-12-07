@@ -116,7 +116,6 @@ export function ClassDistributionChart({
             </div>
           </div>
         </div>
-        <SectionHeader title='Classes' />
         <div>
           {chartData.map(classItem => (
             <DataItem

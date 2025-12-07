@@ -3,7 +3,7 @@ import { MapPinIcon } from '@heroicons/react/24/outline';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
-import { WalkthroughActiveStepCard } from '../components/walkthrough/walkthrough-active-step-card/walkthrough-active-step-card';
+import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { Card } from '../components/ui/card/card';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -24,8 +24,9 @@ function Index() {
     <>
       <CharacterStatusCard />
       {activeCharacter && progress && (
-        <WalkthroughActiveStepCard
+        <WalkthroughStepCard
           key={`${progress.current_step_id}-${progress.last_updated}`}
+          variant='active'
           onWikiClick={handleWikiClick}
           className='mt-6'
         />

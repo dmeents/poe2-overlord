@@ -25,14 +25,10 @@ function formatDurationMinutes(seconds: number): string {
 }
 
 interface PlaytimeInsightsProps {
-  className?: string;
   zones?: ZoneStats[];
 }
 
-export function PlaytimeInsights({
-  className = '',
-  zones: propZones,
-}: PlaytimeInsightsProps) {
+export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
   const { activeCharacter, isLoading } = useCharacter();
   const summary = activeCharacter?.summary;
   const zones = propZones || activeCharacter?.zones || [];
@@ -102,51 +98,45 @@ export function PlaytimeInsights({
   const activePlayPercentage = 100 - hideoutPercentage;
 
   return (
-    <Card title='Insights' icon={<ClockIcon />} className={className}>
-      <SectionHeader title='Breakdown' />
-      <div>
+    <Card title='Insights' icon={<ClockIcon />} className='py-0'>
+      <DataItem
+        label='Total Play Time'
+        value={formatDurationMinutes(totalPlayTime)}
+      />
+      <DataItem
+        label='Active Play'
+        value={formatDurationMinutes(activePlayTime)}
+        subValue={`${activePlayPercentage.toFixed(1)}%`}
+      />
+      <DataItem
+        label='Hideout Time'
+        value={formatDurationMinutes(totalHideoutTime)}
+        subValue={`${hideoutPercentage.toFixed(1)}%`}
+      />
+      <DataItem
+        label='Deaths'
+        value={totalDeaths}
+        subValue={`${deathRate.toFixed(2)}/hr`}
+      />
+      <DataItem
+        label='Avg Time per Zone'
+        value={formatDurationMinutes(Math.round(averageTimePerZone))}
+        subValue={`${nonTownHideoutZones.length} zones`}
+      />
+      {mostTimeSpent && (
         <DataItem
-          label='Total Play Time'
-          value={formatDurationMinutes(totalPlayTime)}
+          label='Most Time Spent'
+          value={mostTimeSpent.zone_name}
+          subValue={mostTimeSpentValue}
         />
+      )}
+      {hasDeaths && (
         <DataItem
-          label='Active Play'
-          value={formatDurationMinutes(activePlayTime)}
-          subValue={`${activePlayPercentage.toFixed(1)}%`}
+          label='Most Deaths'
+          value={mostDeaths.zone_name}
+          subValue={`${mostDeaths.deaths} deaths`}
         />
-        <DataItem
-          label='Hideout Time'
-          value={formatDurationMinutes(totalHideoutTime)}
-          subValue={`${hideoutPercentage.toFixed(1)}%`}
-        />
-        <DataItem
-          label='Deaths'
-          value={totalDeaths}
-          subValue={`${deathRate.toFixed(2)}/hr`}
-        />
-        <DataItem
-          label='Avg per Zone'
-          value={formatDurationMinutes(Math.round(averageTimePerZone))}
-          subValue={`${nonTownHideoutZones.length} zones`}
-        />
-      </div>
-      <SectionHeader title='History' />
-      <div>
-        {mostTimeSpent && (
-          <DataItem
-            label='Most Time Spent'
-            value={mostTimeSpent.zone_name}
-            subValue={mostTimeSpentValue}
-          />
-        )}
-        {hasDeaths && (
-          <DataItem
-            label='Most Deaths'
-            value={mostDeaths.zone_name}
-            subValue={`${mostDeaths.deaths} deaths`}
-          />
-        )}
-      </div>
+      )}
     </Card>
   );
 }

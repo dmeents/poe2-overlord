@@ -154,8 +154,6 @@ export function ActDistributionChart({
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-
-          {/* Center text */}
           <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
             <div className='text-2xl font-bold text-white'>
               {activeActs.length}
@@ -165,9 +163,6 @@ export function ActDistributionChart({
             </div>
           </div>
         </div>
-
-        {/* Legend */}
-        <SectionHeader title='Act Distribution' />
         <div>
           {activeActs.map(act => (
             <DataItem

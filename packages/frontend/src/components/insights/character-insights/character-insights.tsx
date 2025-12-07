@@ -94,7 +94,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
   return (
     <Card title='Insights' icon={<ChartBarIcon />}>
-      <SectionHeader title='Overview' />
       <div>
         {metrics.mostPlayedCharacter && (
           <DataItem
@@ -109,7 +108,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label='Highest Level' value={metrics.highestLevel} />
         <DataItem label='Average Level' value={metrics.averageLevel} />
       </div>
-      <SectionHeader title='Playtime' />
       <div>
         <DataItem
           label='Total Play Time'
@@ -117,14 +115,12 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         />
         <DataItem label='Total Deaths' value={metrics.totalDeaths} />
       </div>
-      <SectionHeader title='Game Modes' />
       <div>
         <DataItem label='Hardcore Characters' value={metrics.hardcoreCount} />
         <DataItem label='SSF Characters' value={metrics.ssfCount} />
       </div>
       {Object.keys(metrics.leagueDistribution).length > 0 && (
         <>
-          <SectionHeader title='Leagues' />
           <div>
             {Object.entries(metrics.leagueDistribution)
               .sort(([, a], [, b]) => b - a)

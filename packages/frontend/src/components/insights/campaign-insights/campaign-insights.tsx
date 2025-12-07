@@ -3,7 +3,6 @@ import React from 'react';
 import type { WalkthroughGuide } from '../../../types/walkthrough';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
-import { SectionHeader } from '../../ui/section-header/section-header';
 
 interface CampaignInsightsProps {
   guide: WalkthroughGuide;
@@ -23,7 +22,6 @@ export const CampaignInsights: React.FC<CampaignInsightsProps> = ({
 
   return (
     <Card title='Insights' icon={<ChartBarIcon />} className={className}>
-      <SectionHeader title='Overview' />
       <div>
         <DataItem label='Total Acts' value={totalActs} />
         <DataItem label='Total Steps' value={totalSteps} />

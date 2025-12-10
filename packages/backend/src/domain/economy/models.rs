@@ -11,7 +11,7 @@ pub enum CurrencyTier {
     Tertiary,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DisplayValue {
     pub tier: CurrencyTier,
     pub value: f64,
@@ -137,7 +137,7 @@ pub struct CurrencyItem {
     pub details_id: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrencyExchangeData {
     pub primary_currency: CurrencyInfo,
     pub secondary_currency: CurrencyInfo,
@@ -146,16 +146,18 @@ pub struct CurrencyExchangeData {
     pub tertiary_rate: Option<f64>,
     pub currencies: Vec<CurrencyExchangeRate>,
     pub fetched_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_stale: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrencyInfo {
     pub id: String,
     pub name: String,
     pub image_url: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrencyExchangeRate {
     pub id: String,
     pub name: String,
@@ -184,13 +186,95 @@ pub struct TopCurrencyItem {
     pub cached_at: String,
 }
 
-/// Single-file cache structure for all economy types of a league
+/// Search result for cross-economy currency search
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrencySearchResult {
+    pub id: String,
+    pub name: String,
+    pub image_url: String,
+    pub economy_type: EconomyType,
+    pub primary_value: f64,
+    pub primary_currency_name: String,
+    pub primary_currency_image_url: String,
+    pub secondary_value: f64,
+    pub tertiary_value: f64,
+    pub volume: Option<f64>,
+    pub change_percent: Option<f64>,
+    pub display_value: DisplayValue,
+}
+
+/// Single-file cache structure for all economy types of a league (DEPRECATED - keeping for migration)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LeagueTopCurrenciesCache {
     pub league: String,
     pub types: HashMap<String, Vec<TopCurrencyItem>>,
     pub last_updated: String,
     pub primary_currency_name: String,
+}
+
+/// New consolidated cache structure - one file per league containing all economy types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LeagueEconomyCache {
+    pub league: String,
+    pub is_hardcore: bool,
+    pub last_updated: String,
+    pub economy_types: HashMap<String, CachedEconomyData>,
+}
+
+/// Cached data for a specific economy type with TTL
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CachedEconomyData {
+    pub data: CurrencyExchangeData,
+    pub cached_at: String,
+    pub ttl_seconds: u64,
+}
+
+impl CachedEconomyData {
+    /// Check if this cached data is still fresh based on TTL
+    pub fn is_fresh(&self) -> bool {
+        if let Ok(cached_time) = chrono::DateTime::parse_from_rfc3339(&self.cached_at) {
+            let now = chrono::Utc::now();
+            let elapsed = now.signed_duration_since(cached_time);
+            elapsed.num_seconds() < self.ttl_seconds as i64
+        } else {
+            false
+        }
+    }
+}
+
+impl LeagueEconomyCache {
+    /// Create a new empty cache for a league
+    pub fn new(league: String, is_hardcore: bool) -> Self {
+        Self {
+            league,
+            is_hardcore,
+            last_updated: chrono::Utc::now().to_rfc3339(),
+            economy_types: HashMap::new(),
+        }
+    }
+
+    /// Update or insert cached data for a specific economy type
+    pub fn update_economy_type(
+        &mut self,
+        economy_type: EconomyType,
+        data: CurrencyExchangeData,
+        ttl_seconds: u64,
+    ) {
+        self.economy_types.insert(
+            economy_type.as_str().to_string(),
+            CachedEconomyData {
+                data,
+                cached_at: chrono::Utc::now().to_rfc3339(),
+                ttl_seconds,
+            },
+        );
+        self.last_updated = chrono::Utc::now().to_rfc3339();
+    }
+
+    /// Get cached data for a specific economy type if it exists
+    pub fn get_economy_type(&self, economy_type: EconomyType) -> Option<&CachedEconomyData> {
+        self.economy_types.get(economy_type.as_str())
+    }
 }
 
 pub(crate) struct TierConfig {
@@ -415,6 +499,7 @@ impl CurrencyExchangeApiResponse {
             tertiary_rate,
             currencies,
             fetched_at: chrono::Utc::now().to_rfc3339(),
+            is_stale: None,
         })
     }
 }

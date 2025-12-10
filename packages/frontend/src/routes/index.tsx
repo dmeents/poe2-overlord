@@ -23,7 +23,7 @@ function Index() {
   const leftColumn = (
     <>
       <CharacterStatusCard />
-      {activeCharacter && progress && (
+      {activeCharacter && progress && !progress.is_completed && (
         <WalkthroughStepCard
           key={`${progress.current_step_id}-${progress.last_updated}`}
           variant='active'

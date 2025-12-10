@@ -10,7 +10,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cache_path_normal_league() {
-        let cache_path = EconomyService::get_cache_path("Rise of the Abyssal", false)
+        let cache_path = EconomyService::get_league_cache_path("Rise of the Abyssal", false)
             .await
             .expect("Failed to get cache path");
 
@@ -21,7 +21,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cache_path_hardcore_league() {
-        let cache_path = EconomyService::get_cache_path("Rise of the Abyssal", true)
+        let cache_path = EconomyService::get_league_cache_path("Rise of the Abyssal", true)
             .await
             .expect("Failed to get cache path");
 
@@ -32,7 +32,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cache_path_league_name_sanitization() {
-        let cache_path = EconomyService::get_cache_path("Test League/Special", false)
+        let cache_path = EconomyService::get_league_cache_path("Test League/Special", false)
             .await
             .expect("Failed to get cache path");
 
@@ -43,7 +43,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cache_path_hardcore_league_name_sanitization() {
-        let cache_path = EconomyService::get_cache_path("Test League/Special", true)
+        let cache_path = EconomyService::get_league_cache_path("Test League/Special", true)
             .await
             .expect("Failed to get cache path");
 
@@ -55,7 +55,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_cache_path_standard_hardcore() {
         // Standard + hardcore should use "Hardcore" not "HC_Standard"
-        let cache_path = EconomyService::get_cache_path("Standard", true)
+        let cache_path = EconomyService::get_league_cache_path("Standard", true)
             .await
             .expect("Failed to get cache path");
 

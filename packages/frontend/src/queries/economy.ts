@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type {
   CurrencyExchangeData,
+  CurrencySearchResult,
   EconomyType,
   TopCurrencyItem,
 } from '@/types/economy';
@@ -23,6 +24,8 @@ export const economyQueryKeys = {
     ] as const,
   aggregatedTop: (league: string, isHardcore: boolean) =>
     [...economyQueryKeys.all, 'aggregated-top', league, isHardcore] as const,
+  search: (league: string, isHardcore: boolean, query: string) =>
+    [...economyQueryKeys.all, 'search', league, isHardcore, query] as const,
 };
 
 // Hook to get currency exchange data via Tauri backend
@@ -48,6 +51,30 @@ export function useCurrencyExchange(
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: true,
+  });
+}
+
+// Hook to search currencies across all economy types
+export function useSearchCurrencies(
+  league: string = 'Rise of the Abyssal',
+  isHardcore: boolean = false,
+  query: string = '',
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: economyQueryKeys.search(league, isHardcore, query),
+    queryFn: async (): Promise<CurrencySearchResult[]> => {
+      return await invoke<CurrencySearchResult[]>('search_currencies', {
+        league,
+        isHardcore,
+        query,
+      });
+    },
+    enabled: enabled && query.length > 0, // Only search if query is not empty
+    staleTime: 5 * 60 * 1000, // 5 minutes - use cached search results
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 }
 

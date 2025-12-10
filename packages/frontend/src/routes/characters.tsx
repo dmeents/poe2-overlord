@@ -70,6 +70,7 @@ function CharactersPage() {
       await updateCharacterMutation.mutateAsync({
         characterId: editingCharacter.id,
         data,
+        currentLevel: editingCharacter.level,
       });
       setEditingCharacter(null);
     } catch {
@@ -112,18 +113,6 @@ function CharactersPage() {
     }
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <PageLayout
-        leftColumn={
-          <LoadingSpinner message='Loading characters...' className='h-64' />
-        }
-        rightColumn={<div />}
-      />
-    );
-  }
-
   const leftColumn = (
     <Card
       title='Characters'
@@ -134,22 +123,26 @@ function CharactersPage() {
         onClick: () => setShowCreateModal(true),
       }}
     >
-      <CharacterList
-        characters={filteredCharacters}
-        activeCharacterId={activeCharacter?.id}
-        onSelectCharacter={handleSelectCharacter}
-        onEditCharacter={handleEditCharacter}
-        onDeleteCharacter={handleDeleteCharacter}
-        onCreateCharacter={() => setShowCreateModal(true)}
-        filters={filters}
-        onFilterChange={updateFilter}
-        onClearFilters={clearFilters}
-        hasActiveFilters={hasActiveFilters}
-        sort={sort}
-        onSortChange={updateSort}
-        onResetSort={resetSort}
-        totalCount={totalCount}
-      />
+      {isLoading ? (
+        <LoadingSpinner message='Loading characters...' className='h-64' />
+      ) : (
+        <CharacterList
+          characters={filteredCharacters}
+          activeCharacterId={activeCharacter?.id}
+          onSelectCharacter={handleSelectCharacter}
+          onEditCharacter={handleEditCharacter}
+          onDeleteCharacter={handleDeleteCharacter}
+          onCreateCharacter={() => setShowCreateModal(true)}
+          filters={filters}
+          onFilterChange={updateFilter}
+          onClearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+          sort={sort}
+          onSortChange={updateSort}
+          onResetSort={resetSort}
+          totalCount={totalCount}
+        />
+      )}
     </Card>
   );
 

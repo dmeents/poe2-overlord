@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { CurrencyExchangeRate } from '../types/economy';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CurrencyFilters {
-  search: string;
+  // No filters for now - search is handled globally
 }
 
 export interface CurrencySortOption {
@@ -10,9 +11,7 @@ export interface CurrencySortOption {
   direction: 'asc' | 'desc';
 }
 
-const defaultFilters: CurrencyFilters = {
-  search: '',
-};
+const defaultFilters: CurrencyFilters = {};
 
 const defaultSort: CurrencySortOption = {
   field: 'primary_value',
@@ -55,18 +54,8 @@ export function useCurrencyList(currencies: CurrencyExchangeRate[]) {
 
   const { filteredCurrencies, currencyCount, totalCount, hasActiveFilters } =
     useMemo(() => {
-      // Apply filters
-      const filtered = currencies.filter(currency => {
-        // Search filter
-        if (filters.search.trim() !== '') {
-          const searchTerm = filters.search.toLowerCase().trim();
-          if (!currency.name.toLowerCase().includes(searchTerm)) {
-            return false;
-          }
-        }
-
-        return true;
-      });
+      // Apply filters (currently none - just use all currencies)
+      const filtered = [...currencies];
 
       // Sort the filtered currencies
       filtered.sort((a, b) => {
@@ -102,7 +91,7 @@ export function useCurrencyList(currencies: CurrencyExchangeRate[]) {
       });
 
       // Check if any filters are active
-      const hasActive = filters.search.trim() !== '';
+      const hasActive = false;
 
       return {
         filteredCurrencies: filtered,
@@ -110,7 +99,7 @@ export function useCurrencyList(currencies: CurrencyExchangeRate[]) {
         totalCount: currencies.length,
         hasActiveFilters: hasActive,
       };
-    }, [currencies, filters, sort]);
+    }, [currencies, sort]);
 
   return {
     // State

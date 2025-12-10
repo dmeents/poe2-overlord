@@ -19,7 +19,7 @@ function RouteComponent() {
 
   const rightColumn = (
     <Card title='Configuration Help'>
-      <div className='space-y-4 text-sm text-zinc-300'>
+      <div className='space-y-4 p-4 text-sm text-zinc-300'>
         <div>
           <h4 className='font-medium text-white mb-2'>POE Client Log Path</h4>
           <p>

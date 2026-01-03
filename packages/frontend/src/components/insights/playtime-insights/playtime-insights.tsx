@@ -5,7 +5,6 @@ import { Card } from '../../ui/card/card';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { DataItem } from '../../ui/data-item/data-item';
 import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
-import { SectionHeader } from '../../ui/section-header/section-header';
 
 // Format duration without seconds, rounding to nearest minute
 function formatDurationMinutes(seconds: number): string {
@@ -35,11 +34,7 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
 
   if (isLoading) {
     return (
-      <Card
-        title='Playtime Insights'
-        icon={<ClockIcon />}
-        className={className}
-      >
+      <Card title='Playtime Insights' icon={<ClockIcon />}>
         <LoadingSpinner message='Loading playtime insights...' />
       </Card>
     );
@@ -47,11 +42,7 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
 
   if (!activeCharacter || !summary) {
     return (
-      <Card
-        title='Playtime Insights'
-        icon={<ClockIcon />}
-        className={className}
-      >
+      <Card title='Playtime Insights' icon={<ClockIcon />}>
         <EmptyState
           icon={<ClockIcon className='w-8 h-8' />}
           title='No Character Data Available'

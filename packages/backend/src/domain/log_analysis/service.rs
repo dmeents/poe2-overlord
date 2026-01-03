@@ -28,6 +28,7 @@ pub struct LogAnalysisServiceImpl {
     is_running: Arc<RwLock<bool>>,
     last_position: Arc<RwLock<u64>>,
     zone_level_cache: Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
+    last_log_timestamp: Arc<RwLock<Option<chrono::DateTime<chrono::Utc>>>>,
 }
 
 impl LogAnalysisServiceImpl {
@@ -58,6 +59,7 @@ impl LogAnalysisServiceImpl {
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
             zone_level_cache: Arc::new(RwLock::new(None)),
+            last_log_timestamp: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -88,6 +90,7 @@ impl LogAnalysisServiceImpl {
             is_running: Arc::new(RwLock::new(false)),
             last_position: Arc::new(RwLock::new(0)),
             zone_level_cache: Arc::new(RwLock::new(None)),
+            last_log_timestamp: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -155,6 +158,8 @@ impl LogAnalysisServiceImpl {
         let is_running = Arc::clone(&self.is_running);
         let last_position = Arc::clone(&self.last_position);
         let zone_level_cache = Arc::clone(&self.zone_level_cache);
+        let last_log_timestamp = Arc::clone(&self.last_log_timestamp);
+        let log_analysis_config = Arc::clone(&self.config);
         let parser_manager = self.parser_manager.clone();
 
         tokio::spawn(async move {
@@ -189,6 +194,8 @@ impl LogAnalysisServiceImpl {
                                 &event_bus,
                                 &last_position,
                                 &zone_level_cache,
+                                &last_log_timestamp,
+                                &log_analysis_config,
                                 last_pos,
                             )
                             .await
@@ -224,6 +231,8 @@ impl LogAnalysisServiceImpl {
         event_bus: &Arc<crate::infrastructure::events::EventBus>,
         last_position: &Arc<RwLock<u64>>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
+        last_log_timestamp: &Arc<RwLock<Option<chrono::DateTime<chrono::Utc>>>>,
+        log_analysis_config: &Arc<RwLock<LogAnalysisConfig>>,
         start_position: u64,
     ) -> AppResult<()> {
         let new_lines = log_file_repository
@@ -238,6 +247,39 @@ impl LogAnalysisServiceImpl {
             "LOG ANALYSIS: Processing {} new lines from log file",
             new_lines.len()
         );
+
+        // Check for session gap using the first new line
+        if let Some(first_line) = new_lines.first() {
+            if let Some(current_timestamp) = Self::extract_log_timestamp(first_line) {
+                let last_timestamp_opt = last_log_timestamp.read().await.clone();
+
+                if let Some(last_ts) = last_timestamp_opt {
+                    let session_gap_threshold = {
+                        let config = log_analysis_config.read().await;
+                        config.session_gap_threshold_minutes
+                    };
+                    let gap_duration = current_timestamp.signed_duration_since(last_ts);
+                    let gap_minutes = gap_duration.num_minutes();
+
+                    if gap_minutes > session_gap_threshold {
+                        info!(
+                            "Session gap detected: {} minutes since last log entry. Finalizing stale zones...",
+                            gap_minutes
+                        );
+
+                        if let Err(e) = character_service.finalize_all_active_zones().await {
+                            error!("Failed to finalize stale zones after session gap: {}", e);
+                        } else {
+                            info!("Successfully finalized stale zones after session gap");
+                        }
+                    }
+                }
+
+                // Update last log timestamp
+                let mut last_ts = last_log_timestamp.write().await;
+                *last_ts = Some(current_timestamp);
+            }
+        }
 
         for line in &new_lines {
             if let Err(e) = Self::process_single_line(
@@ -391,6 +433,29 @@ impl LogAnalysisServiceImpl {
 
     fn is_hideout(zone_name: &str) -> bool {
         zone_name.to_lowercase().contains("hideout")
+    }
+
+    /// Extract timestamp from a log line
+    /// POE2 log format: "2025/12/24 04:58:45 123456 abc [INFO Client 12345] ..."
+    fn extract_log_timestamp(line: &str) -> Option<chrono::DateTime<chrono::Utc>> {
+        // Split on whitespace and take first two parts (date and time)
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 2 {
+            return None;
+        }
+
+        let date_str = parts[0]; // "2025/12/24"
+        let time_str = parts[1]; // "04:58:45"
+        let datetime_str = format!("{} {}", date_str, time_str);
+
+        // Parse as naive datetime then convert to UTC
+        match chrono::NaiveDateTime::parse_from_str(&datetime_str, "%Y/%m/%d %H:%M:%S") {
+            Ok(naive_dt) => Some(chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(
+                naive_dt,
+                chrono::Utc,
+            )),
+            Err(_) => None,
+        }
     }
 
     async fn process_scene_change(

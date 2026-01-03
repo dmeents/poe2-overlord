@@ -130,7 +130,6 @@ impl SceneChangeEvent {
     }
 }
 
-
 /// Information about a log file being monitored
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogFileInfo {
@@ -155,6 +154,14 @@ pub struct LogAnalysisConfig {
     pub max_file_size_mb: u64,
     /// Size of the buffer for reading log lines
     pub buffer_size: usize,
+    /// Session gap threshold in minutes (default: 30)
+    /// If time between log entries exceeds this, zones are finalized
+    #[serde(default = "default_session_gap_threshold")]
+    pub session_gap_threshold_minutes: i64,
+}
+
+fn default_session_gap_threshold() -> i64 {
+    30
 }
 
 impl Default for LogAnalysisConfig {
@@ -164,10 +171,10 @@ impl Default for LogAnalysisConfig {
             monitoring_interval_ms: 100,
             max_file_size_mb: 100,
             buffer_size: 1000,
+            session_gap_threshold_minutes: 30,
         }
     }
 }
-
 
 /// Represents the analysis result of a single log line
 #[derive(Debug, Clone)]
@@ -190,19 +197,19 @@ pub enum LogAnalysisError {
     /// The specified log file was not found
     #[error("File not found: {path}")]
     FileNotFound { path: String },
-    
+
     /// An error occurred while accessing the log file
     #[error("File access error: {message}")]
     FileAccessError { message: String },
-    
+
     /// An error occurred while parsing log content
     #[error("Parsing error: {message}")]
     ParsingError { message: String },
-    
+
     /// A configuration-related error
     #[error("Configuration error: {message}")]
     ConfigurationError { message: String },
-    
+
     /// An error occurred during log monitoring
     #[error("Monitoring error: {message}")]
     MonitoringError { message: String },

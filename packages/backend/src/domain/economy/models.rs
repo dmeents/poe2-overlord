@@ -29,8 +29,8 @@ pub enum EconomyType {
     UncutGems,
     LineageSupportGems,
     Essences,
-    Ultimatum,
-    Talismans,
+    SoulCores,
+    Idols,
     Runes,
     Ritual,
     Expedition,
@@ -47,8 +47,8 @@ impl EconomyType {
             EconomyType::UncutGems => "UncutGems",
             EconomyType::LineageSupportGems => "LineageSupportGems",
             EconomyType::Essences => "Essences",
-            EconomyType::Ultimatum => "Ultimatum",
-            EconomyType::Talismans => "Talismans",
+            EconomyType::SoulCores => "SoulCores",
+            EconomyType::Idols => "Idols",
             EconomyType::Runes => "Runes",
             EconomyType::Ritual => "Ritual",
             EconomyType::Expedition => "Expedition",
@@ -65,8 +65,8 @@ impl EconomyType {
             EconomyType::UncutGems,
             EconomyType::LineageSupportGems,
             EconomyType::Essences,
-            EconomyType::Ultimatum,
-            EconomyType::Talismans,
+            EconomyType::SoulCores,
+            EconomyType::Idols,
             EconomyType::Runes,
             EconomyType::Ritual,
             EconomyType::Expedition,
@@ -354,6 +354,11 @@ impl CurrencyExchangeRate {
 
 impl CurrencyExchangeApiResponse {
     pub fn into_frontend_data(self) -> Result<CurrencyExchangeData, String> {
+        // Check if items array is empty first
+        if self.items.is_empty() && self.core.items.is_empty() {
+            return Err("No currency data available for this economy type".to_string());
+        }
+
         if self.core.primary.is_empty() {
             return Err("API response missing primary currency".to_string());
         }
@@ -368,7 +373,7 @@ impl CurrencyExchangeApiResponse {
             .find(|item| item.id == self.core.primary)
             .ok_or_else(|| {
                 format!(
-                    "Primary currency '{}' not found in items",
+                    "No currency data available - '{}' currency not found",
                     self.core.primary
                 )
             })
@@ -385,7 +390,7 @@ impl CurrencyExchangeApiResponse {
             .find(|item| item.id == self.core.secondary)
             .ok_or_else(|| {
                 format!(
-                    "Secondary currency '{}' not found in items",
+                    "No currency data available - '{}' currency not found",
                     self.core.secondary
                 )
             })

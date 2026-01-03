@@ -64,14 +64,20 @@ impl EconomyService {
         // Cache is stale or missing - try to fetch from poe.ninja
         // Handle league name for hardcore economies
         // Special case: Standard + hardcore = "Hardcore"
+        // Special case: Remove "The " prefix from league names for poe.ninja API
+        let mut league_name = league.to_string();
+        if league_name.starts_with("The ") {
+            league_name = league_name.strip_prefix("The ").unwrap().to_string();
+        }
+
         let league_name = if is_hardcore {
             if league.eq_ignore_ascii_case("Standard") {
                 "Hardcore".to_string()
             } else {
-                format!("HC {}", league)
+                format!("HC {}", league_name)
             }
         } else {
-            league.to_string()
+            league_name
         };
 
         let url = format!(
@@ -159,9 +165,19 @@ impl EconomyService {
             })?;
 
         api_response.into_frontend_data().map_err(|e| {
-            log::error!("Failed to convert API response to frontend data: {}", e);
-            AppError::Serialization {
-                message: format!("Failed to process currency data: {}", e),
+            log::warn!(
+                "Failed to convert API response to frontend data for {} economy type: {}",
+                url,
+                e
+            );
+
+            // Provide more user-friendly error messages
+            if e.contains("No currency data available") {
+                AppError::Validation { message: e }
+            } else {
+                AppError::Serialization {
+                    message: format!("Failed to process currency data: {}", e),
+                }
             }
         })
     }
@@ -195,8 +211,8 @@ impl EconomyService {
                 "UncutGems" => EconomyType::UncutGems,
                 "LineageSupportGems" => EconomyType::LineageSupportGems,
                 "Essences" => EconomyType::Essences,
-                "Ultimatum" => EconomyType::Ultimatum,
-                "Talismans" => EconomyType::Talismans,
+                "SoulCores" => EconomyType::SoulCores,
+                "Idols" => EconomyType::Idols,
                 "Runes" => EconomyType::Runes,
                 "Ritual" => EconomyType::Ritual,
                 "Expedition" => EconomyType::Expedition,
@@ -280,8 +296,8 @@ impl EconomyService {
                 "UncutGems" => EconomyType::UncutGems,
                 "LineageSupportGems" => EconomyType::LineageSupportGems,
                 "Essences" => EconomyType::Essences,
-                "Ultimatum" => EconomyType::Ultimatum,
-                "Talismans" => EconomyType::Talismans,
+                "SoulCores" => EconomyType::SoulCores,
+                "Idols" => EconomyType::Idols,
                 "Runes" => EconomyType::Runes,
                 "Ritual" => EconomyType::Ritual,
                 "Expedition" => EconomyType::Expedition,

@@ -77,7 +77,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
         ))}
       </div>
       <div className={controlsContainerClasses}>
-        <div className={searchInputContainerClasses}>
+        <div className={`${searchInputContainerClasses} relative`}>
           <Input
             id='currency-search'
             type='text'
@@ -85,6 +85,29 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             value={searchQuery}
             onChange={value => onSearchChange(String(value || ''))}
           />
+          {searchQuery && (
+            <button
+              type='button'
+              onClick={() => onSearchChange('')}
+              className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-zinc-800/50'
+              aria-label='Clear search'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                width='16'
+                height='16'
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              >
+                <line x1='18' y1='6' x2='6' y2='18' />
+                <line x1='6' y1='6' x2='18' y2='18' />
+              </svg>
+            </button>
+          )}
         </div>
         <div className={sortSelectContainerClasses}>
           <SortSelect

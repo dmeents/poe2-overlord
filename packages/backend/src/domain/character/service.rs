@@ -369,26 +369,53 @@ impl CharacterService for CharacterServiceImpl {
     async fn finalize_all_active_zones(&self) -> Result<(), AppError> {
         let characters = self.repository.load_all_characters().await?;
 
+        log::info!(
+            "finalize_all_active_zones called - found {} characters to process",
+            characters.len()
+        );
+
         for mut character_data in characters {
+            log::info!(
+                "Processing character {} for zone finalization",
+                character_data.id
+            );
+
             // Apply zone tracking business logic
             self.zone_tracking
                 .finalize_active_zones(&mut character_data)?;
+
+            // Clear current_location to make stale state more explicit
+            if character_data.current_location.is_some() {
+                log::info!(
+                    "Clearing current_location for character {} during finalization",
+                    character_data.id
+                );
+                character_data.current_location = None;
+            }
+
             character_data.touch();
 
             // Save character data
             self.repository.save_character_data(&character_data).await?;
+            log::info!(
+                "Saved character data for {} after zone finalization",
+                character_data.id
+            );
 
             // Enrich character data before emitting event
             let enriched_data = self.enrich_character_data(character_data).await;
 
             // Publish event
+            let character_id = enriched_data.id.clone();
             let event = crate::infrastructure::events::AppEvent::character_updated(
                 enriched_data.id.clone(),
                 enriched_data,
             );
             self.event_bus.publish(event).await?;
+            log::info!("Published character_updated event for {}", character_id);
         }
 
+        log::info!("finalize_all_active_zones completed successfully");
         Ok(())
     }
 

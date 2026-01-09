@@ -131,6 +131,7 @@ impl ServiceInitializer {
             monitoring_interval_ms: 500,
             max_file_size_mb: 100,
             buffer_size: 1000,
+            session_gap_threshold_minutes: 30,
         };
 
         let log_analysis_service = LogAnalysisServiceImpl::new(

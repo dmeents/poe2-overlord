@@ -80,9 +80,11 @@ export function useUpdateCharacter() {
     mutationFn: async ({
       characterId,
       data,
+      currentLevel,
     }: {
       characterId: string;
       data: CharacterFormData;
+      currentLevel: number;
     }): Promise<CharacterData> => {
       return await invoke<CharacterData>('update_character', {
         characterId,
@@ -93,7 +95,7 @@ export function useUpdateCharacter() {
           league: data.league,
           hardcore: data.hardcore,
           solo_self_found: data.solo_self_found,
-          level: 1, // Default level for now - can be updated later if needed
+          level: currentLevel,
         },
       });
     },

@@ -14,8 +14,8 @@ export type EconomyType =
   | 'UncutGems'
   | 'LineageSupportGems'
   | 'Essences'
-  | 'Ultimatum'
-  | 'Talismans'
+  | 'SoulCores'
+  | 'Idols'
   | 'Runes'
   | 'Ritual'
   | 'Expedition'
@@ -114,4 +114,24 @@ export interface CurrencyExchangeData {
   currencies: CurrencyExchangeRate[];
   /** Timestamp of when this data was fetched (RFC3339 format) */
   fetched_at: string;
+  /** Whether this data is stale (returned from cache when poe.ninja was unavailable) */
+  is_stale?: boolean;
+}
+
+/**
+ * Search result for cross-economy currency search
+ */
+export interface CurrencySearchResult {
+  id: string;
+  name: string;
+  image_url: string;
+  economy_type: EconomyType;
+  primary_value: number;
+  primary_currency_name: string;
+  primary_currency_image_url: string;
+  secondary_value: number;
+  tertiary_value: number;
+  volume: number | null;
+  change_percent: number | null;
+  display_value: DisplayValue;
 }

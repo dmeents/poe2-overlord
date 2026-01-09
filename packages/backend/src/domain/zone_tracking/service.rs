@@ -137,17 +137,38 @@ impl ZoneTrackingService for ZoneTrackingServiceImpl {
 
     fn finalize_active_zones(&self, character_data: &mut CharacterData) -> Result<(), AppError> {
         let mut has_changes = false;
+        let active_zones_count = character_data.zones.iter().filter(|z| z.is_active).count();
+
+        info!(
+            "Finalizing active zones for character {} - found {} active zones",
+            character_data.id, active_zones_count
+        );
+
         for zone in &mut character_data.zones {
             if zone.is_active {
-                zone.stop_timer_and_add_time();
+                let elapsed = zone.stop_timer_and_add_time();
                 zone.deactivate();
                 has_changes = true;
+
+                info!(
+                    "Finalized zone '{}' for character {} - stopped timer ({}s elapsed), set is_active=false",
+                    zone.zone_name, character_data.id, elapsed
+                );
             }
         }
 
         if has_changes {
             character_data.summary =
                 TrackingSummary::from_zones(&character_data.id, &character_data.zones);
+            info!(
+                "Updated summary for character {} after finalizing zones",
+                character_data.id
+            );
+        } else {
+            info!(
+                "No active zones to finalize for character {}",
+                character_data.id
+            );
         }
 
         Ok(())

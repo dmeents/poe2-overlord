@@ -1,4 +1,4 @@
-use super::models::{CurrencyExchangeData, EconomyType, TopCurrencyItem};
+use super::models::{CurrencyExchangeData, CurrencySearchResult, EconomyType, TopCurrencyItem};
 use super::service::EconomyService;
 use crate::to_command_result;
 use crate::CommandResult;
@@ -39,6 +39,27 @@ pub async fn get_aggregated_top_currencies(
 
     let result = economy_service
         .load_aggregated_top_currencies(&league, is_hardcore)
+        .await;
+
+    to_command_result(result)
+}
+
+#[tauri::command]
+pub async fn search_currencies(
+    league: String,
+    is_hardcore: bool,
+    query: String,
+    economy_service: State<'_, EconomyService>,
+) -> CommandResult<Vec<CurrencySearchResult>> {
+    log::info!(
+        "Command: search_currencies for league: {}, hardcore: {}, query: '{}'",
+        league,
+        is_hardcore,
+        query
+    );
+
+    let result = economy_service
+        .search_currencies(&league, is_hardcore, &query)
         .await;
 
     to_command_result(result)

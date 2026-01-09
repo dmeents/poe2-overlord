@@ -2,7 +2,7 @@
 // Centralized styling utilities for the SettingsForm component
 
 export const settingsFormStyles = {
-  container: 'space-y-0',
+  container: 'space-y-0 p-4',
   messagesContainer: 'mb-6',
   actionButtons: 'flex gap-3 pt-6',
   codeBlock: 'bg-zinc-700 px-1 text-zinc-200',

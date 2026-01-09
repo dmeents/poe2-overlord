@@ -17,9 +17,9 @@ export const ECONOMY_TYPE_ICONS: Record<EconomyType, string> = {
     'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvR2Vtcy9OZXcvTmV3U3VwcG9ydC9MaW5lYWdlL1dpbGRzaGFyZHMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/6d700adf17/Wildshards.png',
   Essences:
     'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvRXNzZW5jZS9HcmVhdGVyQXR0cmlidXRlRXNzZW5jZSIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/8a8cb823af/GreaterAttributeEssence.png',
-  Ultimatum:
+  SoulCores:
     'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvU291bENvcmVzL0dyZWF0ZXJTb3VsQ29yZU1hbmEiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/1437190de2/GreaterSoulCoreMana.png',
-  Talismans:
+  Idols:
     'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvVG9ybWVudGVkU3Bpcml0U29ja2V0YWJsZXMvQXptZXJpU29ja2V0YWJsZU1vbmtleVNwZWNpYWwiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/8ffc9986a0/AzmeriSocketableMonkeySpecial.png',
   Runes:
     'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvUnVuZXMvTGlnaHRuaW5nUnVuZSIsInNjYWxlIjoxLCJyZWFsbSI6InBvZTIifV0/98319b3998/LightningRune.png',
@@ -43,8 +43,8 @@ export const ECONOMY_TYPE_LABELS: Record<EconomyType, string> = {
   UncutGems: 'Uncut Gems',
   LineageSupportGems: 'Lineage Support Gems',
   Essences: 'Essences',
-  Ultimatum: 'Ultimatum',
-  Talismans: 'Talismans',
+  SoulCores: 'Soul Cores',
+  Idols: 'Idols',
   Runes: 'Runes',
   Ritual: 'Ritual',
   Expedition: 'Expedition',
@@ -62,8 +62,8 @@ export const ECONOMY_TYPES: EconomyType[] = [
   'UncutGems',
   'LineageSupportGems',
   'Essences',
-  'Ultimatum',
-  'Talismans',
+  'SoulCores',
+  'Idols',
   'Runes',
   'Ritual',
   'Expedition',

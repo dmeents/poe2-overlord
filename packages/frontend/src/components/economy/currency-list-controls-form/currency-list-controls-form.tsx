@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { XMarkIcon } from '@heroicons/react/20/solid';
 import { Input } from '../../forms/form-input/form-input';
 import { SortSelect } from '../../forms/form-sort-select/form-sort-select';
 import { Button } from '../../ui/button/button';
@@ -61,8 +62,12 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             key={type}
             variant={selectedEconomyType === type ? 'primary' : 'outline'}
             size='sm'
-            onClick={() => setSelectedEconomyType(type)}
-            disabled={searchQuery.length > 0}
+            onClick={() => {
+              setSelectedEconomyType(type);
+              if (searchQuery) {
+                onSearchChange('');
+              }
+            }}
           >
             <img
               src={ECONOMY_TYPE_ICONS[type]}
@@ -86,27 +91,15 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             onChange={value => onSearchChange(String(value || ''))}
           />
           {searchQuery && (
-            <button
-              type='button'
+            <Button
+              variant='icon'
+              size='sm'
               onClick={() => onSearchChange('')}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-zinc-800/50'
-              aria-label='Clear search'
+              className='absolute right-2 top-1/2 -translate-y-1/2'
+              title='Clear search'
             >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                width='16'
-                height='16'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              >
-                <line x1='18' y1='6' x2='6' y2='18' />
-                <line x1='6' y1='6' x2='18' y2='18' />
-              </svg>
-            </button>
+              <XMarkIcon className='w-4 h-4' />
+            </Button>
           )}
         </div>
         <div className={sortSelectContainerClasses}>

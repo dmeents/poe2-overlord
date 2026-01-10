@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
+
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { ReactNode } from 'react';
 
 export interface AccordionProps {
   title: string;
@@ -17,7 +18,7 @@ export function Accordion({
   onToggle,
   children,
   className = '',
-}: AccordionProps) {
+}: AccordionProps): React.JSX.Element {
   return (
     <div className={`bg-zinc-900/80 border border-zinc-700/50 ${className}`}>
       {/* Accordion Header */}

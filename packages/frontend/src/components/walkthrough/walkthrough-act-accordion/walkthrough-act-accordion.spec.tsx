@@ -58,8 +58,8 @@ const mockAct: WalkthroughAct = {
   act_name: 'Act 1',
   act_number: 1,
   steps: {
-    'act1_step_1': mockStep1,
-    'act1_step_2': mockStep2,
+    act1_step_1: mockStep1,
+    act1_step_2: mockStep2,
   },
 };
 
@@ -111,10 +111,7 @@ describe('WalkthroughActAccordion', () => {
 
   it('highlights current step', () => {
     render(
-      <WalkthroughActAccordion
-        {...defaultProps}
-        currentStepId="act1_step_1"
-      />
+      <WalkthroughActAccordion {...defaultProps} currentStepId='act1_step_1' />
     );
 
     // The current step should have the active styling
@@ -122,8 +119,7 @@ describe('WalkthroughActAccordion', () => {
     expect(firstStepCard).toBeInTheDocument();
   });
 
-  it('passes onWikiClick to step cards', async () => {
-    const user = userEvent.setup();
+  it('passes onWikiClick to step cards', () => {
     const handleWikiClick = vi.fn();
 
     render(
@@ -149,7 +145,7 @@ describe('WalkthroughActAccordion', () => {
     render(
       <WalkthroughActAccordion
         {...defaultProps}
-        currentStepId="act1_step_1"
+        currentStepId='act1_step_1'
         onSkipToStep={vi.fn()}
       />
     );
@@ -165,7 +161,7 @@ describe('WalkthroughActAccordion', () => {
     render(
       <WalkthroughActAccordion
         {...defaultProps}
-        currentStepId="act1_step_1"
+        currentStepId='act1_step_1'
         onSkipToStep={handleSkip}
       />
     );
@@ -176,9 +172,7 @@ describe('WalkthroughActAccordion', () => {
   });
 
   it('applies mb-4 className to accordion', () => {
-    const { container } = render(
-      <WalkthroughActAccordion {...defaultProps} />
-    );
+    const { container } = render(<WalkthroughActAccordion {...defaultProps} />);
 
     // The Accordion component should have mb-4 class
     expect(container.firstChild).toHaveClass('mb-4');
@@ -195,7 +189,7 @@ describe('WalkthroughActAccordion', () => {
       <WalkthroughActAccordion
         {...defaultProps}
         act={emptyAct}
-        actKey="act_2"
+        actKey='act_2'
       />
     );
 

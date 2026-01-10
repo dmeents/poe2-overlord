@@ -7,26 +7,38 @@ import type { CharacterFilters, SortOption } from '@/hooks/useCharacterList';
 
 // Mock child components to simplify testing
 vi.mock('../character-card/character-card', () => ({
-  CharacterCard: vi.fn(({ character, isActive, onSelect, onEdit, onDelete }) => (
-    <div data-testid={`character-card-${character.id}`}>
-      <span>{character.name}</span>
-      {isActive && <span data-testid="active-indicator">Active</span>}
-      <button onClick={onSelect} data-testid={`select-${character.id}`}>Select</button>
-      <button onClick={onEdit} data-testid={`edit-${character.id}`}>Edit</button>
-      <button onClick={onDelete} data-testid={`delete-${character.id}`}>Delete</button>
-    </div>
-  )),
+  CharacterCard: vi.fn(
+    ({ character, isActive, onSelect, onEdit, onDelete }) => (
+      <div data-testid={`character-card-${character.id}`}>
+        <span>{character.name}</span>
+        {isActive && <span data-testid='active-indicator'>Active</span>}
+        <button onClick={onSelect} data-testid={`select-${character.id}`}>
+          Select
+        </button>
+        <button onClick={onEdit} data-testid={`edit-${character.id}`}>
+          Edit
+        </button>
+        <button onClick={onDelete} data-testid={`delete-${character.id}`}>
+          Delete
+        </button>
+      </div>
+    )
+  ),
 }));
 
 vi.mock('../character-list-controls-form/character-list-controls-form', () => ({
   CharacterListControlsForm: vi.fn(({ onClearFilters }) => (
-    <div data-testid="character-list-controls">
-      <button onClick={onClearFilters} data-testid="clear-filters-controls">Clear Filters</button>
+    <div data-testid='character-list-controls'>
+      <button onClick={onClearFilters} data-testid='clear-filters-controls'>
+        Clear Filters
+      </button>
     </div>
   )),
 }));
 
-const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData => ({
+const createMockCharacter = (
+  overrides: Partial<CharacterData> = {}
+): CharacterData => ({
   id: 'char-1',
   name: 'TestCharacter',
   class: 'Warrior',
@@ -36,31 +48,46 @@ const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterD
   hardcore: false,
   solo_self_found: false,
   created_at: '2024-01-01T00:00:00Z',
+  last_updated: '2024-01-10T00:00:00Z',
   last_played: '2024-01-10T00:00:00Z',
   current_location: {
     zone_name: 'The Coast',
     act: 1,
     is_town: false,
+    location_type: 'Zone',
     has_waypoint: true,
     area_level: 2,
+    last_updated: '2024-01-10T00:00:00Z',
   },
   summary: {
+    character_id: 'char-1',
     total_play_time: 3600,
-    total_deaths: 5,
+    total_hideout_time: 600,
     total_zones_visited: 20,
-    zones_with_waypoints: 10,
-    unique_npcs_encountered: 15,
-    timestamp: '2024-01-10T00:00:00Z',
+    total_deaths: 5,
+    play_time_act1: 900,
+    play_time_act2: 900,
+    play_time_act3: 900,
+    play_time_act4: 300,
+    play_time_interlude: 0,
+    play_time_endgame: 0,
+  },
+  zones: [],
+  walkthrough_progress: {
+    current_step_id: null,
+    is_completed: false,
+    last_updated: '2024-01-10T00:00:00Z',
   },
   ...overrides,
 });
 
 const defaultFilters: CharacterFilters = {
-  search: '',
-  class: null,
-  league: null,
+  league: 'All',
   hardcore: null,
-  ssf: null,
+  soloSelfFound: null,
+  classes: [],
+  ascendencies: [],
+  nameSearch: '',
 };
 
 const defaultSort: SortOption = {
@@ -92,16 +119,24 @@ describe('CharacterList', () => {
 
   describe('Empty State', () => {
     it('shows empty state when totalCount is 0', () => {
-      render(<CharacterList {...defaultProps} characters={[]} totalCount={0} />);
+      render(
+        <CharacterList {...defaultProps} characters={[]} totalCount={0} />
+      );
 
       expect(screen.getByText('No Characters')).toBeInTheDocument();
-      expect(screen.getByText(/Create your first character/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Create your first character/)
+      ).toBeInTheDocument();
     });
 
     it('shows create character button in empty state', () => {
-      render(<CharacterList {...defaultProps} characters={[]} totalCount={0} />);
+      render(
+        <CharacterList {...defaultProps} characters={[]} totalCount={0} />
+      );
 
-      expect(screen.getByRole('button', { name: 'Create Character' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Create Character' })
+      ).toBeInTheDocument();
     });
 
     it('calls onCreateCharacter when create button is clicked', async () => {
@@ -117,7 +152,9 @@ describe('CharacterList', () => {
         />
       );
 
-      await user.click(screen.getByRole('button', { name: 'Create Character' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Create Character' })
+      );
 
       expect(handleCreate).toHaveBeenCalledTimes(1);
     });
@@ -131,7 +168,13 @@ describe('CharacterList', () => {
         createMockCharacter({ id: 'char-3', name: 'Character Three' }),
       ];
 
-      render(<CharacterList {...defaultProps} characters={characters} totalCount={3} />);
+      render(
+        <CharacterList
+          {...defaultProps}
+          characters={characters}
+          totalCount={3}
+        />
+      );
 
       expect(screen.getByTestId('character-card-char-1')).toBeInTheDocument();
       expect(screen.getByTestId('character-card-char-2')).toBeInTheDocument();
@@ -148,7 +191,7 @@ describe('CharacterList', () => {
         <CharacterList
           {...defaultProps}
           characters={characters}
-          activeCharacterId="char-2"
+          activeCharacterId='char-2'
           totalCount={2}
         />
       );
@@ -233,7 +276,9 @@ describe('CharacterList', () => {
       );
 
       expect(screen.getByText('No characters found')).toBeInTheDocument();
-      expect(screen.getByText(/No characters match your current search/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No characters match your current search/)
+      ).toBeInTheDocument();
     });
 
     it('shows clear filters button in filtered empty state', () => {

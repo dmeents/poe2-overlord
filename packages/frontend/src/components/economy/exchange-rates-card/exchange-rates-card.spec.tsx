@@ -10,19 +10,24 @@ vi.mock('@/contexts/EconomyContext', () => ({
 
 const createMockCurrencyData = () => ({
   primary_currency: {
+    id: 'divine',
     name: 'Divine Orb',
     image_url: 'https://example.com/divine.png',
   },
   secondary_currency: {
+    id: 'chaos',
     name: 'Chaos Orb',
     image_url: 'https://example.com/chaos.png',
   },
   secondary_rate: 100.5,
   tertiary_currency: {
+    id: 'exalted',
     name: 'Exalted Orb',
     image_url: 'https://example.com/exalted.png',
-  },
-  tertiary_rate: 50,
+  } as { id: string; name: string; image_url: string } | null,
+  tertiary_rate: 50 as number | null,
+  currencies: [],
+  fetched_at: '2024-01-10T00:00:00Z',
 });
 
 describe('ExchangeRatesCard', () => {
@@ -80,8 +85,8 @@ describe('ExchangeRatesCard', () => {
 
     it('does not render tertiary currency when not available', () => {
       const dataWithoutTertiary = createMockCurrencyData();
-      dataWithoutTertiary.tertiary_currency = undefined;
-      dataWithoutTertiary.tertiary_rate = undefined;
+      dataWithoutTertiary.tertiary_currency = null;
+      dataWithoutTertiary.tertiary_rate = null;
 
       mockUseEconomy.mockReturnValue({
         currencyData: dataWithoutTertiary,
@@ -129,7 +134,9 @@ describe('ExchangeRatesCard', () => {
 
       render(<ExchangeRatesCard />);
 
-      expect(screen.getByText('No exchange rate data available')).toBeInTheDocument();
+      expect(
+        screen.getByText('No exchange rate data available')
+      ).toBeInTheDocument();
     });
   });
 

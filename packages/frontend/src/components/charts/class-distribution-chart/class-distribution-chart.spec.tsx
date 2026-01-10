@@ -5,16 +5,18 @@ import { ClassDistributionChart } from './class-distribution-chart';
 // Mock Recharts components since they require DOM measurements
 vi.mock('recharts', () => ({
   ResponsiveContainer: vi.fn(({ children }) => (
-    <div data-testid="responsive-container">{children}</div>
+    <div data-testid='responsive-container'>{children}</div>
   )),
-  PieChart: vi.fn(({ children }) => <div data-testid="pie-chart">{children}</div>),
+  PieChart: vi.fn(({ children }) => (
+    <div data-testid='pie-chart'>{children}</div>
+  )),
   Pie: vi.fn(({ children, data }) => (
-    <div data-testid="pie" data-entries={data?.length}>
+    <div data-testid='pie' data-entries={data?.length}>
       {children}
     </div>
   )),
-  Cell: vi.fn(() => <div data-testid="cell" />),
-  Tooltip: vi.fn(() => <div data-testid="tooltip" />),
+  Cell: vi.fn(() => <div data-testid='cell' />),
+  Tooltip: vi.fn(() => <div data-testid='tooltip' />),
 }));
 
 // Mock the class colors utility
@@ -38,7 +40,9 @@ describe('ClassDistributionChart', () => {
       render(<ClassDistributionChart classDistribution={{}} />);
 
       expect(screen.getByText('No Class Data')).toBeInTheDocument();
-      expect(screen.getByText('Create characters to see class distribution')).toBeInTheDocument();
+      expect(
+        screen.getByText('Create characters to see class distribution')
+      ).toBeInTheDocument();
     });
 
     it('renders Classes title in empty state', () => {
@@ -167,7 +171,7 @@ describe('ClassDistributionChart', () => {
       const { container } = render(
         <ClassDistributionChart
           classDistribution={{ Witch: 1 }}
-          className="custom-class"
+          className='custom-class'
         />
       );
 

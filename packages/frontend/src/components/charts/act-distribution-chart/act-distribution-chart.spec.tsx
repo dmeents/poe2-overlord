@@ -6,19 +6,23 @@ import type { CharacterData, CharacterSummary } from '@/types/character';
 // Mock Recharts components since they require DOM measurements
 vi.mock('recharts', () => ({
   ResponsiveContainer: vi.fn(({ children }) => (
-    <div data-testid="responsive-container">{children}</div>
+    <div data-testid='responsive-container'>{children}</div>
   )),
-  PieChart: vi.fn(({ children }) => <div data-testid="pie-chart">{children}</div>),
+  PieChart: vi.fn(({ children }) => (
+    <div data-testid='pie-chart'>{children}</div>
+  )),
   Pie: vi.fn(({ children, data }) => (
-    <div data-testid="pie" data-entries={data?.length}>
+    <div data-testid='pie' data-entries={data?.length}>
       {children}
     </div>
   )),
-  Cell: vi.fn(() => <div data-testid="cell" />),
-  Tooltip: vi.fn(() => <div data-testid="tooltip" />),
+  Cell: vi.fn(() => <div data-testid='cell' />),
+  Tooltip: vi.fn(() => <div data-testid='tooltip' />),
 }));
 
-const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
+const createMockSummary = (
+  overrides: Partial<CharacterSummary> = {}
+): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 7200,
   total_hideout_time: 600,
@@ -33,22 +37,27 @@ const createMockSummary = (overrides: Partial<CharacterSummary> = {}): Character
   ...overrides,
 });
 
-const createMockCharacter = (summaryOverrides: Partial<CharacterSummary> = {}): CharacterData =>
-  ({
-    id: 'char-1',
-    name: 'TestChar',
-    class: 'Witch',
-    ascendency: 'Infernalist',
-    league: 'Standard',
-    hardcore: false,
-    solo_self_found: false,
-    level: 50,
-    created_at: '2024-01-01T00:00:00Z',
+const createMockCharacter = (
+  summaryOverrides: Partial<CharacterSummary> = {}
+): CharacterData => ({
+  id: 'char-1',
+  name: 'TestChar',
+  class: 'Witch',
+  ascendency: 'Infernalist',
+  league: 'Standard',
+  hardcore: false,
+  solo_self_found: false,
+  level: 50,
+  created_at: '2024-01-01T00:00:00Z',
+  last_updated: '2024-01-10T00:00:00Z',
+  summary: createMockSummary(summaryOverrides),
+  zones: [],
+  walkthrough_progress: {
+    current_step_id: null,
+    is_completed: false,
     last_updated: '2024-01-10T00:00:00Z',
-    summary: createMockSummary(summaryOverrides),
-    zones: [],
-    walkthrough_progress: { current_step_id: null, completed_step_ids: [] },
-  }) as CharacterData;
+  },
+});
 
 describe('ActDistributionChart', () => {
   describe('Empty State', () => {
@@ -64,7 +73,9 @@ describe('ActDistributionChart', () => {
       render(<ActDistributionChart character={character} />);
 
       expect(screen.getByText('No Act Data')).toBeInTheDocument();
-      expect(screen.getByText('Start playing to see act distribution')).toBeInTheDocument();
+      expect(
+        screen.getByText('Start playing to see act distribution')
+      ).toBeInTheDocument();
     });
 
     it('renders Act Distribution title in empty state', () => {
@@ -170,7 +181,10 @@ describe('ActDistributionChart', () => {
   describe('Custom ClassName', () => {
     it('applies custom className', () => {
       const { container } = render(
-        <ActDistributionChart character={createMockCharacter()} className="custom-class" />
+        <ActDistributionChart
+          character={createMockCharacter()}
+          className='custom-class'
+        />
       );
 
       expect(container.querySelector('.custom-class')).toBeInTheDocument();

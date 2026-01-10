@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+
+import type { WalkthroughGuide, WalkthroughStep } from '@/types/walkthrough';
 import { CampaignInsights } from './campaign-insights';
-import type { WalkthroughGuide } from '@/types/walkthrough';
 
 const createMockGuide = (numActs = 2, stepsPerAct = 3): WalkthroughGuide => {
   const acts: WalkthroughGuide['acts'] = {};
 
   for (let i = 1; i <= numActs; i++) {
-    const steps: Record<string, unknown> = {};
+    const steps: { [key: string]: WalkthroughStep } = {};
     for (let j = 1; j <= stepsPerAct; j++) {
       steps[`step-${i}-${j}`] = {
         id: `step-${i}-${j}`,
@@ -28,7 +29,7 @@ const createMockGuide = (numActs = 2, stepsPerAct = 3): WalkthroughGuide => {
     };
   }
 
-  return { acts } as unknown as WalkthroughGuide;
+  return { acts };
 };
 
 describe('CampaignInsights', () => {
@@ -56,7 +57,7 @@ describe('CampaignInsights', () => {
 
     it('applies custom className', () => {
       const { container } = render(
-        <CampaignInsights guide={createMockGuide()} className="custom-class" />
+        <CampaignInsights guide={createMockGuide()} className='custom-class' />
       );
 
       expect(container.querySelector('.custom-class')).toBeInTheDocument();

@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import { CharacterFormModal } from './character-form-modal';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { CharacterData } from '@/types/character';
+import { CharacterFormModal } from './character-form-modal';
 
 // Define stable mock data and functions outside the mock to prevent infinite re-renders
 const mockCharacterClasses = [
@@ -60,21 +61,35 @@ const mockCharacter: CharacterData = {
   hardcore: false,
   solo_self_found: false,
   created_at: '2024-01-01T00:00:00Z',
+  last_updated: '2024-01-10T00:00:00Z',
   last_played: '2024-01-10T00:00:00Z',
   current_location: {
     zone_name: 'The Coast',
     act: 1,
     is_town: false,
+    location_type: 'Zone',
     has_waypoint: true,
     area_level: 2,
+    last_updated: '2024-01-10T00:00:00Z',
   },
   summary: {
+    character_id: 'test-id',
     total_play_time: 3600,
-    total_deaths: 5,
+    total_hideout_time: 600,
     total_zones_visited: 20,
-    zones_with_waypoints: 10,
-    unique_npcs_encountered: 15,
-    timestamp: '2024-01-10T00:00:00Z',
+    total_deaths: 5,
+    play_time_act1: 900,
+    play_time_act2: 900,
+    play_time_act3: 900,
+    play_time_act4: 300,
+    play_time_interlude: 0,
+    play_time_endgame: 0,
+  },
+  zones: [],
+  walkthrough_progress: {
+    current_step_id: null,
+    is_completed: false,
+    last_updated: '2024-01-10T00:00:00Z',
   },
 };
 
@@ -150,7 +165,9 @@ describe('CharacterFormModal', () => {
     it('renders cancel button', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Cancel' })
+      ).toBeInTheDocument();
     });
 
     it('renders name generator buttons', () => {
@@ -163,7 +180,9 @@ describe('CharacterFormModal', () => {
 
   describe('Edit Mode', () => {
     it('renders edit modal title', () => {
-      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
+      render(
+        <CharacterFormModal {...defaultProps} character={mockCharacter} />
+      );
 
       expect(
         screen.getByRole('heading', { name: 'Edit Character' })
@@ -171,13 +190,17 @@ describe('CharacterFormModal', () => {
     });
 
     it('pre-fills character name', () => {
-      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
+      render(
+        <CharacterFormModal {...defaultProps} character={mockCharacter} />
+      );
 
       expect(screen.getByDisplayValue('TestCharacter')).toBeInTheDocument();
     });
 
     it('renders update button', () => {
-      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
+      render(
+        <CharacterFormModal {...defaultProps} character={mockCharacter} />
+      );
 
       expect(
         screen.getByRole('button', { name: 'Update Character' })

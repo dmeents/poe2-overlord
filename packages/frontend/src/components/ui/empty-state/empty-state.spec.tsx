@@ -36,7 +36,9 @@ describe('EmptyState', () => {
       />
     );
 
-    expect(screen.getByText('There are no items to display')).toBeInTheDocument();
+    expect(
+      screen.getByText('There are no items to display')
+    ).toBeInTheDocument();
   });
 
   it('renders action when provided', () => {
@@ -49,7 +51,9 @@ describe('EmptyState', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Add Item' })
+    ).toBeInTheDocument();
   });
 
   it('does not render action when not provided', () => {

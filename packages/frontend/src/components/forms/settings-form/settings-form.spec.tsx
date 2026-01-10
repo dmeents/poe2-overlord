@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SettingsForm } from './settings-form';
 
 const mockGetConfig = vi.hoisted(() =>
@@ -195,9 +195,7 @@ describe('SettingsForm', () => {
       ).toBeInTheDocument();
     });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Reset to Defaults' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
 
     await waitFor(() => {
       expect(mockResetConfigToDefaults).toHaveBeenCalled();
@@ -215,9 +213,7 @@ describe('SettingsForm', () => {
       ).toBeInTheDocument();
     });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Reset to Defaults' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
 
     await waitFor(() => {
       expect(
@@ -232,7 +228,9 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Reload' })
+      ).toBeInTheDocument();
     });
 
     // Clear initial call
@@ -247,13 +245,17 @@ describe('SettingsForm', () => {
 
   it('shows error when config fails to load', async () => {
     // Suppress expected console.error from error boundary
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     mockGetConfig.mockRejectedValueOnce(new Error('Failed to load'));
 
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load configuration')).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to load configuration')
+      ).toBeInTheDocument();
     });
 
     consoleErrorSpy.mockRestore();
@@ -261,7 +263,9 @@ describe('SettingsForm', () => {
 
   it('shows error when save fails', async () => {
     // Suppress expected console.error from error handling
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const user = userEvent.setup();
     mockUpdateConfig.mockRejectedValueOnce(new Error('Failed to save'));
 

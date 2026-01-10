@@ -85,9 +85,7 @@ describe('CheckboxInput', () => {
       />
     );
 
-    expect(
-      screen.queryByText('This is a description')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('This is a description')).not.toBeInTheDocument();
   });
 
   it('applies custom className', () => {

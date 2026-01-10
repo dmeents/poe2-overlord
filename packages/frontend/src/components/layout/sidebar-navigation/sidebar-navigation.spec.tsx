@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SidebarNavigation } from './sidebar-navigation';
 
 const mockUseLocation = vi.hoisted(() => vi.fn(() => ({ pathname: '/' })));
@@ -76,7 +76,9 @@ describe('SidebarNavigation', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(<SidebarNavigation className="custom-class" />);
+    const { container } = render(
+      <SidebarNavigation className='custom-class' />
+    );
 
     expect(container.firstChild).toHaveClass('custom-class');
   });

@@ -21,19 +21,20 @@ This file records major architectural and technical decisions for POE2 Overlord.
 - Complex component styles in separate `.styles.ts` files
 - **Rationale**: Consistency, no CSS-in-JS overhead
 
-## Testing Strategy (2026-01-10, updated 2026-01-09)
+## Testing Strategy (2026-01-10, updated 2026-01-10)
 **Decision**: Co-located tests with Vitest
-- Frontend: Vitest + React Testing Library, `.spec.tsx` files (**CONFIGURED**)
+- Frontend: Vitest + React Testing Library, `.spec.tsx` files (**✅ COMPLETE - 517 tests**)
 - Backend: Rust `#[tokio::test]`, `tests/` directory
 - No Storybook yet (future consideration)
 - **Rationale**: Tests close to code, easier to maintain
 
-### Frontend Testing Stack (2026-01-09)
+### Frontend Testing Stack (2026-01-10)
 **Decision**: Vitest over Jest for frontend testing
 - Vitest v4.x with jsdom environment
 - React Testing Library v16.x for component testing
 - @testing-library/user-event for realistic user interactions
 - Co-located tests in `.spec.tsx` files next to components
+- **Status**: ✅ **All 47 components have comprehensive tests (517 tests total)**
 - **Rationale**: Native Vite integration, shared config, faster transforms, React 19 support
 - **Commands**:
   - `yarn test:frontend` - Run all tests

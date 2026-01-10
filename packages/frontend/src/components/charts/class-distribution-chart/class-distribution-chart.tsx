@@ -3,7 +3,6 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { getClassHexColor } from '../../../utils/class-colors';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
-import { SectionHeader } from '../../ui/section-header/section-header';
 import { Card } from '../../ui/card/card';
 
 interface ClassDistributionChartProps {

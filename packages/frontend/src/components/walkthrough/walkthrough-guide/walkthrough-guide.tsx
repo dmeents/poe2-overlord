@@ -1,6 +1,7 @@
 import { BookOpenIcon } from '@heroicons/react/24/outline';
 import { invoke } from '@tauri-apps/api/core';
-import React, { useState } from 'react';
+import { useState } from 'react';
+
 import type {
   WalkthroughGuide as WalkthroughGuideType,
   WalkthroughProgress,
@@ -16,12 +17,12 @@ interface WalkthroughGuideProps {
   className?: string;
 }
 
-export const WalkthroughGuide: React.FC<WalkthroughGuideProps> = ({
+export function WalkthroughGuide({
   guide,
   currentStepId,
   characterId,
   className = '',
-}) => {
+}: WalkthroughGuideProps): React.JSX.Element {
   const [expandedActs, setExpandedActs] = useState<Set<string>>(new Set());
 
   const toggleAct = (actId: string) => {
@@ -80,4 +81,4 @@ export const WalkthroughGuide: React.FC<WalkthroughGuideProps> = ({
       </div>
     </div>
   );
-};
+}

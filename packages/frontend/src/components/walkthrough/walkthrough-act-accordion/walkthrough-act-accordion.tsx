@@ -1,4 +1,3 @@
-import React from 'react';
 import type { WalkthroughAct } from '../../../types/walkthrough';
 import { Accordion } from '../../ui/accordion/accordion';
 import { WalkthroughStepCard } from '../walkthrough-step-card/walkthrough-step-card';
@@ -13,9 +12,7 @@ interface WalkthroughActAccordionProps {
   onSkipToStep?: (stepId: string) => void;
 }
 
-export const WalkthroughActAccordion: React.FC<
-  WalkthroughActAccordionProps
-> = ({
+export function WalkthroughActAccordion({
   act,
   actKey,
   isExpanded,
@@ -23,7 +20,7 @@ export const WalkthroughActAccordion: React.FC<
   onToggle,
   onWikiClick,
   onSkipToStep,
-}) => {
+}: WalkthroughActAccordionProps): React.JSX.Element {
   const isCurrentStep = (stepId: string) => currentStepId === stepId;
 
   return (
@@ -54,4 +51,4 @@ export const WalkthroughActAccordion: React.FC<
       </div>
     </Accordion>
   );
-};
+}

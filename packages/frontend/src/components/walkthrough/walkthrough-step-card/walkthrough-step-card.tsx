@@ -9,7 +9,8 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { invoke } from '@tauri-apps/api/core';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+
 import type {
   WalkthroughStep,
   WalkthroughStepResult,
@@ -18,8 +19,8 @@ import { useCharacter } from '../../../contexts/CharacterContext';
 import { useWalkthrough } from '../../../contexts/WalkthroughContext';
 import { useZone } from '../../../contexts/ZoneContext';
 import { ParsedText } from '../../../utils/text-parser';
-import { Card } from '../../ui/card/card';
 import { Button } from '../../ui/button/button';
+import { Card } from '../../ui/card/card';
 
 interface WalkthroughStepCardProps {
   // Data sources (mutually exclusive with variant)
@@ -41,7 +42,7 @@ interface WalkthroughStepCardProps {
   className?: string;
 }
 
-export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
+export function WalkthroughStepCard({
   step: stepProp,
   stepResult,
   variant,
@@ -50,7 +51,7 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
   onSkipToStep,
   onViewGuide,
   className = '',
-}) => {
+}: WalkthroughStepCardProps): React.JSX.Element | null {
   const { openZone } = useZone();
 
   // Determine if this is active variant (uses context)
@@ -395,4 +396,4 @@ export const WalkthroughStepCard: React.FC<WalkthroughStepCardProps> = ({
       )}
     </Card>
   );
-};
+}

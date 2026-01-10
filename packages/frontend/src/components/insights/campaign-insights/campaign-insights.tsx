@@ -1,5 +1,5 @@
 import { ChartBarIcon } from '@heroicons/react/24/outline';
-import React from 'react';
+
 import type { WalkthroughGuide } from '../../../types/walkthrough';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
@@ -9,10 +9,10 @@ interface CampaignInsightsProps {
   className?: string;
 }
 
-export const CampaignInsights: React.FC<CampaignInsightsProps> = ({
+export function CampaignInsights({
   guide,
   className = '',
-}) => {
+}: CampaignInsightsProps): React.JSX.Element {
   const totalSteps = Object.values(guide.acts).reduce(
     (total, act) => total + Object.keys(act.steps).length,
     0
@@ -28,4 +28,4 @@ export const CampaignInsights: React.FC<CampaignInsightsProps> = ({
       </div>
     </Card>
   );
-};
+}

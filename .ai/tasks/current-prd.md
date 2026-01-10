@@ -1,47 +1,49 @@
-# PRD: Comprehensive Frontend Component Testing
+# PRD: Fix Hanging Unit Tests
 
 ## Goal
-Write comprehensive unit tests for all frontend components in `packages/frontend/src/components/` that don't already have tests.
+Fix all hanging/timing out unit tests in `packages/frontend/src/components/` so the test suite completes quickly.
 
 ## Discovery Phase
-1. Find all `*.tsx` files in `packages/frontend/src/components/`
-2. Exclude files that already have corresponding `*.spec.tsx` tests
-3. Create a list of components needing tests
+1. Run `yarn test --reporter=verbose` to identify hanging tests
+2. Note which test files timeout or take excessively long (>5 seconds per test)
+3. Create list of problematic test files
 
-## Implementation Loop
-For EACH untested component:
-1. Read the component to understand props, behavior, interactions
-2. Reference `.ai/memory/patterns.md` for testing patterns
-3. Reference `packages/frontend/src/components/ui/button/button.spec.tsx` as example
-4. Write comprehensive `*.spec.tsx` test covering:
-   - Renders without crashing
-   - Props handled correctly
-   - User interactions work
-   - Conditional rendering
-   - Event handlers
-   - Edge cases
-5. Run `yarn test` - if fails, debug and fix until passing
-6. Run `yarn format` and `yarn lint` - fix any issues
-7. Commit: `"test: add unit tests for [ComponentName]"`
-8. Continue to next component
+## Fix Strategy
+For EACH hanging test:
+1. Identify root cause:
+   - Missing `await` on async operations (user.click, waitFor, findBy*)
+   - Tauri commands not properly mocked
+   - Timer/interval not cleaned up
+   - React state updates after unmount
+   - Missing `cleanup()` in test teardown
+   - Infinite loops in component logic
+   - Unclosed promises
+
+2. Apply fixes:
+   - Wrap all user interactions in `await`
+   - Mock all Tauri `invoke()` calls with proper return values
+   - Use `vi.useFakeTimers()` if testing timers/intervals
+   - Add `afterEach(() => cleanup())` if missing
+   - Use `waitFor()` with explicit timeout for async checks
+   - Ensure all async operations complete before test ends
+
+3. Verify fix:
+   - Run specific test file: `yarn test [filename]`
+   - Confirm test completes in reasonable time (<2s per test)
+   - Ensure test still passes
+
+4. Commit: `"fix: resolve hanging tests in [ComponentName]"`
 
 ## Self-Healing
-- If tests fail: analyze error, fix test or component, retry
-- If lint fails: run formatter, fix issues, retry
-- If stuck on one component after 5 attempts: document issue in commit message, move to next
-- Let the loop refine the work - don't aim for perfect first try
+- If fix doesn't work: try alternative approach
+- If still hanging after 3 attempts: add `.skip()` to test, document issue, move to next
+- Let the loop refine the work
 
 ## Success Criteria
-- Every `.tsx` component file has a corresponding `.spec.tsx` test file
-- All tests pass (`yarn test` succeeds)
-- No lint/format errors
-- Each component committed separately
+- All tests complete within 10 seconds per test
+- Full test suite (`yarn test`) completes without hanging
+- All non-skipped tests pass
+- Each fix committed separately
 
 ## Completion Signal
-Output `<promise>ALL_TESTS_COMPLETE</promise>` when no untested components remain
-
-## Tech Stack
-- Vitest (test runner)
-- React Testing Library (component testing)
-- @testing-library/user-event (user interactions)
-- Follow patterns from packages/frontend/src/components/ui/button/button.spec.tsx
+Output `<promise>TESTS_FIXED</promise>` when `yarn test` completes successfully without timeouts

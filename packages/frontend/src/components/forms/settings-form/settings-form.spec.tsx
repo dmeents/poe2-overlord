@@ -41,10 +41,14 @@ describe('SettingsForm', () => {
     vi.clearAllMocks();
   });
 
-  it('renders loading state initially', () => {
+  it('renders loading state initially', async () => {
     render(<SettingsForm />);
 
     expect(screen.getByText('Loading configuration...')).toBeInTheDocument();
+    // Wait for async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
+    });
   });
 
   it('renders form after loading', async () => {
@@ -242,6 +246,8 @@ describe('SettingsForm', () => {
   });
 
   it('shows error when config fails to load', async () => {
+    // Suppress expected console.error from error boundary
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockGetConfig.mockRejectedValueOnce(new Error('Failed to load'));
 
     render(<SettingsForm />);
@@ -249,9 +255,13 @@ describe('SettingsForm', () => {
     await waitFor(() => {
       expect(screen.getByText('Failed to load configuration')).toBeInTheDocument();
     });
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('shows error when save fails', async () => {
+    // Suppress expected console.error from error handling
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup();
     mockUpdateConfig.mockRejectedValueOnce(new Error('Failed to save'));
 
@@ -272,6 +282,8 @@ describe('SettingsForm', () => {
         screen.getByText('Failed to save configuration')
       ).toBeInTheDocument();
     });
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('shows warning for invalid POE path', async () => {

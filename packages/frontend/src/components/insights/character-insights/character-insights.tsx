@@ -4,7 +4,6 @@ import type { CharacterData } from '../../../types/character';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
-import { SectionHeader } from '../../ui/section-header/section-header';
 
 interface CharacterInsightsProps {
   characters: CharacterData[];

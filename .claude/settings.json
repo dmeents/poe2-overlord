@@ -1,0 +1,40 @@
+{
+  "model": "claude-opus-4-5-20251101",
+  "autoUpdate": true,
+  "terminal": {
+    "style": "default",
+    "confirmBeforeExecuting": true
+  },
+  "editor": {
+    "autoSave": true,
+    "formatOnSave": true
+  },
+  "git": {
+    "autoCommit": true,
+    "commitMessagePrefix": "",
+    "includeCoAuthor": true
+  },
+  "testing": {
+    "autoRunTests": true,
+    "testCommand": "yarn test"
+  },
+  "linting": {
+    "autoFix": true,
+    "lintCommand": "yarn lint"
+  },
+  "formatting": {
+    "formatCommand": "yarn format"
+  },
+  "allowedTools": [
+    "read_file",
+    "write_file",
+    "list_directory",
+    "run_terminal_command",
+    "git_operations",
+    "search_files"
+  ],
+  "dangerouslySkipPermissions": false,
+  "enabledPlugins": {
+    "ralph-loop@claude-plugins-official": true
+  }
+}

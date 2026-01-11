@@ -1,4 +1,6 @@
 pub mod models;
+#[cfg(test)]
+mod models_test;
 pub mod service;
 pub mod traits;
 

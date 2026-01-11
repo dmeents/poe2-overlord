@@ -30,9 +30,9 @@
     "clean:backend": "yarn workspace @poe2-overlord/backend clean"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.0.0"
+    "@tauri-apps/cli": "^2.9.6"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.90.2"
+    "@tanstack/react-query": "^5.90.16"
   }
 }

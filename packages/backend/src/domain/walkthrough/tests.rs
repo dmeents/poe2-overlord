@@ -3,7 +3,7 @@ use super::models::WalkthroughProgress;
 #[test]
 fn test_walkthrough_progress_new() {
     let progress = WalkthroughProgress::new();
-    assert_eq!(progress.current_step_id, Some("act_4_step_1".to_string()));
+    assert_eq!(progress.current_step_id, Some("act_1_step_1".to_string()));
     assert!(!progress.is_completed);
 }
 

@@ -222,3 +222,90 @@ describe('CharacterCard', () => {
 3. **Use `userEvent` for interactions**: More realistic than `fireEvent`
 4. **Mock Tauri APIs**: Setup file auto-mocks `@tauri-apps/api/*`
 5. **Keep tests simple**: One assertion per behavior when possible
+
+### Mock Data Factory Pattern
+
+Create type-safe mock factories for test data:
+
+```tsx
+const createMockCharacter = (
+  overrides: Partial<CharacterData> = {}
+): CharacterData => ({
+  id: 'test-id',
+  name: 'TestCharacter',
+  class: 'Warrior',
+  ascendency: 'Titan',
+  level: 50,
+  league: 'Standard',
+  // ... all required fields with defaults
+  ...overrides,
+});
+
+// Usage in tests
+const character = createMockCharacter({ name: 'CustomName', level: 99 });
+```
+
+### Type-Safe Mock Functions
+
+When mock return values include union types with null, use type assertions:
+
+```tsx
+// ❌ Incorrect - infers null type only
+const mockUseCharacter = vi.hoisted(() =>
+  vi.fn(() => ({
+    activeCharacter: null,  // Type: null
+    isLoading: false,
+  }))
+);
+
+// ✅ Correct - preserves union type
+const mockUseCharacter = vi.hoisted(() =>
+  vi.fn(() => ({
+    activeCharacter: null as CharacterData | null,  // Type: CharacterData | null
+    isLoading: false,
+  }))
+);
+```
+
+## TypeScript Patterns
+
+### Component Declaration Pattern
+
+Prefer explicit function declarations over React.FC:
+
+```tsx
+// ❌ Avoid - implicit return type, no children control
+export const Component: React.FC<Props> = ({ prop }) => { ... };
+
+// ✅ Prefer - explicit return type, clear interface
+export function Component({ prop }: Props): React.JSX.Element { ... }
+```
+
+### Type-Only Imports (verbatimModuleSyntax)
+
+Always use `import type` for type-only imports:
+
+```tsx
+// ❌ Incorrect
+import { ReactNode } from 'react';
+import { CharacterData, Zone } from '../types';
+
+// ✅ Correct
+import type { ReactNode } from 'react';
+import type { CharacterData, Zone } from '../types';
+
+// Mixed imports - separate runtime and type imports
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+```
+
+### Nullable Return Types
+
+For components that may return null, explicitly declare it:
+
+```tsx
+export function ConditionalComponent({ data }: Props): React.JSX.Element | null {
+  if (!data) return null;
+  return <div>{data.name}</div>;
+}
+```

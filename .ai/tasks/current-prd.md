@@ -1,121 +1,107 @@
-# PRD: Comprehensive TypeScript Refactoring
+# PRD: Backend Testing - Rust/Tauri
 
 ## Goal
-Refactor the frontend codebase to maximize TypeScript type safety, eliminate type escape hatches, and ensure optimal TS utilization.
+Investigate the Rust backend, review existing tests, improve/fix them, and create comprehensive unit tests for files that need them.
 
 ## Discovery Phase
-1. Scan all files in `packages/frontend/src/` for type issues
-2. Identify files with `any`, `as any`, `@ts-ignore`, `@ts-expect-error`
-3. Find missing return types, implicit any, type assertions
-4. Create priority list based on impact
+1. Explore `packages/backend/src/` structure
+2. Identify all Rust modules and their purpose
+3. Find existing test files (look for `#[cfg(test)]`, `#[test]`, `#[tokio::test]`)
+4. Identify files that should have tests but don't
+5. Review existing tests for quality and completeness
+6. Create prioritized list based on:
+   - Domain importance (character, game_monitoring, economy, etc.)
+   - Missing coverage
+   - Test quality issues
 
-## Refactoring Checklist
-**For EACH file**:
+## Testing Standards
+Follow Rust best practices:
 
-### 1. Eliminate Type Escape Hatches
-- Replace `any` with proper types or `unknown`
-- Replace `as any` with type guards or proper types
-- Remove `@ts-ignore`/`@ts-expect-error` - fix root cause
-- Replace unsafe `as` casts with type narrowing
+### Test Organization
+- Unit tests: inline with `#[cfg(test)]` mod tests
+- Integration tests: in `tests/` directory at crate root
+- Test naming: `test_<function>_<scenario>_<expected_result>`
 
-### 2. Strengthen Type Definitions
-- Add explicit return types to all exported functions
-- Use `unknown` instead of `any` for uncertain inputs
-- Use `satisfies` for type validation without widening
-- Add `readonly` to immutable props/data
-- Use `const` assertions for literal types
+### Test Quality
+- **Arrange-Act-Assert** pattern
+- Test one thing per test
+- Use descriptive test names
+- Mock external dependencies (database, file system, Tauri commands)
+- Test both happy path and error cases
+- Use `#[tokio::test]` for async tests
 
-### 3. Improve Null Safety
-- Use optional chaining (`?.`) consistently
-- Use nullish coalescing (`??`) over `||`
-- Add explicit null checks before property access
-- Use discriminated unions for nullable complex types
-
-### 4. Optimize Imports
-- Use `import type` for type-only imports (better tree-shaking)
-- Separate type imports from value imports
-- Example: `import type { Foo } from './types';`
-
-### 5. Function Signatures
-- Explicit return types on exports (no inference)
-- Use `void` explicitly for no-return functions
-- Type event handlers: `React.MouseEvent<HTMLButtonElement>`
-- Named params object for >3 parameters
-
-### 6. React-Specific
-- Avoid `React.FC` unless needed
-- Type props explicitly with destructuring
-- Extend HTML elements: `React.ComponentPropsWithoutRef<'button'>`
-- Type hooks explicitly: `useState<User | null>(null)`
+### Coverage Areas
+For EACH module, ensure tests cover:
+- ✅ Public API functions
+- ✅ Edge cases (empty input, invalid data, boundaries)
+- ✅ Error handling paths
+- ✅ State changes and side effects
+- ✅ Integration points (repository, service layers)
 
 ## Implementation Loop
-**For EACH file**:
-1. Read file and identify type issues
-2. Apply fixes from checklist
-3. Run `yarn typecheck` - fix any new errors
-4. Run `yarn test` - ensure tests pass
-5. Run `yarn lint && yarn format`
-6. Commit: `"refactor(types): improve type safety in [filename]"`
-7. Continue to next file
+**For EACH file/module**:
 
-**Every 10 files** (checkpoint):
-- Push commits to remote: `git push origin HEAD`
-- Update `.ai/sessions/2026-01-10-typescript-refactoring.md` with:
-  - Files completed so far
+1. **Read** the module code to understand functionality
+2. **Review** existing tests (if any):
+   - Are they comprehensive?
+   - Do they follow best practices?
+   - Are there gaps in coverage?
+3. **Improve/Fix** existing tests:
+   - Fix failing tests
+   - Refactor poorly written tests
+   - Add missing assertions
+   - Improve test clarity
+4. **Create** new tests for untested functionality
+5. **Run** `cargo test` - must pass
+6. **Run** `cargo clippy` - fix any warnings
+7. **Commit**: `"test: improve/add tests for [module_name]"`
+8. Continue to next file
+
+**Every 10 modules** (checkpoint):
+- Push commits: `git push origin HEAD`
+- Update `.ai/sessions/2026-01-11-backend-testing.md` with:
+  - Modules completed
   - Issues found and fixed
+  - Test coverage improvements
   - Current progress count
-- Commit session log: `"docs: update refactoring session log (checkpoint)"`
-- Push session log update
+- Commit session log: `"docs: update backend testing session (checkpoint)"`
+- Push session log
 
 ## Self-Healing
-- Typecheck fails → analyze error, fix properly (no suppressions)
-- Tests break → update tests to match improved types
-- Stuck after 3 attempts → document issue, skip file, continue
+- Tests fail → debug, fix test or code, retry
+- Clippy warnings → fix warnings, retry
+- Compilation errors → fix errors, retry
+- Stuck after 3 attempts → document in commit, skip file, continue
 - Let the loop refine the work
 
 ## Success Criteria
-- Zero `any` types (except test mocks if necessary)
-- Zero `@ts-ignore`/`@ts-expect-error` suppressions
-- All exports have explicit return types
-- Type-only imports use `import type`
-- `yarn typecheck` passes with zero errors
-- All 517 tests still pass
-
-## Priority Order
-1. **`src/types/`** - Core type definitions
-2. **`src/hooks/`** - 4 files found with `any`
-3. **`src/utils/`** - Utility functions
-4. **`src/components/`** - All components systematically
-
-## Anti-Patterns to Eliminate
-❌ `any` → use `unknown` and narrow
-❌ `as SomeType` → use type guards
-❌ `@ts-ignore` → fix root cause
-❌ Implicit return types → add explicit types
-❌ Mixed imports → separate type/value imports
-❌ `!` non-null assertion → add proper checks
-
-## Best Practices to Follow
-✅ `unknown` for uncertain types, then narrow with guards
-✅ `satisfies` to validate without widening
-✅ `readonly` for immutable data
-✅ `import type` for type-only imports
-✅ Explicit return types on exports
-✅ Optional chaining and nullish coalescing
-✅ Type guards for runtime validation
+- All existing tests pass (`cargo test` succeeds)
+- All modules have appropriate test coverage
+- Tests follow Rust best practices
+- No clippy warnings in test code
+- Each module committed separately with clear message
 
 ## Session Documentation
-Maintain `.ai/sessions/2026-01-10-typescript-refactoring.md` with:
-- List of files refactored
-- Type issues found per file
-- Patterns discovered
-- Breaking changes (if any)
-- Final stats (any removed, types added, etc.)
+Maintain `.ai/sessions/2026-01-11-backend-testing.md` with:
+- Modules tested (list)
+- Issues found per module
+- Test improvements made
+- New tests added
+- Coverage gaps identified
+- Final test count and pass rate
 
 ## Completion Signal
 When complete:
-1. Update `.ai/sessions/2026-01-10-typescript-refactoring.md` with final summary
-2. Update `.ai/memory/patterns.md` with TypeScript patterns learned
-3. Archive this PRD to `.ai/archive/completed-prds/`
-4. Push all commits to remote
-5. Output `<promise>REFACTOR_COMPLETE</promise>`
+1. Final `cargo test` - all passing
+2. Update session log with summary stats
+3. Update `.ai/memory/patterns.md` with Rust testing patterns
+4. Archive this PRD to `.ai/archive/completed-prds/`
+5. Push all commits
+6. Output `<promise>BACKEND_TESTS_COMPLETE</promise>`
+
+## Notes
+- Focus on quality over quantity
+- Prioritize domain logic (character, economy, game_monitoring) over infrastructure
+- Mock Tauri commands appropriately - don't require running app
+- Use `cargo test --lib` to run only unit tests if faster
+- Reference existing test patterns in codebase as examples

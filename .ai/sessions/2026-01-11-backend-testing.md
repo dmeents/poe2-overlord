@@ -14,9 +14,9 @@ Investigate Rust backend, review existing tests, improve/fix them, and create co
 - **Test Framework**: Rust built-in testing + tokio::test
 
 ## Final Result
-- **Final Test Count**: 346 tests
-- **Pass Rate**: 100% (346 passing, 0 failing)
-- **Tests Added**: 196 new tests
+- **Final Test Count**: 423 tests
+- **Pass Rate**: 100% (423 passing, 0 failing)
+- **Tests Added**: 273 new tests
 - **Tests Fixed**: 1
 
 ---
@@ -130,7 +130,7 @@ Investigate Rust backend, review existing tests, improve/fix them, and create co
   - get_act_breakdown, get_longest_act
   - Serialization/deserialization tests
 
-### Infrastructure Modules (1)
+### Infrastructure Modules (6)
 
 #### 11. Time Module Tests (NEW)
 - **File**: `infrastructure/time/calculations_test.rs`
@@ -144,6 +144,55 @@ Investigate Rust backend, review existing tests, improve/fix them, and create co
   - validate_duration (valid, zero, too long, boundary)
   - validate_no_session_overlap (no overlap, with overlap, empty, adjacent)
   - validate_session_data (all valid, errors, mismatch)
+
+#### 12. Scene Change Parser Tests (NEW)
+- **File**: `infrastructure/parsing/parsers/scene_change_parser_test.rs`
+- **Tests Added**: 14
+- **Coverage**:
+  - should_parse() for Set Source and Load Source patterns
+  - parse_line() zone name extraction
+  - Zone names with special characters and spaces
+  - Hideout detection
+  - Rejection of non-scene lines
+
+#### 13. Character Level Parser Tests (NEW)
+- **File**: `infrastructure/parsing/parsers/character_level_parser_test.rs`
+- **Tests Added**: 17
+- **Coverage**:
+  - should_parse() for level up patterns
+  - parse_line() character name and level extraction
+  - Level validation (1-100 range)
+  - Different character classes
+  - Character names with spaces
+
+#### 14. Character Death Parser Tests (NEW)
+- **File**: `infrastructure/parsing/parsers/character_death_parser_test.rs`
+- **Tests Added**: 19
+- **Coverage**:
+  - should_parse() for death pattern
+  - parse_line() character name extraction
+  - Names with numbers, underscores
+  - Whitespace handling (leading vs trailing)
+  - Rejection of similar but different patterns
+
+#### 15. Server Connection Parser Tests (NEW)
+- **File**: `infrastructure/parsing/parsers/server_connection_parser_test.rs`
+- **Tests Added**: 19
+- **Coverage**:
+  - should_parse() for server connection pattern
+  - parse_line() IP and port extraction
+  - Various port values (1-65535)
+  - Invalid port handling (out of range, non-numeric)
+  - Empty IP/port handling
+
+#### 16. Zone Level Parser Tests (NEW)
+- **File**: `infrastructure/parsing/parsers/zone_level_parser_test.rs`
+- **Tests Added**: 17
+- **Coverage**:
+  - should_parse() for "Generating level X area" pattern
+  - parse_line() zone level extraction
+  - Various level values
+  - Surrounding text handling
 
 ---
 
@@ -164,7 +213,12 @@ Investigate Rust backend, review existing tests, improve/fix them, and create co
 | zone_configuration | 25 |
 | zone_tracking | 27 |
 | infrastructure/time | 27 |
-| **Total New** | **196** |
+| scene_change_parser | 14 |
+| character_level_parser | 17 |
+| character_death_parser | 19 |
+| server_connection_parser | 19 |
+| zone_level_parser | 17 |
+| **Total New** | **282** |
 
 ---
 
@@ -178,6 +232,7 @@ Investigate Rust backend, review existing tests, improve/fix them, and create co
 6. `test: add comprehensive tests for zone_configuration module models`
 7. `test: add comprehensive tests for zone_tracking module models`
 8. `test: add comprehensive tests for infrastructure time module`
+9. `test: add comprehensive tests for log parser modules`
 
 ---
 
@@ -212,8 +267,8 @@ src/domain/module_name/
 | Original Passing | 149 |
 | Original Failing | 1 |
 | Tests Fixed | 1 |
-| New Tests Added | 196 |
-| **Final Total** | **346** |
+| New Tests Added | 273 |
+| **Final Total** | **423** |
 | **Final Pass Rate** | **100%** |
 
 ---
@@ -224,6 +279,7 @@ src/domain/module_name/
 |------|---------|-------|
 | Reviewed (existing) | 4 | 146 |
 | New (domain) | 6 | 169 |
-| New (infrastructure) | 1 | 27 |
+| New (infrastructure/time) | 1 | 27 |
+| New (infrastructure/parsing) | 5 | 77 |
 | Fixed | 1 | 4 |
-| **Total** | **12** | **346** |
+| **Total** | **17** | **423** |

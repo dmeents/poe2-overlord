@@ -1,11 +1,17 @@
+import type { ReactNode } from 'react';
+
+import { CharacterProvider } from './contexts/CharacterContext';
+import { EconomyProvider } from './contexts/EconomyContext';
 import { GameProcessProvider } from './contexts/GameProcessContext';
 import { ServerStatusProvider } from './contexts/ServerStatusContext';
-import { CharacterProvider } from './contexts/CharacterContext';
-import { ZoneProvider } from './contexts/ZoneContext';
-import { EconomyProvider } from './contexts/EconomyContext';
 import { WalkthroughProvider } from './contexts/WalkthroughContext';
+import { ZoneProvider } from './contexts/ZoneContext';
 
-export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
+interface ProvidersProps {
+  children: ReactNode;
+}
+
+export function Providers({ children }: ProvidersProps): React.JSX.Element {
   return (
     <GameProcessProvider>
       <ServerStatusProvider>
@@ -19,4 +25,4 @@ export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
       </ServerStatusProvider>
     </GameProcessProvider>
   );
-};
+}

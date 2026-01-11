@@ -36,8 +36,12 @@ describe('Select', () => {
         />
       );
 
-      expect(screen.getByRole('option', { name: 'Option 1' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'Option 2' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: 'Option 1' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: 'Option 2' })
+      ).toBeInTheDocument();
     });
 
     it('calls onChange when option is selected', async () => {
@@ -102,7 +106,9 @@ describe('Select', () => {
         />
       );
 
-      expect(screen.getByText(/Please select a valid option/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Please select a valid option/)
+      ).toBeInTheDocument();
     });
   });
 

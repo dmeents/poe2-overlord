@@ -75,9 +75,7 @@ describe('Input', () => {
   });
 
   it('renders search input with magnifying glass icon', () => {
-    render(
-      <Input id='test-input' value='' onChange={vi.fn()} type='search' />
-    );
+    render(<Input id='test-input' value='' onChange={vi.fn()} type='search' />);
 
     // Search input renders as textbox (type is converted to text)
     expect(screen.getByRole('textbox')).toBeInTheDocument();
@@ -94,9 +92,7 @@ describe('Input', () => {
   });
 
   it('hides clear button when search input is empty', () => {
-    render(
-      <Input id='test-input' value='' onChange={vi.fn()} type='search' />
-    );
+    render(<Input id='test-input' value='' onChange={vi.fn()} type='search' />);
 
     expect(
       screen.queryByRole('button', { name: 'Clear input' })

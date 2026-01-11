@@ -16,8 +16,10 @@ vi.mock('../zone-card/zone-card', () => ({
 
 vi.mock('../zone-list-controls-form/zone-list-controls-form', () => ({
   ZoneListControlsForm: vi.fn(({ onClearFilters }) => (
-    <div data-testid="zone-list-controls">
-      <button onClick={onClearFilters} data-testid="clear-filters-controls">Clear Filters</button>
+    <div data-testid='zone-list-controls'>
+      <button onClick={onClearFilters} data-testid='clear-filters-controls'>
+        Clear Filters
+      </button>
     </div>
   )),
 }));
@@ -34,19 +36,32 @@ const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
   area_level: 2,
   is_town: false,
   has_waypoint: true,
-  visit_count: 5,
-  total_time_in_zone: 3600,
-  death_count: 2,
+  visits: 5,
+  duration: 3600,
+  deaths: 2,
   first_visited: '2024-01-01T00:00:00Z',
   last_visited: '2024-01-10T00:00:00Z',
+  is_active: false,
+  bosses: [],
+  monsters: [],
+  npcs: [],
+  connected_zones: [],
+  points_of_interest: [],
   ...overrides,
 });
 
 const defaultFilters: ZoneFilters = {
   search: '',
-  act: null,
+  act: 'All',
   isTown: null,
+  isActive: null,
+  minVisits: null,
+  maxVisits: null,
+  minDeaths: null,
+  maxDeaths: null,
+  hasBosses: null,
   hasWaypoint: null,
+  hasNpcs: null,
 };
 
 const defaultSort: ZoneSortOption = {
@@ -76,7 +91,9 @@ describe('ZoneList', () => {
       render(<ZoneList {...defaultProps} zones={[]} totalCount={0} />);
 
       expect(screen.getByText('No Zone Data Available')).toBeInTheDocument();
-      expect(screen.getByText(/Start playing Path of Exile 2/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Start playing Path of Exile 2/)
+      ).toBeInTheDocument();
     });
   });
 
@@ -92,7 +109,9 @@ describe('ZoneList', () => {
 
       expect(screen.getByTestId('zone-card-The Coast')).toBeInTheDocument();
       expect(screen.getByTestId('zone-card-The Mud Flats')).toBeInTheDocument();
-      expect(screen.getByTestId('zone-card-The Submerged Passage')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('zone-card-The Submerged Passage')
+      ).toBeInTheDocument();
     });
 
     it('passes correct isEven prop to zone cards', () => {
@@ -104,9 +123,18 @@ describe('ZoneList', () => {
 
       render(<ZoneList {...defaultProps} zones={zones} totalCount={3} />);
 
-      expect(screen.getByTestId('zone-card-Zone1')).toHaveAttribute('data-even', 'true');
-      expect(screen.getByTestId('zone-card-Zone2')).toHaveAttribute('data-even', 'false');
-      expect(screen.getByTestId('zone-card-Zone3')).toHaveAttribute('data-even', 'true');
+      expect(screen.getByTestId('zone-card-Zone1')).toHaveAttribute(
+        'data-even',
+        'true'
+      );
+      expect(screen.getByTestId('zone-card-Zone2')).toHaveAttribute(
+        'data-even',
+        'false'
+      );
+      expect(screen.getByTestId('zone-card-Zone3')).toHaveAttribute(
+        'data-even',
+        'true'
+      );
     });
 
     it('renders the controls form', () => {
@@ -139,7 +167,9 @@ describe('ZoneList', () => {
       );
 
       expect(screen.getByText('No zones found')).toBeInTheDocument();
-      expect(screen.getByText(/No zones match your current search/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No zones match your current search/)
+      ).toBeInTheDocument();
     });
 
     it('shows clear filters button in filtered empty state', () => {
@@ -180,7 +210,9 @@ describe('ZoneList', () => {
       const user = userEvent.setup();
       const handleClearFilters = vi.fn();
 
-      render(<ZoneList {...defaultProps} onClearFilters={handleClearFilters} />);
+      render(
+        <ZoneList {...defaultProps} onClearFilters={handleClearFilters} />
+      );
 
       await user.click(screen.getByTestId('clear-filters-controls'));
 

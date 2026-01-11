@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { CharacterInsights } from './character-insights';
 import type { CharacterData, CharacterSummary } from '@/types/character';
 
-const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
+const createMockSummary = (
+  overrides: Partial<CharacterSummary> = {}
+): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 3600,
   total_hideout_time: 600,
@@ -18,7 +20,9 @@ const createMockSummary = (overrides: Partial<CharacterSummary> = {}): Character
   ...overrides,
 });
 
-const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData =>
+const createMockCharacter = (
+  overrides: Partial<CharacterData> = {}
+): CharacterData =>
   ({
     id: 'char-1',
     name: 'TestChar',
@@ -42,7 +46,9 @@ describe('CharacterInsights', () => {
       render(<CharacterInsights characters={[]} />);
 
       expect(screen.getByText('No Characters to Analyze')).toBeInTheDocument();
-      expect(screen.getByText('Create some characters to view insights')).toBeInTheDocument();
+      expect(
+        screen.getByText('Create some characters to view insights')
+      ).toBeInTheDocument();
     });
 
     it('renders Character Insights title in empty state', () => {
@@ -200,18 +206,18 @@ describe('CharacterInsights', () => {
       const characters = [
         createMockCharacter({ id: 'char-1', league: 'Standard' }),
         createMockCharacter({ id: 'char-2', league: 'Standard' }),
-        createMockCharacter({ id: 'char-3', league: 'Dawn' }),
+        createMockCharacter({ id: 'char-3', league: 'Rise of the Abyssal' }),
       ];
 
       render(<CharacterInsights characters={characters} />);
 
       expect(screen.getByText('Standard')).toBeInTheDocument();
-      expect(screen.getByText('Dawn')).toBeInTheDocument();
+      expect(screen.getByText('Rise of the Abyssal')).toBeInTheDocument();
     });
 
     it('sorts leagues by character count descending', () => {
       const characters = [
-        createMockCharacter({ id: 'char-1', league: 'Dawn' }),
+        createMockCharacter({ id: 'char-1', league: 'Rise of the Abyssal' }),
         createMockCharacter({ id: 'char-2', league: 'Standard' }),
         createMockCharacter({ id: 'char-3', league: 'Standard' }),
         createMockCharacter({ id: 'char-4', league: 'Standard' }),
@@ -219,9 +225,9 @@ describe('CharacterInsights', () => {
 
       render(<CharacterInsights characters={characters} />);
 
-      // Standard should appear first (3 chars) then Dawn (1 char)
+      // Standard should appear first (3 chars) then Rise of the Abyssal (1 char)
       expect(screen.getByText('Standard')).toBeInTheDocument();
-      expect(screen.getByText('Dawn')).toBeInTheDocument();
+      expect(screen.getByText('Rise of the Abyssal')).toBeInTheDocument();
     });
   });
 

@@ -22,7 +22,7 @@ const createMockZone = (overrides = {}) => ({
   bosses: ['Boss One', 'Boss Two'],
   npcs: ['NPC One'],
   points_of_interest: ['POI One'],
-  connected_zones: ['The Mud Flats', 'Lioneye\'s Watch'],
+  connected_zones: ['The Mud Flats', "Lioneye's Watch"],
   ...overrides,
 });
 
@@ -169,7 +169,9 @@ describe('ZoneDetailsModal', () => {
       render(<ZoneDetailsModal />);
 
       expect(screen.getByText('Zone Not Yet Visited')).toBeInTheDocument();
-      expect(screen.getByText(/You haven't visited this zone yet/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/You haven't visited this zone yet/)
+      ).toBeInTheDocument();
     });
 
     it('does not show player statistics for unvisited zones', () => {
@@ -271,19 +273,26 @@ describe('ZoneDetailsModal', () => {
 
       await user.click(screen.getByText('View on Wiki'));
 
-      expect(mockOpen).toHaveBeenCalledWith('https://wiki.example.com/the-coast');
+      expect(mockOpen).toHaveBeenCalledWith(
+        'https://wiki.example.com/the-coast'
+      );
     });
 
     it('handles wiki open error gracefully', async () => {
       const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
       mockOpen.mockRejectedValueOnce(new Error('Failed to open'));
 
       render(<ZoneDetailsModal />);
 
       await user.click(screen.getByText('View on Wiki'));
 
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to open wiki link:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to open wiki link:',
+        expect.any(Error)
+      );
       consoleSpy.mockRestore();
     });
   });

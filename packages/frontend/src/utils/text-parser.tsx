@@ -83,11 +83,11 @@ const parseTextWithWikiLinks = (
 /**
  * Component that renders parsed text with wiki links
  */
-export const ParsedText: React.FC<ParsedTextProps> = ({
+export function ParsedText({
   text,
   wikiItems,
   onWikiClick,
-}) => {
+}: ParsedTextProps): React.JSX.Element {
   const parsedElements = parseTextWithWikiLinks(text, wikiItems, onWikiClick);
 
   return (
@@ -97,4 +97,4 @@ export const ParsedText: React.FC<ParsedTextProps> = ({
       ))}
     </span>
   );
-};
+}

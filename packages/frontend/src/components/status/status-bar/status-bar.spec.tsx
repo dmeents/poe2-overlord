@@ -1,25 +1,29 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { CharacterData } from '@/types/character';
+import type { GameProcessStatus } from '@/types/process';
+import type { ServerStatus } from '@/types/server';
 import { StatusBar } from './status-bar';
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
 const mockUseGameProcess = vi.hoisted(() =>
   vi.fn(() => ({
-    processInfo: null,
+    processInfo: null as GameProcessStatus | null,
   }))
 );
 
 const mockUseServerStatus = vi.hoisted(() =>
   vi.fn(() => ({
-    serverStatus: null,
+    serverStatus: null as ServerStatus | null,
   }))
 );
 
 const mockUseCharacter = vi.hoisted(() =>
   vi.fn(() => ({
-    activeCharacter: null,
+    activeCharacter: null as CharacterData | null,
   }))
 );
 
@@ -38,6 +42,54 @@ vi.mock('@/contexts/CharacterContext', () => ({
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockNavigate,
 }));
+
+const createMockCharacter = (
+  name: string,
+  currentLocation?: {
+    zone_name: string;
+    act: number;
+    is_town: boolean;
+    has_waypoint: boolean;
+    area_level: number;
+  } | null
+): CharacterData => ({
+  id: 'test-id',
+  name,
+  class: 'Warrior',
+  ascendency: 'Titan',
+  level: 50,
+  league: 'Standard',
+  hardcore: false,
+  solo_self_found: false,
+  created_at: '2024-01-01T00:00:00Z',
+  last_updated: '2024-01-10T00:00:00Z',
+  current_location: currentLocation
+    ? {
+        ...currentLocation,
+        location_type: 'Zone',
+        last_updated: '2024-01-10T00:00:00Z',
+      }
+    : undefined,
+  summary: {
+    character_id: 'test-id',
+    total_play_time: 3600,
+    total_hideout_time: 600,
+    total_zones_visited: 20,
+    total_deaths: 5,
+    play_time_act1: 900,
+    play_time_act2: 900,
+    play_time_act3: 900,
+    play_time_act4: 300,
+    play_time_interlude: 0,
+    play_time_endgame: 0,
+  },
+  zones: [],
+  walkthrough_progress: {
+    current_step_id: null,
+    is_completed: false,
+    last_updated: '2024-01-10T00:00:00Z',
+  },
+});
 
 describe('StatusBar', () => {
   beforeEach(() => {
@@ -61,7 +113,12 @@ describe('StatusBar', () => {
 
   it('shows POE2 is running when process is active', () => {
     mockUseGameProcess.mockReturnValue({
-      processInfo: { running: true },
+      processInfo: {
+        name: 'PathOfExileSteam.exe',
+        pid: 12345,
+        running: true,
+        detected_at: '2024-01-10T00:00:00Z',
+      },
     });
 
     render(<StatusBar />);
@@ -77,10 +134,7 @@ describe('StatusBar', () => {
 
   it('shows character name when active', () => {
     mockUseCharacter.mockReturnValue({
-      activeCharacter: {
-        name: 'TestCharacter',
-        current_location: null,
-      },
+      activeCharacter: createMockCharacter('TestCharacter'),
     });
 
     render(<StatusBar />);
@@ -90,16 +144,13 @@ describe('StatusBar', () => {
 
   it('shows character with zone location', () => {
     mockUseCharacter.mockReturnValue({
-      activeCharacter: {
-        name: 'TestCharacter',
-        current_location: {
-          zone_name: 'The Coast',
-          act: 1,
-          is_town: false,
-          has_waypoint: true,
-          area_level: 2,
-        },
-      },
+      activeCharacter: createMockCharacter('TestCharacter', {
+        zone_name: 'The Coast',
+        act: 1,
+        is_town: false,
+        has_waypoint: true,
+        area_level: 2,
+      }),
     });
 
     render(<StatusBar />);
@@ -121,7 +172,9 @@ describe('StatusBar', () => {
       serverStatus: {
         is_online: true,
         ip_address: '192.168.1.1',
+        port: 6112,
         latency_ms: 50,
+        timestamp: '2024-01-10T00:00:00Z',
       },
     });
 
@@ -136,6 +189,9 @@ describe('StatusBar', () => {
       serverStatus: {
         is_online: false,
         ip_address: '192.168.1.1',
+        port: 6112,
+        latency_ms: null,
+        timestamp: '2024-01-10T00:00:00Z',
       },
     });
 
@@ -176,21 +232,20 @@ describe('StatusBar', () => {
 
   it('shows character with act in location', () => {
     mockUseCharacter.mockReturnValue({
-      activeCharacter: {
-        name: 'TestCharacter',
-        current_location: {
-          zone_name: 'The Coast',
-          act: 2,
-          is_town: false,
-          has_waypoint: true,
-          area_level: 15,
-        },
-      },
+      activeCharacter: createMockCharacter('TestCharacter', {
+        zone_name: 'The Coast',
+        act: 2,
+        is_town: false,
+        has_waypoint: true,
+        area_level: 15,
+      }),
     });
 
     render(<StatusBar />);
 
     // getDisplayAct returns just the act number for regular acts
-    expect(screen.getByText(/TestCharacter - 2 - The Coast/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/TestCharacter - 2 - The Coast/)
+    ).toBeInTheDocument();
   });
 });

@@ -18,11 +18,17 @@ const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
   area_level: 2,
   is_town: false,
   has_waypoint: true,
-  visit_count: 5,
-  total_time_in_zone: 3600,
-  death_count: 2,
+  visits: 5,
+  duration: 3600,
+  deaths: 2,
   first_visited: '2024-01-01T00:00:00Z',
   last_visited: '2024-01-10T00:00:00Z',
+  is_active: false,
+  bosses: [],
+  monsters: [],
+  npcs: [],
+  connected_zones: [],
+  points_of_interest: [],
   ...overrides,
 });
 
@@ -85,7 +91,9 @@ describe('CurrentZoneCard', () => {
 
   describe('Zone Icons', () => {
     it('shows waypoint icon for zones with waypoints', () => {
-      const { container } = render(<CurrentZoneCard zone={createMockZone({ has_waypoint: true })} />);
+      const { container } = render(
+        <CurrentZoneCard zone={createMockZone({ has_waypoint: true })} />
+      );
 
       // MapIcon should be present for waypoints
       const svg = container.querySelector('svg');
@@ -93,7 +101,9 @@ describe('CurrentZoneCard', () => {
     });
 
     it('does not show waypoint icon for zones without waypoints', () => {
-      render(<CurrentZoneCard zone={createMockZone({ has_waypoint: false })} />);
+      render(
+        <CurrentZoneCard zone={createMockZone({ has_waypoint: false })} />
+      );
 
       // The waypoint icon should not be present
       // We check this by verifying the component renders correctly
@@ -101,7 +111,9 @@ describe('CurrentZoneCard', () => {
     });
 
     it('shows town icon for town zones', () => {
-      const { container } = render(<CurrentZoneCard zone={createMockZone({ is_town: true })} />);
+      const { container } = render(
+        <CurrentZoneCard zone={createMockZone({ is_town: true })} />
+      );
 
       // BuildingStorefrontIcon should be present for towns
       const svgs = container.querySelectorAll('svg');
@@ -133,7 +145,9 @@ describe('CurrentZoneCard', () => {
 
   describe('Edge Cases', () => {
     it('handles zones without area_level', () => {
-      render(<CurrentZoneCard zone={createMockZone({ area_level: undefined })} />);
+      render(
+        <CurrentZoneCard zone={createMockZone({ area_level: undefined })} />
+      );
 
       expect(screen.queryByText(/Level/)).not.toBeInTheDocument();
     });
@@ -142,9 +156,9 @@ describe('CurrentZoneCard', () => {
       render(
         <CurrentZoneCard
           zone={createMockZone({
-            visit_count: 0,
-            death_count: 0,
-            total_time_in_zone: 0,
+            visits: 0,
+            deaths: 0,
+            duration: 0,
           })}
         />
       );

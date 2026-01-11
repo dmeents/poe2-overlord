@@ -41,10 +41,7 @@ describe('ErrorState', () => {
 
   it('prefers message over error prop', () => {
     render(
-      <ErrorState
-        message='Custom message'
-        error={new Error('Error message')}
-      />
+      <ErrorState message='Custom message' error={new Error('Error message')} />
     );
 
     expect(screen.getByText('Custom message')).toBeInTheDocument();

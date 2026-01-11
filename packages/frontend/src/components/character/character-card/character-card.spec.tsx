@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import { CharacterCard } from './character-card';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { CharacterData } from '../../../types/character';
+import { CharacterCard } from './character-card';
 
 const mockCharacter: CharacterData = {
   id: 'test-id',
@@ -14,21 +15,35 @@ const mockCharacter: CharacterData = {
   hardcore: false,
   solo_self_found: false,
   created_at: '2024-01-01T00:00:00Z',
+  last_updated: '2024-01-10T00:00:00Z',
   last_played: '2024-01-10T00:00:00Z',
   current_location: {
     zone_name: 'The Coast',
     act: 1,
     is_town: false,
+    location_type: 'Zone',
     has_waypoint: true,
     area_level: 2,
+    last_updated: '2024-01-10T00:00:00Z',
   },
   summary: {
+    character_id: 'test-id',
     total_play_time: 3600,
-    total_deaths: 5,
+    total_hideout_time: 600,
     total_zones_visited: 20,
-    zones_with_waypoints: 10,
-    unique_npcs_encountered: 15,
-    timestamp: '2024-01-10T00:00:00Z',
+    total_deaths: 5,
+    play_time_act1: 900,
+    play_time_act2: 900,
+    play_time_act3: 900,
+    play_time_act4: 300,
+    play_time_interlude: 0,
+    play_time_endgame: 0,
+  },
+  zones: [],
+  walkthrough_progress: {
+    current_step_id: null,
+    is_completed: false,
+    last_updated: '2024-01-10T00:00:00Z',
   },
 };
 

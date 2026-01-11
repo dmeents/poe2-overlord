@@ -12,12 +12,14 @@ vi.mock('../economy-row/economy-row', () => ({
 
 vi.mock('../currency-list-controls-form/currency-list-controls-form', () => ({
   CurrencyListControlsForm: vi.fn(() => (
-    <div data-testid="currency-list-controls">Controls</div>
+    <div data-testid='currency-list-controls'>Controls</div>
   )),
 }));
 
 vi.mock('@/components/ui/loading-spinner/loading-spinner', () => ({
-  LoadingSpinner: vi.fn(() => <div data-testid="loading-spinner">Loading...</div>),
+  LoadingSpinner: vi.fn(() => (
+    <div data-testid='loading-spinner'>Loading...</div>
+  )),
 }));
 
 // Mock the useCurrencyList hook
@@ -27,14 +29,26 @@ vi.mock('@/hooks/useCurrencyList', () => ({
   useCurrencyList: mockUseCurrencyList,
 }));
 
-const createMockCurrency = (overrides: Partial<CurrencyExchangeRate> = {}): CurrencyExchangeRate => ({
+const createMockCurrency = (
+  overrides: Partial<CurrencyExchangeRate> = {}
+): CurrencyExchangeRate => ({
   id: 'chaos',
   name: 'Chaos Orb',
-  category: 'Currency',
-  chaos_equivalent: 1,
-  divine_equivalent: 0.01,
-  icon_url: 'https://example.com/chaos.png',
-  last_updated: '2024-01-10T00:00:00Z',
+  image_url: 'https://example.com/chaos.png',
+  display_value: {
+    tier: 'Primary',
+    value: 1,
+    inverted: false,
+    currency_id: 'divine',
+    currency_name: 'Divine Orb',
+    currency_image_url: '/divine.png',
+  },
+  primary_value: 0.01,
+  secondary_value: 1,
+  tertiary_value: 0.1,
+  volume: 10000,
+  change_percent: 0,
+  price_history: [1, 1, 1],
   ...overrides,
 });
 
@@ -120,9 +134,11 @@ describe('EconomyList', () => {
         totalCount: 10,
       });
 
-      render(<EconomyList {...defaultProps} searchQuery="nonexistent" />);
+      render(<EconomyList {...defaultProps} searchQuery='nonexistent' />);
 
-      expect(screen.getByText(/No currencies found matching "nonexistent"/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No currencies found matching "nonexistent"/)
+      ).toBeInTheDocument();
     });
 
     it('shows filter empty message when no results and hasActiveFilters', () => {
@@ -137,9 +153,11 @@ describe('EconomyList', () => {
         totalCount: 10,
       });
 
-      render(<EconomyList {...defaultProps} searchQuery="" />);
+      render(<EconomyList {...defaultProps} searchQuery='' />);
 
-      expect(screen.getByText('No currencies match your search')).toBeInTheDocument();
+      expect(
+        screen.getByText('No currencies match your search')
+      ).toBeInTheDocument();
     });
 
     it('shows no data message when no currencies at all', () => {
@@ -154,9 +172,11 @@ describe('EconomyList', () => {
         totalCount: 0,
       });
 
-      render(<EconomyList {...defaultProps} currencies={[]} searchQuery="" />);
+      render(<EconomyList {...defaultProps} currencies={[]} searchQuery='' />);
 
-      expect(screen.getByText('No currency data available')).toBeInTheDocument();
+      expect(
+        screen.getByText('No currency data available')
+      ).toBeInTheDocument();
     });
   });
 });

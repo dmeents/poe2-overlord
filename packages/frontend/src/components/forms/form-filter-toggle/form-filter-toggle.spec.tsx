@@ -44,7 +44,11 @@ describe('FilterToggle', () => {
     const handleToggle = vi.fn();
 
     render(
-      <FilterToggle isExpanded={false} onToggle={handleToggle} label='Filters' />
+      <FilterToggle
+        isExpanded={false}
+        onToggle={handleToggle}
+        label='Filters'
+      />
     );
 
     await user.click(screen.getByRole('button'));

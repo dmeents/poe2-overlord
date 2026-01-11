@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { PlaytimeInsights } from './playtime-insights';
-import type { CharacterData, ZoneStats, CharacterSummary } from '@/types/character';
+import type {
+  CharacterData,
+  ZoneStats,
+  CharacterSummary,
+} from '@/types/character';
 
 const mockUseCharacter = vi.hoisted(() => vi.fn());
 
@@ -9,7 +13,9 @@ vi.mock('@/contexts/CharacterContext', () => ({
   useCharacter: mockUseCharacter,
 }));
 
-const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
+const createMockSummary = (
+  overrides: Partial<CharacterSummary> = {}
+): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 7200, // 2 hours
   total_hideout_time: 1800, // 30 minutes
@@ -68,7 +74,9 @@ describe('PlaytimeInsights', () => {
 
       render(<PlaytimeInsights />);
 
-      expect(screen.getByText('Loading playtime insights...')).toBeInTheDocument();
+      expect(
+        screen.getByText('Loading playtime insights...')
+      ).toBeInTheDocument();
     });
   });
 
@@ -81,7 +89,9 @@ describe('PlaytimeInsights', () => {
 
       render(<PlaytimeInsights />);
 
-      expect(screen.getByText('No Character Data Available')).toBeInTheDocument();
+      expect(
+        screen.getByText('No Character Data Available')
+      ).toBeInTheDocument();
       expect(
         screen.getByText('Select a character to view playtime insights')
       ).toBeInTheDocument();
@@ -95,7 +105,9 @@ describe('PlaytimeInsights', () => {
 
       render(<PlaytimeInsights />);
 
-      expect(screen.getByText('No Character Data Available')).toBeInTheDocument();
+      expect(
+        screen.getByText('No Character Data Available')
+      ).toBeInTheDocument();
     });
   });
 
@@ -208,7 +220,11 @@ describe('PlaytimeInsights', () => {
 
     it('excludes hideouts from average time calculation', () => {
       const zones = [
-        createMockZone({ zone_name: 'My Hideout', duration: 3600, is_town: false }),
+        createMockZone({
+          zone_name: 'My Hideout',
+          duration: 3600,
+          is_town: false,
+        }),
         createMockZone({ zone_name: 'Zone A', duration: 600, is_town: false }),
       ];
 
@@ -225,7 +241,11 @@ describe('PlaytimeInsights', () => {
     it('renders most time spent zone', () => {
       // Using zone with no deaths so it doesn't appear in "Most Deaths"
       const zones = [
-        createMockZone({ zone_name: 'Longest Zone', duration: 1200, deaths: 0 }),
+        createMockZone({
+          zone_name: 'Longest Zone',
+          duration: 1200,
+          deaths: 0,
+        }),
         createMockZone({ zone_name: 'Short Zone', duration: 300, deaths: 0 }),
       ];
 
@@ -278,11 +298,17 @@ describe('PlaytimeInsights', () => {
 
   describe('Props Override', () => {
     it('uses zones prop when provided instead of context zones', () => {
-      const contextZones = [createMockZone({ zone_name: 'Context Zone', duration: 100, deaths: 0 })];
-      const propZones = [createMockZone({ zone_name: 'Prop Zone', duration: 500, deaths: 0 })];
+      const contextZones = [
+        createMockZone({ zone_name: 'Context Zone', duration: 100, deaths: 0 }),
+      ];
+      const propZones = [
+        createMockZone({ zone_name: 'Prop Zone', duration: 500, deaths: 0 }),
+      ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: { ...createMockCharacter({ total_deaths: 0 }, contextZones) },
+        activeCharacter: {
+          ...createMockCharacter({ total_deaths: 0 }, contextZones),
+        },
         isLoading: false,
       });
 

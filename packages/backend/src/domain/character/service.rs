@@ -316,17 +316,27 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     /// Validates that a character name is unique
+    /// Optimized: Uses index to load characters individually and stops early on match
     async fn is_name_unique(&self, name: &str, exclude_id: Option<&str>) -> Result<bool, AppError> {
-        // Load all characters
-        let characters = self.repository.load_all_characters().await?;
+        // Load index first (lightweight - just IDs)
+        let index = self.repository.load_characters_index().await?;
 
-        // Check if any character (excluding exclude_id) has the same name
-        let is_unique = !characters.iter().any(|character| {
-            character.profile.name == name
-                && exclude_id.map_or(true, |exclude| character.id != exclude)
-        });
+        // Check each character individually, stopping early if match found
+        for character_id in &index.character_ids {
+            // Skip the excluded character (e.g., when updating an existing character)
+            if exclude_id == Some(character_id.as_str()) {
+                continue;
+            }
 
-        Ok(is_unique)
+            // Load only this character's data
+            if let Ok(character) = self.repository.load_character_data(character_id).await {
+                if character.profile.name == name {
+                    return Ok(false); // Name already exists
+                }
+            }
+        }
+
+        Ok(true) // Name is unique
     }
 
     async fn update_character_level(

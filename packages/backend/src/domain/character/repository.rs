@@ -57,7 +57,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         match FileService::read_json_optional(&character_path).await? {
             Some(data) => Ok(data),
-            None => Err(AppError::internal_error(
+            None => Err(AppError::validation_error(
                 "load_character_data",
                 &format!("Character with ID '{}' not found", character_id),
             )),

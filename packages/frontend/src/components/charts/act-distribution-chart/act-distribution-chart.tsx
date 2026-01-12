@@ -54,6 +54,13 @@ export function ActDistributionChart({
       hexColor: '#f59e0b',
     },
     {
+      name: 'Act 5',
+      time: character.summary.play_time_act5,
+      percentage: 0, // Will be calculated
+      color: 'bg-pink-500',
+      hexColor: '#ec4899',
+    },
+    {
       name: 'Interlude',
       time: character.summary.play_time_interlude,
       percentage: 0, // Will be calculated

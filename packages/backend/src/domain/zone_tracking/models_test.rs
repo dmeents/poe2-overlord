@@ -295,18 +295,20 @@ mod tests {
         summary.play_time_act2 = 200;
         summary.play_time_act3 = 300;
         summary.play_time_act4 = 400;
+        summary.play_time_act5 = 500;
         summary.play_time_interlude = 50;
         summary.play_time_endgame = 1000;
 
         let breakdown = summary.get_act_breakdown();
 
-        assert_eq!(breakdown.len(), 6);
+        assert_eq!(breakdown.len(), 7);
         assert_eq!(breakdown[0], ("Act 1".to_string(), 100));
         assert_eq!(breakdown[1], ("Act 2".to_string(), 200));
         assert_eq!(breakdown[2], ("Act 3".to_string(), 300));
         assert_eq!(breakdown[3], ("Act 4".to_string(), 400));
-        assert_eq!(breakdown[4], ("Interlude".to_string(), 50));
-        assert_eq!(breakdown[5], ("Endgame".to_string(), 1000));
+        assert_eq!(breakdown[4], ("Act 5".to_string(), 500));
+        assert_eq!(breakdown[5], ("Interlude".to_string(), 50));
+        assert_eq!(breakdown[6], ("Endgame".to_string(), 1000));
     }
 
     #[test]
@@ -356,6 +358,7 @@ mod tests {
             "play_time_act2": 300,
             "play_time_act3": 250,
             "play_time_act4": 150,
+            "play_time_act5": 100,
             "play_time_interlude": 50,
             "play_time_endgame": 50
         }"#;
@@ -366,5 +369,6 @@ mod tests {
         assert_eq!(summary.total_play_time, 1000);
         assert_eq!(summary.total_zones_visited, 10);
         assert_eq!(summary.total_deaths, 5);
+        assert_eq!(summary.play_time_act5, 100);
     }
 }

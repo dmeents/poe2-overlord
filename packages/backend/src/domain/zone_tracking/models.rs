@@ -103,6 +103,7 @@ pub struct TrackingSummary {
     pub play_time_act2: u64,
     pub play_time_act3: u64,
     pub play_time_act4: u64,
+    pub play_time_act5: u64,
     pub play_time_interlude: u64,
     pub play_time_endgame: u64,
 }
@@ -120,6 +121,7 @@ impl TrackingSummary {
             play_time_act2: 0,
             play_time_act3: 0,
             play_time_act4: 0,
+            play_time_act5: 0,
             play_time_interlude: 0,
             play_time_endgame: 0,
         }
@@ -152,10 +154,11 @@ impl TrackingSummary {
                     2 => summary.play_time_act2 += zone_time,
                     3 => summary.play_time_act3 += zone_time,
                     4 => summary.play_time_act4 += zone_time,
+                    5 => summary.play_time_act5 += zone_time,
                     6 => summary.play_time_interlude += zone_time,
                     10 => summary.play_time_endgame += zone_time,
                     _ => {
-                        // Unknown act (0, 5, 7-9, 11+)
+                        // Unknown act (0, 7-9, 11+)
                         // Only counts in total_play_time, not act-specific
                     }
                 }
@@ -172,6 +175,7 @@ impl TrackingSummary {
             2 => self.play_time_act2,
             3 => self.play_time_act3,
             4 => self.play_time_act4,
+            5 => self.play_time_act5,
             _ => 0,
         }
     }
@@ -181,6 +185,7 @@ impl TrackingSummary {
             + self.play_time_act2
             + self.play_time_act3
             + self.play_time_act4
+            + self.play_time_act5
             + self.play_time_interlude
     }
 
@@ -190,6 +195,7 @@ impl TrackingSummary {
             ("Act 2".to_string(), self.play_time_act2),
             ("Act 3".to_string(), self.play_time_act3),
             ("Act 4".to_string(), self.play_time_act4),
+            ("Act 5".to_string(), self.play_time_act5),
             ("Interlude".to_string(), self.play_time_interlude),
             ("Endgame".to_string(), self.play_time_endgame),
         ]

@@ -88,7 +88,13 @@ export interface EnrichedLocationState {
   last_updated: string;
 }
 
+/**
+ * Zone statistics enriched with wiki metadata.
+ * Maps to backend's EnrichedZoneStats (not the basic ZoneStats).
+ * Includes both tracking data (duration, deaths, visits) and metadata (bosses, npcs, etc).
+ */
 export interface ZoneStats {
+  // Tracking data (from backend ZoneStats)
   zone_name: string;
   duration: number;
   deaths: number;
@@ -97,10 +103,12 @@ export interface ZoneStats {
   last_visited: string;
   is_active: boolean;
   entry_timestamp?: string;
-  area_id?: string;
   act?: number;
-  area_level?: number;
   is_town: boolean;
+
+  // Enrichment data (from wiki metadata)
+  area_id?: string;
+  area_level?: number;
   has_waypoint: boolean;
   bosses: string[];
   monsters: string[];
@@ -124,6 +132,7 @@ export interface CharacterSummary {
   play_time_act2: number;
   play_time_act3: number;
   play_time_act4: number;
+  play_time_act5: number;
   play_time_interlude: number;
   play_time_endgame: number;
 }

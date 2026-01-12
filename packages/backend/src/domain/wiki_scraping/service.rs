@@ -12,10 +12,11 @@ pub struct WikiScrapingServiceImpl {
 }
 
 impl WikiScrapingServiceImpl {
-    pub fn new() -> Self {
-        Self {
-            repository: Arc::new(WikiRepository::new()),
-        }
+    pub fn new() -> AppResult<Self> {
+        let repository = WikiRepository::new()?;
+        Ok(Self {
+            repository: Arc::new(repository),
+        })
     }
 }
 

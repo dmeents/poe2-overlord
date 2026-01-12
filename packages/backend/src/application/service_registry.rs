@@ -53,7 +53,7 @@ impl ServiceInitializer {
         app.manage(zone_config_service.clone());
 
         let wiki_service =
-            Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new());
+            Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new()?);
         app.manage(wiki_service.clone());
 
         let character_service = tauri::async_runtime::block_on(

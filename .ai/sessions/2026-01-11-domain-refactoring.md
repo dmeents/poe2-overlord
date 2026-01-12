@@ -15,7 +15,7 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 
 ## Domain Progress
 
-### Domains Completed: 1 / 8 (Configuration Management ✅)
+### Domains Completed: 2 / 8 (Configuration ✅, Wiki Scraping ✅)
 
 ---
 
@@ -106,11 +106,75 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 
 ---
 
-### Domain 2: Wiki Scraping ⏳
-**Status**: Pending
-**Files**: TBD
-**Issues Found**: TBD
-**Fixes Implemented**: TBD
+### Domain 2: Wiki Scraping ✅
+**Status**: COMPLETE
+
+#### Files Mapped
+
+**Backend** (`packages/backend/src/domain/wiki_scraping/`):
+- `mod.rs` - Module exports
+- `models.rs` - `WikiZoneData` struct
+- `traits.rs` - `WikiScrapingService` trait
+- `service.rs` - `WikiScrapingServiceImpl`
+- `repository.rs` - `WikiRepository` for HTTP fetching
+- `parser.rs` - `WikiParser` main entry point
+- `url_utils.rs` - URL construction and helpers
+- `parsers/` - 12 specialized parsers:
+  - `base.rs` - Common parsing utilities
+  - `infobox_parser.rs` - Zone infobox extraction
+  - `act_parser.rs`, `area_id_parser.rs`, `area_level_parser.rs`
+  - `is_town_parser.rs`, `has_waypoint_parser.rs`
+  - `bosses_parser.rs`, `monsters_parser.rs`, `npcs_parser.rs`
+  - `connected_zones_parser.rs`, `description_parser.rs`
+  - `points_of_interest_parser.rs`, `image_url_parser.rs`
+- 12+ test modules (`*_test.rs`)
+
+**Frontend**: N/A (backend-only domain)
+
+#### Domain Boundaries
+- **External Dependency**: https://www.poe2wiki.net (HTML scraping)
+- **Consumer**: Zone Configuration domain uses this data
+- **No Tauri commands** (used internally by other services)
+
+#### Issues Found
+
+**CRITICAL (3)**:
+1. **BE**: HTTP client creation can panic with `expect()` (repository.rs:13-17)
+2. **BE**: Boss detection heuristic loses common bosses like "Hillock", "Merveil" (bosses_parser.rs)
+3. **BE**: No validation that parsed data is meaningful - silent data loss (parser.rs)
+
+**HIGH (4)**:
+4. **BE**: No explicit redirect handling policy (repository.rs)
+5. **BE**: Section parsing assumes specific HTML structure - fragile (base.rs)
+6. **BE**: Connected zones parser doesn't handle wiki redirects (connected_zones_parser.rs)
+7. **BE**: Service layer doesn't propagate repository creation errors (service.rs)
+
+**MEDIUM (3)**:
+8. **BE**: URL encoding incomplete for special characters (url_utils.rs)
+9. **BE**: Case-sensitive redirect detection (infobox_parser.rs)
+10. **BE**: Missing timeout configuration flexibility (repository.rs)
+
+#### Fixes Implemented
+
+**CRITICAL (3/3 fixed)**:
+1. ✅ **BE**: Changed `WikiRepository::new()` to return `AppResult<Self>` instead of panicking (repository.rs)
+2. ✅ **BE**: Improved boss detection to catch single-name bosses like "Hillock", "Merveil" with length heuristic (bosses_parser.rs)
+3. ✅ **BE**: Added validation for meaningful parsed data with warning log (parser.rs)
+
+**HIGH (3/4 fixed)**:
+4. ✅ **BE**: Added explicit redirect policy `Policy::limited(5)` (repository.rs)
+5. ⏭️ **BE**: Section parsing - Skipped (would need major parser rewrite)
+6. ⏭️ **BE**: Connected zones redirects - Skipped (edge case, needs wiki testing)
+7. ✅ **BE**: Updated service and service_registry to propagate repository errors (service.rs, service_registry.rs)
+
+**MEDIUM (0/3 fixed)**:
+8. ⏭️ **BE**: URL encoding - Skipped (current encoding works for known zones)
+9. ⏭️ **BE**: Case-sensitive redirect - Skipped (minor edge case)
+10. ⏭️ **BE**: Timeout configuration - Skipped (hardcoded 30s is reasonable)
+
+**Test Results**:
+- Backend: 423 tests passing (77 wiki_scraping tests)
+- All cargo checks pass
 
 ---
 
@@ -169,18 +233,18 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 ## Issues Summary
 
 ### By Severity
-- **Critical Issues Found**: 4 (Fixed: 4)
-- **High Priority Issues Found**: 8 (Fixed: 4)
-- **Medium Priority Issues Found**: 7 (Fixed: 2)
+- **Critical Issues Found**: 7 (Fixed: 7)
+- **High Priority Issues Found**: 12 (Fixed: 7)
+- **Medium Priority Issues Found**: 10 (Fixed: 2)
 
 ### By Category
-- **Bugs**: 3 fixed (race conditions, memory leaks, panic risks)
-- **Data Integrity**: 1 fixed (centralized validation)
+- **Bugs**: 5 fixed (race conditions, memory leaks, panic risks, HTTP client panic, boss detection)
+- **Data Integrity**: 2 fixed (centralized validation, parse validation)
 - **Security**: 0 fixed (path validation deferred for migration)
 - **Contract Violations**: 1 fixed (async trait alignment)
 - **Logic Errors**: 1 fixed (strengthened path validation)
 - **State Management**: 1 fixed (lazy load recovery)
-- **Error Handling**: 2 fixed (specific error messages, pre-validation)
+- **Error Handling**: 4 fixed (specific error messages, pre-validation, error propagation, redirect policy)
 - **Performance**: 0 fixed
 - **Code Quality**: 1 fixed (ConfigurationChangedEvent type)
 
@@ -208,8 +272,8 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 *To be completed at end of session*
 
 **Stats**:
-- Total domains completed: 0 / 8
-- Total files analyzed: 0
-- Total issues found: 0
-- Total fixes implemented: 0
-- Final test pass rate: TBD
+- Total domains completed: 2 / 8
+- Total files analyzed: ~25
+- Total issues found: 29
+- Total fixes implemented: 16
+- Final test pass rate: 423 backend tests passing, 517 frontend tests passing

@@ -9,14 +9,18 @@ pub struct WikiRepository {
 }
 
 impl WikiRepository {
-    pub fn new() -> Self {
+    pub fn new() -> AppResult<Self> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .user_agent("poe2-overlord/1.0")
+            .redirect(reqwest::redirect::Policy::limited(5))
             .build()
-            .expect("Failed to create HTTP client");
+            .map_err(|e| {
+                error!("Failed to create HTTP client: {}", e);
+                AppError::network_error("create_http_client", &e.to_string())
+            })?;
 
-        Self { client }
+        Ok(Self { client })
     }
 
     pub async fn fetch_page(&self, zone_name: &str) -> AppResult<String> {
@@ -48,6 +52,6 @@ impl WikiRepository {
 
 impl Default for WikiRepository {
     fn default() -> Self {
-        Self::new()
+        Self::new().expect("Failed to create default WikiRepository - this is a critical error")
     }
 }

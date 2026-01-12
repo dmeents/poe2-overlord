@@ -1,9 +1,9 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 6 (Quick Wins Batch)
+**Completed**: 15 (Quick Wins + Data Integrity + Event System)
 **In Progress**: 0
-**Remaining**: 55
+**Remaining**: 46
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
 
@@ -94,7 +94,7 @@
 
 ## Priority 2: HIGH Priority Issues (21 deferred)
 
-### Issue #8: Configuration Event Listener
+### Issue #8: Configuration Event Listener ✅
 **Domain**: Configuration Management
 **Severity**: HIGH
 **Type**: Functional Gap
@@ -103,6 +103,7 @@
 **Complexity**: MEDIUM - Needs event registry integration
 **Impact**: UI shows stale config after external changes
 **Dependencies**: Event registry system
+**Status**: ✅ Complete (Event System Batch) - Added useAppEventListener to settings-form
 
 ### Issue #9: Wiki Section Parsing Brittleness
 **Domain**: Wiki Scraping
@@ -154,7 +155,7 @@
 **Impact**: Slow character creation with many characters
 **Dependencies**: Index refactor
 
-### Issue #14: Character Deletion Events
+### Issue #14: Character Deletion Events ✅
 **Domain**: Character Management
 **Severity**: HIGH
 **Type**: Functional Gap
@@ -163,6 +164,7 @@
 **Complexity**: MEDIUM - Needs new AppEvent variant
 **Impact**: Frontend doesn't auto-refresh on deletion
 **Dependencies**: Event system
+**Status**: ✅ Complete (Event System Batch) - Added CharacterDeleted event variant and publishing
 
 ### Issue #15: Frontend Deletion Event Handling ✅
 **Domain**: Character Management

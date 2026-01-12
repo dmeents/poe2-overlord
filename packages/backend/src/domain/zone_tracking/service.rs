@@ -30,10 +30,21 @@ impl ZoneTrackingService for ZoneTrackingServiceImpl {
         act: Option<u32>,
         is_town: bool,
     ) -> Result<(), AppError> {
-        // Deactivate any currently active zone
-        if let Some(active_zone) = character_data.zones.iter_mut().find(|z| z.is_active) {
-            active_zone.stop_timer_and_add_time();
-            active_zone.deactivate();
+        // Deactivate ALL currently active zones (defensive programming)
+        let active_zones_count = character_data.zones.iter().filter(|z| z.is_active).count();
+        if active_zones_count > 1 {
+            log::warn!(
+                "Character {} has {} active zones, expected at most 1. Deactivating all.",
+                character_data.id,
+                active_zones_count
+            );
+        }
+
+        for zone in &mut character_data.zones {
+            if zone.is_active {
+                zone.stop_timer_and_add_time();
+                zone.deactivate();
+            }
         }
 
         // Find or create zone

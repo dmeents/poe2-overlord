@@ -117,6 +117,7 @@ export interface CharacterSummary {
   character_id: string;
   total_play_time: number;
   total_hideout_time: number;
+  total_town_time: number;
   total_zones_visited: number;
   total_deaths: number;
   play_time_act1: number;

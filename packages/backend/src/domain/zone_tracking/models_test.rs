@@ -11,7 +11,7 @@ mod tests {
         assert_eq!(zone.zone_name, "The Coast");
         assert_eq!(zone.duration, 0);
         assert_eq!(zone.deaths, 0);
-        assert_eq!(zone.visits, 1);
+        assert_eq!(zone.visits, 0); // Initialized to 0; activate() increments to 1
         assert!(!zone.is_active);
         assert!(zone.entry_timestamp.is_none());
         assert_eq!(zone.act, Some(1));
@@ -79,26 +79,26 @@ mod tests {
     #[test]
     fn test_zone_stats_record_visit() {
         let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
+        assert_eq!(zone.visits, 0); // Now starts at 0
+
+        zone.record_visit();
         assert_eq!(zone.visits, 1);
 
         zone.record_visit();
         assert_eq!(zone.visits, 2);
-
-        zone.record_visit();
-        assert_eq!(zone.visits, 3);
     }
 
     #[test]
     fn test_zone_stats_activate() {
         let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
         assert!(!zone.is_active);
-        let initial_visits = zone.visits;
+        assert_eq!(zone.visits, 0); // Starts at 0
 
         zone.activate();
 
         assert!(zone.is_active);
-        // Activate also records a visit
-        assert_eq!(zone.visits, initial_visits + 1);
+        // Activate records first visit, setting it to 1
+        assert_eq!(zone.visits, 1);
     }
 
     #[test]
@@ -162,7 +162,7 @@ mod tests {
         assert!(json.contains("\"zone_name\":\"Clearfell\""));
         assert!(json.contains("\"duration\":0"));
         assert!(json.contains("\"deaths\":0"));
-        assert!(json.contains("\"visits\":1"));
+        assert!(json.contains("\"visits\":0")); // Now starts at 0
     }
 
     // ============= TrackingSummary Tests =============

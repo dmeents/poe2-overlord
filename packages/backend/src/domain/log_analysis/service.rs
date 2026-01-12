@@ -512,6 +512,22 @@ impl LogAnalysisServiceImpl {
             Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
         }
 
+        // Leave current active zone before entering new zone (if any)
+        // This ensures proper duration tracking with explicit leave/enter semantics
+        if let Ok(character_data) = character_service.load_character_data(character_id).await {
+            if let Some(active_zone) = character_data.zones.iter().find(|z| z.is_active) {
+                let previous_zone_name = active_zone.zone_name.clone();
+                if previous_zone_name != zone_name {
+                    debug!("Leaving previous zone '{}' before entering '{}'", previous_zone_name, zone_name);
+                    if let Err(e) = character_service.leave_zone(character_id, &previous_zone_name).await {
+                        // Log warning but don't fail - defensive programming
+                        // enter_zone has fallback deactivation code
+                        warn!("Failed to leave previous zone '{}': {}", previous_zone_name, e);
+                    }
+                }
+            }
+        }
+
         if let Err(e) = character_service.enter_zone(character_id, zone_name).await {
             error!("Failed to enter zone '{}': {}", zone_name, e);
             return Err(e);

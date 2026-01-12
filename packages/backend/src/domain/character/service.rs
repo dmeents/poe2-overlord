@@ -421,6 +421,36 @@ impl CharacterService for CharacterServiceImpl {
         Ok(())
     }
 
+    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError> {
+        log::debug!("Character {} leaving zone: {}", character_id, zone_name);
+
+        // Load character data
+        let mut character_data = self.repository.load_character_data(character_id).await?;
+
+        // Apply zone tracking business logic to leave zone
+        self.zone_tracking.leave_zone(&mut character_data, zone_name)?;
+
+        // Update timestamps
+        character_data.touch();
+
+        // Save character data
+        self.repository.save_character_data(&character_data).await?;
+
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
+        // Publish event
+        let event = crate::infrastructure::events::AppEvent::character_updated(
+            character_id.to_string(),
+            enriched_data,
+        );
+        self.event_bus.publish(event).await?;
+
+        log::info!("Character {} left zone: {}", character_id, zone_name);
+
+        Ok(())
+    }
+
     async fn record_death(&self, character_id: &str) -> Result<(), AppError> {
         // Load character data
         let mut character_data = self.repository.load_character_data(character_id).await?;

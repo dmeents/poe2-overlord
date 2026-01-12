@@ -78,6 +78,10 @@ pub trait CharacterService: Send + Sync {
 
     async fn enter_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
 
+    /// Leaves a zone, stopping its timer and recording duration.
+    /// Should be called before entering a new zone for explicit leave/enter semantics.
+    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError>;
+
     async fn record_death(&self, character_id: &str) -> Result<(), AppError>;
 
     async fn finalize_all_active_zones(&self) -> Result<(), AppError>;

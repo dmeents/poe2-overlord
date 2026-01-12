@@ -1,3 +1,16 @@
+//! Economy service for fetching and caching currency exchange data from poe.ninja.
+//!
+//! # Concurrency Safety
+//!
+//! This service is safe for concurrent use. Multiple simultaneous requests for the same
+//! league+economy_type will be coalesced into a single API fetch, with subsequent requests
+//! waiting for the first to complete. This prevents:
+//! - Redundant API calls
+//! - Cache race conditions (last-write-wins)
+//! - Potential rate limiting from the API
+//!
+//! Requests for different leagues/types do not block each other.
+
 use super::models::{
     CurrencyExchangeApiResponse, CurrencyExchangeData, CurrencySearchResult, EconomyType,
     LeagueEconomyCache, TopCurrencyItem,
@@ -6,15 +19,25 @@ use crate::errors::{AppError, AppResult};
 use crate::infrastructure::file_management::paths::AppPaths;
 use crate::infrastructure::file_management::service::FileService;
 use reqwest;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::{RwLock, Semaphore};
 
 const POE_NINJA_API_BASE: &str = "https://poe.ninja/poe2/api/economy/exchange/current/overview";
 const CACHE_TTL_SECONDS: u64 = 600; // 10 minutes
 
+/// Economy service with concurrent request deduplication.
+///
+/// Uses per-cache-key semaphores to ensure only one API fetch happens at a time
+/// for the same league+hardcore+economy_type combination.
 #[derive(Debug, Clone)]
 pub struct EconomyService {
     pub(crate) client: reqwest::Client,
+    /// Tracks in-flight API fetches per cache key to prevent race conditions.
+    /// Key format: "{league}:{is_hardcore}:{economy_type}"
+    in_flight: Arc<RwLock<HashMap<String, Arc<Semaphore>>>>,
 }
 
 impl EconomyService {
@@ -25,7 +48,13 @@ impl EconomyService {
                 .connect_timeout(Duration::from_secs(5)) // 5 second connect timeout
                 .build()
                 .expect("Failed to build HTTP client"),
+            in_flight: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    /// Generate unique key for a cache entry (used for request deduplication)
+    pub(crate) fn cache_key(league: &str, is_hardcore: bool, economy_type: EconomyType) -> String {
+        format!("{}:{}:{}", league, is_hardcore, economy_type.as_str())
     }
 
     pub async fn fetch_currency_exchange_data(
@@ -41,21 +70,58 @@ impl EconomyService {
             });
         }
 
-        // Load existing cache
+        // FAST PATH: Check for fresh cache without acquiring any locks
         let cache_path = Self::get_league_cache_path(league, is_hardcore).await?;
+        let cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path).await?;
+
+        if let Some(ref cache) = cache {
+            if let Some(cached) = cache.get_economy_type(economy_type) {
+                if cached.is_fresh() {
+                    log::debug!(
+                        "Fast path: Fresh cache for {}:{:?} (no lock needed)",
+                        league,
+                        economy_type
+                    );
+                    return Ok(cached.data.clone());
+                }
+            }
+        }
+
+        // Cache is stale or missing - need to fetch with request deduplication
+        // Acquire or create semaphore for this cache key
+        let key = Self::cache_key(league, is_hardcore, economy_type);
+        let semaphore = {
+            let mut in_flight = self.in_flight.write().await;
+            in_flight
+                .entry(key.clone())
+                .or_insert_with(|| Arc::new(Semaphore::new(1)))
+                .clone()
+        };
+
+        // Acquire permit (blocks if another request is already fetching)
+        let _permit = semaphore.acquire().await.map_err(|e| {
+            AppError::internal_error(
+                "fetch_currency_exchange_data",
+                &format!("Failed to acquire fetch lock: {}", e),
+            )
+        })?;
+
+        log::debug!("Acquired fetch lock for {}:{:?}", league, economy_type);
+
+        // Re-check cache after acquiring lock (another request may have fetched)
         let mut cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path)
             .await?
             .unwrap_or_else(|| LeagueEconomyCache::new(league.to_string(), is_hardcore));
 
-        // Check if we have fresh cached data for this economy type
         if let Some(cached) = cache.get_economy_type(economy_type) {
             if cached.is_fresh() {
                 log::info!(
-                    "Returning fresh cached data for league: {}, type: {} (cached {} seconds ago)",
+                    "Cache became fresh while waiting for lock (coalesced fetch) for {}:{:?}",
                     league,
-                    economy_type,
-                    Self::seconds_since(&cached.cached_at)
+                    economy_type
                 );
+                // Clean up the semaphore since we're done
+                self.cleanup_semaphore(&key).await;
                 return Ok(cached.data.clone());
             } else {
                 log::info!(
@@ -73,7 +139,7 @@ impl EconomyService {
             );
         }
 
-        // Cache is stale or missing - try to fetch from poe.ninja
+        // Still stale - proceed with fetch from poe.ninja
         // Handle league name for hardcore economies
         // Special case: Standard + hardcore = "Hardcore"
         // Special case: Remove "The " prefix from league names for poe.ninja API
@@ -107,7 +173,7 @@ impl EconomyService {
         );
 
         // Try to fetch from poe.ninja
-        match self.fetch_from_poe_ninja(&url).await {
+        let result = match self.fetch_from_poe_ninja(&url).await {
             Ok(data) => {
                 log::info!(
                     "Successfully fetched {} economy data: {} items, {} exchange rates",
@@ -140,13 +206,25 @@ impl EconomyService {
 
                     let mut stale_data = cached.data.clone();
                     stale_data.is_stale = Some(true);
-                    return Ok(stale_data);
+                    Ok(stale_data)
+                } else {
+                    // No cache available - return the error
+                    Err(e)
                 }
-
-                // No cache available - return the error
-                Err(e)
             }
-        }
+        };
+
+        // Clean up the semaphore after fetch completes (success or failure)
+        self.cleanup_semaphore(&key).await;
+
+        result
+    }
+
+    /// Remove semaphore from in-flight map after fetch completes
+    async fn cleanup_semaphore(&self, key: &str) {
+        let mut in_flight = self.in_flight.write().await;
+        in_flight.remove(key);
+        log::trace!("Removed fetch lock for {}", key);
     }
 
     /// Fetch data from poe.ninja API

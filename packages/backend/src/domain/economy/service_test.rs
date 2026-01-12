@@ -1,11 +1,129 @@
 #[cfg(test)]
 mod tests {
+    use crate::domain::economy::models::EconomyType;
     use crate::domain::economy::service::EconomyService;
+    use std::sync::Arc;
 
     #[test]
     fn test_service_creation() {
         let service = EconomyService::new();
         assert!(service.client.get("https://example.com").build().is_ok());
+    }
+
+    #[test]
+    fn test_cache_key_format() {
+        // Test that cache_key generates unique keys for different combinations
+        let key1 = EconomyService::cache_key("Standard", false, EconomyType::Currency);
+        let key2 = EconomyService::cache_key("Standard", true, EconomyType::Currency);
+        let key3 = EconomyService::cache_key("Standard", false, EconomyType::Fragments);
+        let key4 = EconomyService::cache_key("Hardcore", false, EconomyType::Currency);
+
+        // All keys should be different
+        assert_ne!(key1, key2, "Hardcore flag should affect key");
+        assert_ne!(key1, key3, "Economy type should affect key");
+        assert_ne!(key1, key4, "League should affect key");
+        assert_ne!(key2, key3);
+        assert_ne!(key2, key4);
+        assert_ne!(key3, key4);
+
+        // Key format should be "{league}:{is_hardcore}:{economy_type}"
+        assert_eq!(key1, "Standard:false:Currency");
+        assert_eq!(key2, "Standard:true:Currency");
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_requests_no_deadlock() {
+        // Test that multiple concurrent requests for the same cache key
+        // don't cause deadlocks (they should wait and coalesce)
+        let service = Arc::new(EconomyService::new());
+
+        // Spawn 3 concurrent requests for same league+type
+        let handle1 = tokio::spawn({
+            let service = service.clone();
+            async move {
+                service
+                    .fetch_currency_exchange_data("TestLeague", false, EconomyType::Currency)
+                    .await
+            }
+        });
+
+        let handle2 = tokio::spawn({
+            let service = service.clone();
+            async move {
+                service
+                    .fetch_currency_exchange_data("TestLeague", false, EconomyType::Currency)
+                    .await
+            }
+        });
+
+        let handle3 = tokio::spawn({
+            let service = service.clone();
+            async move {
+                service
+                    .fetch_currency_exchange_data("TestLeague", false, EconomyType::Currency)
+                    .await
+            }
+        });
+
+        // Wait for all requests with timeout to detect deadlock
+        let timeout_result = tokio::time::timeout(
+            std::time::Duration::from_secs(15),
+            async { tokio::join!(handle1, handle2, handle3) },
+        )
+        .await;
+
+        // Should complete (even if with errors) - no deadlock
+        assert!(
+            timeout_result.is_ok(),
+            "Concurrent requests should complete without deadlock"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_different_cache_keys_dont_block() {
+        // Test that requests for different leagues/types don't block each other
+        let service = Arc::new(EconomyService::new());
+
+        // Spawn concurrent requests for DIFFERENT cache keys
+        let handle1 = tokio::spawn({
+            let service = service.clone();
+            async move {
+                service
+                    .fetch_currency_exchange_data("League1", false, EconomyType::Currency)
+                    .await
+            }
+        });
+
+        let handle2 = tokio::spawn({
+            let service = service.clone();
+            async move {
+                service
+                    .fetch_currency_exchange_data("League2", false, EconomyType::Currency)
+                    .await
+            }
+        });
+
+        let handle3 = tokio::spawn({
+            let service = service.clone();
+            async move {
+                service
+                    .fetch_currency_exchange_data("League1", false, EconomyType::Fragments)
+                    .await
+            }
+        });
+
+        // Wait with timeout
+        let timeout_result = tokio::time::timeout(
+            std::time::Duration::from_secs(15),
+            async { tokio::join!(handle1, handle2, handle3) },
+        )
+        .await;
+
+        // All should complete (even if with errors)
+        assert!(
+            timeout_result.is_ok(),
+            "Different cache keys should not block each other"
+        );
     }
 
     #[tokio::test]

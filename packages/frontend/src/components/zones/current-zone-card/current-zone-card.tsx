@@ -9,6 +9,7 @@ import { TimeDisplay } from '../../ui/time-display/time-display';
 import { getDisplayAct } from '@/utils/zone-utils';
 import { useZone } from '@/contexts/ZoneContext';
 import { Card } from '../../ui/card/card';
+import { useElapsedTime } from '@/hooks/useElapsedTime';
 
 interface CurrentZoneCardProps {
   zone: ZoneStats;
@@ -19,6 +20,13 @@ export const CurrentZoneCard = memo(function CurrentZoneCard({
 }: CurrentZoneCardProps) {
   const { openZone } = useZone();
   const handleViewDetails = () => openZone(zone.zone_name);
+
+  // Calculate live elapsed time for active zones
+  const elapsedSeconds = useElapsedTime({
+    entryTimestamp: zone.entry_timestamp,
+    baseDuration: zone.duration,
+    isActive: zone.is_active,
+  });
 
   return (
     <Card
@@ -64,7 +72,7 @@ export const CurrentZoneCard = memo(function CurrentZoneCard({
           <div className='bg-zinc-800/50 rounded px-3 py-2'>
             <div className='text-xs text-zinc-500 mb-0.5'>Time</div>
             <div className='text-sm font-mono text-zinc-200'>
-              <TimeDisplay seconds={zone.duration} showSeconds={false} />
+              <TimeDisplay seconds={elapsedSeconds} showSeconds={false} />
             </div>
           </div>
           <div className='bg-zinc-800/50 rounded px-3 py-2'>

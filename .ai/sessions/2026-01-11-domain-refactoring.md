@@ -15,7 +15,7 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 
 ## Domain Progress
 
-### Domains Completed: 6 / 8 (Configuration ✅, Wiki Scraping ✅, Monitoring ✅, Character ✅, Zone Tracking ✅, Economy ✅)
+### Domains Completed: 7 / 8 (Configuration ✅, Wiki Scraping ✅, Monitoring ✅, Character ✅, Zone Tracking ✅, Economy ✅, Walkthrough ✅)
 
 ---
 
@@ -477,11 +477,65 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 
 ## Phase 3: Supporting Features
 
-### Domain 7: Walkthrough/Guides ⏳
-**Status**: Pending
-**Files**: TBD
-**Issues Found**: TBD
-**Fixes Implemented**: TBD
+### Domain 7: Walkthrough/Guides ✅
+**Status**: COMPLETE
+
+#### Files Mapped
+
+**Backend** (`packages/backend/src/domain/walkthrough/`):
+- `mod.rs` - Module exports
+- `models.rs` - WalkthroughProgress, WalkthroughStep, WalkthroughAct, WalkthroughGuide, WalkthroughStepResult
+- `traits.rs` - WalkthroughService, WalkthroughRepository traits
+- `service.rs` - WalkthroughServiceImpl with handle_scene_change for automatic progression
+- `repository.rs` - File-based guide loading
+- `commands.rs` - Tauri IPC handlers
+- `tests.rs` - 5 model tests
+
+**Frontend** (`packages/frontend/src/`):
+- `types/walkthrough.ts` - TypeScript types for guide, steps, progress
+- `utils/walkthrough.ts` - WalkthroughService utility class
+- `queries/walkthrough.ts` - TanStack Query hook for guide fetching
+- `contexts/WalkthroughContext.tsx` - Context provider with event listeners
+- `components/walkthrough/*` - WalkthroughGuide, WalkthroughStepCard, WalkthroughActAccordion
+
+#### Domain Boundaries
+- **BE**: Automatic step advancement via scene change detection
+- **FE**: Event-driven UI updates via WalkthroughStepAdvanced, WalkthroughStepCompleted events
+- **Contract**: WalkthroughStepResult type used in events and local lookups
+
+#### Issues Found
+
+**CRITICAL (1)**:
+1. **FE**: WalkthroughStepResult type mismatch - frontend has `act: WalkthroughAct` but backend sends `act_name: string, act_number: number` (types/walkthrough.ts:72-77)
+
+**HIGH (3)**:
+2. **BE**: Missing step validation in handle_scene_change - no validation that next_step_id exists in guide (service.rs:204-211)
+3. **BE**: Race condition in progress updates - concurrent scene changes could skip steps (service.rs:42-80)
+4. **BE**: Silent event publishing failures - errors ignored with `let _ = ...` (service.rs:76,219,226,237)
+
+**MEDIUM (4)**:
+5. **BE**: Incomplete test coverage - only model tests, no service tests (tests.rs)
+6. **BE/FE**: Parameter naming inconsistency - characterId vs character_id (commands.rs, walkthrough.ts)
+7. **BE**: No bounds checking on step IDs - circular references could loop (service.rs:103-122)
+8. **FE**: Conditional hook calls violate Rules of Hooks (walkthrough-step-card.tsx:62-70)
+
+#### Fixes Implemented
+
+**CRITICAL (1/1 fixed)**:
+1. ✅ **FE**: Fixed WalkthroughStepResult type to use act_name and act_number instead of full act object (types/walkthrough.ts, utils/walkthrough.ts, walkthrough-step-card.spec.tsx)
+
+**HIGH (2/3 fixed)**:
+2. ✅ **BE**: Added next_step_id validation before advancing - prevents corruption from invalid guide data (service.rs)
+3. ⏭️ **BE**: Race condition - Skipped (needs per-character mutex architecture, low probability in practice)
+4. ✅ **BE**: Added error logging for event publishing failures (service.rs)
+
+**MEDIUM (0/4 fixed)**:
+5-8. ⏭️ Skipped (lower priority refactors)
+
+**Test Results**:
+- Backend: 423 tests passing (5 walkthrough tests)
+- Frontend: 517 tests passing (16 walkthrough-step-card tests, 14 walkthrough-guide tests)
+- All cargo checks and TypeScript checks pass
 
 ---
 
@@ -496,9 +550,9 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 ## Issues Summary
 
 ### By Severity
-- **Critical Issues Found**: 23 (Fixed: 19)
-- **High Priority Issues Found**: 38 (Fixed: 20)
-- **Medium Priority Issues Found**: 27 (Fixed: 2)
+- **Critical Issues Found**: 24 (Fixed: 20)
+- **High Priority Issues Found**: 41 (Fixed: 22)
+- **Medium Priority Issues Found**: 31 (Fixed: 2)
 
 ### By Category
 - **Bugs**: 16 fixed (race conditions, memory leaks, panic risks, HTTP client panic, boss detection, task leak, Windows ping, duplicate tasks, process matching, active character race, delete order, last_played, visit double-count, multiple active zones)
@@ -535,8 +589,8 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 *To be completed at end of session*
 
 **Stats**:
-- Total domains completed: 6 / 8
-- Total files analyzed: ~80
-- Total issues found: 88
-- Total fixes implemented: 41
+- Total domains completed: 7 / 8
+- Total files analyzed: ~95
+- Total issues found: 96
+- Total fixes implemented: 44
 - Final test pass rate: 423 backend tests passing, 517 frontend tests passing

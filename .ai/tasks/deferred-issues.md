@@ -1,9 +1,9 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 21 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config Refactors)
+**Completed**: 27 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config + Monitoring + Character Refactors)
 **In Progress**: 0
-**Remaining**: 40
+**Remaining**: 34
 **Deferred to PRD**: 5 (Wiki issues #9, #10, #32-34 → see prd-wiki-parsing-robustness.md)
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
@@ -313,16 +313,18 @@
 - Issue #33: Case-sensitive redirect detection ⏸️ (PRD created)
 - Issue #34: Timeout configuration flexibility ⏸️ (PRD created)
 
-### Monitoring Domain (2 issues)
-- Issue #35: IP address validation (already exists in is_valid())
-- Issue #36: SystemTime serialization
+### Monitoring Domain (3 issues) ✅ ALL COMPLETE
+- Issue #11: Character error propagation ✅ (Commit: 443aa45)
+- Issue #35: IP address validation ✅ (N/A - already exists in is_valid())
+- Issue #36: SystemTime serialization ✅ (Commit: a76ae11)
 
-### Character Domain (5 issues)
-- Issue #37: Inconsistent error handling in repository
-- Issue #38: Inefficient character enrichment (sequential zone metadata calls)
-- Issue #39: Default CharacterData has empty ID
-- Issue #40: Missing bounds check on level in update_character_level
-- Issue #41: Hardcoded hideout detection logic
+### Character Domain (6 issues) ✅ ALL COMPLETE
+- Issue #13: Inefficient name uniqueness check ✅ (Commit: b5a5a45)
+- Issue #37: Inconsistent error handling in repository ✅ (Commit: 31be92e)
+- Issue #38: Inefficient character enrichment ✅ (Commit: 94b3356)
+- Issue #39: Default CharacterData has empty ID ✅ (Commit: 8e4ca20)
+- Issue #40: Missing bounds check on level ✅ (N/A - already exists)
+- Issue #41: Hardcoded hideout detection logic ✅ (Commit: 3459e5c)
 
 ### Zone Tracking Domain (5 issues)
 - Issue #42: ZoneContext conflates modal state with zone selection

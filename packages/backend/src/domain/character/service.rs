@@ -345,7 +345,7 @@ impl CharacterService for CharacterServiceImpl {
         new_level: u32,
     ) -> Result<(), AppError> {
         // Validate level is within valid range (1-100)
-        if new_level < 1 || new_level > 100 {
+        if !(1..=100).contains(&new_level) {
             return Err(AppError::validation_error(
                 "validate_level",
                 &format!(

@@ -110,7 +110,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
             let guide = self.repository.load_guide().await?;
             let mut found_step = None;
 
-            for (_, act) in &guide.acts {
+            for act in guide.acts.values() {
                 if let Some(step) = act.steps.get(step_id) {
                     found_step = Some(step);
                     break;
@@ -183,7 +183,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                 let mut found_step = None;
                 let mut found_act = None;
 
-                for (_, act) in &guide.acts {
+                for act in guide.acts.values() {
                     if let Some(step) = act.steps.get(step_id) {
                         found_step = Some(step);
                         found_act = Some(act);

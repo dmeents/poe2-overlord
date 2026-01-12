@@ -309,8 +309,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         };
 
         // Create default config but preserve version for the check
-        let mut default_config = AppConfig::default();
-        default_config.version = current_version;
+        let default_config = AppConfig {
+            version: current_version,
+            ..Default::default()
+        };
 
         // Save handles in-memory update and schedules debounced disk write
         self.save(&default_config).await

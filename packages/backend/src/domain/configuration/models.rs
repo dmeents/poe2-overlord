@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ZoneRefreshInterval {
     FiveMinutes,
     OneHour,
     TwelveHours,
     TwentyFourHours,
     ThreeDays,
+    #[default]
     SevenDays,
 }
 
@@ -45,7 +46,7 @@ impl ZoneRefreshInterval {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s {
             "FiveMinutes" => Some(ZoneRefreshInterval::FiveMinutes),
             "OneHour" => Some(ZoneRefreshInterval::OneHour),
@@ -55,12 +56,6 @@ impl ZoneRefreshInterval {
             "SevenDays" => Some(ZoneRefreshInterval::SevenDays),
             _ => None,
         }
-    }
-}
-
-impl Default for ZoneRefreshInterval {
-    fn default() -> Self {
-        ZoneRefreshInterval::SevenDays
     }
 }
 

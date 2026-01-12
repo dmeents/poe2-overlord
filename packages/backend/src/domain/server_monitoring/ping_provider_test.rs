@@ -7,16 +7,14 @@ mod tests {
 
     #[test]
     fn test_system_ping_provider_new() {
-        let _provider = SystemPingProvider::new();
         // Just verify it can be constructed
-        assert!(true);
+        let _provider = SystemPingProvider::new();
     }
 
     #[test]
     fn test_system_ping_provider_default() {
-        let _provider = SystemPingProvider::default();
         // Just verify default constructor works
-        assert!(true);
+        let _provider = SystemPingProvider;
     }
 
     #[test]
@@ -56,9 +54,8 @@ mod tests {
 
         // This should fail or timeout - 192.0.2.0/24 is TEST-NET-1 (RFC 5737)
         // We don't assert failure because system configuration might vary
-        match result {
-            Ok(_) => println!("Unexpectedly succeeded pinging test network"),
-            Err(_) => assert!(true, "Expected to fail pinging unreachable IP"),
+        if result.is_ok() {
+            println!("Unexpectedly succeeded pinging test network");
         }
     }
 

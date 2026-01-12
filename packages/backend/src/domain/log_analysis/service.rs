@@ -15,6 +15,7 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::time;
 
+#[allow(clippy::type_complexity)]
 pub struct LogAnalysisServiceImpl {
     config: Arc<RwLock<LogAnalysisConfig>>,
     log_file_repository: Arc<dyn LogFileRepository>,
@@ -33,6 +34,7 @@ pub struct LogAnalysisServiceImpl {
 }
 
 impl LogAnalysisServiceImpl {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterService>,
@@ -64,6 +66,7 @@ impl LogAnalysisServiceImpl {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn with_repositories(
         config: LogAnalysisConfig,
         log_file_repository: Arc<dyn LogFileRepository>,
@@ -219,6 +222,7 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     async fn process_new_lines(
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
@@ -252,7 +256,7 @@ impl LogAnalysisServiceImpl {
         // Check for session gap using the first new line
         if let Some(first_line) = new_lines.first() {
             if let Some(current_timestamp) = Self::extract_log_timestamp(first_line) {
-                let last_timestamp_opt = last_log_timestamp.read().await.clone();
+                let last_timestamp_opt = *last_log_timestamp.read().await;
 
                 if let Some(last_ts) = last_timestamp_opt {
                     let session_gap_threshold = {
@@ -331,21 +335,16 @@ impl LogAnalysisServiceImpl {
                         zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town
                     );
 
-                    let _area_id = wiki_data
-                        .area_id
-                        .as_ref()
-                        .map(|id| id.clone())
-                        .unwrap_or_else(|| {
-                            zone_name
-                                .to_lowercase()
-                                .replace(' ', "_")
-                                .replace('-', "_")
-                                .chars()
-                                .filter(|c| c.is_alphanumeric() || *c == '_')
-                                .collect::<String>()
-                                .trim_matches('_')
-                                .to_string()
-                        });
+                    let _area_id = wiki_data.area_id.clone().unwrap_or_else(|| {
+                        zone_name
+                            .to_lowercase()
+                            .replace([' ', '-'], "_")
+                            .chars()
+                            .filter(|c| c.is_alphanumeric() || *c == '_')
+                            .collect::<String>()
+                            .trim_matches('_')
+                            .to_string()
+                    });
 
                     info!("Reloading zone configuration before lookup...");
                     if let Err(e) = zone_config.reload_configuration().await {
@@ -456,6 +455,7 @@ impl LogAnalysisServiceImpl {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn process_scene_change(
         character_service: &Arc<dyn CharacterService>,
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
@@ -606,6 +606,7 @@ impl LogAnalysisServiceImpl {
         Ok(Some(scene_change_event))
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn process_scene_change_with_error_handling(
         character_service: &Arc<dyn CharacterService>,
         walkthrough_service: &Arc<dyn WalkthroughService>,
@@ -672,6 +673,7 @@ impl LogAnalysisServiceImpl {
         }
     }
 
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     async fn process_single_line(
         parser_manager: &LogParserManager,
         line: &str,
@@ -726,7 +728,7 @@ impl LogAnalysisServiceImpl {
                         );
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
-                            cache.clone()
+                            *cache
                         };
 
                         let zone_level = if let Some((level, _timestamp)) = cached_level {

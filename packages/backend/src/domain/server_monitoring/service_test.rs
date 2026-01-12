@@ -109,10 +109,8 @@ mod tests {
     #[tokio::test]
     async fn test_service_creation() {
         let ping_provider = Arc::new(MockPingProvider::new_success(50));
-        let _service = create_test_service(ping_provider).await;
-
         // Service should be created successfully
-        assert!(true);
+        let _service = create_test_service(ping_provider).await;
     }
 
     #[tokio::test]

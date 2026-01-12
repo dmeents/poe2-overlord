@@ -11,6 +11,7 @@ use tokio::sync::RwLock;
 
 /// Implementation of ZoneConfigurationService with caching for performance
 /// Uses a cached lookup map for fast O(1) zone-to-act resolution
+#[allow(clippy::type_complexity)]
 pub struct ZoneConfigurationServiceImpl {
     repository: Arc<dyn ZoneConfigurationRepository>,
     zone_lookup: Arc<RwLock<Option<HashMap<String, (u32, bool)>>>>,
@@ -100,7 +101,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
     /// Gets the act number for a specific zone by zone name using cached lookup
     /// Returns None for unknown zones
     async fn get_act_for_zone(&self, zone_name: &str) -> Option<u32> {
-        if let Err(_) = self.ensure_cache_loaded().await {
+        if self.ensure_cache_loaded().await.is_err() {
             debug!(
                 "Failed to load zone configuration cache for zone_name: {}",
                 zone_name
@@ -124,7 +125,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
     /// Checks if a zone is a town by zone name using cached lookup
     /// Returns false for unknown zones (they are not explicitly marked as towns)
     async fn is_town_zone(&self, zone_name: &str) -> bool {
-        if let Err(_) = self.ensure_cache_loaded().await {
+        if self.ensure_cache_loaded().await.is_err() {
             return false;
         }
 
@@ -137,7 +138,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
 
     /// Gets zone metadata by zone name
     async fn get_zone_metadata(&self, zone_name: &str) -> Option<ZoneMetadata> {
-        if let Err(_) = self.ensure_cache_loaded().await {
+        if self.ensure_cache_loaded().await.is_err() {
             debug!(
                 "Failed to load zone configuration cache for zone: {}",
                 zone_name
@@ -151,7 +152,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
 
     /// Gets all zones for a specific act
     async fn get_act_zones(&self, act: u32) -> Vec<ZoneMetadata> {
-        if let Err(_) = self.ensure_cache_loaded().await {
+        if self.ensure_cache_loaded().await.is_err() {
             debug!("Failed to load zone configuration cache for act: {}", act);
             return Vec::new();
         }

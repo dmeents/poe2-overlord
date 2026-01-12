@@ -56,7 +56,7 @@ mod tests {
         let duration = calculate_active_session_duration_seconds(entry);
 
         // Should be approximately 60 seconds (allow some tolerance)
-        assert!(duration >= 60 && duration <= 62);
+        assert!((60..=62).contains(&duration));
     }
 
     // ============= calculate_session_duration_from_timestamps Tests =============

@@ -6,7 +6,6 @@ use crate::application::service_orchestrator::{
 };
 use crate::application::service_registry::ServiceInitializer;
 use crate::domain::character::models::CleanupStrategy;
-use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::infrastructure::events::TauriEventBridge;
 

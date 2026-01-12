@@ -58,8 +58,7 @@ impl BaseParser {
 
     /// Parses a number from a string, extracting just the numeric portion
     pub fn parse_number(text: &str) -> Option<u32> {
-        text.trim()
-            .split_whitespace()
+        text.split_whitespace()
             .next()
             .and_then(|num_str| num_str.parse().ok())
     }

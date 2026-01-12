@@ -28,13 +28,12 @@ impl ActParser {
             if text.contains("area in act") {
                 if let Some(act_pos) = text.find("area in act") {
                     let after_act = &text[act_pos + 11..];
-                    if let Some(num) = after_act
+                    if let Ok(num) = after_act
                         .trim()
                         .chars()
                         .take_while(|c| c.is_numeric())
                         .collect::<String>()
                         .parse::<u32>()
-                        .ok()
                     {
                         debug!("Found act {} in page text", num);
                         return Some(num);

@@ -66,36 +66,36 @@ mod tests {
     #[test]
     fn test_zone_refresh_interval_from_str_valid() {
         assert_eq!(
-            ZoneRefreshInterval::from_str("FiveMinutes"),
+            ZoneRefreshInterval::parse("FiveMinutes"),
             Some(ZoneRefreshInterval::FiveMinutes)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("OneHour"),
+            ZoneRefreshInterval::parse("OneHour"),
             Some(ZoneRefreshInterval::OneHour)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("TwelveHours"),
+            ZoneRefreshInterval::parse("TwelveHours"),
             Some(ZoneRefreshInterval::TwelveHours)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("TwentyFourHours"),
+            ZoneRefreshInterval::parse("TwentyFourHours"),
             Some(ZoneRefreshInterval::TwentyFourHours)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("ThreeDays"),
+            ZoneRefreshInterval::parse("ThreeDays"),
             Some(ZoneRefreshInterval::ThreeDays)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("SevenDays"),
+            ZoneRefreshInterval::parse("SevenDays"),
             Some(ZoneRefreshInterval::SevenDays)
         );
     }
 
     #[test]
     fn test_zone_refresh_interval_from_str_invalid() {
-        assert_eq!(ZoneRefreshInterval::from_str("invalid"), None);
-        assert_eq!(ZoneRefreshInterval::from_str(""), None);
-        assert_eq!(ZoneRefreshInterval::from_str("5 Minutes"), None);
+        assert_eq!(ZoneRefreshInterval::parse("invalid"), None);
+        assert_eq!(ZoneRefreshInterval::parse(""), None);
+        assert_eq!(ZoneRefreshInterval::parse("5 Minutes"), None);
     }
 
     #[test]
@@ -329,8 +329,10 @@ mod tests {
 
     #[test]
     fn test_app_config_version_wrapping() {
-        let mut config = AppConfig::default();
-        config.version = u64::MAX;
+        let config = AppConfig {
+            version: u64::MAX,
+            ..Default::default()
+        };
 
         let wrapped = config.with_incremented_version();
         assert_eq!(wrapped.version, 0); // Should wrap around

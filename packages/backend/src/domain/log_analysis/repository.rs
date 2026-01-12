@@ -7,6 +7,7 @@ use tokio::fs;
 use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 
 /// Simple implementation of LogFileRepository for file system operations
+#[derive(Default)]
 pub struct LogFileRepositoryImpl;
 
 impl LogFileRepositoryImpl {

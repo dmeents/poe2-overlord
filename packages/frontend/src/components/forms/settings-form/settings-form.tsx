@@ -19,6 +19,45 @@ import {
 /** Valid log levels matching backend validation */
 const VALID_LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error'];
 
+/**
+ * Extract a user-friendly error message from any error type.
+ * Provides consistent error handling across all form operations.
+ */
+function extractErrorMessage(err: unknown): string {
+  const rawMessage = err instanceof Error ? err.message : String(err);
+  return rawMessage;
+}
+
+/**
+ * Format a configuration error with context-specific messages.
+ * Maps backend error patterns to user-friendly messages.
+ */
+function formatConfigError(
+  err: unknown,
+  operation: 'save' | 'load' | 'reset',
+  context?: { logLevel?: string }
+): string {
+  const message = extractErrorMessage(err);
+
+  // Map common error patterns to user-friendly messages
+  if (message.includes('Invalid log level')) {
+    const level = context?.logLevel || 'unknown';
+    return `Invalid log level: "${level}". Valid levels: ${VALID_LOG_LEVELS.join(', ')}`;
+  }
+  if (message.includes('cannot be empty')) {
+    return 'POE client log path cannot be empty';
+  }
+  if (message.includes('path traversal') || message.includes('not allowed')) {
+    return 'Invalid path: The path contains invalid characters or attempts to access restricted locations';
+  }
+  if (message.includes('file not found') || message.includes('ENOENT')) {
+    return 'The specified file path does not exist. Please check the path and try again.';
+  }
+
+  // Default: include operation context
+  return `Failed to ${operation} configuration: ${message}`;
+}
+
 interface SettingsFormProps {
   onConfigUpdate?: (config: AppConfig) => void;
 }
@@ -92,8 +131,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       const loadedConfig = await tauriUtils.getConfig();
       setConfig(loadedConfig);
     } catch (err) {
-      setError('Failed to load configuration');
-      console.error('Error loading config:', err);
+      setError(formatConfigError(err, 'load'));
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +142,8 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       const options = await tauriUtils.getZoneRefreshIntervalOptions();
       setZoneRefreshOptions(options);
     } catch (err) {
-      console.error('Error loading zone refresh options:', err);
+      // Non-critical - use default options, but log for debugging
+      console.warn('Failed to load zone refresh options, using defaults:', extractErrorMessage(err));
     }
   };
 
@@ -134,18 +173,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
 
       clearSuccessAfterDelay();
     } catch (err) {
-      // Extract specific error message from backend
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('Invalid log level')) {
-        setError(
-          `Invalid log level: "${config.log_level}". Valid levels: ${VALID_LOG_LEVELS.join(', ')}`
-        );
-      } else if (errorMessage.includes('cannot be empty')) {
-        setError('POE client log path cannot be empty');
-      } else {
-        setError(`Failed to save configuration: ${errorMessage}`);
-      }
-      console.error('Error saving config:', err);
+      setError(formatConfigError(err, 'save', { logLevel: config.log_level }));
     } finally {
       setIsSaving(false);
     }
@@ -164,9 +192,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
 
       clearSuccessAfterDelay();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(`Failed to reset configuration: ${errorMessage}`);
-      console.error('Error resetting config:', err);
+      setError(formatConfigError(err, 'reset'));
     } finally {
       setIsSaving(false);
     }

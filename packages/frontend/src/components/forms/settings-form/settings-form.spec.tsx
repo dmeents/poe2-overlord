@@ -244,30 +244,20 @@ describe('SettingsForm', () => {
   });
 
   it('shows error when config fails to load', async () => {
-    // Suppress expected console.error from error boundary
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    mockGetConfig.mockRejectedValueOnce(new Error('Failed to load'));
+    mockGetConfig.mockRejectedValueOnce(new Error('Network error'));
 
     render(<SettingsForm />);
 
     await waitFor(() => {
       expect(
-        screen.getByText('Failed to load configuration')
+        screen.getByText('Failed to load configuration: Network error')
       ).toBeInTheDocument();
     });
-
-    consoleErrorSpy.mockRestore();
   });
 
   it('shows error when save fails', async () => {
-    // Suppress expected console.error from error handling
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
     const user = userEvent.setup();
-    mockUpdateConfig.mockRejectedValueOnce(new Error('Failed to save'));
+    mockUpdateConfig.mockRejectedValueOnce(new Error('Save failed'));
 
     render(<SettingsForm />);
 
@@ -282,13 +272,10 @@ describe('SettingsForm', () => {
     );
 
     await waitFor(() => {
-      // Updated to match new error message format which includes backend error details
       expect(
-        screen.getByText(/Failed to save configuration/)
+        screen.getByText('Failed to save configuration: Save failed')
       ).toBeInTheDocument();
     });
-
-    consoleErrorSpy.mockRestore();
   });
 
   it('shows warning for invalid POE path', async () => {

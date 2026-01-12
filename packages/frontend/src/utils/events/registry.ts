@@ -2,6 +2,7 @@ import type { GameProcessStatusChangedEvent } from '@/types/process';
 import type { ServerStatusChangedEvent } from '@/types/server';
 import type { CharacterData } from '@/types/character';
 import type { WalkthroughStepResult } from '@/types/walkthrough';
+import type { ConfigurationChangedEvent as ConfigurationChangedEventData } from '@/types/app-config';
 
 /**
  * Centralized registry mapping AppEvent variants to their Tauri event names.
@@ -57,13 +58,17 @@ export type CharacterUpdatedEvent = {
 
 /**
  * Event type for character deletion.
- * NOTE: Requires backend Issue #14 to be implemented for this event to fire.
  */
 export type CharacterDeletedEvent = {
   CharacterDeleted: {
     character_id: string;
     timestamp: string;
   };
+};
+
+/** Event type for configuration changes */
+export type ConfigurationChangedEvent = {
+  ConfigurationChanged: ConfigurationChangedEventData;
 };
 
 /** Event type for walkthrough step completed */
@@ -99,11 +104,11 @@ export type AppEventRegistry = {
   ServerStatusChanged: ServerStatusChangedEvent;
   CharacterUpdated: CharacterUpdatedEvent;
   CharacterDeleted: CharacterDeletedEvent;
+  ConfigurationChanged: ConfigurationChangedEvent;
 
   WalkthroughStepCompleted: WalkthroughStepCompletedEvent;
   WalkthroughStepAdvanced: WalkthroughStepAdvancedEvent;
   WalkthroughCampaignCompleted: WalkthroughCampaignCompletedEvent;
-  // Add other event types as they're defined
 };
 
 /** Gets the payload type for a specific event variant. */

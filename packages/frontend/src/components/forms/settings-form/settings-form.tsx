@@ -9,6 +9,12 @@ import { Input } from '../form-input/form-input';
 import { Select } from '../form-select/form-select';
 import { Button } from '../../ui/button/button';
 import { settingsFormStyles } from './settings-form.styles';
+import { useAppEventListener } from '@/hooks/useAppEventListener';
+import {
+  EVENT_KEYS,
+  type ExtractPayload,
+  type ConfigurationChangedEvent,
+} from '@/utils/events/registry';
 
 /** Valid log levels matching backend validation */
 const VALID_LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error'];
@@ -54,6 +60,24 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       }
     };
   }, []);
+
+  // Listen for configuration changes from backend to keep UI in sync
+  useAppEventListener(
+    [
+      {
+        eventType: EVENT_KEYS.ConfigurationChanged,
+        handler: (payload: unknown) => {
+          const { new_config } =
+            payload as ExtractPayload<ConfigurationChangedEvent>;
+          // Update local state with the new config from the event
+          setConfig(new_config);
+          // Notify parent component if callback provided
+          onConfigUpdate?.(new_config);
+        },
+      },
+    ],
+    [] // No dependencies - using functional updates
+  );
 
   // Load configuration and options on component mount
   useEffect(() => {

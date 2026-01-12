@@ -61,8 +61,9 @@ pub struct CharacterUpdateParams {
 impl Default for CharacterData {
     fn default() -> Self {
         let now = Utc::now();
+        let id = uuid::Uuid::new_v4().to_string();
         Self {
-            id: String::new(),
+            id: id.clone(),
             profile: CharacterProfile {
                 name: String::new(),
                 class: CharacterClass::Warrior,
@@ -78,7 +79,7 @@ impl Default for CharacterData {
                 last_updated: now,
             },
             current_location: None,
-            summary: TrackingSummary::new(String::new()),
+            summary: TrackingSummary::new(id),
             zones: Vec::new(),
             walkthrough_progress: WalkthroughProgress::new(),
         }

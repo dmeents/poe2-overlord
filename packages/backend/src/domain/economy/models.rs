@@ -234,8 +234,12 @@ impl CachedEconomyData {
     pub fn is_fresh(&self) -> bool {
         if let Ok(cached_time) = chrono::DateTime::parse_from_rfc3339(&self.cached_at) {
             let now = chrono::Utc::now();
-            let elapsed = now.signed_duration_since(cached_time);
-            elapsed.num_seconds() < self.ttl_seconds as i64
+            // Convert cached_time to UTC before comparison to handle timezone offsets
+            let cached_time_utc = cached_time.with_timezone(&chrono::Utc);
+            let elapsed = now.signed_duration_since(cached_time_utc);
+            // Use checked conversion to prevent overflow for large TTL values
+            let ttl_i64 = i64::try_from(self.ttl_seconds).unwrap_or(i64::MAX);
+            elapsed.num_seconds() < ttl_i64
         } else {
             false
         }

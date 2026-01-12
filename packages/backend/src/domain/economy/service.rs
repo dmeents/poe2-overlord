@@ -7,6 +7,7 @@ use crate::infrastructure::file_management::paths::AppPaths;
 use crate::infrastructure::file_management::service::FileService;
 use reqwest;
 use std::path::PathBuf;
+use std::time::Duration;
 
 const POE_NINJA_API_BASE: &str = "https://poe.ninja/poe2/api/economy/exchange/current/overview";
 const CACHE_TTL_SECONDS: u64 = 600; // 10 minutes
@@ -19,7 +20,11 @@ pub struct EconomyService {
 impl EconomyService {
     pub fn new() -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .timeout(Duration::from_secs(10)) // 10 second total timeout
+                .connect_timeout(Duration::from_secs(5)) // 5 second connect timeout
+                .build()
+                .expect("Failed to build HTTP client"),
         }
     }
 
@@ -29,6 +34,13 @@ impl EconomyService {
         is_hardcore: bool,
         economy_type: EconomyType,
     ) -> AppResult<CurrencyExchangeData> {
+        // Validate league name is not empty
+        if league.trim().is_empty() {
+            return Err(AppError::Validation {
+                message: "League name cannot be empty".to_string(),
+            });
+        }
+
         // Load existing cache
         let cache_path = Self::get_league_cache_path(league, is_hardcore).await?;
         let mut cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path)
@@ -357,11 +369,17 @@ impl EconomyService {
         // Ensure cache directory exists
         AppPaths::ensure_dir(&cache_dir).await?;
 
+        // Strip "The " prefix to match API normalization
+        let mut league_name = league.to_string();
+        if league_name.starts_with("The ") {
+            league_name = league_name.strip_prefix("The ").unwrap().to_string();
+        }
+
         // Prepend "HC_" to filename for hardcore leagues
         let league_prefix = if is_hardcore { "HC_" } else { "" };
 
         // Sanitize league name for filename
-        let safe_league_name = league.replace(" ", "_").replace("/", "-");
+        let safe_league_name = league_name.replace(" ", "_").replace("/", "-");
         let filename = format!("{}{}.json", league_prefix, safe_league_name);
 
         Ok(cache_dir.join(filename))

@@ -15,7 +15,7 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 
 ## Domain Progress
 
-### Domains Completed: 5 / 8 (Configuration ✅, Wiki Scraping ✅, Monitoring ✅, Character ✅, Zone Tracking ✅)
+### Domains Completed: 6 / 8 (Configuration ✅, Wiki Scraping ✅, Monitoring ✅, Character ✅, Zone Tracking ✅, Economy ✅)
 
 ---
 
@@ -402,11 +402,76 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 
 ---
 
-### Domain 6: Economy System ⏳
-**Status**: Pending
-**Files**: TBD
-**Issues Found**: TBD
-**Fixes Implemented**: TBD
+### Domain 6: Economy System ✅
+**Status**: COMPLETE
+
+#### Files Mapped
+
+**Backend** (`packages/backend/src/domain/economy/`):
+- `mod.rs` - Module exports
+- `models.rs` - Currency types, cache structures, tier selection logic
+- `service.rs` - poe.ninja API integration with TTL caching
+- `commands.rs` - 3 Tauri IPC handlers
+- `models_test.rs`, `service_test.rs` - 26 tests
+
+**Frontend** (`packages/frontend/src/`):
+- `types/economy.ts` - TypeScript types (CurrencyExchangeData, EconomyType, etc.)
+- `queries/economy.ts` - TanStack Query hooks
+- `contexts/EconomyContext.tsx` - Economy state management
+- `routes/economy.tsx` - Economy page
+- `components/economy/*` - EconomyList, EconomyRow, TopItemsCard
+
+#### Domain Boundaries
+- **External API**: poe.ninja for currency data
+- **Caching**: File-based with 10 minute TTL
+- **Consumer**: Frontend economy page and exchange cards
+
+#### Issues Found
+
+**CRITICAL (4)**:
+1. **BE**: Missing HTTP timeout configuration - can freeze application (service.rs:20-24)
+2. **BE**: Timezone bug in cache freshness check - incorrect cache behavior (models.rs:234-242)
+3. **FE**: Division by zero in items sold calculation - UI corruption (economy-row.tsx:27-36)
+4. **BE**: Race condition in cache updates - data loss (service.rs:98-115)
+
+**HIGH (6)**:
+5. **BE**: Missing "The " prefix stripping in cache path - cache misses (service.rs:353-368)
+6. **FE/BE**: Stale time mismatch (15min FE vs 10min BE) - stale data (queries/economy.ts:50)
+7. **BE**: Empty league name not validated - confusing errors (service.rs:68-81)
+8. **BE**: No retry logic for network failures - poor resilience (service.rs:141-183)
+9. **BE**: Incorrect tertiary currency selection - unpredictable behavior (models.rs:100-106)
+10. **FE**: Incorrect comment on staleTime - misleading (queries/economy.ts:50)
+
+**MEDIUM (5)**:
+11. **BE**: Manual EconomyType string parsing - maintenance burden (service.rs:207-222)
+12. **BE**: No validation of TTL value overflow - edge case (models.rs:238)
+13. **FE**: Empty currencies array not distinguished - confusing UI (economy.tsx:88-98)
+14. **FE**: Excessive query invalidation - performance (EconomyContext.tsx:55-61)
+15. **FE**: Missing error handling for image failures - poor UX (economy-row.tsx:84-86)
+
+#### Fixes Implemented
+
+**CRITICAL (3/4 fixed)**:
+1. ✅ **BE**: Added HTTP timeout configuration (10s total, 5s connect) (service.rs)
+2. ✅ **BE**: Fixed timezone bug - convert to UTC before comparison (models.rs)
+3. ✅ **FE**: Added division-by-zero guard in calculateItemsSoldPerHour (economy-row.tsx)
+4. ⏭️ **BE**: Race condition - Skipped (needs cache locking architecture change)
+
+**HIGH (3/6 fixed)**:
+5. ✅ **BE**: Strip "The " prefix in get_league_cache_path (service.rs)
+6. ✅ **FE**: Fixed staleTime to 10 minutes to match backend TTL (queries/economy.ts)
+7. ✅ **BE**: Added league name validation (service.rs)
+8. ⏭️ **BE**: Retry logic - Skipped (graceful degradation already serves stale cache)
+9. ⏭️ **BE**: Tertiary currency - Skipped (current logic works for 3-currency systems)
+10. ✅ **FE**: Fixed comment to match actual value (queries/economy.ts)
+
+**MEDIUM (0/5 fixed)**:
+11-15. ⏭️ Skipped (lower priority refactors)
+
+**Test Results**:
+- Backend: 423 tests passing (26 economy tests)
+- Frontend: 517 tests passing
+- All cargo checks and TypeScript checks pass
 
 ---
 
@@ -431,9 +496,9 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 ## Issues Summary
 
 ### By Severity
-- **Critical Issues Found**: 19 (Fixed: 16)
-- **High Priority Issues Found**: 32 (Fixed: 17)
-- **Medium Priority Issues Found**: 22 (Fixed: 2)
+- **Critical Issues Found**: 23 (Fixed: 19)
+- **High Priority Issues Found**: 38 (Fixed: 20)
+- **Medium Priority Issues Found**: 27 (Fixed: 2)
 
 ### By Category
 - **Bugs**: 16 fixed (race conditions, memory leaks, panic risks, HTTP client panic, boss detection, task leak, Windows ping, duplicate tasks, process matching, active character race, delete order, last_played, visit double-count, multiple active zones)
@@ -470,8 +535,8 @@ Systematically analyze and refactor entire codebase domain-by-domain, prioritizi
 *To be completed at end of session*
 
 **Stats**:
-- Total domains completed: 5 / 8
-- Total files analyzed: ~65
-- Total issues found: 73
-- Total fixes implemented: 35
+- Total domains completed: 6 / 8
+- Total files analyzed: ~80
+- Total issues found: 88
+- Total fixes implemented: 41
 - Final test pass rate: 423 backend tests passing, 517 frontend tests passing

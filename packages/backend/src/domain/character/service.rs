@@ -89,19 +89,69 @@ impl CharacterService for CharacterServiceImpl {
             solo_self_found,
         );
 
-        self.repository.save_character_data(&character_data).await?;
+        // TRANSACTION SAFETY: Write index FIRST, then character file
+        // This prevents orphaned files - if index write fails, no file is created
+        // If file write fails, we roll back the index entry
 
+        // Step 1: Update index with new character ID
         let mut index = self.repository.load_characters_index().await?;
+        let is_first_character = index.character_ids.is_empty();
         index.add_character(character_data.id.clone());
 
-        if index.character_ids.len() == 1 {
+        if is_first_character {
             index.set_active_character(Some(character_data.id.clone()));
         }
 
+        // Step 2: Save index (if this fails, no character file exists - clean state)
         self.repository.save_characters_index(&index).await?;
+        log::debug!(
+            "Index updated with new character ID: {}",
+            character_data.id
+        );
 
-        log::info!("Created new character: {}", name);
-        Ok(character_data)
+        // Step 3: Write character file (if this fails, rollback index)
+        match self.repository.save_character_data(&character_data).await {
+            Ok(_) => {
+                log::info!("Created new character: {}", name);
+                Ok(character_data)
+            }
+            Err(e) => {
+                // ROLLBACK: Character file write failed, remove from index
+                log::error!(
+                    "Failed to write character file for {}, rolling back index: {}",
+                    character_data.id,
+                    e
+                );
+
+                // Re-load index to ensure we have latest state (handles concurrent modifications)
+                let mut rollback_index = self.repository.load_characters_index().await?;
+                rollback_index.remove_character(&character_data.id);
+
+                // Clear active character if it was the one we're rolling back
+                if rollback_index.active_character_id.as_ref() == Some(&character_data.id) {
+                    rollback_index.set_active_character(None);
+                }
+
+                // Save cleaned index
+                if let Err(rollback_err) =
+                    self.repository.save_characters_index(&rollback_index).await
+                {
+                    log::error!(
+                        "CRITICAL: Rollback failed for character {}: {}. Manual cleanup may be required.",
+                        character_data.id,
+                        rollback_err
+                    );
+                } else {
+                    log::info!(
+                        "Successfully rolled back index for failed character creation: {}",
+                        character_data.id
+                    );
+                }
+
+                // Return original error
+                Err(e)
+            }
+        }
     }
 
     async fn load_character_data(&self, character_id: &str) -> Result<CharacterData, AppError> {

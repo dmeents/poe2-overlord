@@ -80,6 +80,10 @@ pub struct AppConfig {
     /// Configuration schema version for migration compatibility
     #[serde(default = "default_config_version")]
     pub config_version: u32,
+    /// Optimistic locking version - increments on every write
+    /// Used to detect concurrent modifications
+    #[serde(default)]
+    pub version: u64,
     pub poe_client_log_path: String,
     pub log_level: String,
     pub zone_refresh_interval: ZoneRefreshInterval,
@@ -101,10 +105,23 @@ impl AppConfig {
     pub fn with_values(poe_client_log_path: String, log_level: String) -> Self {
         Self {
             config_version: Self::CURRENT_VERSION,
+            version: 0,
             poe_client_log_path,
             log_level,
             zone_refresh_interval: ZoneRefreshInterval::default(),
         }
+    }
+
+    /// Create a new config with incremented version for optimistic locking
+    pub fn with_incremented_version(&self) -> Self {
+        let mut new_config = self.clone();
+        new_config.version = self.version.wrapping_add(1);
+        new_config
+    }
+
+    /// Get the current optimistic locking version
+    pub fn get_version(&self) -> u64 {
+        self.version
     }
 
     /// Check if a log level string is valid (case-insensitive)
@@ -197,6 +214,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             config_version: Self::CURRENT_VERSION,
+            version: 0,
             poe_client_log_path: Self::get_default_poe_client_log_path(),
             log_level: "info".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::default(),

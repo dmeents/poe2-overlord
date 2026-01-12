@@ -79,7 +79,15 @@ impl ConfigurationRepositoryImpl {
 #[async_trait]
 impl ConfigurationRepository for ConfigurationRepositoryImpl {
     async fn save(&self, config: &AppConfig) -> AppResult<()> {
-        FileService::write_json(&self.file_path, config).await
+        // Use version-checked save to detect concurrent modifications
+        let config_to_save = config.with_incremented_version();
+        FileService::write_json_with_version_check(
+            &self.file_path,
+            &config_to_save,
+            config.version,
+            |c| c.version,
+        )
+        .await
     }
 
     async fn load(&self) -> AppResult<AppConfig> {
@@ -164,31 +172,74 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
 
     async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
         self.ensure_data_loaded().await?;
+
+        // Read current config and prepare updated config
         let config_to_save = {
-            let mut config = self.config.write().await;
-            config.poe_client_log_path = path;
-            config.clone()
+            let config = self.config.read().await;
+            let mut updated = config.clone();
+            updated.poe_client_log_path = path;
+            updated
         };
-        self.save(&config_to_save).await
+
+        // Save with version check (save() increments version internally)
+        self.save(&config_to_save).await?;
+
+        // Update in-memory state with new version only after successful disk write
+        {
+            let mut config = self.config.write().await;
+            *config = config_to_save.with_incremented_version();
+        }
+
+        Ok(())
     }
 
     async fn set_log_level(&self, level: String) -> AppResult<()> {
         self.ensure_data_loaded().await?;
         self.ensure_valid_log_level(&level).await?;
 
+        // Read current config and prepare updated config
         let config_to_save = {
-            let mut config = self.config.write().await;
-            config.log_level = level;
-            config.clone()
+            let config = self.config.read().await;
+            let mut updated = config.clone();
+            updated.log_level = level;
+            updated
         };
-        self.save(&config_to_save).await
+
+        // Save with version check
+        self.save(&config_to_save).await?;
+
+        // Update in-memory state with new version only after successful disk write
+        {
+            let mut config = self.config.write().await;
+            *config = config_to_save.with_incremented_version();
+        }
+
+        Ok(())
     }
 
     async fn reset_to_defaults(&self) -> AppResult<()> {
         self.ensure_data_loaded().await?;
-        let default_config = AppConfig::default();
-        self.update_in_memory_config(default_config.clone()).await?;
-        self.save(&default_config).await
+
+        // Read current version for the version check
+        let current_version = {
+            let config = self.config.read().await;
+            config.version
+        };
+
+        // Create default config but preserve version for the check
+        let mut default_config = AppConfig::default();
+        default_config.version = current_version;
+
+        // Save with version check
+        self.save(&default_config).await?;
+
+        // Update in-memory state with new version
+        {
+            let mut config = self.config.write().await;
+            *config = default_config.with_incremented_version();
+        }
+
+        Ok(())
     }
 
     async fn validate_config(

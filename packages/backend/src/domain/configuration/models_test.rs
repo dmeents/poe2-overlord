@@ -236,6 +236,7 @@ mod tests {
     fn test_app_config_serialization_roundtrip() {
         let config = AppConfig {
             config_version: AppConfig::CURRENT_VERSION,
+            version: 5,
             poe_client_log_path: "/test/path".to_string(),
             log_level: "debug".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::OneHour,
@@ -251,6 +252,7 @@ mod tests {
             config.zone_refresh_interval
         );
         assert_eq!(deserialized.config_version, config.config_version);
+        assert_eq!(deserialized.version, config.version);
     }
 
     // ============= Config Version and Security Tests =============
@@ -314,6 +316,58 @@ mod tests {
             "Error should mention traversal or security: {}",
             err
         );
+    }
+
+    // ============= Optimistic Locking Version Tests =============
+
+    #[test]
+    fn test_app_config_default_version_is_zero() {
+        let config = AppConfig::default();
+        assert_eq!(config.version, 0);
+    }
+
+    #[test]
+    fn test_app_config_with_incremented_version() {
+        let config = AppConfig::default();
+        assert_eq!(config.version, 0);
+
+        let updated = config.with_incremented_version();
+        assert_eq!(updated.version, 1);
+
+        let updated2 = updated.with_incremented_version();
+        assert_eq!(updated2.version, 2);
+    }
+
+    #[test]
+    fn test_app_config_version_wrapping() {
+        let mut config = AppConfig::default();
+        config.version = u64::MAX;
+
+        let wrapped = config.with_incremented_version();
+        assert_eq!(wrapped.version, 0); // Should wrap around
+    }
+
+    #[test]
+    fn test_app_config_get_version() {
+        let mut config = AppConfig::default();
+        assert_eq!(config.get_version(), 0);
+
+        config.version = 42;
+        assert_eq!(config.get_version(), 42);
+    }
+
+    #[test]
+    fn test_app_config_deserialization_without_version_defaults_to_zero() {
+        // Old config without version field should deserialize with version 0
+        let old_json = r#"{
+            "config_version": 1,
+            "poe_client_log_path": "/old/path",
+            "log_level": "info",
+            "zone_refresh_interval": "SevenDays"
+        }"#;
+
+        let config: AppConfig = serde_json::from_str(old_json).unwrap();
+        assert_eq!(config.version, 0);
     }
 
     // ============= ConfigurationChangedEvent Tests =============

@@ -12,7 +12,7 @@
 ## Issues Progress
 
 - [x] Issue #1: Path Validation with Migration Strategy (CRITICAL) ✅
-- [ ] Issue #2: Lost Update Prevention Architecture (CRITICAL)
+- [x] Issue #2: Lost Update Prevention Architecture (CRITICAL) ✅
 - [ ] Issue #3: Transaction Safety in Character Creation (CRITICAL)
 - [ ] Issue #4: Cache Race Condition (CRITICAL)
 - [ ] Issue #12: Orphaned Character Cleanup (HIGH)
@@ -43,6 +43,24 @@
 - `src/domain/configuration/repository.rs` - Added migration logic
 - `src/domain/configuration/models_test.rs` - Updated tests for new fields
 
+### Issue #2: Optimistic Locking for Lost Update Prevention
+
+**Decision**: Implemented optimistic locking using version numbers to prevent lost updates from concurrent modifications.
+
+**Key Points**:
+1. **Version field**: Added `version: u64` field to AppConfig (increments on every write)
+2. **Version check on save**: FileService.write_json_with_version_check validates version before writing
+3. **Atomic pattern**: Read current version → validate matches → write with incremented version
+4. **Error type**: Added `AppError::ConcurrentModification` for conflict detection
+5. **In-memory consistency**: Only update in-memory state after successful disk write
+
+**Files Modified**:
+- `src/errors.rs` - Added ConcurrentModification error variant
+- `src/domain/configuration/models.rs` - Added version field and with_incremented_version()
+- `src/domain/configuration/repository.rs` - Updated save methods with version checking
+- `src/infrastructure/file_management/service.rs` - Added write_json_with_version_check()
+- `src/domain/configuration/models_test.rs` - Added optimistic locking tests
+
 ## Edge Cases Tested
 
 ### Issue #1 Edge Cases:
@@ -53,6 +71,13 @@
 - Tilde expansion (`~/path`) - EXPANDED and validated
 - Sensitive system paths (`/etc/passwd.txt`) - REJECTED (outside allowed roots)
 - Valid home directory paths - ACCEPTED
+
+### Issue #2 Edge Cases:
+- Version increment on every write - VERIFIED
+- Version wrapping at u64::MAX - Wraps to 0 correctly
+- Old configs without version field - Default to version 0
+- Concurrent modification detection - Returns ConcurrentModification error
+- File deleted between read and write - Detected as version mismatch
 
 ## Commits
 

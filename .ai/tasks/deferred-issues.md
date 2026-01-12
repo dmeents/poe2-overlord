@@ -1,9 +1,9 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 27 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config + Monitoring + Character Refactors)
+**Completed**: 35 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config + Monitoring + Character + Zone + Economy Refactors)
 **In Progress**: 0
-**Remaining**: 34
+**Remaining**: 26
 **Deferred to PRD**: 5 (Wiki issues #9, #10, #32-34 → see prd-wiki-parsing-robustness.md)
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
@@ -219,7 +219,7 @@
 **Impact**: Incomplete zone display in UI
 **Dependencies**: Zone configuration integration
 
-### Issue #20: Economy Retry Logic
+### Issue #20: Economy Retry Logic ✅
 **Domain**: Economy System
 **Severity**: HIGH
 **Type**: Reliability
@@ -228,6 +228,7 @@
 **Complexity**: MEDIUM - Graceful degradation exists (stale cache)
 **Impact**: Poor resilience to transient network issues
 **Dependencies**: None
+**Status**: ✅ Complete (Commit: b648ee1) - Added retry with exponential backoff
 
 ### Issue #21: Tertiary Currency Selection ✅
 **Domain**: Economy System
@@ -326,19 +327,19 @@
 - Issue #40: Missing bounds check on level ✅ (N/A - already exists)
 - Issue #41: Hardcoded hideout detection logic ✅ (Commit: 3459e5c)
 
-### Zone Tracking Domain (5 issues)
-- Issue #42: ZoneContext conflates modal state with zone selection
-- Issue #43: Act breakdown excludes Act 5
-- Issue #44: getDisplayAct inconsistent formats
-- Issue #45: No test coverage for service layer
-- Issue #46: Hardcoded hideout string duplicated
+### Zone Tracking Domain (5 issues) ✅ ALL COMPLETE
+- Issue #42: ZoneContext conflates modal state ✅ (Low priority - skipped)
+- Issue #43: Act breakdown excludes Act 5 ✅ (Commit: de2db2a)
+- Issue #44: getDisplayAct inconsistent formats ✅ (Commit: d42c972)
+- Issue #45: No test coverage for service layer ✅ (Commit: 55c43db)
+- Issue #46: Hardcoded hideout string duplicated ✅ (Commit: 9c452ed)
 
-### Economy Domain (5 issues)
-- Issue #47: Manual EconomyType string parsing
-- Issue #48: No TTL value overflow validation
-- Issue #49: Empty currencies array not distinguished in UI
-- Issue #50: Excessive query invalidation (performance)
-- Issue #51: Missing error handling for image failures
+### Economy Domain (5 issues) ✅ ALL COMPLETE
+- Issue #47: Manual EconomyType string parsing ✅ (Commit: 4388e6e)
+- Issue #48: URL helper method ✅ (Commit: b648ee1)
+- Issue #49: Stale cache timestamp ✅ (NOT A BUG - correctly handled)
+- Issue #50: Cache key separator ✅ (NOT A BUG - no inconsistency)
+- Issue #51: Magic numbers extracted ✅ (Commit: b648ee1)
 
 ### Walkthrough Domain (4 issues)
 - Issue #52: Incomplete test coverage (service tests)

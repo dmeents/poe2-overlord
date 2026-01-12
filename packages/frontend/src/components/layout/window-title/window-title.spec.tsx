@@ -34,7 +34,7 @@ describe('WindowTitle', () => {
     render(<WindowTitle />);
 
     expect(
-      screen.getByRole('button', { name: 'minimize' })
+      screen.getByRole('button', { name: 'Minimize window' })
     ).toBeInTheDocument();
   });
 
@@ -42,21 +42,23 @@ describe('WindowTitle', () => {
     render(<WindowTitle />);
 
     expect(
-      screen.getByRole('button', { name: 'maximize' })
+      screen.getByRole('button', { name: 'Maximize window' })
     ).toBeInTheDocument();
   });
 
   it('renders close button', () => {
     render(<WindowTitle />);
 
-    expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Close window' })
+    ).toBeInTheDocument();
   });
 
   it('calls minimize when minimize button is clicked', async () => {
     const user = userEvent.setup();
     render(<WindowTitle />);
 
-    await user.click(screen.getByRole('button', { name: 'minimize' }));
+    await user.click(screen.getByRole('button', { name: 'Minimize window' }));
 
     expect(mockMinimize).toHaveBeenCalledTimes(1);
   });
@@ -65,7 +67,7 @@ describe('WindowTitle', () => {
     const user = userEvent.setup();
     render(<WindowTitle />);
 
-    await user.click(screen.getByRole('button', { name: 'maximize' }));
+    await user.click(screen.getByRole('button', { name: 'Maximize window' }));
 
     expect(mockToggleMaximize).toHaveBeenCalledTimes(1);
   });
@@ -74,7 +76,7 @@ describe('WindowTitle', () => {
     const user = userEvent.setup();
     render(<WindowTitle />);
 
-    await user.click(screen.getByRole('button', { name: 'close' }));
+    await user.click(screen.getByRole('button', { name: 'Close window' }));
 
     expect(mockClose).toHaveBeenCalledTimes(1);
   });

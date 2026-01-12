@@ -16,22 +16,57 @@ export function Tooltip({
   className = '',
   showIcon = false,
 }: TooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  // Use null to indicate tooltip is hidden; position is calculated before showing
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(
+    null
+  );
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (isVisible && triggerRef.current) {
+  // Show tooltip: calculate position first, then display
+  const showTooltip = () => {
+    if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      // For fixed positioning, use viewport coordinates directly (no scroll offset needed)
       setPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
+        top: rect.top,
+        left: rect.left + rect.width / 2,
       });
     }
-  }, [isVisible]);
+  };
 
-  const tooltipContent = isVisible && (
+  // Hide tooltip
+  const hideTooltip = () => {
+    setPosition(null);
+  };
+
+  // Reposition on scroll/resize while visible
+  useEffect(() => {
+    if (!position || !triggerRef.current) return;
+
+    const updatePosition = () => {
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        setPosition({
+          top: rect.top,
+          left: rect.left + rect.width / 2,
+        });
+      }
+    };
+
+    // Use capture phase to catch scroll events on any element
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [position]);
+
+  // Only render when position is calculated (prevents flash at 0,0)
+  const tooltipContent = position && (
     <div
+      role="tooltip"
       className={tooltipStyles.tooltip}
       style={{
         position: 'fixed',
@@ -53,11 +88,16 @@ export function Tooltip({
       <div
         ref={triggerRef}
         className={tooltipStyles.trigger}
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
+        onMouseEnter={showTooltip}
+        onMouseLeave={hideTooltip}
       >
         {children}
-        {showIcon && <InformationCircleIcon className={tooltipStyles.icon} />}
+        {showIcon && (
+          <InformationCircleIcon
+            className={tooltipStyles.icon}
+            aria-hidden="true"
+          />
+        )}
       </div>
 
       {typeof document !== 'undefined' &&

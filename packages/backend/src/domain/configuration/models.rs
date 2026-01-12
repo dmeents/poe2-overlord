@@ -78,6 +78,10 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
+    /// Valid log levels for configuration
+    pub const VALID_LOG_LEVELS: &'static [&'static str] =
+        &["trace", "debug", "info", "warn", "warning", "error"];
+
     pub fn new() -> Self {
         Self::default()
     }
@@ -90,13 +94,17 @@ impl AppConfig {
         }
     }
 
+    /// Check if a log level string is valid (case-insensitive)
+    pub fn is_valid_log_level(level: &str) -> bool {
+        Self::VALID_LOG_LEVELS.contains(&level.to_lowercase().as_str())
+    }
+
     pub fn validate(&self) -> Result<(), String> {
-        let valid_log_levels = ["trace", "debug", "info", "warn", "warning", "error"];
-        if !valid_log_levels.contains(&self.log_level.to_lowercase().as_str()) {
+        if !Self::is_valid_log_level(&self.log_level) {
             return Err(format!(
                 "Invalid log level '{}'. Valid levels are: {}",
                 self.log_level,
-                valid_log_levels.join(", ")
+                Self::VALID_LOG_LEVELS.join(", ")
             ));
         }
 

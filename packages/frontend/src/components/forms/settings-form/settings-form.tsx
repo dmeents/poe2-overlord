@@ -2,13 +2,16 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner'
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
 import { tauriUtils } from '@/utils/tauri';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertMessage } from '../form-alert-message/form-alert-message';
 import { FormField } from '../form-field/form-field';
 import { Input } from '../form-input/form-input';
 import { Select } from '../form-select/form-select';
 import { Button } from '../../ui/button/button';
 import { settingsFormStyles } from './settings-form.styles';
+
+/** Valid log levels matching backend validation */
+const VALID_LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error'];
 
 interface SettingsFormProps {
   onConfigUpdate?: (config: AppConfig) => void;
@@ -27,6 +30,30 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   const [zoneRefreshOptions, setZoneRefreshOptions] = useState<
     ZoneRefreshIntervalOption[]
   >([]);
+
+  // Track timeout refs for cleanup to prevent memory leaks
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear success message with proper cleanup
+  const clearSuccessAfterDelay = useCallback(() => {
+    // Clear any existing timeout
+    if (successTimeoutRef.current) {
+      clearTimeout(successTimeoutRef.current);
+    }
+    successTimeoutRef.current = setTimeout(() => {
+      setSuccess(null);
+      successTimeoutRef.current = null;
+    }, 3000);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Load configuration and options on component mount
   useEffect(() => {
@@ -58,6 +85,18 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   };
 
   const handleSave = async () => {
+    // Pre-validate before backend call
+    const pathValid = validatePoeClientLogPath(config.poe_client_log_path);
+    if (!pathValid) {
+      setError('Please enter a valid POE client log path before saving');
+      return;
+    }
+
+    if (!VALID_LOG_LEVELS.includes(config.log_level.toLowerCase())) {
+      setError(`Invalid log level: ${config.log_level}. Valid levels: ${VALID_LOG_LEVELS.join(', ')}`);
+      return;
+    }
+
     try {
       setIsSaving(true);
       setError(null);
@@ -67,10 +106,17 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       setSuccess('Configuration saved successfully!');
       onConfigUpdate?.(config);
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      clearSuccessAfterDelay();
     } catch (err) {
-      setError('Failed to save configuration');
+      // Extract specific error message from backend
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('Invalid log level')) {
+        setError(`Invalid log level: "${config.log_level}". Valid levels: ${VALID_LOG_LEVELS.join(', ')}`);
+      } else if (errorMessage.includes('cannot be empty')) {
+        setError('POE client log path cannot be empty');
+      } else {
+        setError(`Failed to save configuration: ${errorMessage}`);
+      }
       console.error('Error saving config:', err);
     } finally {
       setIsSaving(false);
@@ -89,10 +135,10 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       setSuccess('Configuration reset to defaults!');
       onConfigUpdate?.(defaultConfig);
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      clearSuccessAfterDelay();
     } catch (err) {
-      setError('Failed to reset configuration');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Failed to reset configuration: ${errorMessage}`);
       console.error('Error resetting config:', err);
     } finally {
       setIsSaving(false);
@@ -110,22 +156,27 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   };
 
   const validatePoeClientLogPath = (path: string): boolean => {
-    // Basic validation - check if it's not empty and has a reasonable structure
+    // Basic validation - check if it's not empty
     if (!path.trim()) return false;
 
-    // Check if it ends with .txt or .log
+    const pathLower = path.toLowerCase();
+
+    // Must have valid extension (.txt or .log)
     const validExtensions = ['.txt', '.log'];
     const hasValidExtension = validExtensions.some(ext =>
-      path.toLowerCase().endsWith(ext)
+      pathLower.endsWith(ext)
     );
 
-    // Check if it contains common POE path indicators
-    const hasPoeIndicators =
-      path.toLowerCase().includes('poe') ||
-      path.toLowerCase().includes('path of exile') ||
-      path.toLowerCase().includes('client');
+    if (!hasValidExtension) return false;
 
-    return hasValidExtension || hasPoeIndicators;
+    // Should contain POE-related keywords (strengthened from OR to more specific matching)
+    const hasPoeIndicators =
+      pathLower.includes('path of exile') ||
+      pathLower.includes('poe2') ||
+      pathLower.includes('poe 2') ||
+      (pathLower.includes('client') && pathLower.includes('log'));
+
+    return hasPoeIndicators;
   };
 
   if (isLoading) {

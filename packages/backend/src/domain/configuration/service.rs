@@ -171,8 +171,8 @@ impl ConfigurationService for ConfigurationServiceImpl {
         self.repository.get_log_level().await
     }
 
-    fn get_default_poe_client_log_path(&self) -> String {
-        tauri::async_runtime::block_on(self.repository.get_default_poe_client_log_path())
+    async fn get_default_poe_client_log_path(&self) -> String {
+        self.repository.get_default_poe_client_log_path().await
     }
 
     async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()> {
@@ -224,9 +224,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
     }
 }
 
-impl Default for ConfigurationServiceImpl {
-    fn default() -> Self {
-        tauri::async_runtime::block_on(Self::new())
-            .expect("Failed to create default configuration service")
-    }
-}
+// NOTE: Default trait removed intentionally - ConfigurationServiceImpl::new() is async
+// and must be called explicitly. Using block_on in Default would risk deadlocks.
+// All initialization should go through ServiceRegistry or explicit new().await calls.

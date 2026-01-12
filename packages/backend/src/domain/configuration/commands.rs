@@ -103,7 +103,7 @@ pub async fn set_poe_client_log_path(
 pub async fn get_default_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
 ) -> CommandResult<String> {
-    let default_path = config_service.get_default_poe_client_log_path();
+    let default_path = config_service.get_default_poe_client_log_path().await;
     Ok(default_path)
 }
 

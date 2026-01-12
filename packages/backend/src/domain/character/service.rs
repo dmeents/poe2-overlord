@@ -408,9 +408,9 @@ impl CharacterService for CharacterServiceImpl {
                 (None, false)
             };
 
-        // Override act to 10 for hideouts to separate them from act playtimes
-        if zone_name.to_lowercase().contains("hideout") {
-            act = Some(10);
+        // Override act for hideouts to separate from act playtimes
+        if is_hideout_zone(zone_name) {
+            act = Some(HIDEOUT_ACT);
         }
 
         // Apply zone tracking business logic
@@ -565,9 +565,9 @@ impl CharacterService for CharacterServiceImpl {
                     (None, false)
                 };
 
-            // Override act to 10 for hideouts to separate them from act playtimes
-            if zone_name.to_lowercase().contains("hideout") {
-                act = Some(10);
+            // Override act for hideouts to separate from act playtimes
+            if is_hideout_zone(&zone_name) {
+                act = Some(HIDEOUT_ACT);
             }
 
             self.zone_tracking
@@ -686,6 +686,15 @@ impl CharacterService for CharacterServiceImpl {
 
         Ok(report)
     }
+}
+
+/// Hideout act number constant - used to separate hideout time from act playtimes
+const HIDEOUT_ACT: u32 = 10;
+
+/// Checks if a zone name indicates a hideout
+/// Centralizes hideout detection logic to avoid duplication (Issue #41)
+fn is_hideout_zone(zone_name: &str) -> bool {
+    zone_name.to_lowercase().contains("hideout")
 }
 
 impl CharacterServiceImpl {

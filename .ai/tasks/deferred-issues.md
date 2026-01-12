@@ -1,8 +1,8 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 0
-**In Progress**: 6 (Quick Wins Batch - see `.ai/tasks/current-prd.md`)
+**Completed**: 6 (Quick Wins Batch)
+**In Progress**: 0
 **Remaining**: 55
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
@@ -68,7 +68,7 @@
 **Impact**: Poor UX, users can't see live time tracking
 **Dependencies**: None
 
-### Issue #6: Provider Dependency Documentation 🚧
+### Issue #6: Provider Dependency Documentation ✅
 **Domain**: UI Foundation
 **Severity**: CRITICAL (Architecture)
 **Type**: Documentation + Architecture
@@ -77,9 +77,9 @@
 **Complexity**: LOW - Documentation + optional runtime check
 **Impact**: App crashes if provider order wrong
 **Dependencies**: None
-**Status**: 🚧 In Progress (Quick Wins Batch)
+**Status**: ✅ Complete (Commit: 44d5f32)
 
-### Issue #7: QueryClient Provider Access 🚧
+### Issue #7: QueryClient Provider Access ✅
 **Domain**: UI Foundation
 **Severity**: CRITICAL (Architecture)
 **Type**: Architecture
@@ -88,7 +88,7 @@
 **Complexity**: LOW - Documentation
 **Impact**: Inconsistent patterns, hard to maintain
 **Dependencies**: None
-**Status**: 🚧 In Progress (Quick Wins Batch)
+**Status**: ✅ Complete (Commit: ed28bde)
 
 ---
 
@@ -164,7 +164,7 @@
 **Impact**: Frontend doesn't auto-refresh on deletion
 **Dependencies**: Event system
 
-### Issue #15: Frontend Deletion Event Handling 🚧
+### Issue #15: Frontend Deletion Event Handling ✅
 **Domain**: Character Management
 **Severity**: HIGH
 **Type**: Functional Gap
@@ -173,7 +173,7 @@
 **Complexity**: LOW - Depends on Issue #14
 **Impact**: UI doesn't update on character deletion
 **Dependencies**: Issue #14 (backend event)
-**Status**: 🚧 In Progress (Quick Wins Batch)
+**Status**: ✅ Complete (Commit: 90d3f44) - Frontend ready, awaits backend Issue #14
 
 ### Issue #16: Zone Leave Not Called on Change
 **Domain**: Zone Tracking
@@ -225,7 +225,7 @@
 **Impact**: Poor resilience to transient network issues
 **Dependencies**: None
 
-### Issue #21: Tertiary Currency Selection 🚧
+### Issue #21: Tertiary Currency Selection ✅
 **Domain**: Economy System
 **Severity**: HIGH
 **Type**: Logic Bug
@@ -234,7 +234,7 @@
 **Complexity**: MEDIUM - Current logic works for 3-currency systems
 **Impact**: Wrong currency shown in 4+ currency leagues
 **Dependencies**: None
-**Status**: 🚧 In Progress (Quick Wins Batch)
+**Status**: ✅ Complete (Commit: 73474c5) - Deterministic rate-based selection
 
 ### Issue #22: Walkthrough Race Condition
 **Domain**: Walkthrough/Guides
@@ -266,8 +266,8 @@
 **Impact**: Memory leak, scroll issues with nested modals
 **Dependencies**: Global modal manager architecture
 
-### Issue #25: Tooltip Scroll Repositioning (Partial) 🚧
-**Domain**: UI Foundation  
+### Issue #25: Tooltip Scroll Repositioning ✅
+**Domain**: UI Foundation
 **Severity**: HIGH
 **Type**: UX Bug
 **Description**: Tooltip repositioning added but may need refinement
@@ -275,9 +275,9 @@
 **Complexity**: LOW - Verify fix works well
 **Impact**: Tooltip positioned incorrectly after scroll
 **Dependencies**: None
-**Status**: 🚧 In Progress (Quick Wins Batch)
+**Status**: ✅ Complete (Commit: f8f3b3a) - Verified, added tests and documentation
 
-### Issue #26: Accordion Accessibility 🚧
+### Issue #26: Accordion Accessibility ✅
 **Domain**: UI Foundation
 **Severity**: HIGH
 **Type**: Accessibility
@@ -286,7 +286,7 @@
 **Complexity**: LOW - Add ARIA attributes
 **Impact**: Not accessible to screen readers
 **Dependencies**: None
-**Status**: 🚧 In Progress (Quick Wins Batch)
+**Status**: ✅ Complete (Commit: ccdcea2) - Added full ARIA compliance
 
 ---
 
@@ -375,8 +375,8 @@ Lower priority, technical debt
 
 ## Recommended Implementation Order
 
-1. **Quick Wins** (1 week): #6, #7, #26, #15, #25, #21
-2. **Data Integrity** (2-3 weeks): #1, #2, #3, #4, #12, #16, #22
-3. **Event System** (1 week): #8, #14
-4. **Real-Time Features** (1 week): #5
-5. **Refactors** (2-4 weeks): Remaining MEDIUM issues
+1. ~~**Quick Wins**: #6, #7, #26, #15, #25, #21~~ ✅ **COMPLETE** (Session: 2026-01-11)
+2. **Data Integrity**: #1, #2, #3, #4, #12, #16, #22
+3. **Event System**: #8, #14
+4. **Real-Time Features**: #5
+5. **Refactors**: Remaining MEDIUM issues

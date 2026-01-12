@@ -141,6 +141,10 @@ impl ConfigurationService for ConfigurationServiceImpl {
         self.update_config(default_config).await
     }
 
+    async fn flush(&self) -> AppResult<()> {
+        self.repository.flush().await
+    }
+
     async fn load_config(&self) -> AppResult<()> {
         self.repository.load().await?;
         info!("Configuration loaded successfully");

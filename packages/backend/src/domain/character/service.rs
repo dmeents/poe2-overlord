@@ -10,7 +10,7 @@ use super::models::{
     LocationState, OrphanCleanupReport,
 };
 use super::traits::{CharacterRepository, CharacterService};
-use crate::domain::zone_tracking::ZoneStats;
+use crate::domain::zone_tracking::{is_hideout_zone, ZoneStats, HIDEOUT_ACT};
 
 pub struct CharacterServiceImpl {
     repository: Arc<dyn CharacterRepository + Send + Sync>,
@@ -686,15 +686,6 @@ impl CharacterService for CharacterServiceImpl {
 
         Ok(report)
     }
-}
-
-/// Hideout act number constant - used to separate hideout time from act playtimes
-const HIDEOUT_ACT: u32 = 10;
-
-/// Checks if a zone name indicates a hideout
-/// Centralizes hideout detection logic to avoid duplication (Issue #41)
-fn is_hideout_zone(zone_name: &str) -> bool {
-    zone_name.to_lowercase().contains("hideout")
 }
 
 impl CharacterServiceImpl {

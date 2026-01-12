@@ -6,6 +6,6 @@ pub mod service;
 mod service_test;
 pub mod traits;
 
-pub use models::{TrackingSummary, ZoneStats};
+pub use models::{is_hideout_zone, TrackingSummary, ZoneStats, HIDEOUT_ACT, HIDEOUT_KEYWORD};
 pub use service::ZoneTrackingServiceImpl;
 pub use traits::ZoneTrackingService;

@@ -1,6 +1,20 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+/// String used to identify hideout zones
+pub const HIDEOUT_KEYWORD: &str = "hideout";
+
+/// Act number assigned to hideout zones to separate them from story act playtimes
+pub const HIDEOUT_ACT: u32 = 10;
+
+/// Checks if a zone name represents a hideout zone (case-insensitive)
+///
+/// This is the centralized hideout detection logic to avoid duplication.
+/// Use this function wherever you need to check if a zone name is a hideout.
+pub fn is_hideout_zone(zone_name: &str) -> bool {
+    zone_name.to_lowercase().contains(HIDEOUT_KEYWORD)
+}
+
 /// Statistics for a specific zone visited by a character
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ZoneStats {
@@ -36,7 +50,7 @@ impl ZoneStats {
     }
 
     pub fn is_hideout(&self) -> bool {
-        self.zone_name.to_lowercase().contains("hideout")
+        is_hideout_zone(&self.zone_name)
     }
 
     pub fn add_time(&mut self, seconds: u64) {

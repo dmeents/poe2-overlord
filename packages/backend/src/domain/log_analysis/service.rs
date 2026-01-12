@@ -1,4 +1,5 @@
 use crate::domain::character::traits::CharacterService;
+use crate::domain::zone_tracking::{is_hideout_zone, HIDEOUT_ACT};
 use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
 use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
@@ -431,9 +432,6 @@ impl LogAnalysisServiceImpl {
             .any(|keyword| lower_name.contains(keyword))
     }
 
-    fn is_hideout(zone_name: &str) -> bool {
-        zone_name.to_lowercase().contains("hideout")
-    }
 
     /// Extract timestamp from a log line
     /// POE2 log format: "2025/12/24 04:58:45 123456 abc [INFO Client 12345] ..."
@@ -490,8 +488,12 @@ impl LogAnalysisServiceImpl {
                     zone_name.to_string(),
                 );
 
-            // Set hideouts to act 10 (endgame) to separate them from act playtimes
-            placeholder.act = if Self::is_hideout(zone_name) { 10 } else { 0 };
+            // Set hideouts to endgame act to separate them from act playtimes
+            placeholder.act = if is_hideout_zone(zone_name) {
+                HIDEOUT_ACT
+            } else {
+                0
+            };
 
             if let Err(e) = zone_config.add_zone(placeholder.clone()).await {
                 debug!("Failed to add placeholder zone '{}': {}", zone_name, e);

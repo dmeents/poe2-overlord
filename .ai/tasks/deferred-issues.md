@@ -1,9 +1,10 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 16 (Quick Wins + Data Integrity + Event System + Real-Time Features)
+**Completed**: 21 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config Refactors)
 **In Progress**: 0
-**Remaining**: 45
+**Remaining**: 40
+**Deferred to PRD**: 5 (Wiki issues #9, #10, #32-34 → see prd-wiki-parsing-robustness.md)
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
 
@@ -297,17 +298,20 @@
 
 *(All MEDIUM issues from the session log - architectural refactors, code cleanup, etc.)*
 
-### Configuration Domain (5 issues)
-- Issue #27: Disk write debouncing
-- Issue #28: Event publishing on load failure
-- Issue #29: Unused repository methods cleanup
-- Issue #30: Double backend call on reset
-- Issue #31: Error handling pattern consistency
+### Configuration Domain (5 issues) ✅ ALL COMPLETE
+- Issue #27: Disk write debouncing ✅ (Commit: c6a3f80)
+- Issue #28: Event publishing on load failure ✅ (Commit: 084cff5)
+- Issue #29: Unused repository methods cleanup ✅ (Commit: 4bf03a1)
+- Issue #30: Double backend call on reset ✅ (Commit: 36a0cf3)
+- Issue #31: Error handling pattern consistency ✅ (Commit: 3755793)
 
-### Wiki Scraping Domain (3 issues)
-- Issue #32: URL encoding for special characters
-- Issue #33: Case-sensitive redirect detection
-- Issue #34: Timeout configuration flexibility
+### Wiki Scraping Domain (5 issues) ⏸️ DEFERRED TO PRD
+*Deferred to `.ai/tasks/prd-wiki-parsing-robustness.md` (requires ~30 hours architectural work)*
+- Issue #9: Wiki section parsing brittleness ⏸️ (PRD created)
+- Issue #10: Connected zones wiki redirects ⏸️ (PRD created)
+- Issue #32: URL encoding for special characters ⏸️ (PRD created)
+- Issue #33: Case-sensitive redirect detection ⏸️ (PRD created)
+- Issue #34: Timeout configuration flexibility ⏸️ (PRD created)
 
 ### Monitoring Domain (2 issues)
 - Issue #35: IP address validation (already exists in is_valid())

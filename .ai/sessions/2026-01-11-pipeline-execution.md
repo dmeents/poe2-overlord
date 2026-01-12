@@ -1,14 +1,15 @@
 # Pipeline Execution - All Deferred Issues
 
 **Started**: 2026-01-11
-**Status**: PAUSED (after Batch 4)
+**Status**: IN_PROGRESS (Batch 5 complete)
 
 ## Overall Progress
 
 - Total Issues: 61
-- Completed: 16
-- Remaining: 45
-- Current Batch: Batch 5 - Refactors 1 (Config & Wiki)
+- Completed: 21 (5 in Batch 5)
+- Deferred to PRD: 5 (wiki issues)
+- Remaining: 35
+- Current Batch: Batch 6 - Refactors 2 (Monitoring & Character)
 
 ## Batch Summary
 
@@ -47,9 +48,18 @@
 - Commits: 37f690b (feat: real-time zone timer updates)
 - Notes: Added useElapsedTime hook, timer updates every second for active zones
 
-### ⏳ Batch 5: Refactors 1 - Config & Wiki (8 issues)
+### ✅ Batch 5: Refactors 1 - Config & Wiki (10 issues)
 
-- Status: PENDING
+- Started: 2026-01-11
+- Completed: 2026-01-11
+- Issues Completed: #27, #28, #29, #30, #31 (Config domain)
+- Issues Deferred to PRD: #9, #10, #32, #33, #34 (Wiki domain → prd-wiki-parsing-robustness.md)
+- Session Log: `.ai/sessions/2026-01-11-refactors-1-batch.md`
+- Commits: c6a3f80, 084cff5, 4bf03a1, 36a0cf3, 3755793
+- Notes: Wiki issues deferred - requires ~30 hours architectural work (multi-strategy parsing)
+- PRDs Created:
+  - `.ai/tasks/prd-wiki-parsing-robustness.md` - Multi-strategy parsing architecture
+  - `.ai/tasks/prd-comprehensive-error-handling.md` - Full error handling system
 
 ### ⏳ Batch 6: Refactors 2 - Monitoring & Character (8 issues)
 

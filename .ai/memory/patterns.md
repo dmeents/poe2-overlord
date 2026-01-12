@@ -128,6 +128,72 @@ const [isExpanded, setIsExpanded] = useState(false);
 // NO: Redux, Zustand, Context for server data
 ```
 
+## Provider Dependency Pattern
+
+**Status**: DOCUMENTED (as of 2026-01-11)
+
+Application providers have specific nesting requirements. Always check `src/providers.tsx` before adding or reordering providers.
+
+### Provider Dependency Graph
+
+```
+GameProcessProvider (independent)
+  └─ ServerStatusProvider (independent)
+      └─ CharacterProvider (root of character tree)
+          ├─ ZoneProvider (depends on Character)
+          ├─ EconomyProvider (depends on Character)
+          └─ WalkthroughProvider (depends on Character)
+```
+
+### Adding a New Provider
+
+**If provider is independent** (no dependencies):
+```tsx
+// Add at top level or after other independent providers
+<GameProcessProvider>
+  <ServerStatusProvider>
+    <YourNewIndependentProvider>
+      <CharacterProvider>
+        {/* ... */}
+      </CharacterProvider>
+    </YourNewIndependentProvider>
+  </ServerStatusProvider>
+</GameProcessProvider>
+```
+
+**If provider depends on CharacterProvider**:
+```tsx
+// Must be nested INSIDE CharacterProvider
+<CharacterProvider>
+  <ZoneProvider>
+    <EconomyProvider>
+      <YourNewCharacterDependentProvider>
+        <WalkthroughProvider>
+          {children}
+        </WalkthroughProvider>
+      </YourNewCharacterDependentProvider>
+    </EconomyProvider>
+  </ZoneProvider>
+</CharacterProvider>
+```
+
+### Rules
+
+1. **Never reorder** without understanding dependencies
+2. **Always add JSDoc** explaining new provider's dependencies
+3. **Update tests** in `providers.spec.tsx` when adding providers
+4. **Check context hooks** - if a provider calls `useCharacter()`, it depends on CharacterProvider
+
+### Common Errors
+
+```
+Error: "useCharacter must be used within CharacterProvider"
+Fix: Move provider inside <CharacterProvider>
+
+Error: "useGameProcess must be used within GameProcessProvider"
+Fix: Move provider inside <GameProcessProvider>
+```
+
 ## Testing Pattern
 
 **Status: CONFIGURED** (as of 2026-01-09)

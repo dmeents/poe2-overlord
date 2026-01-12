@@ -60,10 +60,18 @@ impl GameMonitoringServiceImpl {
                 info!("POE2 process stopped");
 
                 if let Err(e) = self.character_service.finalize_all_active_zones().await {
-                    error!(
+                    let error_msg = format!(
                         "Failed to finalize character tracking when game stopped: {}",
                         e
                     );
+                    error!("{}", error_msg);
+
+                    // Publish error event so frontend can notify user
+                    let error_event =
+                        AppEvent::system_error(error_msg, "CharacterFinalizationError".to_string());
+                    if let Err(publish_err) = self.event_bus.publish(error_event).await {
+                        error!("Failed to publish finalization error event: {}", publish_err);
+                    }
                 } else {
                     info!("Character tracking finalized after game process stopped");
                 }

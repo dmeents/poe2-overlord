@@ -7,6 +7,7 @@ import {
   EVENT_KEYS,
   type ExtractPayload,
   type CharacterUpdatedEvent,
+  type CharacterDeletedEvent,
 } from '@/utils/events/registry';
 
 interface CharacterContextValue {
@@ -63,6 +64,24 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
           // Use functional update to avoid stale closure issue
           setActiveCharacterWithUpdates(prev =>
             prev?.id === character_id ? characterData : prev
+          );
+        },
+      },
+      {
+        // NOTE: Requires backend Issue #14 to publish CharacterDeleted events
+        eventType: EVENT_KEYS.CharacterDeleted,
+        handler: (payload: unknown) => {
+          const { character_id } =
+            payload as ExtractPayload<CharacterDeletedEvent>;
+
+          // Remove character from list
+          setCharactersWithUpdates(prev =>
+            prev.filter(char => char.id !== character_id)
+          );
+
+          // Clear active character if it was deleted
+          setActiveCharacterWithUpdates(prev =>
+            prev?.id === character_id ? null : prev
           );
         },
       },

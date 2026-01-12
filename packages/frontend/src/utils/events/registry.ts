@@ -11,6 +11,7 @@ export const APP_EVENTS = {
   GameProcessStatusChanged: 'game-process-status-changed',
   ServerStatusChanged: 'server-status-changed',
   CharacterUpdated: 'character-updated',
+  CharacterDeleted: 'character-deleted',
   ConfigurationChanged: 'configuration-changed',
   ServerPingCompleted: 'server-ping-completed',
 
@@ -30,6 +31,7 @@ export const EVENT_KEYS = {
   GameProcessStatusChanged: 'GameProcessStatusChanged',
   ServerStatusChanged: 'ServerStatusChanged',
   CharacterUpdated: 'CharacterUpdated',
+  CharacterDeleted: 'CharacterDeleted',
   ConfigurationChanged: 'ConfigurationChanged',
   ServerPingCompleted: 'ServerPingCompleted',
   WalkthroughStepCompleted: 'WalkthroughStepCompleted',
@@ -49,6 +51,17 @@ export type CharacterUpdatedEvent = {
   CharacterUpdated: {
     character_id: string;
     data: CharacterData;
+    timestamp: string;
+  };
+};
+
+/**
+ * Event type for character deletion.
+ * NOTE: Requires backend Issue #14 to be implemented for this event to fire.
+ */
+export type CharacterDeletedEvent = {
+  CharacterDeleted: {
+    character_id: string;
     timestamp: string;
   };
 };
@@ -85,6 +98,7 @@ export type AppEventRegistry = {
   GameProcessStatusChanged: GameProcessStatusChangedEvent;
   ServerStatusChanged: ServerStatusChangedEvent;
   CharacterUpdated: CharacterUpdatedEvent;
+  CharacterDeleted: CharacterDeletedEvent;
 
   WalkthroughStepCompleted: WalkthroughStepCompletedEvent;
   WalkthroughStepAdvanced: WalkthroughStepAdvancedEvent;

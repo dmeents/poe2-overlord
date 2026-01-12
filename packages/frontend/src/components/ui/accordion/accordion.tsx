@@ -28,26 +28,32 @@ export function Accordion({
   return (
     <div className={`bg-zinc-900/80 border border-zinc-700/50 ${className}`}>
       {/* Accordion Header */}
-      <div className='bg-zinc-700/50 border-b border-zinc-700/50'>
+      <div className="bg-zinc-700/50 border-b border-zinc-700/50">
         <button
-          type='button'
+          type="button"
           id={buttonId}
           onClick={onToggle}
-          className='flex items-center justify-between w-full text-left hover:text-white transition-colors cursor-pointer p-3'
+          className="flex items-center justify-between w-full text-left hover:text-white transition-colors cursor-pointer p-3"
           aria-expanded={isExpanded}
           aria-controls={contentId}
         >
-          <h3 id={headingId} className='text-base font-semibold text-white'>
+          <h3 id={headingId} className="text-base font-semibold text-white">
             {title}
           </h3>
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             {subtitle && (
-              <span className='text-xs text-zinc-400'>{subtitle}</span>
+              <span className="text-xs text-zinc-400">{subtitle}</span>
             )}
             {isExpanded ? (
-              <ChevronUpIcon className='w-4 h-4 text-zinc-400' aria-hidden='true' />
+              <ChevronUpIcon
+                className="w-4 h-4 text-zinc-400"
+                aria-hidden="true"
+              />
             ) : (
-              <ChevronDownIcon className='w-4 h-4 text-zinc-400' aria-hidden='true' />
+              <ChevronDownIcon
+                className="w-4 h-4 text-zinc-400"
+                aria-hidden="true"
+              />
             )}
           </div>
         </button>
@@ -57,9 +63,9 @@ export function Accordion({
       {isExpanded && (
         <div
           id={contentId}
-          role='region'
+          role="region"
           aria-labelledby={headingId}
-          className='p-3'
+          className="p-3"
         >
           {children}
         </div>

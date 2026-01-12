@@ -236,10 +236,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 Some(next_step_id.clone()),
                             );
                             if let Err(e) = self.event_bus.publish(event).await {
-                                warn!(
-                                    "Failed to publish walkthrough step advanced event: {}",
-                                    e
-                                );
+                                warn!("Failed to publish walkthrough step advanced event: {}", e);
                             }
 
                             // Publish step completed event
@@ -248,10 +245,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 step_result,
                             );
                             if let Err(e) = self.event_bus.publish(event).await {
-                                warn!(
-                                    "Failed to publish walkthrough step completed event: {}",
-                                    e
-                                );
+                                warn!("Failed to publish walkthrough step completed event: {}", e);
                             }
                         } else {
                             // No next step, mark campaign as completed

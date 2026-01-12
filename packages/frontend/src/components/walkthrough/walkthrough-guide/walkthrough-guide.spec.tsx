@@ -146,7 +146,7 @@ describe('WalkthroughGuide', () => {
 
     it('applies custom className', () => {
       const { container } = render(
-        <WalkthroughGuide guide={createMockGuide()} className='custom-class' />
+        <WalkthroughGuide guide={createMockGuide()} className="custom-class" />
       );
 
       // The className is passed to SectionHeader
@@ -208,7 +208,7 @@ describe('WalkthroughGuide', () => {
     it('passes currentStepId to accordions', async () => {
       const user = userEvent.setup();
       render(
-        <WalkthroughGuide guide={createMockGuide()} currentStepId='step-1' />
+        <WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />
       );
 
       await user.click(screen.getByText('Act 1'));
@@ -226,8 +226,8 @@ describe('WalkthroughGuide', () => {
       render(
         <WalkthroughGuide
           guide={createMockGuide()}
-          characterId='char-123'
-          currentStepId='step-1'
+          characterId="char-123"
+          currentStepId="step-1"
         />
       );
 
@@ -255,7 +255,7 @@ describe('WalkthroughGuide', () => {
       const user = userEvent.setup();
 
       render(
-        <WalkthroughGuide guide={createMockGuide()} currentStepId='step-1' />
+        <WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />
       );
 
       await user.click(screen.getByText('Act 1'));
@@ -278,8 +278,8 @@ describe('WalkthroughGuide', () => {
       render(
         <WalkthroughGuide
           guide={createMockGuide()}
-          characterId='char-123'
-          currentStepId='step-1'
+          characterId="char-123"
+          currentStepId="step-1"
         />
       );
 

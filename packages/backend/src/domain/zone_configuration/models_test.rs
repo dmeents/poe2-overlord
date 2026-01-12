@@ -115,7 +115,10 @@ mod tests {
         assert!(zone.has_waypoint);
         assert_eq!(zone.npcs, vec!["Tarkand"]);
         assert_eq!(zone.connected_zones, vec!["The Coast"]);
-        assert_eq!(zone.wiki_url, Some("https://wiki.example.com/Ogham_Village".to_string()));
+        assert_eq!(
+            zone.wiki_url,
+            Some("https://wiki.example.com/Ogham_Village".to_string())
+        );
     }
 
     // ============= ZoneConfiguration Tests =============

@@ -24,9 +24,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
     <div className={`${sidebarNavigationStyles.container} ${className}`}>
       {/* Primary Navigation */}
       <nav className={sidebarNavigationStyles.primaryNav}>
-        <Link to='/' className='block'>
+        <Link to="/" className="block">
           <div
-            title='Dashboard'
+            title="Dashboard"
             className={`${sidebarNavigationStyles.navButton} ${
               isActive('/')
                 ? sidebarNavigationStyles.navButtonActive
@@ -36,9 +36,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             <HomeIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
-        <Link to='/walkthrough' className='block'>
+        <Link to="/walkthrough" className="block">
           <div
-            title='Walkthrough'
+            title="Walkthrough"
             className={`${sidebarNavigationStyles.navButton} ${
               isActive('/walkthrough')
                 ? sidebarNavigationStyles.navButtonActive
@@ -48,9 +48,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             <BookOpenIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
-        <Link to='/playtime' className='block'>
+        <Link to="/playtime" className="block">
           <div
-            title='Playtime'
+            title="Playtime"
             className={`${sidebarNavigationStyles.navButton} ${
               isActive('/playtime')
                 ? sidebarNavigationStyles.navButtonActive
@@ -60,9 +60,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             <ClockIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
-        <Link to='/economy' className='block'>
+        <Link to="/economy" className="block">
           <div
-            title='Economy'
+            title="Economy"
             className={`${sidebarNavigationStyles.navButton} ${
               isActive('/economy')
                 ? sidebarNavigationStyles.navButtonActive
@@ -76,9 +76,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
 
       {/* Secondary Navigation (Settings) */}
       <nav className={sidebarNavigationStyles.secondaryNav}>
-        <Link to='/characters' className='block'>
+        <Link to="/characters" className="block">
           <div
-            title='Characters'
+            title="Characters"
             className={`${sidebarNavigationStyles.navButton} ${
               isActive('/characters')
                 ? sidebarNavigationStyles.navButtonActive
@@ -88,9 +88,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
             <UserGroupIcon className={sidebarNavigationStyles.icon} />
           </div>
         </Link>
-        <Link to='/settings' className='block'>
+        <Link to="/settings" className="block">
           <div
-            title='Settings'
+            title="Settings"
             className={`${sidebarNavigationStyles.navButton} ${
               isActive('/settings')
                 ? sidebarNavigationStyles.navButtonActive

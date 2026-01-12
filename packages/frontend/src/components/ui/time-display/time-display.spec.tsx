@@ -40,7 +40,7 @@ describe('TimeDisplay', () => {
   });
 
   it('applies custom className', () => {
-    render(<TimeDisplay seconds={60} className='custom-class' />);
+    render(<TimeDisplay seconds={60} className="custom-class" />);
 
     expect(screen.getByText('1m 0s')).toHaveClass('custom-class');
   });

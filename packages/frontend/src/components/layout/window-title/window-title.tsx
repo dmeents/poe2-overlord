@@ -38,31 +38,31 @@ export const WindowTitle = () => {
       </div>
       <div className={windowTitleStyles.controls}>
         <Button
-          title='Minimize window'
-          variant='ghost'
-          size='sm'
+          title="Minimize window"
+          variant="ghost"
+          size="sm"
           onClick={handleMinimize}
           className={windowTitleStyles.controlButton}
         >
-          <MinusIcon className='w-4 h-4' aria-hidden="true" />
+          <MinusIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
         <Button
-          title='Maximize window'
-          variant='ghost'
-          size='sm'
+          title="Maximize window"
+          variant="ghost"
+          size="sm"
           onClick={handleMaximize}
           className={windowTitleStyles.controlButton}
         >
-          <WindowIcon className='w-4 h-4' aria-hidden="true" />
+          <WindowIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
         <Button
-          title='Close window'
-          variant='ghost'
-          size='sm'
+          title="Close window"
+          variant="ghost"
+          size="sm"
           onClick={handleClose}
           className={windowTitleStyles.controlButton}
         >
-          <XMarkIcon className='w-4 h-4' aria-hidden="true" />
+          <XMarkIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
       </div>
     </div>

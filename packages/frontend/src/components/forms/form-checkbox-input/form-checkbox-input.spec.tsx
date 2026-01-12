@@ -7,10 +7,10 @@ describe('CheckboxInput', () => {
   it('renders with label', () => {
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={vi.fn()}
-        label='Test Label'
+        label="Test Label"
       />
     );
 
@@ -20,10 +20,10 @@ describe('CheckboxInput', () => {
   it('renders checked state correctly', () => {
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={true}
         onChange={vi.fn()}
-        label='Test Label'
+        label="Test Label"
       />
     );
 
@@ -33,10 +33,10 @@ describe('CheckboxInput', () => {
   it('renders unchecked state correctly', () => {
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={vi.fn()}
-        label='Test Label'
+        label="Test Label"
       />
     );
 
@@ -49,10 +49,10 @@ describe('CheckboxInput', () => {
 
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={handleChange}
-        label='Test Label'
+        label="Test Label"
       />
     );
 
@@ -64,11 +64,11 @@ describe('CheckboxInput', () => {
   it('renders description when provided', () => {
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={vi.fn()}
-        label='Test Label'
-        description='This is a description'
+        label="Test Label"
+        description="This is a description"
       />
     );
 
@@ -78,10 +78,10 @@ describe('CheckboxInput', () => {
   it('does not render description when not provided', () => {
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={vi.fn()}
-        label='Test Label'
+        label="Test Label"
       />
     );
 
@@ -91,11 +91,11 @@ describe('CheckboxInput', () => {
   it('applies custom className', () => {
     const { container } = render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={vi.fn()}
-        label='Test Label'
-        className='custom-class'
+        label="Test Label"
+        className="custom-class"
       />
     );
 
@@ -105,10 +105,10 @@ describe('CheckboxInput', () => {
   it('renders React node as label', () => {
     render(
       <CheckboxInput
-        id='test-checkbox'
+        id="test-checkbox"
         checked={false}
         onChange={vi.fn()}
-        label={<span data-testid='custom-label'>Custom Label</span>}
+        label={<span data-testid="custom-label">Custom Label</span>}
       />
     );
 

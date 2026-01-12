@@ -6,9 +6,9 @@ describe('EmptyState', () => {
   it('renders icon correctly', () => {
     render(
       <EmptyState
-        icon={<span data-testid='test-icon'>Icon</span>}
-        title='Test Title'
-        description='Test description'
+        icon={<span data-testid="test-icon">Icon</span>}
+        title="Test Title"
+        description="Test description"
       />
     );
 
@@ -19,8 +19,8 @@ describe('EmptyState', () => {
     render(
       <EmptyState
         icon={<span>Icon</span>}
-        title='No Items Found'
-        description='There are no items to display'
+        title="No Items Found"
+        description="There are no items to display"
       />
     );
 
@@ -31,8 +31,8 @@ describe('EmptyState', () => {
     render(
       <EmptyState
         icon={<span>Icon</span>}
-        title='No Items Found'
-        description='There are no items to display'
+        title="No Items Found"
+        description="There are no items to display"
       />
     );
 
@@ -45,8 +45,8 @@ describe('EmptyState', () => {
     render(
       <EmptyState
         icon={<span>Icon</span>}
-        title='No Items Found'
-        description='There are no items to display'
+        title="No Items Found"
+        description="There are no items to display"
         action={<button>Add Item</button>}
       />
     );
@@ -60,8 +60,8 @@ describe('EmptyState', () => {
     render(
       <EmptyState
         icon={<span>Icon</span>}
-        title='No Items Found'
-        description='There are no items to display'
+        title="No Items Found"
+        description="There are no items to display"
       />
     );
 
@@ -72,9 +72,9 @@ describe('EmptyState', () => {
     const { container } = render(
       <EmptyState
         icon={<span>Icon</span>}
-        title='No Items Found'
-        description='There are no items to display'
-        className='custom-class'
+        title="No Items Found"
+        description="There are no items to display"
+        className="custom-class"
       />
     );
 

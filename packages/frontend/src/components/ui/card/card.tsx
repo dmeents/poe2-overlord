@@ -66,8 +66,8 @@ export function Card({
         <div
           className={`${accentGradients[accentColor]} px-5 py-3 border-b border-zinc-800`}
         >
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               {showStatusIndicator && (
                 <div
                   className={`w-2 h-2 ${accentDotColors[accentColor]} rounded-full animate-pulse`}
@@ -85,16 +85,16 @@ export function Card({
               </span>
             </div>
             {subtitle && !rightAction && (
-              <span className='text-xs text-zinc-400 font-normal'>
+              <span className="text-xs text-zinc-400 font-normal">
                 {subtitle}
               </span>
             )}
             {rightAction && (
               <Button
                 onClick={rightAction.onClick}
-                variant='text'
-                size='xs'
-                className='text-zinc-400 hover:text-zinc-200 h-auto py-0'
+                variant="text"
+                size="xs"
+                className="text-zinc-400 hover:text-zinc-200 h-auto py-0"
               >
                 {rightAction.label}
               </Button>

@@ -160,25 +160,25 @@ export function WalkthroughStepCard({
     if (progress.is_completed) {
       return (
         <Card className={`${className} border-green-500 bg-green-500/10`}>
-          <div className='flex items-center gap-4 p-4'>
-            <CheckCircleIcon className='w-8 h-8 text-green-500' />
-            <h4 className='text-xl font-semibold text-white'>
+          <div className="flex items-center gap-4 p-4">
+            <CheckCircleIcon className="w-8 h-8 text-green-500" />
+            <h4 className="text-xl font-semibold text-white">
               Campaign Complete!
             </h4>
           </div>
-          <div className='flex justify-between items-center pt-3 pb-1 px-4 border-t border-zinc-700/30'>
-            <div className='flex items-center gap-2 text-xs text-zinc-500'>
-              <ClockIcon className='w-3 h-3' />
+          <div className="flex justify-between items-center pt-3 pb-1 px-4 border-t border-zinc-700/30">
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <ClockIcon className="w-3 h-3" />
               Last updated: {formatLastUpdated(progress.last_updated)}
             </div>
             {onViewGuide && (
               <Button
                 onClick={onViewGuide}
-                variant='text'
-                size='xs'
-                title='View guide'
+                variant="text"
+                size="xs"
+                title="View guide"
               >
-                <BookOpenIcon className='w-3 h-3' />
+                <BookOpenIcon className="w-3 h-3" />
                 Guide
               </Button>
             )}
@@ -191,17 +191,17 @@ export function WalkthroughStepCard({
     if (!stepData) {
       return (
         <Card className={`${className} border-blue-500 bg-blue-500/10`}>
-          <div className='text-center py-8'>
-            <BookOpenIcon className='w-16 h-16 text-zinc-400 mx-auto mb-4' />
-            <h4 className='text-lg font-semibold text-white mb-2'>
+          <div className="text-center py-8">
+            <BookOpenIcon className="w-16 h-16 text-zinc-400 mx-auto mb-4" />
+            <h4 className="text-lg font-semibold text-white mb-2">
               No Active Step
             </h4>
-            <p className='text-zinc-300 mb-4'>
+            <p className="text-zinc-300 mb-4">
               Start your walkthrough to begin tracking progress.
             </p>
             {onViewGuide && (
-              <Button onClick={onViewGuide} variant='primary' size='md'>
-                <BookOpenIcon className='w-4 h-4' />
+              <Button onClick={onViewGuide} variant="primary" size="md">
+                <BookOpenIcon className="w-4 h-4" />
                 View Walkthrough Guide
               </Button>
             )}
@@ -226,16 +226,16 @@ export function WalkthroughStepCard({
       icon={<MapPinIcon />}
       accentColor={isActiveStep ? 'blue' : 'zinc'}
     >
-      <div className='p-4 space-y-4'>
+      <div className="p-4 space-y-4">
         {/* Completion Zone */}
-        <div className='bg-blue-500/5 border border-blue-500/20 p-3'>
-          <div className='flex items-center gap-2'>
-            <MapPinIcon className='w-4 h-4 text-blue-400 flex-shrink-0' />
-            <span className='text-zinc-300 font-medium text-sm'>
+        <div className="bg-blue-500/5 border border-blue-500/20 p-3">
+          <div className="flex items-center gap-2">
+            <MapPinIcon className="w-4 h-4 text-blue-400 flex-shrink-0" />
+            <span className="text-zinc-300 font-medium text-sm">
               Enter{' '}
               <button
                 onClick={() => openZone(stepData.completion_zone)}
-                className='text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium'
+                className="text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium"
               >
                 {stepData.completion_zone}
               </button>
@@ -244,8 +244,8 @@ export function WalkthroughStepCard({
         </div>
 
         {/* Description */}
-        <div className='bg-zinc-800/30 border border-zinc-700/20 p-3'>
-          <p className='text-sm text-zinc-300'>
+        <div className="bg-zinc-800/30 border border-zinc-700/20 p-3">
+          <p className="text-sm text-zinc-300">
             <ParsedText
               text={stepData.description}
               wikiItems={filteredWikiItems}
@@ -256,17 +256,17 @@ export function WalkthroughStepCard({
 
         {/* Objectives */}
         {stepData.objectives.length > 0 && (
-          <div className='bg-zinc-800/40 p-4 border border-zinc-700/30'>
-            <h5 className='text-sm font-medium text-zinc-200 mb-3'>
+          <div className="bg-zinc-800/40 p-4 border border-zinc-700/30">
+            <h5 className="text-sm font-medium text-zinc-200 mb-3">
               Objectives ({stepData.objectives.length}):
             </h5>
-            <ul className='space-y-4'>
+            <ul className="space-y-4">
               {stepData.objectives.map((objective, index) => (
-                <li key={index} className='text-xs'>
-                  <div className='flex items-start gap-2'>
-                    <div className='w-1.5 h-1.5 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0' />
-                    <div className='flex-1 space-y-1'>
-                      <div className='font-medium text-zinc-200 flex items-center gap-2'>
+                <li key={index} className="text-xs">
+                  <div className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0" />
+                    <div className="flex-1 space-y-1">
+                      <div className="font-medium text-zinc-200 flex items-center gap-2">
                         {objective.required !== undefined && (
                           <StarIcon
                             className={`w-3 h-3 ${
@@ -287,9 +287,9 @@ export function WalkthroughStepCard({
                         objective.notes ||
                         (objective.rewards &&
                           objective.rewards.length > 0)) && (
-                        <div className='border-l-2 border-zinc-500 pl-2 ml-1.5 space-y-1'>
+                        <div className="border-l-2 border-zinc-500 pl-2 ml-1.5 space-y-1">
                           {objective.details && (
-                            <div className='text-xs text-zinc-400'>
+                            <div className="text-xs text-zinc-400">
                               <ParsedText
                                 text={objective.details}
                                 wikiItems={filteredWikiItems}
@@ -298,7 +298,7 @@ export function WalkthroughStepCard({
                             </div>
                           )}
                           {objective.notes && (
-                            <div className='text-xs text-blue-400 italic'>
+                            <div className="text-xs text-blue-400 italic">
                               Note:{' '}
                               <ParsedText
                                 text={objective.notes}
@@ -309,10 +309,10 @@ export function WalkthroughStepCard({
                           )}
                           {objective.rewards &&
                             objective.rewards.length > 0 && (
-                              <div className='text-xs flex items-center gap-1'>
+                              <div className="text-xs flex items-center gap-1">
                                 <GiftIcon
-                                  className='w-3 h-3 text-purple-400'
-                                  title='Rewards'
+                                  className="w-3 h-3 text-purple-400"
+                                  title="Rewards"
                                 />
                                 <ParsedText
                                   text={objective.rewards.join(', ')}
@@ -334,60 +334,60 @@ export function WalkthroughStepCard({
 
       {/* Footer */}
       {(isActiveVariant || (onSkipToStep && !isCurrent)) && (
-        <div className='flex justify-between items-center py-2 px-4 border-t border-zinc-700/30'>
+        <div className="flex justify-between items-center py-2 px-4 border-t border-zinc-700/30">
           {isActiveVariant && progress ? (
             <>
-              <div className='flex items-center gap-2 text-xs text-zinc-500'>
-                <ClockIcon className='w-3 h-3' />
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
+                <ClockIcon className="w-3 h-3" />
                 Last updated: {formatLastUpdated(progress.last_updated)}
               </div>
-              <div className='flex gap-2'>
+              <div className="flex gap-2">
                 {hasPreviousStep && (
                   <Button
                     onClick={handlePreviousStep}
-                    variant='text'
-                    size='xs'
-                    title='Previous step'
+                    variant="text"
+                    size="xs"
+                    title="Previous step"
                   >
-                    <ArrowLeftIcon className='mr-1 w-3 h-3' />
+                    <ArrowLeftIcon className="mr-1 w-3 h-3" />
                     Previous
                   </Button>
                 )}
                 {!progress.is_completed && (
                   <Button
                     onClick={handleAdvanceStep}
-                    variant='text'
-                    size='xs'
-                    title='Next step'
+                    variant="text"
+                    size="xs"
+                    title="Next step"
                   >
                     Next
-                    <ArrowRightIcon className='ml-1 w-3 h-3' />
+                    <ArrowRightIcon className="ml-1 w-3 h-3" />
                   </Button>
                 )}
                 {onViewGuide && (
                   <Button
                     onClick={onViewGuide}
-                    variant='text'
-                    size='xs'
-                    className='gap-1'
-                    title='View guide'
+                    variant="text"
+                    size="xs"
+                    className="gap-1"
+                    title="View guide"
                   >
-                    <BookOpenIcon className='w-3 h-3' />
+                    <BookOpenIcon className="w-3 h-3" />
                     Guide
                   </Button>
                 )}
               </div>
             </>
           ) : (
-            <div className='flex justify-end w-full'>
+            <div className="flex justify-end w-full">
               <Button
                 onClick={() => onSkipToStep?.(stepData.id)}
-                variant='text'
-                size='xs'
-                className='gap-1'
-                title='Go to this step'
+                variant="text"
+                size="xs"
+                className="gap-1"
+                title="Go to this step"
               >
-                <ArrowRightIcon className='w-3 h-3' />
+                <ArrowRightIcon className="w-3 h-3" />
                 Go Here
               </Button>
             </div>

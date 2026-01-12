@@ -6,7 +6,7 @@ import { Accordion } from './accordion';
 describe('Accordion', () => {
   it('renders title correctly', () => {
     render(
-      <Accordion title='Test Title' isExpanded={false} onToggle={vi.fn()}>
+      <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
         <div>Content</div>
       </Accordion>
     );
@@ -17,8 +17,8 @@ describe('Accordion', () => {
   it('renders subtitle when provided', () => {
     render(
       <Accordion
-        title='Test Title'
-        subtitle='Test Subtitle'
+        title="Test Title"
+        subtitle="Test Subtitle"
         isExpanded={false}
         onToggle={vi.fn()}
       >
@@ -31,7 +31,7 @@ describe('Accordion', () => {
 
   it('does not render subtitle when not provided', () => {
     render(
-      <Accordion title='Test Title' isExpanded={false} onToggle={vi.fn()}>
+      <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
         <div>Content</div>
       </Accordion>
     );
@@ -41,7 +41,7 @@ describe('Accordion', () => {
 
   it('shows content when expanded', () => {
     render(
-      <Accordion title='Test Title' isExpanded={true} onToggle={vi.fn()}>
+      <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
         <div>Expanded Content</div>
       </Accordion>
     );
@@ -51,7 +51,7 @@ describe('Accordion', () => {
 
   it('hides content when collapsed', () => {
     render(
-      <Accordion title='Test Title' isExpanded={false} onToggle={vi.fn()}>
+      <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
         <div>Hidden Content</div>
       </Accordion>
     );
@@ -64,7 +64,7 @@ describe('Accordion', () => {
     const handleToggle = vi.fn();
 
     render(
-      <Accordion title='Test Title' isExpanded={false} onToggle={handleToggle}>
+      <Accordion title="Test Title" isExpanded={false} onToggle={handleToggle}>
         <div>Content</div>
       </Accordion>
     );
@@ -77,10 +77,10 @@ describe('Accordion', () => {
   it('applies custom className', () => {
     const { container } = render(
       <Accordion
-        title='Test Title'
+        title="Test Title"
         isExpanded={false}
         onToggle={vi.fn()}
-        className='custom-class'
+        className="custom-class"
       >
         <div>Content</div>
       </Accordion>
@@ -91,9 +91,9 @@ describe('Accordion', () => {
 
   it('renders complex children when expanded', () => {
     render(
-      <Accordion title='Test Title' isExpanded={true} onToggle={vi.fn()}>
-        <div data-testid='child-1'>Child 1</div>
-        <div data-testid='child-2'>Child 2</div>
+      <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
+        <div data-testid="child-1">Child 1</div>
+        <div data-testid="child-2">Child 2</div>
       </Accordion>
     );
 
@@ -104,7 +104,7 @@ describe('Accordion', () => {
   describe('Accessibility', () => {
     it('has proper ARIA attributes when collapsed', () => {
       render(
-        <Accordion title='Test Title' isExpanded={false} onToggle={vi.fn()}>
+        <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
           <div>Content</div>
         </Accordion>
       );
@@ -116,7 +116,7 @@ describe('Accordion', () => {
 
     it('has proper ARIA attributes when expanded', () => {
       render(
-        <Accordion title='Test Title' isExpanded={true} onToggle={vi.fn()}>
+        <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
           <div>Content</div>
         </Accordion>
       );
@@ -132,7 +132,7 @@ describe('Accordion', () => {
 
     it('links button to content panel via aria-controls', () => {
       render(
-        <Accordion title='Test Title' isExpanded={true} onToggle={vi.fn()}>
+        <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
           <div>Expanded Content</div>
         </Accordion>
       );
@@ -148,13 +148,13 @@ describe('Accordion', () => {
 
     it('hides decorative icons from screen readers', () => {
       const { container } = render(
-        <Accordion title='Test Title' isExpanded={false} onToggle={vi.fn()}>
+        <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
           <div>Content</div>
         </Accordion>
       );
 
       const icons = container.querySelectorAll('svg');
-      icons.forEach((icon) => {
+      icons.forEach(icon => {
         expect(icon).toHaveAttribute('aria-hidden', 'true');
       });
     });
@@ -162,10 +162,10 @@ describe('Accordion', () => {
     it('uses unique IDs for multiple accordions', () => {
       render(
         <>
-          <Accordion title='Accordion 1' isExpanded={false} onToggle={vi.fn()}>
+          <Accordion title="Accordion 1" isExpanded={false} onToggle={vi.fn()}>
             <div>Content 1</div>
           </Accordion>
-          <Accordion title='Accordion 2' isExpanded={true} onToggle={vi.fn()}>
+          <Accordion title="Accordion 2" isExpanded={true} onToggle={vi.fn()}>
             <div>Content 2</div>
           </Accordion>
         </>

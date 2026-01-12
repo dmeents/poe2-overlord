@@ -362,11 +362,7 @@ mod tests {
 
         for pattern in patterns {
             let result = validator.validate_path(pattern);
-            assert!(
-                result.is_err(),
-                "Pattern '{}' should be rejected",
-                pattern
-            );
+            assert!(result.is_err(), "Pattern '{}' should be rejected", pattern);
         }
     }
 }

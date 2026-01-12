@@ -156,7 +156,8 @@ export function useZoneList(zones: ZoneStats[]) {
               break;
             default:
               // Fix: Compare numeric value directly (filter is "Act 1", zoneActString is "1")
-              if (zoneActString !== filters.act.replace('Act ', '')) return false;
+              if (zoneActString !== filters.act.replace('Act ', ''))
+                return false;
               break;
           }
         }

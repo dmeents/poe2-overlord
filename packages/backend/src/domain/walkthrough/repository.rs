@@ -68,10 +68,7 @@ impl WalkthroughRepository for WalkthroughRepositoryImpl {
         // Fast path: read from cache with read lock
         let cache = self.cached_guide.read().await;
         cache.clone().ok_or_else(|| {
-            AppError::internal_error(
-                "load_guide",
-                "Guide cache is empty after load attempt",
-            )
+            AppError::internal_error("load_guide", "Guide cache is empty after load attempt")
         })
     }
 }

@@ -223,11 +223,7 @@ mod tests {
 
     #[test]
     fn test_tracking_summary_from_zones_hideout() {
-        let mut zones = vec![ZoneStats::new(
-            "My Hideout".to_string(),
-            None,
-            false,
-        )];
+        let mut zones = vec![ZoneStats::new("My Hideout".to_string(), None, false)];
         zones[0].add_time(300);
 
         let summary = TrackingSummary::from_zones("char-123", &zones);

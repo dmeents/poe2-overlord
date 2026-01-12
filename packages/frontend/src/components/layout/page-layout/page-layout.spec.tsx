@@ -54,7 +54,7 @@ describe('PageLayout', () => {
       <PageLayout
         leftColumn={<div>Left Content</div>}
         rightColumn={<div>Right Content</div>}
-        className='custom-class'
+        className="custom-class"
       />
     );
 

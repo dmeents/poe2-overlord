@@ -125,9 +125,7 @@ impl CurrencyCore {
             .collect();
 
         // Sort by rate ascending (smallest rate = highest value currency first)
-        candidates.sort_by(|a, b| {
-            a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
-        });
+        candidates.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Return the highest-value non-primary/non-secondary currency (smallest rate)
         candidates.first().map(|(item, _rate)| *item)

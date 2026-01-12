@@ -127,11 +127,11 @@ export const CharacterCard = memo(function CharacterCard({
     >
       {/* Ascendency Background Overlay */}
       {ascendencyImage && (
-        <div className='absolute inset-0' style={overlayStyles} />
+        <div className="absolute inset-0" style={overlayStyles} />
       )}
       {/* Header Section with Gradient Background */}
-      <div className='relative p-5 pb-4' style={headerBackgroundStyles}>
-        <div className='flex items-center gap-3 mb-5'>
+      <div className="relative p-5 pb-4" style={headerBackgroundStyles}>
+        <div className="flex items-center gap-3 mb-5">
           {/* Character Level */}
           <div
             className={`w-8 h-8 bg-gradient-to-br ${classLevelColors.bg} border ${classLevelColors.border} flex items-center justify-center flex-shrink-0`}
@@ -142,7 +142,7 @@ export const CharacterCard = memo(function CharacterCard({
           </div>
 
           {/* Character Name */}
-          <h3 className='text-xl font-bold text-white truncate flex-1'>
+          <h3 className="text-xl font-bold text-white truncate flex-1">
             {character.name}
           </h3>
 
@@ -150,22 +150,22 @@ export const CharacterCard = memo(function CharacterCard({
           {showDetails && (
             <button
               onClick={handleToggleDetails}
-              className='p-1.5 bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100'
+              className="p-1.5 bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100"
               title={isDetailsExpanded ? 'Hide details' : 'Show details'}
             >
               <svg
                 className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
                   isDetailsExpanded ? 'rotate-180' : ''
                 }`}
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   strokeWidth={2}
-                  d='M19 9l-7 7-7-7'
+                  d="M19 9l-7 7-7-7"
                 />
               </svg>
             </button>
@@ -173,20 +173,20 @@ export const CharacterCard = memo(function CharacterCard({
 
           {/* Action Buttons */}
           {interactive && (
-            <div className='flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <Button
                 onClick={handleEditClick}
-                variant='outline'
-                size='sm'
-                className='bg-zinc-800/80 backdrop-blur-sm'
+                variant="outline"
+                size="sm"
+                className="bg-zinc-800/80 backdrop-blur-sm"
               >
                 Edit
               </Button>
               <Button
                 onClick={handleDeleteClick}
-                variant='outline'
-                size='sm'
-                className='text-red-400 hover:text-red-300 hover:border-red-400 bg-zinc-800/80 backdrop-blur-sm'
+                variant="outline"
+                size="sm"
+                className="text-red-400 hover:text-red-300 hover:border-red-400 bg-zinc-800/80 backdrop-blur-sm"
               >
                 Delete
               </Button>
@@ -195,25 +195,25 @@ export const CharacterCard = memo(function CharacterCard({
         </div>
 
         {/* Character Details */}
-        <div className='flex items-center gap-6 mb-2'>
-          <div className='space-y-1'>
-            <div className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+        <div className="flex items-center gap-6 mb-2">
+          <div className="space-y-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
               Class
             </div>
             <div className={`text-sm font-medium ${classColor}`}>
               {character.class}
             </div>
           </div>
-          <div className='space-y-1'>
-            <div className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+          <div className="space-y-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
               Ascendency
             </div>
-            <div className='text-sm text-zinc-300 font-medium'>
+            <div className="text-sm text-zinc-300 font-medium">
               {character.ascendency}
             </div>
           </div>
-          <div className='space-y-1'>
-            <div className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+          <div className="space-y-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
               League
             </div>
             <div className={`text-sm font-medium text-zinc-300`}>
@@ -232,45 +232,45 @@ export const CharacterCard = memo(function CharacterCard({
             isDetailsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className='px-5 py-4 bg-zinc-900 border-t border-zinc-700/50'>
-            <div className='grid grid-cols-1 gap-3'>
+          <div className="px-5 py-4 bg-zinc-900 border-t border-zinc-700/50">
+            <div className="grid grid-cols-1 gap-3">
               {/* Play Time */}
-              <div className='flex items-center justify-between'>
-                <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
                   Play Time
                 </span>
-                <span className='text-sm font-medium text-zinc-300'>
+                <span className="text-sm font-medium text-zinc-300">
                   {formatDuration(character.summary?.total_play_time || 0)}
                 </span>
               </div>
 
               {/* Deaths */}
-              <div className='flex items-center justify-between'>
-                <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
                   Deaths
                 </span>
-                <span className='text-sm font-medium text-zinc-300'>
+                <span className="text-sm font-medium text-zinc-300">
                   {character.summary?.total_deaths || 0}
                 </span>
               </div>
 
               {/* Zones Visited */}
-              <div className='flex items-center justify-between'>
-                <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
                   Zones Visited
                 </span>
-                <span className='text-sm font-medium text-zinc-300'>
+                <span className="text-sm font-medium text-zinc-300">
                   {character.summary?.total_zones_visited || 0}
                 </span>
               </div>
 
               {/* Last Played */}
               {character.last_played && (
-                <div className='flex items-center justify-between'>
-                  <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
                     Last Played
                   </span>
-                  <span className='text-sm font-medium text-zinc-300'>
+                  <span className="text-sm font-medium text-zinc-300">
                     {formatDate(character.last_played)}
                   </span>
                 </div>
@@ -278,12 +278,12 @@ export const CharacterCard = memo(function CharacterCard({
 
               {/* Location */}
               {currentLocation && (
-                <div className='flex items-center justify-between'>
-                  <span className='text-xs text-zinc-500 uppercase tracking-wide font-medium'>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
                     {isActive ? 'Current Location' : 'Location'}
                   </span>
                   <span
-                    className='text-sm font-medium text-zinc-300'
+                    className="text-sm font-medium text-zinc-300"
                     title={formatCurrentLocation(currentLocation)}
                   >
                     {formatCurrentLocation(currentLocation)}

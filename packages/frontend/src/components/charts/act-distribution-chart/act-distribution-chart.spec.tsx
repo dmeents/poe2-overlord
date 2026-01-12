@@ -6,18 +6,18 @@ import type { CharacterData, CharacterSummary } from '@/types/character';
 // Mock Recharts components since they require DOM measurements
 vi.mock('recharts', () => ({
   ResponsiveContainer: vi.fn(({ children }) => (
-    <div data-testid='responsive-container'>{children}</div>
+    <div data-testid="responsive-container">{children}</div>
   )),
   PieChart: vi.fn(({ children }) => (
-    <div data-testid='pie-chart'>{children}</div>
+    <div data-testid="pie-chart">{children}</div>
   )),
   Pie: vi.fn(({ children, data }) => (
-    <div data-testid='pie' data-entries={data?.length}>
+    <div data-testid="pie" data-entries={data?.length}>
       {children}
     </div>
   )),
-  Cell: vi.fn(() => <div data-testid='cell' />),
-  Tooltip: vi.fn(() => <div data-testid='tooltip' />),
+  Cell: vi.fn(() => <div data-testid="cell" />),
+  Tooltip: vi.fn(() => <div data-testid="tooltip" />),
 }));
 
 const createMockSummary = (
@@ -183,7 +183,7 @@ describe('ActDistributionChart', () => {
       const { container } = render(
         <ActDistributionChart
           character={createMockCharacter()}
-          className='custom-class'
+          className="custom-class"
         />
       );
 

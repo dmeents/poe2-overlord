@@ -81,42 +81,42 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
 
   if (characters.length === 0) {
     return (
-      <Card title='Character Insights' icon={<ChartBarIcon />}>
+      <Card title="Character Insights" icon={<ChartBarIcon />}>
         <EmptyState
-          icon={<InboxIcon className='w-8 h-8' />}
-          title='No Characters to Analyze'
-          description='Create some characters to view insights'
+          icon={<InboxIcon className="w-8 h-8" />}
+          title="No Characters to Analyze"
+          description="Create some characters to view insights"
         />
       </Card>
     );
   }
 
   return (
-    <Card title='Insights' icon={<ChartBarIcon />}>
+    <Card title="Insights" icon={<ChartBarIcon />}>
       <div>
         {metrics.mostPlayedCharacter && (
           <DataItem
-            label='Most Played'
+            label="Most Played"
             value={metrics.mostPlayedCharacter.name}
             subValue={`Level ${metrics.mostPlayedCharacter.level} • ${formatPlayTime(
               metrics.mostPlayedCharacter.summary.total_play_time
             )}`}
           />
         )}
-        <DataItem label='Total Characters' value={metrics.totalCharacters} />
-        <DataItem label='Highest Level' value={metrics.highestLevel} />
-        <DataItem label='Average Level' value={metrics.averageLevel} />
+        <DataItem label="Total Characters" value={metrics.totalCharacters} />
+        <DataItem label="Highest Level" value={metrics.highestLevel} />
+        <DataItem label="Average Level" value={metrics.averageLevel} />
       </div>
       <div>
         <DataItem
-          label='Total Play Time'
+          label="Total Play Time"
           value={formatPlayTime(metrics.totalPlayTime)}
         />
-        <DataItem label='Total Deaths' value={metrics.totalDeaths} />
+        <DataItem label="Total Deaths" value={metrics.totalDeaths} />
       </div>
       <div>
-        <DataItem label='Hardcore Characters' value={metrics.hardcoreCount} />
-        <DataItem label='SSF Characters' value={metrics.ssfCount} />
+        <DataItem label="Hardcore Characters" value={metrics.hardcoreCount} />
+        <DataItem label="SSF Characters" value={metrics.ssfCount} />
       </div>
       {Object.keys(metrics.leagueDistribution).length > 0 && (
         <>

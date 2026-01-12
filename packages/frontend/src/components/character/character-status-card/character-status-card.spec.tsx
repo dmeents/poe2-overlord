@@ -135,7 +135,7 @@ describe('CharacterStatusCard', () => {
     });
 
     const { container } = render(
-      <CharacterStatusCard className='custom-class' />
+      <CharacterStatusCard className="custom-class" />
     );
 
     expect(container.firstChild).toHaveClass('custom-class');
@@ -148,7 +148,7 @@ describe('CharacterStatusCard', () => {
     });
 
     const { container } = render(
-      <CharacterStatusCard className='custom-class' />
+      <CharacterStatusCard className="custom-class" />
     );
 
     expect(container.firstChild).toHaveClass('custom-class');

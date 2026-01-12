@@ -98,11 +98,11 @@ export const CharacterList = memo(function CharacterList({
   if (totalCount === 0) {
     return (
       <EmptyState
-        icon={<UserIcon className='h-12 w-12' />}
-        title='No Characters'
-        description='Create your first character to start tracking your adventures.'
+        icon={<UserIcon className="h-12 w-12" />}
+        title="No Characters"
+        description="Create your first character to start tracking your adventures."
         action={
-          <Button onClick={onCreateCharacter} variant='primary'>
+          <Button onClick={onCreateCharacter} variant="primary">
             Create Character
           </Button>
         }
@@ -140,20 +140,20 @@ export const CharacterList = memo(function CharacterList({
           })}
         </div>
       ) : (
-        <div className='flex flex-col items-center justify-center py-16 px-6 text-center'>
-          <div className='w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4'>
-            <MagnifyingGlassIcon className='w-8 h-8 text-zinc-500' />
+        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+          <div className="w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4">
+            <MagnifyingGlassIcon className="w-8 h-8 text-zinc-500" />
           </div>
-          <h3 className='text-lg font-medium text-zinc-300 mb-2'>
+          <h3 className="text-lg font-medium text-zinc-300 mb-2">
             No characters found
           </h3>
-          <p className='text-zinc-500 mb-4 max-w-md'>
+          <p className="text-zinc-500 mb-4 max-w-md">
             No characters match your current search and filter criteria. Try
             adjusting your filters or search terms.
           </p>
           <button
             onClick={onClearFilters}
-            className='px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors'
+            className="px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
           >
             Clear All Filters
           </button>

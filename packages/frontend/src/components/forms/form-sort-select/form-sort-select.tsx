@@ -108,11 +108,11 @@ export function SortSelect({
 
       <div className={formSortSelectStyles.triggerContainer} ref={triggerRef}>
         <button
-          type='button'
+          type="button"
           className={formSortSelectStyles.trigger}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          aria-haspopup='listbox'
+          aria-haspopup="listbox"
           aria-expanded={isOpen}
         >
           <span className={formSortSelectStyles.triggerText}>
@@ -141,7 +141,7 @@ export function SortSelect({
           <div className={formSortSelectStyles.header}>
             <h4 className={formSortSelectStyles.headerTitle}>Sort Options</h4>
             <button
-              type='button'
+              type="button"
               onClick={handleReset}
               className={formSortSelectStyles.resetButton}
             >
@@ -149,7 +149,7 @@ export function SortSelect({
             </button>
           </div>
 
-          <div className={formSortSelectStyles.optionsList} role='listbox'>
+          <div className={formSortSelectStyles.optionsList} role="listbox">
             {options.map(option => {
               const isSelected = option.value === value;
               return (
@@ -159,7 +159,7 @@ export function SortSelect({
                     isSelected ? formSortSelectStyles.optionSelected : ''
                   }`}
                   onClick={() => handleOptionSelect(option.value)}
-                  role='option'
+                  role="option"
                   aria-selected={isSelected}
                 >
                   <span className={formSortSelectStyles.optionLabel}>
@@ -176,7 +176,7 @@ export function SortSelect({
           {/* Direction Toggle */}
           <div className={formSortSelectStyles.directionToggle}>
             <button
-              type='button'
+              type="button"
               onClick={handleDirectionToggle}
               className={formSortSelectStyles.directionButton}
             >

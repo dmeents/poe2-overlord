@@ -66,10 +66,9 @@ mod tests {
         });
 
         // Wait for all requests with timeout to detect deadlock
-        let timeout_result = tokio::time::timeout(
-            std::time::Duration::from_secs(15),
-            async { tokio::join!(handle1, handle2, handle3) },
-        )
+        let timeout_result = tokio::time::timeout(std::time::Duration::from_secs(15), async {
+            tokio::join!(handle1, handle2, handle3)
+        })
         .await;
 
         // Should complete (even if with errors) - no deadlock
@@ -113,10 +112,9 @@ mod tests {
         });
 
         // Wait with timeout
-        let timeout_result = tokio::time::timeout(
-            std::time::Duration::from_secs(15),
-            async { tokio::join!(handle1, handle2, handle3) },
-        )
+        let timeout_result = tokio::time::timeout(std::time::Duration::from_secs(15), async {
+            tokio::join!(handle1, handle2, handle3)
+        })
         .await;
 
         // All should complete (even if with errors)

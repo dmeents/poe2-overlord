@@ -16,8 +16,8 @@ vi.mock('../zone-card/zone-card', () => ({
 
 vi.mock('../zone-list-controls-form/zone-list-controls-form', () => ({
   ZoneListControlsForm: vi.fn(({ onClearFilters }) => (
-    <div data-testid='zone-list-controls'>
-      <button onClick={onClearFilters} data-testid='clear-filters-controls'>
+    <div data-testid="zone-list-controls">
+      <button onClick={onClearFilters} data-testid="clear-filters-controls">
         Clear Filters
       </button>
     </div>

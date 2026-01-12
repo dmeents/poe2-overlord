@@ -105,10 +105,7 @@ impl CharacterService for CharacterServiceImpl {
 
         // Step 2: Save index (if this fails, no character file exists - clean state)
         self.repository.save_characters_index(&index).await?;
-        log::debug!(
-            "Index updated with new character ID: {}",
-            character_data.id
-        );
+        log::debug!("Index updated with new character ID: {}", character_data.id);
 
         // Step 3: Write character file (if this fails, rollback index)
         match self.repository.save_character_data(&character_data).await {
@@ -438,7 +435,8 @@ impl CharacterService for CharacterServiceImpl {
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
         // Apply zone tracking business logic to leave zone
-        self.zone_tracking.leave_zone(&mut character_data, zone_name)?;
+        self.zone_tracking
+            .leave_zone(&mut character_data, zone_name)?;
 
         // Update timestamps
         character_data.touch();

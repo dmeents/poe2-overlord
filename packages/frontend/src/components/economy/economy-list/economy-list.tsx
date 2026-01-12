@@ -36,7 +36,7 @@ export function EconomyList({
   return (
     <div>
       {/* Controls */}
-      <div className='mb-4'>
+      <div className="mb-4">
         <CurrencyListControlsForm
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
@@ -53,9 +53,9 @@ export function EconomyList({
 
       {/* Currency List */}
       {isSearching ? (
-        <LoadingSpinner className='py-12' />
+        <LoadingSpinner className="py-12" />
       ) : filteredCurrencies.length === 0 ? (
-        <div className='text-center py-8 text-zinc-400'>
+        <div className="text-center py-8 text-zinc-400">
           {searchQuery
             ? `No currencies found matching "${searchQuery}"`
             : hasActiveFilters

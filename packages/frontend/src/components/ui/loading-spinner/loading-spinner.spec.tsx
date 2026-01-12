@@ -10,7 +10,7 @@ describe('LoadingSpinner', () => {
   });
 
   it('renders with message when provided', () => {
-    render(<LoadingSpinner message='Loading data...' />);
+    render(<LoadingSpinner message="Loading data..." />);
 
     expect(screen.getByText('Loading data...')).toBeInTheDocument();
   });
@@ -22,7 +22,7 @@ describe('LoadingSpinner', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(<LoadingSpinner className='custom-class' />);
+    const { container } = render(<LoadingSpinner className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });

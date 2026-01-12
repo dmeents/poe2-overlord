@@ -109,10 +109,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         let mut entries = tokio::fs::read_dir(&self.data_dir).await.map_err(|e| {
             AppError::file_system_error(
                 "list_character_files",
-                &format!(
-                    "Failed to read data directory {:?}: {}",
-                    self.data_dir, e
-                ),
+                &format!("Failed to read data directory {:?}: {}", self.data_dir, e),
             )
         })?;
 

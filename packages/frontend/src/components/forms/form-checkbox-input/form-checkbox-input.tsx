@@ -27,7 +27,7 @@ export function CheckboxInput({
           <div className={formCheckboxInputStyles.inputContainer}>
             <input
               id={id}
-              type='checkbox'
+              type="checkbox"
               checked={checked}
               onChange={e => onChange(e.target.checked)}
               className={formCheckboxInputStyles.checkbox}

@@ -128,7 +128,7 @@ describe('ZoneCard', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <ZoneCard zone={mockZone} className='custom-class' />
+      <ZoneCard zone={mockZone} className="custom-class" />
     );
 
     expect(container.firstChild).toHaveClass('custom-class');

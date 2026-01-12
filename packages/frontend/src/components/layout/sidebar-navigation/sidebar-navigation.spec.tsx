@@ -77,7 +77,7 @@ describe('SidebarNavigation', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <SidebarNavigation className='custom-class' />
+      <SidebarNavigation className="custom-class" />
     );
 
     expect(container.firstChild).toHaveClass('custom-class');

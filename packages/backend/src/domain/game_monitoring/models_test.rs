@@ -112,7 +112,9 @@ mod tests {
         // Should include common POE process names
         assert!(config.process_names.contains(&"pathofexile2".to_string()));
         assert!(config.process_names.contains(&"poe2".to_string()));
-        assert!(config.process_names.contains(&"pathofexile2.exe".to_string()));
+        assert!(config
+            .process_names
+            .contains(&"pathofexile2.exe".to_string()));
     }
 
     #[test]

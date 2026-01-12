@@ -51,20 +51,20 @@ describe('Button', () => {
   });
 
   it('accepts custom type prop', () => {
-    render(<Button type='submit'>Submit</Button>);
+    render(<Button type="submit">Submit</Button>);
 
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
   });
 
   it('applies custom className', () => {
-    render(<Button className='custom-class'>Click me</Button>);
+    render(<Button className="custom-class">Click me</Button>);
 
     expect(screen.getByRole('button')).toHaveClass('custom-class');
   });
 
   it('applies id and title attributes', () => {
     render(
-      <Button id='test-id' title='test title'>
+      <Button id="test-id" title="test title">
         Click me
       </Button>
     );

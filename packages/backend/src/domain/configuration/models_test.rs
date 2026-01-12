@@ -106,10 +106,7 @@ mod tests {
 
     #[test]
     fn test_zone_refresh_interval_display() {
-        assert_eq!(
-            format!("{}", ZoneRefreshInterval::FiveMinutes),
-            "5 Minutes"
-        );
+        assert_eq!(format!("{}", ZoneRefreshInterval::FiveMinutes), "5 Minutes");
         assert_eq!(format!("{}", ZoneRefreshInterval::OneHour), "1 Hour");
     }
 
@@ -122,8 +119,7 @@ mod tests {
 
     #[test]
     fn test_zone_refresh_interval_deserialization() {
-        let interval: ZoneRefreshInterval =
-            serde_json::from_str("\"TwentyFourHours\"").unwrap();
+        let interval: ZoneRefreshInterval = serde_json::from_str("\"TwentyFourHours\"").unwrap();
         assert_eq!(interval, ZoneRefreshInterval::TwentyFourHours);
     }
 
@@ -133,10 +129,7 @@ mod tests {
     fn test_app_config_new() {
         let config = AppConfig::new();
         assert_eq!(config.log_level, "info");
-        assert_eq!(
-            config.zone_refresh_interval,
-            ZoneRefreshInterval::SevenDays
-        );
+        assert_eq!(config.zone_refresh_interval, ZoneRefreshInterval::SevenDays);
     }
 
     #[test]
@@ -144,10 +137,7 @@ mod tests {
         let config = AppConfig::with_values("/custom/path".to_string(), "debug".to_string());
         assert_eq!(config.poe_client_log_path, "/custom/path");
         assert_eq!(config.log_level, "debug");
-        assert_eq!(
-            config.zone_refresh_interval,
-            ZoneRefreshInterval::SevenDays
-        );
+        assert_eq!(config.zone_refresh_interval, ZoneRefreshInterval::SevenDays);
     }
 
     #[test]
@@ -305,8 +295,7 @@ mod tests {
 
     #[test]
     fn test_app_config_validate_rejects_path_traversal() {
-        let config =
-            AppConfig::with_values("../../../etc/passwd".to_string(), "info".to_string());
+        let config = AppConfig::with_values("../../../etc/passwd".to_string(), "info".to_string());
         let result = config.validate();
         assert!(result.is_err());
         // Should mention traversal or security in error
@@ -429,8 +418,7 @@ mod tests {
 
     #[test]
     fn test_configuration_file_info_nonexistent_file() {
-        let info =
-            ConfigurationFileInfo::new(PathBuf::from("/nonexistent/path/config.json"));
+        let info = ConfigurationFileInfo::new(PathBuf::from("/nonexistent/path/config.json"));
         assert!(!info.exists);
         assert!(info.size.is_none());
         assert!(info.last_modified.is_none());

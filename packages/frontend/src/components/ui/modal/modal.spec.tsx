@@ -26,7 +26,7 @@ describe('Modal', () => {
 
   it('renders title when provided', () => {
     render(
-      <Modal isOpen={true} onClose={vi.fn()} title='Test Title'>
+      <Modal isOpen={true} onClose={vi.fn()} title="Test Title">
         <div>Content</div>
       </Modal>
     );
@@ -39,7 +39,7 @@ describe('Modal', () => {
       <Modal
         isOpen={true}
         onClose={vi.fn()}
-        icon={<span data-testid='test-icon'>Icon</span>}
+        icon={<span data-testid="test-icon">Icon</span>}
       >
         <div>Content</div>
       </Modal>
@@ -132,7 +132,7 @@ describe('Modal', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <Modal isOpen={true} onClose={vi.fn()} className='custom-class'>
+      <Modal isOpen={true} onClose={vi.fn()} className="custom-class">
         <div>Content</div>
       </Modal>
     );

@@ -517,7 +517,10 @@ mod tests {
         assert_eq!(deserialized.id, character.id);
         assert_eq!(deserialized.profile.name, character.profile.name);
         assert_eq!(deserialized.profile.class, character.profile.class);
-        assert_eq!(deserialized.profile.ascendency, character.profile.ascendency);
+        assert_eq!(
+            deserialized.profile.ascendency,
+            character.profile.ascendency
+        );
         assert_eq!(deserialized.profile.league, character.profile.league);
         assert_eq!(deserialized.profile.hardcore, character.profile.hardcore);
     }

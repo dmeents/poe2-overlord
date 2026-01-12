@@ -127,10 +127,7 @@ export function Modal({
   return (
     <div className={modalStyles.overlay}>
       <div className={modalStyles.container} onClick={handleBackdropClick}>
-        <div
-          className={modalStyles.backdrop}
-          aria-hidden="true"
-        />
+        <div className={modalStyles.backdrop} aria-hidden="true" />
         <div
           ref={modalRef}
           role="dialog"
@@ -163,20 +160,20 @@ export function Modal({
                     onClick={onClose}
                     className={modalStyles.closeButton}
                     disabled={disabled}
-                    aria-label='Close modal'
+                    aria-label="Close modal"
                   >
                     <svg
                       className={modalStyles.closeIcon}
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                       aria-hidden="true"
                     >
                       <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                         strokeWidth={2}
-                        d='M6 18L18 6M6 6l12 12'
+                        d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
                   </button>

@@ -30,9 +30,9 @@ export function WalkthroughActAccordion({
       subtitle={`${Object.keys(act.steps).length} steps`}
       isExpanded={isExpanded}
       onToggle={() => onToggle(actKey)}
-      className='mb-4'
+      className="mb-4"
     >
-      <div className='space-y-3'>
+      <div className="space-y-3">
         {Object.values(act.steps)
           .sort((a, b) => {
             const aStepNum = parseInt(a.id.split('_').pop() || '0');

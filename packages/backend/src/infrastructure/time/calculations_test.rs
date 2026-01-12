@@ -219,7 +219,10 @@ mod tests {
         let new_entry = Utc::now();
         let new_exit = new_entry + Duration::hours(1);
 
-        let existing = vec![(new_exit + Duration::hours(1), Some(new_exit + Duration::hours(2)))];
+        let existing = vec![(
+            new_exit + Duration::hours(1),
+            Some(new_exit + Duration::hours(2)),
+        )];
 
         let result = validate_no_session_overlap(new_entry, Some(new_exit), &existing);
 

@@ -83,9 +83,27 @@ This is the **master orchestrator PRD** that executes all 8 batch PRDs in priori
 
 ---
 
+## Initial State Detection
+
+**Before starting orchestration loop**:
+
+1. Check if master log exists: `.ai/sessions/[any-date]-pipeline-execution.md`
+2. If exists:
+   - Read master log to find last verified batch
+   - Read `deferred-issues.md` to check completion counter
+   - Resume from next batch after last verified
+3. If not exists:
+   - This is first run
+   - Check `deferred-issues.md` for any completed batches:
+     - If counter shows (6/61): Batch 1 already complete, start from Batch 2
+     - If counter shows (0/61): Start from Batch 1
+   - Create new master log
+
+---
+
 ## Orchestration Loop
 
-**For EACH batch (1-8)**:
+**For EACH batch (starting from determined batch)**:
 
 ### Step 1: Pre-Flight Check
 
@@ -354,7 +372,7 @@ After Batch 8 verified:
 ## Ralph Command
 
 ```bash
-/ralph-loop:ralph-loop "Follow .ai/tasks/current-prd.md to execute pipeline of 8 batch PRDs. For each batch: pre-flight check, execute batch PRD, wait for batch completion promise, verify results, update master log, output batch verified promise, ask user to continue. Handle failures gracefully. Output PIPELINE_COMPLETE when all 8 batches done." --max-iterations 2000 --completion-promise "PIPELINE_COMPLETE"
+/ralph-loop:ralph-loop "Follow .ai/tasks/current-prd.md to execute pipeline of 8 batch PRDs. FIRST: check deferred-issues.md counter to detect already-completed batches and determine starting point. THEN for each remaining batch: pre-flight check, execute batch PRD, wait for batch completion promise, verify results, update master log, output batch verified promise, ask user to continue. Handle failures gracefully. Output PIPELINE_COMPLETE when all 8 batches done." --max-iterations 2000 --completion-promise "PIPELINE_COMPLETE"
 ```
 
 ---

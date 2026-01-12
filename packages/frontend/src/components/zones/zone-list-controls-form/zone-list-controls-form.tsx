@@ -109,28 +109,28 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
   };
 
   return (
-    <div className='space-y-4 p-4'>
+    <div className="space-y-4 p-4">
       {/* Controls */}
-      <div className='space-y-4'>
+      <div className="space-y-4">
         {/* First Row: Search Bar */}
-        <div className='mb-4'>
+        <div className="mb-4">
           <Input
-            id='zone-search'
+            id="zone-search"
             value={filters.search}
             onChange={(value: string | number | null) =>
               onFilterChange('search', value as string)
             }
-            type='search'
-            placeholder='Search zones, acts, or location types...'
-            label='Search'
+            type="search"
+            placeholder="Search zones, acts, or location types..."
+            label="Search"
           />
         </div>
 
         {/* Second Row: Sorts, Filters, and Reset */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Filters */}
           <div>
-            <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
+            <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
               Filters
             </label>
             <FilterToggle
@@ -139,23 +139,23 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               label={hasActiveFilters ? 'Filters Active' : 'All Filters'}
               activeCount={activeFilterCount}
             >
-              <div className='space-y-3'>
+              <div className="space-y-3">
                 {/* Act Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='act-filter'
+                    id="act-filter"
                     value={filters.act}
                     onChange={value => onFilterChange('act', value)}
                     options={ACTS}
-                    variant='dropdown'
-                    label='Act'
+                    variant="dropdown"
+                    label="Act"
                   />
                 </div>
 
                 {/* Town Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='town-filter'
+                    id="town-filter"
                     value={
                       filters.isTown === null
                         ? 'All'
@@ -173,15 +173,15 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       { value: 'Town', label: 'Towns Only' },
                       { value: 'Non-Town', label: 'Non-Towns Only' },
                     ]}
-                    variant='dropdown'
-                    label='Town Status'
+                    variant="dropdown"
+                    label="Town Status"
                   />
                 </div>
 
                 {/* Active Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='active-filter'
+                    id="active-filter"
                     value={
                       filters.isActive === null
                         ? 'All'
@@ -199,15 +199,15 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       { value: 'Active', label: 'Active Only' },
                       { value: 'Inactive', label: 'Inactive Only' },
                     ]}
-                    variant='dropdown'
-                    label='Status'
+                    variant="dropdown"
+                    label="Status"
                   />
                 </div>
 
                 {/* Bosses Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='bosses-filter'
+                    id="bosses-filter"
                     value={
                       filters.hasBosses === null
                         ? 'All'
@@ -225,15 +225,15 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       { value: 'HasBosses', label: 'Has Bosses' },
                       { value: 'NoBosses', label: 'No Bosses' },
                     ]}
-                    variant='dropdown'
-                    label='Bosses'
+                    variant="dropdown"
+                    label="Bosses"
                   />
                 </div>
 
                 {/* Waypoint Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='waypoint-filter'
+                    id="waypoint-filter"
                     value={
                       filters.hasWaypoint === null
                         ? 'All'
@@ -251,15 +251,15 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       { value: 'HasWaypoint', label: 'Has Waypoint' },
                       { value: 'NoWaypoint', label: 'No Waypoint' },
                     ]}
-                    variant='dropdown'
-                    label='Waypoint'
+                    variant="dropdown"
+                    label="Waypoint"
                   />
                 </div>
 
                 {/* NPCs Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='npcs-filter'
+                    id="npcs-filter"
                     value={
                       filters.hasNpcs === null
                         ? 'All'
@@ -277,34 +277,34 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       { value: 'HasNpcs', label: 'Has NPCs' },
                       { value: 'NoNpcs', label: 'No NPCs' },
                     ]}
-                    variant='dropdown'
-                    label='NPCs'
+                    variant="dropdown"
+                    label="NPCs"
                   />
                 </div>
 
                 {/* Visit Count Filters */}
                 <div className={filterSectionClasses}>
-                  <div className='grid grid-cols-2 gap-2'>
+                  <div className="grid grid-cols-2 gap-2">
                     <Input
-                      id='min-visits-filter'
+                      id="min-visits-filter"
                       value={filters.minVisits}
                       onChange={value =>
                         onFilterChange('minVisits', value as number | null)
                       }
-                      type='number'
-                      label='Min Visits'
-                      placeholder='Any'
+                      type="number"
+                      label="Min Visits"
+                      placeholder="Any"
                       min={0}
                     />
                     <Input
-                      id='max-visits-filter'
+                      id="max-visits-filter"
                       value={filters.maxVisits}
                       onChange={value =>
                         onFilterChange('maxVisits', value as number | null)
                       }
-                      type='number'
-                      label='Max Visits'
-                      placeholder='Any'
+                      type="number"
+                      label="Max Visits"
+                      placeholder="Any"
                       min={0}
                     />
                   </div>
@@ -312,27 +312,27 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
 
                 {/* Death Count Filters */}
                 <div className={filterSectionClasses}>
-                  <div className='grid grid-cols-2 gap-2'>
+                  <div className="grid grid-cols-2 gap-2">
                     <Input
-                      id='min-deaths-filter'
+                      id="min-deaths-filter"
                       value={filters.minDeaths}
                       onChange={value =>
                         onFilterChange('minDeaths', value as number | null)
                       }
-                      type='number'
-                      label='Min Deaths'
-                      placeholder='Any'
+                      type="number"
+                      label="Min Deaths"
+                      placeholder="Any"
                       min={0}
                     />
                     <Input
-                      id='max-deaths-filter'
+                      id="max-deaths-filter"
                       value={filters.maxDeaths}
                       onChange={value =>
                         onFilterChange('maxDeaths', value as number | null)
                       }
-                      type='number'
-                      label='Max Deaths'
-                      placeholder='Any'
+                      type="number"
+                      label="Max Deaths"
+                      placeholder="Any"
                       min={0}
                     />
                   </div>
@@ -344,7 +344,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                     <h4 className={filterSectionTitleClasses}>
                       Active Filters
                     </h4>
-                    <div className='flex flex-wrap gap-2'>
+                    <div className="flex flex-wrap gap-2">
                       {filters.act !== 'All' && (
                         <span className={activeFilterChipClasses}>
                           Act: {filters.act}
@@ -472,11 +472,11 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
 
                 {/* Clear Filters Button */}
                 {hasActiveFilters && (
-                  <div className='flex justify-end'>
+                  <div className="flex justify-end">
                     <Button
                       onClick={onClearFilters}
-                      variant='outline'
-                      size='sm'
+                      variant="outline"
+                      size="sm"
                       className={clearButtonClasses}
                     >
                       Clear All Filters
@@ -487,13 +487,13 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
             </FilterToggle>
           </div>
           <div>
-            <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
+            <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
               Sort
             </label>
-            <div className='flex gap-2'>
-              <div className='flex-1'>
+            <div className="flex gap-2">
+              <div className="flex-1">
                 <SortSelect
-                  id='zone-sort'
+                  id="zone-sort"
                   value={sort.field}
                   direction={sort.direction}
                   onChange={handleSortChange}
@@ -503,12 +503,12 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               </div>
             </div>
           </div>
-          <div className='flex flex-col justify-end'>
-            <div className='h-6'></div>
+          <div className="flex flex-col justify-end">
+            <div className="h-6"></div>
             <Button
               onClick={handleReset}
-              variant='outline'
-              className='h-10 px-4 text-sm'
+              variant="outline"
+              className="h-10 px-4 text-sm"
             >
               Reset All
             </Button>

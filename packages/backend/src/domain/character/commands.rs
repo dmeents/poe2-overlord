@@ -81,5 +81,9 @@ pub async fn reconcile_character_storage(
     strategy: crate::domain::character::models::CleanupStrategy,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<crate::domain::character::models::OrphanCleanupReport> {
-    to_command_result(character_service.reconcile_character_storage(strategy).await)
+    to_command_result(
+        character_service
+            .reconcile_character_storage(strategy)
+            .await,
+    )
 }

@@ -151,104 +151,104 @@ export function CharacterFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size='2xl'
+      size="2xl"
       title={character ? 'Edit Character' : 'Create Character'}
       disabled={isLoading}
     >
-      <form onSubmit={handleSubmit} className='space-y-6'>
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className={getFormFieldClasses()}>
-          <FormField label='Character Name'>
-            <div className='flex gap-2'>
-              <div className='flex-1'>
+          <FormField label="Character Name">
+            <div className="flex gap-2">
+              <div className="flex-1">
                 <Input
-                  id='character-name'
+                  id="character-name"
                   value={formData.name}
                   onChange={value => handleInputChange('name', value as string)}
-                  type='text'
-                  placeholder='Enter character name'
+                  type="text"
+                  placeholder="Enter character name"
                   isValid={!errors.name}
                   warningMessage={errors.name}
                 />
               </div>
-              <div className='flex items-center gap-1 border border-gray-700 bg-gray-800/50 px-2'>
-                <span className='text-xs text-gray-400'>Generate:</span>
+              <div className="flex items-center gap-1 border border-gray-700 bg-gray-800/50 px-2">
+                <span className="text-xs text-gray-400">Generate:</span>
                 <Button
-                  type='button'
-                  variant='icon'
-                  size='sm'
+                  type="button"
+                  variant="icon"
+                  size="sm"
                   onClick={() => handleGenerateName('male')}
                   disabled={isLoading}
-                  title='Generate masculine name'
-                  className='shrink-0'
+                  title="Generate masculine name"
+                  className="shrink-0"
                 >
-                  <MarsIcon className='h-4 w-4' />
+                  <MarsIcon className="h-4 w-4" />
                 </Button>
                 <Button
-                  type='button'
-                  variant='icon'
-                  size='sm'
+                  type="button"
+                  variant="icon"
+                  size="sm"
                   onClick={() => handleGenerateName('female')}
                   disabled={isLoading}
-                  title='Generate feminine name'
-                  className='shrink-0'
+                  title="Generate feminine name"
+                  className="shrink-0"
                 >
-                  <VenusIcon className='h-4 w-4' />
+                  <VenusIcon className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           </FormField>
-          <FormField label='Class'>
+          <FormField label="Class">
             <Select
-              id='character-class'
+              id="character-class"
               value={formData.class}
               onChange={value => handleInputChange('class', value)}
               options={characterClasses}
-              variant='basic'
+              variant="basic"
             />
           </FormField>
-          <FormField label='Ascendency'>
+          <FormField label="Ascendency">
             <Select
-              id='character-ascendency'
+              id="character-ascendency"
               value={formData.ascendency}
               onChange={value => handleInputChange('ascendency', value)}
               options={availableAscendencies}
-              variant='basic'
+              variant="basic"
             />
           </FormField>
-          <FormField label='League'>
+          <FormField label="League">
             <Select
-              id='character-league'
+              id="character-league"
               value={formData.league}
               onChange={value => handleInputChange('league', value)}
               options={leagues}
-              variant='basic'
+              variant="basic"
             />
           </FormField>
           <CheckboxInput
-            id='character-hardcore'
-            label='Hardcore'
+            id="character-hardcore"
+            label="Hardcore"
             checked={formData.hardcore}
             onChange={checked => handleInputChange('hardcore', checked)}
-            description='Hardcore characters have permanent death and cannot be revived.'
+            description="Hardcore characters have permanent death and cannot be revived."
           />
           <CheckboxInput
-            id='character-ssf'
-            label='Solo Self-Found (SSF)'
+            id="character-ssf"
+            label="Solo Self-Found (SSF)"
             checked={formData.solo_self_found}
             onChange={checked => handleInputChange('solo_self_found', checked)}
-            description='Solo Self-Found characters cannot trade with other players or use shared stash.'
+            description="Solo Self-Found characters cannot trade with other players or use shared stash."
           />
         </div>
         <div className={getFormActionsClasses()}>
           <Button
-            type='button'
-            variant='outline'
+            type="button"
+            variant="outline"
             onClick={onClose}
             disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button type='submit' variant='primary' disabled={isLoading}>
+          <Button type="submit" variant="primary" disabled={isLoading}>
             {isLoading
               ? 'Saving...'
               : character

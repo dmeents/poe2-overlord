@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::infrastructure::parsing::parsers::zone_level_parser::ZoneLevelParser;
     use crate::infrastructure::parsing::manager::ParserResult;
+    use crate::infrastructure::parsing::parsers::zone_level_parser::ZoneLevelParser;
     use crate::infrastructure::parsing::LogParser;
 
     fn create_parser() -> ZoneLevelParser {

@@ -13,9 +13,9 @@ describe('SortSelect', () => {
   it('renders with selected option label', () => {
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
@@ -28,9 +28,9 @@ describe('SortSelect', () => {
   it('renders placeholder when no value selected', () => {
     render(
       <SortSelect
-        id='sort'
-        value=''
-        direction='asc'
+        id="sort"
+        value=""
+        direction="asc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
@@ -43,13 +43,13 @@ describe('SortSelect', () => {
   it('renders label when provided', () => {
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
-        label='Sort By'
+        label="Sort By"
       />
     );
 
@@ -61,9 +61,9 @@ describe('SortSelect', () => {
 
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
@@ -82,9 +82,9 @@ describe('SortSelect', () => {
 
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={handleChange}
         onReset={vi.fn()}
         options={mockOptions}
@@ -103,9 +103,9 @@ describe('SortSelect', () => {
 
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={vi.fn()}
         onReset={handleReset}
         options={mockOptions}
@@ -121,9 +121,9 @@ describe('SortSelect', () => {
   it('shows ascending direction indicator', () => {
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
@@ -136,9 +136,9 @@ describe('SortSelect', () => {
   it('shows descending direction indicator', () => {
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='desc'
+        id="sort"
+        value="name"
+        direction="desc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
@@ -151,9 +151,9 @@ describe('SortSelect', () => {
   it('disables button when disabled prop is true', () => {
     render(
       <SortSelect
-        id='sort'
-        value='name'
-        direction='asc'
+        id="sort"
+        value="name"
+        direction="asc"
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}

@@ -518,11 +518,20 @@ impl LogAnalysisServiceImpl {
             if let Some(active_zone) = character_data.zones.iter().find(|z| z.is_active) {
                 let previous_zone_name = active_zone.zone_name.clone();
                 if previous_zone_name != zone_name {
-                    debug!("Leaving previous zone '{}' before entering '{}'", previous_zone_name, zone_name);
-                    if let Err(e) = character_service.leave_zone(character_id, &previous_zone_name).await {
+                    debug!(
+                        "Leaving previous zone '{}' before entering '{}'",
+                        previous_zone_name, zone_name
+                    );
+                    if let Err(e) = character_service
+                        .leave_zone(character_id, &previous_zone_name)
+                        .await
+                    {
                         // Log warning but don't fail - defensive programming
                         // enter_zone has fallback deactivation code
-                        warn!("Failed to leave previous zone '{}': {}", previous_zone_name, e);
+                        warn!(
+                            "Failed to leave previous zone '{}': {}",
+                            previous_zone_name, e
+                        );
                     }
                 }
             }

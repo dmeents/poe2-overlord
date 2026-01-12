@@ -66,15 +66,15 @@ export const ZoneList = memo(function ZoneList({
   if (totalCount === 0) {
     return (
       <EmptyState
-        icon={<MapPinIcon className='h-12 w-12' />}
-        title='No Zone Data Available'
-        description='Start playing Path of Exile 2 to begin tracking your time in different locations.'
+        icon={<MapPinIcon className="h-12 w-12" />}
+        title="No Zone Data Available"
+        description="Start playing Path of Exile 2 to begin tracking your time in different locations."
       />
     );
   }
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       <ZoneListControlsForm
         filters={filters}
         onFilterChange={handleFilterChange}
@@ -85,19 +85,19 @@ export const ZoneList = memo(function ZoneList({
         onResetSort={handleResetSort}
       />
       {zones.length > 0 ? (
-        <div className='bg-zinc-900/50 border border-zinc-700/50 overflow-hidden'>
+        <div className="bg-zinc-900/50 border border-zinc-700/50 overflow-hidden">
           <div
-            className='grid gap-2 px-4 py-2 bg-zinc-800/50 border-b border-zinc-700/50 text-xs font-medium text-zinc-400 uppercase tracking-wider'
+            className="grid gap-2 px-4 py-2 bg-zinc-800/50 border-b border-zinc-700/50 text-xs font-medium text-zinc-400 uppercase tracking-wider"
             style={{
               gridTemplateColumns: '5fr 1fr 1fr 1fr 1fr 1fr',
             }}
           >
             <div>Zone</div>
-            <div className='text-right'>Act</div>
-            <div className='text-right'>Level</div>
-            <div className='text-right'>Visits</div>
-            <div className='text-right'>Deaths</div>
-            <div className='text-right'>Duration</div>
+            <div className="text-right">Act</div>
+            <div className="text-right">Level</div>
+            <div className="text-right">Visits</div>
+            <div className="text-right">Deaths</div>
+            <div className="text-right">Duration</div>
           </div>
           {zones.map((zone, index) => {
             return (
@@ -110,20 +110,20 @@ export const ZoneList = memo(function ZoneList({
           })}
         </div>
       ) : (
-        <div className='flex flex-col items-center justify-center py-16 px-6 text-center'>
-          <div className='w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4'>
-            <MagnifyingGlassIcon className='w-8 h-8 text-zinc-500' />
+        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+          <div className="w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4">
+            <MagnifyingGlassIcon className="w-8 h-8 text-zinc-500" />
           </div>
-          <h3 className='text-lg font-medium text-zinc-300 mb-2'>
+          <h3 className="text-lg font-medium text-zinc-300 mb-2">
             No zones found
           </h3>
-          <p className='text-zinc-500 mb-4 max-w-md'>
+          <p className="text-zinc-500 mb-4 max-w-md">
             No zones match your current search and filter criteria. Try
             adjusting your filters or search terms.
           </p>
           <button
             onClick={handleClearFilters}
-            className='px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors'
+            className="px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
           >
             Clear All Filters
           </button>

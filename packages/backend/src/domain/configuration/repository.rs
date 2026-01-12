@@ -99,7 +99,9 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         // We detect old configs by checking if the path validation fails (they didn't have validation before)
         let needs_path_migration = {
             let validator = PathValidator::new_for_poe_logs();
-            validator.validate_path(&config.poe_client_log_path).is_err()
+            validator
+                .validate_path(&config.poe_client_log_path)
+                .is_err()
         };
 
         if needs_path_migration {

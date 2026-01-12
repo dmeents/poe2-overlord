@@ -31,9 +31,10 @@ export function Tooltip({
   showIcon = false,
 }: TooltipProps) {
   // Use null to indicate tooltip is hidden; position is calculated before showing
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(
-    null
-  );
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
   // Show tooltip: calculate position first, then display

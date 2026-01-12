@@ -10,13 +10,13 @@ describe('ErrorState', () => {
   });
 
   it('renders custom title when provided', () => {
-    render(<ErrorState title='Custom Error Title' />);
+    render(<ErrorState title="Custom Error Title" />);
 
     expect(screen.getByText('Custom Error Title')).toBeInTheDocument();
   });
 
   it('renders message when provided', () => {
-    render(<ErrorState message='Something went wrong' />);
+    render(<ErrorState message="Something went wrong" />);
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
   });
@@ -28,7 +28,7 @@ describe('ErrorState', () => {
   });
 
   it('renders string error', () => {
-    render(<ErrorState error='Connection failed' />);
+    render(<ErrorState error="Connection failed" />);
 
     expect(screen.getByText('Connection failed')).toBeInTheDocument();
   });
@@ -41,7 +41,7 @@ describe('ErrorState', () => {
 
   it('prefers message over error prop', () => {
     render(
-      <ErrorState message='Custom message' error={new Error('Error message')} />
+      <ErrorState message="Custom message" error={new Error('Error message')} />
     );
 
     expect(screen.getByText('Custom message')).toBeInTheDocument();
@@ -60,13 +60,13 @@ describe('ErrorState', () => {
   });
 
   it('renders custom icon when provided', () => {
-    render(<ErrorState icon={<span data-testid='custom-icon'>X</span>} />);
+    render(<ErrorState icon={<span data-testid="custom-icon">X</span>} />);
 
     expect(screen.getByTestId('custom-icon')).toBeInTheDocument();
   });
 
   it('applies custom className', () => {
-    const { container } = render(<ErrorState className='custom-class' />);
+    const { container } = render(<ErrorState className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });

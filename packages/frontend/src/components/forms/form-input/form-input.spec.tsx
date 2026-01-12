@@ -5,14 +5,14 @@ import { Input } from './form-input';
 
 describe('Input', () => {
   it('renders with default type text', () => {
-    render(<Input id='test-input' value='' onChange={vi.fn()} />);
+    render(<Input id="test-input" value="" onChange={vi.fn()} />);
 
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
   it('renders with label when provided', () => {
     render(
-      <Input id='test-input' value='' onChange={vi.fn()} label='Test Label' />
+      <Input id="test-input" value="" onChange={vi.fn()} label="Test Label" />
     );
 
     expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
@@ -21,10 +21,10 @@ describe('Input', () => {
   it('renders placeholder text', () => {
     render(
       <Input
-        id='test-input'
-        value=''
+        id="test-input"
+        value=""
         onChange={vi.fn()}
-        placeholder='Enter text'
+        placeholder="Enter text"
       />
     );
 
@@ -35,7 +35,7 @@ describe('Input', () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
 
-    render(<Input id='test-input' value='' onChange={handleChange} />);
+    render(<Input id="test-input" value="" onChange={handleChange} />);
 
     await user.type(screen.getByRole('textbox'), 'a');
 
@@ -47,7 +47,7 @@ describe('Input', () => {
     const handleChange = vi.fn();
 
     render(
-      <Input id='test-input' value='' onChange={handleChange} type='number' />
+      <Input id="test-input" value="" onChange={handleChange} type="number" />
     );
 
     await user.type(screen.getByRole('spinbutton'), '5');
@@ -60,7 +60,7 @@ describe('Input', () => {
     const handleChange = vi.fn();
 
     render(
-      <Input id='test-input' value={5} onChange={handleChange} type='number' />
+      <Input id="test-input" value={5} onChange={handleChange} type="number" />
     );
 
     await user.clear(screen.getByRole('spinbutton'));
@@ -69,13 +69,13 @@ describe('Input', () => {
   });
 
   it('renders disabled state correctly', () => {
-    render(<Input id='test-input' value='' onChange={vi.fn()} disabled />);
+    render(<Input id="test-input" value="" onChange={vi.fn()} disabled />);
 
     expect(screen.getByRole('textbox')).toBeDisabled();
   });
 
   it('renders search input with magnifying glass icon', () => {
-    render(<Input id='test-input' value='' onChange={vi.fn()} type='search' />);
+    render(<Input id="test-input" value="" onChange={vi.fn()} type="search" />);
 
     // Search input renders as textbox (type is converted to text)
     expect(screen.getByRole('textbox')).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('Input', () => {
 
   it('shows clear button for search input with value', () => {
     render(
-      <Input id='test-input' value='test' onChange={vi.fn()} type='search' />
+      <Input id="test-input" value="test" onChange={vi.fn()} type="search" />
     );
 
     expect(
@@ -92,7 +92,7 @@ describe('Input', () => {
   });
 
   it('hides clear button when search input is empty', () => {
-    render(<Input id='test-input' value='' onChange={vi.fn()} type='search' />);
+    render(<Input id="test-input" value="" onChange={vi.fn()} type="search" />);
 
     expect(
       screen.queryByRole('button', { name: 'Clear input' })
@@ -106,10 +106,10 @@ describe('Input', () => {
 
     render(
       <Input
-        id='test-input'
-        value='test'
+        id="test-input"
+        value="test"
         onChange={handleChange}
-        type='search'
+        type="search"
         onClear={handleClear}
       />
     );
@@ -123,11 +123,11 @@ describe('Input', () => {
   it('shows warning message when invalid', () => {
     render(
       <Input
-        id='test-input'
-        value='invalid'
+        id="test-input"
+        value="invalid"
         onChange={vi.fn()}
         isValid={false}
-        warningMessage='This is invalid'
+        warningMessage="This is invalid"
       />
     );
 
@@ -137,11 +137,11 @@ describe('Input', () => {
   it('does not show warning message when valid', () => {
     render(
       <Input
-        id='test-input'
-        value='valid'
+        id="test-input"
+        value="valid"
         onChange={vi.fn()}
         isValid={true}
-        warningMessage='This is invalid'
+        warningMessage="This is invalid"
       />
     );
 
@@ -151,10 +151,10 @@ describe('Input', () => {
   it('applies custom className', () => {
     render(
       <Input
-        id='test-input'
-        value=''
+        id="test-input"
+        value=""
         onChange={vi.fn()}
-        className='custom-class'
+        className="custom-class"
       />
     );
 
@@ -164,10 +164,10 @@ describe('Input', () => {
   it('passes min, max, step to number input', () => {
     render(
       <Input
-        id='test-input'
+        id="test-input"
         value={5}
         onChange={vi.fn()}
-        type='number'
+        type="number"
         min={0}
         max={10}
         step={2}

@@ -21,10 +21,10 @@ export function CampaignInsights({
   const totalActs = Object.keys(guide.acts).length;
 
   return (
-    <Card title='Insights' icon={<ChartBarIcon />} className={className}>
+    <Card title="Insights" icon={<ChartBarIcon />} className={className}>
       <div>
-        <DataItem label='Total Acts' value={totalActs} />
-        <DataItem label='Total Steps' value={totalSteps} />
+        <DataItem label="Total Acts" value={totalActs} />
+        <DataItem label="Total Steps" value={totalSteps} />
       </div>
     </Card>
   );

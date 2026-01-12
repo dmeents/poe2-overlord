@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::infrastructure::parsing::parsers::character_level_parser::CharacterLevelParser;
     use crate::infrastructure::parsing::manager::ParserResult;
+    use crate::infrastructure::parsing::parsers::character_level_parser::CharacterLevelParser;
     use crate::infrastructure::parsing::LogParser;
 
     fn create_parser() -> CharacterLevelParser {
@@ -22,7 +22,14 @@ mod tests {
         let parser = create_parser();
 
         let classes = vec![
-            "Warrior", "Sorceress", "Ranger", "Huntress", "Monk", "Mercenary", "Witch", "Druid",
+            "Warrior",
+            "Sorceress",
+            "Ranger",
+            "Huntress",
+            "Monk",
+            "Mercenary",
+            "Witch",
+            "Druid",
         ];
 
         for class in classes {

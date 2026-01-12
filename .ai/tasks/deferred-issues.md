@@ -1,9 +1,9 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 15 (Quick Wins + Data Integrity + Event System)
+**Completed**: 16 (Quick Wins + Data Integrity + Event System + Real-Time Features)
 **In Progress**: 0
-**Remaining**: 46
+**Remaining**: 45
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
 
@@ -58,7 +58,7 @@
 **Impact**: Stale or corrupted economy data
 **Dependencies**: None
 
-### Issue #5: Real-Time Zone Timer
+### Issue #5: Real-Time Zone Timer ✅
 **Domain**: Zone Tracking
 **Severity**: CRITICAL (UX)
 **Type**: Functional Gap
@@ -67,6 +67,7 @@
 **Complexity**: MEDIUM - Needs useEffect intervals
 **Impact**: Poor UX, users can't see live time tracking
 **Dependencies**: None
+**Status**: ✅ Complete (Commit: 37f690b) - Added useElapsedTime hook for live timer updates
 
 ### Issue #6: Provider Dependency Documentation ✅
 **Domain**: UI Foundation

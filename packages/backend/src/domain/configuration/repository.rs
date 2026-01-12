@@ -4,8 +4,9 @@ use crate::domain::configuration::models::{
 use crate::domain::configuration::traits::ConfigurationRepository;
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::file_management::{AppPaths, FileService};
+use crate::infrastructure::PathValidator;
 use async_trait::async_trait;
-use log::debug;
+use log::{debug, warn};
 use std::path::PathBuf;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -49,6 +50,30 @@ impl ConfigurationRepositoryImpl {
         }
         Ok(())
     }
+
+    /// Migrate configuration with invalid/insecure POE path to use default path
+    async fn migrate_invalid_path(&self, mut config: AppConfig) -> AppConfig {
+        let validator = PathValidator::new_for_poe_logs();
+
+        match validator.validate_path(&config.poe_client_log_path) {
+            Ok(validated_path) => {
+                // Path is valid, update to canonical form
+                config.poe_client_log_path = validated_path.to_string_lossy().to_string();
+                debug!("POE path validated and canonicalized");
+            }
+            Err(e) => {
+                // Path is invalid/insecure, reset to default
+                warn!(
+                    "Existing POE path '{}' failed validation: {}. Resetting to default.",
+                    config.poe_client_log_path, e
+                );
+                config.poe_client_log_path = AppConfig::get_default_poe_client_log_path();
+            }
+        }
+
+        config.config_version = AppConfig::CURRENT_VERSION;
+        config
+    }
 }
 
 #[async_trait]
@@ -58,9 +83,26 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn load(&self) -> AppResult<AppConfig> {
-        let config: AppConfig = FileService::read_json_optional(&self.file_path)
+        let mut config: AppConfig = FileService::read_json_optional(&self.file_path)
             .await?
             .unwrap_or_default();
+
+        // Check if migration is needed (old config without version field defaults to CURRENT_VERSION via serde)
+        // We detect old configs by checking if the path validation fails (they didn't have validation before)
+        let needs_path_migration = {
+            let validator = PathValidator::new_for_poe_logs();
+            validator.validate_path(&config.poe_client_log_path).is_err()
+        };
+
+        if needs_path_migration {
+            debug!("Configuration needs path migration - validating and potentially resetting POE path");
+            config = self.migrate_invalid_path(config).await;
+
+            // Save migrated config
+            if let Err(e) = self.save(&config).await {
+                warn!("Failed to save migrated config: {}", e);
+            }
+        }
 
         {
             let mut current_config = self.config.write().await;
@@ -180,6 +222,11 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 "POE client log path cannot be empty",
             ));
         }
+
+        // Security validation
+        let validator = PathValidator::new_for_poe_logs();
+        validator.validate_path(path)?;
+
         Ok(())
     }
 

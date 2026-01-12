@@ -24,6 +24,10 @@ pub enum AppError {
     /// Serialization/deserialization errors
     #[error("Serialization error: {message}")]
     Serialization { message: String },
+
+    /// Security violations (path traversal, unauthorized access, etc.)
+    #[error("Security error: {message}")]
+    Security { message: String },
 }
 
 // Standard library error conversions
@@ -91,6 +95,13 @@ impl AppError {
     /// Convenience constructor for serialization errors
     pub fn serialization_error(operation: &str, message: &str) -> Self {
         Self::Serialization {
+            message: format!("{}: {}", operation, message),
+        }
+    }
+
+    /// Convenience constructor for security errors
+    pub fn security_error(operation: &str, message: &str) -> Self {
+        Self::Security {
             message: format!("{}: {}", operation, message),
         }
     }

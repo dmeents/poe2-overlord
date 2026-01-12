@@ -6,7 +6,8 @@ use crate::infrastructure::events::EventBus;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, EnrichedLocationState, EnrichedZoneStats, League, LocationState,
+    CharactersIndex, CleanupStrategy, EnrichedLocationState, EnrichedZoneStats, League,
+    LocationState, OrphanCleanupReport,
 };
 use super::traits::{CharacterRepository, CharacterService};
 use crate::domain::zone_tracking::ZoneStats;
@@ -541,6 +542,101 @@ impl CharacterService for CharacterServiceImpl {
         self.event_bus.publish(event).await?;
 
         Ok(())
+    }
+
+    async fn reconcile_character_storage(
+        &self,
+        strategy: CleanupStrategy,
+    ) -> Result<OrphanCleanupReport, AppError> {
+        log::info!(
+            "Starting character storage reconciliation with {:?} strategy",
+            strategy
+        );
+
+        // Load current index and filesystem state
+        let mut index = self.repository.load_characters_index().await?;
+        let files_on_disk = self.repository.list_character_data_files().await?;
+
+        let mut orphaned_files = Vec::new();
+        let mut missing_files = Vec::new();
+
+        // Find files on disk not in index (orphans)
+        for file_id in &files_on_disk {
+            if !index.has_character(file_id) {
+                orphaned_files.push(file_id.clone());
+            }
+        }
+
+        // Find IDs in index with no file (reverse orphans)
+        for index_id in &index.character_ids {
+            if !files_on_disk.contains(index_id) {
+                missing_files.push(index_id.clone());
+            }
+        }
+
+        log::info!(
+            "Found {} orphaned files and {} missing files",
+            orphaned_files.len(),
+            missing_files.len()
+        );
+
+        // Handle orphaned files based on strategy
+        for orphan_id in &orphaned_files {
+            match strategy {
+                CleanupStrategy::Conservative => {
+                    // Try to load the file and add to index if valid
+                    match self.repository.load_character_data(orphan_id).await {
+                        Ok(character_data) => {
+                            index.add_character(orphan_id.clone());
+                            log::info!(
+                                "Added orphaned character '{}' ({}) back to index",
+                                character_data.profile.name,
+                                orphan_id
+                            );
+                        }
+                        Err(e) => {
+                            log::warn!(
+                                "Failed to load orphaned file {}, deleting: {}",
+                                orphan_id,
+                                e
+                            );
+                            self.repository.delete_character_data(orphan_id).await?;
+                        }
+                    }
+                }
+                CleanupStrategy::Aggressive => {
+                    // Delete orphaned file
+                    self.repository.delete_character_data(orphan_id).await?;
+                    log::info!("Deleted orphaned character file: {}", orphan_id);
+                }
+            }
+        }
+
+        // Always remove missing files from index (they don't exist)
+        for missing_id in &missing_files {
+            index.remove_character(missing_id);
+            log::info!("Removed missing character {} from index", missing_id);
+        }
+
+        // Save reconciled index if there were any changes
+        if !orphaned_files.is_empty() || !missing_files.is_empty() {
+            self.repository.save_characters_index(&index).await?;
+            log::info!("Saved reconciled character index");
+        }
+
+        let report = OrphanCleanupReport {
+            orphaned_files,
+            missing_files,
+            total_characters: index.character_ids.len(),
+            strategy,
+        };
+
+        log::info!(
+            "Character storage reconciliation complete: {} total characters",
+            report.total_characters
+        );
+
+        Ok(report)
     }
 }
 

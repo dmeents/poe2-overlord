@@ -4,7 +4,7 @@ use crate::errors::AppError;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, League, LocationState,
+    CharactersIndex, CleanupStrategy, League, LocationState, OrphanCleanupReport,
 };
 
 #[async_trait]
@@ -22,6 +22,10 @@ pub trait CharacterRepository {
     async fn load_all_characters(&self) -> Result<Vec<CharacterData>, AppError>;
 
     async fn character_exists(&self, character_id: &str) -> Result<bool, AppError>;
+
+    /// Lists all character data files in the data directory.
+    /// Returns character IDs extracted from filenames (character_data_{id}.json pattern).
+    async fn list_character_data_files(&self) -> Result<Vec<String>, AppError>;
 }
 
 #[async_trait]
@@ -80,4 +84,13 @@ pub trait CharacterService: Send + Sync {
 
     /// Syncs zone metadata (act, is_town) for all zones in a character's data with current zone configuration
     async fn sync_zone_metadata(&self, character_id: &str) -> Result<(), AppError>;
+
+    /// Reconciles character storage by detecting and cleaning up orphaned files.
+    ///
+    /// - Conservative: Adds orphaned files back to index (preserve data)
+    /// - Aggressive: Deletes orphaned files from disk (clean state)
+    async fn reconcile_character_storage(
+        &self,
+        strategy: CleanupStrategy,
+    ) -> Result<OrphanCleanupReport, AppError>;
 }

@@ -554,3 +554,33 @@ impl Default for League {
         League::Standard
     }
 }
+
+// ============= Orphan Cleanup Types =============
+
+/// Strategy for handling orphaned character files
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum CleanupStrategy {
+    /// Add orphaned files back to index (preserve data)
+    Conservative,
+    /// Delete orphaned files from disk (clean state)
+    Aggressive,
+}
+
+impl Default for CleanupStrategy {
+    fn default() -> Self {
+        CleanupStrategy::Conservative
+    }
+}
+
+/// Report of orphan cleanup operation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct OrphanCleanupReport {
+    /// Files found on disk but not in index (added or deleted based on strategy)
+    pub orphaned_files: Vec<String>,
+    /// IDs in index but missing files (removed from index)
+    pub missing_files: Vec<String>,
+    /// Total characters after cleanup
+    pub total_characters: usize,
+    /// Cleanup strategy used
+    pub strategy: CleanupStrategy,
+}

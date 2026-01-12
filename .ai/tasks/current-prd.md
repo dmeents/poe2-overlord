@@ -1,214 +1,364 @@
-# PRD: Domain-Driven Functionality Refactoring
+# PRD: Pipeline Orchestrator - All Deferred Issues (61 Total)
 
-## Goal
+## Context
+This is the **master orchestrator PRD** that executes all 8 batch PRDs in priority order to systematically resolve all 61 deferred issues from the domain refactoring session (2026-01-11).
 
-Systematically analyze and refactor the entire codebase domain-by-domain, using a code analyzer subagent for deep analysis followed by implementation of functional improvements. Prioritize bugs, gaps, and inconsistencies over style.
+**Pipeline Overview**:
+- 8 batch PRDs to execute sequentially
+- 61 total issues across all batches
+- Each batch has dependencies on previous batches
+- Estimated total: 4-8 weeks of work
 
-## Domain Refactoring Order
+**Source of Truth**: `.ai/tasks/deferred-issues.md`
 
-### Phase 1: Infrastructure Domains
+---
 
-#### Domain 1: Configuration Management
+## Batch Execution Plan
 
-**Frontend**: `components/forms/settings-form`
-**Backend**: `domain/configuration/*`
-**Why First**: Everything depends on config
-**Checkpoint**: `<promise>CONFIG_DOMAIN_COMPLETE</promise>`
+### Batch 1: Quick Wins (6 issues)
+**PRD**: `.ai/tasks/prd-quick-wins.md`
+**Completion Promise**: `QUICK_WINS_COMPLETE`
+**Prerequisites**: None (first batch)
+**Remaining After**: 55 issues
+**Max Iterations**: 150
 
-#### Domain 2: Wiki Scraping (Backend only)
+### Batch 2: Data Integrity (7 issues)
+**PRD**: `.ai/tasks/prd-data-integrity.md`
+**Completion Promise**: `DATA_INTEGRITY_COMPLETE`
+**Prerequisites**: Batch 1 complete
+**Remaining After**: 48 issues
+**Max Iterations**: 250
 
-**Frontend**: N/A
-**Backend**: `domain/wiki_scraping/*`
-**Why Second**: Provides data for other domains
-**Checkpoint**: `<promise>WIKI_DOMAIN_COMPLETE</promise>`
+### Batch 3: Event System (2 issues)
+**PRD**: `.ai/tasks/prd-event-system.md`
+**Completion Promise**: `EVENT_SYSTEM_COMPLETE`
+**Prerequisites**: Batch 1, 2 complete
+**Remaining After**: 46 issues
+**Max Iterations**: 100
 
-#### Domain 3: Server/Game Monitoring
+### Batch 4: Real-Time Features (1 issue)
+**PRD**: `.ai/tasks/prd-real-time-features.md`
+**Completion Promise**: `REAL_TIME_COMPLETE`
+**Prerequisites**: Batch 1, 2, 3 complete
+**Remaining After**: 45 issues
+**Max Iterations**: 60
 
-**Frontend**: `components/status/*`
-**Backend**: `domain/server_monitoring/*`, `domain/game_monitoring/*`
-**Why Third**: Critical infrastructure
-**Checkpoint**: `<promise>MONITORING_DOMAIN_COMPLETE</promise>`
+### Batch 5: Refactors 1 - Config & Wiki (8 issues)
+**PRD**: `.ai/tasks/prd-refactors-1-config-wiki.md`
+**Completion Promise**: `REFACTORS_1_COMPLETE`
+**Prerequisites**: Batch 1-4 complete
+**Remaining After**: 37 issues
+**Max Iterations**: 250
 
-### Phase 2: Core User Features
+### Batch 6: Refactors 2 - Monitoring & Character (8 issues)
+**PRD**: `.ai/tasks/prd-refactors-2-monitoring-character.md`
+**Completion Promise**: `REFACTORS_2_COMPLETE`
+**Prerequisites**: Batch 5 complete
+**Remaining After**: 29 issues
+**Max Iterations**: 250
 
-#### Domain 4: Character Management
+### Batch 7: Refactors 3 - Zone & Economy (12 issues)
+**PRD**: `.ai/tasks/prd-refactors-3-zone-economy.md`
+**Completion Promise**: `REFACTORS_3_COMPLETE`
+**Prerequisites**: Batch 6 complete
+**Remaining After**: 17 issues
+**Max Iterations**: 350
 
-**Frontend**: `components/character/*` (6 components)
-**Backend**: `domain/character/*` (6 modules)
-**Why Fourth**: Primary user feature
-**Checkpoint**: `<promise>CHARACTER_DOMAIN_COMPLETE</promise>`
+### Batch 8: Refactors 4 - Walkthrough & UI (9 issues)
+**PRD**: `.ai/tasks/prd-refactors-4-walkthrough-ui.md`
+**Completion Promise**: `REFACTORS_4_COMPLETE`
+**Prerequisites**: Batch 7 complete
+**Remaining After**: 8 issues
+**Max Iterations**: 300
 
-#### Domain 5: Zone Tracking
+---
 
-**Frontend**: `components/zones/*` (5 components)
-**Backend**: `domain/zone_tracking/*`, `domain/zone_configuration/*`
-**Why Fifth**: Core gameplay tracking
-**Checkpoint**: `<promise>ZONE_DOMAIN_COMPLETE</promise>`
+## Orchestration Loop
 
-#### Domain 6: Economy System
+**For EACH batch (1-8)**:
 
-**Frontend**: `components/economy/*` (5 components)
-**Backend**: `domain/economy/*` (3 modules)
-**Why Sixth**: Important user feature
-**Checkpoint**: `<promise>ECONOMY_DOMAIN_COMPLETE</promise>`
+### Step 1: Pre-Flight Check
+1. Verify prerequisites complete (check master log)
+2. Verify current branch clean (`git status`)
+3. Verify tests passing baseline (517 frontend, 423 backend)
+4. Read batch PRD file
+5. Create batch session log: `.ai/sessions/[date]-[batch-name]-batch.md`
 
-### Phase 3: Supporting Features
+### Step 2: Execute Batch
+1. Follow batch PRD instructions **exactly**
+2. Use `@implementation-planner` for each issue per batch PRD
+3. Implement, test, commit per batch PRD loop
+4. Follow batch checkpoints (if any)
+5. Continue until batch completion promise received
 
-#### Domain 7: Walkthrough/Guides
+### Step 3: Verify Batch Completion
+When `<promise>[BATCH]_COMPLETE</promise>` received:
+1. **Verify issues marked**: All issues in batch marked ✅ in `deferred-issues.md`
+2. **Verify counters**: Issue count updated correctly (e.g., 6/61 → 13/61)
+3. **Verify commits**: All commits for batch pushed to remote
+4. **Verify tests**: Tests still passing (517 frontend, 423 backend)
+5. **Verify session log**: Batch session log complete and committed
 
-**Frontend**: `components/walkthrough/*` (3 components)
-**Backend**: `domain/walkthrough/*`
-**Why Seventh**: User guidance
-**Checkpoint**: `<promise>WALKTHROUGH_DOMAIN_COMPLETE</promise>`
+### Step 4: Update Master State
+1. Update master log: `.ai/sessions/[date]-pipeline-execution.md`:
+   - Mark batch complete ✅
+   - Note issues completed
+   - Note any problems or deviations
+   - Update overall progress counter
+2. Archive batch PRD: Move to `.ai/archive/completed-prds/[batch-name].md`
+3. Commit master log: `"docs: batch [N] complete - [X]/61 issues done"`
+4. Push all changes
 
-#### Domain 8: UI Foundation
+### Step 5: Checkpoint Gate
+1. Output parent checkpoint: `<promise>BATCH_[N]_VERIFIED</promise>`
+2. Use `AskUserQuestion`:
+   ```
+   "Batch [N] ([batch-name]) complete: [X]/61 issues done.
+   
+   Status:
+   - Issues fixed: [list of issue numbers]
+   - Tests: ✅ passing
+   - Commits: ✅ pushed
+   
+   Continue to Batch [N+1] ([next-batch-name])?
+   Options: 'yes' to continue, 'pause' to stop, 'skip' to skip next batch"
+   ```
+3. Wait for user response
 
-**Frontend**: `components/ui/*`, `components/forms/*`, `components/layout/*`
-**Backend**: N/A
-**Why Last**: Shared UI components
-**Checkpoint**: `<promise>UI_DOMAIN_COMPLETE</promise>`
+### Step 6: Handle User Response
+- **"yes"**: Continue to next batch (Step 1)
+- **"pause"**: Output `<promise>PIPELINE_PAUSED</promise>` and stop gracefully
+- **"skip"**: Mark next batch as SKIPPED, move to batch after that
 
-## Implementation Loop
+### Step 7: Final Completion
+After Batch 8 verified:
+1. Verify all 61 issues marked ✅ in `deferred-issues.md`
+2. Verify counter shows (61/61 complete)
+3. Create final summary in master log
+4. Output: `<promise>PIPELINE_COMPLETE</promise>` 🎉
 
-**For EACH domain**:
-
-### Step 1: Discovery & Mapping
-
-1. List all frontend components in domain
-2. List all backend modules in domain
-3. Identify shared types/contracts between FE and BE
-4. Document domain boundaries
-
-### Step 2: Deep Analysis (Use @code-analyzer)
-
-For EACH file/module in domain:
-
-- Invoke: `@code-analyzer "Analyze [file/module path] in the context of [domain name]. Provide structured recommendations prioritizing functional correctness."`
-- Parse analyzer output
-- Aggregate findings across domain
-
-### Step 3: Prioritized Implementation
-
-1. **Fix ALL Critical issues**:
-   - Bugs
-   - Data integrity problems
-   - Security vulnerabilities
-   - Functional gaps
-   - Contract violations
-
-2. **Fix MOST High Priority issues**:
-   - Logic errors
-   - State management issues
-   - Error handling gaps
-   - Performance bugs
-
-3. **Selectively fix Medium Priority**:
-   - High-impact code quality issues
-   - Important performance improvements
-   - Critical testing gaps
-
-### Step 4: Validation
-
-1. **Run tests**:
-   - Frontend: `yarn test` (filter by domain if possible)
-   - Backend: `cargo test` (filter by domain module)
-2. **Run linters**:
-   - Frontend: `yarn lint && yarn format`
-   - Backend: `cargo clippy`
-3. **Manual verification**:
-   - Test critical user flows for domain
-   - Verify frontend ↔ backend integration
-
-### Step 5: Documentation
-
-1. Update session log with:
-   - Issues found (by severity)
-   - Fixes implemented
-   - Testing results
-   - Any remaining TODOs
-
-### Step 6: Commit & Checkpoint
-
-1. **Commit domain changes**:
-   - Group by severity: "fix(domain): critical issues in [domain]"
-   - Or by feature: "fix(character): resolve data integrity issues"
-2. **Update session log**
-3. **HARD STOP**:
-   - Output `<promise>[DOMAIN]_COMPLETE</promise>`
-   - Use AskUserQuestion: "Domain [name] refactoring complete. Review changes and approve to continue to next domain?"
-4. **Push to remote**: `git push origin HEAD`
-5. Continue to next domain
+---
 
 ## Self-Healing
 
-Ralph should autonomously fix issues that arise:
+### Batch Fails to Complete
+**Symptoms**: No completion promise after max iterations, or verification fails
 
-### When Tests Fail
-- **Analyze the failure**: Read test output to understand what broke
-- **Determine root cause**: Is it the production code or the test itself?
-- **Fix appropriately**:
-  - If production code has a bug → fix the code
-  - If test is wrong/outdated → fix the test
-  - If both need changes → fix both
-- **Retry**: Run tests again to verify fix
-- **Iterate**: Repeat up to 3 times if needed
+**Action**:
+1. Document failure in master log
+2. Save current state (what was completed)
+3. Output `<promise>BATCH_[N]_FAILED</promise>`
+4. `AskUserQuestion`: "Batch [N] failed. Retry batch, skip batch, or pause pipeline?"
+5. Handle response:
+   - **retry**: Restart batch from beginning (up to 2 retries)
+   - **skip**: Mark batch as BLOCKED, continue to next
+   - **pause**: Stop pipeline gracefully
 
-### When Linter/Compiler Errors Occur
-- Fix linter errors in code or tests
-- Fix compilation errors
-- Run linter/compiler again to verify
+### Test Regression
+**Symptoms**: Tests passing before batch, failing after
 
-### When Analyzer Recommendations Are Unclear
-- Ask @code-analyzer for clarification with more context
-- Or use best judgment based on codebase patterns
+**Action**:
+1. Document regression in master log
+2. Output `<promise>TEST_REGRESSION_DETECTED</promise>`
+3. `AskUserQuestion`: "Tests regressed during batch [N]. Debug, rollback, or continue?"
+4. Handle response:
+   - **debug**: Investigate failing tests, fix, re-verify
+   - **rollback**: `git reset --hard` to before batch, mark BLOCKED
+   - **continue**: Accept regression, document reason
 
-### When Stuck
-- After 3 failed attempts on same issue:
-  - Document the problem in commit message
-  - Note in session log for manual review
-  - Skip to next file/module
-  - Continue with domain
+### Git Conflicts
+**Symptoms**: Cannot push commits due to conflicts
 
-**Key Principle**: Fix whatever is broken (code, tests, or both) to get tests passing. Don't skip fixes because tests break.
+**Action**:
+1. Attempt `git pull --rebase`
+2. If conflicts: Output `<promise>GIT_CONFLICT</promise>`
+3. `AskUserQuestion`: "Git conflicts detected. Resolve manually?"
+4. Wait for user to resolve, then continue
+
+### Iteration Limit Reached
+**Symptoms**: Batch hits max iterations without completion
+
+**Action**:
+1. Document in master log what was completed
+2. Output `<promise>ITERATION_LIMIT_REACHED</promise>`
+3. `AskUserQuestion`: "Batch [N] hit iteration limit. Extend limit and retry, or skip batch?"
+
+---
+
+## Master Session Log Structure
+
+**File**: `.ai/sessions/[date]-pipeline-execution.md`
+
+```markdown
+# Pipeline Execution - All Deferred Issues
+
+**Started**: YYYY-MM-DD HH:MM
+**Status**: IN_PROGRESS | PAUSED | COMPLETE | BLOCKED
+
+## Overall Progress
+- Total Issues: 61
+- Completed: X
+- Remaining: Y
+- Current Batch: [batch-name]
+
+## Batch Summary
+
+### ✅ Batch 1: Quick Wins (6 issues)
+- Started: YYYY-MM-DD HH:MM
+- Completed: YYYY-MM-DD HH:MM
+- Duration: Xh Ym
+- Issues: #6, #7, #15, #21, #25, #26
+- Commits: [list of commit SHAs]
+- Session Log: `.ai/sessions/[date]-quick-wins-batch.md`
+- Notes: [any important notes]
+
+### ✅ Batch 2: Data Integrity (7 issues)
+... (same structure)
+
+### 🚧 Batch 3: Event System (2 issues)
+- Status: IN_PROGRESS
+- Started: YYYY-MM-DD HH:MM
+... (same structure)
+
+### ⏳ Batch 4: Real-Time Features
+- Status: PENDING
+
+... (continue for all batches)
+
+## Issues Encountered
+- [Timestamp] Batch X: [description of issue]
+- [Timestamp] Resolution: [how it was handled]
+
+## Final Verification
+- [ ] All 61 issues marked ✅
+- [ ] Counter shows (61/61)
+- [ ] All tests passing
+- [ ] All commits pushed
+- [ ] All batch PRDs archived
+```
+
+---
+
+## Resume Capability
+
+### If Pipeline Paused or Interrupted
+
+1. **Check master log** for last verified batch
+2. **Resume from next batch**:
+   - If Batch 3 verified → Resume from Batch 4
+3. **Verify current state**:
+   - Check deferred-issues.md counters
+   - Verify tests still passing
+   - Check git status
+4. **Continue execution** from Step 1 of next batch
+
+### Resume Command
+
+```bash
+/ralph-wiggum:ralph-loop "Resume .ai/tasks/current-prd.md from last verified batch. Check master log at .ai/sessions/[date]-pipeline-execution.md to determine resume point, verify state, continue execution." --max-iterations 2000 --completion-promise "PIPELINE_COMPLETE"
+```
+
+---
 
 ## Success Criteria
 
-- All 8 domains analyzed and refactored
-- All Critical issues fixed
-- Most High Priority issues fixed
-- All tests passing
-- No critical bugs remaining
-- Frontend ↔ Backend contracts aligned
-- Session log documents all changes
+- [ ] All 8 batches executed
+- [ ] All 61 issues marked ✅ in deferred-issues.md
+- [ ] Issue counter shows (61/61 complete)
+- [ ] All tests passing (517 frontend, 423 backend)
+- [ ] No linter errors
+- [ ] All commits pushed to remote
+- [ ] All batch PRDs archived
+- [ ] Master session log complete
+- [ ] `<promise>PIPELINE_COMPLETE</promise>` output
 
-## Session Documentation
+---
 
-Maintain `.ai/sessions/2026-01-11-domain-refactoring.md` with:
+## Important Context for Ralph
 
-- Domains completed (list)
-- Issues found per domain (by severity)
-- Fixes implemented per domain
-- Test results
-- Remaining TODOs
-- Patterns/learnings discovered
+### Orchestration Role
+- You are the **meta-orchestrator**, not implementing issues directly
+- Follow each batch PRD's instructions exactly
+- Use batch completion promises as gates between batches
+- Update master state after each batch
+- Give user control at checkpoints
 
-## Completion Signal
+### Batch Execution
+- Each batch PRD is self-contained
+- Follow batch's specific instructions (don't deviate)
+- Use batch's subagent invocations as specified
+- Honor batch's checkpoints and promises
+- Let batch handle its own issue loop
 
-When all domains complete:
+### State Management
+- Master log is source of truth for pipeline state
+- deferred-issues.md is source of truth for issue status
+- Always verify before moving to next batch
+- Document everything in master log
 
-1. Final test suite run (frontend + backend)
-2. Update session log with final summary
-3. Update `.ai/memory/patterns.md` with learnings
-4. Update `.ai/memory/decisions.md` if architectural changes made
-5. Archive this PRD
-6. Push all commits
-7. Output `<promise>ALL_DOMAINS_COMPLETE</promise>`
+### User Interaction
+- Ask user at EVERY batch boundary
+- Give clear status (issues done, tests, commits)
+- Offer options (continue, pause, skip)
+- Respect user's choice
 
-## Notes
+### Failure Handling
+- Don't stop pipeline for single issue failures
+- Batch completion promises indicate batch success
+- Document failures in master log
+- Let user decide on retries/skips
 
-- Infrastructure first ensures stable foundation
-- Each domain checkpoint allows for review and course correction
-- Analyzer subagent gets fresh context per file/module
-- Main agent implements with full domain context
-- 600 iterations provides buffer for 8 domains with thorough analysis
-- Focus on "does it work?" before "is it elegant?"
+---
+
+## Ralph Command
+
+```bash
+/ralph-wiggum:ralph-loop "Follow .ai/tasks/current-prd.md to execute pipeline of 8 batch PRDs. For each batch: pre-flight check, execute batch PRD, wait for batch completion promise, verify results, update master log, output batch verified promise, ask user to continue. Handle failures gracefully. Output PIPELINE_COMPLETE when all 8 batches done." --max-iterations 2000 --completion-promise "PIPELINE_COMPLETE"
+```
+
+---
+
+## Project Context
+
+**Tech Stack**:
+- Frontend: React 19, TypeScript, TanStack Query, Tailwind CSS
+- Backend: Rust, Tauri 2.x, serde, tokio
+- Testing: Vitest + RTL (frontend), cargo test (backend)
+
+**Repository**:
+- Branch: `main` (or create feature branch per batch?)
+- Tests: Must pass at all times
+- Commits: Use conventional commits format
+
+**Key Files**:
+- Issue tracker: `.ai/tasks/deferred-issues.md`
+- Batch PRDs: `.ai/tasks/prd-*.md`
+- Master log: `.ai/sessions/[date]-pipeline-execution.md`
+- Batch logs: `.ai/sessions/[date]-[batch-name]-batch.md`
+
+---
+
+## Safety Limits
+
+- **Max iterations per batch**: See batch PRD (150-350)
+- **Max iterations total**: 2000 (safety limit)
+- **Max retries per batch**: 2
+- **Test regression tolerance**: 0 (must investigate)
+- **Required checkpoints**: After every batch
+
+---
+
+## Final Notes
+
+This is a long-running, complex pipeline. The key to success:
+
+1. **Follow batch PRDs exactly** - they have detailed instructions
+2. **Verify at every gate** - don't skip verification steps
+3. **Give user control** - ask at every batch boundary
+4. **Document everything** - master log is critical
+5. **Handle failures gracefully** - don't let one issue block entire pipeline
+6. **Respect completion promises** - they signal batch success
+7. **Update state religiously** - deferred-issues.md + master log
+8. **Test constantly** - verify tests pass between batches
+
+The pipeline is designed to be pausable, resumable, and self-documenting. Trust the process.

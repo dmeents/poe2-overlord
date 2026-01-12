@@ -6,6 +6,31 @@ import { windowTitleStyles } from './window-title.styles';
 const appWindow = getCurrentWindow();
 
 export const WindowTitle = () => {
+  // Wrap Tauri API calls with error handling to prevent crashes in browser dev mode
+  const handleMinimize = async () => {
+    try {
+      await appWindow.minimize();
+    } catch (error) {
+      console.error('Failed to minimize window:', error);
+    }
+  };
+
+  const handleMaximize = async () => {
+    try {
+      await appWindow.toggleMaximize();
+    } catch (error) {
+      console.error('Failed to maximize window:', error);
+    }
+  };
+
+  const handleClose = async () => {
+    try {
+      await appWindow.close();
+    } catch (error) {
+      console.error('Failed to close window:', error);
+    }
+  };
+
   return (
     <div data-tauri-drag-region className={windowTitleStyles.container}>
       <div data-tauri-drag-region className={windowTitleStyles.title}>
@@ -13,31 +38,31 @@ export const WindowTitle = () => {
       </div>
       <div className={windowTitleStyles.controls}>
         <Button
-          title='minimize'
+          title='Minimize window'
           variant='ghost'
           size='sm'
-          onClick={() => appWindow.minimize()}
+          onClick={handleMinimize}
           className={windowTitleStyles.controlButton}
         >
-          <MinusIcon className='w-4 h-4' />
+          <MinusIcon className='w-4 h-4' aria-hidden="true" />
         </Button>
         <Button
-          title='maximize'
+          title='Maximize window'
           variant='ghost'
           size='sm'
-          onClick={() => appWindow.toggleMaximize()}
+          onClick={handleMaximize}
           className={windowTitleStyles.controlButton}
         >
-          <WindowIcon className='w-4 h-4' />
+          <WindowIcon className='w-4 h-4' aria-hidden="true" />
         </Button>
         <Button
-          title='close'
+          title='Close window'
           variant='ghost'
           size='sm'
-          onClick={() => appWindow.close()}
+          onClick={handleClose}
           className={windowTitleStyles.controlButton}
         >
-          <XMarkIcon className='w-4 h-4' />
+          <XMarkIcon className='w-4 h-4' aria-hidden="true" />
         </Button>
       </div>
     </div>

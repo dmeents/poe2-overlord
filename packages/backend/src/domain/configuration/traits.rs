@@ -31,7 +31,7 @@ pub trait ConfigurationService: Send + Sync {
 
     async fn get_log_level(&self) -> AppResult<String>;
 
-    fn get_default_poe_client_log_path(&self) -> String;
+    async fn get_default_poe_client_log_path(&self) -> String;
 
     async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()>;
 

@@ -60,13 +60,14 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
             prev.map(char => (char.id === character_id ? characterData : char))
           );
 
-          if (character_id === activeCharacterWithUpdates?.id) {
-            setActiveCharacterWithUpdates(characterData);
-          }
+          // Use functional update to avoid stale closure issue
+          setActiveCharacterWithUpdates(prev =>
+            prev?.id === character_id ? characterData : prev
+          );
         },
       },
     ],
-    [activeCharacterWithUpdates?.id]
+    [] // Dependencies removed - using functional updates avoids stale closures
   );
 
   const isLoading = charactersLoading || activeCharacterLoading;

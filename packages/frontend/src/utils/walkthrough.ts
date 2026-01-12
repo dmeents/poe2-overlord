@@ -96,7 +96,8 @@ export class WalkthroughService {
       if (act.steps[stepId]) {
         return {
           step: act.steps[stepId],
-          act: act,
+          act_name: act.act_name,
+          act_number: act.act_number,
         };
       }
     }

@@ -25,7 +25,7 @@ impl ZoneStats {
             zone_name,
             duration: 0,
             deaths: 0,
-            visits: 1,
+            visits: 0, // Initialize to 0; activate() will set it to 1
             first_visited: now,
             last_visited: now,
             is_active: false,
@@ -129,28 +129,31 @@ impl TrackingSummary {
         let mut summary = Self::new(character_id.to_string());
 
         for zone in zones {
-            summary.total_play_time += zone.duration;
+            // Use get_current_time_spent() to include active timer
+            let zone_time = zone.get_current_time_spent();
+
+            summary.total_play_time += zone_time;
             summary.total_deaths += zone.deaths;
 
             // Calculate hideout time
             if zone.is_hideout() {
-                summary.total_hideout_time += zone.duration;
+                summary.total_hideout_time += zone_time;
             }
 
             // Calculate town time (excluding hideouts)
             if zone.is_town && !zone.is_hideout() {
-                summary.total_town_time += zone.duration;
+                summary.total_town_time += zone_time;
             }
 
             // Calculate act-specific time (only for zones with known act)
             if let Some(act) = zone.act {
                 match act {
-                    1 => summary.play_time_act1 += zone.duration,
-                    2 => summary.play_time_act2 += zone.duration,
-                    3 => summary.play_time_act3 += zone.duration,
-                    4 => summary.play_time_act4 += zone.duration,
-                    6 => summary.play_time_interlude += zone.duration,
-                    10 => summary.play_time_endgame += zone.duration,
+                    1 => summary.play_time_act1 += zone_time,
+                    2 => summary.play_time_act2 += zone_time,
+                    3 => summary.play_time_act3 += zone_time,
+                    4 => summary.play_time_act4 += zone_time,
+                    6 => summary.play_time_interlude += zone_time,
+                    10 => summary.play_time_endgame += zone_time,
                     _ => {
                         // Unknown act (0, 5, 7-9, 11+)
                         // Only counts in total_play_time, not act-specific

@@ -25,6 +25,28 @@ impl Default for ProcessDetectorImpl {
     }
 }
 
+impl ProcessDetectorImpl {
+    /// Matches process names exactly to avoid false positives.
+    /// Handles both with and without .exe extension.
+    fn matches_poe_process(&self, process_name: &str) -> bool {
+        for target in &self.config.process_names {
+            let target_lower = target.to_lowercase();
+
+            // Exact match
+            if process_name == target_lower {
+                return true;
+            }
+
+            // Match with .exe extension if target doesn't have it
+            if !target_lower.ends_with(".exe") && process_name == format!("{}.exe", target_lower) {
+                return true;
+            }
+        }
+
+        false
+    }
+}
+
 #[async_trait]
 impl ProcessDetector for ProcessDetectorImpl {
     async fn check_game_process(&self) -> AppResult<GameProcessStatus> {
@@ -34,12 +56,8 @@ impl ProcessDetector for ProcessDetectorImpl {
         for (pid, process) in system.processes() {
             let process_name = process.name().to_string_lossy().to_lowercase();
 
-            if self
-                .config
-                .process_names
-                .iter()
-                .any(|name| process_name.contains(&name.to_lowercase()))
-            {
+            // Use exact matching to avoid false positives (e.g., "mypoe2tool")
+            if self.matches_poe_process(&process_name) {
                 debug!(
                     "Found POE2 process: {:?} (PID: {})",
                     process.name(),

@@ -39,6 +39,12 @@ impl ConfigurationRepositoryImpl {
         if !self.data_loaded.load(Ordering::Relaxed) {
             if let Err(e) = self.load().await {
                 debug!("Failed to load configuration, using defaults: {}", e);
+                // Set flag to prevent repeated load attempts and log spam
+                self.data_loaded.store(true, Ordering::Relaxed);
+                // Ensure default config is set in memory
+                let default_config = AppConfig::default();
+                let mut config = self.config.write().await;
+                *config = default_config;
             }
         }
         Ok(())
@@ -116,20 +122,24 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
 
     async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
         self.ensure_data_loaded().await?;
-        let mut config = self.config.write().await;
-        config.poe_client_log_path = path;
-        drop(config);
-        self.save(&self.get_in_memory_config().await?).await
+        let config_to_save = {
+            let mut config = self.config.write().await;
+            config.poe_client_log_path = path;
+            config.clone()
+        };
+        self.save(&config_to_save).await
     }
 
     async fn set_log_level(&self, level: String) -> AppResult<()> {
         self.ensure_data_loaded().await?;
         self.ensure_valid_log_level(&level).await?;
 
-        let mut config = self.config.write().await;
-        config.log_level = level;
-        drop(config);
-        self.save(&self.get_in_memory_config().await?).await
+        let config_to_save = {
+            let mut config = self.config.write().await;
+            config.log_level = level;
+            config.clone()
+        };
+        self.save(&config_to_save).await
     }
 
     async fn reset_to_defaults(&self) -> AppResult<()> {
@@ -150,14 +160,13 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
     }
 
     async fn ensure_valid_log_level(&self, level: &str) -> AppResult<()> {
-        let valid_log_levels = ["trace", "debug", "info", "warn", "warning", "error"];
-        if !valid_log_levels.contains(&level.to_lowercase().as_str()) {
+        if !AppConfig::is_valid_log_level(level) {
             return Err(AppError::validation_error(
                 "validate_log_level",
                 &format!(
                     "Invalid log level '{}'. Valid levels are: {}",
                     level,
-                    valid_log_levels.join(", ")
+                    AppConfig::VALID_LOG_LEVELS.join(", ")
                 ),
             ));
         }

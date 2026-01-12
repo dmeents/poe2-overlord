@@ -47,7 +47,7 @@ export function useCurrencyExchange(
         economyType: economyType,
       });
     },
-    staleTime: 15 * 60 * 1000, // 5 minutes - economy data doesn't change too frequently
+    staleTime: 10 * 60 * 1000, // 10 minutes - matches backend cache TTL
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: true,

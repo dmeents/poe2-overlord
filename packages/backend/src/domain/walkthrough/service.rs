@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug, error, info, warn};
 use std::sync::Arc;
 
 use crate::domain::character::traits::CharacterService;
@@ -73,7 +73,12 @@ impl WalkthroughServiceImpl {
 
         // Emit character updated event (includes walkthrough progress)
         let event = AppEvent::character_updated(character_id.to_string(), enriched_data);
-        let _ = self.event_bus.publish(event).await;
+        if let Err(e) = self.event_bus.publish(event).await {
+            error!(
+                "Failed to publish character updated event for {}: {}",
+                character_id, e
+            );
+        }
 
         debug!("Updated character {} walkthrough progress", character_id);
         Ok(())
@@ -202,6 +207,20 @@ impl WalkthroughService for WalkthroughServiceImpl {
 
                         // Get the next step ID and move to it
                         if let Some(next_step_id) = &step.next_step_id {
+                            // Validate that next_step_id exists in the guide before advancing
+                            let next_step_exists = guide
+                                .acts
+                                .values()
+                                .any(|a| a.steps.contains_key(next_step_id));
+
+                            if !next_step_exists {
+                                error!(
+                                    "Next step ID '{}' referenced by step '{}' does not exist in guide",
+                                    next_step_id, step_id
+                                );
+                                return Ok(()); // Abort advancement to prevent corruption
+                            }
+
                             let from_step_id = progress.current_step_id.clone();
 
                             // Create new progress with next step
@@ -216,14 +235,24 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 from_step_id,
                                 Some(next_step_id.clone()),
                             );
-                            let _ = self.event_bus.publish(event).await;
+                            if let Err(e) = self.event_bus.publish(event).await {
+                                warn!(
+                                    "Failed to publish walkthrough step advanced event: {}",
+                                    e
+                                );
+                            }
 
                             // Publish step completed event
                             let event = AppEvent::walkthrough_step_completed(
                                 character_id.to_string(),
                                 step_result,
                             );
-                            let _ = self.event_bus.publish(event).await;
+                            if let Err(e) = self.event_bus.publish(event).await {
+                                warn!(
+                                    "Failed to publish walkthrough step completed event: {}",
+                                    e
+                                );
+                            }
                         } else {
                             // No next step, mark campaign as completed
                             let mut new_progress = progress.clone();
@@ -234,7 +263,12 @@ impl WalkthroughService for WalkthroughServiceImpl {
                             // Publish campaign completed event
                             let event =
                                 AppEvent::walkthrough_campaign_completed(character_id.to_string());
-                            let _ = self.event_bus.publish(event).await;
+                            if let Err(e) = self.event_bus.publish(event).await {
+                                warn!(
+                                    "Failed to publish walkthrough campaign completed event: {}",
+                                    e
+                                );
+                            }
                         }
                     } else {
                         debug!(

@@ -72,8 +72,10 @@ export interface WalkthroughGuide {
 export interface WalkthroughStepResult {
   /** The step data */
   step: WalkthroughStep;
-  /** The act this step belongs to */
-  act: WalkthroughAct;
+  /** The act name this step belongs to */
+  act_name: string;
+  /** The act number */
+  act_number: number;
 }
 
 export interface CharacterWalkthroughProgress {

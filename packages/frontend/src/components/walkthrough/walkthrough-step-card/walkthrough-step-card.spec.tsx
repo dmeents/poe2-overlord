@@ -5,7 +5,6 @@ import { WalkthroughStepCard } from './walkthrough-step-card';
 import type {
   WalkthroughStep,
   WalkthroughStepResult,
-  WalkthroughAct,
 } from '@/types/walkthrough';
 
 const mockOpenZone = vi.hoisted(() => vi.fn());
@@ -60,17 +59,10 @@ const mockStep: WalkthroughStep = {
   wiki_items: ['Skill Gem', 'Twilight Strand'],
 };
 
-const mockAct: WalkthroughAct = {
-  act_name: 'Act 1',
-  act_number: 1,
-  steps: {
-    'step-1': mockStep,
-  },
-};
-
 const mockStepResult: WalkthroughStepResult = {
   step: mockStep,
-  act: mockAct,
+  act_name: 'Act 1',
+  act_number: 1,
 };
 
 describe('WalkthroughStepCard', () => {

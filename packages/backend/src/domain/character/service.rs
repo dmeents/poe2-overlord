@@ -151,6 +151,17 @@ impl CharacterService for CharacterServiceImpl {
             ));
         }
 
+        // Validate level is within valid range (1-100)
+        if update_params.level < 1 || update_params.level > 100 {
+            return Err(AppError::validation_error(
+                "validate_level",
+                &format!(
+                    "Character level must be between 1 and 100, got {}",
+                    update_params.level
+                ),
+            ));
+        }
+
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
         character_data.profile.name = update_params.name.clone();
@@ -170,14 +181,13 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     async fn delete_character(&self, character_id: &str) -> Result<(), AppError> {
-        let mut index = self.repository.load_characters_index().await?;
-
-        // Remove character ID from index
-        index.remove_character(character_id);
-
-        // Save updated index
-        self.repository.save_characters_index(&index).await?;
+        // Delete file first - if this fails, index remains consistent
         self.repository.delete_character_data(character_id).await?;
+
+        // Then update index
+        let mut index = self.repository.load_characters_index().await?;
+        index.remove_character(character_id);
+        self.repository.save_characters_index(&index).await?;
 
         log::info!("Deleted character: {}", character_id);
         Ok(())
@@ -217,17 +227,24 @@ impl CharacterService for CharacterServiceImpl {
 
         // Get active character ID
         if let Some(active_id) = &index.active_character_id {
+            let active_id_owned = active_id.clone();
             // Load active character data
-            match self.repository.load_character_data(active_id).await {
+            match self.repository.load_character_data(&active_id_owned).await {
                 Ok(character) => {
                     let enriched = self.enrich_character_data(character).await;
                     Ok(Some(enriched))
                 }
                 Err(_) => {
-                    // Character file might be missing, clear active character
-                    let mut index = self.repository.load_characters_index().await?;
-                    index.set_active_character(None);
-                    self.repository.save_characters_index(&index).await?;
+                    // Character file might be missing, reload index and clear only if same character is still active
+                    let mut fresh_index = self.repository.load_characters_index().await?;
+                    if fresh_index.active_character_id.as_ref() == Some(&active_id_owned) {
+                        fresh_index.set_active_character(None);
+                        self.repository.save_characters_index(&fresh_index).await?;
+                        log::warn!(
+                            "Cleared missing active character from index: {}",
+                            active_id_owned
+                        );
+                    }
                     Ok(None)
                 }
             }
@@ -259,6 +276,17 @@ impl CharacterService for CharacterServiceImpl {
         character_id: &str,
         new_level: u32,
     ) -> Result<(), AppError> {
+        // Validate level is within valid range (1-100)
+        if new_level < 1 || new_level > 100 {
+            return Err(AppError::validation_error(
+                "validate_level",
+                &format!(
+                    "Character level must be between 1 and 100, got {}",
+                    new_level
+                ),
+            ));
+        }
+
         // Load existing character data
         let mut character_data = self.repository.load_character_data(character_id).await?;
 
@@ -272,17 +300,16 @@ impl CharacterService for CharacterServiceImpl {
         // Enrich character data before emitting event
         let enriched_data = self.enrich_character_data(character_data).await;
 
-        // Emit character updated event
+        // Emit character updated event - log warning but don't fail the operation
         let event = crate::infrastructure::events::AppEvent::character_updated(
             character_id.to_string(),
             enriched_data,
         );
         if let Err(e) = self.event_bus.publish(event).await {
             log::warn!(
-                "LEVEL UP: Failed to publish character tracking data updated event: {}",
+                "Failed to publish character level update event: {}. UI may show stale data.",
                 e
             );
-        } else {
         }
 
         log::info!("Updated character {} level to {}", character_id, new_level);
@@ -324,6 +351,7 @@ impl CharacterService for CharacterServiceImpl {
 
         // Update current location (character identity concern)
         character_data.current_location = Some(LocationState::new(zone_name.to_string()));
+        character_data.timestamps.last_played = Some(chrono::Utc::now());
         character_data.touch();
 
         // Save character data

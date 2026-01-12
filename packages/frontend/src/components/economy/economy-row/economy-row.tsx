@@ -28,7 +28,14 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
     volume: number,
     primaryValue: number
   ): string => {
+    // Guard against division by zero or invalid values
+    if (primaryValue === 0 || !isFinite(primaryValue)) {
+      return '0.00';
+    }
     const itemsSold = volume / primaryValue;
+    if (!isFinite(itemsSold)) {
+      return '0.00';
+    }
     return itemsSold.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

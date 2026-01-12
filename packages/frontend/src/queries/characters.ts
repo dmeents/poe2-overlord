@@ -62,7 +62,7 @@ export function useCreateCharacter() {
         ascendency: data.ascendency,
         league: data.league,
         hardcore: data.hardcore,
-        soloSelfFound: data.solo_self_found,
+        solo_self_found: data.solo_self_found,
       });
     },
     onSuccess: () => {

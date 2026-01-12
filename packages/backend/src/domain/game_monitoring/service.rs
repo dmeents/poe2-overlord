@@ -120,7 +120,9 @@ impl GameMonitoringServiceImpl {
 
                 if initial_interval != current_interval {
                     current_interval = initial_interval;
-                    interval_timer = interval(current_interval);
+                    let mut new_timer = interval(current_interval);
+                    new_timer.tick().await; // Consume immediate tick
+                    interval_timer = new_timer;
                 }
 
                 previous_status = Some(initial_status);
@@ -170,7 +172,9 @@ impl GameMonitoringServiceImpl {
 
                         if new_interval != current_interval {
                             current_interval = new_interval;
-                            interval_timer = interval(current_interval);
+                            let mut new_timer = interval(current_interval);
+                            new_timer.tick().await; // Consume immediate tick
+                            interval_timer = new_timer;
                         }
                     } else {
                         let mut status = self.current_status.write().await;

@@ -1,5 +1,5 @@
 import { cn } from '@/utils/tailwind';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useId } from 'react';
 import { modalStyles } from './modal.styles';
 
 export interface ModalProps {
@@ -30,6 +30,9 @@ export function Modal({
   disabled = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const contentId = useId();
 
   // Handle escape key
   useEffect(() => {
@@ -45,17 +48,59 @@ export function Modal({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, closeOnEscape, onClose, disabled]);
 
-  // Focus management
+  // Focus management with focus trap and return focus
   useEffect(() => {
-    if (isOpen && modalRef.current) {
-      const focusableElements = modalRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      const firstElement = focusableElements[0] as HTMLElement;
-      if (firstElement) {
-        firstElement.focus();
-      }
+    if (!isOpen || !modalRef.current) return;
+
+    const modal = modalRef.current;
+
+    // Store the element that had focus before modal opened
+    previouslyFocusedElementRef.current = document.activeElement as HTMLElement;
+
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
+
+    // Focus first element
+    if (firstElement) {
+      firstElement.focus();
     }
+
+    // Handle Tab key to trap focus within modal
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        // Shift + Tab: if on first element, go to last
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        // Tab: if on last element, go to first
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTabKey);
+
+    // Cleanup: restore focus to previously focused element
+    return () => {
+      modal.removeEventListener('keydown', handleTabKey);
+      if (
+        previouslyFocusedElementRef.current &&
+        previouslyFocusedElementRef.current.focus
+      ) {
+        previouslyFocusedElementRef.current.focus();
+      }
+    };
   }, [isOpen]);
 
   // Prevent body scroll when modal is open
@@ -81,10 +126,17 @@ export function Modal({
 
   return (
     <div className={modalStyles.overlay}>
-      <div className={modalStyles.container}>
-        <div className={modalStyles.backdrop} onClick={handleBackdropClick} />
+      <div className={modalStyles.container} onClick={handleBackdropClick}>
+        <div
+          className={modalStyles.backdrop}
+          aria-hidden="true"
+        />
         <div
           ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? titleId : undefined}
+          aria-describedby={contentId}
           className={cn(
             modalStyles.modal,
             modalStyles.sizeClasses[size],
@@ -95,8 +147,16 @@ export function Modal({
             {(title || icon || showCloseButton) && (
               <div className={modalStyles.header}>
                 <div className={modalStyles.headerContent}>
-                  {icon && <div className={modalStyles.icon}>{icon}</div>}
-                  {title && <h2 className={modalStyles.title}>{title}</h2>}
+                  {icon && (
+                    <div className={modalStyles.icon} aria-hidden="true">
+                      {icon}
+                    </div>
+                  )}
+                  {title && (
+                    <h2 id={titleId} className={modalStyles.title}>
+                      {title}
+                    </h2>
+                  )}
                 </div>
                 {showCloseButton && (
                   <button
@@ -110,6 +170,7 @@ export function Modal({
                       fill='none'
                       viewBox='0 0 24 24'
                       stroke='currentColor'
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap='round'
@@ -124,7 +185,7 @@ export function Modal({
             )}
 
             {/* Content */}
-            {children}
+            <div id={contentId}>{children}</div>
           </div>
         </div>
       </div>

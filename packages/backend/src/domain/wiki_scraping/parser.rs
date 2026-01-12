@@ -47,6 +47,21 @@ impl WikiParser {
         zone_data.points_of_interest = PointsOfInterestParser::parse(&document);
         zone_data.image_url = ImageUrlParser::parse(&document);
 
+        // Validate that we extracted meaningful data
+        // At minimum, we should have either: act info, area_id, area_level, or connected zones
+        let has_basic_data = zone_data.act > 0
+            || zone_data.area_id.is_some()
+            || zone_data.area_level.is_some()
+            || !zone_data.connected_zones.is_empty();
+
+        if !has_basic_data && infobox.is_some() {
+            // We found an infobox but couldn't extract any basic data - warn but continue
+            info!(
+                "Warning: Limited data extracted for '{}'. Wiki page structure may have changed.",
+                zone_name
+            );
+        }
+
         info!(
             "Extracted wiki data for '{}': Act {}, {} bosses, {} monsters, {} NPCs, {} connected zones",
             zone_name,

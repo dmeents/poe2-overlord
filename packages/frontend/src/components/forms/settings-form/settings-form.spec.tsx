@@ -282,8 +282,9 @@ describe('SettingsForm', () => {
     );
 
     await waitFor(() => {
+      // Updated to match new error message format which includes backend error details
       expect(
-        screen.getByText('Failed to save configuration')
+        screen.getByText(/Failed to save configuration/)
       ).toBeInTheDocument();
     });
 

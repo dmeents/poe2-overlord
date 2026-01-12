@@ -53,7 +53,8 @@ describe('CurrentZoneCard', () => {
     it('renders act badge when act is present', () => {
       render(<CurrentZoneCard zone={createMockZone()} />);
 
-      expect(screen.getByText('1')).toBeInTheDocument();
+      // getDisplayAct returns consistent "Act N" format
+      expect(screen.getByText('Act 1')).toBeInTheDocument();
     });
 
     it('renders area level', () => {

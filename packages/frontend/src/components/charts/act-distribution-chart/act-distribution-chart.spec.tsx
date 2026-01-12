@@ -26,12 +26,14 @@ const createMockSummary = (
   character_id: 'char-1',
   total_play_time: 7200,
   total_hideout_time: 600,
+  total_town_time: 0,
   total_zones_visited: 10,
   total_deaths: 2,
   play_time_act1: 1800,
   play_time_act2: 1200,
   play_time_act3: 900,
   play_time_act4: 600,
+  play_time_act5: 0,
   play_time_interlude: 300,
   play_time_endgame: 0,
   ...overrides,
@@ -67,6 +69,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 0,
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -84,6 +87,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 0,
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -114,6 +118,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 1200,
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -148,6 +153,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 3600, // 50%
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -166,6 +172,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 0,
         play_time_act3: 900,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -198,6 +205,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 1800, // 30 minutes
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -224,6 +232,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 0,
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 
@@ -239,6 +248,7 @@ describe('ActDistributionChart', () => {
         play_time_act2: 0,
         play_time_act3: 0,
         play_time_act4: 0,
+        play_time_act5: 0,
         play_time_interlude: 0,
       });
 

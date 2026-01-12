@@ -148,18 +148,8 @@ export function useZoneList(zones: ZoneStats[]) {
         // Act filter
         if (filters.act !== 'All') {
           const zoneActString = getDisplayAct(zone) || '';
-
-          switch (filters.act) {
-            case 'Endgame':
-            case 'Interlude':
-              if (zoneActString !== filters.act) return false;
-              break;
-            default:
-              // Fix: Compare numeric value directly (filter is "Act 1", zoneActString is "1")
-              if (zoneActString !== filters.act.replace('Act ', ''))
-                return false;
-              break;
-          }
+          // getDisplayAct now returns consistent format: "Act 1", "Interlude", "Endgame"
+          if (zoneActString !== filters.act) return false;
         }
 
         // Town filter

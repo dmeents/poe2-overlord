@@ -27,7 +27,7 @@ export function getDisplayAct(
       case 6:
         return 'Interlude';
       default:
-        return `${zone.act}`;
+        return `Act ${zone.act}`;
     }
   }
 

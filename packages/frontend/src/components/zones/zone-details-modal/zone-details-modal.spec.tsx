@@ -86,7 +86,8 @@ describe('ZoneDetailsModal', () => {
       render(<ZoneDetailsModal />);
 
       expect(screen.getByText('Act:')).toBeInTheDocument();
-      expect(screen.getByText('1')).toBeInTheDocument();
+      // getDisplayAct returns consistent "Act N" format
+      expect(screen.getByText('Act 1')).toBeInTheDocument();
     });
 
     it('displays area level', () => {

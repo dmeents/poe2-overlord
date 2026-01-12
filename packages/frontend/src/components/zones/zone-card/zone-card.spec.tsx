@@ -162,8 +162,8 @@ describe('ZoneCard', () => {
   it('renders act display', () => {
     render(<ZoneCard zone={mockZone} />);
 
-    // Act 1 should be displayed as "1"
-    expect(screen.getByText('1')).toBeInTheDocument();
+    // Act should be displayed with "Act" prefix for consistency
+    expect(screen.getByText('Act 1')).toBeInTheDocument();
   });
 
   it('does not render area level when undefined', () => {

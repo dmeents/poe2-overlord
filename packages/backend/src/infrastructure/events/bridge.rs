@@ -62,6 +62,7 @@ impl TauriEventBridge {
             AppEvent::ServerPingCompleted { .. } => "server-ping-completed".to_string(),
             AppEvent::ConfigurationChanged(_) => "configuration-changed".to_string(),
             AppEvent::CharacterUpdated { .. } => "character-updated".to_string(),
+            AppEvent::CharacterDeleted { .. } => "character-deleted".to_string(),
             AppEvent::WalkthroughProgressUpdated { .. } => {
                 "walkthrough-progress-updated".to_string()
             }

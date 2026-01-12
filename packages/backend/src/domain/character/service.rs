@@ -240,6 +240,16 @@ impl CharacterService for CharacterServiceImpl {
         index.remove_character(character_id);
         self.repository.save_characters_index(&index).await?;
 
+        // Publish character deleted event for frontend reactivity
+        let event =
+            crate::infrastructure::events::AppEvent::character_deleted(character_id.to_string());
+        if let Err(e) = self.event_bus.publish(event).await {
+            log::warn!(
+                "Failed to publish character deleted event: {}. UI may show stale data.",
+                e
+            );
+        }
+
         log::info!("Deleted character: {}", character_id);
         Ok(())
     }

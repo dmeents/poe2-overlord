@@ -4,7 +4,6 @@ use crate::domain::server_monitoring::traits::PingProvider;
 use async_trait::async_trait;
 
 const PING_COUNT: &str = "1";
-const PING_TIMEOUT_SECONDS: &str = "5";
 
 #[cfg(target_family = "unix")]
 const PING_COUNT_FLAG: &str = "-c";
@@ -15,6 +14,12 @@ const PING_COUNT_FLAG: &str = "-n";
 const PING_TIMEOUT_FLAG: &str = "-W";
 #[cfg(target_family = "windows")]
 const PING_TIMEOUT_FLAG: &str = "-w";
+
+// Unix expects seconds, Windows expects milliseconds
+#[cfg(target_family = "unix")]
+const PING_TIMEOUT_VALUE: &str = "5";
+#[cfg(target_family = "windows")]
+const PING_TIMEOUT_VALUE: &str = "5000";
 
 /// System-level ping provider that uses the operating system's ping command.
 #[derive(Debug, Clone)]
@@ -41,7 +46,7 @@ impl PingProvider for SystemPingProvider {
             .arg(PING_COUNT_FLAG)
             .arg(PING_COUNT)
             .arg(PING_TIMEOUT_FLAG)
-            .arg(PING_TIMEOUT_SECONDS)
+            .arg(PING_TIMEOUT_VALUE)
             .arg(ip_address)
             .output()
             .await;

@@ -21,6 +21,7 @@ pub struct ServerMonitoringServiceImpl {
     ping_provider: Arc<dyn PingProvider>,
     cached_status: Arc<RwLock<Option<ServerStatus>>>,
     monitoring_active: Arc<RwLock<bool>>,
+    monitoring_task: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 impl ServerMonitoringServiceImpl {
@@ -35,6 +36,7 @@ impl ServerMonitoringServiceImpl {
             ping_provider,
             cached_status: Arc::new(RwLock::new(None)),
             monitoring_active: Arc::new(RwLock::new(false)),
+            monitoring_task: Arc::new(RwLock::new(None)),
         })
     }
 }
@@ -47,6 +49,7 @@ impl Clone for ServerMonitoringServiceImpl {
             ping_provider: Arc::clone(&self.ping_provider),
             cached_status: Arc::clone(&self.cached_status),
             monitoring_active: Arc::clone(&self.monitoring_active),
+            monitoring_task: Arc::clone(&self.monitoring_task),
         }
     }
 }
@@ -140,6 +143,7 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     }
 
     async fn start_ping_monitoring(&self) -> AppResult<()> {
+        // Hold the lock until task is spawned to prevent race conditions
         let mut is_active = self.monitoring_active.write().await;
         if *is_active {
             warn!("Ping monitoring is already active");
@@ -147,12 +151,12 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         }
 
         *is_active = true;
-        drop(is_active);
 
+        // Load from file while holding lock
         self.load_from_file().await?;
 
         let service = Arc::new(self.clone());
-        tokio::spawn(async move {
+        let task_handle = tokio::spawn(async move {
             let mut interval = time::interval(Duration::from_secs(MONITORING_INTERVAL_SECS));
 
             info!(
@@ -174,6 +178,13 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
             }
         });
 
+        // Store the task handle for cleanup
+        {
+            let mut task = self.monitoring_task.write().await;
+            *task = Some(task_handle);
+        }
+
+        drop(is_active);
         Ok(())
     }
 
@@ -185,6 +196,15 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         }
 
         *is_active = false;
+        drop(is_active);
+
+        // Wait for the monitoring task to complete
+        if let Some(task_handle) = self.monitoring_task.write().await.take() {
+            if let Err(e) = task_handle.await {
+                error!("Error waiting for monitoring task to complete: {}", e);
+            }
+        }
+
         info!("Ping monitoring stopped");
         Ok(())
     }

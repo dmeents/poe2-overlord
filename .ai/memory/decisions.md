@@ -8,6 +8,18 @@ This file records major architectural and technical decisions for POE2 Overlord.
 - Local UI state can use React useState/useReducer
 - **Rationale**: Reduces boilerplate, built-in caching, simpler mental model
 
+### QueryClient Access (2026-01-11)
+**Decision**: Export QueryClient singleton for edge cases, prefer useQueryClient() hook
+- Primary pattern: Use `useQueryClient()` hook in all React contexts
+- Edge case: Export `queryClient` from main.tsx for non-React contexts (event listeners, utilities)
+- Safe accessor: `getQueryClient()` utility with initialization check
+- Testing: Create new QueryClient per test with `retry: false`
+- **Rationale**:
+  - SPA context makes singleton safe (no SSR data leakage)
+  - React hook is primary pattern (explicit dependencies, testable)
+  - Export enables event system integration without architecture changes
+  - Documented patterns prevent misuse
+
 ## Validation (2026-01-10)
 **Decision**: Zod for all input validation
 - All form inputs must have Zod schemas

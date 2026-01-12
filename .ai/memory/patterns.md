@@ -128,6 +128,110 @@ const [isExpanded, setIsExpanded] = useState(false);
 // NO: Redux, Zustand, Context for server data
 ```
 
+## QueryClient Access Pattern
+
+**Status**: DOCUMENTED (as of 2026-01-11)
+
+TanStack React Query's QueryClient can be accessed in two ways depending on context.
+
+### Primary Pattern: useQueryClient Hook (Within React)
+
+**ALWAYS use this pattern within React components and custom hooks.**
+
+```tsx
+// In component
+import { useQueryClient } from '@tanstack/react-query';
+
+export function MyComponent() {
+  const queryClient = useQueryClient();
+
+  const handleInvalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['my-data'] });
+  };
+
+  return <button onClick={handleInvalidate}>Refresh</button>;
+}
+
+// In custom hook
+export function useInvalidateData() {
+  const queryClient = useQueryClient();
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ['my-data'] });
+  };
+}
+
+// In mutation callbacks
+export function useUpdateData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateData,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['data'] });
+    },
+  });
+}
+```
+
+### Edge Case Pattern: Direct Import (Outside React)
+
+**Only use this pattern in non-React contexts** (event handlers, utilities, Tauri command callbacks).
+
+```tsx
+// In event listener (outside React)
+import { getQueryClient } from '@/queries/query-client';
+
+// Event listener registered outside React tree
+eventBus.on('backend-data-updated', (data) => {
+  const queryClient = getQueryClient();
+  queryClient.invalidateQueries({ queryKey: ['backend-data'] });
+});
+```
+
+### When to Use Each Pattern
+
+| Scenario | Pattern | Import |
+|----------|---------|--------|
+| React component | `useQueryClient()` hook | `@tanstack/react-query` |
+| Custom React hook | `useQueryClient()` hook | `@tanstack/react-query` |
+| Mutation callback | `useQueryClient()` hook | `@tanstack/react-query` |
+| Event listener (outside React) | `getQueryClient()` | `@/queries/query-client` |
+| Utility function (outside React) | `getQueryClient()` | `@/queries/query-client` |
+| Test wrapper | `new QueryClient()` | `@tanstack/react-query` |
+
+### Common Mistakes
+
+```tsx
+// WRONG - Creating new QueryClient in component
+export function MyComponent() {
+  const queryClient = new QueryClient(); // Creates isolated instance!
+  // Use useQueryClient() instead
+}
+
+// WRONG - Using getQueryClient in component
+import { getQueryClient } from '@/queries/query-client';
+
+export function MyComponent() {
+  const queryClient = getQueryClient(); // Bypasses React context!
+  // Use useQueryClient() hook instead
+}
+```
+
+### Architecture Decision
+
+**Why we export the QueryClient**:
+- POE2 Overlord is a Tauri SPA (not SSR) - singleton pattern is safe
+- Event system may need to invalidate queries outside React context
+- Follows TanStack Query recommendation for client-only apps
+- Zero performance cost - just exposes existing instance
+
+**Why we still prefer useQueryClient()**:
+- React context ensures QueryClient is initialized
+- Enables future testing enhancements (per-test QueryClient)
+- Follows React best practices for dependency injection
+- Makes component dependencies explicit
+
 ## Provider Dependency Pattern
 
 **Status**: DOCUMENTED (as of 2026-01-11)

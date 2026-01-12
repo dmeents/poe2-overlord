@@ -10,8 +10,17 @@ import { routeTree } from './routeTree.gen';
 // Create a new router instance
 const router = createRouter({ routeTree });
 
-// Create a new query client
-const queryClient = new QueryClient({
+/**
+ * Global QueryClient instance.
+ *
+ * IMPORTANT: Within React components/hooks, always use the useQueryClient() hook
+ * instead of importing this directly. Direct import is only for edge cases
+ * outside React context (event handlers, utilities).
+ *
+ * @see packages/frontend/src/queries/README.md for usage patterns
+ * @see .ai/memory/patterns.md for "QueryClient Access Pattern"
+ */
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes

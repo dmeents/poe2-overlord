@@ -13,7 +13,7 @@
 
 - [x] Issue #1: Path Validation with Migration Strategy (CRITICAL) ✅
 - [x] Issue #2: Lost Update Prevention Architecture (CRITICAL) ✅
-- [ ] Issue #3: Transaction Safety in Character Creation (CRITICAL)
+- [x] Issue #3: Transaction Safety in Character Creation (CRITICAL) ✅
 - [ ] Issue #4: Cache Race Condition (CRITICAL)
 - [ ] Issue #12: Orphaned Character Cleanup (HIGH)
 - [ ] Issue #16: Zone Leave Not Called on Change (HIGH)
@@ -79,10 +79,33 @@
 - Concurrent modification detection - Returns ConcurrentModification error
 - File deleted between read and write - Detected as version mismatch
 
+### Issue #3: Transaction Safety in Character Creation
+
+**Decision**: Reversed operation order in `create_character` to prevent orphaned files on failure.
+
+**Key Points**:
+1. **Index-first pattern**: Write index entry FIRST (if fails, no orphan file created)
+2. **File second**: Write character file SECOND (if fails, can rollback index)
+3. **Rollback logic**: On file write failure, remove character from index and clear active if needed
+4. **Clean failure states**: Either both operations succeed, or both fail (atomic semantics)
+
+**Files Modified**:
+- `src/domain/character/service.rs` - Reordered operations with rollback in create_character()
+
+### Issue #3 Edge Cases:
+- Index write fails first - No orphan file, clean error state
+- File write fails - Index rolled back, clean error state
+- Both succeed - Normal operation
+- First character (sets active) - Rollback also clears active_character_id
+
 ## Commits
 
-(To be added as issues are completed)
+- `fix(security): add path validation to prevent path traversal attacks (Issue #1)`
+- `fix(data): implement optimistic locking to prevent lost updates (Issue #2)`
+- `fix(data): add transaction safety with rollback to character creation (Issue #3)`
 
 ## Gotchas and Learnings
 
-(To be documented throughout batch)
+1. **Test count increased**: Backend tests went from 425 → 445 (+20 tests from Issues #1-2)
+2. **Serde defaults**: Using `#[serde(default)]` allows graceful migration of old configs without version field
+3. **Rollback complexity**: When rollback itself can fail, need to decide whether to propagate original error or rollback error - chose to propagate original

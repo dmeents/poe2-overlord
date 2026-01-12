@@ -61,10 +61,6 @@ pub trait ConfigurationRepository: Send + Sync {
 
     async fn load(&self) -> AppResult<AppConfig>;
 
-    async fn exists(&self) -> AppResult<bool>;
-
-    async fn delete(&self) -> AppResult<()>;
-
     async fn get_in_memory_config(&self) -> AppResult<AppConfig>;
 
     async fn update_in_memory_config(&self, config: AppConfig) -> AppResult<()>;
@@ -85,8 +81,6 @@ pub trait ConfigurationRepository: Send + Sync {
         -> AppResult<ConfigurationValidationResult>;
 
     async fn ensure_valid_log_level(&self, level: &str) -> AppResult<()>;
-
-    async fn ensure_valid_poe_path(&self, path: &str) -> AppResult<()>;
 
     async fn get_default_poe_client_log_path(&self) -> String;
 

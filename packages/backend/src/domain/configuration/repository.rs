@@ -236,22 +236,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(config)
     }
 
-    async fn exists(&self) -> AppResult<bool> {
-        Ok(FileService::exists(&self.file_path).await?)
-    }
-
-    async fn delete(&self) -> AppResult<()> {
-        FileService::delete(&self.file_path).await?;
-
-        {
-            let mut config = self.config.write().await;
-            *config = AppConfig::default();
-        }
-
-        debug!("Configuration file deleted and reset to defaults");
-        Ok(())
-    }
-
     async fn get_in_memory_config(&self) -> AppResult<AppConfig> {
         self.ensure_data_loaded().await?;
         let config = self.config.read().await;
@@ -353,21 +337,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 ),
             ));
         }
-        Ok(())
-    }
-
-    async fn ensure_valid_poe_path(&self, path: &str) -> AppResult<()> {
-        if path.trim().is_empty() {
-            return Err(AppError::validation_error(
-                "validate_poe_path",
-                "POE client log path cannot be empty",
-            ));
-        }
-
-        // Security validation
-        let validator = PathValidator::new_for_poe_logs();
-        validator.validate_path(path)?;
-
         Ok(())
     }
 

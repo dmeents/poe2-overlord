@@ -690,33 +690,34 @@ impl CharacterService for CharacterServiceImpl {
 
 impl CharacterServiceImpl {
     /// Enriches character data with zone metadata for API responses
+    /// Optimized: Loads zone config once and uses for all lookups (Issue #38)
     async fn enrich_character_data(&self, character_data: CharacterData) -> CharacterDataResponse {
         let mut response = CharacterDataResponse::from(character_data.clone());
 
+        // Load zone configuration once for all lookups
+        let zone_config = self.zone_config.load_configuration().await.ok();
+
         // Enrich current location
         if let Some(ref location) = character_data.current_location {
-            if let Some(zone_metadata) = self
-                .zone_config
-                .get_zone_metadata(&location.zone_name)
-                .await
-            {
-                response.current_location = Some(
-                    EnrichedLocationState::from_location_and_metadata(location, &zone_metadata),
-                );
+            let zone_metadata = zone_config
+                .as_ref()
+                .and_then(|c| c.get_zone_by_name(&location.zone_name).cloned());
+
+            response.current_location = Some(if let Some(metadata) = zone_metadata {
+                EnrichedLocationState::from_location_and_metadata(location, &metadata)
             } else {
-                response.current_location =
-                    Some(EnrichedLocationState::from_location_minimal(location));
-            }
+                EnrichedLocationState::from_location_minimal(location)
+            });
         }
 
-        // Enrich zones
+        // Enrich zones using the already-loaded config
         let mut enriched_zones = Vec::new();
         for zone_stats in &response.zones {
-            if let Some(zone_metadata) = self
-                .zone_config
-                .get_zone_metadata(&zone_stats.zone_name)
-                .await
-            {
+            let zone_metadata = zone_config
+                .as_ref()
+                .and_then(|c| c.get_zone_by_name(&zone_stats.zone_name).cloned());
+
+            if let Some(metadata) = zone_metadata {
                 let base_zone = ZoneStats {
                     zone_name: zone_stats.zone_name.clone(),
                     duration: zone_stats.duration,
@@ -731,7 +732,7 @@ impl CharacterServiceImpl {
                 };
                 enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(
                     &base_zone,
-                    &zone_metadata,
+                    &metadata,
                 ));
             } else {
                 enriched_zones.push(zone_stats.clone());

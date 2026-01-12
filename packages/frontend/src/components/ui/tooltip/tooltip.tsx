@@ -10,6 +10,20 @@ interface TooltipProps {
   showIcon?: boolean;
 }
 
+/**
+ * Tooltip component with automatic scroll repositioning.
+ *
+ * Features:
+ * - Automatically repositions on scroll/resize while visible
+ * - Uses capture phase event listening to catch scroll on any ancestor
+ * - Renders in portal to avoid z-index and overflow issues
+ * - Uses fixed positioning with viewport coordinates
+ *
+ * @example
+ * <Tooltip content="Detailed information">
+ *   <button>Hover me</button>
+ * </Tooltip>
+ */
 export function Tooltip({
   content,
   children,

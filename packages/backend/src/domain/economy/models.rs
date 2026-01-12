@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CurrencyTier {
@@ -79,6 +80,29 @@ impl EconomyType {
 impl fmt::Display for EconomyType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
+    }
+}
+
+impl FromStr for EconomyType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Currency" => Ok(EconomyType::Currency),
+            "Fragments" => Ok(EconomyType::Fragments),
+            "Abyss" => Ok(EconomyType::Abyss),
+            "UncutGems" => Ok(EconomyType::UncutGems),
+            "LineageSupportGems" => Ok(EconomyType::LineageSupportGems),
+            "Essences" => Ok(EconomyType::Essences),
+            "SoulCores" => Ok(EconomyType::SoulCores),
+            "Idols" => Ok(EconomyType::Idols),
+            "Runes" => Ok(EconomyType::Runes),
+            "Ritual" => Ok(EconomyType::Ritual),
+            "Expedition" => Ok(EconomyType::Expedition),
+            "Delirium" => Ok(EconomyType::Delirium),
+            "Breach" => Ok(EconomyType::Breach),
+            _ => Err(format!("Unknown economy type: {}", s)),
+        }
     }
 }
 
@@ -487,7 +511,7 @@ impl CurrencyExchangeApiResponse {
                     (&primary_currency, CurrencyTier::Primary)
                 } else if tertiary_currency
                     .as_ref()
-                    .map_or(false, |tc| line.id == tc.id)
+                    .is_some_and(|tc| line.id == tc.id)
                 {
                     // Tertiary currency should be exchanged with Secondary
                     (&secondary_currency, CurrencyTier::Secondary)

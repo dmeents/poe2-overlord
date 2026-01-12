@@ -293,22 +293,9 @@ impl EconomyService {
         let mut all_items: Vec<TopCurrencyItem> = Vec::new();
 
         for (economy_type_str, cached_data) in cache.economy_types.iter() {
-            // Parse economy type from string
-            let economy_type = match economy_type_str.as_str() {
-                "Currency" => EconomyType::Currency,
-                "Fragments" => EconomyType::Fragments,
-                "Abyss" => EconomyType::Abyss,
-                "UncutGems" => EconomyType::UncutGems,
-                "LineageSupportGems" => EconomyType::LineageSupportGems,
-                "Essences" => EconomyType::Essences,
-                "SoulCores" => EconomyType::SoulCores,
-                "Idols" => EconomyType::Idols,
-                "Runes" => EconomyType::Runes,
-                "Ritual" => EconomyType::Ritual,
-                "Expedition" => EconomyType::Expedition,
-                "Delirium" => EconomyType::Delirium,
-                "Breach" => EconomyType::Breach,
-                _ => continue,
+            // Parse economy type from string using FromStr
+            let Ok(economy_type) = economy_type_str.parse::<EconomyType>() else {
+                continue;
             };
 
             // Extract ALL currencies and convert to TopCurrencyItem
@@ -378,22 +365,9 @@ impl EconomyService {
         let mut results: Vec<CurrencySearchResult> = Vec::new();
 
         for (economy_type_str, cached_data) in cache.economy_types.iter() {
-            // Parse economy type from string
-            let economy_type = match economy_type_str.as_str() {
-                "Currency" => EconomyType::Currency,
-                "Fragments" => EconomyType::Fragments,
-                "Abyss" => EconomyType::Abyss,
-                "UncutGems" => EconomyType::UncutGems,
-                "LineageSupportGems" => EconomyType::LineageSupportGems,
-                "Essences" => EconomyType::Essences,
-                "SoulCores" => EconomyType::SoulCores,
-                "Idols" => EconomyType::Idols,
-                "Runes" => EconomyType::Runes,
-                "Ritual" => EconomyType::Ritual,
-                "Expedition" => EconomyType::Expedition,
-                "Delirium" => EconomyType::Delirium,
-                "Breach" => EconomyType::Breach,
-                _ => continue,
+            // Parse economy type from string using FromStr
+            let Ok(economy_type) = economy_type_str.parse::<EconomyType>() else {
+                continue;
             };
 
             // Filter currencies by name match

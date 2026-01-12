@@ -158,10 +158,9 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       setSuccess(null);
 
       await tauriUtils.resetConfigToDefaults();
-      const defaultConfig = await tauriUtils.getConfig();
-      setConfig(defaultConfig);
+      // State will be updated by ConfigurationChanged event listener
+      // which also handles onConfigUpdate callback
       setSuccess('Configuration reset to defaults!');
-      onConfigUpdate?.(defaultConfig);
 
       clearSuccessAfterDelay();
     } catch (err) {

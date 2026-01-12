@@ -98,10 +98,39 @@ pub struct CurrencyCore {
 }
 
 impl CurrencyCore {
+    /// Get the tertiary currency (3rd highest value) based on exchange rates.
+    /// Returns None if there are fewer than 3 currencies or no valid candidate with rates.
+    ///
+    /// Selection logic:
+    /// 1. Primary currency has rate 1.0 (highest value)
+    /// 2. Secondary currency is explicitly defined by API
+    /// 3. Tertiary is the currency with the highest rate among remaining currencies
+    ///    (highest rate = lowest value, so we want the smallest rate after primary/secondary)
     pub fn get_tertiary_currency(&self) -> Option<&CurrencyItem> {
-        self.items
+        // Need at least 3 currencies for a tertiary
+        if self.items.len() < 3 {
+            return None;
+        }
+
+        // Find the currency with the smallest exchange rate among non-primary/non-secondary
+        // (smaller rate = higher value currency, which is what we want for tertiary)
+        let mut candidates: Vec<(&CurrencyItem, f64)> = self
+            .items
             .iter()
-            .find(|item| item.id != self.primary && item.id != self.secondary)
+            .filter(|item| item.id != self.primary && item.id != self.secondary)
+            .filter_map(|item| {
+                // Get exchange rate from rates map
+                self.rates.get(&item.id).map(|rate| (item, *rate))
+            })
+            .collect();
+
+        // Sort by rate ascending (smallest rate = highest value currency first)
+        candidates.sort_by(|a, b| {
+            a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        // Return the highest-value non-primary/non-secondary currency (smallest rate)
+        candidates.first().map(|(item, _rate)| *item)
     }
 }
 

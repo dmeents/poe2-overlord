@@ -145,6 +145,8 @@ mod tests {
 
     #[test]
     fn test_tertiary_currency_detection() {
+        // Tertiary currency selection requires rates to be set
+        // The currency with the lowest rate (highest value) is selected
         let divine_item = CurrencyItem {
             id: "divine".to_string(),
             name: "Divine Orb".to_string(),
@@ -169,13 +171,19 @@ mod tests {
             details_id: "exalted-orb".to_string(),
         };
 
+        // Set up rates - exalted has rate 5.0 (lower = higher value = tertiary)
+        let mut rates = HashMap::new();
+        rates.insert("divine".to_string(), 1.0);
+        rates.insert("chaos".to_string(), 42.86);
+        rates.insert("exalted".to_string(), 5.0);
+
         let core = CurrencyCore {
             items: vec![
                 divine_item.clone(),
                 chaos_item.clone(),
                 exalted_item.clone(),
             ],
-            rates: HashMap::new(),
+            rates,
             primary: "divine".to_string(),
             secondary: "chaos".to_string(),
         };
@@ -184,15 +192,118 @@ mod tests {
         assert!(tertiary.is_some());
         assert_eq!(tertiary.unwrap().id, "exalted");
 
+        // Test with different primary/secondary - chaos should be tertiary
+        let mut rates2 = HashMap::new();
+        rates2.insert("divine".to_string(), 1.0);
+        rates2.insert("chaos".to_string(), 42.86);
+        rates2.insert("exalted".to_string(), 5.0);
+
         let core2 = CurrencyCore {
             items: vec![divine_item, chaos_item, exalted_item],
-            rates: HashMap::new(),
+            rates: rates2,
             primary: "divine".to_string(),
             secondary: "exalted".to_string(),
         };
         let tertiary2 = core2.get_tertiary_currency();
         assert!(tertiary2.is_some());
+        // chaos (42.86) is the only non-primary/non-secondary
         assert_eq!(tertiary2.unwrap().id, "chaos");
+    }
+
+    #[test]
+    fn test_tertiary_currency_deterministic_selection() {
+        // When multiple currencies qualify as tertiary, select the highest value one
+        // (lowest exchange rate = highest value)
+        let divine_item = CurrencyItem {
+            id: "divine".to_string(),
+            name: "Divine Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "divine-orb".to_string(),
+        };
+
+        let chaos_item = CurrencyItem {
+            id: "chaos".to_string(),
+            name: "Chaos Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "chaos-orb".to_string(),
+        };
+
+        let exalted_item = CurrencyItem {
+            id: "exalted".to_string(),
+            name: "Exalted Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "exalted-orb".to_string(),
+        };
+
+        let annul_item = CurrencyItem {
+            id: "annul".to_string(),
+            name: "Orb of Annulment".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "annul-orb".to_string(),
+        };
+
+        // Set up rates - exalted (5.0) has lower rate than annul (10.0)
+        // So exalted should be selected as tertiary (highest value)
+        let mut rates = HashMap::new();
+        rates.insert("divine".to_string(), 1.0);
+        rates.insert("chaos".to_string(), 42.86);
+        rates.insert("exalted".to_string(), 5.0);
+        rates.insert("annul".to_string(), 10.0);
+
+        let core = CurrencyCore {
+            items: vec![divine_item, chaos_item, exalted_item, annul_item],
+            rates,
+            primary: "divine".to_string(),
+            secondary: "chaos".to_string(),
+        };
+
+        let tertiary = core.get_tertiary_currency();
+        assert!(tertiary.is_some());
+        // Exalted has lower rate (5.0) than annul (10.0), so it's selected
+        assert_eq!(tertiary.unwrap().id, "exalted");
+    }
+
+    #[test]
+    fn test_tertiary_currency_requires_rates() {
+        // If a currency doesn't have a rate entry, it won't be selected as tertiary
+        let divine_item = CurrencyItem {
+            id: "divine".to_string(),
+            name: "Divine Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "divine-orb".to_string(),
+        };
+
+        let chaos_item = CurrencyItem {
+            id: "chaos".to_string(),
+            name: "Chaos Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "chaos-orb".to_string(),
+        };
+
+        let exalted_item = CurrencyItem {
+            id: "exalted".to_string(),
+            name: "Exalted Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "exalted-orb".to_string(),
+        };
+
+        // No rates set - tertiary should be None
+        let core = CurrencyCore {
+            items: vec![divine_item, chaos_item, exalted_item],
+            rates: HashMap::new(),
+            primary: "divine".to_string(),
+            secondary: "chaos".to_string(),
+        };
+
+        let tertiary = core.get_tertiary_currency();
+        assert!(tertiary.is_none());
     }
 
     #[test]

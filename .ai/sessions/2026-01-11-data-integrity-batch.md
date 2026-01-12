@@ -2,7 +2,7 @@
 
 **Started**: 2026-01-11
 **PRD**: `.ai/tasks/prd-data-integrity.md`
-**Status**: IN_PROGRESS
+**Status**: COMPLETE
 
 ## Test Baseline
 
@@ -14,10 +14,10 @@
 - [x] Issue #1: Path Validation with Migration Strategy (CRITICAL) ✅
 - [x] Issue #2: Lost Update Prevention Architecture (CRITICAL) ✅
 - [x] Issue #3: Transaction Safety in Character Creation (CRITICAL) ✅
-- [ ] Issue #4: Cache Race Condition (CRITICAL)
-- [ ] Issue #12: Orphaned Character Cleanup (HIGH)
-- [ ] Issue #16: Zone Leave Not Called on Change (HIGH)
-- [ ] Issue #22: Walkthrough Race Condition (HIGH)
+- [x] Issue #4: Cache Race Condition (CRITICAL) ✅
+- [x] Issue #12: Orphaned Character Cleanup (HIGH) ✅
+- [x] Issue #16: Zone Leave Not Called on Change (HIGH) ✅
+- [x] Issue #22: Walkthrough Race Condition (HIGH) ✅
 
 ## Architecture Decisions
 
@@ -98,11 +98,36 @@
 - Both succeed - Normal operation
 - First character (sets active) - Rollback also clears active_character_id
 
+### Issue #4: Cache Race Condition Fix
+
+**Decision**: Implemented per-cache-key semaphore deduplication using `Arc<RwLock<HashMap<String, Arc<Semaphore>>>>`.
+
+**Key Points**:
+1. **Fast path optimization**: Fresh cache check without acquiring any locks
+2. **Request deduplication**: Per-cache-key semaphores ensure only one API fetch at a time
+3. **Double-check pattern**: Re-check cache after acquiring lock (coalesced requests)
+4. **Cleanup**: Remove semaphores from map after fetch completes
+5. **No blocking between keys**: Different league/type combinations don't block each other
+
+**Files Modified**:
+- `src/domain/economy/service.rs` - Added in_flight tracking, semaphore acquisition, cleanup
+- `src/domain/economy/service_test.rs` - Added cache_key and concurrent tests
+
+### Issue #4 Edge Cases:
+- Concurrent requests for same cache key - Coalesced into single fetch
+- Different cache keys - Run in parallel, no blocking
+- Semaphore cleanup - Removed after each fetch to prevent memory growth
+- Deadlock prevention - Using RAII (semaphore permit auto-released)
+
 ## Commits
 
 - `fix(security): add path validation to prevent path traversal attacks (Issue #1)`
 - `fix(data): implement optimistic locking to prevent lost updates (Issue #2)`
 - `fix(data): add transaction safety with rollback to character creation (Issue #3)`
+- `fix(data): add request deduplication to prevent cache race condition (Issue #4)`
+- `fix(data): add orphaned character cleanup with automatic startup reconciliation (Issue #12)`
+- `fix(data): add explicit zone leave before zone enter for proper duration tracking (Issue #16)`
+- `fix(data): add in-memory caching to prevent walkthrough race condition (Issue #22)`
 
 ## Gotchas and Learnings
 

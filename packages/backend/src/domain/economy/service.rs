@@ -1,5 +1,21 @@
 //! Economy service for fetching and caching currency exchange data from poe.ninja.
 //!
+//! # Configuration
+//!
+//! Service behavior is controlled by module-level constants:
+//!
+//! ## HTTP Timeouts
+//! - `HTTP_TOTAL_TIMEOUT_SECS` (10s) - Total request timeout
+//! - `HTTP_CONNECT_TIMEOUT_SECS` (5s) - Connection establishment timeout
+//!
+//! ## Caching
+//! - `CACHE_TTL_SECONDS` (600s / 10min) - How long cached data is considered fresh
+//!
+//! ## Retry Logic
+//! - `MAX_RETRY_ATTEMPTS` (3) - Number of fetch attempts before fallback to stale cache
+//! - `INITIAL_RETRY_DELAY_MS` (500ms) - First retry delay
+//! - `RETRY_BACKOFF_MULTIPLIER` (3x) - Exponential backoff rate
+//!
 //! # Concurrency Safety
 //!
 //! This service is safe for concurrent use. Multiple simultaneous requests for the same
@@ -25,8 +41,51 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{RwLock, Semaphore};
 
-const POE_NINJA_API_BASE: &str = "https://poe.ninja/poe2/api/economy/exchange/current/overview";
-const CACHE_TTL_SECONDS: u64 = 600; // 10 minutes
+// =============================================================================
+// POE Ninja API Configuration
+// =============================================================================
+
+/// Base URL for poe.ninja economy API
+/// URL format: {BASE}?league={LEAGUE}&type={TYPE}
+const POE_NINJA_API_BASE_URL: &str = "https://poe.ninja/poe2/api/economy/exchange/current/overview";
+
+// =============================================================================
+// HTTP Client Configuration
+// =============================================================================
+
+/// Total request timeout including connection, sending, and receiving.
+/// Set to 10 seconds to fail fast on network issues while allowing for slow API responses.
+const HTTP_TOTAL_TIMEOUT_SECS: u64 = 10;
+
+/// Connection establishment timeout.
+/// Set to 5 seconds - if we can't connect within this time, the API is likely unreachable.
+const HTTP_CONNECT_TIMEOUT_SECS: u64 = 5;
+
+// =============================================================================
+// Cache Configuration
+// =============================================================================
+
+/// Time-to-live for cached economy data in seconds.
+/// Set to 10 minutes (600s) to balance data freshness with API load.
+/// POE economy prices change slowly, so 10-minute staleness is acceptable.
+const CACHE_TTL_SECONDS: u64 = 600;
+
+// =============================================================================
+// Retry Configuration
+// =============================================================================
+
+/// Maximum number of fetch attempts before giving up and falling back to stale cache.
+/// Set to 3 attempts to handle transient network issues without excessive delay.
+const MAX_RETRY_ATTEMPTS: u32 = 3;
+
+/// Initial delay before first retry in milliseconds.
+/// Set to 500ms to quickly retry after brief network blips.
+const INITIAL_RETRY_DELAY_MS: u64 = 500;
+
+/// Multiplier for exponential backoff between retry attempts.
+/// Each retry waits MULTIPLIER times longer than the previous.
+/// Delays: 500ms -> 1500ms (total ~2s for all retries).
+const RETRY_BACKOFF_MULTIPLIER: u32 = 3;
 
 /// Economy service with concurrent request deduplication.
 ///
@@ -44,12 +103,37 @@ impl EconomyService {
     pub fn new() -> Self {
         Self {
             client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(10)) // 10 second total timeout
-                .connect_timeout(Duration::from_secs(5)) // 5 second connect timeout
+                .timeout(Duration::from_secs(HTTP_TOTAL_TIMEOUT_SECS))
+                .connect_timeout(Duration::from_secs(HTTP_CONNECT_TIMEOUT_SECS))
                 .build()
                 .expect("Failed to build HTTP client"),
             in_flight: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    /// Build the poe.ninja API URL for a given league and economy type.
+    pub(crate) fn build_poe_ninja_url(league_name: &str, economy_type: EconomyType) -> String {
+        format!(
+            "{}?league={}&type={}",
+            POE_NINJA_API_BASE_URL,
+            urlencoding::encode(league_name),
+            economy_type.as_str()
+        )
+    }
+
+    /// Calculate exponential backoff delay for a given retry attempt.
+    pub(crate) fn calculate_retry_delay(attempt: u32) -> Duration {
+        if attempt == 0 {
+            Duration::from_millis(0)
+        } else {
+            let delay_ms = INITIAL_RETRY_DELAY_MS * (RETRY_BACKOFF_MULTIPLIER.pow(attempt - 1) as u64);
+            Duration::from_millis(delay_ms)
+        }
+    }
+
+    /// Check if an error should trigger a retry attempt.
+    pub(crate) fn is_retryable_error(error: &AppError) -> bool {
+        matches!(error, AppError::Network { .. })
     }
 
     /// Generate unique key for a cache entry (used for request deduplication)
@@ -158,12 +242,7 @@ impl EconomyService {
             league_name
         };
 
-        let url = format!(
-            "{}?league={}&type={}",
-            POE_NINJA_API_BASE,
-            urlencoding::encode(&league_name),
-            economy_type.as_str()
-        );
+        let url = Self::build_poe_ninja_url(&league_name, economy_type);
 
         log::info!(
             "Fetching economy data from poe.ninja - league: {}, hardcore: {}, type: {}",
@@ -227,8 +306,63 @@ impl EconomyService {
         log::trace!("Removed fetch lock for {}", key);
     }
 
-    /// Fetch data from poe.ninja API
+    /// Fetch data from poe.ninja API with automatic retry on transient failures.
+    ///
+    /// Retries up to MAX_RETRY_ATTEMPTS times with exponential backoff on network errors.
+    /// Does NOT retry on 4xx errors (client errors) - only 5xx and network failures.
     async fn fetch_from_poe_ninja(&self, url: &str) -> AppResult<CurrencyExchangeData> {
+        let mut last_error = None;
+
+        for attempt in 0..MAX_RETRY_ATTEMPTS {
+            // Apply delay (0ms for first attempt)
+            let delay = Self::calculate_retry_delay(attempt);
+            if delay.as_millis() > 0 {
+                log::debug!(
+                    "Retry attempt {}/{} after {}ms delay",
+                    attempt + 1,
+                    MAX_RETRY_ATTEMPTS,
+                    delay.as_millis()
+                );
+                tokio::time::sleep(delay).await;
+            }
+
+            // Attempt fetch
+            match self.try_fetch_from_poe_ninja(url).await {
+                Ok(data) => {
+                    if attempt > 0 {
+                        log::info!(
+                            "Successfully fetched data after {} retry attempts",
+                            attempt
+                        );
+                    }
+                    return Ok(data);
+                }
+                Err(e) => {
+                    if Self::is_retryable_error(&e) {
+                        log::warn!(
+                            "Retryable error on attempt {}/{}: {}",
+                            attempt + 1,
+                            MAX_RETRY_ATTEMPTS,
+                            e
+                        );
+                        last_error = Some(e);
+                    } else {
+                        // Non-retryable error - fail immediately
+                        log::error!("Non-retryable error, not retrying: {}", e);
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        // All retries exhausted
+        Err(last_error.unwrap_or_else(|| AppError::Network {
+            message: "All retry attempts failed with no error captured".to_string(),
+        }))
+    }
+
+    /// Single attempt to fetch data from poe.ninja (no retries).
+    async fn try_fetch_from_poe_ninja(&self, url: &str) -> AppResult<CurrencyExchangeData> {
         let response = self.client.get(url).send().await.map_err(|e| {
             log::error!("Failed to fetch currency data: {}", e);
             AppError::Network {
@@ -239,9 +373,17 @@ impl EconomyService {
         if !response.status().is_success() {
             let status = response.status();
             log::error!("poe.ninja API returned error status: {}", status);
-            return Err(AppError::Network {
-                message: format!("poe.ninja API returned error: {}", status),
-            });
+
+            // Differentiate between 4xx (client error) and 5xx (server error)
+            return if status.is_client_error() {
+                Err(AppError::Validation {
+                    message: format!("poe.ninja API client error: {}", status),
+                })
+            } else {
+                Err(AppError::Network {
+                    message: format!("poe.ninja API server error: {}", status),
+                })
+            };
         }
 
         let api_response = response
@@ -261,7 +403,6 @@ impl EconomyService {
                 e
             );
 
-            // Provide more user-friendly error messages
             if e.contains("No currency data available") {
                 AppError::Validation { message: e }
             } else {

@@ -2,7 +2,112 @@
 mod tests {
     use crate::domain::economy::models::EconomyType;
     use crate::domain::economy::service::EconomyService;
+    use crate::errors::AppError;
     use std::sync::Arc;
+    use std::time::Duration;
+
+    // ============= Helper Function Tests =============
+
+    #[test]
+    fn test_build_poe_ninja_url_basic() {
+        let url = EconomyService::build_poe_ninja_url("Standard", EconomyType::Currency);
+        assert_eq!(
+            url,
+            "https://poe.ninja/poe2/api/economy/exchange/current/overview?league=Standard&type=Currency"
+        );
+    }
+
+    #[test]
+    fn test_build_poe_ninja_url_with_spaces() {
+        // League names with spaces should be URL-encoded
+        let url = EconomyService::build_poe_ninja_url("Rise of the Abyssal", EconomyType::Fragments);
+        assert!(url.contains("Rise%20of%20the%20Abyssal"));
+        assert!(url.contains("type=Fragments"));
+    }
+
+    #[test]
+    fn test_build_poe_ninja_url_different_economy_types() {
+        let economy_types = [
+            (EconomyType::Currency, "Currency"),
+            (EconomyType::Fragments, "Fragments"),
+            (EconomyType::Essences, "Essences"),
+            (EconomyType::Runes, "Runes"),
+            (EconomyType::Ritual, "Ritual"),
+        ];
+
+        for (economy_type, expected_type_str) in economy_types {
+            let url = EconomyService::build_poe_ninja_url("TestLeague", economy_type);
+            assert!(
+                url.contains(&format!("type={}", expected_type_str)),
+                "URL should contain type={} for {:?}",
+                expected_type_str,
+                economy_type
+            );
+        }
+    }
+
+    #[test]
+    fn test_calculate_retry_delay_first_attempt() {
+        // First attempt (attempt 0) should have no delay
+        let delay = EconomyService::calculate_retry_delay(0);
+        assert_eq!(delay, Duration::from_millis(0));
+    }
+
+    #[test]
+    fn test_calculate_retry_delay_second_attempt() {
+        // Second attempt (attempt 1) should have initial delay (500ms)
+        let delay = EconomyService::calculate_retry_delay(1);
+        assert_eq!(delay, Duration::from_millis(500));
+    }
+
+    #[test]
+    fn test_calculate_retry_delay_third_attempt() {
+        // Third attempt (attempt 2) should have 500 * 3 = 1500ms
+        let delay = EconomyService::calculate_retry_delay(2);
+        assert_eq!(delay, Duration::from_millis(1500));
+    }
+
+    #[test]
+    fn test_calculate_retry_delay_fourth_attempt() {
+        // Fourth attempt (attempt 3) should have 500 * 9 = 4500ms
+        let delay = EconomyService::calculate_retry_delay(3);
+        assert_eq!(delay, Duration::from_millis(4500));
+    }
+
+    #[test]
+    fn test_is_retryable_error_network() {
+        let error = AppError::Network {
+            message: "Connection refused".to_string(),
+        };
+        assert!(EconomyService::is_retryable_error(&error));
+    }
+
+    #[test]
+    fn test_is_retryable_error_validation() {
+        // Validation errors (4xx) should NOT be retryable
+        let error = AppError::Validation {
+            message: "Bad request".to_string(),
+        };
+        assert!(!EconomyService::is_retryable_error(&error));
+    }
+
+    #[test]
+    fn test_is_retryable_error_serialization() {
+        // Serialization errors should NOT be retryable
+        let error = AppError::Serialization {
+            message: "Failed to parse JSON".to_string(),
+        };
+        assert!(!EconomyService::is_retryable_error(&error));
+    }
+
+    #[test]
+    fn test_is_retryable_error_internal() {
+        // Internal errors should NOT be retryable
+        let error = AppError::internal_error("test_function", "Something went wrong");
+        assert!(!EconomyService::is_retryable_error(&error));
+    }
+
+    // ============= Service Creation Tests =============
 
     #[test]
     fn test_service_creation() {

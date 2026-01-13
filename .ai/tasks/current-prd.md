@@ -1,426 +1,263 @@
-# PRD: Pipeline Orchestrator - All Deferred Issues (61 Total)
+# PRD: Debug Character List Not Appearing
 
 ## Context
+A runtime bug has been reported: **the character list is not appearing when the application starts**.
 
-This is the **master orchestrator PRD** that executes all 8 batch PRDs in priority order to systematically resolve all 61 deferred issues from the domain refactoring session (2026-01-11).
-
-**Pipeline Overview**:
-
-- 8 batch PRDs to execute sequentially
-- 61 total issues across all batches
-- Each batch has dependencies on previous batches
-- Estimated total: 4-8 weeks of work
-
-**Source of Truth**: `.ai/tasks/deferred-issues.md`
+**Type**: Runtime bug
+**Severity**: HIGH (core feature broken)
+**Suspected Cause**: Unknown - needs log-based investigation
 
 ---
 
-## Batch Execution Plan
+## Investigation Approach
 
-### Batch 1: Quick Wins (6 issues)
-
-**PRD**: `.ai/tasks/prd-quick-wins.md`
-**Completion Promise**: `QUICK_WINS_COMPLETE`
-**Prerequisites**: None (first batch)
-**Remaining After**: 55 issues
-**Max Iterations**: 150
-
-### Batch 2: Data Integrity (7 issues)
-
-**PRD**: `.ai/tasks/prd-data-integrity.md`
-**Completion Promise**: `DATA_INTEGRITY_COMPLETE`
-**Prerequisites**: Batch 1 complete
-**Remaining After**: 48 issues
-**Max Iterations**: 250
-
-### Batch 3: Event System (2 issues)
-
-**PRD**: `.ai/tasks/prd-event-system.md`
-**Completion Promise**: `EVENT_SYSTEM_COMPLETE`
-**Prerequisites**: Batch 1, 2 complete
-**Remaining After**: 46 issues
-**Max Iterations**: 100
-
-### Batch 4: Real-Time Features (1 issue)
-
-**PRD**: `.ai/tasks/prd-real-time-features.md`
-**Completion Promise**: `REAL_TIME_COMPLETE`
-**Prerequisites**: Batch 1, 2, 3 complete
-**Remaining After**: 45 issues
-**Max Iterations**: 60
-
-### Batch 5: Refactors 1 - Config & Wiki (8 issues)
-
-**PRD**: `.ai/tasks/prd-refactors-1-config-wiki.md`
-**Completion Promise**: `REFACTORS_1_COMPLETE`
-**Prerequisites**: Batch 1-4 complete
-**Remaining After**: 37 issues
-**Max Iterations**: 250
-
-### Batch 6: Refactors 2 - Monitoring & Character (8 issues)
-
-**PRD**: `.ai/tasks/prd-refactors-2-monitoring-character.md`
-**Completion Promise**: `REFACTORS_2_COMPLETE`
-**Prerequisites**: Batch 5 complete
-**Remaining After**: 29 issues
-**Max Iterations**: 250
-
-### Batch 7: Refactors 3 - Zone & Economy (12 issues)
-
-**PRD**: `.ai/tasks/prd-refactors-3-zone-economy.md`
-**Completion Promise**: `REFACTORS_3_COMPLETE`
-**Prerequisites**: Batch 6 complete
-**Remaining After**: 17 issues
-**Max Iterations**: 350
-
-### Batch 8: Refactors 4 - Walkthrough & UI (9 issues)
-
-**PRD**: `.ai/tasks/prd-refactors-4-walkthrough-ui.md`
-**Completion Promise**: `REFACTORS_4_COMPLETE`
-**Prerequisites**: Batch 7 complete
-**Remaining After**: 8 issues
-**Max Iterations**: 300
+This is a **log-based debugging task**. You will autonomously:
+1. **Start the app** with `yarn dev` in interact mode
+2. **Capture and analyze logs** (compilation errors, runtime errors, warnings)
+3. **Identify errors and inconsistencies** in the logs
+4. **Add strategic debug logging** if needed to gather more evidence
+5. **Analyze code** to understand why errors are occurring
+6. **Implement fixes** based on log analysis
+7. **Restart and verify** - logs should be clean
 
 ---
 
-## Initial State Detection
+## Step-by-Step Investigation
 
-**Before starting orchestration loop**:
-
-1. Check if master log exists: `.ai/sessions/[any-date]-pipeline-execution.md`
-2. If exists:
-   - Read master log to find last verified batch
-   - Read `deferred-issues.md` to check completion counter
-   - Resume from next batch after last verified
-3. If not exists:
-   - This is first run
-   - Check `deferred-issues.md` for any completed batches:
-     - If counter shows (6/61): Batch 1 already complete, start from Batch 2
-     - If counter shows (0/61): Start from Batch 1
-   - Create new master log
-
----
-
-## Orchestration Loop
-
-**For EACH batch (starting from determined batch)**:
-
-### Step 1: Pre-Flight Check
-
-1. Verify prerequisites complete (check master log)
-2. Verify current branch clean (`git status`)
-3. Verify tests passing baseline (517 frontend, 423 backend)
-4. Read batch PRD file
-5. Create batch session log: `.ai/sessions/[date]-[batch-name]-batch.md`
-
-### Step 2: Execute Batch
-
-1. Follow batch PRD instructions **exactly**
-2. Use `@implementation-planner` for each issue per batch PRD
-3. Implement, test, commit per batch PRD loop
-4. Follow batch checkpoints (if any)
-5. Continue until batch completion promise received
-
-### Step 3: Verify Batch Completion
-
-When `<promise>[BATCH]_COMPLETE</promise>` received:
-
-1. **Verify issues marked**: All issues in batch marked ✅ in `deferred-issues.md`
-2. **Verify counters**: Issue count updated correctly (e.g., 6/61 → 13/61)
-3. **Verify commits**: All commits for batch pushed to remote
-4. **Verify tests**: Tests still passing (517 frontend, 423 backend)
-5. **Verify session log**: Batch session log complete and committed
-
-### Step 4: Update Master State
-
-1. Update master log: `.ai/sessions/[date]-pipeline-execution.md`:
-   - Mark batch complete ✅
-   - Note issues completed
-   - Note any problems or deviations
-   - Update overall progress counter
-2. Archive batch PRD: Move to `.ai/archive/completed-prds/[batch-name].md`
-3. Commit master log: `"docs: batch [N] complete - [X]/61 issues done"`
-4. Push all changes
-
-### Step 5: Checkpoint Gate
-
-1. Output parent checkpoint: `<promise>BATCH_[N]_VERIFIED</promise>`
-2. Use `AskUserQuestion`:
-
-   ```
-   "Batch [N] ([batch-name]) complete: [X]/61 issues done.
-
-   Status:
-   - Issues fixed: [list of issue numbers]
-   - Tests: ✅ passing
-   - Commits: ✅ pushed
-
-   Continue to Batch [N+1] ([next-batch-name])?
-   Options: 'yes' to continue, 'pause' to stop, 'skip' to skip next batch"
-   ```
-
-3. Wait for user response
-
-### Step 6: Handle User Response
-
-- **"yes"**: Continue to next batch (Step 1)
-- **"pause"**: Output `<promise>PIPELINE_PAUSED</promise>` and stop gracefully
-- **"skip"**: Mark next batch as SKIPPED, move to batch after that
-
-### Step 7: Final Completion
-
-After Batch 8 verified:
-
-1. Verify all 61 issues marked ✅ in `deferred-issues.md`
-2. Verify counter shows (61/61 complete)
-3. Create final summary in master log
-4. Output: `<promise>PIPELINE_COMPLETE</promise>` 🎉
-
----
-
-## Self-Healing
-
-### Batch Fails to Complete
-
-**Symptoms**: No completion promise after max iterations, or verification fails
-
-**Action**:
-
-1. Document failure in master log
-2. Save current state (what was completed)
-3. Output `<promise>BATCH_[N]_FAILED</promise>`
-4. `AskUserQuestion`: "Batch [N] failed. Retry batch, skip batch, or pause pipeline?"
-5. Handle response:
-   - **retry**: Restart batch from beginning (up to 2 retries)
-   - **skip**: Mark batch as BLOCKED, continue to next
-   - **pause**: Stop pipeline gracefully
-
-### Test Regression
-
-**Symptoms**: Tests passing before batch, failing after
-
-**Action**:
-
-1. Document regression in master log
-2. Output `<promise>TEST_REGRESSION_DETECTED</promise>`
-3. `AskUserQuestion`: "Tests regressed during batch [N]. Debug, rollback, or continue?"
-4. Handle response:
-   - **debug**: Investigate failing tests, fix, re-verify
-   - **rollback**: `git reset --hard` to before batch, mark BLOCKED
-   - **continue**: Accept regression, document reason
-
-### Git Conflicts
-
-**Symptoms**: Cannot push commits due to conflicts
-
-**Action**:
-
-1. Attempt `git pull --rebase`
-2. If conflicts: Output `<promise>GIT_CONFLICT</promise>`
-3. `AskUserQuestion`: "Git conflicts detected. Resolve manually?"
-4. Wait for user to resolve, then continue
-
-### Iteration Limit Reached
-
-**Symptoms**: Batch hits max iterations without completion
-
-**Action**:
-
-1. Document in master log what was completed
-2. Output `<promise>ITERATION_LIMIT_REACHED</promise>`
-3. `AskUserQuestion`: "Batch [N] hit iteration limit. Extend limit and retry, or skip batch?"
-
----
-
-## Master Session Log Structure
-
-**File**: `.ai/sessions/[date]-pipeline-execution.md`
-
-```markdown
-# Pipeline Execution - All Deferred Issues
-
-**Started**: YYYY-MM-DD HH:MM
-**Status**: IN_PROGRESS | PAUSED | COMPLETE | BLOCKED
-
-## Overall Progress
-
-- Total Issues: 61
-- Completed: X
-- Remaining: Y
-- Current Batch: [batch-name]
-
-## Batch Summary
-
-### ✅ Batch 1: Quick Wins (6 issues)
-
-- Started: YYYY-MM-DD HH:MM
-- Completed: YYYY-MM-DD HH:MM
-- Duration: Xh Ym
-- Issues: #6, #7, #15, #21, #25, #26
-- Commits: [list of commit SHAs]
-- Session Log: `.ai/sessions/[date]-quick-wins-batch.md`
-- Notes: [any important notes]
-
-### ✅ Batch 2: Data Integrity (7 issues)
-
-... (same structure)
-
-### 🚧 Batch 3: Event System (2 issues)
-
-- Status: IN_PROGRESS
-- Started: YYYY-MM-DD HH:MM
-  ... (same structure)
-
-### ⏳ Batch 4: Real-Time Features
-
-- Status: PENDING
-
-... (continue for all batches)
-
-## Issues Encountered
-
-- [Timestamp] Batch X: [description of issue]
-- [Timestamp] Resolution: [how it was handled]
-
-## Final Verification
-
-- [ ] All 61 issues marked ✅
-- [ ] Counter shows (61/61)
-- [ ] All tests passing
-- [ ] All commits pushed
-- [ ] All batch PRDs archived
-```
-
----
-
-## Resume Capability
-
-### If Pipeline Paused or Interrupted
-
-1. **Check master log** for last verified batch
-2. **Resume from next batch**:
-   - If Batch 3 verified → Resume from Batch 4
-3. **Verify current state**:
-   - Check deferred-issues.md counters
-   - Verify tests still passing
-   - Check git status
-4. **Continue execution** from Step 1 of next batch
-
-### Resume Command
-
+### Step 1: Start the App in Interact Mode
+Start app with interact subagent to monitor logs:
 ```bash
-/ralph-loop:ralph-loop "Resume .ai/tasks/current-prd.md from last verified batch. Check master log at .ai/sessions/[date]-pipeline-execution.md to determine resume point, verify state, continue execution." --max-iterations 2000 --completion-promise "PIPELINE_COMPLETE"
+yarn dev
 ```
+
+**Task for interact subagent**: Monitor logs for 15-20 seconds and capture:
+- Any compilation errors (Rust or TypeScript)
+- Runtime errors or panics
+- Warnings about missing functions, types, or imports
+- Character-related errors
+- Failed command invocations
+
+Let app fully start up before stopping.
+
+### Step 2: Analyze Captured Logs
+Review the log output for:
+- **Compilation errors**: Missing imports, renamed functions, type errors
+- **Runtime errors**: Panics, unwraps on None, failed operations
+- **Warnings**: Unused imports, deprecations, type mismatches
+- **Missing logs**: Should see character loading on startup - is it missing?
+
+**Document all errors/warnings found.**
+
+### Step 3: Analyze Recent Changes (if logs unclear)
+If logs don't reveal obvious error, check recent commits:
+```bash
+git log --oneline -20 -- packages/backend/src/domain/character/ packages/frontend/src/contexts/ packages/frontend/src/hooks/
+```
+
+Look for:
+- Renamed functions or types
+- Changed imports
+- Modified query keys or command names
+
+### Step 4: Investigate Error Root Cause
+Based on errors found in logs, read relevant files:
+
+**If compilation error**: Read the file mentioned in error
+**If runtime error**: Read the function/module where panic occurred
+**If no obvious error**: Read character loading flow:
+- `packages/frontend/src/hooks/use-characters.ts`
+- `packages/backend/src/commands/characters.rs`
+- `packages/backend/src/domain/character/service.rs`
+
+Identify:
+- What specific line is causing the error?
+- Why is it failing? (missing import, wrong type, renamed function?)
+- What was changed recently that could cause this?
+
+### Step 5: Add Debug Logging (if needed)
+If error not obvious from initial logs, add strategic debug logs:
+
+**Backend** (at entry point of suspected issue):
+```rust
+eprintln!("[DEBUG] Function X called with args: {:?}", args);
+eprintln!("[DEBUG] Result: {:?}", result);
+```
+
+**Frontend** (if frontend might be involved):
+```typescript
+console.error('[DEBUG] Hook/Component state:', { status, data, error });
+```
+
+**Location**: Add logs at:
+- Function entry points
+- Before operations that might fail
+- After critical operations
+
+### Step 6: Restart with Debug Logs
+Restart app with new logs:
+```bash
+yarn dev
+```
+
+Capture output again. New logs should reveal:
+- Where execution stops
+- What values are unexpected
+- Which branch is taken
+
+### Step 7: Identify Root Cause
+Based on all evidence:
+- **Compilation error** → Fix syntax, imports, types
+- **Missing function** → Function renamed in refactor, update call sites
+- **Type mismatch** → Types changed, update usage
+- **Runtime panic** → Add error handling or fix logic
+- **Silent failure** → Missing command registration or broken query
+
+### Step 8: Implement Fix
+Make targeted fix based on root cause:
+- **Missing import** → Add import statement
+- **Renamed function** → Update all call sites
+- **Type mismatch** → Fix type annotations
+- **Logic error** → Correct the logic
+- **Missing registration** → Register command/handler
+
+### Step 9: Verify Fix - Check Logs Are Clean
+1. Remove debug logs (if any were added)
+2. Restart app: `yarn dev`
+3. Monitor logs for 15-20 seconds
+4. Verify:
+   - **No compilation errors**
+   - **No runtime errors or panics**
+   - **No warnings about the fixed code**
+   - App starts successfully
+
+### Step 10: Run Tests
+Verify nothing else broke:
+```bash
+yarn test
+```
+
+All tests should pass.
+
+### Step 11: Document and Commit
+1. Create session log: `.ai/sessions/[date]-character-list-bug-fix.md`
+2. Document:
+   - Symptoms observed
+   - Investigation steps taken
+   - Root cause identified
+   - Fix applied
+   - Verification results
+3. Commit: `"fix(characters): [description of root cause fix]"`
+4. Include: `Co-Authored-By: Warp <agent@warp.dev>`
 
 ---
 
 ## Success Criteria
 
-- [ ] All 8 batches executed
-- [ ] All 61 issues marked ✅ in deferred-issues.md
-- [ ] Issue counter shows (61/61 complete)
-- [ ] All tests passing (517 frontend, 423 backend)
-- [ ] No linter errors
-- [ ] All commits pushed to remote
-- [ ] All batch PRDs archived
-- [ ] Master session log complete
-- [ ] `<promise>PIPELINE_COMPLETE</promise>` output
+- [ ] Application starts without compilation errors
+- [ ] No runtime errors or panics in logs
+- [ ] All tests passing (`yarn test`)
+- [ ] Root cause identified from log analysis
+- [ ] Fix implemented and verified via clean logs
+- [ ] Session log documents: symptoms, logs captured, root cause, fix
+- [ ] Fix committed with clear message
 
 ---
 
-## Important Context for Ralph
+## Important Context for Claude
 
-### Orchestration Role
+**Debugging Workflow**:
+1. Run app in interact mode, capture logs (15-20 seconds)
+2. Analyze logs for errors, warnings, inconsistencies
+3. Identify root cause from log analysis
+4. Add debug logging if needed, restart, capture again
+5. Implement fix based on evidence
+6. Verify: Clean logs on restart + tests pass
 
-- You are the **meta-orchestrator**, not implementing issues directly
-- Follow each batch PRD's instructions exactly
-- Use batch completion promises as gates between batches
-- Update master state after each batch
-- Give user control at checkpoints
+**Subagent Usage**:
+- Consider invoking `@debugger` for investigation guidance
+- Debugger agent specializes in runtime debugging approach
 
-### Batch Execution
+**Tech Stack Reminders**:
+- **Frontend**: React 19, TanStack Query (for data fetching)
+- **Backend**: Rust, Tauri commands
+- **Data**: File-based (character files + index)
+- **State**: React Context + TanStack Query cache
 
-- Each batch PRD is self-contained
-- Follow batch's specific instructions (don't deviate)
-- Use batch's subagent invocations as specified
-- Honor batch's checkpoints and promises
-- Let batch handle its own issue loop
-
-### State Management
-
-- Master log is source of truth for pipeline state
-- deferred-issues.md is source of truth for issue status
-- Always verify before moving to next batch
-- Document everything in master log
-
-### User Interaction
-
-- Ask user at EVERY batch boundary
-- Give clear status (issues done, tests, commits)
-- Offer options (continue, pause, skip)
-- Respect user's choice
-
-### Failure Handling
-
-- Don't stop pipeline for single issue failures
-- Batch completion promises indicate batch success
-- Document failures in master log
-- Let user decide on retries/skips
+**Key Files** (likely suspects):
+- Frontend query: `packages/frontend/src/hooks/use-characters.ts`
+- Frontend context: `packages/frontend/src/contexts/CharacterContext.tsx`
+- Frontend page: `packages/frontend/src/routes/characters.tsx`
+- Backend service: `packages/backend/src/domain/character/service.rs`
+- Backend command: `packages/backend/src/commands/characters.rs`
 
 ---
 
-## Ralph Command
+## Recommended Approach: Ralph Loop
 
+Since this is autonomous log-based debugging, **Ralph loop is well-suited** for this task.
+
+**Command**:
 ```bash
-/ralph-loop:ralph-loop "Follow .ai/tasks/current-prd.md to execute pipeline of 8 batch PRDs. FIRST: check deferred-issues.md counter to detect already-completed batches and determine starting point. THEN for each remaining batch: pre-flight check, execute batch PRD, wait for batch completion promise, verify results, update master log, output batch verified promise, ask user to continue. Handle failures gracefully. Output PIPELINE_COMPLETE when all 8 batches done." --max-iterations 2000 --completion-promise "PIPELINE_COMPLETE"
+/ralph-loop:ralph-loop "Follow .ai/tasks/current-prd.md to debug character list issue. Start app in interact mode, capture and analyze logs for errors/warnings, identify root cause, add debug logging if needed, implement fix, verify logs are clean and tests pass. Document findings. Output BUG_FIXED when complete." --max-iterations 50 --completion-promise "BUG_FIXED"
+```
+
+**Alternative: Regular Conversation**
+If you prefer to observe the investigation:
+```
+Please debug why the character list isn't appearing.
+
+1. Start `yarn dev` in interact mode and analyze the logs
+2. Identify any errors or warnings
+3. Add debug logging if needed to pinpoint the issue
+4. Implement a fix
+5. Verify with clean logs and passing tests
 ```
 
 ---
 
-## Project Context
+## Debugging Capability Notes
 
-**Tech Stack**:
+**What Claude can determine from logs:**
+- Compilation errors (missing imports, type errors, renamed functions)
+- Runtime errors (panics, unwraps, failed operations)
+- Warning messages
+- Missing functionality (commands not registered, handlers not found)
 
-- Frontend: React 19, TypeScript, TanStack Query, Tailwind CSS
-- Backend: Rust, Tauri 2.x, serde, tokio
-- Testing: Vitest + RTL (frontend), cargo test (backend)
+**What Claude cannot determine from logs alone:**
+- UI rendering issues (if logs are clean but UI still broken)
+- Visual bugs
+- UX issues
 
-**Repository**:
-
-- Branch: `main` (or create feature branch per batch?)
-- Tests: Must pass at all times
-- Commits: Use conventional commits format
-
-**Key Files**:
-
-- Issue tracker: `.ai/tasks/deferred-issues.md`
-- Batch PRDs: `.ai/tasks/prd-*.md`
-- Master log: `.ai/sessions/[date]-pipeline-execution.md`
-- Batch logs: `.ai/sessions/[date]-[batch-name]-batch.md`
+**For this character list issue**: Since it's likely a code error from the refactoring pipeline, logs should reveal the problem.
 
 ---
 
-## Safety Limits
+## Session Log Template
 
-- **Max iterations per batch**: See batch PRD (150-350)
-- **Max iterations total**: 2000 (safety limit)
-- **Max retries per batch**: 2
-- **Test regression tolerance**: 0 (must investigate)
-- **Required checkpoints**: After every batch
+`.ai/sessions/[date]-character-list-bug-fix.md`:
 
----
+```markdown
+# Character List Bug Investigation
 
-## Final Notes
+**Date**: YYYY-MM-DD
+**Issue**: Character list not appearing on app start
 
-This is a long-running, complex pipeline. The key to success:
+## Symptoms
+- [what you observed]
 
-1. **Follow batch PRDs exactly** - they have detailed instructions
-2. **Verify at every gate** - don't skip verification steps
-3. **Give user control** - ask at every batch boundary
-4. **Document everything** - master log is critical
-5. **Handle failures gracefully** - don't let one issue block entire pipeline
-6. **Respect completion promises** - they signal batch success
-7. **Update state religiously** - deferred-issues.md + master log
-8. **Test constantly** - verify tests pass between batches
+## Investigation Steps
+1. [step taken]
+2. [evidence gathered]
 
-The pipeline is designed to be pausable, resumable, and self-documenting. Trust the process.
+## Root Cause
+[what was broken and why]
+
+## Fix Applied
+[code changes made]
+
+## Verification
+[how fix was verified to work]
+
+## Related Commits
+- [commit SHA and message]
+```

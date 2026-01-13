@@ -9,6 +9,9 @@ pub mod traits;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod service_test;
+
 pub use commands::{
     get_character_walkthrough_progress, get_walkthrough_guide,
     update_character_walkthrough_progress,

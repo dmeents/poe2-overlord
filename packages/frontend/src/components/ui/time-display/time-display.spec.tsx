@@ -62,4 +62,24 @@ describe('TimeDisplay', () => {
 
     expect(screen.getByText('1m 0s')).toBeInTheDocument();
   });
+
+  describe('fractional seconds handling', () => {
+    it('floors fractional seconds to integer', () => {
+      render(<TimeDisplay seconds={45.7} />);
+
+      expect(screen.getByText('45s')).toBeInTheDocument();
+    });
+
+    it('floors fractional seconds in minutes display', () => {
+      render(<TimeDisplay seconds={125.9} />);
+
+      expect(screen.getByText('2m 5s')).toBeInTheDocument();
+    });
+
+    it('floors fractional seconds in hours display', () => {
+      render(<TimeDisplay seconds={3725.5} />);
+
+      expect(screen.getByText('1h 2m 5s')).toBeInTheDocument();
+    });
+  });
 });

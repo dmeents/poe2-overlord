@@ -1,9 +1,9 @@
 # Deferred Issues from Domain Refactoring
 
 **Total**: 61 issues deferred for larger architectural changes
-**Completed**: 35 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config + Monitoring + Character + Zone + Economy Refactors)
+**Completed**: 44 (Quick Wins + Data Integrity + Event System + Real-Time Features + Config + Monitoring + Character + Zone + Economy + Walkthrough + UI Refactors)
 **In Progress**: 0
-**Remaining**: 26
+**Remaining**: 17
 **Deferred to PRD**: 5 (Wiki issues #9, #10, #32-34 → see prd-wiki-parsing-robustness.md)
 
 **Source**: `.ai/sessions/2026-01-11-domain-refactoring.md`
@@ -261,7 +261,7 @@
 **Impact**: Hard to maintain, breaks on layout changes
 **Dependencies**: None
 
-### Issue #24: Modal Scroll Lock Memory Leak
+### Issue #24: Modal Scroll Lock Memory Leak ✅
 **Domain**: UI Foundation
 **Severity**: HIGH
 **Type**: Memory Leak
@@ -270,6 +270,7 @@
 **Complexity**: HIGH - Needs global modal manager
 **Impact**: Memory leak, scroll issues with nested modals
 **Dependencies**: Global modal manager architecture
+**Status**: ✅ Complete (Commit: ffdeb8b) - Implemented reference counting pattern
 
 ### Issue #25: Tooltip Scroll Repositioning ✅
 **Domain**: UI Foundation
@@ -342,16 +343,16 @@
 - Issue #51: Magic numbers extracted ✅ (Commit: b648ee1)
 
 ### Walkthrough Domain (4 issues)
-- Issue #52: Incomplete test coverage (service tests)
-- Issue #53: Parameter naming inconsistency (characterId vs character_id)
-- Issue #54: No bounds checking on step IDs (circular reference risk)
-- Issue #55: Conditional hook calls violate Rules of Hooks
+- Issue #52: Incomplete test coverage (service tests) ✅ (Commit: 66bb26b)
+- Issue #53: Parameter naming inconsistency ✅ (N/A - follows Tauri conventions)
+- Issue #54: No bounds checking on step IDs ✅ (Commit: a95a110)
+- Issue #55: Conditional hook calls violate Rules of Hooks ✅ (Commit: 749e7ad)
 
 ### UI Foundation Domain (4 issues)
-- Issue #56: Button no loading state
-- Issue #57: Sidebar missing active link announcement
-- Issue #58: Error state unsafe type coercion
-- Issue #59: Time display inconsistent rounding
+- Issue #56: Button no loading state ✅ (Commit: bd59f08)
+- Issue #57: Sidebar missing active link announcement ✅ (Commit: a410abd)
+- Issue #58: Error state unsafe type coercion ✅ (Commit: 86c8bd3)
+- Issue #59: Time display inconsistent rounding ✅ (Commit: 03ab868)
 
 ---
 

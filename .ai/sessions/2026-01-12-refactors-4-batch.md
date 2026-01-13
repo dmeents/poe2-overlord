@@ -13,7 +13,7 @@
 - [x] Issue #55: Conditional hook calls violate Rules of Hooks
 
 ### UI Foundation Domain (5 issues)
-- [ ] Issue #24: Modal scroll lock memory leak (HIGH)
+- [x] Issue #24: Modal scroll lock memory leak (HIGH)
 - [ ] Issue #56: Button no loading state
 - [ ] Issue #57: Sidebar missing active link announcement
 - [ ] Issue #58: Error state unsafe type coercion
@@ -104,3 +104,27 @@ const activeCharacter = isActiveVariant ? characterContext.activeCharacter : nul
 ```
 
 This ensures hooks are called in the same order on every render, complying with React's Rules of Hooks.
+
+---
+
+### Issue #24: Modal scroll lock memory leak (HIGH)
+**Status**: Complete
+**Commit**: (pending)
+
+Fixed scroll lock memory leak in modal component:
+
+**Problem**: Previous implementation set `document.body.style.overflow` directly in each modal,
+which could leak if modals were stacked (second modal closing would unlock scroll even though first still open).
+
+**Solution**: Implemented reference counting pattern:
+- Added `scrollLockCount` module variable to track how many modals need scroll lock
+- `lockScroll()`: Increments counter, only sets overflow:hidden on first lock
+- `unlockScroll()`: Decrements counter, only restores overflow:unset when last modal closes
+
+**Tests Added** (4 new tests):
+- `locks scroll when modal opens`
+- `unlocks scroll when modal closes`
+- `handles nested modals correctly - only unlocks on last close`
+- `cleans up scroll lock on unmount`
+
+Frontend tests increased from 545 to 549 (+4 tests)

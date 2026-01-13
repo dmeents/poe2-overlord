@@ -2,6 +2,26 @@ import { cn } from '@/utils/tailwind';
 import { useEffect, useRef, useId } from 'react';
 import { modalStyles } from './modal.styles';
 
+/**
+ * Reference counter for scroll lock to handle nested/stacked modals.
+ * Only restores scroll when the last modal is closed.
+ */
+let scrollLockCount = 0;
+
+function lockScroll(): void {
+  scrollLockCount++;
+  if (scrollLockCount === 1) {
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function unlockScroll(): void {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    document.body.style.overflow = 'unset';
+  }
+}
+
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -104,16 +124,13 @@ export function Modal({
   }, [isOpen]);
 
   // Prevent body scroll when modal is open
+  // Uses reference counting to handle nested/stacked modals correctly
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      lockScroll();
+      return () => unlockScroll();
     }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    return undefined;
   }, [isOpen]);
 
   if (!isOpen) return null;

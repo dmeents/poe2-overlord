@@ -139,4 +139,99 @@ describe('Modal', () => {
 
     expect(container.querySelector('.custom-class')).toBeInTheDocument();
   });
+
+  describe('scroll lock', () => {
+    beforeEach(() => {
+      // Reset body overflow before each test
+      document.body.style.overflow = '';
+    });
+
+    it('locks scroll when modal opens', () => {
+      render(
+        <Modal isOpen={true} onClose={vi.fn()}>
+          <div>Content</div>
+        </Modal>
+      );
+
+      expect(document.body.style.overflow).toBe('hidden');
+    });
+
+    it('unlocks scroll when modal closes', () => {
+      const { rerender } = render(
+        <Modal isOpen={true} onClose={vi.fn()}>
+          <div>Content</div>
+        </Modal>
+      );
+
+      expect(document.body.style.overflow).toBe('hidden');
+
+      rerender(
+        <Modal isOpen={false} onClose={vi.fn()}>
+          <div>Content</div>
+        </Modal>
+      );
+
+      expect(document.body.style.overflow).toBe('unset');
+    });
+
+    it('handles nested modals correctly - only unlocks on last close', () => {
+      const { rerender } = render(
+        <>
+          <Modal isOpen={true} onClose={vi.fn()}>
+            <div>First Modal</div>
+          </Modal>
+          <Modal isOpen={true} onClose={vi.fn()}>
+            <div>Second Modal</div>
+          </Modal>
+        </>
+      );
+
+      // Both modals open - scroll should be locked
+      expect(document.body.style.overflow).toBe('hidden');
+
+      // Close one modal
+      rerender(
+        <>
+          <Modal isOpen={true} onClose={vi.fn()}>
+            <div>First Modal</div>
+          </Modal>
+          <Modal isOpen={false} onClose={vi.fn()}>
+            <div>Second Modal</div>
+          </Modal>
+        </>
+      );
+
+      // One modal still open - scroll should still be locked
+      expect(document.body.style.overflow).toBe('hidden');
+
+      // Close last modal
+      rerender(
+        <>
+          <Modal isOpen={false} onClose={vi.fn()}>
+            <div>First Modal</div>
+          </Modal>
+          <Modal isOpen={false} onClose={vi.fn()}>
+            <div>Second Modal</div>
+          </Modal>
+        </>
+      );
+
+      // All modals closed - scroll should be unlocked
+      expect(document.body.style.overflow).toBe('unset');
+    });
+
+    it('cleans up scroll lock on unmount', () => {
+      const { unmount } = render(
+        <Modal isOpen={true} onClose={vi.fn()}>
+          <div>Content</div>
+        </Modal>
+      );
+
+      expect(document.body.style.overflow).toBe('hidden');
+
+      unmount();
+
+      expect(document.body.style.overflow).toBe('unset');
+    });
+  });
 });

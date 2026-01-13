@@ -136,11 +136,32 @@ impl WalkthroughService for WalkthroughServiceImpl {
     }
 
     /// Updates a character's walkthrough progress
+    ///
+    /// Validates that the step ID exists in the guide if provided.
+    /// This prevents data corruption from invalid step references.
     async fn update_character_progress(
         &self,
         character_id: &str,
         progress: WalkthroughProgress,
     ) -> Result<(), AppError> {
+        // Validate step ID exists in guide if provided
+        if let Some(step_id) = &progress.current_step_id {
+            let guide = self.repository.load_guide().await?;
+            let step_exists = guide
+                .acts
+                .values()
+                .any(|act| act.steps.contains_key(step_id));
+
+            if !step_exists {
+                return Err(AppError::Validation {
+                    message: format!(
+                        "Invalid step ID '{}' - does not exist in walkthrough guide",
+                        step_id
+                    ),
+                });
+            }
+        }
+
         self.update_character_walkthrough_progress(character_id, progress)
             .await?;
 

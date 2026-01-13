@@ -586,6 +586,59 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[tokio::test]
+    async fn test_update_character_progress_invalid_step_id_rejected() {
+        let guide = create_test_guide();
+        let character = create_test_character("char-1");
+        let character_service = Arc::new(MockCharacterService::with_character(character));
+
+        let repository = Arc::new(MockWalkthroughRepository::new(guide));
+        let service = create_test_service(repository, character_service);
+
+        // Try to set an invalid step ID
+        let mut invalid_progress = WalkthroughProgress::new();
+        invalid_progress.set_current_step("nonexistent_step".to_string());
+
+        let result = service
+            .update_character_progress("char-1", invalid_progress)
+            .await;
+
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        match error {
+            AppError::Validation { message } => {
+                assert!(message.contains("Invalid step ID"));
+                assert!(message.contains("nonexistent_step"));
+            }
+            _ => panic!("Expected Validation error, got {:?}", error),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_update_character_progress_completed_with_no_step_id_allowed() {
+        let guide = create_test_guide();
+        let character = create_test_character("char-1");
+        let character_service = Arc::new(MockCharacterService::with_character(character));
+
+        let repository = Arc::new(MockWalkthroughRepository::new(guide));
+        let service = create_test_service(repository, character_service.clone());
+
+        // Set progress to completed with no step ID - should be allowed
+        let completed_progress = WalkthroughProgress::completed();
+
+        let result = service
+            .update_character_progress("char-1", completed_progress)
+            .await;
+
+        assert!(result.is_ok());
+
+        // Verify character was updated
+        let characters = character_service.characters.read().await;
+        let updated_char = characters.get("char-1").unwrap();
+        assert!(updated_char.walkthrough_progress.is_completed);
+        assert_eq!(updated_char.walkthrough_progress.current_step_id, None);
+    }
+
     // ============= handle_scene_change() Tests - Basic Scenarios =============
 
     #[tokio::test]

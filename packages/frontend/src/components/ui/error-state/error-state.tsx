@@ -10,6 +10,32 @@ interface ErrorStateProps {
   className?: string;
 }
 
+/**
+ * Safely extracts an error message from an unknown error type.
+ * Handles Error objects, objects with message property, strings, and other types.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  // Handle objects that have a message property (common API error shapes)
+  if (
+    error !== null &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string'
+  ) {
+    return (error as { message: string }).message;
+  }
+
+  return 'An unknown error occurred';
+}
+
 export function ErrorState({
   title = 'Error Loading Data',
   message,
@@ -18,14 +44,8 @@ export function ErrorState({
   action,
   className = '',
 }: ErrorStateProps) {
-  // Format the error message
-  const errorMessage =
-    message ||
-    (error instanceof Error
-      ? error.message
-      : error
-        ? String(error)
-        : 'An unknown error occurred');
+  // Format the error message, preferring explicit message prop
+  const errorMessage = message || getErrorMessage(error);
 
   return (
     <div className={`text-center py-8 ${className}`}>

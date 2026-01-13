@@ -39,6 +39,30 @@ describe('ErrorState', () => {
     expect(screen.getByText('An unknown error occurred')).toBeInTheDocument();
   });
 
+  it('renders message from object with message property', () => {
+    render(<ErrorState error={{ message: 'API error message' }} />);
+
+    expect(screen.getByText('API error message')).toBeInTheDocument();
+  });
+
+  it('renders default error for object without message property', () => {
+    render(<ErrorState error={{ code: 500 }} />);
+
+    expect(screen.getByText('An unknown error occurred')).toBeInTheDocument();
+  });
+
+  it('renders default error for object with non-string message', () => {
+    render(<ErrorState error={{ message: 123 }} />);
+
+    expect(screen.getByText('An unknown error occurred')).toBeInTheDocument();
+  });
+
+  it('renders default error for undefined', () => {
+    render(<ErrorState error={undefined} />);
+
+    expect(screen.getByText('An unknown error occurred')).toBeInTheDocument();
+  });
+
   it('prefers message over error prop', () => {
     render(
       <ErrorState message="Custom message" error={new Error('Error message')} />

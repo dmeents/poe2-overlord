@@ -14,7 +14,7 @@
 
 ### UI Foundation Domain (5 issues)
 - [x] Issue #24: Modal scroll lock memory leak (HIGH)
-- [ ] Issue #56: Button no loading state
+- [x] Issue #56: Button no loading state
 - [ ] Issue #57: Sidebar missing active link announcement
 - [ ] Issue #58: Error state unsafe type coercion
 - [ ] Issue #59: Time display inconsistent rounding
@@ -128,3 +128,35 @@ which could leak if modals were stacked (second modal closing would unlock scrol
 - `cleans up scroll lock on unmount`
 
 Frontend tests increased from 545 to 549 (+4 tests)
+
+---
+
+### Issue #56: Button no loading state
+**Status**: Complete
+**Commit**: (pending)
+
+Added loading state to Button component:
+
+**Features**:
+- New `loading` prop (boolean)
+- Loading spinner inline with button text
+- Button is disabled while loading (can't click)
+- Cursor changes to `cursor-wait` while loading
+- `aria-busy` attribute for accessibility
+- Spinner size matches button size (xs/sm/md/lg)
+
+**Implementation**:
+- Created `LoadingSpinner` component with size variants
+- Combined `disabled || loading` for actual disabled state
+- Added appropriate ARIA attribute for screen readers
+
+**Tests Added** (7 new tests):
+- Shows loading spinner when loading
+- Hides loading spinner when not loading
+- Is disabled when loading
+- Does not call onClick when loading
+- Sets aria-busy when loading
+- Does not set aria-busy when not loading
+- Applies cursor-wait class when loading
+
+Frontend tests increased from 549 to 556 (+7 tests)

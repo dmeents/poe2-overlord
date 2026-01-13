@@ -117,6 +117,7 @@ pub struct TrackingSummary {
     pub play_time_act2: u64,
     pub play_time_act3: u64,
     pub play_time_act4: u64,
+    #[serde(default)]
     pub play_time_act5: u64,
     pub play_time_interlude: u64,
     pub play_time_endgame: u64,

@@ -15,9 +15,9 @@
 ### UI Foundation Domain (5 issues)
 - [x] Issue #24: Modal scroll lock memory leak (HIGH)
 - [x] Issue #56: Button no loading state
-- [ ] Issue #57: Sidebar missing active link announcement
-- [ ] Issue #58: Error state unsafe type coercion
-- [ ] Issue #59: Time display inconsistent rounding
+- [x] Issue #57: Sidebar missing active link announcement
+- [x] Issue #58: Error state unsafe type coercion
+- [x] Issue #59: Time display inconsistent rounding
 
 ## Implementation Log
 
@@ -160,3 +160,77 @@ Added loading state to Button component:
 - Applies cursor-wait class when loading
 
 Frontend tests increased from 549 to 556 (+7 tests)
+
+---
+
+### Issue #57: Sidebar missing active link announcement
+**Status**: Complete
+**Commit**: (pending)
+
+Added accessibility improvements to SidebarNavigation:
+
+**Changes**:
+- Added `aria-current="page"` on active navigation links (for screen reader announcement)
+- Added `aria-label` on all navigation links for icon-only buttons
+- Added `aria-label="Primary navigation"` and `aria-label="Secondary navigation"` on nav regions
+- Added `aria-hidden="true"` on decorative icons
+
+**Implementation**:
+- Refactored to use data-driven navigation with `renderNavItem` function
+- Consolidated styling logic using conditional classes
+
+**Tests Added** (5 new tests):
+- Sets aria-current="page" on active link
+- Does not set aria-current on inactive links
+- Provides aria-label on all navigation links
+- Provides aria-label on navigation regions
+- Hides decorative icons from screen readers
+
+Frontend tests increased from 556 to 561 (+5 tests)
+
+---
+
+### Issue #58: Error state unsafe type coercion
+**Status**: Complete
+**Commit**: (pending)
+
+Fixed unsafe type coercion in ErrorState component:
+
+**Problem**: The previous implementation used `String(error)` for unknown error types,
+which could produce unhelpful messages like `[object Object]` for API error responses.
+
+**Solution**: Created `getErrorMessage()` helper function with proper type narrowing:
+1. First checks if error is an `Error` instance
+2. Then checks if error is a string
+3. Then checks if error is an object with a string `message` property (common API error shape)
+4. Falls back to "An unknown error occurred"
+
+**Tests Added** (4 new tests):
+- Renders message from object with message property
+- Renders default error for object without message property
+- Renders default error for object with non-string message
+- Renders default error for undefined
+
+Frontend tests increased from 561 to 565 (+4 tests)
+
+---
+
+### Issue #59: Time display inconsistent rounding
+**Status**: Complete
+**Commit**: (pending)
+
+Fixed inconsistent rounding in TimeDisplay component:
+
+**Problem**: The previous implementation used `Math.floor()` for hours and minutes,
+but used modulo without flooring for seconds. This meant fractional seconds like
+45.7 could display as "45.7s" instead of "45s".
+
+**Solution**: Added `Math.floor(totalSeconds)` at the start of the `formatTime` function
+to ensure all time components are calculated from an integer value.
+
+**Tests Added** (3 new tests):
+- Floors fractional seconds to integer
+- Floors fractional seconds in minutes display
+- Floors fractional seconds in hours display
+
+Frontend tests increased from 565 to 568 (+3 tests)

@@ -54,22 +54,21 @@ export function WalkthroughStepCard({
 }: WalkthroughStepCardProps): React.JSX.Element | null {
   const { openZone } = useZone();
 
+  // Always call hooks unconditionally (Rules of Hooks compliance)
+  const walkthroughContext = useWalkthrough();
+  const characterContext = useCharacter();
+
   // Determine if this is active variant (uses context)
   const isActiveVariant =
     variant === 'active' || (!stepProp && !stepResult && variant !== 'preview');
 
-  // Only use context when in active variant
-  const contextData = isActiveVariant
-    ? // eslint-disable-next-line react-hooks/rules-of-hooks
-      useWalkthrough()
-    : { progress: null, currentStep: null, previousStep: null };
-
-  const { activeCharacter } = isActiveVariant
-    ? // eslint-disable-next-line react-hooks/rules-of-hooks
-      useCharacter()
-    : { activeCharacter: null };
-
-  const { progress, currentStep, previousStep } = contextData;
+  // Conditionally use context data based on variant
+  const progress = isActiveVariant ? walkthroughContext.progress : null;
+  const currentStep = isActiveVariant ? walkthroughContext.currentStep : null;
+  const previousStep = isActiveVariant ? walkthroughContext.previousStep : null;
+  const activeCharacter = isActiveVariant
+    ? characterContext.activeCharacter
+    : null;
 
   // Determine the step data to use
   const stepData = stepProp || stepResult?.step || currentStep?.step;

@@ -10,7 +10,7 @@
 - [x] Issue #52: Incomplete test coverage (service tests)
 - [x] Issue #53: Parameter naming inconsistency - N/A (Follows standard conventions)
 - [x] Issue #54: No bounds checking on step IDs (circular reference risk)
-- [ ] Issue #55: Conditional hook calls violate Rules of Hooks
+- [x] Issue #55: Conditional hook calls violate Rules of Hooks
 
 ### UI Foundation Domain (5 issues)
 - [ ] Issue #24: Modal scroll lock memory leak (HIGH)
@@ -71,3 +71,36 @@ Added 2 new tests:
 Note: `handle_scene_change()` already had validation for next_step_id references (from Data Integrity batch).
 
 Backend tests increased from 510 to 512 (+2 tests)
+
+---
+
+### Issue #55: Conditional hook calls violate Rules of Hooks
+**Status**: Complete
+**Commit**: (pending)
+
+Fixed Rules of Hooks violation in `walkthrough-step-card.tsx`:
+
+**Before** (violating Rules of Hooks):
+```tsx
+// Conditional hook calls - BAD
+const contextData = isActiveVariant
+  ? useWalkthrough()
+  : { progress: null, ... };
+
+const { activeCharacter } = isActiveVariant
+  ? useCharacter()
+  : { activeCharacter: null };
+```
+
+**After** (compliant with Rules of Hooks):
+```tsx
+// Always call hooks unconditionally - GOOD
+const walkthroughContext = useWalkthrough();
+const characterContext = useCharacter();
+
+// Conditionally use the results
+const progress = isActiveVariant ? walkthroughContext.progress : null;
+const activeCharacter = isActiveVariant ? characterContext.activeCharacter : null;
+```
+
+This ensures hooks are called in the same order on every render, complying with React's Rules of Hooks.

@@ -32,7 +32,7 @@ mod tests {
         assert_eq!(zone_data.area_id, Some("test_zone_1".to_string()));
         assert_eq!(zone_data.act, 1);
         assert_eq!(zone_data.area_level, Some(10));
-        assert_eq!(zone_data.has_waypoint, true);
+        assert!(zone_data.has_waypoint);
         assert_eq!(zone_data.connected_zones.len(), 2);
     }
 

@@ -12,13 +12,13 @@ vi.mock('../economy-row/economy-row', () => ({
 
 vi.mock('../currency-list-controls-form/currency-list-controls-form', () => ({
   CurrencyListControlsForm: vi.fn(() => (
-    <div data-testid='currency-list-controls'>Controls</div>
+    <div data-testid="currency-list-controls">Controls</div>
   )),
 }));
 
 vi.mock('@/components/ui/loading-spinner/loading-spinner', () => ({
   LoadingSpinner: vi.fn(() => (
-    <div data-testid='loading-spinner'>Loading...</div>
+    <div data-testid="loading-spinner">Loading...</div>
   )),
 }));
 
@@ -134,7 +134,7 @@ describe('EconomyList', () => {
         totalCount: 10,
       });
 
-      render(<EconomyList {...defaultProps} searchQuery='nonexistent' />);
+      render(<EconomyList {...defaultProps} searchQuery="nonexistent" />);
 
       expect(
         screen.getByText(/No currencies found matching "nonexistent"/)
@@ -153,7 +153,7 @@ describe('EconomyList', () => {
         totalCount: 10,
       });
 
-      render(<EconomyList {...defaultProps} searchQuery='' />);
+      render(<EconomyList {...defaultProps} searchQuery="" />);
 
       expect(
         screen.getByText('No currencies match your search')
@@ -172,7 +172,7 @@ describe('EconomyList', () => {
         totalCount: 0,
       });
 
-      render(<EconomyList {...defaultProps} currencies={[]} searchQuery='' />);
+      render(<EconomyList {...defaultProps} currencies={[]} searchQuery="" />);
 
       expect(
         screen.getByText('No currency data available')

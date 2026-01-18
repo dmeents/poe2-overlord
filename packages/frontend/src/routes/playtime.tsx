@@ -34,9 +34,9 @@ function PlaytimePage() {
 
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-zinc-900 text-white'>
-        <div className='px-6 py-8'>
-          <LoadingSpinner className='py-12' />
+      <div className="min-h-screen bg-zinc-900 text-white">
+        <div className="px-6 py-8">
+          <LoadingSpinner className="py-12" />
         </div>
       </div>
     );
@@ -46,11 +46,11 @@ function PlaytimePage() {
     <>
       <CharacterStatusCard />
       {activeCharacter && (
-        <div className='mt-6'>
+        <div className="mt-6">
           <Card
-            title='Zones'
+            title="Zones"
             subtitle={`${zoneCount} of ${totalCount} zones`}
-            icon={<MapPinIcon className='w-5 h-5' />}
+            icon={<MapPinIcon className="w-5 h-5" />}
           >
             <ZoneList
               zones={filteredZones}
@@ -74,8 +74,8 @@ function PlaytimePage() {
       <PlaytimeInsights zones={zones} />
       {!isLoading && activeCharacter && zones.length === 0 && (
         <EmptyState
-          icon={<ClockIcon className='h-12 w-12' />}
-          title='No Time Tracking Data'
+          icon={<ClockIcon className="h-12 w-12" />}
+          title="No Time Tracking Data"
           description={`Start playing Path of Exile 2 with ${activeCharacter?.name} to begin tracking your time in different locations.`}
         />
       )}

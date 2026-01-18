@@ -40,7 +40,8 @@ pub use domain::log_analysis::models::{
 // Character domain models and data structures
 pub use domain::character::{
     Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex,
-    EnrichedLocationState, League, LocationState, LocationType,
+    CleanupStrategy, EnrichedLocationState, League, LocationState, LocationType,
+    OrphanCleanupReport,
 };
 
 // Zone tracking domain models
@@ -128,6 +129,7 @@ pub fn run() {
             delete_character,
             set_active_character,
             get_active_character,
+            reconcile_character_storage,
 
             // Economy commands
             get_currency_exchange_data,

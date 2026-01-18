@@ -111,7 +111,7 @@ describe('WalkthroughActAccordion', () => {
 
   it('highlights current step', () => {
     render(
-      <WalkthroughActAccordion {...defaultProps} currentStepId='act1_step_1' />
+      <WalkthroughActAccordion {...defaultProps} currentStepId="act1_step_1" />
     );
 
     // The current step should have the active styling
@@ -145,7 +145,7 @@ describe('WalkthroughActAccordion', () => {
     render(
       <WalkthroughActAccordion
         {...defaultProps}
-        currentStepId='act1_step_1'
+        currentStepId="act1_step_1"
         onSkipToStep={vi.fn()}
       />
     );
@@ -161,7 +161,7 @@ describe('WalkthroughActAccordion', () => {
     render(
       <WalkthroughActAccordion
         {...defaultProps}
-        currentStepId='act1_step_1'
+        currentStepId="act1_step_1"
         onSkipToStep={handleSkip}
       />
     );
@@ -189,7 +189,7 @@ describe('WalkthroughActAccordion', () => {
       <WalkthroughActAccordion
         {...defaultProps}
         act={emptyAct}
-        actKey='act_2'
+        actKey="act_2"
       />
     );
 

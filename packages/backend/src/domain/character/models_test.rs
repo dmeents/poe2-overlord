@@ -374,10 +374,14 @@ mod tests {
     #[test]
     fn test_character_data_default() {
         let character: CharacterData = Default::default();
-        assert!(character.id.is_empty());
+        // Default now generates a UUID to prevent empty ID issues
+        assert!(!character.id.is_empty());
+        assert!(uuid::Uuid::parse_str(&character.id).is_ok()); // Valid UUID format
         assert!(character.profile.name.is_empty());
         assert_eq!(character.profile.class, CharacterClass::Warrior);
         assert_eq!(character.profile.level, 1);
+        // TrackingSummary should use the same ID
+        assert_eq!(character.summary.character_id, character.id);
     }
 
     #[test]
@@ -517,7 +521,10 @@ mod tests {
         assert_eq!(deserialized.id, character.id);
         assert_eq!(deserialized.profile.name, character.profile.name);
         assert_eq!(deserialized.profile.class, character.profile.class);
-        assert_eq!(deserialized.profile.ascendency, character.profile.ascendency);
+        assert_eq!(
+            deserialized.profile.ascendency,
+            character.profile.ascendency
+        );
         assert_eq!(deserialized.profile.league, character.profile.league);
         assert_eq!(deserialized.profile.hardcore, character.profile.hardcore);
     }

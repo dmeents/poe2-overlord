@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::infrastructure::parsing::parsers::server_connection_parser::ServerConnectionParser;
     use crate::infrastructure::parsing::manager::ParserResult;
+    use crate::infrastructure::parsing::parsers::server_connection_parser::ServerConnectionParser;
     use crate::infrastructure::parsing::LogParser;
 
     fn create_parser() -> ServerConnectionParser {

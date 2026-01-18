@@ -130,26 +130,26 @@ export const CharacterListControlsForm = memo(
     };
 
     return (
-      <div className='space-y-4 p-4'>
+      <div className="space-y-4 p-4">
         {/* First Row: Search Bar */}
-        <div className='mb-4'>
+        <div className="mb-4">
           <Input
-            id='character-search'
+            id="character-search"
             value={filters.nameSearch}
             onChange={(value: string | number | null) =>
               onFilterChange('nameSearch', value as string)
             }
-            type='search'
-            placeholder='Enter character name...'
-            label='Search'
+            type="search"
+            placeholder="Enter character name..."
+            label="Search"
           />
         </div>
 
         {/* Second Row: Sorts, Filters, and Reset */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Filters */}
           <div>
-            <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
+            <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
               Filters
             </label>
             <FilterToggle
@@ -158,25 +158,25 @@ export const CharacterListControlsForm = memo(
               label={hasActiveFilters ? 'Filters Active' : 'All Filters'}
               activeCount={activeFilterCount}
             >
-              <div className='space-y-3'>
+              <div className="space-y-3">
                 {/* League Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='league-filter'
+                    id="league-filter"
                     value={filters.league}
                     onChange={(value: string) =>
                       onFilterChange('league', value as League | 'All')
                     }
                     options={leagueOptions}
-                    variant='dropdown'
-                    label='League'
+                    variant="dropdown"
+                    label="League"
                   />
                 </div>
 
                 {/* Game Mode Filters */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='hardcore-filter'
+                    id="hardcore-filter"
                     value={
                       filters.hardcore === null
                         ? 'all'
@@ -197,14 +197,14 @@ export const CharacterListControlsForm = memo(
                         label: 'Non-Hardcore Only',
                       },
                     ]}
-                    variant='dropdown'
-                    label='Hardcore'
+                    variant="dropdown"
+                    label="Hardcore"
                   />
                 </div>
 
                 <div className={filterSectionClasses}>
                   <Select
-                    id='ssf-filter'
+                    id="ssf-filter"
                     value={
                       filters.soloSelfFound === null
                         ? 'all'
@@ -221,15 +221,15 @@ export const CharacterListControlsForm = memo(
                       { value: 'ssf', label: 'SSF Only' },
                       { value: 'non-ssf', label: 'Non-SSF Only' },
                     ]}
-                    variant='dropdown'
-                    label='Solo Self Found'
+                    variant="dropdown"
+                    label="Solo Self Found"
                   />
                 </div>
 
                 {/* Class Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='class-filter'
+                    id="class-filter"
                     value={
                       filters.classes.length === 0 ? 'all' : filters.classes[0]
                     }
@@ -241,15 +241,15 @@ export const CharacterListControlsForm = memo(
                       }
                     }}
                     options={characterClassOptions}
-                    variant='dropdown'
-                    label='Character Class'
+                    variant="dropdown"
+                    label="Character Class"
                   />
                 </div>
 
                 {/* Ascendency Filter */}
                 <div className={filterSectionClasses}>
                   <Select
-                    id='ascendency-filter'
+                    id="ascendency-filter"
                     value={
                       filters.ascendencies.length === 0
                         ? 'all'
@@ -263,8 +263,8 @@ export const CharacterListControlsForm = memo(
                       }
                     }}
                     options={ascendencyOptions}
-                    variant='dropdown'
-                    label='Ascendency'
+                    variant="dropdown"
+                    label="Ascendency"
                     disabled={filters.classes.length === 0}
                     placeholder={
                       filters.classes.length === 0
@@ -280,7 +280,7 @@ export const CharacterListControlsForm = memo(
                     <h4 className={filterSectionTitleClasses}>
                       Active Filters
                     </h4>
-                    <div className='flex flex-wrap gap-2'>
+                    <div className="flex flex-wrap gap-2">
                       {filters.league !== 'All' && (
                         <span className={activeFilterChipClasses}>
                           League: {filters.league}
@@ -355,11 +355,11 @@ export const CharacterListControlsForm = memo(
 
                 {/* Clear Filters Button */}
                 {hasActiveFilters && (
-                  <div className='flex justify-end'>
+                  <div className="flex justify-end">
                     <Button
                       onClick={onClearFilters}
-                      variant='outline'
-                      size='sm'
+                      variant="outline"
+                      size="sm"
                       className={clearButtonClasses}
                     >
                       Clear All Filters
@@ -372,13 +372,13 @@ export const CharacterListControlsForm = memo(
 
           {/* Sort */}
           <div>
-            <label className='block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2'>
+            <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
               Sort
             </label>
-            <div className='flex gap-2'>
-              <div className='flex-1'>
+            <div className="flex gap-2">
+              <div className="flex-1">
                 <SortSelect
-                  id='character-sort'
+                  id="character-sort"
                   value={sort.field}
                   direction={sort.direction}
                   onChange={handleSortChange}
@@ -390,12 +390,12 @@ export const CharacterListControlsForm = memo(
           </div>
 
           {/* Reset All Button */}
-          <div className='flex flex-col justify-end'>
-            <div className='h-6'></div>
+          <div className="flex flex-col justify-end">
+            <div className="h-6"></div>
             <Button
               onClick={handleReset}
-              variant='outline'
-              className='h-10 px-4 text-sm'
+              variant="outline"
+              className="h-10 px-4 text-sm"
             >
               Reset All
             </Button>

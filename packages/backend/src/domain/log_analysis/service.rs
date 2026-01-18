@@ -1,4 +1,5 @@
 use crate::domain::character::traits::CharacterService;
+use crate::domain::zone_tracking::{is_hideout_zone, HIDEOUT_ACT};
 use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
 use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
@@ -14,6 +15,7 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tokio::time;
 
+#[allow(clippy::type_complexity)]
 pub struct LogAnalysisServiceImpl {
     config: Arc<RwLock<LogAnalysisConfig>>,
     log_file_repository: Arc<dyn LogFileRepository>,
@@ -32,6 +34,7 @@ pub struct LogAnalysisServiceImpl {
 }
 
 impl LogAnalysisServiceImpl {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         config: LogAnalysisConfig,
         character_service: Arc<dyn CharacterService>,
@@ -63,6 +66,7 @@ impl LogAnalysisServiceImpl {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn with_repositories(
         config: LogAnalysisConfig,
         log_file_repository: Arc<dyn LogFileRepository>,
@@ -218,6 +222,7 @@ impl LogAnalysisServiceImpl {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     async fn process_new_lines(
         log_path: &str,
         log_file_repository: &Arc<dyn LogFileRepository>,
@@ -251,7 +256,7 @@ impl LogAnalysisServiceImpl {
         // Check for session gap using the first new line
         if let Some(first_line) = new_lines.first() {
             if let Some(current_timestamp) = Self::extract_log_timestamp(first_line) {
-                let last_timestamp_opt = last_log_timestamp.read().await.clone();
+                let last_timestamp_opt = *last_log_timestamp.read().await;
 
                 if let Some(last_ts) = last_timestamp_opt {
                     let session_gap_threshold = {
@@ -330,21 +335,16 @@ impl LogAnalysisServiceImpl {
                         zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town
                     );
 
-                    let _area_id = wiki_data
-                        .area_id
-                        .as_ref()
-                        .map(|id| id.clone())
-                        .unwrap_or_else(|| {
-                            zone_name
-                                .to_lowercase()
-                                .replace(' ', "_")
-                                .replace('-', "_")
-                                .chars()
-                                .filter(|c| c.is_alphanumeric() || *c == '_')
-                                .collect::<String>()
-                                .trim_matches('_')
-                                .to_string()
-                        });
+                    let _area_id = wiki_data.area_id.clone().unwrap_or_else(|| {
+                        zone_name
+                            .to_lowercase()
+                            .replace([' ', '-'], "_")
+                            .chars()
+                            .filter(|c| c.is_alphanumeric() || *c == '_')
+                            .collect::<String>()
+                            .trim_matches('_')
+                            .to_string()
+                    });
 
                     info!("Reloading zone configuration before lookup...");
                     if let Err(e) = zone_config.reload_configuration().await {
@@ -431,9 +431,6 @@ impl LogAnalysisServiceImpl {
             .any(|keyword| lower_name.contains(keyword))
     }
 
-    fn is_hideout(zone_name: &str) -> bool {
-        zone_name.to_lowercase().contains("hideout")
-    }
 
     /// Extract timestamp from a log line
     /// POE2 log format: "2025/12/24 04:58:45 123456 abc [INFO Client 12345] ..."
@@ -458,6 +455,7 @@ impl LogAnalysisServiceImpl {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn process_scene_change(
         character_service: &Arc<dyn CharacterService>,
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
@@ -490,8 +488,12 @@ impl LogAnalysisServiceImpl {
                     zone_name.to_string(),
                 );
 
-            // Set hideouts to act 10 (endgame) to separate them from act playtimes
-            placeholder.act = if Self::is_hideout(zone_name) { 10 } else { 0 };
+            // Set hideouts to endgame act to separate them from act playtimes
+            placeholder.act = if is_hideout_zone(zone_name) {
+                HIDEOUT_ACT
+            } else {
+                0
+            };
 
             if let Err(e) = zone_config.add_zone(placeholder.clone()).await {
                 debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
@@ -510,6 +512,31 @@ impl LogAnalysisServiceImpl {
 
         if zone_metadata.needs_refresh(refresh_interval) {
             Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
+        }
+
+        // Leave current active zone before entering new zone (if any)
+        // This ensures proper duration tracking with explicit leave/enter semantics
+        if let Ok(character_data) = character_service.load_character_data(character_id).await {
+            if let Some(active_zone) = character_data.zones.iter().find(|z| z.is_active) {
+                let previous_zone_name = active_zone.zone_name.clone();
+                if previous_zone_name != zone_name {
+                    debug!(
+                        "Leaving previous zone '{}' before entering '{}'",
+                        previous_zone_name, zone_name
+                    );
+                    if let Err(e) = character_service
+                        .leave_zone(character_id, &previous_zone_name)
+                        .await
+                    {
+                        // Log warning but don't fail - defensive programming
+                        // enter_zone has fallback deactivation code
+                        warn!(
+                            "Failed to leave previous zone '{}': {}",
+                            previous_zone_name, e
+                        );
+                    }
+                }
+            }
         }
 
         if let Err(e) = character_service.enter_zone(character_id, zone_name).await {
@@ -579,6 +606,7 @@ impl LogAnalysisServiceImpl {
         Ok(Some(scene_change_event))
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn process_scene_change_with_error_handling(
         character_service: &Arc<dyn CharacterService>,
         walkthrough_service: &Arc<dyn WalkthroughService>,
@@ -645,6 +673,7 @@ impl LogAnalysisServiceImpl {
         }
     }
 
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     async fn process_single_line(
         parser_manager: &LogParserManager,
         line: &str,
@@ -699,7 +728,7 @@ impl LogAnalysisServiceImpl {
                         );
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
-                            cache.clone()
+                            *cache
                         };
 
                         let zone_level = if let Some((level, _timestamp)) = cached_level {

@@ -54,6 +54,13 @@ export function ActDistributionChart({
       hexColor: '#f59e0b',
     },
     {
+      name: 'Act 5',
+      time: character.summary.play_time_act5,
+      percentage: 0, // Will be calculated
+      color: 'bg-pink-500',
+      hexColor: '#ec4899',
+    },
+    {
       name: 'Interlude',
       time: character.summary.play_time_interlude,
       percentage: 0, // Will be calculated
@@ -76,14 +83,14 @@ export function ActDistributionChart({
   if (activeActs.length === 0) {
     return (
       <Card
-        title='Act Distribution'
+        title="Act Distribution"
         icon={<ChartPieIcon />}
         className={className}
       >
         <EmptyState
-          icon={<ChartPieIcon className='w-8 h-8' />}
-          title='No Act Data'
-          description='Start playing to see act distribution'
+          icon={<ChartPieIcon className="w-8 h-8" />}
+          title="No Act Data"
+          description="Start playing to see act distribution"
         />
       </Card>
     );
@@ -110,9 +117,9 @@ export function ActDistributionChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className='bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50'>
-          <p className='text-white font-medium'>{data.name}</p>
-          <p className='text-zinc-300 text-sm'>
+        <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50">
+          <p className="text-white font-medium">{data.name}</p>
+          <p className="text-zinc-300 text-sm">
             {formatDuration(data.value)} ({data.percentage.toFixed(1)}%)
           </p>
         </div>
@@ -123,41 +130,41 @@ export function ActDistributionChart({
 
   return (
     <Card
-      title='Act Distribution'
+      title="Act Distribution"
       icon={<ChartPieIcon />}
       className={className}
     >
-      <div className='space-y-6'>
-        <div className='relative flex items-center justify-center h-48'>
-          <ResponsiveContainer width='100%' height={200}>
+      <div className="space-y-6">
+        <div className="relative flex items-center justify-center h-48">
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
                 data={chartData}
-                cx='50%'
-                cy='50%'
+                cx="50%"
+                cy="50%"
                 innerRadius={60}
                 outerRadius={80}
                 paddingAngle={2}
-                dataKey='value'
-                stroke='none'
-                className='transition-all duration-300'
+                dataKey="value"
+                stroke="none"
+                className="transition-all duration-300"
               >
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.color}
-                    className='transition-all duration-300 hover:opacity-80 cursor-pointer'
+                    className="transition-all duration-300 hover:opacity-80 cursor-pointer"
                   />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
-            <div className='text-2xl font-bold text-white'>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="text-2xl font-bold text-white">
               {activeActs.length}
             </div>
-            <div className='text-xs text-zinc-400 uppercase tracking-wide'>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide">
               Acts
             </div>
           </div>
@@ -173,9 +180,9 @@ export function ActDistributionChart({
             />
           ))}
           <DataItem
-            label='Total Campaign Time'
+            label="Total Campaign Time"
             value={formatDuration(totalTime)}
-            className='font-medium'
+            className="font-medium"
           />
         </div>
       </div>

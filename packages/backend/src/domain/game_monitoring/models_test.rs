@@ -86,12 +86,24 @@ mod tests {
 
     #[test]
     fn test_game_process_status_deserialization() {
-        let json = r#"{"name":"poe2.exe","pid":1234,"running":true,"detected_at":{"secs_since_epoch":1704067200,"nanos_since_epoch":0}}"#;
+        // detected_at is now an RFC3339 string for frontend compatibility
+        let json = r#"{"name":"poe2.exe","pid":1234,"running":true,"detected_at":"2024-01-01T00:00:00+00:00"}"#;
         let status: GameProcessStatus = serde_json::from_str(json).unwrap();
 
         assert_eq!(status.name, "poe2.exe");
         assert_eq!(status.pid, 1234);
         assert!(status.running);
+        assert_eq!(status.detected_at, "2024-01-01T00:00:00+00:00");
+    }
+
+    #[test]
+    fn test_game_process_status_serializes_timestamp_as_string() {
+        let status = GameProcessStatus::new("poe2.exe".to_string(), 1234, true);
+        let json = serde_json::to_string(&status).unwrap();
+
+        // Timestamp should be an RFC3339 string, not a SystemTime object
+        assert!(json.contains("\"detected_at\":\""));
+        assert!(!json.contains("secs_since_epoch")); // Old SystemTime format
     }
 
     // ============= GameMonitoringConfig Tests =============
@@ -112,7 +124,9 @@ mod tests {
         // Should include common POE process names
         assert!(config.process_names.contains(&"pathofexile2".to_string()));
         assert!(config.process_names.contains(&"poe2".to_string()));
-        assert!(config.process_names.contains(&"pathofexile2.exe".to_string()));
+        assert!(config
+            .process_names
+            .contains(&"pathofexile2.exe".to_string()));
     }
 
     #[test]

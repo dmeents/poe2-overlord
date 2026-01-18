@@ -25,6 +25,10 @@ pub enum AppEvent {
         data: CharacterDataResponse,
         timestamp: String,
     },
+    CharacterDeleted {
+        character_id: String,
+        timestamp: String,
+    },
 
     WalkthroughProgressUpdated {
         character_id: String,
@@ -72,6 +76,7 @@ impl AppEvent {
             }
             AppEvent::ConfigurationChanged(_) => EventType::Configuration,
             AppEvent::CharacterUpdated { .. }
+            | AppEvent::CharacterDeleted { .. }
             | AppEvent::WalkthroughProgressUpdated { .. }
             | AppEvent::WalkthroughStepCompleted { .. }
             | AppEvent::WalkthroughStepAdvanced { .. }
@@ -87,6 +92,7 @@ impl AppEvent {
             AppEvent::ServerPingCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::ConfigurationChanged(event) => event.timestamp.to_rfc3339(),
             AppEvent::CharacterUpdated { timestamp, .. } => timestamp.clone(),
+            AppEvent::CharacterDeleted { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughProgressUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughStepCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughStepAdvanced { timestamp, .. } => timestamp.clone(),
@@ -120,6 +126,13 @@ impl AppEvent {
         Self::CharacterUpdated {
             character_id,
             data,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    pub fn character_deleted(character_id: String) -> Self {
+        Self::CharacterDeleted {
+            character_id,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }

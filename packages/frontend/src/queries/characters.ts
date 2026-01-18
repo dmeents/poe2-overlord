@@ -19,7 +19,10 @@ export function useCharacters() {
   return useQuery({
     queryKey: characterQueryKeys.lists(),
     queryFn: async (): Promise<CharacterData[]> => {
-      return await invoke<CharacterData[]>('get_all_characters');
+      console.log('[DEBUG useCharacters] Calling get_all_characters...');
+      const result = await invoke<CharacterData[]>('get_all_characters');
+      console.log('[DEBUG useCharacters] Result:', { count: result.length, characters: result });
+      return result;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

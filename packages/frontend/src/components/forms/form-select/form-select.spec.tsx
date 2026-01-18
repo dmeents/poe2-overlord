@@ -14,11 +14,11 @@ describe('Select', () => {
     it('renders native select element', () => {
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='basic'
+          variant="basic"
         />
       );
 
@@ -28,11 +28,11 @@ describe('Select', () => {
     it('renders options', () => {
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='basic'
+          variant="basic"
         />
       );
 
@@ -50,11 +50,11 @@ describe('Select', () => {
 
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={handleChange}
           options={mockOptions}
-          variant='basic'
+          variant="basic"
         />
       );
 
@@ -66,12 +66,12 @@ describe('Select', () => {
     it('renders label when provided', () => {
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='basic'
-          label='Select Option'
+          variant="basic"
+          label="Select Option"
         />
       );
 
@@ -81,11 +81,11 @@ describe('Select', () => {
     it('disables select when disabled prop is true', () => {
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='basic'
+          variant="basic"
           disabled
         />
       );
@@ -96,13 +96,13 @@ describe('Select', () => {
     it('shows warning message when invalid', () => {
       render(
         <Select
-          id='test-select'
-          value='option1'
+          id="test-select"
+          value="option1"
           onChange={vi.fn()}
           options={mockOptions}
-          variant='basic'
+          variant="basic"
           isValid={false}
-          warningMessage='Please select a valid option'
+          warningMessage="Please select a valid option"
         />
       );
 
@@ -116,11 +116,11 @@ describe('Select', () => {
     it('renders dropdown trigger button', () => {
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='dropdown'
+          variant="dropdown"
         />
       );
 
@@ -130,12 +130,12 @@ describe('Select', () => {
     it('shows placeholder when no value selected', () => {
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='dropdown'
-          placeholder='Choose one'
+          variant="dropdown"
+          placeholder="Choose one"
         />
       );
 
@@ -147,11 +147,11 @@ describe('Select', () => {
 
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={mockOptions}
-          variant='dropdown'
+          variant="dropdown"
         />
       );
 
@@ -166,11 +166,11 @@ describe('Select', () => {
 
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={handleChange}
           options={mockOptions}
-          variant='dropdown'
+          variant="dropdown"
         />
       );
 
@@ -185,11 +185,11 @@ describe('Select', () => {
 
       render(
         <Select
-          id='test-select'
-          value=''
+          id="test-select"
+          value=""
           onChange={vi.fn()}
           options={[]}
-          variant='dropdown'
+          variant="dropdown"
         />
       );
 

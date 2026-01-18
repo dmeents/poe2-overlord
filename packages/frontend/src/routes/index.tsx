@@ -26,9 +26,9 @@ function Index() {
       {activeCharacter && progress && !progress.is_completed && (
         <WalkthroughStepCard
           key={`${progress.current_step_id}-${progress.last_updated}`}
-          variant='active'
+          variant="active"
           onWikiClick={handleWikiClick}
-          className='mt-6'
+          className="mt-6"
         />
       )}
     </>
@@ -43,13 +43,13 @@ function Index() {
             <CurrentZoneCard zone={activeZone} />
           ) : (
             <Card
-              title='Current Location'
-              icon={<MapPinIcon className='w-5 h-5' />}
+              title="Current Location"
+              icon={<MapPinIcon className="w-5 h-5" />}
             >
               <EmptyState
-                icon={<MapPinIcon className='w-12 h-12' />}
-                title='No active zone'
-                description='Start playing to track your location'
+                icon={<MapPinIcon className="w-12 h-12" />}
+                title="No active zone"
+                description="Start playing to track your location"
               />
             </Card>
           )}

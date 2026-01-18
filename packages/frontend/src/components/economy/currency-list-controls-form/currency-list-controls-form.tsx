@@ -55,13 +55,13 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
 }: CurrencyListControlsFormProps) {
   const { selectedEconomyType, setSelectedEconomyType } = useEconomy();
   return (
-    <div className='space-y-4 p-4'>
-      <div className='flex flex-wrap gap-2'>
+    <div className="space-y-4 p-4">
+      <div className="flex flex-wrap gap-2">
         {ECONOMY_TYPES.map(type => (
           <Button
             key={type}
             variant={selectedEconomyType === type ? 'primary' : 'outline'}
-            size='sm'
+            size="sm"
             onClick={() => {
               setSelectedEconomyType(type);
               if (searchQuery) {
@@ -72,7 +72,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             <img
               src={ECONOMY_TYPE_ICONS[type]}
               alt={ECONOMY_TYPE_LABELS[type]}
-              className='w-4 h-4 mr-2'
+              className="w-4 h-4 mr-2"
               onError={e => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -84,27 +84,27 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
       <div className={controlsContainerClasses}>
         <div className={`${searchInputContainerClasses} relative`}>
           <Input
-            id='currency-search'
-            type='text'
-            placeholder='Search all currencies...'
+            id="currency-search"
+            type="text"
+            placeholder="Search all currencies..."
             value={searchQuery}
             onChange={value => onSearchChange(String(value || ''))}
           />
           {searchQuery && (
             <Button
-              variant='icon'
-              size='sm'
+              variant="icon"
+              size="sm"
               onClick={() => onSearchChange('')}
-              className='absolute right-2 top-1/2 -translate-y-1/2'
-              title='Clear search'
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              title="Clear search"
             >
-              <XMarkIcon className='w-4 h-4' />
+              <XMarkIcon className="w-4 h-4" />
             </Button>
           )}
         </div>
         <div className={sortSelectContainerClasses}>
           <SortSelect
-            id='currency-sort'
+            id="currency-sort"
             value={sort.field}
             direction={sort.direction}
             options={SORT_OPTIONS}
@@ -115,12 +115,12 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
           />
         </div>
       </div>
-      <div className='flex items-center'>
+      <div className="flex items-center">
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
             className={clearButtonClasses}
-            type='button'
+            type="button"
           >
             Clear search
           </button>

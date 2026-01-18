@@ -20,86 +20,67 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
     return location.pathname === path;
   };
 
+  // Navigation items for easier mapping
+  const primaryNavItems = [
+    { path: '/', title: 'Dashboard', icon: HomeIcon },
+    { path: '/walkthrough', title: 'Walkthrough', icon: BookOpenIcon },
+    { path: '/playtime', title: 'Playtime', icon: ClockIcon },
+    { path: '/economy', title: 'Economy', icon: BanknotesIcon },
+  ];
+
+  const secondaryNavItems = [
+    { path: '/characters', title: 'Characters', icon: UserGroupIcon },
+    { path: '/settings', title: 'Settings', icon: Cog6ToothIcon },
+  ];
+
+  const renderNavItem = ({
+    path,
+    title,
+    icon: Icon,
+  }: {
+    path: string;
+    title: string;
+    icon: React.ElementType;
+  }) => {
+    const active = isActive(path);
+    return (
+      <Link
+        key={path}
+        to={path}
+        className="block"
+        aria-label={title}
+        aria-current={active ? 'page' : undefined}
+      >
+        <div
+          title={title}
+          className={`${sidebarNavigationStyles.navButton} ${
+            active
+              ? sidebarNavigationStyles.navButtonActive
+              : sidebarNavigationStyles.navButtonInactive
+          }`}
+        >
+          <Icon className={sidebarNavigationStyles.icon} aria-hidden="true" />
+        </div>
+      </Link>
+    );
+  };
+
   return (
     <div className={`${sidebarNavigationStyles.container} ${className}`}>
       {/* Primary Navigation */}
-      <nav className={sidebarNavigationStyles.primaryNav}>
-        <Link to='/' className='block'>
-          <div
-            title='Dashboard'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <HomeIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
-        <Link to='/walkthrough' className='block'>
-          <div
-            title='Walkthrough'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/walkthrough')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <BookOpenIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
-        <Link to='/playtime' className='block'>
-          <div
-            title='Playtime'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/playtime')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <ClockIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
-        <Link to='/economy' className='block'>
-          <div
-            title='Economy'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/economy')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <BanknotesIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
+      <nav
+        className={sidebarNavigationStyles.primaryNav}
+        aria-label="Primary navigation"
+      >
+        {primaryNavItems.map(renderNavItem)}
       </nav>
 
       {/* Secondary Navigation (Settings) */}
-      <nav className={sidebarNavigationStyles.secondaryNav}>
-        <Link to='/characters' className='block'>
-          <div
-            title='Characters'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/characters')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <UserGroupIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
-        <Link to='/settings' className='block'>
-          <div
-            title='Settings'
-            className={`${sidebarNavigationStyles.navButton} ${
-              isActive('/settings')
-                ? sidebarNavigationStyles.navButtonActive
-                : sidebarNavigationStyles.navButtonInactive
-            }`}
-          >
-            <Cog6ToothIcon className={sidebarNavigationStyles.icon} />
-          </div>
-        </Link>
+      <nav
+        className={sidebarNavigationStyles.secondaryNav}
+        aria-label="Secondary navigation"
+      >
+        {secondaryNavItems.map(renderNavItem)}
       </nav>
     </div>
   );

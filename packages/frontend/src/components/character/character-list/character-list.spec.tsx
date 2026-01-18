@@ -11,7 +11,7 @@ vi.mock('../character-card/character-card', () => ({
     ({ character, isActive, onSelect, onEdit, onDelete }) => (
       <div data-testid={`character-card-${character.id}`}>
         <span>{character.name}</span>
-        {isActive && <span data-testid='active-indicator'>Active</span>}
+        {isActive && <span data-testid="active-indicator">Active</span>}
         <button onClick={onSelect} data-testid={`select-${character.id}`}>
           Select
         </button>
@@ -28,8 +28,8 @@ vi.mock('../character-card/character-card', () => ({
 
 vi.mock('../character-list-controls-form/character-list-controls-form', () => ({
   CharacterListControlsForm: vi.fn(({ onClearFilters }) => (
-    <div data-testid='character-list-controls'>
-      <button onClick={onClearFilters} data-testid='clear-filters-controls'>
+    <div data-testid="character-list-controls">
+      <button onClick={onClearFilters} data-testid="clear-filters-controls">
         Clear Filters
       </button>
     </div>
@@ -191,7 +191,7 @@ describe('CharacterList', () => {
         <CharacterList
           {...defaultProps}
           characters={characters}
-          activeCharacterId='char-2'
+          activeCharacterId="char-2"
           totalCount={2}
         />
       );

@@ -16,7 +16,7 @@ describe('Card', () => {
 
   it('renders title when provided', () => {
     render(
-      <Card title='Test Title'>
+      <Card title="Test Title">
         <div>Content</div>
       </Card>
     );
@@ -26,7 +26,7 @@ describe('Card', () => {
 
   it('renders subtitle when provided', () => {
     render(
-      <Card title='Test Title' subtitle='Test Subtitle'>
+      <Card title="Test Title" subtitle="Test Subtitle">
         <div>Content</div>
       </Card>
     );
@@ -36,7 +36,7 @@ describe('Card', () => {
 
   it('renders icon when provided', () => {
     render(
-      <Card title='Title' icon={<span data-testid='test-icon'>Icon</span>}>
+      <Card title="Title" icon={<span data-testid="test-icon">Icon</span>}>
         <div>Content</div>
       </Card>
     );
@@ -50,7 +50,7 @@ describe('Card', () => {
 
     render(
       <Card
-        title='Title'
+        title="Title"
         rightAction={{ label: 'Action', onClick: handleClick }}
       >
         <div>Content</div>
@@ -67,8 +67,8 @@ describe('Card', () => {
   it('hides subtitle when rightAction is provided', () => {
     render(
       <Card
-        title='Title'
-        subtitle='Subtitle'
+        title="Title"
+        subtitle="Subtitle"
         rightAction={{ label: 'Action', onClick: vi.fn() }}
       >
         <div>Content</div>
@@ -80,7 +80,7 @@ describe('Card', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <Card className='custom-class'>
+      <Card className="custom-class">
         <div>Content</div>
       </Card>
     );
@@ -101,7 +101,7 @@ describe('Card', () => {
 
   it('renders status indicator when showStatusIndicator is true', () => {
     const { container } = render(
-      <Card title='Title' showStatusIndicator>
+      <Card title="Title" showStatusIndicator>
         <div>Content</div>
       </Card>
     );

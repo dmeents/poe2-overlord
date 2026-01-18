@@ -10,9 +10,12 @@ export function TimeDisplay({
   className = '',
 }: TimeDisplayProps) {
   const formatTime = (totalSeconds: number): string => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
+    // Floor first to ensure consistent integer display (fixes fractional seconds issue)
+    const flooredSeconds = Math.floor(totalSeconds);
+
+    const hours = Math.floor(flooredSeconds / 3600);
+    const minutes = Math.floor((flooredSeconds % 3600) / 60);
+    const secs = flooredSeconds % 60;
 
     if (hours > 0) {
       if (showSeconds) {

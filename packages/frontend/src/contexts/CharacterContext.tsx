@@ -7,6 +7,7 @@ import {
   EVENT_KEYS,
   type ExtractPayload,
   type CharacterUpdatedEvent,
+  type CharacterDeletedEvent,
 } from '@/utils/events/registry';
 
 interface CharacterContextValue {
@@ -28,6 +29,13 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     error: charactersError,
   } = useCharacters();
 
+  console.log('[DEBUG CharacterContext] useCharacters result:', {
+    characters,
+    count: characters.length,
+    isLoading: charactersLoading,
+    error: charactersError,
+  });
+
   const {
     data: activeCharacter = null,
     isLoading: activeCharacterLoading,
@@ -41,6 +49,10 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     useState<CharacterData | null>(null);
 
   useEffect(() => {
+    console.log('[DEBUG CharacterContext] Effect triggered - setting characters:', {
+      count: characters.length,
+      characters,
+    });
     setCharactersWithUpdates(characters);
   }, [characters]);
 
@@ -56,13 +68,39 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
           const { character_id, data: characterData } =
             payload as ExtractPayload<CharacterUpdatedEvent>;
 
-          setCharactersWithUpdates(prev =>
-            prev.map(char => (char.id === character_id ? characterData : char))
-          );
+          console.log('[DEBUG CharacterContext] Received character-updated event:', {
+            character_id,
+            characterData,
+          });
+
+          setCharactersWithUpdates(prev => {
+            console.log('[DEBUG CharacterContext] Updating characters - prev count:', prev.length);
+            const updated = prev.map(char => (char.id === character_id ? characterData : char));
+            console.log('[DEBUG CharacterContext] Updated characters count:', updated.length);
+            return updated;
+          });
 
           // Use functional update to avoid stale closure issue
           setActiveCharacterWithUpdates(prev =>
             prev?.id === character_id ? characterData : prev
+          );
+        },
+      },
+      {
+        // NOTE: Requires backend Issue #14 to publish CharacterDeleted events
+        eventType: EVENT_KEYS.CharacterDeleted,
+        handler: (payload: unknown) => {
+          const { character_id } =
+            payload as ExtractPayload<CharacterDeletedEvent>;
+
+          // Remove character from list
+          setCharactersWithUpdates(prev =>
+            prev.filter(char => char.id !== character_id)
+          );
+
+          // Clear active character if it was deleted
+          setActiveCharacterWithUpdates(prev =>
+            prev?.id === character_id ? null : prev
           );
         },
       },

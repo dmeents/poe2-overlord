@@ -6,10 +6,11 @@ use crate::infrastructure::events::EventBus;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, EnrichedLocationState, EnrichedZoneStats, League, LocationState,
+    CharactersIndex, CleanupStrategy, EnrichedLocationState, EnrichedZoneStats, League,
+    LocationState, OrphanCleanupReport,
 };
 use super::traits::{CharacterRepository, CharacterService};
-use crate::domain::zone_tracking::ZoneStats;
+use crate::domain::zone_tracking::{is_hideout_zone, ZoneStats, HIDEOUT_ACT};
 
 pub struct CharacterServiceImpl {
     repository: Arc<dyn CharacterRepository + Send + Sync>,
@@ -89,19 +90,66 @@ impl CharacterService for CharacterServiceImpl {
             solo_self_found,
         );
 
-        self.repository.save_character_data(&character_data).await?;
+        // TRANSACTION SAFETY: Write index FIRST, then character file
+        // This prevents orphaned files - if index write fails, no file is created
+        // If file write fails, we roll back the index entry
 
+        // Step 1: Update index with new character ID
         let mut index = self.repository.load_characters_index().await?;
+        let is_first_character = index.character_ids.is_empty();
         index.add_character(character_data.id.clone());
 
-        if index.character_ids.len() == 1 {
+        if is_first_character {
             index.set_active_character(Some(character_data.id.clone()));
         }
 
+        // Step 2: Save index (if this fails, no character file exists - clean state)
         self.repository.save_characters_index(&index).await?;
+        log::debug!("Index updated with new character ID: {}", character_data.id);
 
-        log::info!("Created new character: {}", name);
-        Ok(character_data)
+        // Step 3: Write character file (if this fails, rollback index)
+        match self.repository.save_character_data(&character_data).await {
+            Ok(_) => {
+                log::info!("Created new character: {}", name);
+                Ok(character_data)
+            }
+            Err(e) => {
+                // ROLLBACK: Character file write failed, remove from index
+                log::error!(
+                    "Failed to write character file for {}, rolling back index: {}",
+                    character_data.id,
+                    e
+                );
+
+                // Re-load index to ensure we have latest state (handles concurrent modifications)
+                let mut rollback_index = self.repository.load_characters_index().await?;
+                rollback_index.remove_character(&character_data.id);
+
+                // Clear active character if it was the one we're rolling back
+                if rollback_index.active_character_id.as_ref() == Some(&character_data.id) {
+                    rollback_index.set_active_character(None);
+                }
+
+                // Save cleaned index
+                if let Err(rollback_err) =
+                    self.repository.save_characters_index(&rollback_index).await
+                {
+                    log::error!(
+                        "CRITICAL: Rollback failed for character {}: {}. Manual cleanup may be required.",
+                        character_data.id,
+                        rollback_err
+                    );
+                } else {
+                    log::info!(
+                        "Successfully rolled back index for failed character creation: {}",
+                        character_data.id
+                    );
+                }
+
+                // Return original error
+                Err(e)
+            }
+        }
     }
 
     async fn load_character_data(&self, character_id: &str) -> Result<CharacterData, AppError> {
@@ -189,6 +237,16 @@ impl CharacterService for CharacterServiceImpl {
         index.remove_character(character_id);
         self.repository.save_characters_index(&index).await?;
 
+        // Publish character deleted event for frontend reactivity
+        let event =
+            crate::infrastructure::events::AppEvent::character_deleted(character_id.to_string());
+        if let Err(e) = self.event_bus.publish(event).await {
+            log::warn!(
+                "Failed to publish character deleted event: {}. UI may show stale data.",
+                e
+            );
+        }
+
         log::info!("Deleted character: {}", character_id);
         Ok(())
     }
@@ -258,17 +316,27 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     /// Validates that a character name is unique
+    /// Optimized: Uses index to load characters individually and stops early on match
     async fn is_name_unique(&self, name: &str, exclude_id: Option<&str>) -> Result<bool, AppError> {
-        // Load all characters
-        let characters = self.repository.load_all_characters().await?;
+        // Load index first (lightweight - just IDs)
+        let index = self.repository.load_characters_index().await?;
 
-        // Check if any character (excluding exclude_id) has the same name
-        let is_unique = !characters.iter().any(|character| {
-            character.profile.name == name
-                && exclude_id.map_or(true, |exclude| character.id != exclude)
-        });
+        // Check each character individually, stopping early if match found
+        for character_id in &index.character_ids {
+            // Skip the excluded character (e.g., when updating an existing character)
+            if exclude_id == Some(character_id.as_str()) {
+                continue;
+            }
 
-        Ok(is_unique)
+            // Load only this character's data
+            if let Ok(character) = self.repository.load_character_data(character_id).await {
+                if character.profile.name == name {
+                    return Ok(false); // Name already exists
+                }
+            }
+        }
+
+        Ok(true) // Name is unique
     }
 
     async fn update_character_level(
@@ -277,7 +345,7 @@ impl CharacterService for CharacterServiceImpl {
         new_level: u32,
     ) -> Result<(), AppError> {
         // Validate level is within valid range (1-100)
-        if new_level < 1 || new_level > 100 {
+        if !(1..=100).contains(&new_level) {
             return Err(AppError::validation_error(
                 "validate_level",
                 &format!(
@@ -340,9 +408,9 @@ impl CharacterService for CharacterServiceImpl {
                 (None, false)
             };
 
-        // Override act to 10 for hideouts to separate them from act playtimes
-        if zone_name.to_lowercase().contains("hideout") {
-            act = Some(10);
+        // Override act for hideouts to separate from act playtimes
+        if is_hideout_zone(zone_name) {
+            act = Some(HIDEOUT_ACT);
         }
 
         // Apply zone tracking business logic
@@ -366,6 +434,37 @@ impl CharacterService for CharacterServiceImpl {
             enriched_data,
         );
         self.event_bus.publish(event).await?;
+
+        Ok(())
+    }
+
+    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError> {
+        log::debug!("Character {} leaving zone: {}", character_id, zone_name);
+
+        // Load character data
+        let mut character_data = self.repository.load_character_data(character_id).await?;
+
+        // Apply zone tracking business logic to leave zone
+        self.zone_tracking
+            .leave_zone(&mut character_data, zone_name)?;
+
+        // Update timestamps
+        character_data.touch();
+
+        // Save character data
+        self.repository.save_character_data(&character_data).await?;
+
+        // Enrich character data before emitting event
+        let enriched_data = self.enrich_character_data(character_data).await;
+
+        // Publish event
+        let event = crate::infrastructure::events::AppEvent::character_updated(
+            character_id.to_string(),
+            enriched_data,
+        );
+        self.event_bus.publish(event).await?;
+
+        log::info!("Character {} left zone: {}", character_id, zone_name);
 
         Ok(())
     }
@@ -466,9 +565,9 @@ impl CharacterService for CharacterServiceImpl {
                     (None, false)
                 };
 
-            // Override act to 10 for hideouts to separate them from act playtimes
-            if zone_name.to_lowercase().contains("hideout") {
-                act = Some(10);
+            // Override act for hideouts to separate from act playtimes
+            if is_hideout_zone(&zone_name) {
+                act = Some(HIDEOUT_ACT);
             }
 
             self.zone_tracking
@@ -492,37 +591,133 @@ impl CharacterService for CharacterServiceImpl {
 
         Ok(())
     }
+
+    async fn reconcile_character_storage(
+        &self,
+        strategy: CleanupStrategy,
+    ) -> Result<OrphanCleanupReport, AppError> {
+        log::info!(
+            "Starting character storage reconciliation with {:?} strategy",
+            strategy
+        );
+
+        // Load current index and filesystem state
+        let mut index = self.repository.load_characters_index().await?;
+        let files_on_disk = self.repository.list_character_data_files().await?;
+
+        let mut orphaned_files = Vec::new();
+        let mut missing_files = Vec::new();
+
+        // Find files on disk not in index (orphans)
+        for file_id in &files_on_disk {
+            if !index.has_character(file_id) {
+                orphaned_files.push(file_id.clone());
+            }
+        }
+
+        // Find IDs in index with no file (reverse orphans)
+        for index_id in &index.character_ids {
+            if !files_on_disk.contains(index_id) {
+                missing_files.push(index_id.clone());
+            }
+        }
+
+        log::info!(
+            "Found {} orphaned files and {} missing files",
+            orphaned_files.len(),
+            missing_files.len()
+        );
+
+        // Handle orphaned files based on strategy
+        for orphan_id in &orphaned_files {
+            match strategy {
+                CleanupStrategy::Conservative => {
+                    // Try to load the file and add to index if valid
+                    match self.repository.load_character_data(orphan_id).await {
+                        Ok(character_data) => {
+                            index.add_character(orphan_id.clone());
+                            log::info!(
+                                "Added orphaned character '{}' ({}) back to index",
+                                character_data.profile.name,
+                                orphan_id
+                            );
+                        }
+                        Err(e) => {
+                            log::warn!(
+                                "Failed to load orphaned file {}, deleting: {}",
+                                orphan_id,
+                                e
+                            );
+                            self.repository.delete_character_data(orphan_id).await?;
+                        }
+                    }
+                }
+                CleanupStrategy::Aggressive => {
+                    // Delete orphaned file
+                    self.repository.delete_character_data(orphan_id).await?;
+                    log::info!("Deleted orphaned character file: {}", orphan_id);
+                }
+            }
+        }
+
+        // Always remove missing files from index (they don't exist)
+        for missing_id in &missing_files {
+            index.remove_character(missing_id);
+            log::info!("Removed missing character {} from index", missing_id);
+        }
+
+        // Save reconciled index if there were any changes
+        if !orphaned_files.is_empty() || !missing_files.is_empty() {
+            self.repository.save_characters_index(&index).await?;
+            log::info!("Saved reconciled character index");
+        }
+
+        let report = OrphanCleanupReport {
+            orphaned_files,
+            missing_files,
+            total_characters: index.character_ids.len(),
+            strategy,
+        };
+
+        log::info!(
+            "Character storage reconciliation complete: {} total characters",
+            report.total_characters
+        );
+
+        Ok(report)
+    }
 }
 
 impl CharacterServiceImpl {
     /// Enriches character data with zone metadata for API responses
+    /// Optimized: Loads zone config once and uses for all lookups (Issue #38)
     async fn enrich_character_data(&self, character_data: CharacterData) -> CharacterDataResponse {
         let mut response = CharacterDataResponse::from(character_data.clone());
 
+        // Load zone configuration once for all lookups
+        let zone_config = self.zone_config.load_configuration().await.ok();
+
         // Enrich current location
         if let Some(ref location) = character_data.current_location {
-            if let Some(zone_metadata) = self
-                .zone_config
-                .get_zone_metadata(&location.zone_name)
-                .await
-            {
-                response.current_location = Some(
-                    EnrichedLocationState::from_location_and_metadata(location, &zone_metadata),
-                );
+            let zone_metadata = zone_config
+                .as_ref()
+                .and_then(|c| c.get_zone_by_name(&location.zone_name).cloned());
+
+            response.current_location = Some(if let Some(metadata) = zone_metadata {
+                EnrichedLocationState::from_location_and_metadata(location, &metadata)
             } else {
-                response.current_location =
-                    Some(EnrichedLocationState::from_location_minimal(location));
-            }
+                EnrichedLocationState::from_location_minimal(location)
+            });
         }
 
-        // Enrich zones
+        // Enrich zones using the already-loaded config
         let mut enriched_zones = Vec::new();
         for zone_stats in &response.zones {
-            if let Some(zone_metadata) = self
-                .zone_config
-                .get_zone_metadata(&zone_stats.zone_name)
-                .await
-            {
+            let zone_metadata = zone_config
+                .as_ref()
+                .and_then(|c| c.get_zone_by_name(&zone_stats.zone_name).cloned());
+
+            if let Some(metadata) = zone_metadata {
                 let base_zone = ZoneStats {
                     zone_name: zone_stats.zone_name.clone(),
                     duration: zone_stats.duration,
@@ -537,7 +732,7 @@ impl CharacterServiceImpl {
                 };
                 enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(
                     &base_zone,
-                    &zone_metadata,
+                    &metadata,
                 ));
             } else {
                 enriched_zones.push(zone_stats.clone());

@@ -243,9 +243,9 @@ describe('StatusBar', () => {
 
     render(<StatusBar />);
 
-    // getDisplayAct returns just the act number for regular acts
+    // getDisplayAct returns consistent format "Act N" for regular acts
     expect(
-      screen.getByText(/TestCharacter - 2 - The Coast/)
+      screen.getByText(/TestCharacter - Act 2 - The Coast/)
     ).toBeInTheDocument();
   });
 });

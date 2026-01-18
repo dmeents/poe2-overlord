@@ -75,7 +75,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -87,7 +87,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -99,7 +99,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -111,7 +111,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -125,7 +125,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -139,7 +139,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -153,7 +153,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -165,7 +165,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -179,7 +179,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -196,7 +196,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           onWikiClick={handleWikiClick}
         />
       );
@@ -213,7 +213,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           isCurrent={false}
           onWikiClick={vi.fn()}
           onSkipToStep={vi.fn()}
@@ -230,7 +230,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           isCurrent={false}
           onWikiClick={vi.fn()}
           onSkipToStep={handleSkip}
@@ -246,8 +246,8 @@ describe('WalkthroughStepCard', () => {
       const { container } = render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
-          className='custom-class'
+          variant="preview"
+          className="custom-class"
           onWikiClick={vi.fn()}
         />
       );
@@ -261,7 +261,7 @@ describe('WalkthroughStepCard', () => {
       render(
         <WalkthroughStepCard
           stepResult={mockStepResult}
-          variant='preview'
+          variant="preview"
           onWikiClick={vi.fn()}
         />
       );
@@ -275,7 +275,7 @@ describe('WalkthroughStepCard', () => {
       const { container } = render(
         <WalkthroughStepCard
           step={mockStep}
-          variant='preview'
+          variant="preview"
           isCurrent={true}
           onWikiClick={vi.fn()}
         />
@@ -288,7 +288,7 @@ describe('WalkthroughStepCard', () => {
   describe('without step data', () => {
     it('returns null when no step data in preview mode', () => {
       const { container } = render(
-        <WalkthroughStepCard variant='preview' onWikiClick={vi.fn()} />
+        <WalkthroughStepCard variant="preview" onWikiClick={vi.fn()} />
       );
 
       expect(container.firstChild).toBeNull();

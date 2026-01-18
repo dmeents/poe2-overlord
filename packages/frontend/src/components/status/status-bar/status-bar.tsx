@@ -58,7 +58,7 @@ export const StatusBar = () => {
           <StatusIndicator
             status={isOnline ? 'success' : 'error'}
             icon={<ComputerDesktopIcon />}
-            size='sm'
+            size="sm"
           />
         </div>
         <div title={getServerStatusTooltip()}>
@@ -71,19 +71,19 @@ export const StatusBar = () => {
                   : 'error'
             }
             icon={<ChartBarIcon />}
-            size='sm'
+            size="sm"
           />
         </div>
-        <div title='Logged out of POE2'>
-          <StatusIndicator status='error' icon={<UserIcon />} size='sm' />
+        <div title="Logged out of POE2">
+          <StatusIndicator status="error" icon={<UserIcon />} size="sm" />
         </div>
         {getZoneDisplayText()}
       </div>
       <div className={statusBarStyles.rightSection}>
-        <div title='Settings'>
+        <div title="Settings">
           <Button
-            variant='icon'
-            size='xs'
+            variant="icon"
+            size="xs"
             onClick={() => navigate({ to: '/settings' })}
           >
             <CogIcon />

@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ZoneRefreshInterval {
     FiveMinutes,
     OneHour,
     TwelveHours,
     TwentyFourHours,
     ThreeDays,
+    #[default]
     SevenDays,
 }
 
@@ -45,7 +46,7 @@ impl ZoneRefreshInterval {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s {
             "FiveMinutes" => Some(ZoneRefreshInterval::FiveMinutes),
             "OneHour" => Some(ZoneRefreshInterval::OneHour),
@@ -58,26 +59,36 @@ impl ZoneRefreshInterval {
     }
 }
 
-impl Default for ZoneRefreshInterval {
-    fn default() -> Self {
-        ZoneRefreshInterval::SevenDays
-    }
-}
-
 impl std::fmt::Display for ZoneRefreshInterval {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.label())
     }
 }
 
+/// Default config version for new configs
+fn default_config_version() -> u32 {
+    AppConfig::CURRENT_VERSION
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AppConfig {
+    /// Configuration schema version for migration compatibility
+    #[serde(default = "default_config_version")]
+    pub config_version: u32,
+    /// Optimistic locking version - increments on every write
+    /// Used to detect concurrent modifications
+    #[serde(default)]
+    pub version: u64,
     pub poe_client_log_path: String,
     pub log_level: String,
     pub zone_refresh_interval: ZoneRefreshInterval,
 }
 
 impl AppConfig {
+    /// Current configuration schema version
+    /// Increment this when making breaking changes that require migration
+    pub const CURRENT_VERSION: u32 = 1;
+
     /// Valid log levels for configuration
     pub const VALID_LOG_LEVELS: &'static [&'static str] =
         &["trace", "debug", "info", "warn", "warning", "error"];
@@ -88,10 +99,24 @@ impl AppConfig {
 
     pub fn with_values(poe_client_log_path: String, log_level: String) -> Self {
         Self {
+            config_version: Self::CURRENT_VERSION,
+            version: 0,
             poe_client_log_path,
             log_level,
             zone_refresh_interval: ZoneRefreshInterval::default(),
         }
+    }
+
+    /// Create a new config with incremented version for optimistic locking
+    pub fn with_incremented_version(&self) -> Self {
+        let mut new_config = self.clone();
+        new_config.version = self.version.wrapping_add(1);
+        new_config
+    }
+
+    /// Get the current optimistic locking version
+    pub fn get_version(&self) -> u64 {
+        self.version
     }
 
     /// Check if a log level string is valid (case-insensitive)
@@ -99,7 +124,37 @@ impl AppConfig {
         Self::VALID_LOG_LEVELS.contains(&level.to_lowercase().as_str())
     }
 
+    /// Check if config needs migration to current version
+    pub fn needs_migration(&self) -> bool {
+        self.config_version < Self::CURRENT_VERSION
+    }
+
+    /// Validate configuration including security checks for paths
     pub fn validate(&self) -> Result<(), String> {
+        if !Self::is_valid_log_level(&self.log_level) {
+            return Err(format!(
+                "Invalid log level '{}'. Valid levels are: {}",
+                self.log_level,
+                Self::VALID_LOG_LEVELS.join(", ")
+            ));
+        }
+
+        if self.poe_client_log_path.trim().is_empty() {
+            return Err("POE client log path cannot be empty".to_string());
+        }
+
+        // Security validation for POE path
+        use crate::infrastructure::PathValidator;
+        let validator = PathValidator::new_for_poe_logs();
+        validator
+            .validate_path(&self.poe_client_log_path)
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    /// Basic validation without security checks (for internal use during migration)
+    pub fn validate_basic(&self) -> Result<(), String> {
         if !Self::is_valid_log_level(&self.log_level) {
             return Err(format!(
                 "Invalid log level '{}'. Valid levels are: {}",
@@ -153,6 +208,8 @@ impl AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
+            config_version: Self::CURRENT_VERSION,
+            version: 0,
             poe_client_log_path: Self::get_default_poe_client_log_path(),
             log_level: "info".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::default(),

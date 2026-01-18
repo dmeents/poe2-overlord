@@ -66,7 +66,7 @@ export function FilterToggle({
     >
       <button
         ref={buttonRef}
-        type='button'
+        type="button"
         onClick={onToggle}
         disabled={disabled}
         className={formFilterToggleStyles.toggleButton}

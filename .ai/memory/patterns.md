@@ -128,6 +128,176 @@ const [isExpanded, setIsExpanded] = useState(false);
 // NO: Redux, Zustand, Context for server data
 ```
 
+## QueryClient Access Pattern
+
+**Status**: DOCUMENTED (as of 2026-01-11)
+
+TanStack React Query's QueryClient can be accessed in two ways depending on context.
+
+### Primary Pattern: useQueryClient Hook (Within React)
+
+**ALWAYS use this pattern within React components and custom hooks.**
+
+```tsx
+// In component
+import { useQueryClient } from '@tanstack/react-query';
+
+export function MyComponent() {
+  const queryClient = useQueryClient();
+
+  const handleInvalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['my-data'] });
+  };
+
+  return <button onClick={handleInvalidate}>Refresh</button>;
+}
+
+// In custom hook
+export function useInvalidateData() {
+  const queryClient = useQueryClient();
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ['my-data'] });
+  };
+}
+
+// In mutation callbacks
+export function useUpdateData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateData,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['data'] });
+    },
+  });
+}
+```
+
+### Edge Case Pattern: Direct Import (Outside React)
+
+**Only use this pattern in non-React contexts** (event handlers, utilities, Tauri command callbacks).
+
+```tsx
+// In event listener (outside React)
+import { getQueryClient } from '@/queries/query-client';
+
+// Event listener registered outside React tree
+eventBus.on('backend-data-updated', (data) => {
+  const queryClient = getQueryClient();
+  queryClient.invalidateQueries({ queryKey: ['backend-data'] });
+});
+```
+
+### When to Use Each Pattern
+
+| Scenario | Pattern | Import |
+|----------|---------|--------|
+| React component | `useQueryClient()` hook | `@tanstack/react-query` |
+| Custom React hook | `useQueryClient()` hook | `@tanstack/react-query` |
+| Mutation callback | `useQueryClient()` hook | `@tanstack/react-query` |
+| Event listener (outside React) | `getQueryClient()` | `@/queries/query-client` |
+| Utility function (outside React) | `getQueryClient()` | `@/queries/query-client` |
+| Test wrapper | `new QueryClient()` | `@tanstack/react-query` |
+
+### Common Mistakes
+
+```tsx
+// WRONG - Creating new QueryClient in component
+export function MyComponent() {
+  const queryClient = new QueryClient(); // Creates isolated instance!
+  // Use useQueryClient() instead
+}
+
+// WRONG - Using getQueryClient in component
+import { getQueryClient } from '@/queries/query-client';
+
+export function MyComponent() {
+  const queryClient = getQueryClient(); // Bypasses React context!
+  // Use useQueryClient() hook instead
+}
+```
+
+### Architecture Decision
+
+**Why we export the QueryClient**:
+- POE2 Overlord is a Tauri SPA (not SSR) - singleton pattern is safe
+- Event system may need to invalidate queries outside React context
+- Follows TanStack Query recommendation for client-only apps
+- Zero performance cost - just exposes existing instance
+
+**Why we still prefer useQueryClient()**:
+- React context ensures QueryClient is initialized
+- Enables future testing enhancements (per-test QueryClient)
+- Follows React best practices for dependency injection
+- Makes component dependencies explicit
+
+## Provider Dependency Pattern
+
+**Status**: DOCUMENTED (as of 2026-01-11)
+
+Application providers have specific nesting requirements. Always check `src/providers.tsx` before adding or reordering providers.
+
+### Provider Dependency Graph
+
+```
+GameProcessProvider (independent)
+  └─ ServerStatusProvider (independent)
+      └─ CharacterProvider (root of character tree)
+          ├─ ZoneProvider (depends on Character)
+          ├─ EconomyProvider (depends on Character)
+          └─ WalkthroughProvider (depends on Character)
+```
+
+### Adding a New Provider
+
+**If provider is independent** (no dependencies):
+```tsx
+// Add at top level or after other independent providers
+<GameProcessProvider>
+  <ServerStatusProvider>
+    <YourNewIndependentProvider>
+      <CharacterProvider>
+        {/* ... */}
+      </CharacterProvider>
+    </YourNewIndependentProvider>
+  </ServerStatusProvider>
+</GameProcessProvider>
+```
+
+**If provider depends on CharacterProvider**:
+```tsx
+// Must be nested INSIDE CharacterProvider
+<CharacterProvider>
+  <ZoneProvider>
+    <EconomyProvider>
+      <YourNewCharacterDependentProvider>
+        <WalkthroughProvider>
+          {children}
+        </WalkthroughProvider>
+      </YourNewCharacterDependentProvider>
+    </EconomyProvider>
+  </ZoneProvider>
+</CharacterProvider>
+```
+
+### Rules
+
+1. **Never reorder** without understanding dependencies
+2. **Always add JSDoc** explaining new provider's dependencies
+3. **Update tests** in `providers.spec.tsx` when adding providers
+4. **Check context hooks** - if a provider calls `useCharacter()`, it depends on CharacterProvider
+
+### Common Errors
+
+```
+Error: "useCharacter must be used within CharacterProvider"
+Fix: Move provider inside <CharacterProvider>
+
+Error: "useGameProcess must be used within GameProcessProvider"
+Fix: Move provider inside <GameProcessProvider>
+```
+
 ## Testing Pattern
 
 **Status: CONFIGURED** (as of 2026-01-09)

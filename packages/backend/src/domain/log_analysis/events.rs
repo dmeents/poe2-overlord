@@ -11,13 +11,13 @@ pub enum LogAnalysisEvent {
         /// ISO 8601 timestamp when monitoring started
         timestamp: String,
     },
-    
+
     /// Log monitoring has been stopped
     MonitoringStopped {
         /// ISO 8601 timestamp when monitoring stopped
         timestamp: String,
     },
-    
+
     /// The log file path has been updated
     LogPathUpdated {
         /// The previous log file path
@@ -27,13 +27,13 @@ pub enum LogAnalysisEvent {
         /// ISO 8601 timestamp when the path was updated
         timestamp: String,
     },
-    
+
     /// The log analysis configuration has been updated
     ConfigurationUpdated {
         /// ISO 8601 timestamp when configuration was updated
         timestamp: String,
     },
-    
+
     /// A new log analysis session has started
     SessionStarted {
         /// Unique identifier for the session
@@ -41,7 +41,7 @@ pub enum LogAnalysisEvent {
         /// ISO 8601 timestamp when the session started
         timestamp: String,
     },
-    
+
     /// A log analysis session has ended
     SessionEnded {
         /// Unique identifier for the session
@@ -53,7 +53,7 @@ pub enum LogAnalysisEvent {
         /// ISO 8601 timestamp when the session ended
         timestamp: String,
     },
-    
+
     /// Log analysis statistics have been updated
     StatisticsUpdated {
         /// Total number of events processed across all sessions
@@ -61,7 +61,7 @@ pub enum LogAnalysisEvent {
         /// ISO 8601 timestamp when statistics were updated
         timestamp: String,
     },
-    
+
     /// An error occurred during log analysis
     AnalysisError {
         /// Description of the error that occurred

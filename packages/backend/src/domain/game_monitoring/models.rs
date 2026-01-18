@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProcessInfo {
@@ -16,21 +15,27 @@ pub struct OverlayState {
     pub always_on_top: bool,
 }
 
+/// Status of the game process with human-readable timestamp
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GameProcessStatus {
     pub name: String,
     pub pid: u32,
     pub running: bool,
-    pub detected_at: SystemTime,
+    /// RFC3339 formatted timestamp for frontend compatibility
+    pub detected_at: String,
 }
 
 impl GameProcessStatus {
+    fn current_timestamp() -> String {
+        chrono::Utc::now().to_rfc3339()
+    }
+
     pub fn new(name: String, pid: u32, running: bool) -> Self {
         Self {
             name,
             pid,
             running,
-            detected_at: SystemTime::now(),
+            detected_at: Self::current_timestamp(),
         }
     }
 
@@ -39,7 +44,7 @@ impl GameProcessStatus {
             name: "Not Found".to_string(),
             pid: 0,
             running: false,
-            detected_at: SystemTime::now(),
+            detected_at: Self::current_timestamp(),
         }
     }
 

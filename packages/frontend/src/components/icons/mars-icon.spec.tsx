@@ -10,7 +10,7 @@ describe('MarsIcon', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(<MarsIcon className='custom-class' />);
+    const { container } = render(<MarsIcon className="custom-class" />);
 
     expect(container.querySelector('svg')).toHaveClass('custom-class');
   });

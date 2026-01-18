@@ -10,6 +10,20 @@ interface TooltipProps {
   showIcon?: boolean;
 }
 
+/**
+ * Tooltip component with automatic scroll repositioning.
+ *
+ * Features:
+ * - Automatically repositions on scroll/resize while visible
+ * - Uses capture phase event listening to catch scroll on any ancestor
+ * - Renders in portal to avoid z-index and overflow issues
+ * - Uses fixed positioning with viewport coordinates
+ *
+ * @example
+ * <Tooltip content="Detailed information">
+ *   <button>Hover me</button>
+ * </Tooltip>
+ */
 export function Tooltip({
   content,
   children,
@@ -17,9 +31,10 @@ export function Tooltip({
   showIcon = false,
 }: TooltipProps) {
   // Use null to indicate tooltip is hidden; position is calculated before showing
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(
-    null
-  );
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
   // Show tooltip: calculate position first, then display

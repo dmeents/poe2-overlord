@@ -54,9 +54,9 @@ export function ClassDistributionChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className='bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50'>
-          <p className='text-white font-medium'>{data.name}</p>
-          <p className='text-zinc-300 text-sm'>
+        <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50">
+          <p className="text-white font-medium">{data.name}</p>
+          <p className="text-zinc-300 text-sm">
             {data.value} character{data.value !== 1 ? 's' : ''} (
             {data.percentage.toFixed(1)}%)
           </p>
@@ -68,49 +68,49 @@ export function ClassDistributionChart({
 
   if (chartData.length === 0) {
     return (
-      <Card title='Classes' icon={<UsersIcon />} className={className}>
+      <Card title="Classes" icon={<UsersIcon />} className={className}>
         <EmptyState
-          icon={<UsersIcon className='w-8 h-8' />}
-          title='No Class Data'
-          description='Create characters to see class distribution'
+          icon={<UsersIcon className="w-8 h-8" />}
+          title="No Class Data"
+          description="Create characters to see class distribution"
         />
       </Card>
     );
   }
 
   return (
-    <Card title='Classes' icon={<UsersIcon />} className={className}>
-      <div className='space-y-6'>
-        <div className='relative flex items-center justify-center h-40'>
-          <ResponsiveContainer width='100%' height={160}>
+    <Card title="Classes" icon={<UsersIcon />} className={className}>
+      <div className="space-y-6">
+        <div className="relative flex items-center justify-center h-40">
+          <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie
                 data={chartData}
-                cx='50%'
-                cy='50%'
+                cx="50%"
+                cy="50%"
                 innerRadius={40}
                 outerRadius={60}
                 paddingAngle={1}
-                dataKey='value'
-                stroke='none'
-                className='transition-all duration-300'
+                dataKey="value"
+                stroke="none"
+                className="transition-all duration-300"
               >
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.hexColor}
-                    className='transition-all duration-300 hover:opacity-80 cursor-pointer'
+                    className="transition-all duration-300 hover:opacity-80 cursor-pointer"
                   />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          <div className='absolute inset-0 flex flex-col items-center justify-center pointer-events-none'>
-            <div className='text-2xl font-bold text-white'>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="text-2xl font-bold text-white">
               {chartData.length}
             </div>
-            <div className='text-xs text-zinc-400 uppercase tracking-wide'>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide">
               Classes
             </div>
           </div>

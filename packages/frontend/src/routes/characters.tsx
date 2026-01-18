@@ -50,6 +50,14 @@ function CharactersPage() {
     totalCount,
   } = useCharacterList(characters);
 
+  console.log('[DEBUG CharactersPage] State:', {
+    charactersFromContext: characters.length,
+    filteredCharacters: filteredCharacters.length,
+    totalCount,
+    isLoading,
+    error,
+  });
+
   const handleCreateCharacter = async (data: CharacterFormData) => {
     try {
       setIsSubmitting(true);
@@ -115,7 +123,7 @@ function CharactersPage() {
 
   const leftColumn = (
     <Card
-      title='Characters'
+      title="Characters"
       subtitle={`${filteredCharacters.length} of ${totalCount} characters`}
       icon={<UsersIcon />}
       rightAction={{
@@ -124,7 +132,7 @@ function CharactersPage() {
       }}
     >
       {isLoading ? (
-        <LoadingSpinner message='Loading characters...' className='h-64' />
+        <LoadingSpinner message="Loading characters..." className="h-64" />
       ) : (
         <CharacterList
           characters={filteredCharacters}
@@ -156,7 +164,7 @@ function CharactersPage() {
   );
 
   const rightColumn = (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       <CharacterInsights characters={characters} />
       <ClassDistributionChart classDistribution={classDistribution} />
     </div>
@@ -167,8 +175,8 @@ function CharactersPage() {
       leftColumn={
         <>
           {error && (
-            <div className='mb-6'>
-              <AlertMessage type='error' message={error} />
+            <div className="mb-6">
+              <AlertMessage type="error" message={error} />
             </div>
           )}
           {leftColumn}

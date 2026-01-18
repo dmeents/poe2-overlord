@@ -59,11 +59,11 @@ export function WalkthroughGuide({
   return (
     <div>
       <SectionHeader
-        title='Guide'
-        icon={<BookOpenIcon className='w-4 h-4' />}
+        title="Guide"
+        icon={<BookOpenIcon className="w-4 h-4" />}
         className={className}
       />
-      <div className='space-y-4'>
+      <div className="space-y-4">
         {Object.entries(guide.acts)
           .sort(([, a], [, b]) => a.act_number - b.act_number)
           .map(([actKey, act]) => (

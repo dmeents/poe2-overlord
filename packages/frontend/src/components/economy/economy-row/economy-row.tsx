@@ -43,32 +43,32 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
   };
 
   const tooltipContent = currencyData ? (
-    <div className='space-y-1 text-xs'>
-      <div className='font-semibold border-b border-zinc-600 pb-1 mb-2'>
+    <div className="space-y-1 text-xs">
+      <div className="font-semibold border-b border-zinc-600 pb-1 mb-2">
         Raw Values
       </div>
-      <div className='flex justify-between gap-4'>
-        <span className='text-zinc-400'>
+      <div className="flex justify-between gap-4">
+        <span className="text-zinc-400">
           {currencyData.primary_currency.name}:
         </span>
-        <span className='text-white font-mono'>
+        <span className="text-white font-mono">
           {currency.primary_value.toFixed(6)}
         </span>
       </div>
-      <div className='flex justify-between gap-4'>
-        <span className='text-zinc-400'>
+      <div className="flex justify-between gap-4">
+        <span className="text-zinc-400">
           {currencyData.secondary_currency.name}:
         </span>
-        <span className='text-white font-mono'>
+        <span className="text-white font-mono">
           {currency.secondary_value.toFixed(4)}
         </span>
       </div>
       {currencyData.tertiary_currency && (
-        <div className='flex justify-between gap-4'>
-          <span className='text-zinc-400'>
+        <div className="flex justify-between gap-4">
+          <span className="text-zinc-400">
             {currencyData.tertiary_currency.name}:
           </span>
-          <span className='text-white font-mono'>
+          <span className="text-white font-mono">
             {currency.tertiary_value.toFixed(2)}
           </span>
         </div>
@@ -83,20 +83,20 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
         onClick ? 'cursor-pointer hover:bg-zinc-800/30' : ''
       }`}
     >
-      <div className='flex items-center gap-3 flex-1 min-w-0'>
+      <div className="flex items-center gap-3 flex-1 min-w-0">
         <img
           src={currency.image_url}
           alt={currency.name}
-          className='w-8 h-8 flex-shrink-0'
+          className="w-8 h-8 flex-shrink-0"
           onError={e => {
             e.currentTarget.style.display = 'none';
           }}
         />
-        <div className='flex-1 min-w-0'>
-          <div className='text-white font-medium truncate'>{currency.name}</div>
-          <div className='flex items-center gap-3 text-xs text-zinc-400 mt-1'>
+        <div className="flex-1 min-w-0">
+          <div className="text-white font-medium truncate">{currency.name}</div>
+          <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1">
             {currency.volume !== null && currencyData && (
-              <span title='Number of items sold per hour'>
+              <span title="Number of items sold per hour">
                 {calculateItemsSoldPerHour(
                   currency.volume,
                   currency.primary_value
@@ -109,26 +109,26 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
       </div>
 
       <Tooltip content={tooltipContent}>
-        <div className='text-right'>
-          <div className='flex items-center gap-2 justify-end text-base font-semibold text-zinc-200'>
+        <div className="text-right">
+          <div className="flex items-center gap-2 justify-end text-base font-semibold text-zinc-200">
             {display_value.inverted ? (
               <>
                 <span>{formattedValue}</span>
                 <img
                   src={currency.image_url}
                   alt={currency.name}
-                  className='w-5 h-5'
+                  className="w-5 h-5"
                   title={currency.name}
                   onError={e => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                <ArrowsRightLeftIcon className='w-4 h-4 text-zinc-500' />
+                <ArrowsRightLeftIcon className="w-4 h-4 text-zinc-500" />
                 <span>1</span>
                 <img
                   src={display_value.currency_image_url}
                   alt={display_value.currency_name}
-                  className='w-5 h-5'
+                  className="w-5 h-5"
                   title={display_value.currency_name}
                   onError={e => {
                     e.currentTarget.style.display = 'none';
@@ -141,18 +141,18 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
                 <img
                   src={display_value.currency_image_url}
                   alt={display_value.currency_name}
-                  className='w-5 h-5'
+                  className="w-5 h-5"
                   title={display_value.currency_name}
                   onError={e => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                <ArrowsRightLeftIcon className='w-4 h-4 text-zinc-500' />
+                <ArrowsRightLeftIcon className="w-4 h-4 text-zinc-500" />
                 <span>1</span>
                 <img
                   src={currency.image_url}
                   alt={currency.name}
-                  className='w-5 h-5'
+                  className="w-5 h-5"
                   title={currency.name}
                   onError={e => {
                     e.currentTarget.style.display = 'none';
@@ -162,7 +162,7 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
             )}
           </div>
           {currency.change_percent !== null && (
-            <div className='text-xs text-zinc-400 mt-1 flex justify-end'>
+            <div className="text-xs text-zinc-400 mt-1 flex justify-end">
               <span
                 className={`font-semibold opacity-60 ${
                   currency.change_percent >= 0

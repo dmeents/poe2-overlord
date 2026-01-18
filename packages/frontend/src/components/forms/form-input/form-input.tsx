@@ -105,10 +105,10 @@ export function Input({
 
         {showClearButton && value && (
           <button
-            type='button'
+            type="button"
             onClick={handleClear}
             className={formInputStyles.clearButton}
-            aria-label='Clear input'
+            aria-label="Clear input"
           >
             <XMarkIcon className={formInputStyles.clearIcon} />
           </button>

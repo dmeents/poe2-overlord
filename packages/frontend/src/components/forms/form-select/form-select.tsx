@@ -131,7 +131,7 @@ export function Select({
         >
           {placeholder && (
             <option
-              value=''
+              value=""
               disabled
               className={formSelectStyles.placeholderOption}
             >
@@ -162,11 +162,11 @@ export function Select({
     selectedOption?: SelectOption
   ) => (
     <button
-      type='button'
+      type="button"
       className={`${formSelectStyles.trigger} ${triggerClassName}`}
       onClick={() => !disabled && setIsOpen(!isOpen)}
       disabled={disabled}
-      aria-haspopup='listbox'
+      aria-haspopup="listbox"
       aria-expanded={isOpen}
     >
       <span className={formSelectStyles.triggerText}>
@@ -175,10 +175,10 @@ export function Select({
       <div className={formSelectStyles.triggerIcons}>
         {showClearButton && selectedOption && (
           <button
-            type='button'
+            type="button"
             onClick={handleClear}
             className={formSelectStyles.clearButton}
-            aria-label='Clear selection'
+            aria-label="Clear selection"
           >
             ×
           </button>
@@ -197,11 +197,11 @@ export function Select({
         isSelected ? formSelectStyles.optionSelected : ''
       } ${option.disabled ? formSelectStyles.optionDisabled : ''}`}
       onClick={() => !option.disabled && handleOptionSelect(option.value)}
-      role='option'
+      role="option"
       aria-selected={isSelected}
     >
       <span className={formSelectStyles.optionLabel}>{option.label}</span>
-      {isSelected && <CheckIcon className='w-4 h-4 text-emerald-400' />}
+      {isSelected && <CheckIcon className="w-4 h-4 text-emerald-400" />}
     </div>
   );
 
@@ -231,7 +231,7 @@ export function Select({
             minWidth: `${dropdownPosition.width}px`,
           }}
         >
-          <div className={formSelectStyles.optionsList} role='listbox'>
+          <div className={formSelectStyles.optionsList} role="listbox">
             {options.length === 0 ? (
               <div className={formSelectStyles.emptyState}>
                 No options available

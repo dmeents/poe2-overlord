@@ -47,46 +47,46 @@ export const ZoneCard = memo(function ZoneCard({
       }}
     >
       {/* Zone Name with Icon */}
-      <div className='flex items-center gap-2 min-w-0'>
+      <div className="flex items-center gap-2 min-w-0">
         {zone.has_waypoint && (
-          <MapIcon className='w-3.5 h-3.5 text-zinc-400 flex-shrink-0' />
+          <MapIcon className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
         )}
-        <span className='text-zinc-200 truncate'>{zone.zone_name}</span>
+        <span className="text-zinc-200 truncate">{zone.zone_name}</span>
         {zone.is_town && (
-          <BuildingStorefrontIcon className='w-3.5 h-3.5 text-zinc-400 flex-shrink-0' />
+          <BuildingStorefrontIcon className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
         )}
         {zone.zone_name.toLowerCase().includes('hideout') && (
-          <HomeIcon className='w-3.5 h-3.5 text-zinc-400 flex-shrink-0' />
+          <HomeIcon className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
         )}
       </div>
 
       {/* Act */}
-      <div className='flex items-center justify-end text-xs'>
+      <div className="flex items-center justify-end text-xs">
         {getDisplayAct(zone) && (
-          <span className='text-zinc-400'>{getDisplayAct(zone)}</span>
+          <span className="text-zinc-400">{getDisplayAct(zone)}</span>
         )}
       </div>
 
       {/* Level */}
-      <div className='flex items-center justify-end text-xs'>
+      <div className="flex items-center justify-end text-xs">
         {zone.area_level && (
-          <span className='text-zinc-400'>{zone.area_level}</span>
+          <span className="text-zinc-400">{zone.area_level}</span>
         )}
       </div>
 
       {/* Visits */}
-      <div className='flex items-center justify-end text-xs'>
-        <span className='text-zinc-400'>{zone.visits}</span>
+      <div className="flex items-center justify-end text-xs">
+        <span className="text-zinc-400">{zone.visits}</span>
       </div>
 
       {/* Deaths */}
-      <div className='flex items-center justify-end text-xs'>
-        <span className='text-zinc-400'>{zone.deaths}</span>
+      <div className="flex items-center justify-end text-xs">
+        <span className="text-zinc-400">{zone.deaths}</span>
       </div>
 
       {/* Duration */}
-      <div className='flex items-center justify-end text-xs'>
-        <span className='font-mono text-zinc-400'>
+      <div className="flex items-center justify-end text-xs">
+        <span className="font-mono text-zinc-400">
           <TimeDisplay seconds={zone.duration} showSeconds={false} />
         </span>
       </div>

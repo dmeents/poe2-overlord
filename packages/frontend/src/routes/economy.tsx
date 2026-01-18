@@ -100,32 +100,32 @@ function EconomyPage() {
   // Render list content based on state
   const renderListContent = () => {
     if (isLoading) {
-      return <LoadingSpinner className='py-12' />;
+      return <LoadingSpinner className="py-12" />;
     }
 
     if (isError) {
       if (isNoDataError) {
         return (
-          <div className='text-center py-12'>
-            <div className='text-zinc-400 mb-2'>
+          <div className="text-center py-12">
+            <div className="text-zinc-400 mb-2">
               <svg
-                className='mx-auto h-12 w-12 mb-4'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
+                className="mx-auto h-12 w-12 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   strokeWidth={1.5}
-                  d='M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4'
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                 />
               </svg>
             </div>
-            <h3 className='text-lg font-medium text-zinc-300 mb-2'>
+            <h3 className="text-lg font-medium text-zinc-300 mb-2">
               No Data Available
             </h3>
-            <p className='text-sm text-zinc-400 max-w-md mx-auto'>
+            <p className="text-sm text-zinc-400 max-w-md mx-auto">
               {ECONOMY_TYPE_LABELS[selectedEconomyType]} data is not available
               for this league yet. Try selecting a different economy type or
               check back later.
@@ -133,12 +133,12 @@ function EconomyPage() {
           </div>
         );
       }
-      return <ErrorState title='Error loading economy data' error={error} />;
+      return <ErrorState title="Error loading economy data" error={error} />;
     }
 
     if (!currencyData) {
       return (
-        <div className='text-zinc-400 text-center py-8'>
+        <div className="text-zinc-400 text-center py-8">
           No economy data available
         </div>
       );
@@ -149,9 +149,9 @@ function EconomyPage() {
       return (
         <div>
           {isSearching ? (
-            <LoadingSpinner className='py-12' />
+            <LoadingSpinner className="py-12" />
           ) : searchResults.length === 0 ? (
-            <div className='text-center py-8 text-zinc-400'>
+            <div className="text-center py-8 text-zinc-400">
               No currencies found matching "{searchQuery}"
             </div>
           ) : (
@@ -187,7 +187,7 @@ function EconomyPage() {
     return (
       <div>
         {filteredCurrencies.length === 0 ? (
-          <div className='text-center py-8 text-zinc-400'>
+          <div className="text-center py-8 text-zinc-400">
             {hasActiveFilters
               ? 'No currencies match your filters'
               : 'No currency data available'}
@@ -212,10 +212,10 @@ function EconomyPage() {
       <Card
         title={ECONOMY_TYPE_LABELS[selectedEconomyType]}
         subtitle={getSubtitle()}
-        className='mt-6'
+        className="mt-6"
       >
         {/* Controls - Always visible */}
-        <div className='mb-4'>
+        <div className="mb-4">
           <CurrencyListControlsForm
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -240,13 +240,13 @@ function EconomyPage() {
     <>
       <ExchangeRatesCard />
       <TopItemsCard />
-      <div className='text-xs text-zinc-500 text-center'>
+      <div className="text-xs text-zinc-500 text-center">
         Economy data provided by{' '}
         <a
-          href='https://poe.ninja'
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-zinc-400 hover:text-zinc-300 underline transition-colors'
+          href="https://poe.ninja"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-400 hover:text-zinc-300 underline transition-colors"
         >
           poe.ninja
         </a>

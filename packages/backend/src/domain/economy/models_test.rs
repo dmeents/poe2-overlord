@@ -2,6 +2,7 @@
 mod tests {
     use crate::domain::economy::models::*;
     use std::collections::HashMap;
+    use std::str::FromStr;
 
     #[test]
     fn test_tier_selection_high_value_primary() {
@@ -106,21 +107,21 @@ mod tests {
     fn test_finalize_display_value_no_inversion() {
         let (value, inverted) = CurrencyExchangeRate::finalize_display_value(11.88);
         assert_eq!(value, 11.88);
-        assert_eq!(inverted, false);
+        assert!(!inverted);
     }
 
     #[test]
     fn test_finalize_display_value_with_inversion() {
         let (value, inverted) = CurrencyExchangeRate::finalize_display_value(0.0592);
         assert!((value - 16.89).abs() < 0.1);
-        assert_eq!(inverted, true);
+        assert!(inverted);
     }
 
     #[test]
     fn test_finalize_display_value_edge_case_exactly_one() {
         let (value, inverted) = CurrencyExchangeRate::finalize_display_value(1.0);
         assert_eq!(value, 1.0);
-        assert_eq!(inverted, false);
+        assert!(!inverted);
     }
 
     #[test]
@@ -145,6 +146,8 @@ mod tests {
 
     #[test]
     fn test_tertiary_currency_detection() {
+        // Tertiary currency selection requires rates to be set
+        // The currency with the lowest rate (highest value) is selected
         let divine_item = CurrencyItem {
             id: "divine".to_string(),
             name: "Divine Orb".to_string(),
@@ -169,13 +172,19 @@ mod tests {
             details_id: "exalted-orb".to_string(),
         };
 
+        // Set up rates - exalted has rate 5.0 (lower = higher value = tertiary)
+        let mut rates = HashMap::new();
+        rates.insert("divine".to_string(), 1.0);
+        rates.insert("chaos".to_string(), 42.86);
+        rates.insert("exalted".to_string(), 5.0);
+
         let core = CurrencyCore {
             items: vec![
                 divine_item.clone(),
                 chaos_item.clone(),
                 exalted_item.clone(),
             ],
-            rates: HashMap::new(),
+            rates,
             primary: "divine".to_string(),
             secondary: "chaos".to_string(),
         };
@@ -184,15 +193,118 @@ mod tests {
         assert!(tertiary.is_some());
         assert_eq!(tertiary.unwrap().id, "exalted");
 
+        // Test with different primary/secondary - chaos should be tertiary
+        let mut rates2 = HashMap::new();
+        rates2.insert("divine".to_string(), 1.0);
+        rates2.insert("chaos".to_string(), 42.86);
+        rates2.insert("exalted".to_string(), 5.0);
+
         let core2 = CurrencyCore {
             items: vec![divine_item, chaos_item, exalted_item],
-            rates: HashMap::new(),
+            rates: rates2,
             primary: "divine".to_string(),
             secondary: "exalted".to_string(),
         };
         let tertiary2 = core2.get_tertiary_currency();
         assert!(tertiary2.is_some());
+        // chaos (42.86) is the only non-primary/non-secondary
         assert_eq!(tertiary2.unwrap().id, "chaos");
+    }
+
+    #[test]
+    fn test_tertiary_currency_deterministic_selection() {
+        // When multiple currencies qualify as tertiary, select the highest value one
+        // (lowest exchange rate = highest value)
+        let divine_item = CurrencyItem {
+            id: "divine".to_string(),
+            name: "Divine Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "divine-orb".to_string(),
+        };
+
+        let chaos_item = CurrencyItem {
+            id: "chaos".to_string(),
+            name: "Chaos Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "chaos-orb".to_string(),
+        };
+
+        let exalted_item = CurrencyItem {
+            id: "exalted".to_string(),
+            name: "Exalted Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "exalted-orb".to_string(),
+        };
+
+        let annul_item = CurrencyItem {
+            id: "annul".to_string(),
+            name: "Orb of Annulment".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "annul-orb".to_string(),
+        };
+
+        // Set up rates - exalted (5.0) has lower rate than annul (10.0)
+        // So exalted should be selected as tertiary (highest value)
+        let mut rates = HashMap::new();
+        rates.insert("divine".to_string(), 1.0);
+        rates.insert("chaos".to_string(), 42.86);
+        rates.insert("exalted".to_string(), 5.0);
+        rates.insert("annul".to_string(), 10.0);
+
+        let core = CurrencyCore {
+            items: vec![divine_item, chaos_item, exalted_item, annul_item],
+            rates,
+            primary: "divine".to_string(),
+            secondary: "chaos".to_string(),
+        };
+
+        let tertiary = core.get_tertiary_currency();
+        assert!(tertiary.is_some());
+        // Exalted has lower rate (5.0) than annul (10.0), so it's selected
+        assert_eq!(tertiary.unwrap().id, "exalted");
+    }
+
+    #[test]
+    fn test_tertiary_currency_requires_rates() {
+        // If a currency doesn't have a rate entry, it won't be selected as tertiary
+        let divine_item = CurrencyItem {
+            id: "divine".to_string(),
+            name: "Divine Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "divine-orb".to_string(),
+        };
+
+        let chaos_item = CurrencyItem {
+            id: "chaos".to_string(),
+            name: "Chaos Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "chaos-orb".to_string(),
+        };
+
+        let exalted_item = CurrencyItem {
+            id: "exalted".to_string(),
+            name: "Exalted Orb".to_string(),
+            image: "/image.png".to_string(),
+            category: "Currency".to_string(),
+            details_id: "exalted-orb".to_string(),
+        };
+
+        // No rates set - tertiary should be None
+        let core = CurrencyCore {
+            items: vec![divine_item, chaos_item, exalted_item],
+            rates: HashMap::new(),
+            primary: "divine".to_string(),
+            secondary: "chaos".to_string(),
+        };
+
+        let tertiary = core.get_tertiary_currency();
+        assert!(tertiary.is_none());
     }
 
     #[test]
@@ -229,7 +341,7 @@ mod tests {
         assert_eq!(display_value.currency_name, "Chaos Orb");
         // 1 Divine = 42.86 Chaos
         assert!((display_value.value - 42.86).abs() < 0.01);
-        assert_eq!(display_value.inverted, false);
+        assert!(!display_value.inverted);
     }
 
     #[test]
@@ -266,7 +378,7 @@ mod tests {
         assert_eq!(display_value.currency_id, "divine");
         assert_eq!(display_value.currency_name, "Divine Orb");
         // Since value is < 1, it should be inverted
-        assert_eq!(display_value.inverted, true);
+        assert!(display_value.inverted);
         // Should show ~42.86 (inverted from 0.0233)
         assert!((display_value.value - 42.86).abs() < 0.5);
     }
@@ -306,7 +418,7 @@ mod tests {
         assert_eq!(display_value.currency_name, "Chaos Orb");
         // 1 Exalted in terms of Chaos = (1/1836) * 42.86 = ~0.0233 Chaos
         // Since < 1, should be inverted to show ~42.86
-        assert_eq!(display_value.inverted, true);
+        assert!(display_value.inverted);
     }
 
     #[test]
@@ -353,7 +465,7 @@ mod tests {
         assert_eq!(display_value.currency_name, "Divine Orb");
         // Values < 1 get inverted by finalize_display_value: 1/0.2773 = ~3.606
         assert!((display_value.value - 3.606).abs() < 0.01);
-        assert_eq!(display_value.inverted, true);
+        assert!(display_value.inverted);
     }
 
     #[test]
@@ -385,5 +497,72 @@ mod tests {
 
         let tertiary = core.get_tertiary_currency();
         assert!(tertiary.is_none());
+    }
+
+    // ========== FromStr Tests for EconomyType ==========
+
+    #[test]
+    fn test_economy_type_from_str_all_variants() {
+        assert_eq!(EconomyType::from_str("Currency"), Ok(EconomyType::Currency));
+        assert_eq!(
+            EconomyType::from_str("Fragments"),
+            Ok(EconomyType::Fragments)
+        );
+        assert_eq!(EconomyType::from_str("Abyss"), Ok(EconomyType::Abyss));
+        assert_eq!(
+            EconomyType::from_str("UncutGems"),
+            Ok(EconomyType::UncutGems)
+        );
+        assert_eq!(
+            EconomyType::from_str("LineageSupportGems"),
+            Ok(EconomyType::LineageSupportGems)
+        );
+        assert_eq!(
+            EconomyType::from_str("Essences"),
+            Ok(EconomyType::Essences)
+        );
+        assert_eq!(
+            EconomyType::from_str("SoulCores"),
+            Ok(EconomyType::SoulCores)
+        );
+        assert_eq!(EconomyType::from_str("Idols"), Ok(EconomyType::Idols));
+        assert_eq!(EconomyType::from_str("Runes"), Ok(EconomyType::Runes));
+        assert_eq!(EconomyType::from_str("Ritual"), Ok(EconomyType::Ritual));
+        assert_eq!(
+            EconomyType::from_str("Expedition"),
+            Ok(EconomyType::Expedition)
+        );
+        assert_eq!(
+            EconomyType::from_str("Delirium"),
+            Ok(EconomyType::Delirium)
+        );
+        assert_eq!(EconomyType::from_str("Breach"), Ok(EconomyType::Breach));
+    }
+
+    #[test]
+    fn test_economy_type_from_str_unknown() {
+        assert!(EconomyType::from_str("Unknown").is_err());
+        assert!(EconomyType::from_str("").is_err());
+        assert!(EconomyType::from_str("currency").is_err()); // case-sensitive
+    }
+
+    #[test]
+    fn test_economy_type_roundtrip() {
+        // Test that as_str() and from_str() are inverses
+        for economy_type in EconomyType::all() {
+            let str_repr = economy_type.as_str();
+            let parsed = EconomyType::from_str(str_repr).unwrap();
+            assert_eq!(economy_type, parsed);
+        }
+    }
+
+    #[test]
+    fn test_economy_type_parse_method() {
+        // Test the .parse() method works (uses FromStr internally)
+        let result: Result<EconomyType, _> = "Currency".parse();
+        assert_eq!(result, Ok(EconomyType::Currency));
+
+        let result: Result<EconomyType, _> = "Invalid".parse();
+        assert!(result.is_err());
     }
 }

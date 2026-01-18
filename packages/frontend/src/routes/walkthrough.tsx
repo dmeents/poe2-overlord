@@ -23,9 +23,9 @@ function WalkthroughPage() {
 
   if (isLoading || guideLoading) {
     return (
-      <div className='min-h-screen bg-zinc-900 text-white'>
-        <div className='px-6 py-8'>
-          <LoadingSpinner className='py-12' />
+      <div className="min-h-screen bg-zinc-900 text-white">
+        <div className="px-6 py-8">
+          <LoadingSpinner className="py-12" />
         </div>
       </div>
     );
@@ -37,15 +37,15 @@ function WalkthroughPage() {
       {activeCharacter && (
         <>
           <SectionHeader
-            title='Progress'
-            icon={<ChartBarIcon className='w-4 h-4' />}
+            title="Progress"
+            icon={<ChartBarIcon className="w-4 h-4" />}
           />
           {progress && (
             <WalkthroughStepCard
               key={`${progress.current_step_id}-${progress.last_updated}`}
-              variant='active'
+              variant="active"
               onWikiClick={handleWikiClick}
-              className='mb-6'
+              className="mb-6"
             />
           )}
           {guide && (
@@ -64,14 +64,14 @@ function WalkthroughPage() {
     <>
       {!isLoading && !activeCharacter && (
         <EmptyState
-          icon={<BookOpenIcon className='h-12 w-12' />}
-          title='No Active Character'
-          description='Please select an active character to view walkthrough progress.'
+          icon={<BookOpenIcon className="h-12 w-12" />}
+          title="No Active Character"
+          description="Please select an active character to view walkthrough progress."
         />
       )}
       {activeCharacter && guide && (
         <>
-          <CampaignInsights guide={guide} className='mb-6' />
+          <CampaignInsights guide={guide} className="mb-6" />
           <ActDistributionChart character={activeCharacter} />
         </>
       )}

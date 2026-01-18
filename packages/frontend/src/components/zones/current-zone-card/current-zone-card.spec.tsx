@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { CurrentZoneCard } from './current-zone-card';
 import type { ZoneStats } from '@/types/character';
 
@@ -53,7 +53,8 @@ describe('CurrentZoneCard', () => {
     it('renders act badge when act is present', () => {
       render(<CurrentZoneCard zone={createMockZone()} />);
 
-      expect(screen.getByText('1')).toBeInTheDocument();
+      // getDisplayAct returns consistent "Act N" format
+      expect(screen.getByText('Act 1')).toBeInTheDocument();
     });
 
     it('renders area level', () => {
@@ -164,6 +165,137 @@ describe('CurrentZoneCard', () => {
       );
 
       expect(screen.getByText('The Coast')).toBeInTheDocument();
+    });
+  });
+
+  describe('Live Timer', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('displays live elapsed time for active zone', () => {
+      const now = new Date('2024-01-10T12:00:00Z');
+      vi.setSystemTime(now);
+
+      const entryTime = new Date('2024-01-10T11:59:00Z'); // 1 minute ago
+      const activeZone = createMockZone({
+        duration: 100,
+        entry_timestamp: entryTime.toISOString(),
+        is_active: true,
+      });
+
+      render(<CurrentZoneCard zone={activeZone} />);
+
+      // Should show 100 + 60 = 160 seconds = 2m (showSeconds=false)
+      expect(screen.getByText('2m')).toBeInTheDocument();
+
+      // Advance 10 seconds
+      act(() => {
+        vi.advanceTimersByTime(10000);
+      });
+
+      // Should now show 170 seconds = 2m (still 2m with showSeconds=false)
+      expect(screen.getByText('2m')).toBeInTheDocument();
+    });
+
+    it('displays static duration for inactive zone', () => {
+      const now = new Date('2024-01-10T12:00:00Z');
+      vi.setSystemTime(now);
+
+      const entryTime = new Date('2024-01-10T11:59:00Z');
+      const inactiveZone = createMockZone({
+        duration: 3600, // 1 hour
+        entry_timestamp: entryTime.toISOString(),
+        is_active: false,
+      });
+
+      render(<CurrentZoneCard zone={inactiveZone} />);
+
+      // Should show static duration (1h 0m with showSeconds=false)
+      expect(screen.getByText('1h 0m')).toBeInTheDocument();
+
+      // Advance time - should not change
+      act(() => {
+        vi.advanceTimersByTime(10000);
+      });
+      expect(screen.getByText('1h 0m')).toBeInTheDocument();
+    });
+
+    it('displays static duration when no entry timestamp', () => {
+      const zone = createMockZone({
+        duration: 120,
+        entry_timestamp: undefined,
+        is_active: false,
+      });
+
+      render(<CurrentZoneCard zone={zone} />);
+
+      expect(screen.getByText('2m')).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(screen.getByText('2m')).toBeInTheDocument();
+    });
+
+    it('updates timer when zone changes', () => {
+      const now = new Date('2024-01-10T12:00:00Z');
+      vi.setSystemTime(now);
+
+      const zone1 = createMockZone({
+        zone_name: 'The Coast',
+        duration: 100,
+        entry_timestamp: new Date('2024-01-10T11:59:00Z').toISOString(),
+        is_active: true,
+      });
+
+      const { rerender } = render(<CurrentZoneCard zone={zone1} />);
+
+      // Initial zone shows 100 + 60 = 160s = 2m
+      expect(screen.getByText('The Coast')).toBeInTheDocument();
+      expect(screen.getByText('2m')).toBeInTheDocument();
+
+      // Switch to new zone
+      const newNow = new Date('2024-01-10T12:01:00Z');
+      vi.setSystemTime(newNow);
+
+      const zone2 = createMockZone({
+        zone_name: 'Mud Flats',
+        duration: 50,
+        entry_timestamp: newNow.toISOString(),
+        is_active: true,
+      });
+
+      rerender(<CurrentZoneCard zone={zone2} />);
+
+      // New zone should show its duration (50s = <1m so shows 50s)
+      expect(screen.getByText('Mud Flats')).toBeInTheDocument();
+    });
+
+    it('timer ticks up every second for active zones', () => {
+      const now = new Date('2024-01-10T12:00:00Z');
+      vi.setSystemTime(now);
+
+      const activeZone = createMockZone({
+        duration: 0,
+        entry_timestamp: now.toISOString(),
+        is_active: true,
+      });
+
+      render(<CurrentZoneCard zone={activeZone} />);
+
+      // Initially 0 seconds - should show 0m or similar
+      // Advance 61 seconds (1 minute 1 second)
+      act(() => {
+        vi.advanceTimersByTime(61000);
+      });
+
+      // Should now show 1m (61 seconds with showSeconds=false)
+      expect(screen.getByText('1m')).toBeInTheDocument();
     });
   });
 });

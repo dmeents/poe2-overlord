@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::infrastructure::parsing::parsers::character_death_parser::CharacterDeathParser;
     use crate::infrastructure::parsing::manager::ParserResult;
+    use crate::infrastructure::parsing::parsers::character_death_parser::CharacterDeathParser;
     use crate::infrastructure::parsing::LogParser;
 
     fn create_parser() -> CharacterDeathParser {
@@ -21,12 +21,7 @@ mod tests {
     fn test_should_parse_with_different_names() {
         let parser = create_parser();
 
-        let names = vec![
-            "SimpleChar",
-            "Char123",
-            "X",
-            "MyAwesomeCharacterName",
-        ];
+        let names = vec!["SimpleChar", "Char123", "X", "MyAwesomeCharacterName"];
 
         for name in names {
             let line = format!("[INFO Client 1234] : {} has been slain.", name);

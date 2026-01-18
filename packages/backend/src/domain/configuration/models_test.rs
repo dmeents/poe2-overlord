@@ -66,36 +66,36 @@ mod tests {
     #[test]
     fn test_zone_refresh_interval_from_str_valid() {
         assert_eq!(
-            ZoneRefreshInterval::from_str("FiveMinutes"),
+            ZoneRefreshInterval::parse("FiveMinutes"),
             Some(ZoneRefreshInterval::FiveMinutes)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("OneHour"),
+            ZoneRefreshInterval::parse("OneHour"),
             Some(ZoneRefreshInterval::OneHour)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("TwelveHours"),
+            ZoneRefreshInterval::parse("TwelveHours"),
             Some(ZoneRefreshInterval::TwelveHours)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("TwentyFourHours"),
+            ZoneRefreshInterval::parse("TwentyFourHours"),
             Some(ZoneRefreshInterval::TwentyFourHours)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("ThreeDays"),
+            ZoneRefreshInterval::parse("ThreeDays"),
             Some(ZoneRefreshInterval::ThreeDays)
         );
         assert_eq!(
-            ZoneRefreshInterval::from_str("SevenDays"),
+            ZoneRefreshInterval::parse("SevenDays"),
             Some(ZoneRefreshInterval::SevenDays)
         );
     }
 
     #[test]
     fn test_zone_refresh_interval_from_str_invalid() {
-        assert_eq!(ZoneRefreshInterval::from_str("invalid"), None);
-        assert_eq!(ZoneRefreshInterval::from_str(""), None);
-        assert_eq!(ZoneRefreshInterval::from_str("5 Minutes"), None);
+        assert_eq!(ZoneRefreshInterval::parse("invalid"), None);
+        assert_eq!(ZoneRefreshInterval::parse(""), None);
+        assert_eq!(ZoneRefreshInterval::parse("5 Minutes"), None);
     }
 
     #[test]
@@ -106,10 +106,7 @@ mod tests {
 
     #[test]
     fn test_zone_refresh_interval_display() {
-        assert_eq!(
-            format!("{}", ZoneRefreshInterval::FiveMinutes),
-            "5 Minutes"
-        );
+        assert_eq!(format!("{}", ZoneRefreshInterval::FiveMinutes), "5 Minutes");
         assert_eq!(format!("{}", ZoneRefreshInterval::OneHour), "1 Hour");
     }
 
@@ -122,8 +119,7 @@ mod tests {
 
     #[test]
     fn test_zone_refresh_interval_deserialization() {
-        let interval: ZoneRefreshInterval =
-            serde_json::from_str("\"TwentyFourHours\"").unwrap();
+        let interval: ZoneRefreshInterval = serde_json::from_str("\"TwentyFourHours\"").unwrap();
         assert_eq!(interval, ZoneRefreshInterval::TwentyFourHours);
     }
 
@@ -133,10 +129,7 @@ mod tests {
     fn test_app_config_new() {
         let config = AppConfig::new();
         assert_eq!(config.log_level, "info");
-        assert_eq!(
-            config.zone_refresh_interval,
-            ZoneRefreshInterval::SevenDays
-        );
+        assert_eq!(config.zone_refresh_interval, ZoneRefreshInterval::SevenDays);
     }
 
     #[test]
@@ -144,25 +137,26 @@ mod tests {
         let config = AppConfig::with_values("/custom/path".to_string(), "debug".to_string());
         assert_eq!(config.poe_client_log_path, "/custom/path");
         assert_eq!(config.log_level, "debug");
-        assert_eq!(
-            config.zone_refresh_interval,
-            ZoneRefreshInterval::SevenDays
-        );
+        assert_eq!(config.zone_refresh_interval, ZoneRefreshInterval::SevenDays);
     }
 
     #[test]
     fn test_app_config_validate_valid() {
-        let config = AppConfig::with_values("/some/path".to_string(), "info".to_string());
+        // Use a path in home directory which is allowed
+        let home = dirs::home_dir().unwrap_or_default();
+        let valid_path = home.join("test.txt").to_string_lossy().to_string();
+        let config = AppConfig::with_values(valid_path, "info".to_string());
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_app_config_validate_all_log_levels() {
+        // Use validate_basic() to test log levels without security checks
         let valid_levels = ["trace", "debug", "info", "warn", "warning", "error"];
         for level in valid_levels {
             let config = AppConfig::with_values("/path".to_string(), level.to_string());
             assert!(
-                config.validate().is_ok(),
+                config.validate_basic().is_ok(),
                 "Expected log level '{}' to be valid",
                 level
             );
@@ -171,17 +165,19 @@ mod tests {
 
     #[test]
     fn test_app_config_validate_log_level_case_insensitive() {
+        // Use validate_basic() to test log levels without security checks
         let config = AppConfig::with_values("/path".to_string(), "INFO".to_string());
-        assert!(config.validate().is_ok());
+        assert!(config.validate_basic().is_ok());
 
         let config = AppConfig::with_values("/path".to_string(), "Debug".to_string());
-        assert!(config.validate().is_ok());
+        assert!(config.validate_basic().is_ok());
     }
 
     #[test]
     fn test_app_config_validate_invalid_log_level() {
         let config = AppConfig::with_values("/path".to_string(), "invalid".to_string());
-        let result = config.validate();
+        // Use validate_basic() since the path might also fail
+        let result = config.validate_basic();
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Invalid log level"));
     }
@@ -229,6 +225,8 @@ mod tests {
     #[test]
     fn test_app_config_serialization_roundtrip() {
         let config = AppConfig {
+            config_version: AppConfig::CURRENT_VERSION,
+            version: 5,
             poe_client_log_path: "/test/path".to_string(),
             log_level: "debug".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::OneHour,
@@ -243,6 +241,124 @@ mod tests {
             deserialized.zone_refresh_interval,
             config.zone_refresh_interval
         );
+        assert_eq!(deserialized.config_version, config.config_version);
+        assert_eq!(deserialized.version, config.version);
+    }
+
+    // ============= Config Version and Security Tests =============
+
+    #[test]
+    fn test_app_config_current_version() {
+        assert_eq!(AppConfig::CURRENT_VERSION, 1);
+    }
+
+    #[test]
+    fn test_app_config_default_has_current_version() {
+        let config = AppConfig::default();
+        assert_eq!(config.config_version, AppConfig::CURRENT_VERSION);
+    }
+
+    #[test]
+    fn test_app_config_needs_migration() {
+        let mut config = AppConfig::default();
+        assert!(!config.needs_migration());
+
+        config.config_version = 0;
+        assert!(config.needs_migration());
+    }
+
+    #[test]
+    fn test_app_config_deserialization_without_version() {
+        // Simulate old config without version field
+        let old_json = r#"{
+            "poe_client_log_path": "/old/path",
+            "log_level": "info",
+            "zone_refresh_interval": "SevenDays"
+        }"#;
+
+        let config: AppConfig = serde_json::from_str(old_json).unwrap();
+        // Should default to current version via serde default
+        assert_eq!(config.config_version, AppConfig::CURRENT_VERSION);
+    }
+
+    #[test]
+    fn test_app_config_validate_basic_valid() {
+        let config = AppConfig::with_values("/some/path".to_string(), "info".to_string());
+        assert!(config.validate_basic().is_ok());
+    }
+
+    #[test]
+    fn test_app_config_validate_basic_invalid_log_level() {
+        let config = AppConfig::with_values("/some/path".to_string(), "invalid".to_string());
+        assert!(config.validate_basic().is_err());
+    }
+
+    #[test]
+    fn test_app_config_validate_rejects_path_traversal() {
+        let config = AppConfig::with_values("../../../etc/passwd".to_string(), "info".to_string());
+        let result = config.validate();
+        assert!(result.is_err());
+        // Should mention traversal or security in error
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("traversal") || err.contains("Security"),
+            "Error should mention traversal or security: {}",
+            err
+        );
+    }
+
+    // ============= Optimistic Locking Version Tests =============
+
+    #[test]
+    fn test_app_config_default_version_is_zero() {
+        let config = AppConfig::default();
+        assert_eq!(config.version, 0);
+    }
+
+    #[test]
+    fn test_app_config_with_incremented_version() {
+        let config = AppConfig::default();
+        assert_eq!(config.version, 0);
+
+        let updated = config.with_incremented_version();
+        assert_eq!(updated.version, 1);
+
+        let updated2 = updated.with_incremented_version();
+        assert_eq!(updated2.version, 2);
+    }
+
+    #[test]
+    fn test_app_config_version_wrapping() {
+        let config = AppConfig {
+            version: u64::MAX,
+            ..Default::default()
+        };
+
+        let wrapped = config.with_incremented_version();
+        assert_eq!(wrapped.version, 0); // Should wrap around
+    }
+
+    #[test]
+    fn test_app_config_get_version() {
+        let mut config = AppConfig::default();
+        assert_eq!(config.get_version(), 0);
+
+        config.version = 42;
+        assert_eq!(config.get_version(), 42);
+    }
+
+    #[test]
+    fn test_app_config_deserialization_without_version_defaults_to_zero() {
+        // Old config without version field should deserialize with version 0
+        let old_json = r#"{
+            "config_version": 1,
+            "poe_client_log_path": "/old/path",
+            "log_level": "info",
+            "zone_refresh_interval": "SevenDays"
+        }"#;
+
+        let config: AppConfig = serde_json::from_str(old_json).unwrap();
+        assert_eq!(config.version, 0);
     }
 
     // ============= ConfigurationChangedEvent Tests =============
@@ -304,8 +420,7 @@ mod tests {
 
     #[test]
     fn test_configuration_file_info_nonexistent_file() {
-        let info =
-            ConfigurationFileInfo::new(PathBuf::from("/nonexistent/path/config.json"));
+        let info = ConfigurationFileInfo::new(PathBuf::from("/nonexistent/path/config.json"));
         assert!(!info.exists);
         assert!(info.size.is_none());
         assert!(info.last_modified.is_none());

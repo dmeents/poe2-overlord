@@ -5,8 +5,8 @@ import { FormField } from './form-field';
 describe('FormField', () => {
   it('renders label and children correctly', () => {
     render(
-      <FormField label='Test Label'>
-        <input type='text' data-testid='test-input' />
+      <FormField label="Test Label">
+        <input type="text" data-testid="test-input" />
       </FormField>
     );
 
@@ -16,8 +16,8 @@ describe('FormField', () => {
 
   it('renders description when provided', () => {
     render(
-      <FormField label='Test Label' description='Test description'>
-        <input type='text' />
+      <FormField label="Test Label" description="Test description">
+        <input type="text" />
       </FormField>
     );
 
@@ -26,8 +26,8 @@ describe('FormField', () => {
 
   it('does not render description when not provided', () => {
     render(
-      <FormField label='Test Label'>
-        <input type='text' />
+      <FormField label="Test Label">
+        <input type="text" />
       </FormField>
     );
 
@@ -36,8 +36,8 @@ describe('FormField', () => {
 
   it('associates label with input via htmlFor', () => {
     render(
-      <FormField label='Email' htmlFor='email-input'>
-        <input type='email' id='email-input' />
+      <FormField label="Email" htmlFor="email-input">
+        <input type="email" id="email-input" />
       </FormField>
     );
 
@@ -46,8 +46,8 @@ describe('FormField', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <FormField label='Test Label' className='custom-class'>
-        <input type='text' />
+      <FormField label="Test Label" className="custom-class">
+        <input type="text" />
       </FormField>
     );
 
@@ -56,8 +56,8 @@ describe('FormField', () => {
 
   it('renders React node as label', () => {
     render(
-      <FormField label={<span data-testid='custom-label'>Custom Label</span>}>
-        <input type='text' />
+      <FormField label={<span data-testid="custom-label">Custom Label</span>}>
+        <input type="text" />
       </FormField>
     );
 
@@ -66,8 +66,8 @@ describe('FormField', () => {
 
   it('renders divider when not last item', () => {
     const { container } = render(
-      <FormField label='Test Label'>
-        <input type='text' />
+      <FormField label="Test Label">
+        <input type="text" />
       </FormField>
     );
 
@@ -78,8 +78,8 @@ describe('FormField', () => {
 
   it('does not render divider when last-form-item class is applied', () => {
     const { container } = render(
-      <FormField label='Test Label' className='last-form-item'>
-        <input type='text' />
+      <FormField label="Test Label" className="last-form-item">
+        <input type="text" />
       </FormField>
     );
 

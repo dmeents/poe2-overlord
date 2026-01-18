@@ -61,8 +61,9 @@ pub struct CharacterUpdateParams {
 impl Default for CharacterData {
     fn default() -> Self {
         let now = Utc::now();
+        let id = uuid::Uuid::new_v4().to_string();
         Self {
-            id: String::new(),
+            id: id.clone(),
             profile: CharacterProfile {
                 name: String::new(),
                 class: CharacterClass::Warrior,
@@ -78,7 +79,7 @@ impl Default for CharacterData {
                 last_updated: now,
             },
             current_location: None,
-            summary: TrackingSummary::new(String::new()),
+            summary: TrackingSummary::new(id),
             zones: Vec::new(),
             walkthrough_progress: WalkthroughProgress::new(),
         }
@@ -171,9 +172,10 @@ impl CharactersIndex {
 // Re-export all the enums and types from the old character domain
 // These will be moved here in a future step, but for now we'll import them
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CharacterClass {
     #[serde(rename = "Warrior")]
+    #[default]
     Warrior,
     #[serde(rename = "Sorceress")]
     Sorceress,
@@ -191,9 +193,10 @@ pub enum CharacterClass {
     Druid,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Ascendency {
     #[serde(rename = "Titan")]
+    #[default]
     Titan,
     #[serde(rename = "Warbringer")]
     Warbringer,
@@ -233,9 +236,10 @@ pub enum Ascendency {
     Oracle,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum League {
     #[serde(rename = "Standard")]
+    #[default]
     Standard,
     #[serde(rename = "Rise of the Abyssal")]
     RiseOfTheAbyssal,
@@ -310,11 +314,7 @@ impl EnrichedLocationState {
             zone_name: location.zone_name.clone(),
             act: metadata.act,
             is_town: metadata.is_town,
-            location_type: if metadata.is_town {
-                LocationType::Zone // Towns are still zones
-            } else {
-                LocationType::Zone
-            },
+            location_type: LocationType::Zone, // All locations are zones (including towns)
             area_id: metadata.area_id.clone(),
             area_level: metadata.area_level,
             has_waypoint: metadata.has_waypoint,
@@ -537,20 +537,27 @@ impl fmt::Display for CharacterClass {
     }
 }
 
-impl Default for CharacterClass {
-    fn default() -> Self {
-        CharacterClass::Warrior
-    }
+// ============= Orphan Cleanup Types =============
+
+/// Strategy for handling orphaned character files
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum CleanupStrategy {
+    /// Add orphaned files back to index (preserve data)
+    #[default]
+    Conservative,
+    /// Delete orphaned files from disk (clean state)
+    Aggressive,
 }
 
-impl Default for Ascendency {
-    fn default() -> Self {
-        Ascendency::Titan
-    }
-}
-
-impl Default for League {
-    fn default() -> Self {
-        League::Standard
-    }
+/// Report of orphan cleanup operation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct OrphanCleanupReport {
+    /// Files found on disk but not in index (added or deleted based on strategy)
+    pub orphaned_files: Vec<String>,
+    /// IDs in index but missing files (removed from index)
+    pub missing_files: Vec<String>,
+    /// Total characters after cleanup
+    pub total_characters: usize,
+    /// Cleanup strategy used
+    pub strategy: CleanupStrategy,
 }

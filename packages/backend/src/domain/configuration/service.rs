@@ -27,6 +27,16 @@ impl ConfigurationServiceImpl {
 
         if let Err(e) = service.load_config().await {
             warn!("Failed to load config, using defaults: {}", e);
+
+            // Get the default config that was set
+            let default_config = service.get_config().await.unwrap_or_default();
+
+            // Publish event so frontend knows config was initialized to defaults
+            // This allows UI to react to the fallback (e.g., show notification)
+            service
+                .publish_config_change(default_config.clone(), AppConfig::default())
+                .await;
+
             if let Err(save_err) = service.save_config().await {
                 warn!("Failed to save default config: {}", save_err);
             }
@@ -139,6 +149,10 @@ impl ConfigurationService for ConfigurationServiceImpl {
     async fn reset_to_defaults(&self) -> AppResult<()> {
         let default_config = AppConfig::default();
         self.update_config(default_config).await
+    }
+
+    async fn flush(&self) -> AppResult<()> {
+        self.repository.flush().await
     }
 
     async fn load_config(&self) -> AppResult<()> {

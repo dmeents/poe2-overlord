@@ -56,7 +56,7 @@ mod tests {
         let duration = calculate_active_session_duration_seconds(entry);
 
         // Should be approximately 60 seconds (allow some tolerance)
-        assert!(duration >= 60 && duration <= 62);
+        assert!((60..=62).contains(&duration));
     }
 
     // ============= calculate_session_duration_from_timestamps Tests =============
@@ -219,7 +219,10 @@ mod tests {
         let new_entry = Utc::now();
         let new_exit = new_entry + Duration::hours(1);
 
-        let existing = vec![(new_exit + Duration::hours(1), Some(new_exit + Duration::hours(2)))];
+        let existing = vec![(
+            new_exit + Duration::hours(1),
+            Some(new_exit + Duration::hours(2)),
+        )];
 
         let result = validate_no_session_overlap(new_entry, Some(new_exit), &existing);
 

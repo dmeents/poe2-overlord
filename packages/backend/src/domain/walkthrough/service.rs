@@ -110,7 +110,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
             let guide = self.repository.load_guide().await?;
             let mut found_step = None;
 
-            for (_, act) in &guide.acts {
+            for act in guide.acts.values() {
                 if let Some(step) = act.steps.get(step_id) {
                     found_step = Some(step);
                     break;
@@ -136,11 +136,32 @@ impl WalkthroughService for WalkthroughServiceImpl {
     }
 
     /// Updates a character's walkthrough progress
+    ///
+    /// Validates that the step ID exists in the guide if provided.
+    /// This prevents data corruption from invalid step references.
     async fn update_character_progress(
         &self,
         character_id: &str,
         progress: WalkthroughProgress,
     ) -> Result<(), AppError> {
+        // Validate step ID exists in guide if provided
+        if let Some(step_id) = &progress.current_step_id {
+            let guide = self.repository.load_guide().await?;
+            let step_exists = guide
+                .acts
+                .values()
+                .any(|act| act.steps.contains_key(step_id));
+
+            if !step_exists {
+                return Err(AppError::Validation {
+                    message: format!(
+                        "Invalid step ID '{}' - does not exist in walkthrough guide",
+                        step_id
+                    ),
+                });
+            }
+        }
+
         self.update_character_walkthrough_progress(character_id, progress)
             .await?;
 
@@ -183,7 +204,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                 let mut found_step = None;
                 let mut found_act = None;
 
-                for (_, act) in &guide.acts {
+                for act in guide.acts.values() {
                     if let Some(step) = act.steps.get(step_id) {
                         found_step = Some(step);
                         found_act = Some(act);
@@ -236,10 +257,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 Some(next_step_id.clone()),
                             );
                             if let Err(e) = self.event_bus.publish(event).await {
-                                warn!(
-                                    "Failed to publish walkthrough step advanced event: {}",
-                                    e
-                                );
+                                warn!("Failed to publish walkthrough step advanced event: {}", e);
                             }
 
                             // Publish step completed event
@@ -248,10 +266,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 step_result,
                             );
                             if let Err(e) = self.event_bus.publish(event).await {
-                                warn!(
-                                    "Failed to publish walkthrough step completed event: {}",
-                                    e
-                                );
+                                warn!("Failed to publish walkthrough step completed event: {}", e);
                             }
                         } else {
                             // No next step, mark campaign as completed

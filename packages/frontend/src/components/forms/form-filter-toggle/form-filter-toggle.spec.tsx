@@ -6,7 +6,7 @@ import { FilterToggle } from './form-filter-toggle';
 describe('FilterToggle', () => {
   it('renders label correctly', () => {
     render(
-      <FilterToggle isExpanded={false} onToggle={vi.fn()} label='Filters' />
+      <FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters" />
     );
 
     expect(screen.getByText('Filters')).toBeInTheDocument();
@@ -17,7 +17,7 @@ describe('FilterToggle', () => {
       <FilterToggle
         isExpanded={false}
         onToggle={vi.fn()}
-        label='Filters'
+        label="Filters"
         activeCount={3}
       />
     );
@@ -30,7 +30,7 @@ describe('FilterToggle', () => {
       <FilterToggle
         isExpanded={false}
         onToggle={vi.fn()}
-        label='Filters'
+        label="Filters"
         activeCount={0}
       />
     );
@@ -47,7 +47,7 @@ describe('FilterToggle', () => {
       <FilterToggle
         isExpanded={false}
         onToggle={handleToggle}
-        label='Filters'
+        label="Filters"
       />
     );
 
@@ -58,7 +58,7 @@ describe('FilterToggle', () => {
 
   it('shows children when expanded', () => {
     render(
-      <FilterToggle isExpanded={true} onToggle={vi.fn()} label='Filters'>
+      <FilterToggle isExpanded={true} onToggle={vi.fn()} label="Filters">
         <div>Filter Content</div>
       </FilterToggle>
     );
@@ -68,7 +68,7 @@ describe('FilterToggle', () => {
 
   it('hides children when collapsed', () => {
     render(
-      <FilterToggle isExpanded={false} onToggle={vi.fn()} label='Filters'>
+      <FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters">
         <div>Filter Content</div>
       </FilterToggle>
     );
@@ -81,7 +81,7 @@ describe('FilterToggle', () => {
       <FilterToggle
         isExpanded={false}
         onToggle={vi.fn()}
-        label='Filters'
+        label="Filters"
         disabled
       />
     );
@@ -94,8 +94,8 @@ describe('FilterToggle', () => {
       <FilterToggle
         isExpanded={false}
         onToggle={vi.fn()}
-        label='Filters'
-        className='custom-class'
+        label="Filters"
+        className="custom-class"
       />
     );
 

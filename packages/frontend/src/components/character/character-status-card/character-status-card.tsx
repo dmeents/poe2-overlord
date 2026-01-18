@@ -19,7 +19,7 @@ export function CharacterStatusCard({
     return (
       <div className={`${characterStatusCardStyles.container} ${className}`}>
         <h3 className={characterStatusCardStyles.title}>Active Character</h3>
-        <LoadingSpinner message='Loading character data...' className='py-8' />
+        <LoadingSpinner message="Loading character data..." className="py-8" />
       </div>
     );
   }
@@ -30,15 +30,15 @@ export function CharacterStatusCard({
         <h3 className={characterStatusCardStyles.title}>Active Character</h3>
         <EmptyState
           icon={
-            <div className='h-12 w-12 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-400 text-xl'>
+            <div className="h-12 w-12 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-400 text-xl">
               👤
             </div>
           }
-          title='No Active Character'
-          description='Create or select a character to start tracking'
+          title="No Active Character"
+          description="Create or select a character to start tracking"
           action={
-            <Link to='/characters'>
-              <Button variant='primary' size='sm'>
+            <Link to="/characters">
+              <Button variant="primary" size="sm">
                 Manage Characters
               </Button>
             </Link>

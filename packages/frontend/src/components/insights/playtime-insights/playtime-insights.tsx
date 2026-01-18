@@ -34,19 +34,19 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
 
   if (isLoading) {
     return (
-      <Card title='Playtime Insights' icon={<ClockIcon />}>
-        <LoadingSpinner message='Loading playtime insights...' />
+      <Card title="Playtime Insights" icon={<ClockIcon />}>
+        <LoadingSpinner message="Loading playtime insights..." />
       </Card>
     );
   }
 
   if (!activeCharacter || !summary) {
     return (
-      <Card title='Playtime Insights' icon={<ClockIcon />}>
+      <Card title="Playtime Insights" icon={<ClockIcon />}>
         <EmptyState
-          icon={<ClockIcon className='w-8 h-8' />}
-          title='No Character Data Available'
-          description='Select a character to view playtime insights'
+          icon={<ClockIcon className="w-8 h-8" />}
+          title="No Character Data Available"
+          description="Select a character to view playtime insights"
         />
       </Card>
     );
@@ -89,41 +89,41 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
   const activePlayPercentage = 100 - hideoutPercentage;
 
   return (
-    <Card title='Insights' icon={<ClockIcon />} className='py-0'>
+    <Card title="Insights" icon={<ClockIcon />} className="py-0">
       <DataItem
-        label='Total Play Time'
+        label="Total Play Time"
         value={formatDurationMinutes(totalPlayTime)}
       />
       <DataItem
-        label='Active Play'
+        label="Active Play"
         value={formatDurationMinutes(activePlayTime)}
         subValue={`${activePlayPercentage.toFixed(1)}%`}
       />
       <DataItem
-        label='Hideout Time'
+        label="Hideout Time"
         value={formatDurationMinutes(totalHideoutTime)}
         subValue={`${hideoutPercentage.toFixed(1)}%`}
       />
       <DataItem
-        label='Deaths'
+        label="Deaths"
         value={totalDeaths}
         subValue={`${deathRate.toFixed(2)}/hr`}
       />
       <DataItem
-        label='Avg Time per Zone'
+        label="Avg Time per Zone"
         value={formatDurationMinutes(Math.round(averageTimePerZone))}
         subValue={`${nonTownHideoutZones.length} zones`}
       />
       {mostTimeSpent && (
         <DataItem
-          label='Most Time Spent'
+          label="Most Time Spent"
           value={mostTimeSpent.zone_name}
           subValue={mostTimeSpentValue}
         />
       )}
       {hasDeaths && (
         <DataItem
-          label='Most Deaths'
+          label="Most Deaths"
           value={mostDeaths.zone_name}
           subValue={`${mostDeaths.deaths} deaths`}
         />

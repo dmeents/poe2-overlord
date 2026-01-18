@@ -57,7 +57,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         match FileService::read_json_optional(&character_path).await? {
             Some(data) => Ok(data),
-            None => Err(AppError::internal_error(
+            None => Err(AppError::validation_error(
                 "load_character_data",
                 &format!("Character with ID '{}' not found", character_id),
             )),
@@ -98,5 +98,41 @@ impl CharacterRepository for CharacterRepositoryImpl {
     async fn character_exists(&self, character_id: &str) -> Result<bool, AppError> {
         let character_path = self.character_path(character_id);
         Ok(FileService::exists(&character_path).await?)
+    }
+
+    /// Lists all character data files in the data directory.
+    /// Returns character IDs extracted from filenames (character_data_{id}.json pattern).
+    async fn list_character_data_files(&self) -> Result<Vec<String>, AppError> {
+        let mut character_ids = Vec::new();
+
+        // Read directory entries
+        let mut entries = tokio::fs::read_dir(&self.data_dir).await.map_err(|e| {
+            AppError::file_system_error(
+                "list_character_files",
+                &format!("Failed to read data directory {:?}: {}", self.data_dir, e),
+            )
+        })?;
+
+        while let Some(entry) = entries.next_entry().await.map_err(|e| {
+            AppError::file_system_error(
+                "list_character_files",
+                &format!("Failed to read directory entry: {}", e),
+            )
+        })? {
+            let file_name = entry.file_name();
+            let file_name_str = file_name.to_string_lossy();
+
+            // Match pattern: character_data_{id}.json
+            if file_name_str.starts_with("character_data_") && file_name_str.ends_with(".json") {
+                // Extract ID from filename
+                let id = file_name_str
+                    .trim_start_matches("character_data_")
+                    .trim_end_matches(".json")
+                    .to_string();
+                character_ids.push(id);
+            }
+        }
+
+        Ok(character_ids)
     }
 }

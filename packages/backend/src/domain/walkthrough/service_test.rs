@@ -152,7 +152,7 @@ mod tests {
             _league: League,
             _hardcore: bool,
             _solo_self_found: bool,
-        ) -> Result<CharacterData, AppError> {
+        ) -> Result<CharacterDataResponse, AppError> {
             panic!("create_character should not be called in walkthrough tests")
         }
 
@@ -164,7 +164,7 @@ mod tests {
             &self,
             _character_id: &str,
             _update_params: CharacterUpdateParams,
-        ) -> Result<CharacterData, AppError> {
+        ) -> Result<CharacterDataResponse, AppError> {
             panic!("update_character should not be called in walkthrough tests")
         }
 

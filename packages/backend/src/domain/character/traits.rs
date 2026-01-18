@@ -38,7 +38,7 @@ pub trait CharacterService: Send + Sync {
         league: League,
         hardcore: bool,
         solo_self_found: bool,
-    ) -> Result<CharacterData, AppError>;
+    ) -> Result<CharacterDataResponse, AppError>;
 
     async fn get_character(&self, character_id: &str) -> Result<CharacterDataResponse, AppError>;
 
@@ -48,7 +48,7 @@ pub trait CharacterService: Send + Sync {
         &self,
         character_id: &str,
         update_params: CharacterUpdateParams,
-    ) -> Result<CharacterData, AppError>;
+    ) -> Result<CharacterDataResponse, AppError>;
 
     async fn delete_character(&self, character_id: &str) -> Result<(), AppError>;
 

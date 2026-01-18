@@ -59,18 +59,30 @@ export function useCreateCharacter() {
 
   return useMutation({
     mutationFn: async (data: CharacterFormData): Promise<CharacterData> => {
-      return await invoke<CharacterData>('create_character', {
-        name: data.name,
-        class: data.class,
-        ascendency: data.ascendency,
-        league: data.league,
-        hardcore: data.hardcore,
-        solo_self_found: data.solo_self_found,
-      });
+      console.log('[DEBUG useCreateCharacter] Invoking create_character with data:', data);
+      try {
+        const result = await invoke<CharacterData>('create_character', {
+          name: data.name,
+          class: data.class,
+          ascendency: data.ascendency,
+          league: data.league,
+          hardcore: data.hardcore,
+          soloSelfFound: data.solo_self_found,
+        });
+        console.log('[DEBUG useCreateCharacter] Success:', result);
+        return result;
+      } catch (error) {
+        console.error('[DEBUG useCreateCharacter] Error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
+      console.log('[DEBUG useCreateCharacter] onSuccess - invalidating queries');
       // Invalidate and refetch character queries
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.all });
+    },
+    onError: (error) => {
+      console.error('[DEBUG useCreateCharacter] onError:', error);
     },
   });
 }

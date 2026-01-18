@@ -61,7 +61,7 @@ impl CharacterService for CharacterServiceImpl {
         league: League,
         hardcore: bool,
         solo_self_found: bool,
-    ) -> Result<CharacterData, AppError> {
+    ) -> Result<CharacterDataResponse, AppError> {
         if !super::models::is_valid_ascendency_for_class(&ascendency, &class) {
             return Err(AppError::validation_error(
                 "validate_ascendency",
@@ -111,7 +111,7 @@ impl CharacterService for CharacterServiceImpl {
         match self.repository.save_character_data(&character_data).await {
             Ok(_) => {
                 log::info!("Created new character: {}", name);
-                Ok(character_data)
+                Ok(self.enrich_character_data(character_data).await)
             }
             Err(e) => {
                 // ROLLBACK: Character file write failed, remove from index
@@ -174,7 +174,7 @@ impl CharacterService for CharacterServiceImpl {
         &self,
         character_id: &str,
         update_params: CharacterUpdateParams,
-    ) -> Result<CharacterData, AppError> {
+    ) -> Result<CharacterDataResponse, AppError> {
         if !super::models::is_valid_ascendency_for_class(
             &update_params.ascendency,
             &update_params.class,
@@ -225,7 +225,7 @@ impl CharacterService for CharacterServiceImpl {
         self.repository.save_character_data(&character_data).await?;
 
         log::info!("Updated character: {}", update_params.name);
-        Ok(character_data)
+        Ok(self.enrich_character_data(character_data).await)
     }
 
     async fn delete_character(&self, character_id: &str) -> Result<(), AppError> {

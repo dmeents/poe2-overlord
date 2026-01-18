@@ -50,6 +50,14 @@ function CharactersPage() {
     totalCount,
   } = useCharacterList(characters);
 
+  console.log('[DEBUG CharactersPage] State:', {
+    charactersFromContext: characters.length,
+    filteredCharacters: filteredCharacters.length,
+    totalCount,
+    isLoading,
+    error,
+  });
+
   const handleCreateCharacter = async (data: CharacterFormData) => {
     try {
       setIsSubmitting(true);

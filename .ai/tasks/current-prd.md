@@ -11,134 +11,152 @@ A runtime bug has been reported: **the character list is not appearing when the 
 
 ## Investigation Approach
 
-This is a **log-based debugging task**. You will autonomously:
-1. **Start the app** with `yarn dev` in interact mode
-2. **Capture and analyze logs** (compilation errors, runtime errors, warnings)
-3. **Identify errors and inconsistencies** in the logs
-4. **Add strategic debug logging** if needed to gather more evidence
-5. **Analyze code** to understand why errors are occurring
-6. **Implement fixes** based on log analysis
-7. **Restart and verify** - logs should be clean
+This is an **iterative debugging task** where you orchestrate but delegate analysis:
+1. **You capture logs** - Run app in interact mode, save output
+2. **@debugger analyzes** - Pass logs to debugger for analysis
+3. **You add debug logs** - Based on debugger's findings, add strategic logs
+4. **You re-run app** - Capture new logs with debug output
+5. **@debugger analyzes again** - Until root cause clear
+6. **@implementation-planner designs fix** - Based on confirmed root cause
+7. **You implement** - Follow the implementation plan
+8. **You verify** - Clean logs, tests pass
+
+**Key**: YOU handle app execution and code edits. Subagents analyze logs and design fixes.
 
 ---
 
 ## Step-by-Step Investigation
 
-### Step 1: Start the App in Interact Mode
-Start app with interact subagent to monitor logs:
+### Step 1: Capture Initial Logs
+Run app in interact mode to capture all output:
+
 ```bash
 yarn dev
 ```
 
-**Task for interact subagent**: Monitor logs for 15-20 seconds and capture:
-- Any compilation errors (Rust or TypeScript)
-- Runtime errors or panics
-- Warnings about missing functions, types, or imports
-- Character-related errors
-- Failed command invocations
-
-Let app fully start up before stopping.
-
-### Step 2: Analyze Captured Logs
-Review the log output for:
-- **Compilation errors**: Missing imports, renamed functions, type errors
-- **Runtime errors**: Panics, unwraps on None, failed operations
-- **Warnings**: Unused imports, deprecations, type mismatches
-- **Missing logs**: Should see character loading on startup - is it missing?
-
-**Document all errors/warnings found.**
-
-### Step 3: Analyze Recent Changes (if logs unclear)
-If logs don't reveal obvious error, check recent commits:
-```bash
-git log --oneline -20 -- packages/backend/src/domain/character/ packages/frontend/src/contexts/ packages/frontend/src/hooks/
+Interact task:
+```
+Monitor logs for 20 seconds. Capture ALL output: compilation errors, runtime errors, warnings, panics, character-related messages. Report complete logs.
 ```
 
-Look for:
-- Renamed functions or types
-- Changed imports
-- Modified query keys or command names
+Save the captured logs - you'll pass them to @debugger.
 
-### Step 4: Investigate Error Root Cause
-Based on errors found in logs, read relevant files:
+### Step 2: Pass Logs to @debugger for Analysis
+Invoke @debugger with captured logs:
 
-**If compilation error**: Read the file mentioned in error
-**If runtime error**: Read the function/module where panic occurred
-**If no obvious error**: Read character loading flow:
-- `packages/frontend/src/hooks/use-characters.ts`
-- `packages/backend/src/commands/characters.rs`
-- `packages/backend/src/domain/character/service.rs`
+```
+@debugger "Analyze these logs to identify why character list isn't appearing:
 
-Identify:
-- What specific line is causing the error?
-- Why is it failing? (missing import, wrong type, renamed function?)
-- What was changed recently that could cause this?
+**Captured Logs**:
+```
+[Paste complete log output here]
+```
 
-### Step 5: Add Debug Logging (if needed)
-If error not obvious from initial logs, add strategic debug logs:
+**What to identify**:
+1. All compilation errors (missing imports, type errors, renamed functions)
+2. All runtime errors/panics
+3. Relevant warnings
+4. Root cause hypothesis
+5. Where I should add debug logs if root cause unclear
 
-**Backend** (at entry point of suspected issue):
+Provide detailed analysis."
+```
+
+@debugger will analyze and tell you what's wrong.
+
+### Step 3: Add Debug Logs Based on @debugger's Findings
+Based on @debugger's analysis, YOU add strategic debug logs:
+
+**If @debugger says "add logs to trace character loading"**:
+Add to backend (`packages/backend/src/domain/character/service.rs`):
 ```rust
-eprintln!("[DEBUG] Function X called with args: {:?}", args);
-eprintln!("[DEBUG] Result: {:?}", result);
+eprintln!("[DEBUG] get_all_characters called");
+eprintln!("[DEBUG] Found {} characters", result.len());
 ```
 
-**Frontend** (if frontend might be involved):
+**If @debugger says "check frontend query state"**:
+Add to frontend (character hook/component):
 ```typescript
-console.error('[DEBUG] Hook/Component state:', { status, data, error });
+console.error('[DEBUG] Characters query:', { status, data, error });
 ```
 
-**Location**: Add logs at:
-- Function entry points
-- Before operations that might fail
-- After critical operations
+**If @debugger identifies exact error**:
+Skip to Step 6 (no more debug logs needed).
 
-### Step 6: Restart with Debug Logs
-Restart app with new logs:
+### Step 4: Re-run App with Debug Logs
+Restart app to capture new logs with debug output:
+
 ```bash
 yarn dev
 ```
 
-Capture output again. New logs should reveal:
-- Where execution stops
-- What values are unexpected
-- Which branch is taken
+Capture logs again (20 seconds) - now with your debug output.
 
-### Step 7: Identify Root Cause
-Based on all evidence:
-- **Compilation error** → Fix syntax, imports, types
-- **Missing function** → Function renamed in refactor, update call sites
-- **Type mismatch** → Types changed, update usage
-- **Runtime panic** → Add error handling or fix logic
-- **Silent failure** → Missing command registration or broken query
+### Step 5: Pass New Logs to @debugger Again
+Invoke @debugger with updated logs:
 
-### Step 8: Implement Fix
-Make targeted fix based on root cause:
-- **Missing import** → Add import statement
-- **Renamed function** → Update all call sites
-- **Type mismatch** → Fix type annotations
-- **Logic error** → Correct the logic
-- **Missing registration** → Register command/handler
+```
+@debugger "Here are the new logs with debug output:
 
-### Step 9: Verify Fix - Check Logs Are Clean
-1. Remove debug logs (if any were added)
+**New Logs**:
+```
+[Paste new log output with debug statements]
+```
+
+**Previous analysis**: [What you said before]
+
+With this additional debug info, what's the confirmed root cause?"
+```
+
+Repeat Steps 3-5 until @debugger confirms root cause.
+
+### Step 6: Pass Root Cause to @implementation-planner for Fix Design
+Once @debugger confirms root cause, ask @implementation-planner to design the fix:
+
+```
+@implementation-planner "Design a fix for this issue:
+
+**Root Cause** (from @debugger): [Root cause @debugger identified]
+
+**Affected Area**: [Files/components mentioned]
+
+**Requirements**:
+1. Create step-by-step implementation plan
+2. Identify all files that need changes
+3. Specify exact changes needed
+4. Include testing strategy
+5. Note any risks
+
+Provide detailed fix plan I can follow."
+```
+
+@implementation-planner will create detailed implementation plan.
+
+### Step 7: Implement the Fix
+YOU implement following @implementation-planner's plan:
+
+- Make code changes step-by-step as specified
+- Follow the plan exactly
+- Make edits to all identified files
+
+### Step 8: Verify Fix
+1. Remove debug logs (if you added any)
 2. Restart app: `yarn dev`
-3. Monitor logs for 15-20 seconds
+3. Monitor logs (20 seconds)
 4. Verify:
-   - **No compilation errors**
-   - **No runtime errors or panics**
-   - **No warnings about the fixed code**
-   - App starts successfully
+   - ✅ No compilation errors
+   - ✅ No runtime errors/panics
+   - ✅ No warnings
+   - ✅ App starts successfully
 
-### Step 10: Run Tests
-Verify nothing else broke:
+### Step 9: Run Tests
 ```bash
 yarn test
 ```
 
 All tests should pass.
 
-### Step 11: Document and Commit
+### Step 10: Document and Commit
 1. Create session log: `.ai/sessions/[date]-character-list-bug-fix.md`
 2. Document:
    - Symptoms observed
@@ -165,17 +183,20 @@ All tests should pass.
 
 ## Important Context for Claude
 
-**Debugging Workflow**:
-1. Run app in interact mode, capture logs (15-20 seconds)
-2. Analyze logs for errors, warnings, inconsistencies
-3. Identify root cause from log analysis
-4. Add debug logging if needed, restart, capture again
-5. Implement fix based on evidence
-6. Verify: Clean logs on restart + tests pass
+**Debugging Workflow** (Main agent orchestrates, subagents analyze/plan):
+1. **Capture**: Run app, save logs
+2. **Delegate Analysis**: Pass logs to @debugger
+3. **Iterate**: Add debug logs per @debugger's guidance, re-run
+4. **Repeat**: Until @debugger confirms root cause
+5. **Delegate Planning**: Pass root cause to @implementation-planner
+6. **Implement**: Follow @implementation-planner's plan
+7. **Verify**: Run app, check clean logs + tests pass
 
 **Subagent Usage**:
-- Consider invoking `@debugger` for investigation guidance
-- Debugger agent specializes in runtime debugging approach
+- `@debugger`: Analyzes logs, identifies root cause, suggests where to add debug logs
+- `@implementation-planner`: Designs fix plan based on root cause
+- Main agent: Runs app, adds debug logs, implements fix plan
+- Iterative loop: Main captures → @debugger analyzes → Main adds logs → repeat
 
 **Tech Stack Reminders**:
 - **Frontend**: React 19, TanStack Query (for data fetching)

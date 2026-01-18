@@ -33,7 +33,13 @@ pub async fn get_character(
 pub async fn get_all_characters(
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<Vec<CharacterDataResponse>> {
-    to_command_result(character_service.get_all_characters().await)
+    log::info!("[DEBUG] get_all_characters command called");
+    let result = character_service.get_all_characters().await;
+    match &result {
+        Ok(chars) => log::info!("[DEBUG] get_all_characters returning {} characters", chars.len()),
+        Err(e) => log::error!("[DEBUG] get_all_characters error: {:?}", e),
+    }
+    to_command_result(result)
 }
 
 #[tauri::command]

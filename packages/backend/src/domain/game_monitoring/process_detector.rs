@@ -5,6 +5,7 @@ use crate::domain::game_monitoring::{
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::debug;
+use std::ffi::OsString;
 use sysinfo::System;
 
 pub struct ProcessDetectorImpl {
@@ -46,21 +47,48 @@ impl ProcessDetectorImpl {
         false
     }
 
-    /// On Linux/Proton, the process name might be generic (e.g., "Main").
-    /// Check the executable path for POE2 identifiers.
-    fn matches_poe_exe_path(&self, exe_path: &std::path::Path) -> bool {
-        let path_str = exe_path.to_string_lossy().to_lowercase();
+    /// Check if a path string contains POE2 identifiers.
+    /// Handles both Unix paths and Wine-style paths (Z:\...\PathOfExileSteam.exe).
+    fn path_contains_poe(&self, path_str: &str) -> bool {
+        let path_lower = path_str.to_lowercase();
 
-        // Check if the path contains any POE2 identifiers
+        // Skip if the path contains our own project directory (poe2-overlord)
+        if path_lower.contains("poe2-overlord") {
+            return false;
+        }
+
+        // Extract filename - handle both Unix (/) and Windows (\) separators
+        let filename = path_str
+            .rsplit(|c| c == '/' || c == '\\')
+            .next()
+            .unwrap_or("")
+            .to_lowercase();
+
+        // Check if the filename matches any POE2 process names
         for target in &self.config.process_names {
             let target_lower = target.to_lowercase();
-            if path_str.contains(&target_lower) {
+
+            // Exact match or match with .exe extension
+            if filename == target_lower || filename == format!("{}.exe", target_lower) {
                 return true;
             }
         }
 
-        // Also check for common POE2 path patterns (Wine/Proton paths)
-        path_str.contains("path of exile 2") || path_str.contains("pathofexile2")
+        // Also check for common POE2 executable patterns in filename
+        filename.contains("pathofexile")
+    }
+
+    /// Check the command line for POE2 identifiers.
+    /// On Linux/Proton, the exe path might be wine64-preloader, but the
+    /// command line contains the actual Windows executable path.
+    fn cmdline_contains_poe(&self, cmd: &[OsString]) -> bool {
+        for arg in cmd {
+            let arg_str = arg.to_string_lossy();
+            if self.path_contains_poe(&arg_str) {
+                return true;
+            }
+        }
+        false
     }
 }
 
@@ -76,7 +104,7 @@ impl ProcessDetector for ProcessDetectorImpl {
             // First try exact process name matching (works on Windows)
             if self.matches_poe_process(&process_name) {
                 debug!(
-                    "Found POE2 process: {:?} (PID: {})",
+                    "Found POE2 process by name: {:?} (PID: {})",
                     process.name(),
                     pid.as_u32()
                 );
@@ -88,17 +116,15 @@ impl ProcessDetector for ProcessDetectorImpl {
                 ));
             }
 
-            // On Linux/Proton, process names can be generic (e.g., "Main")
-            // Check the executable path as a fallback
+            // On Linux/Proton, check the executable path
             if let Some(exe_path) = process.exe() {
-                if self.matches_poe_exe_path(exe_path) {
+                if self.path_contains_poe(&exe_path.to_string_lossy()) {
                     debug!(
                         "Found POE2 process by exe path: {} (PID: {})",
                         exe_path.display(),
                         pid.as_u32()
                     );
 
-                    // Use the exe filename as the display name
                     let display_name = exe_path
                         .file_name()
                         .map(|n| n.to_string_lossy().to_string())
@@ -110,6 +136,35 @@ impl ProcessDetector for ProcessDetectorImpl {
                         true,
                     ));
                 }
+            }
+
+            // On Linux/Proton with Wine, the exe might be wine64-preloader
+            // but the command line contains the actual game path
+            let cmd = process.cmd();
+            if !cmd.is_empty() && self.cmdline_contains_poe(cmd) {
+                debug!(
+                    "Found POE2 process by cmdline: {:?} (PID: {})",
+                    cmd,
+                    pid.as_u32()
+                );
+
+                // Extract game name from command line
+                let display_name = cmd
+                    .iter()
+                    .map(|arg| arg.to_string_lossy())
+                    .find(|arg| self.path_contains_poe(arg))
+                    .and_then(|path| {
+                        path.rsplit(|c| c == '/' || c == '\\')
+                            .next()
+                            .map(|s| s.to_string())
+                    })
+                    .unwrap_or_else(|| "PathOfExile".to_string());
+
+                return Ok(GameProcessStatus::new(
+                    display_name,
+                    pid.as_u32(),
+                    true,
+                ));
             }
         }
 

@@ -71,7 +71,7 @@ impl Default for GameMonitoringConfig {
     fn default() -> Self {
         Self {
             detection_interval_seconds: 3,
-            monitoring_interval_seconds: 60,
+            monitoring_interval_seconds: 5,
             process_names: vec![
                 "pathofexile2".to_string(),
                 "poe2".to_string(),

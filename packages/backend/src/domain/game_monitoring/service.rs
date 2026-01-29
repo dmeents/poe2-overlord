@@ -267,4 +267,8 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
     async fn get_current_status(&self) -> Option<GameProcessStatus> {
         self.current_status.read().await.clone()
     }
+
+    async fn check_status_now(&self) -> AppResult<GameProcessStatus> {
+        self.process_detector.check_game_process().await
+    }
 }

@@ -479,3 +479,76 @@ export function ConditionalComponent({ data }: Props): React.JSX.Element | null 
   return <div>{data.name}</div>;
 }
 ```
+
+## Walkthrough Guide Editing
+
+**File**: `packages/backend/config/walkthrough_guide.json`
+
+The walkthrough guide is a JSON file containing step-by-step instructions for the game campaign. Claude can edit this file based on plain English instructions.
+
+### Common Edit Types
+
+1. **Add optional objective**: Add new objective with `"required": false`
+2. **Add note**: Update the `notes` field for an objective
+3. **Add reward**: Add items to the `rewards` array
+4. **Add wiki item**: Add to the `wiki_items` array for the step
+5. **Combine objectives**: Merge multiple objectives into one with clearer wording
+6. **Fix step pointers**: Correct `next_step_id` and `previous_step_id` links
+7. **Make step more descriptive**: Rewrite title, description, objective text, and details
+
+### Making Steps More Descriptive
+
+When asked to improve a step's clarity, update these fields:
+
+- **title**: Action-oriented, describes what player does (e.g., "Navigate Mawdun Quarry" instead of "Find Exit to Mawdun Mine")
+- **description**: Context about the zone/area and what to expect
+- **objective text**: Clear action with helpful context
+- **details**: Specific tips on how to accomplish the objective
+
+**Example transformation**:
+```json
+// Before
+{
+  "title": "Find Exit to Mawdun Mine",
+  "description": "Navigate Mawdun Quarry and find the exit to Mawdun Mine, following the checkpoints.",
+  "objectives": [{
+    "text": "Find exit to Mawdun Mine",
+    "details": "Follow the checkpoints"
+  }]
+}
+
+// After
+{
+  "title": "Navigate Mawdun Quarry",
+  "description": "Make your way through Mawdun Quarry toward the mine entrance. The quarry is a linear zone with checkpoints guiding the path forward.",
+  "objectives": [{
+    "text": "Follow the checkpoints through the quarry to reach Mawdun Mine",
+    "details": "The quarry is mostly linear - follow the checkpoints and they will lead you to the mine entrance."
+  }]
+}
+```
+
+### Objective Structure
+
+```json
+{
+  "text": "Action to take",
+  "details": "How to accomplish it",
+  "required": true,
+  "rewards": ["Reward 1", "Reward 2"],
+  "notes": "Optional tips or edge cases"
+}
+```
+
+### Searching the Guide
+
+The file is large, so use Grep to find relevant sections:
+```bash
+# Find step by zone name
+Grep "Clearfell" walkthrough_guide.json
+
+# Find step by boss name
+Grep "Rathbreaker" walkthrough_guide.json
+```
+
+Then use Read with offset/limit to see the full step context.

@@ -13,12 +13,19 @@ pub async fn create_character(
     hardcore: bool,
     solo_self_found: bool,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<crate::domain::character::models::CharacterData> {
-    to_command_result(
-        character_service
-            .create_character(name, class, ascendency, league, hardcore, solo_self_found)
-            .await,
-    )
+) -> CommandResult<CharacterDataResponse> {
+    log::info!(
+        "[DEBUG] create_character command called: name={}, class={:?}, ascendency={:?}, league={:?}",
+        name, class, ascendency, league
+    );
+    let result = character_service
+        .create_character(name.clone(), class, ascendency, league, hardcore, solo_self_found)
+        .await;
+    match &result {
+        Ok(char) => log::info!("[DEBUG] create_character success: id={}", char.id),
+        Err(e) => log::error!("[DEBUG] create_character error: {:?}", e),
+    }
+    to_command_result(result)
 }
 
 #[tauri::command]
@@ -47,7 +54,7 @@ pub async fn update_character(
     character_id: String,
     update_params: crate::domain::character::models::CharacterUpdateParams,
     character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<crate::domain::character::models::CharacterData> {
+) -> CommandResult<CharacterDataResponse> {
     to_command_result(
         character_service
             .update_character(&character_id, update_params)

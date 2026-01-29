@@ -59,11 +59,14 @@ function CharactersPage() {
   });
 
   const handleCreateCharacter = async (data: CharacterFormData) => {
+    console.log('[DEBUG handleCreateCharacter] Called with data:', data);
     try {
       setIsSubmitting(true);
       await createCharacterMutation.mutateAsync(data);
+      console.log('[DEBUG handleCreateCharacter] Success - closing modal');
       setShowCreateModal(false);
-    } catch {
+    } catch (error) {
+      console.error('[DEBUG handleCreateCharacter] Error:', error);
       // Error is handled by the parent component
     } finally {
       setIsSubmitting(false);

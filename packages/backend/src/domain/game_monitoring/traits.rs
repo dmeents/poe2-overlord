@@ -25,4 +25,8 @@ pub trait GameMonitoringService: Send + Sync {
     async fn is_monitoring(&self) -> bool;
 
     async fn get_current_status(&self) -> Option<GameProcessStatus>;
+
+    /// Performs an immediate check of the game process status.
+    /// Unlike get_current_status() which returns cached data, this always checks live.
+    async fn check_status_now(&self) -> AppResult<GameProcessStatus>;
 }

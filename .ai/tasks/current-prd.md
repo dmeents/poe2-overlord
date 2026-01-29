@@ -1,284 +1,262 @@
-# PRD: Debug Character List Not Appearing
+# PRD: Walkthrough Guide Refinement
 
 ## Context
-A runtime bug has been reported: **the character list is not appearing when the application starts**.
+The walkthrough guide is stored as JSON at `packages/backend/config/walkthrough_guide.json`. Users want to refine/improve the guide by providing **plain English instructions**, and Claude should intelligently translate those into JSON edits.
 
-**Type**: Runtime bug
-**Severity**: HIGH (core feature broken)
-**Suspected Cause**: Unknown - needs log-based investigation
-
----
-
-## Investigation Approach
-
-This is an **iterative debugging task** where you orchestrate but delegate analysis:
-1. **You capture logs** - Run app in interact mode, save output
-2. **@debugger analyzes** - Pass logs to debugger for analysis
-3. **You add debug logs** - Based on debugger's findings, add strategic logs
-4. **You re-run app** - Capture new logs with debug output
-5. **@debugger analyzes again** - Until root cause clear
-6. **@implementation-planner designs fix** - Based on confirmed root cause
-7. **You implement** - Follow the implementation plan
-8. **You verify** - Clean logs, tests pass
-
-**Key**: YOU handle app execution and code edits. Subagents analyze logs and design fixes.
+**Type**: Content editing with structured data
+**File**: `packages/backend/config/walkthrough_guide.json`
+**Goal**: Make it easy to update walkthrough steps without manually editing JSON
 
 ---
 
-## Step-by-Step Investigation
+## Guide Structure Understanding
 
-### Step 1: Capture Initial Logs
-Run app in interact mode to capture all output:
+### JSON Schema
+```json
+{
+  "acts": {
+    "act_N": {
+      "act_name": "Act N",
+      "act_number": N,
+      "steps": {
+        "act_N_step_M": {
+          "id": "act_N_step_M",
+          "title": "Step Title",
+          "description": "Step description",
+          "objectives": [
+            {
+              "text": "Objective text",
+              "details": "Additional details",
+              "required": true/false,
+              "rewards": ["Reward 1", "Reward 2"],
+              "notes": "Optional notes"
+            }
+          ],
+          "current_zone": "Zone Name",
+          "completion_zone": "Next Zone Name",
+          "next_step_id": "act_N_step_M+1" or null,
+          "previous_step_id": "act_N_step_M-1" or null,
+          "wiki_items": ["Item 1", "Item 2"]
+        }
+      }
+    }
+  }
+}
+```
 
+### Key Concepts
+- **Acts**: Top-level containers (Act 1, Act 2, etc.)
+- **Steps**: Individual guide steps within an act
+- **Objectives**: Tasks within a step (can be required or optional)
+- **Zones**: Game locations (current_zone, completion_zone)
+- **Step IDs**: Linked list structure (next_step_id, previous_step_id)
+- **Wiki Items**: References to game encyclopedia
+
+---
+
+## Approach
+
+When user provides plain English instructions, you should:
+
+1. **Parse the request** - Understand what they want to change
+2. **Read current state** - Load the walkthrough guide JSON
+3. **Identify affected sections** - Which act/step/objective?
+4. **Make precise edits** - Update only what's needed
+5. **Validate structure** - Ensure JSON is valid and links intact
+6. **Explain changes** - Summarize what was updated
+
+---
+
+## Example Instructions & How to Handle
+
+### Example 1: "Add a note to Act 1 Step 3 about Beira being north of the waypoint"
+
+**What to do**:
+1. Read `walkthrough_guide.json`
+2. Find `acts.act_1.steps.act_1_step_3`
+3. Find objective with text containing "Beira"
+4. Update the `notes` field
+5. Save changes
+
+### Example 2: "Change the reward for completing the witch hut to include a skill gem"
+
+**What to do**:
+1. Find step with "Witch Hut" objective
+2. Update `rewards` array for that objective
+3. Save changes
+
+### Example 3: "Add a new optional objective to Act 1 Step 4 for finding a hidden chest"
+
+**What to do**:
+1. Find `acts.act_1.steps.act_1_step_4.objectives`
+2. Add new objective object with `required: false`
+3. Save changes
+
+### Example 4: "Fix the typo in Act 1 Step 5 where it says 'Empale' instead of 'Impale'"
+
+**What to do**:
+1. Search for "Empale" in the file
+2. Replace with "Impale"
+3. Save changes
+
+### Example 5: "Add 'The Grim Tangle' to wiki items for Act 1 Step 6"
+
+**What to do**:
+1. Find `acts.act_1.steps.act_1_step_6.wiki_items`
+2. Add "The Grim Tangle" if not already present
+3. Save changes
+
+---
+
+## Step-by-Step Process
+
+### Step 1: Parse User Request
+Understand:
+- What act/step is affected?
+- What field needs to change? (title, description, objectives, zones, wiki_items)
+- Is this adding, modifying, or removing content?
+- Are there any ambiguities that need clarification?
+
+### Step 2: Read Current Guide
 ```bash
-yarn dev
+# Read the entire file to understand current state
+```
+Read: `packages/backend/config/walkthrough_guide.json`
+
+Locate the relevant section based on user's instructions.
+
+### Step 3: Make Edits
+Use `edit_files` to make precise JSON changes:
+
+**Important**:
+- Maintain JSON formatting (2-space indentation)
+- Preserve existing structure
+- Keep step ID links intact (next_step_id, previous_step_id)
+- Validate JSON syntax
+
+### Step 4: Validate Changes
+After editing:
+1. Verify JSON is valid (no syntax errors)
+2. Check step links are intact
+3. Ensure no data loss in adjacent sections
+
+### Step 5: Summarize Changes
+Explain to user:
+- What was changed
+- Where it was changed (Act X, Step Y)
+- Confirm the change matches their request
+
+---
+
+## Common Editing Patterns
+
+### Adding a New Objective
+```json
+{
+  "text": "New objective text",
+  "details": "Additional details",
+  "required": false,
+  "rewards": [],
+  "notes": ""
+}
 ```
 
-Interact task:
-```
-Monitor logs for 20 seconds. Capture ALL output: compilation errors, runtime errors, warnings, panics, character-related messages. Report complete logs.
-```
+### Modifying Existing Text
+- Find exact section
+- Update the specific field
+- Preserve all other fields
 
-Save the captured logs - you'll pass them to @debugger.
+### Adding to Arrays
+- `objectives`: Append to list
+- `rewards`: Add to rewards array
+- `wiki_items`: Add unique items only
 
-### Step 2: Pass Logs to @debugger for Analysis
-Invoke @debugger with captured logs:
-
-```
-@debugger "Analyze these logs to identify why character list isn't appearing:
-
-**Captured Logs**:
-```
-[Paste complete log output here]
-```
-
-**What to identify**:
-1. All compilation errors (missing imports, type errors, renamed functions)
-2. All runtime errors/panics
-3. Relevant warnings
-4. Root cause hypothesis
-5. Where I should add debug logs if root cause unclear
-
-Provide detailed analysis."
-```
-
-@debugger will analyze and tell you what's wrong.
-
-### Step 3: Add Debug Logs Based on @debugger's Findings
-Based on @debugger's analysis, YOU add strategic debug logs:
-
-**If @debugger says "add logs to trace character loading"**:
-Add to backend (`packages/backend/src/domain/character/service.rs`):
-```rust
-eprintln!("[DEBUG] get_all_characters called");
-eprintln!("[DEBUG] Found {} characters", result.len());
-```
-
-**If @debugger says "check frontend query state"**:
-Add to frontend (character hook/component):
-```typescript
-console.error('[DEBUG] Characters query:', { status, data, error });
-```
-
-**If @debugger identifies exact error**:
-Skip to Step 6 (no more debug logs needed).
-
-### Step 4: Re-run App with Debug Logs
-Restart app to capture new logs with debug output:
-
-```bash
-yarn dev
-```
-
-Capture logs again (20 seconds) - now with your debug output.
-
-### Step 5: Pass New Logs to @debugger Again
-Invoke @debugger with updated logs:
-
-```
-@debugger "Here are the new logs with debug output:
-
-**New Logs**:
-```
-[Paste new log output with debug statements]
-```
-
-**Previous analysis**: [What you said before]
-
-With this additional debug info, what's the confirmed root cause?"
-```
-
-Repeat Steps 3-5 until @debugger confirms root cause.
-
-### Step 6: Pass Root Cause to @implementation-planner for Fix Design
-Once @debugger confirms root cause, ask @implementation-planner to design the fix:
-
-```
-@implementation-planner "Design a fix for this issue:
-
-**Root Cause** (from @debugger): [Root cause @debugger identified]
-
-**Affected Area**: [Files/components mentioned]
-
-**Requirements**:
-1. Create step-by-step implementation plan
-2. Identify all files that need changes
-3. Specify exact changes needed
-4. Include testing strategy
-5. Note any risks
-
-Provide detailed fix plan I can follow."
-```
-
-@implementation-planner will create detailed implementation plan.
-
-### Step 7: Implement the Fix
-YOU implement following @implementation-planner's plan:
-
-- Make code changes step-by-step as specified
-- Follow the plan exactly
-- Make edits to all identified files
-
-### Step 8: Verify Fix
-1. Remove debug logs (if you added any)
-2. Restart app: `yarn dev`
-3. Monitor logs (20 seconds)
-4. Verify:
-   - ✅ No compilation errors
-   - ✅ No runtime errors/panics
-   - ✅ No warnings
-   - ✅ App starts successfully
-
-### Step 9: Run Tests
-```bash
-yarn test
-```
-
-All tests should pass.
-
-### Step 10: Document and Commit
-1. Create session log: `.ai/sessions/[date]-character-list-bug-fix.md`
-2. Document:
-   - Symptoms observed
-   - Investigation steps taken
-   - Root cause identified
-   - Fix applied
-   - Verification results
-3. Commit: `"fix(characters): [description of root cause fix]"`
-4. Include: `Co-Authored-By: Warp <agent@warp.dev>`
+### Updating Zone Information
+- `current_zone`: Where step starts
+- `completion_zone`: Where step ends
+- Both should be valid zone names
 
 ---
 
 ## Success Criteria
 
-- [ ] Application starts without compilation errors
-- [ ] No runtime errors or panics in logs
-- [ ] All tests passing (`yarn test`)
-- [ ] Root cause identified from log analysis
-- [ ] Fix implemented and verified via clean logs
-- [ ] Session log documents: symptoms, logs captured, root cause, fix
-- [ ] Fix committed with clear message
+- [ ] User's plain English request understood correctly
+- [ ] Relevant section of JSON identified
+- [ ] Changes made precisely (no unintended edits)
+- [ ] JSON remains valid after changes
+- [ ] Step links (next/previous) still intact
+- [ ] User can verify the change matches their intent
 
 ---
 
-## Important Context for Claude
+## Important Guidelines
 
-**Debugging Workflow** (Main agent orchestrates, subagents analyze/plan):
-1. **Capture**: Run app, save logs
-2. **Delegate Analysis**: Pass logs to @debugger
-3. **Iterate**: Add debug logs per @debugger's guidance, re-run
-4. **Repeat**: Until @debugger confirms root cause
-5. **Delegate Planning**: Pass root cause to @implementation-planner
-6. **Implement**: Follow @implementation-planner's plan
-7. **Verify**: Run app, check clean logs + tests pass
+**Precision**:
+- Only edit what user requested
+- Don't make additional "improvements" without asking
+- Preserve exact formatting and structure
 
-**Subagent Usage**:
-- `@debugger`: Analyzes logs, identifies root cause, suggests where to add debug logs
-- `@implementation-planner`: Designs fix plan based on root cause
-- Main agent: Runs app, adds debug logs, implements fix plan
-- Iterative loop: Main captures → @debugger analyzes → Main adds logs → repeat
+**Validation**:
+- Always verify JSON syntax after edits
+- Check that arrays and objects are properly closed
+- Ensure no trailing commas
 
-**Tech Stack Reminders**:
-- **Frontend**: React 19, TanStack Query (for data fetching)
-- **Backend**: Rust, Tauri commands
-- **Data**: File-based (character files + index)
-- **State**: React Context + TanStack Query cache
+**Communication**:
+- If request is ambiguous, ask for clarification
+- After changes, explain what was updated
+- If request impossible (e.g., nonexistent step), explain why
 
-**Key Files** (likely suspects):
-- Frontend query: `packages/frontend/src/hooks/use-characters.ts`
-- Frontend context: `packages/frontend/src/contexts/CharacterContext.tsx`
-- Frontend page: `packages/frontend/src/routes/characters.tsx`
-- Backend service: `packages/backend/src/domain/character/service.rs`
-- Backend command: `packages/backend/src/commands/characters.rs`
+**Data Integrity**:
+- Don't break step ID chains
+- Maintain act/step numbering consistency
+- Keep wiki_items relevant to the step
 
 ---
 
-## Recommended Approach: Ralph Loop
+## Example Session Flow
 
-Since this is autonomous log-based debugging, **Ralph loop is well-suited** for this task.
+**User**: "Add a note to Act 1 Step 3 that Beira is always north of the waypoint"
 
-**Command**:
-```bash
-/ralph-loop:ralph-loop "Follow .ai/tasks/current-prd.md to debug character list issue. Start app in interact mode, capture and analyze logs for errors/warnings, identify root cause, add debug logging if needed, implement fix, verify logs are clean and tests pass. Document findings. Output BUG_FIXED when complete." --max-iterations 50 --completion-promise "BUG_FIXED"
-```
-
-**Alternative: Regular Conversation**
-If you prefer to observe the investigation:
-```
-Please debug why the character list isn't appearing.
-
-1. Start `yarn dev` in interact mode and analyze the logs
-2. Identify any errors or warnings
-3. Add debug logging if needed to pinpoint the issue
-4. Implement a fix
-5. Verify with clean logs and passing tests
-```
+**Claude**:
+1. Reads `walkthrough_guide.json`
+2. Finds `acts.act_1.steps.act_1_step_3.objectives[0]` (Beira objective)
+3. Updates `notes` field: `"Always located north of the waypoint"`
+4. Saves changes
+5. Responds: "✅ Updated Act 1, Step 3 - Added note to Beira objective about location"
 
 ---
 
-## Debugging Capability Notes
+## Tech Stack Context
 
-**What Claude can determine from logs:**
-- Compilation errors (missing imports, type errors, renamed functions)
-- Runtime errors (panics, unwraps, failed operations)
-- Warning messages
-- Missing functionality (commands not registered, handlers not found)
+**File Format**: JSON (structured data)
+**Location**: `packages/backend/config/walkthrough_guide.json`
+**Used by**: Backend walkthrough service, frontend walkthrough UI
+**Validation**: Must be valid JSON syntax
 
-**What Claude cannot determine from logs alone:**
-- UI rendering issues (if logs are clean but UI still broken)
-- Visual bugs
-- UX issues
-
-**For this character list issue**: Since it's likely a code error from the refactoring pipeline, logs should reveal the problem.
+**Related Files**:
+- Backend: `packages/backend/src/domain/walkthrough/*`
+- Frontend: `packages/frontend/src/components/walkthrough/*`
 
 ---
 
-## Session Log Template
+## When to Ask for Clarification
 
-`.ai/sessions/[date]-character-list-bug-fix.md`:
+- "Add an objective to Act 1" → Which step in Act 1?
+- "Change the reward" → Which step/objective has the reward?
+- "Fix that typo" → Which typo specifically?
+- "Update Step 5" → Which act's Step 5?
 
-```markdown
-# Character List Bug Investigation
+Be specific but not pedantic - use context clues when obvious.
 
-**Date**: YYYY-MM-DD
-**Issue**: Character list not appearing on app start
+---
 
-## Symptoms
-- [what you observed]
+## Ready to Use
 
-## Investigation Steps
-1. [step taken]
-2. [evidence gathered]
+Just provide plain English instructions like:
+- "Add X to step Y"
+- "Change the description of Act 2 Step 1 to say..."
+- "Remove the optional objective about..."
+- "Fix the typo where it says..."
+- "Add a new step after Act 1 Step 5 for..."
 
-## Root Cause
-[what was broken and why]
-
-## Fix Applied
-[code changes made]
-
-## Verification
-[how fix was verified to work]
-
-## Related Commits
-- [commit SHA and message]
-```
+Claude will handle the JSON editing intelligently!

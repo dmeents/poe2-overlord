@@ -1,11 +1,9 @@
 // Sidebar Navigation Styles
 // Centralized styling utilities for the SidebarNavigation component
-// Uses stone/ember color palette from theme
 
 export const sidebarNavigationStyles = {
-  // shadow: effects.shadow.right
   container:
-    'fixed left-0 top-[28px] bottom-6 w-12 bg-stone-950/95 backdrop-blur-sm flex flex-col z-50 border-r border-stone-800/50 shadow-[4px_0_6px_rgba(0,0,0,0.7)]',
+    'fixed left-0 top-7 bottom-6 w-12 bg-stone-950/95 backdrop-blur-sm flex flex-col z-50 border-r border-stone-800/50 shadow-right',
   logo: 'w-full h-12 flex items-center justify-center border-b border-stone-800/50',
   logoImage: 'w-8 h-8',
   primaryNav: 'flex-1 flex flex-col',

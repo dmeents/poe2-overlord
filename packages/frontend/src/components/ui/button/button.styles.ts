@@ -6,7 +6,7 @@ export const buttonStyles = {
   base: 'cursor-pointer inline-flex items-center justify-center font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-500 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-950 disabled:pointer-events-none disabled:opacity-50',
   variants: {
     primary:
-      'bg-ember-600 text-white hover:bg-ember-700 border border-ember-700 shadow-[0_0_10px_rgba(249,115,22,0.15)] hover:shadow-[0_0_15px_rgba(249,115,22,0.25)]',
+      'bg-ember-800 text-ember-100 hover:bg-ember-700 border border-ember-700 shadow-[0_0_10px_rgba(249,115,22,0.15)] hover:shadow-[0_0_15px_rgba(249,115,22,0.25)]',
     secondary: 'bg-stone-800 text-stone-200 hover:bg-stone-700 border border-stone-700',
     outline:
       'border border-stone-700 bg-stone-900 text-stone-200 hover:bg-stone-800 hover:border-stone-600',
@@ -14,7 +14,9 @@ export const buttonStyles = {
     text: 'bg-transparent hover:text-stone-200',
     icon: 'flex items-center justify-center bg-transparent text-stone-400 hover:text-ember-400',
     danger:
-      'bg-blood-600 text-white hover:bg-blood-700 border border-blood-700 shadow-[0_0_10px_rgba(220,38,38,0.15)] hover:shadow-[0_0_15px_rgba(220,38,38,0.25)]',
+      'bg-blood-700 text-blood-100 hover:bg-blood-600 border border-blood-600 shadow-[0_0_10px_rgba(220,38,38,0.15)] hover:shadow-[0_0_15px_rgba(220,38,38,0.25)]',
+    active:
+      'bg-stone-800 text-ember-400 border border-ember-700/50 shadow-[0_0_8px_rgba(249,115,22,0.2)]',
   },
   sizes: {
     xs: 'h-6 px-2 text-xs',

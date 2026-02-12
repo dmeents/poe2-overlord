@@ -10,13 +10,13 @@
 The application needed a consistent design language with colors extracted from the logo and background assets (volcanic/infernal aesthetic).
 
 **Decision:**
-- Create a centralized `theme.ts` file containing all design tokens
-- Register custom colors in `globals.css` `@theme` block for Tailwind usage
-- Use semantic color names (ember, molten, blood, bone, stone) instead of generic Tailwind defaults
+- Define all design tokens in `globals.css` `@theme` block (single source of truth)
+- Use semantic color names (ember, molten, blood, bone, stone, ash) instead of generic Tailwind defaults
+- Define custom shadows with high opacity for dark backgrounds
 - Apply background image with gradient overlay using CSS multiple backgrounds (no z-index needed)
 
 **Consequences:**
-- All color changes can be made in one place
+- All design token changes can be made in one place (`globals.css`)
 - Consistent visual language across components
-- Component `.styles.ts` files should use theme colors, not hardcoded values
-- Migration needed for existing components still using `zinc-*` or `emerald-*` colors
+- Component `.styles.ts` files use Tailwind classes that reference theme tokens
+- No need for a separate JS theme file - everything is CSS-native

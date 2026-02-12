@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Button } from '../button/button';
-import { type CardAccentColor, type CardVariant, cardStyles } from './card.styles';
+import { type CardAccentColor, cardStyles } from './card.styles';
 
 interface CardProps {
   children: ReactNode;
@@ -8,7 +8,6 @@ interface CardProps {
   subtitle?: string;
   icon?: ReactNode;
   className?: string;
-  variant?: CardVariant;
   accentColor?: CardAccentColor;
   showStatusIndicator?: boolean;
   rightAction?: {
@@ -23,13 +22,12 @@ export function Card({
   subtitle,
   icon,
   className = '',
-  variant = 'default',
   accentColor = 'stone',
   showStatusIndicator = false,
   rightAction,
 }: CardProps) {
   return (
-    <div className={`${cardStyles.base} ${cardStyles.variant[variant]} ${className}`}>
+    <div className={`${cardStyles.base} ${className}`}>
       {title && (
         <div className={`${cardStyles.header} ${cardStyles.accentGradient[accentColor]}`}>
           <div className={cardStyles.headerContent}>

@@ -62,6 +62,52 @@
   --color-bone-300: #c0aea2;
   --color-bone-400: #a89888;
   --color-bone-500: #8a7a6a;
+
+  /* ==========================================================================
+     ASH - Cool neutral for disabled/muted states
+     ========================================================================== */
+  --color-ash-400: #9ca3af;
+  --color-ash-500: #6b7280;
+  --color-ash-600: #4b5563;
+  --color-ash-700: #374151;
+  --color-ash-800: #1f2937;
+  --color-ash-900: #111827;
+
+  /* ==========================================================================
+     STONE - Using Tailwind's stone palette (already built-in, but ensuring
+     consistency with our dark theme values)
+     ========================================================================== */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+
+  /* ==========================================================================
+     SHADOWS - High opacity for dark backgrounds
+     ========================================================================== */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 8px 12px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.8);
+  /* Directional shadows for docked panels */
+  --shadow-top: 0 -4px 6px rgba(0, 0, 0, 0.7);
+  --shadow-right: 4px 0 6px rgba(0, 0, 0, 0.7);
+  --shadow-bottom: 0 4px 6px rgba(0, 0, 0, 0.7);
+  --shadow-left: -4px 0 6px rgba(0, 0, 0, 0.7);
+
+  /* ==========================================================================
+     SPACING - Layout constants
+     ========================================================================== */
+  --spacing-sidebar: 48px;
+  --spacing-titlebar: 28px;
+  --spacing-statusbar: 24px;
 }
 
 /* =============================================================================
@@ -79,9 +125,9 @@ body {
   background:
     linear-gradient(
       to bottom,
-      rgba(12, 10, 9, 0.88) 0%,
-      rgba(12, 10, 9, 0.85) 50%,
-      rgba(12, 10, 9, 0.92) 100%
+      rgba(28, 25, 23, 0.8) 0%,
+      rgba(28, 25, 23, 0.85) 50%,
+      rgba(28, 25, 23, 0.95) 100%
     ),
     url("/background.png") center / cover no-repeat fixed;
 }

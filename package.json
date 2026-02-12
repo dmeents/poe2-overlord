@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "A powerful game overlay for Path of Exile 2 built with Tauri and React",
-  "author": "POE2 Overlord Team",
+  "author": "David Meents",
   "license": "MIT",
   "packageManager": "pnpm@10.29.3",
   "scripts": {
@@ -13,7 +13,6 @@
     "format:rust": "pnpm --filter @poe2-overlord/backend format",
     "format:rust:check": "pnpm --filter @poe2-overlord/backend format:check",
     "format:ts": "pnpm --filter @poe2-overlord/frontend format",
-    "install:all": "pnpm install && cd packages/backend && cargo fetch && cd ../../",
     "lint": "pnpm lint:ts && pnpm lint:rust",
     "lint:rust": "pnpm --filter @poe2-overlord/backend lint",
     "lint:ts": "pnpm --filter @poe2-overlord/frontend lint",
@@ -22,14 +21,9 @@
     "test:backend:verbose": "pnpm --filter @poe2-overlord/backend test:verbose",
     "test:backend:watch": "pnpm --filter @poe2-overlord/backend test:watch",
     "test:frontend": "pnpm --filter @poe2-overlord/frontend test",
-    "check:backend": "pnpm --filter @poe2-overlord/backend check",
-    "build:backend": "pnpm --filter @poe2-overlord/backend build",
-    "clean:backend": "pnpm --filter @poe2-overlord/backend clean"
+    "check:backend": "pnpm --filter @poe2-overlord/backend check"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.9.6"
-  },
-  "dependencies": {
-    "@tanstack/react-query": "^5.90.16"
   }
 }

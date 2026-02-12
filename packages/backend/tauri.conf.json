@@ -6,8 +6,8 @@
   "build": {
     "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "yarn workspace @poe2-overlord/frontend dev",
-    "beforeBuildCommand": "yarn workspace @poe2-overlord/frontend build"
+    "beforeDevCommand": "pnpm --filter @poe2-overlord/frontend dev",
+    "beforeBuildCommand": "pnpm --filter @poe2-overlord/frontend build"
   },
   "app": {
     "windows": [

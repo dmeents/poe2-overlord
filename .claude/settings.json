@@ -16,14 +16,14 @@
   },
   "testing": {
     "autoRunTests": true,
-    "testCommand": "yarn test"
+    "testCommand": "pnpm test"
   },
   "linting": {
     "autoFix": true,
-    "lintCommand": "yarn lint"
+    "lintCommand": "pnpm lint"
   },
   "formatting": {
-    "formatCommand": "yarn format"
+    "formatCommand": "pnpm format"
   },
   "allowedTools": [
     "read_file",

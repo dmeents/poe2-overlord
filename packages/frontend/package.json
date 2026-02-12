@@ -19,7 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
-    "pre-commit": "npm run format && npm run lint",
+    "pre-commit": "pnpm format && pnpm lint",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

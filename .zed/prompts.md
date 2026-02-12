@@ -7,7 +7,7 @@ POE2 Overlord is a desktop overlay application for Path of Exile 2, providing re
 **Tech Stack:**
 - **Frontend**: React 19 + Tanstack Router/Query + Tailwind CSS v4
 - **Backend**: Rust + Tauri 2.8 + tokio async runtime
-- **Build**: Vite 7 + yarn workspaces monorepo
+- **Build**: Vite 7 + pnpm workspaces monorepo
 
 **Architecture:**
 - Strict separation: UI logic in React, system/performance-critical code in Rust
@@ -85,9 +85,9 @@ Expert in TypeScript + Rust for cross-platform desktop apps with Tauri 2.x.
 - UI/UX code in TypeScript/React
 
 ### After Implementation
-1. Run `yarn format` (auto-format all code)
-2. Run `yarn lint` (fix linting issues)
-3. Run `yarn test` (validate changes)
+1. Run `pnpm format` (auto-format all code)
+2. Run `pnpm lint` (fix linting issues)
+3. Run `pnpm test` (validate changes)
 4. **Claude Code only**: Auto-commit with descriptive message including `Co-Authored-By: Warp <agent@warp.dev>`
 5. **Zed only**: Report completion, wait for user to commit
 
@@ -116,7 +116,7 @@ Expert in TypeScript + Rust for cross-platform desktop apps with Tauri 2.x.
 Both Zed and Claude Code must:
 1. Follow the same code style (functional, descriptive names, file naming)
 2. Use same validation (Zod for all inputs)
-3. Run same commands (`yarn lint`, `yarn format`, `yarn test`)
+3. Run same commands (`pnpm lint`, `pnpm format`, `pnpm test`)
 4. Maintain same architecture decisions
 5. Follow same anti-patterns (no classes, no inline styles, etc.)
 
@@ -143,7 +143,7 @@ Both Zed and Claude Code must:
 - Styles: `{name}.styles.ts`
 
 ### Architecture Decisions
-- **Monorepo**: yarn workspaces with frontend/backend packages
+- **Monorepo**: pnpm workspaces with frontend/backend packages
 - **State Management**: Tanstack Query ONLY (no Redux, Zustand, or Context for server state)
 - **Validation**: Zod for all form inputs and Tauri command parameters
 - **Error Handling**: Centralized error boundaries in React, Result<T, E> in Rust
@@ -246,7 +246,7 @@ Both Zed and Claude Code must:
 "Build `{feature}` full-stack: plan the architecture, implement Rust backend with tests, create React components, and add integration tests"
 
 ### Reviewing Test Coverage
-"Audit test coverage: identify untested files, run test suite with `yarn test`, and report gaps"
+"Audit test coverage: identify untested files, run test suite with `pnpm test`, and report gaps"
 
 ### Checking Accessibility
 "Audit accessibility for `{component}`: check ARIA labels, test keyboard navigation, verify color contrast, and generate a report"
@@ -267,17 +267,17 @@ Both Zed and Claude Code must:
 1. Frontend changes: Update components in `packages/frontend/src/components/`
 2. Backend changes: Add Tauri commands in `packages/backend/src/commands/`
 3. Keep tests co-located with source files
-4. Run `yarn lint` and `yarn format` before committing
+4. Run `pnpm lint` and `pnpm format` before committing
 
 ### After Implementation
-1. Run full test suite: `yarn test`
+1. Run full test suite: `pnpm test`
 2. Check type safety: frontend builds without errors
-3. Test Rust compilation: `yarn check:backend`
+3. Test Rust compilation: `pnpm check:backend`
 4. Store important decisions in Memory MCP
 
 ### Common Tasks
-- **Lint**: `yarn lint` (runs both TS and Rust linters)
-- **Format**: `yarn format` (formats TS and Rust code)
-- **Test**: `yarn test` (runs all tests)
-- **Dev**: `yarn dev` (starts Tauri dev server)
-- **Build**: `yarn build` (production build)
+- **Lint**: `pnpm lint` (runs both TS and Rust linters)
+- **Format**: `pnpm format` (formats TS and Rust code)
+- **Test**: `pnpm test` (runs all tests)
+- **Dev**: `pnpm dev` (starts Tauri dev server)
+- **Build**: `pnpm build` (production build)

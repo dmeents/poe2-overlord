@@ -49,17 +49,18 @@ This file records major architectural and technical decisions for POE2 Overlord.
 - **Status**: ✅ **All 47 components have comprehensive tests (517 tests total)**
 - **Rationale**: Native Vite integration, shared config, faster transforms, React 19 support
 - **Commands**:
-  - `yarn test:frontend` - Run all tests
-  - `yarn test:watch` - Watch mode
-  - `yarn test:ui` - Visual UI
-  - `yarn test:coverage` - Coverage report
+  - `pnpm test:frontend` - Run all tests
+  - `pnpm test:watch` - Watch mode
+  - `pnpm test:ui` - Visual UI
+  - `pnpm test:coverage` - Coverage report
 
-## Monorepo Structure (2026-01-10)
-**Decision**: Yarn workspaces with strict package separation
+## Monorepo Structure (2026-01-10, updated 2026-02-12)
+**Decision**: pnpm workspaces with strict package separation
 - `packages/frontend/` - React UI
 - `packages/backend/` - Rust + Tauri
 - No shared packages (yet)
 - **Rationale**: Clear boundaries, Tauri best practice
+- **Migration**: Moved from Yarn 4 to pnpm 10 for stricter dependency isolation and faster installs
 
 ## Model Selection (2026-01-10)
 **Decision**: Claude Opus 4 for Claude Code, Claude Sonnet 4 for Zed

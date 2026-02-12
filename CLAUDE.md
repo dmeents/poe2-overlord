@@ -34,21 +34,21 @@ POE2 Overlord is a game overlay for Path of Exile 2 built with Tauri. It's a mon
 
 ```bash
 # Development
-yarn dev                    # Start Tauri dev mode (frontend + backend)
-yarn build                  # Production build
+pnpm dev                    # Start Tauri dev mode (frontend + backend)
+pnpm build                  # Production build
 
 # Linting & Formatting
-yarn lint                   # Run all linters (TypeScript + Rust)
-yarn format                 # Format all code (Prettier + rustfmt)
+pnpm lint                   # Run all linters (TypeScript + Rust)
+pnpm format                 # Format all code (Prettier + rustfmt)
 
 # Testing
-yarn test                   # Run all tests
-yarn test:backend           # Run Rust tests only
-yarn test:backend:verbose   # Rust tests with output
-yarn test:backend:watch     # Rust tests in watch mode
+pnpm test                   # Run all tests
+pnpm test:backend           # Run Rust tests only
+pnpm test:backend:verbose   # Rust tests with output
+pnpm test:backend:watch     # Rust tests in watch mode
 
 # Type Checking
-yarn check:backend          # Run cargo check
+pnpm check:backend          # Run cargo check
 ```
 
 ## Architecture

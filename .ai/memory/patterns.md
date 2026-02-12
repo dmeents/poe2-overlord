@@ -307,10 +307,10 @@ Frontend testing uses Vitest + React Testing Library with co-located test files.
 ### Running Tests
 
 ```bash
-yarn test:frontend      # Run all tests once
-yarn test:watch         # Watch mode for development
-yarn test:ui            # Visual test UI
-yarn test:coverage      # Run with coverage report
+pnpm test:frontend      # Run all tests once
+pnpm test:watch         # Watch mode for development
+pnpm test:ui            # Visual test UI
+pnpm test:coverage      # Run with coverage report
 ```
 
 ### Test File Location

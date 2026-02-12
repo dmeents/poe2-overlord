@@ -6,7 +6,7 @@
 Follow .ai/tasks/current-prd.md to debug why the character list isn't appearing.
 
 **Your role**: Orchestrator
-1. Run `yarn dev` in INTERACT mode to capture logs
+1. Run `pnpm dev` in INTERACT mode to capture logs
 2. Pass logs to @debugger for analysis
 3. If @debugger needs more info, add debug logs they request
 4. Re-run and pass new logs to @debugger
@@ -28,7 +28,7 @@ Subagents handle: log analysis, fix planning
 ## The Model:
 
 **Main Agent (You)**:
-- Runs `yarn dev` in interact mode
+- Runs `pnpm dev` in interact mode
 - Captures and saves logs
 - Adds debug logs as requested
 - Implements fix code changes

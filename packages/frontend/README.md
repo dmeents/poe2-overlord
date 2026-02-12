@@ -207,14 +207,14 @@ All components follow these principles:
 
 ## Development Scripts
 
-- `yarn dev` - Start Vite dev server with hot reloading
-- `yarn build` - Build the frontend for production
-- `yarn lint` - Run ESLint for code quality
-- `yarn preview` - Preview the production build
-- `yarn format` - Format code with Prettier
-- `yarn clean` - Clean build artifacts
-- `yarn tauri:dev` - Start Tauri development mode
-- `yarn tauri:build` - Build Tauri application
+- `pnpm dev` - Start Vite dev server with hot reloading
+- `pnpm build` - Build the frontend for production
+- `pnpm lint` - Run ESLint for code quality
+- `pnpm preview` - Preview the production build
+- `pnpm format` - Format code with Prettier
+- `pnpm clean` - Clean build artifacts
+- `pnpm tauri:dev` - Start Tauri development mode
+- `pnpm tauri:build` - Build Tauri application
 
 ## Integration with Backend
 

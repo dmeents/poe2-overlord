@@ -117,7 +117,6 @@ export const CharacterList = memo(function CharacterList({
                 onSelect={handlers?.onSelect || (() => {})}
                 onEdit={handlers?.onEdit || (() => {})}
                 onDelete={handlers?.onDelete || (() => {})}
-                showDetails={true}
               />
             );
           })}

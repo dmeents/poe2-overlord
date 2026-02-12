@@ -1,5 +1,5 @@
 export const cardStyles = {
-  base: 'bg-stone-900 border border-stone-800 shadow-md',
+  base: 'bg-stone-900 border border-stone-800 card-shadow',
   header: 'px-5 py-3 border-b border-stone-800/50',
   headerContent: 'flex items-center justify-between',
   headerLeft: 'flex items-center gap-2',
@@ -7,7 +7,7 @@ export const cardStyles = {
   subtitle: 'text-xs text-stone-400 font-normal',
   statusDot: 'w-2 h-2 rounded-full animate-pulse',
   icon: 'w-4 h-4',
-  body: '',
+  body: 'p-4',
   accentGradient: {
     ember: 'bg-gradient-to-r from-ember-500/10 to-transparent',
     molten: 'bg-gradient-to-r from-molten-400/10 to-transparent',

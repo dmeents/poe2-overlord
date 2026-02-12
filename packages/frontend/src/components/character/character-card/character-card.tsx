@@ -1,19 +1,47 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import type { CharacterData } from '../../../types/character';
-import { getAscendencyImage } from '../../../utils/ascendency-assets';
-import { formatDuration } from '../../../utils/format-duration';
-import { getDisplayAct } from '../../../utils/zone-utils';
+import {
+  CalendarDaysIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  MapIcon,
+  MapPinIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { memo, useCallback, useMemo } from 'react';
+import type { CharacterData } from '@/types/character';
+import { getAscendencyImage } from '@/utils/ascendency-assets';
+import { formatDuration } from '@/utils/format-duration';
+import { getDisplayAct } from '@/utils/zone-utils';
 import { Button } from '../../ui/button/button';
 import {
   formatDate,
   getAscendencyBackgroundStyles,
   getAscendencyOverlayStyles,
-  getClassBgColor,
-  getClassBorderColor,
-  getClassColor,
-  getClassLevelColors,
-  getHeaderSectionBackgroundStyles,
+  getHardcoreAccentStyles,
+  characterCardStyles as styles,
 } from './character-card.styles';
+
+/**
+ * Calculate deaths per hour from total deaths and play time (in seconds)
+ */
+function formatDeathsPerHour(deaths: number, playTimeSeconds: number): string {
+  if (playTimeSeconds < 60) return '0.0'; // Not enough data
+  const hours = playTimeSeconds / 3600;
+  const deathsPerHour = deaths / hours;
+  return deathsPerHour.toFixed(1);
+}
+
+/**
+ * Calculate character age in days from created_at timestamp
+ */
+function formatCharacterAge(createdAt: string): string {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days === 0) return 'Today';
+  if (days === 1) return '1 day';
+  return `${days} days`;
+}
 
 export interface CharacterCardProps {
   character: CharacterData;
@@ -22,7 +50,6 @@ export interface CharacterCardProps {
   onEdit: () => void;
   onDelete: () => void;
   interactive?: boolean;
-  showDetails?: boolean;
 }
 
 export const CharacterCard = memo(function CharacterCard({
@@ -32,20 +59,8 @@ export const CharacterCard = memo(function CharacterCard({
   onEdit,
   onDelete,
   interactive = true,
-  showDetails = true,
 }: CharacterCardProps) {
-  // State for collapsible details - default to expanded for active characters
-  const [isDetailsExpanded, setIsDetailsExpanded] = useState(isActive);
-
-  // Update expanded state when character becomes active/inactive
-  useEffect(() => {
-    setIsDetailsExpanded(isActive);
-  }, [isActive]);
-
-  // Get current location (always needed for header display)
-  const currentLocation = character.current_location;
-
-  // Memoize expensive computations
+  // Memoize ascendency image and styles
   const ascendencyImage = useMemo(
     () => getAscendencyImage(character.ascendency),
     [character.ascendency],
@@ -55,48 +70,27 @@ export const CharacterCard = memo(function CharacterCard({
     [ascendencyImage],
   );
   const overlayStyles = useMemo(() => getAscendencyOverlayStyles(), []);
-
-  const headerBackgroundStyles = useMemo(
-    () => getHeaderSectionBackgroundStyles(character.hardcore),
+  const hardcoreStyles = useMemo(
+    () => (character.hardcore ? getHardcoreAccentStyles() : undefined),
     [character.hardcore],
   );
 
-  // Memoize class computations
-  const classColor = useMemo(() => getClassColor(character.class), [character.class]);
-  const classBorderColor = useMemo(() => getClassBorderColor(character.class), [character.class]);
-  const classBgColor = useMemo(() => getClassBgColor(character.class), [character.class]);
-  const classLevelColors = useMemo(() => getClassLevelColors(character.class), [character.class]);
+  // Format current location
+  const locationDisplay = useMemo(() => {
+    const location = character.current_location;
+    if (!location) return null;
 
-  // Memoize helper function
-  const formatCurrentLocation = useCallback((location: typeof currentLocation) => {
-    if (!location) return 'Unknown';
-
-    const parts = [];
     const displayAct = getDisplayAct(location);
-    if (displayAct) parts.push(displayAct);
-    if (location.zone_name) parts.push(location.zone_name);
+    if (location.zone_name) {
+      return { act: displayAct, zone: location.zone_name };
+    }
+    return displayAct ? { act: displayAct, zone: null } : null;
+  }, [character.current_location]);
 
-    return parts.length > 0 ? parts.join(' - ') : 'Unknown';
-  }, []);
-
-  // Memoize event handlers
+  // Event handlers
   const handleSelect = useCallback(() => {
     if (interactive) onSelect();
   }, [interactive, onSelect]);
-
-  const handleToggleDetails = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDetailsExpanded(prev => !prev);
-  }, []);
-
-  // Wrapper functions for Button onClick (Button expects () => void)
-  const handleEditClick = useCallback(() => {
-    onEdit();
-  }, [onEdit]);
-
-  const handleDeleteClick = useCallback(() => {
-    onDelete();
-  }, [onDelete]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -108,171 +102,165 @@ export const CharacterCard = memo(function CharacterCard({
     [interactive, onSelect],
   );
 
+  const handleEdit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onEdit();
+    },
+    [onEdit],
+  );
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete();
+    },
+    [onDelete],
+  );
+
+  // Build container classes
+  const containerClasses = useMemo(() => {
+    const classes = [styles.base];
+
+    if (interactive) {
+      classes.push(styles.baseInteractive, styles.baseHoverBg, styles.hoverBorder(character.class));
+    }
+
+    if (isActive) {
+      classes.push(styles.activeBorder(character.class));
+    }
+
+    return classes.join(' ');
+  }, [interactive, isActive, character.class]);
+
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: handleSelect is a no-op when interactive is false
     <div
-      className={`group relative border transition-all duration-200 overflow-hidden ${
-        interactive ? 'cursor-pointer' : ''
-      } ${
-        isActive
-          ? `${classBorderColor} bg-gradient-to-br ${classBgColor}`
-          : 'border-zinc-700 bg-gradient-to-br from-zinc-800/50 to-zinc-900/30 hover:border-zinc-600 hover:bg-gradient-to-br hover:from-zinc-800/70 hover:to-zinc-900/50'
-      }`}
-      style={backgroundStyles}
+      className={containerClasses}
       onClick={handleSelect}
       onKeyDown={handleKeyDown}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}>
-      {/* Ascendency Background Overlay */}
-      {ascendencyImage && <div className="absolute inset-0" style={overlayStyles} />}
-      {/* Header Section with Gradient Background */}
-      <div className="relative p-5 pb-4" style={headerBackgroundStyles}>
-        <div className="flex items-center gap-3 mb-5">
-          {/* Character Level */}
-          <div
-            className={`w-8 h-8 bg-gradient-to-br ${classLevelColors.bg} border ${classLevelColors.border} flex items-center justify-center flex-shrink-0`}>
-            <span className={`text-sm font-bold ${classLevelColors.text}`}>{character.level}</span>
+      {/* Ascendency Background Layer */}
+      {ascendencyImage && (
+        <div className={styles.ascendencyBg} style={backgroundStyles}>
+          <div className={styles.ascendencyOverlay} style={overlayStyles} />
+        </div>
+      )}
+
+      {/* Hardcore Accent Overlay */}
+      {hardcoreStyles && <div className={styles.ascendencyOverlay} style={hardcoreStyles} />}
+
+      {/* Header Section */}
+      <div className={`${styles.header} ${styles.headerGradient(character.class)}`}>
+        <div className={styles.headerContent}>
+          {/* Level Badge */}
+          <div className={`${styles.levelBadge} ${styles.levelBadgeStyles(character.class)}`}>
+            <span className={styles.levelText(character.class)}>{character.level}</span>
           </div>
 
-          {/* Character Name */}
-          <h3 className="text-xl font-bold text-white truncate flex-1">{character.name}</h3>
+          {/* Character Info */}
+          <div className={styles.info}>
+            <h3 className={styles.name}>{character.name}</h3>
 
-          {/* Toggle Details Button */}
-          {showDetails && (
-            <button
-              type="button"
-              onClick={handleToggleDetails}
-              className="p-1.5 bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100"
-              aria-label={isDetailsExpanded ? 'Hide details' : 'Show details'}>
-              <svg
-                className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
-                  isDetailsExpanded ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-          )}
+            {/* Class & Ascendency */}
+            <div className={styles.details}>
+              <span className={styles.classText(character.class)}>{character.class}</span>
+              <span className={styles.separator}>/</span>
+              <span className={styles.ascendency}>{character.ascendency}</span>
+            </div>
+
+            {/* League Info */}
+            <div className={styles.leagueRow}>
+              {character.hardcore && <span className={styles.hardcoreBadge}>HC</span>}
+              {character.solo_self_found && <span className={styles.ssfBadge}>SSF</span>}
+              <span className={styles.leagueBadge}>{character.league}</span>
+            </div>
+          </div>
 
           {/* Action Buttons */}
           {interactive && (
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className={styles.actions}>
               <Button
-                onClick={handleEditClick}
+                onClick={handleEdit}
                 variant="outline"
                 size="sm"
-                className="bg-zinc-800/80 backdrop-blur-sm">
+                className={styles.actionButton}>
                 Edit
               </Button>
               <Button
-                onClick={handleDeleteClick}
+                onClick={handleDelete}
                 variant="outline"
                 size="sm"
-                className="text-red-400 hover:text-red-300 hover:border-red-400 bg-zinc-800/80 backdrop-blur-sm">
+                className={styles.deleteButton}>
                 Delete
               </Button>
             </div>
           )}
         </div>
-
-        {/* Character Details */}
-        <div className="flex items-center gap-6 mb-2">
-          <div className="space-y-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide font-medium">Class</div>
-            <div className={`text-sm font-medium ${classColor}`}>{character.class}</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
-              Ascendency
-            </div>
-            <div className="text-sm text-zinc-300 font-medium">{character.ascendency}</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide font-medium">League</div>
-            <div className={`text-sm font-medium text-zinc-300`}>
-              {character.solo_self_found && 'SSF '}
-              {character.hardcore && 'HC '}
-              {character.league}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Footer Section - only show when showDetails is true and expanded */}
-      {showDetails && (
-        <div
-          className={`relative overflow-hidden transition-all duration-300 ease-in-out ${
-            isDetailsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}>
-          <div className="px-5 py-4 bg-zinc-900 border-t border-zinc-700/50">
-            <div className="grid grid-cols-1 gap-3">
-              {/* Play Time */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
-                  Play Time
-                </span>
-                <span className="text-sm font-medium text-zinc-300">
-                  {formatDuration(character.summary?.total_play_time || 0)}
-                </span>
-              </div>
-
-              {/* Deaths */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
-                  Deaths
-                </span>
-                <span className="text-sm font-medium text-zinc-300">
-                  {character.summary?.total_deaths || 0}
-                </span>
-              </div>
-
-              {/* Zones Visited */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
-                  Zones Visited
-                </span>
-                <span className="text-sm font-medium text-zinc-300">
-                  {character.summary?.total_zones_visited || 0}
-                </span>
-              </div>
-
-              {/* Last Played */}
-              {character.last_played && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
-                    Last Played
-                  </span>
-                  <span className="text-sm font-medium text-zinc-300">
-                    {formatDate(character.last_played)}
-                  </span>
-                </div>
-              )}
-
-              {/* Location */}
-              {currentLocation && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">
-                    {isActive ? 'Current Location' : 'Location'}
-                  </span>
-                  <span
-                    className="text-sm font-medium text-zinc-300"
-                    title={formatCurrentLocation(currentLocation)}>
-                    {formatCurrentLocation(currentLocation)}
-                  </span>
-                </div>
-              )}
-            </div>
+      {/* Stats Footer */}
+      <div className={styles.footer}>
+        <div className={styles.statsGrid}>
+          {/* Play Time */}
+          <div className={styles.stat} title="Play Time">
+            <ClockIcon className={styles.statIcon} aria-hidden="true" />
+            <span className={styles.statValue}>
+              {formatDuration(character.summary?.total_play_time || 0)}
+            </span>
           </div>
+
+          {/* Deaths */}
+          <div className={styles.stat} title="Deaths">
+            <XCircleIcon className={styles.statIcon} aria-hidden="true" />
+            <span className={styles.statValue}>{character.summary?.total_deaths || 0}</span>
+          </div>
+
+          {/* Deaths per Hour */}
+          <div className={styles.stat} title="Deaths per Hour">
+            <ExclamationTriangleIcon className={styles.statIcon} aria-hidden="true" />
+            <span className={styles.statValue}>
+              {formatDeathsPerHour(
+                character.summary?.total_deaths || 0,
+                character.summary?.total_play_time || 0,
+              )}
+              /hr
+            </span>
+          </div>
+
+          {/* Zones Visited */}
+          <div className={styles.stat} title="Zones Visited">
+            <MapIcon className={styles.statIcon} aria-hidden="true" />
+            <span className={styles.statValue}>{character.summary?.total_zones_visited || 0}</span>
+          </div>
+
+          {/* Character Age */}
+          <div className={styles.stat} title="Character Age">
+            <CalendarDaysIcon className={styles.statIcon} aria-hidden="true" />
+            <span className={styles.statValue}>{formatCharacterAge(character.created_at)}</span>
+          </div>
+
+          {/* Location */}
+          {locationDisplay && (
+            <div
+              className={styles.stat}
+              title={`${locationDisplay.act}${locationDisplay.zone ? ` - ${locationDisplay.zone}` : ''}`}>
+              <MapPinIcon className={styles.statIcon} aria-hidden="true" />
+              <span className={styles.statValue}>
+                {locationDisplay.zone || locationDisplay.act}
+              </span>
+            </div>
+          )}
+
+          {/* Last Played (only if not active) */}
+          {!isActive && character.last_played && (
+            <div className={styles.stat} title="Last Played">
+              <span className={styles.statValue}>{formatDate(character.last_played)}</span>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 });

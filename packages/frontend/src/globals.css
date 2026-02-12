@@ -244,6 +244,13 @@ textarea:focus {
    UTILITY CLASSES
    ============================================================================= */
 
+/* Card shadow - uses drop-shadow filter to avoid stacking context clipping */
+.card-shadow {
+  filter: drop-shadow(var(--shadow-md));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
 /* Ember glow effect for interactive elements */
 .glow-ember {
   box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);

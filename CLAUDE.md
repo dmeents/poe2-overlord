@@ -16,16 +16,21 @@ POE2 Overlord is a game overlay for Path of Exile 2 built with Tauri. It's a mon
 - **`.ai/memory/`** - Long-term context (ALWAYS READ FIRST)
   - `decisions.md` - Architecture decisions
   - `patterns.md` - Code patterns and examples
-- **`.ai/tasks/`** - Active work
-  - `current-prd.md` - Current feature being built
-  - `backlog.md` - Future work
-- **`.ai/sessions/`** - Ralph loop logs (auto-generated)
+- **`.ai/tasks/`** - Active PRDs and work items
+- **`.ai/sessions/`** - Session notes and Ralph loop logs
 - **`.ai/prompts/`** - Reusable prompt templates
 - **`.ai/archive/`** - Completed work
+  - `completed-prds/` - Archived PRDs (named `YYYY-MM-DD-prd-name.md`)
+  - `old-sessions/` - Old session logs
+
+### PRD Workflow
+1. **When starting a PRD**: Create in `.ai/tasks/` (e.g., `prd-feature-name.md`)
+2. **While working**: Save notes, progress, and learnings in `.ai/sessions/YYYY-MM-DD-task.md`
+3. **When complete**: Move the PRD to `.ai/archive/completed-prds/YYYY-MM-DD-prd-name.md`
 
 ### Usage Guidelines
 1. **Before starting work**: Read all files in `.ai/memory/`
-2. **During work**: Reference `.ai/tasks/current-prd.md` for context
+2. **During work**: Reference the relevant PRD in `.ai/tasks/`
 3. **After decisions**: Update `.ai/memory/decisions.md`
 4. **After Ralph loops**: Log session to `.ai/sessions/YYYY-MM-DD-task.md`
 5. **When learning patterns**: Update `.ai/memory/patterns.md`
@@ -101,6 +106,52 @@ const result = await invoke<CharacterData>('create_character', { name, class: ch
 - Use field init shorthand and try shorthand (`?`)
 - All services use `Arc<T>` for thread-safe sharing
 - All service interfaces are async traits
+
+## Theming & Styling
+
+### Design Tokens
+All design tokens are defined in `packages/frontend/src/globals.css` under the `@theme` block. This is the **single source of truth** for colors, shadows, and spacing.
+
+**Never hardcode values in components.** Use Tailwind classes that reference these tokens:
+```tsx
+// Good - uses Tailwind classes
+<div className="bg-stone-900 shadow-md">
+
+// Bad - hardcoded values
+<div className="bg-[#1c1917] shadow-[0_4px_6px_rgba(0,0,0,0.7)]">
+```
+
+### Color Palette
+| Token   | Purpose                              |
+|---------|--------------------------------------|
+| `ember` | Primary accent (volcanic orange)     |
+| `molten`| Secondary accent (gold/amber)        |
+| `blood` | Danger states, Warrior class         |
+| `bone`  | Muted text, subtle highlights        |
+| `stone` | Neutral backgrounds (warm gray)      |
+| `ash`   | Disabled/muted states (cool gray)    |
+
+**Class Colors** (character identity): `blood` (Warrior), `arcane` (Sorceress), `verdant` (Ranger), `molten` (Huntress), `spirit` (Monk), `ember` (Mercenary), `hex` (Witch), `primal` (Druid)
+
+Use `@/utils/class-colors.ts` for character-specific styling:
+```tsx
+import { getClassTextColor, getClassTheme } from '@/utils/class-colors';
+getClassTextColor('Warrior')   // 'text-blood-400'
+getClassTheme('Warrior')       // 'blood'
+```
+
+### Z-Index Scale
+| Class   | Value | Use case                                      |
+|---------|-------|-----------------------------------------------|
+| `z-0`   | 0     | Base content (default)                        |
+| `z-10`  | 10    | Elevated cards, hover states                  |
+| `z-20`  | 20    | Dropdowns, popovers, tooltips                 |
+| `z-30`  | 30    | Fixed UI chrome (titlebar, sidebar, statusbar)|
+| `z-40`  | 40    | Notifications, toasts                         |
+| `z-50`  | 50    | Modals, dialogs (blocking UI)                 |
+
+### Component Styles
+Each component has a co-located `.styles.ts` file. Use theme colors (`stone-*`, `ember-*`) and theme shadows (`shadow-md`, `shadow-right`).
 
 ## Key Domains
 

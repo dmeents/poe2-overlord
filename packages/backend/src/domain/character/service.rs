@@ -731,8 +731,7 @@ impl CharacterServiceImpl {
                     is_town: zone_stats.is_town,
                 };
                 enriched_zones.push(EnrichedZoneStats::from_stats_and_metadata(
-                    &base_zone,
-                    &metadata,
+                    &base_zone, &metadata,
                 ));
             } else {
                 enriched_zones.push(zone_stats.clone());

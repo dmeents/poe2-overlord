@@ -126,7 +126,8 @@ impl EconomyService {
         if attempt == 0 {
             Duration::from_millis(0)
         } else {
-            let delay_ms = INITIAL_RETRY_DELAY_MS * (RETRY_BACKOFF_MULTIPLIER.pow(attempt - 1) as u64);
+            let delay_ms =
+                INITIAL_RETRY_DELAY_MS * (RETRY_BACKOFF_MULTIPLIER.pow(attempt - 1) as u64);
             Duration::from_millis(delay_ms)
         }
     }
@@ -330,10 +331,7 @@ impl EconomyService {
             match self.try_fetch_from_poe_ninja(url).await {
                 Ok(data) => {
                     if attempt > 0 {
-                        log::info!(
-                            "Successfully fetched data after {} retry attempts",
-                            attempt
-                        );
+                        log::info!("Successfully fetched data after {} retry attempts", attempt);
                     }
                     return Ok(data);
                 }

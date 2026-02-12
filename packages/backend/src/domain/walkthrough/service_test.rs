@@ -118,7 +118,10 @@ mod tests {
                 })
         }
 
-        async fn save_character_data(&self, character_data: &CharacterData) -> Result<(), AppError> {
+        async fn save_character_data(
+            &self,
+            character_data: &CharacterData,
+        ) -> Result<(), AppError> {
             if self.should_fail_save {
                 return Err(AppError::FileSystem {
                     message: "Failed to save character".to_string(),
@@ -134,12 +137,13 @@ mod tests {
             character_id: &str,
         ) -> Result<CharacterDataResponse, AppError> {
             let characters = self.characters.read().await;
-            let character = characters
-                .get(character_id)
-                .cloned()
-                .ok_or_else(|| AppError::Validation {
-                    message: format!("Character {} not found", character_id),
-                })?;
+            let character =
+                characters
+                    .get(character_id)
+                    .cloned()
+                    .ok_or_else(|| AppError::Validation {
+                        message: format!("Character {} not found", character_id),
+                    })?;
             Ok(CharacterDataResponse::from(character))
         }
 
@@ -441,10 +445,7 @@ mod tests {
             Some("act_1_step_2".to_string())
         );
         assert_eq!(progress.next_step_id, Some("act_2_step_1".to_string()));
-        assert_eq!(
-            progress.previous_step_id,
-            Some("act_1_step_1".to_string())
-        );
+        assert_eq!(progress.previous_step_id, Some("act_1_step_1".to_string()));
     }
 
     #[tokio::test]
@@ -465,10 +466,7 @@ mod tests {
             Some("act_2_step_1".to_string())
         );
         assert_eq!(progress.next_step_id, None); // Last step has no next
-        assert_eq!(
-            progress.previous_step_id,
-            Some("act_1_step_2".to_string())
-        );
+        assert_eq!(progress.previous_step_id, Some("act_1_step_2".to_string()));
     }
 
     #[tokio::test]
@@ -674,9 +672,7 @@ mod tests {
         let service = create_test_service(repository, character_service.clone());
 
         // Scene change to non-completion zone should not advance
-        let result = service
-            .handle_scene_change("char-1", "Random Zone")
-            .await;
+        let result = service.handle_scene_change("char-1", "Random Zone").await;
 
         assert!(result.is_ok());
 
@@ -856,7 +852,9 @@ mod tests {
         let character_service = Arc::new(MockCharacterService::new());
         let service = create_test_service(repository, character_service);
 
-        let result = service.handle_scene_change("nonexistent", "The Coast").await;
+        let result = service
+            .handle_scene_change("nonexistent", "The Coast")
+            .await;
 
         assert!(result.is_err());
     }
@@ -885,7 +883,10 @@ mod tests {
         let service = create_test_service(repository, character_service.clone());
 
         // Step 1 -> Step 2
-        service.handle_scene_change("char-1", "The Coast").await.unwrap();
+        service
+            .handle_scene_change("char-1", "The Coast")
+            .await
+            .unwrap();
         {
             let characters = character_service.characters.read().await;
             let char = characters.get("char-1").unwrap();
@@ -896,7 +897,10 @@ mod tests {
         }
 
         // Step 2 -> Step 3 (Act 2)
-        service.handle_scene_change("char-1", "Town Square").await.unwrap();
+        service
+            .handle_scene_change("char-1", "Town Square")
+            .await
+            .unwrap();
         {
             let characters = character_service.characters.read().await;
             let char = characters.get("char-1").unwrap();

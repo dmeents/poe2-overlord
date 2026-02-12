@@ -20,7 +20,8 @@ mod tests {
     #[test]
     fn test_build_poe_ninja_url_with_spaces() {
         // League names with spaces should be URL-encoded
-        let url = EconomyService::build_poe_ninja_url("Rise of the Abyssal", EconomyType::Fragments);
+        let url =
+            EconomyService::build_poe_ninja_url("Rise of the Abyssal", EconomyType::Fragments);
         assert!(url.contains("Rise%20of%20the%20Abyssal"));
         assert!(url.contains("type=Fragments"));
     }

@@ -7,6 +7,7 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import { Link, useLocation } from '@tanstack/react-router';
+import logoNoText from '@/assets/logo-no-text-square.png';
 import { sidebarNavigationStyles } from './sidebar-navigation.styles';
 
 interface SidebarNavigationProps {
@@ -65,6 +66,11 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
 
   return (
     <div className={`${sidebarNavigationStyles.container} ${className}`}>
+      {/* Logo */}
+      <Link to="/" className={sidebarNavigationStyles.logo} aria-label="Home">
+        <img src={logoNoText} alt="" className={sidebarNavigationStyles.logoImage} />
+      </Link>
+
       {/* Primary Navigation */}
       <nav className={sidebarNavigationStyles.primaryNav} aria-label="Primary navigation">
         {primaryNavItems.map(renderNavItem)}

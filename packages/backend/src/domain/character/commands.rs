@@ -19,7 +19,14 @@ pub async fn create_character(
         name, class, ascendency, league
     );
     let result = character_service
-        .create_character(name.clone(), class, ascendency, league, hardcore, solo_self_found)
+        .create_character(
+            name.clone(),
+            class,
+            ascendency,
+            league,
+            hardcore,
+            solo_self_found,
+        )
         .await;
     match &result {
         Ok(char) => log::info!("[DEBUG] create_character success: id={}", char.id),
@@ -43,7 +50,10 @@ pub async fn get_all_characters(
     log::info!("[DEBUG] get_all_characters command called");
     let result = character_service.get_all_characters().await;
     match &result {
-        Ok(chars) => log::info!("[DEBUG] get_all_characters returning {} characters", chars.len()),
+        Ok(chars) => log::info!(
+            "[DEBUG] get_all_characters returning {} characters",
+            chars.len()
+        ),
         Err(e) => log::error!("[DEBUG] get_all_characters error: {:?}", e),
     }
     to_command_result(result)

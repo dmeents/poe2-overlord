@@ -1,554 +1,81 @@
 # Code Patterns
 
-Common patterns and idioms used in POE2 Overlord.
+## Theming & Styling
 
-## Component Structure
+### Theme File (`packages/frontend/src/theme.ts`)
 
+All reusable colors and design tokens **must** be defined in the centralized theme file. This ensures consistency across the application and makes it easy to update the design system.
+
+**What belongs in `theme.ts`:**
+- Color palettes (ember, molten, blood, bone, stone)
+- Semantic color mappings (background, text, interactive, state, border)
+- Typography tokens (font families, sizes)
+- Spacing constants
+- Effect definitions (glows, shadows, overlays)
+- Pre-composed Tailwind class combinations (`tw` helpers)
+
+**Example usage:**
 ```tsx
-// {name}.component.tsx
-import { z } from 'zod';
+import { colors, semanticColors, tw } from '@/theme';
 
-// Zod schema for props
-const propsSchema = z.object({
-  characterId: z.string(),
-  onSelect: z.function().args(z.string()).returns(z.void())
-});
+// Use semantic colors for consistency
+<div style={{ background: semanticColors.background.surface }}>
 
-type CharacterCardProps = z.infer<typeof propsSchema>;
+// Use tw helpers for common patterns
+<button className={tw.button.primary}>
+```
 
-/**
- * Displays character information in a card format
- * @param characterId - Unique character identifier
- * @param onSelect - Callback when character is selected
- */
-export function CharacterCard({ characterId, onSelect }: CharacterCardProps) {
-  // Tanstack Query for data fetching
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['character', characterId],
-    queryFn: () => fetchCharacter(characterId)
-  });
+### Tailwind Custom Colors (`globals.css`)
 
-  // Early returns for loading/error states
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <ErrorBoundary error={error} />;
-  if (!data) return null;
+Custom colors are registered in `globals.css` under the `@theme` block so they can be used as Tailwind classes:
 
-  return (
-    <div className="rounded-lg border p-4">
-      {/* Component content */}
-    </div>
-  );
+```css
+@theme {
+  --color-ember-500: #f97316;
+  --color-stone-900: #1c1917;
+  /* etc. */
 }
 ```
 
-## Tauri Command Pattern
+This enables usage like `bg-ember-500`, `text-stone-400`, `border-blood-600`.
 
-**Backend (Rust):**
-```rust
-#[tauri::command]
-async fn get_character(id: String) -> Result<Character, String> {
-    // Validate input
-    if id.is_empty() {
-        return Err("Character ID cannot be empty".to_string());
-    }
+### Color Palette
 
-    // Implementation
-    let character = fetch_character(&id).await
-        .map_err(|e| e.to_string())?;
+| Token | Purpose |
+|-------|---------|
+| `ember` | Primary accent (volcanic orange) |
+| `molten` | Secondary accent (gold/amber) |
+| `blood` | Danger states, hardcore mode |
+| `bone` | Muted text, subtle highlights |
+| `stone` | Neutral backgrounds (warm gray) |
 
-    Ok(character)
+### Component Styles
+
+Each component has a co-located `.styles.ts` file containing Tailwind class compositions:
+
+```
+components/
+  ui/
+    button/
+      button.tsx
+      button.styles.ts  # Contains buttonStyles object
+```
+
+**Guidelines:**
+- Use theme colors (`stone-*`, `ember-*`) instead of default Tailwind colors (`zinc-*`, `emerald-*`)
+- Keep styles in the `.styles.ts` file, not inline in components
+- Reference `theme.ts` for color values when needed in JS
+
+### Background Pattern
+
+The app uses a volcanic background image with a gradient overlay, applied via CSS multiple backgrounds in `globals.css`:
+
+```css
+.app-background {
+  background:
+    linear-gradient(...overlay...),
+    url("/background.png") center / cover no-repeat fixed;
 }
 ```
 
-**Frontend (React):**
-```tsx
-// hooks/use-character.ts
-import { invoke } from '@tauri-apps/api/core';
-import { useQuery } from '@tanstack/react-query';
-
-export function useCharacter(id: string) {
-  return useQuery({
-    queryKey: ['character', id],
-    queryFn: () => invoke<Character>('get_character', { id })
-  });
-}
-```
-
-## Error Handling Pattern
-
-```tsx
-// Custom error boundary
-<ErrorBoundary
-  fallback={(error) => <ErrorMessage error={error} />}
->
-  <CharacterCard {...props} />
-</ErrorBoundary>
-```
-
-## File Naming
-
-- Components: `character-card.component.tsx`
-- Routes: `character-list.route.tsx`
-- Styles: `character-card.styles.ts`
-- Tests: `character-card.spec.tsx`
-- Hooks: `use-character.ts`
-
-## Import Organization
-
-```tsx
-// 1. External dependencies
-import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
-
-// 2. Tauri APIs
-import { invoke } from '@tauri-apps/api/core';
-
-// 3. Internal components
-import { ErrorBoundary } from '../error-boundary/error-boundary.component';
-
-// 4. Types
-import type { Character } from '../../types';
-
-// 5. Styles (if separate file)
-import { cardStyles } from './character-card.styles';
-```
-
-## State Management Pattern
-
-```tsx
-// Server state: Tanstack Query
-const { data } = useQuery({
-  queryKey: ['characters'],
-  queryFn: fetchCharacters
-});
-
-// Local UI state: useState
-const [isExpanded, setIsExpanded] = useState(false);
-
-// NO: Redux, Zustand, Context for server data
-```
-
-## QueryClient Access Pattern
-
-**Status**: DOCUMENTED (as of 2026-01-11)
-
-TanStack React Query's QueryClient can be accessed in two ways depending on context.
-
-### Primary Pattern: useQueryClient Hook (Within React)
-
-**ALWAYS use this pattern within React components and custom hooks.**
-
-```tsx
-// In component
-import { useQueryClient } from '@tanstack/react-query';
-
-export function MyComponent() {
-  const queryClient = useQueryClient();
-
-  const handleInvalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['my-data'] });
-  };
-
-  return <button onClick={handleInvalidate}>Refresh</button>;
-}
-
-// In custom hook
-export function useInvalidateData() {
-  const queryClient = useQueryClient();
-
-  return () => {
-    queryClient.invalidateQueries({ queryKey: ['my-data'] });
-  };
-}
-
-// In mutation callbacks
-export function useUpdateData() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateData,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['data'] });
-    },
-  });
-}
-```
-
-### Edge Case Pattern: Direct Import (Outside React)
-
-**Only use this pattern in non-React contexts** (event handlers, utilities, Tauri command callbacks).
-
-```tsx
-// In event listener (outside React)
-import { getQueryClient } from '@/queries/query-client';
-
-// Event listener registered outside React tree
-eventBus.on('backend-data-updated', (data) => {
-  const queryClient = getQueryClient();
-  queryClient.invalidateQueries({ queryKey: ['backend-data'] });
-});
-```
-
-### When to Use Each Pattern
-
-| Scenario | Pattern | Import |
-|----------|---------|--------|
-| React component | `useQueryClient()` hook | `@tanstack/react-query` |
-| Custom React hook | `useQueryClient()` hook | `@tanstack/react-query` |
-| Mutation callback | `useQueryClient()` hook | `@tanstack/react-query` |
-| Event listener (outside React) | `getQueryClient()` | `@/queries/query-client` |
-| Utility function (outside React) | `getQueryClient()` | `@/queries/query-client` |
-| Test wrapper | `new QueryClient()` | `@tanstack/react-query` |
-
-### Common Mistakes
-
-```tsx
-// WRONG - Creating new QueryClient in component
-export function MyComponent() {
-  const queryClient = new QueryClient(); // Creates isolated instance!
-  // Use useQueryClient() instead
-}
-
-// WRONG - Using getQueryClient in component
-import { getQueryClient } from '@/queries/query-client';
-
-export function MyComponent() {
-  const queryClient = getQueryClient(); // Bypasses React context!
-  // Use useQueryClient() hook instead
-}
-```
-
-### Architecture Decision
-
-**Why we export the QueryClient**:
-- POE2 Overlord is a Tauri SPA (not SSR) - singleton pattern is safe
-- Event system may need to invalidate queries outside React context
-- Follows TanStack Query recommendation for client-only apps
-- Zero performance cost - just exposes existing instance
-
-**Why we still prefer useQueryClient()**:
-- React context ensures QueryClient is initialized
-- Enables future testing enhancements (per-test QueryClient)
-- Follows React best practices for dependency injection
-- Makes component dependencies explicit
-
-## Provider Dependency Pattern
-
-**Status**: DOCUMENTED (as of 2026-01-11)
-
-Application providers have specific nesting requirements. Always check `src/providers.tsx` before adding or reordering providers.
-
-### Provider Dependency Graph
-
-```
-GameProcessProvider (independent)
-  └─ ServerStatusProvider (independent)
-      └─ CharacterProvider (root of character tree)
-          ├─ ZoneProvider (depends on Character)
-          ├─ EconomyProvider (depends on Character)
-          └─ WalkthroughProvider (depends on Character)
-```
-
-### Adding a New Provider
-
-**If provider is independent** (no dependencies):
-```tsx
-// Add at top level or after other independent providers
-<GameProcessProvider>
-  <ServerStatusProvider>
-    <YourNewIndependentProvider>
-      <CharacterProvider>
-        {/* ... */}
-      </CharacterProvider>
-    </YourNewIndependentProvider>
-  </ServerStatusProvider>
-</GameProcessProvider>
-```
-
-**If provider depends on CharacterProvider**:
-```tsx
-// Must be nested INSIDE CharacterProvider
-<CharacterProvider>
-  <ZoneProvider>
-    <EconomyProvider>
-      <YourNewCharacterDependentProvider>
-        <WalkthroughProvider>
-          {children}
-        </WalkthroughProvider>
-      </YourNewCharacterDependentProvider>
-    </EconomyProvider>
-  </ZoneProvider>
-</CharacterProvider>
-```
-
-### Rules
-
-1. **Never reorder** without understanding dependencies
-2. **Always add JSDoc** explaining new provider's dependencies
-3. **Update tests** in `providers.spec.tsx` when adding providers
-4. **Check context hooks** - if a provider calls `useCharacter()`, it depends on CharacterProvider
-
-### Common Errors
-
-```
-Error: "useCharacter must be used within CharacterProvider"
-Fix: Move provider inside <CharacterProvider>
-
-Error: "useGameProcess must be used within GameProcessProvider"
-Fix: Move provider inside <GameProcessProvider>
-```
-
-## Testing Pattern
-
-**Status: CONFIGURED** (as of 2026-01-09)
-
-Frontend testing uses Vitest + React Testing Library with co-located test files.
-
-### Running Tests
-
-```bash
-pnpm test:frontend      # Run all tests once
-pnpm test:watch         # Watch mode for development
-pnpm test:ui            # Visual test UI
-pnpm test:coverage      # Run with coverage report
-```
-
-### Test File Location
-
-Tests are co-located with components using `.spec.tsx` extension:
-```
-src/components/ui/button/
-  ├── button.tsx
-  ├── button.styles.ts
-  └── button.spec.tsx    # <-- test file here
-```
-
-### Basic Component Test
-
-```tsx
-// button.spec.tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import { Button } from './button';
-
-describe('Button', () => {
-  it('renders children correctly', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
-  });
-
-  it('calls onClick when clicked', async () => {
-    const user = userEvent.setup();
-    const handleClick = vi.fn();
-
-    render(<Button onClick={handleClick}>Click me</Button>);
-    await user.click(screen.getByRole('button'));
-
-    expect(handleClick).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not call onClick when disabled', async () => {
-    const user = userEvent.setup();
-    const handleClick = vi.fn();
-
-    render(<Button onClick={handleClick} disabled>Click me</Button>);
-    await user.click(screen.getByRole('button'));
-
-    expect(handleClick).not.toHaveBeenCalled();
-  });
-});
-```
-
-### Testing with React Query
-
-```tsx
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect } from 'vitest';
-import { CharacterCard } from './character-card';
-
-describe('CharacterCard', () => {
-  const createWrapper = () => {
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  };
-
-  it('renders character data', async () => {
-    render(<CharacterCard characterId="123" />, { wrapper: createWrapper() });
-    expect(await screen.findByText('Character Name')).toBeInTheDocument();
-  });
-});
-```
-
-### Key Testing Practices
-
-1. **Use semantic queries**: Prefer `getByRole`, `getByLabelText` over `getByTestId`
-2. **Test behavior, not implementation**: Focus on what users see and do
-3. **Use `userEvent` for interactions**: More realistic than `fireEvent`
-4. **Mock Tauri APIs**: Setup file auto-mocks `@tauri-apps/api/*`
-5. **Keep tests simple**: One assertion per behavior when possible
-
-### Mock Data Factory Pattern
-
-Create type-safe mock factories for test data:
-
-```tsx
-const createMockCharacter = (
-  overrides: Partial<CharacterData> = {}
-): CharacterData => ({
-  id: 'test-id',
-  name: 'TestCharacter',
-  class: 'Warrior',
-  ascendency: 'Titan',
-  level: 50,
-  league: 'Standard',
-  // ... all required fields with defaults
-  ...overrides,
-});
-
-// Usage in tests
-const character = createMockCharacter({ name: 'CustomName', level: 99 });
-```
-
-### Type-Safe Mock Functions
-
-When mock return values include union types with null, use type assertions:
-
-```tsx
-// ❌ Incorrect - infers null type only
-const mockUseCharacter = vi.hoisted(() =>
-  vi.fn(() => ({
-    activeCharacter: null,  // Type: null
-    isLoading: false,
-  }))
-);
-
-// ✅ Correct - preserves union type
-const mockUseCharacter = vi.hoisted(() =>
-  vi.fn(() => ({
-    activeCharacter: null as CharacterData | null,  // Type: CharacterData | null
-    isLoading: false,
-  }))
-);
-```
-
-## TypeScript Patterns
-
-### Component Declaration Pattern
-
-Prefer explicit function declarations over React.FC:
-
-```tsx
-// ❌ Avoid - implicit return type, no children control
-export const Component: React.FC<Props> = ({ prop }) => { ... };
-
-// ✅ Prefer - explicit return type, clear interface
-export function Component({ prop }: Props): React.JSX.Element { ... }
-```
-
-### Type-Only Imports (verbatimModuleSyntax)
-
-Always use `import type` for type-only imports:
-
-```tsx
-// ❌ Incorrect
-import { ReactNode } from 'react';
-import { CharacterData, Zone } from '../types';
-
-// ✅ Correct
-import type { ReactNode } from 'react';
-import type { CharacterData, Zone } from '../types';
-
-// Mixed imports - separate runtime and type imports
-import { useState } from 'react';
-import type { ReactNode } from 'react';
-```
-
-### Nullable Return Types
-
-For components that may return null, explicitly declare it:
-
-```tsx
-export function ConditionalComponent({ data }: Props): React.JSX.Element | null {
-  if (!data) return null;
-  return <div>{data.name}</div>;
-}
-```
-
-## Walkthrough Guide Editing
-
-**File**: `packages/backend/config/walkthrough_guide.json`
-
-The walkthrough guide is a JSON file containing step-by-step instructions for the game campaign. Claude can edit this file based on plain English instructions.
-
-### Common Edit Types
-
-1. **Add optional objective**: Add new objective with `"required": false`
-2. **Add note**: Update the `notes` field for an objective
-3. **Add reward**: Add items to the `rewards` array
-4. **Add wiki item**: Add to the `wiki_items` array for the step
-5. **Combine objectives**: Merge multiple objectives into one with clearer wording
-6. **Fix step pointers**: Correct `next_step_id` and `previous_step_id` links
-7. **Make step more descriptive**: Rewrite title, description, objective text, and details
-
-### Making Steps More Descriptive
-
-When asked to improve a step's clarity, update these fields:
-
-- **title**: Action-oriented, describes what player does (e.g., "Navigate Mawdun Quarry" instead of "Find Exit to Mawdun Mine")
-- **description**: Context about the zone/area and what to expect
-- **objective text**: Clear action with helpful context
-- **details**: Specific tips on how to accomplish the objective
-
-**Example transformation**:
-```json
-// Before
-{
-  "title": "Find Exit to Mawdun Mine",
-  "description": "Navigate Mawdun Quarry and find the exit to Mawdun Mine, following the checkpoints.",
-  "objectives": [{
-    "text": "Find exit to Mawdun Mine",
-    "details": "Follow the checkpoints"
-  }]
-}
-
-// After
-{
-  "title": "Navigate Mawdun Quarry",
-  "description": "Make your way through Mawdun Quarry toward the mine entrance. The quarry is a linear zone with checkpoints guiding the path forward.",
-  "objectives": [{
-    "text": "Follow the checkpoints through the quarry to reach Mawdun Mine",
-    "details": "The quarry is mostly linear - follow the checkpoints and they will lead you to the mine entrance."
-  }]
-}
-```
-
-### Objective Structure
-
-```json
-{
-  "text": "Action to take",
-  "details": "How to accomplish it",
-  "required": true,
-  "rewards": ["Reward 1", "Reward 2"],
-  "notes": "Optional tips or edge cases"
-}
-```
-
-### Searching the Guide
-
-The file is large, so use Grep to find relevant sections:
-```bash
-# Find step by zone name
-Grep "Clearfell" walkthrough_guide.json
-
-# Find step by boss name
-Grep "Rathbreaker" walkthrough_guide.json
-```
-
-Then use Read with offset/limit to see the full step context.
+This approach avoids z-index complexity by compositing the overlay directly onto the image.

@@ -70,7 +70,10 @@ impl GameMonitoringServiceImpl {
                     let error_event =
                         AppEvent::system_error(error_msg, "CharacterFinalizationError".to_string());
                     if let Err(publish_err) = self.event_bus.publish(error_event).await {
-                        error!("Failed to publish finalization error event: {}", publish_err);
+                        error!(
+                            "Failed to publish finalization error event: {}",
+                            publish_err
+                        );
                     }
                 } else {
                     info!("Character tracking finalized after game process stopped");

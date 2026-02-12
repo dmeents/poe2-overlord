@@ -1,10 +1,10 @@
 use crate::domain::character::traits::CharacterService;
-use crate::domain::zone_tracking::{is_hideout_zone, HIDEOUT_ACT};
 use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
 use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
 use crate::domain::server_monitoring::ServerMonitoringService;
 use crate::domain::walkthrough::traits::WalkthroughService;
+use crate::domain::zone_tracking::{is_hideout_zone, HIDEOUT_ACT};
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::expand_tilde;
 use crate::infrastructure::parsing::LogParserManager;
@@ -430,7 +430,6 @@ impl LogAnalysisServiceImpl {
             .iter()
             .any(|keyword| lower_name.contains(keyword))
     }
-
 
     /// Extract timestamp from a log line
     /// POE2 log format: "2025/12/24 04:58:45 123456 abc [INFO Client 12345] ..."

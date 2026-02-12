@@ -130,11 +130,7 @@ impl ProcessDetector for ProcessDetectorImpl {
                         .map(|n| n.to_string_lossy().to_string())
                         .unwrap_or_else(|| process_name.clone());
 
-                    return Ok(GameProcessStatus::new(
-                        display_name,
-                        pid.as_u32(),
-                        true,
-                    ));
+                    return Ok(GameProcessStatus::new(display_name, pid.as_u32(), true));
                 }
             }
 
@@ -160,11 +156,7 @@ impl ProcessDetector for ProcessDetectorImpl {
                     })
                     .unwrap_or_else(|| "PathOfExile".to_string());
 
-                return Ok(GameProcessStatus::new(
-                    display_name,
-                    pid.as_u32(),
-                    true,
-                ));
+                return Ok(GameProcessStatus::new(display_name, pid.as_u32(), true));
             }
         }
 

@@ -517,10 +517,7 @@ mod tests {
             EconomyType::from_str("LineageSupportGems"),
             Ok(EconomyType::LineageSupportGems)
         );
-        assert_eq!(
-            EconomyType::from_str("Essences"),
-            Ok(EconomyType::Essences)
-        );
+        assert_eq!(EconomyType::from_str("Essences"), Ok(EconomyType::Essences));
         assert_eq!(
             EconomyType::from_str("SoulCores"),
             Ok(EconomyType::SoulCores)
@@ -532,10 +529,7 @@ mod tests {
             EconomyType::from_str("Expedition"),
             Ok(EconomyType::Expedition)
         );
-        assert_eq!(
-            EconomyType::from_str("Delirium"),
-            Ok(EconomyType::Delirium)
-        );
+        assert_eq!(EconomyType::from_str("Delirium"), Ok(EconomyType::Delirium));
         assert_eq!(EconomyType::from_str("Breach"), Ok(EconomyType::Breach));
     }
 

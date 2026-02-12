@@ -1,5 +1,6 @@
 // Status Indicator Styles
 // Centralized styling utilities for the StatusIndicator component
+// Uses theme color palette
 
 export const statusIndicatorStyles = {
   container: '', // Base container styles
@@ -9,10 +10,10 @@ export const statusIndicatorStyles = {
     lg: 'w-6 h-6',
   },
   statusClasses: {
-    success: 'text-green-800',
-    warning: 'text-yellow-600',
-    error: 'text-red-800',
-    info: 'text-zinc-500',
+    success: 'text-green-500',
+    warning: 'text-molten-400',
+    error: 'text-blood-500',
+    info: 'text-stone-500',
   },
   animated: 'animate-pulse',
 } as const;

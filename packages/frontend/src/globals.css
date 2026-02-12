@@ -4,16 +4,98 @@
 @import "tailwindcss";
 
 @theme {
+  /* Typography */
   --font-sans: "Roboto", sans-serif;
   --font-cursive: "Macondo", cursive;
+
+  /* ==========================================================================
+     EMBER - Primary accent (volcanic orange-red glow)
+     ========================================================================== */
+  --color-ember-50: #fff7ed;
+  --color-ember-100: #ffedd5;
+  --color-ember-200: #fed7aa;
+  --color-ember-300: #fdba74;
+  --color-ember-400: #fb923c;
+  --color-ember-500: #f97316;
+  --color-ember-600: #ea580c;
+  --color-ember-700: #c2410c;
+  --color-ember-800: #9a3412;
+  --color-ember-900: #7c2d12;
+  --color-ember-950: #431407;
+
+  /* ==========================================================================
+     MOLTEN - Secondary accent (gold/amber highlights)
+     ========================================================================== */
+  --color-molten-50: #fffbeb;
+  --color-molten-100: #fef3c7;
+  --color-molten-200: #fde68a;
+  --color-molten-300: #fcd34d;
+  --color-molten-400: #fbbf24;
+  --color-molten-500: #d4a437;
+  --color-molten-600: #b8942a;
+  --color-molten-700: #92400e;
+  --color-molten-800: #78350f;
+  --color-molten-900: #451a03;
+  --color-molten-950: #271004;
+
+  /* ==========================================================================
+     BLOOD - Danger/hardcore states
+     ========================================================================== */
+  --color-blood-50: #fef2f2;
+  --color-blood-100: #fee2e2;
+  --color-blood-200: #fecaca;
+  --color-blood-300: #fca5a5;
+  --color-blood-400: #f87171;
+  --color-blood-500: #dc2626;
+  --color-blood-600: #b91c1c;
+  --color-blood-700: #8b0000;
+  --color-blood-800: #6b0000;
+  --color-blood-900: #450a0a;
+  --color-blood-950: #2a0505;
+
+  /* ==========================================================================
+     BONE - Muted text and subtle highlights
+     ========================================================================== */
+  --color-bone-50: #fdfcfb;
+  --color-bone-100: #e8dcc8;
+  --color-bone-200: #d4c5b5;
+  --color-bone-300: #c0aea2;
+  --color-bone-400: #a89888;
+  --color-bone-500: #8a7a6a;
 }
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
+html,
+body {
+  background-color: #0c0a09; /* stone-950 */
+  color: #fafaf9; /* stone-50 */
+}
+
+/* App background with texture - gradient overlay composited directly */
+.app-background {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(12, 10, 9, 0.88) 0%,
+      rgba(12, 10, 9, 0.85) 50%,
+      rgba(12, 10, 9, 0.92) 100%
+    ),
+    url("/background.png") center / cover no-repeat fixed;
+}
+
+/* =============================================================================
+   FORM ELEMENTS
+   ============================================================================= */
 
 /* Custom select styling for sharp, fantasy-adjacent design */
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a8a29e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
@@ -24,18 +106,87 @@ select {
 select:focus {
   outline: none;
   box-shadow:
-    0 0 0 2px #3b82f6,
-    0 0 0 1px #3b82f6;
+    0 0 0 2px #ea580c,
+    0 0 0 1px #ea580c;
 }
 
 /* Style select options */
 select option {
-  background-color: #18181b;
-  color: #f4f4f5;
+  background-color: #1c1917;
+  color: #fafaf9;
   padding: 0.5rem;
 }
 
 /* Hover state for options */
 select option:hover {
-  background-color: #27272a;
+  background-color: #292524;
+}
+
+/* Input focus states */
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ea580c;
+  border-color: #ea580c;
+}
+
+/* =============================================================================
+   SCROLLBAR STYLING
+   ============================================================================= */
+
+/* Webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1917;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #44403c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #57534e;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #44403c #1c1917;
+}
+
+/* =============================================================================
+   UTILITY CLASSES
+   ============================================================================= */
+
+/* Ember glow effect for interactive elements */
+.glow-ember {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+}
+
+.glow-ember-strong {
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+}
+
+/* Molten gold glow */
+.glow-molten {
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+
+/* Blood red glow for danger states */
+.glow-blood {
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+}
+
+/* Text glow effects */
+.text-glow-ember {
+  text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+}
+
+.text-glow-molten {
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }

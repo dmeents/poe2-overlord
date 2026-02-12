@@ -33,9 +33,7 @@ export const WindowTitle = () => {
 
   return (
     <div data-tauri-drag-region className={windowTitleStyles.container}>
-      <div data-tauri-drag-region className={windowTitleStyles.title}>
-        POE Overlord
-      </div>
+      <div data-tauri-drag-region className={windowTitleStyles.title} />
       <div className={windowTitleStyles.controls}>
         <Button
           title="Minimize window"

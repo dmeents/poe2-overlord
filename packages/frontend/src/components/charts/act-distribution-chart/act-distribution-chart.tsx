@@ -110,7 +110,8 @@ export function ActDistributionChart({ character, className = '' }: ActDistribut
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50">
+        {/* z-20: Tooltips (see patterns.md for z-index scale) */}
+        <div className="bg-stone-800 border border-stone-700 rounded-lg p-3 shadow-lg relative z-20">
           <p className="text-white font-medium">{data.name}</p>
           <p className="text-zinc-300 text-sm">
             {formatDuration(data.value)} ({data.percentage.toFixed(1)}%)

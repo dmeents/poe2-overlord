@@ -24,9 +24,9 @@ export const formSelectStyles = {
   chevron: 'w-4 h-4 text-white transition-transform',
   chevronOpen: 'rotate-180',
 
-  // Dropdown
+  // Dropdown - z-20: Dropdowns/popovers (see patterns.md for z-index scale)
   dropdown:
-    'fixed mt-2 bg-stone-800 border border-stone-700 shadow-2xl z-50 w-64 min-w-max rounded',
+    'fixed mt-2 bg-stone-800 border border-stone-700 shadow-2xl z-20 w-64 min-w-max rounded',
   optionsList: 'py-2',
 
   // Options

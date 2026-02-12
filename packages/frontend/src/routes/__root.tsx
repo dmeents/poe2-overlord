@@ -10,11 +10,11 @@ export const Route = createRootRoute({
     <div className="app-background">
       <WindowTitle />
       <SidebarNavigation />
-      <div className="mt-7.5 ml-12 overflow-auto font-sans">
+      <main className="relative h-[calc(100vh-52px)] mt-[28px] ml-12 overflow-auto font-sans">
         <div className="mb-16">
           <Outlet />
         </div>
-      </div>
+      </main>
       <StatusBar />
       <ZoneDetailsModal />
     </div>

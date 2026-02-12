@@ -110,7 +110,8 @@ const CLASS_HOVER_BORDER: Record<string, string> = {
 
 export const characterCardStyles = {
   // Base card container
-  base: 'group relative z-10 bg-stone-900 border border-stone-800 card-shadow overflow-hidden',
+  // Note: overflow-hidden is required to clip the ascendancy background image
+  base: 'group relative bg-stone-900 border border-stone-800 card-shadow overflow-hidden',
   baseInteractive: 'cursor-pointer',
   baseHoverBg: 'hover:bg-gradient-to-r hover:from-stone-800/50 hover:to-transparent',
 
@@ -156,11 +157,11 @@ export const characterCardStyles = {
   ssfBadge: 'text-xs font-medium text-molten-400 bg-molten-500/10 px-1.5 py-0.5',
 
   // Action buttons
+  // Note: backdrop-blur removed - buttons are on opaque card background, nothing to blur
   actions:
     'flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-auto flex-shrink-0',
-  actionButton: 'bg-stone-800/80 backdrop-blur-sm',
-  deleteButton:
-    'text-blood-400 hover:text-blood-300 hover:border-blood-500 bg-stone-800/80 backdrop-blur-sm',
+  actionButton: 'bg-stone-800/80',
+  deleteButton: 'text-blood-400 hover:text-blood-300 hover:border-blood-500 bg-stone-800/80',
 
   // Stats footer
   footer: 'relative px-4 py-2.5 bg-stone-950 border-t border-stone-800',

@@ -157,6 +157,7 @@ body {
 
 /* App background with texture - gradient overlay composited directly */
 .app-background {
+  min-height: 100vh;
   background:
     linear-gradient(
       to bottom,
@@ -244,7 +245,20 @@ textarea:focus {
    UTILITY CLASSES
    ============================================================================= */
 
-/* Card shadow - uses drop-shadow filter to avoid stacking context clipping */
+/* Card shadow - uses drop-shadow filter for consistent rendering
+ *
+ * Why these properties are ALL required:
+ * 1. filter: drop-shadow() - Renders shadow during composite phase (not paint phase),
+ *    which avoids clipping by ancestor overflow/stacking contexts that hide box-shadow
+ * 2. will-change: filter - Hints browser to pre-allocate a compositing layer
+ * 3. transform: translateZ(0) - Forces GPU layer promotion to prevent intermittent
+ *    rendering where shadows would flicker/pop during route navigation
+ *
+ * Without will-change + transform, the browser inconsistently promotes elements to
+ * compositing layers during navigation, causing shadows to appear/disappear.
+ *
+ * See: .ai/sessions/2026-02-12-dom-compositing-layer-audit.md for full investigation
+ */
 .card-shadow {
   filter: drop-shadow(var(--shadow-md));
   will-change: filter;

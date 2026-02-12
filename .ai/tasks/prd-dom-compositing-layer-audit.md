@@ -1,5 +1,15 @@
 # PRD: DOM Structure & Compositing Layer Audit
 
+## Status
+
+**Completed** - Audit performed 2026-02-12. Structural fixes implemented. Root cause investigation deferred.
+
+See:
+- `.ai/sessions/2026-02-12-dom-compositing-layer-audit.md` - Detailed findings
+- `.ai/tasks/prd-compositing-layer-root-cause.md` - Follow-up investigation (deferred)
+
+---
+
 ## Problem Statement
 
 During implementation of card shadows, we discovered that `box-shadow` CSS properties were completely invisible on card components, while `filter: drop-shadow()` worked correctly. Further investigation revealed that shadows were intermittently appearing/disappearing during route navigation until GPU compositing hints (`will-change`, `transform: translateZ(0)`) were added.

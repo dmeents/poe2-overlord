@@ -89,6 +89,27 @@ getClassHexColor('Warrior')    // '#dc2626'
 | `shadow-bottom`| Top-docked panels (titlebar)|
 | `shadow-left`  | Right-docked panels         |
 
+### Z-Index Scale
+
+Consistent layering prevents z-index conflicts. Use these values:
+
+| Class   | Value | Use case                                      |
+|---------|-------|-----------------------------------------------|
+| `z-0`   | 0     | Base content (default)                        |
+| `z-10`  | 10    | Elevated cards, hover states (if needed)      |
+| `z-20`  | 20    | Dropdowns, popovers, tooltips                 |
+| `z-30`  | 30    | Fixed UI chrome (titlebar, sidebar, statusbar)|
+| `z-40`  | 40    | Notifications, toasts                         |
+| `z-50`  | 50    | Modals, dialogs (blocking UI)                 |
+
+**Guidelines:**
+- Fixed chrome (titlebar, sidebar, statusbar) uses `z-30` to stay above content but below modals
+- Dropdowns/tooltips use `z-20` - they appear above content but below fixed chrome
+- Modals use `z-50` - they block everything else
+- Avoid arbitrary z-index values; stick to the scale
+
+**Note on card shadows:** Cards use the `.card-shadow` class which applies `filter: drop-shadow()` with GPU hints. This is required due to a compositing issue - see `.ai/tasks/prd-compositing-layer-root-cause.md` for details.
+
 ### Component Styles
 
 Each component has a co-located `.styles.ts` file containing Tailwind class compositions:

@@ -1,30 +1,30 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { WalkthroughGuide } from './walkthrough-guide';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
-  WalkthroughGuide as WalkthroughGuideType,
   WalkthroughAct,
+  WalkthroughGuide as WalkthroughGuideType,
   WalkthroughStep,
 } from '@/types/walkthrough';
+import { WalkthroughGuide } from './walkthrough-guide';
 
 const mockInvoke = vi.hoisted(() => vi.fn());
 const mockOpenZone = vi.hoisted(() => vi.fn());
 const mockUseZone = vi.hoisted(() =>
   vi.fn(() => ({
     openZone: mockOpenZone,
-  }))
+  })),
 );
 const mockUseWalkthrough = vi.hoisted(() =>
   vi.fn(() => ({
     currentStep: null,
     currentAct: null,
-  }))
+  })),
 );
 const mockUseCharacter = vi.hoisted(() =>
   vi.fn(() => ({
     activeCharacter: null,
-  }))
+  })),
 );
 
 vi.mock('@tauri-apps/api/core', () => ({
@@ -47,9 +47,7 @@ vi.mock('@/contexts/CharacterContext', () => ({
   useCharacter: mockUseCharacter,
 }));
 
-const createMockStep = (
-  overrides: Partial<WalkthroughStep> = {}
-): WalkthroughStep => ({
+const createMockStep = (overrides: Partial<WalkthroughStep> = {}): WalkthroughStep => ({
   id: 'step-1',
   title: 'First Step',
   description: 'Complete the first step',
@@ -68,9 +66,7 @@ const createMockStep = (
   ...overrides,
 });
 
-const createMockAct = (
-  overrides: Partial<WalkthroughAct> = {}
-): WalkthroughAct => ({
+const createMockAct = (overrides: Partial<WalkthroughAct> = {}): WalkthroughAct => ({
   act_name: 'Act 1',
   act_number: 1,
   steps: {
@@ -86,9 +82,7 @@ const createMockAct = (
   ...overrides,
 });
 
-const createMockGuide = (
-  overrides: Partial<WalkthroughGuideType> = {}
-): WalkthroughGuideType => ({
+const createMockGuide = (overrides: Partial<WalkthroughGuideType> = {}): WalkthroughGuideType => ({
   acts: {
     'act-1': createMockAct(),
     'act-2': createMockAct({
@@ -146,7 +140,7 @@ describe('WalkthroughGuide', () => {
 
     it('applies custom className', () => {
       const { container } = render(
-        <WalkthroughGuide guide={createMockGuide()} className="custom-class" />
+        <WalkthroughGuide guide={createMockGuide()} className="custom-class" />,
       );
 
       // The className is passed to SectionHeader
@@ -207,9 +201,7 @@ describe('WalkthroughGuide', () => {
   describe('Current Step Highlighting', () => {
     it('passes currentStepId to accordions', async () => {
       const user = userEvent.setup();
-      render(
-        <WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />
-      );
+      render(<WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />);
 
       await user.click(screen.getByText('Act 1'));
 
@@ -228,7 +220,7 @@ describe('WalkthroughGuide', () => {
           guide={createMockGuide()}
           characterId="char-123"
           currentStepId="step-1"
-        />
+        />,
       );
 
       await user.click(screen.getByText('Act 1'));
@@ -246,7 +238,7 @@ describe('WalkthroughGuide', () => {
               current_step_id: expect.any(String),
               is_completed: false,
             }),
-          })
+          }),
         );
       });
     });
@@ -254,9 +246,7 @@ describe('WalkthroughGuide', () => {
     it('does not call invoke when no characterId is provided', async () => {
       const user = userEvent.setup();
 
-      render(
-        <WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />
-      );
+      render(<WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />);
 
       await user.click(screen.getByText('Act 1'));
 
@@ -270,9 +260,7 @@ describe('WalkthroughGuide', () => {
 
     it('handles skip error gracefully', async () => {
       const user = userEvent.setup();
-      const consoleSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockInvoke.mockRejectedValueOnce(new Error('Failed to skip'));
 
       render(
@@ -280,7 +268,7 @@ describe('WalkthroughGuide', () => {
           guide={createMockGuide()}
           characterId="char-123"
           currentStepId="step-1"
-        />
+        />,
       );
 
       await user.click(screen.getByText('Act 1'));
@@ -289,10 +277,7 @@ describe('WalkthroughGuide', () => {
       await user.click(goHereButtons[0]);
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'Failed to skip to step:',
-          expect.any(Error)
-        );
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to skip to step:', expect.any(Error));
       });
 
       consoleSpy.mockRestore();

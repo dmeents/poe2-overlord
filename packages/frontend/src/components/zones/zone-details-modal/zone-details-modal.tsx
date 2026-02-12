@@ -9,17 +9,11 @@ import {
 import { open } from '@tauri-apps/plugin-shell';
 import { useZone } from '@/contexts/ZoneContext';
 import { createPlaceholderZone, getDisplayAct } from '@/utils/zone-utils';
-import { TimeDisplay } from '../../ui/time-display/time-display';
 import { Modal } from '../../ui/modal/modal';
+import { TimeDisplay } from '../../ui/time-display/time-display';
 
 export function ZoneDetailsModal() {
-  const {
-    selectedZone: zone,
-    isModalOpen,
-    closeModal,
-    navigateToZone,
-    allZones,
-  } = useZone();
+  const { selectedZone: zone, isModalOpen, closeModal, navigateToZone, allZones } = useZone();
 
   const handleWikiClick = async () => {
     if (!zone || !zone.wiki_url) return;
@@ -57,10 +51,8 @@ export function ZoneDetailsModal() {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60)
-      return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30)
@@ -74,8 +66,7 @@ export function ZoneDetailsModal() {
       onClose={closeModal}
       size="2xl"
       title={zone.zone_name}
-      icon={<MapIcon className="w-6 h-6" />}
-    >
+      icon={<MapIcon className="w-6 h-6" />}>
       <div className="space-y-6">
         {/* Unvisited Zone Message */}
         {isUnvisitedZone && (
@@ -84,12 +75,10 @@ export function ZoneDetailsModal() {
               <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
                 <MapIcon className="w-6 h-6 text-zinc-500" />
               </div>
-              <h3 className="text-lg font-medium text-zinc-300">
-                Zone Not Yet Visited
-              </h3>
+              <h3 className="text-lg font-medium text-zinc-300">Zone Not Yet Visited</h3>
               <p className="text-sm text-zinc-400 max-w-md">
-                You haven't visited this zone yet. Once you explore it in-game,
-                detailed statistics and information will be available here.
+                You haven't visited this zone yet. Once you explore it in-game, detailed statistics
+                and information will be available here.
               </p>
             </div>
           </div>
@@ -115,17 +104,13 @@ export function ZoneDetailsModal() {
               <SparklesIcon className="w-4 h-4" />
               Description
             </h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              {zone.description}
-            </p>
+            <p className="text-sm text-zinc-400 leading-relaxed">{zone.description}</p>
           </div>
         )}
 
         {/* Zone Metadata Section - Always show */}
         <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-          <h3 className="text-sm font-medium text-zinc-300 mb-3">
-            Zone Information
-          </h3>
+          <h3 className="text-sm font-medium text-zinc-300 mb-3">Zone Information</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {/* Zone Type */}
             <div>
@@ -143,9 +128,7 @@ export function ZoneDetailsModal() {
             {getDisplayAct(zone) && (
               <div>
                 <span className="text-zinc-500">Act:</span>
-                <span className="ml-2 text-zinc-300">
-                  {getDisplayAct(zone)}
-                </span>
+                <span className="ml-2 text-zinc-300">{getDisplayAct(zone)}</span>
               </div>
             )}
 
@@ -160,18 +143,14 @@ export function ZoneDetailsModal() {
             {/* Waypoint */}
             <div>
               <span className="text-zinc-500">Waypoint:</span>
-              <span className="ml-2 text-zinc-300">
-                {zone.has_waypoint ? 'Yes' : 'No'}
-              </span>
+              <span className="ml-2 text-zinc-300">{zone.has_waypoint ? 'Yes' : 'No'}</span>
             </div>
 
             {/* Area ID */}
             {zone.area_id && (
               <div>
                 <span className="text-zinc-500">Area ID:</span>
-                <span className="ml-2 text-zinc-300 font-mono text-xs">
-                  {zone.area_id}
-                </span>
+                <span className="ml-2 text-zinc-300 font-mono text-xs">{zone.area_id}</span>
               </div>
             )}
 
@@ -180,8 +159,7 @@ export function ZoneDetailsModal() {
               <div className="col-span-2">
                 <button
                   onClick={handleWikiClick}
-                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
-                >
+                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
                   <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                   <span>View on Wiki</span>
                 </button>
@@ -193,9 +171,7 @@ export function ZoneDetailsModal() {
         {/* Player Statistics Section - Only show if visited */}
         {!isUnvisitedZone && (
           <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3">
-              Your Statistics
-            </h3>
+            <h3 className="text-sm font-medium text-zinc-300 mb-3">Your Statistics</h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               {/* Time Spent */}
               <div>
@@ -212,17 +188,14 @@ export function ZoneDetailsModal() {
               </div>
 
               {/* Deaths */}
-              {!zone.is_town &&
-                !zone.zone_name.toLowerCase().includes('hideout') && (
-                  <div>
-                    <span className="text-zinc-500">Deaths:</span>
-                    <span
-                      className={`ml-2 ${zone.deaths > 0 ? 'text-red-400' : 'text-zinc-300'}`}
-                    >
-                      {zone.deaths}
-                    </span>
-                  </div>
-                )}
+              {!zone.is_town && !zone.zone_name.toLowerCase().includes('hideout') && (
+                <div>
+                  <span className="text-zinc-500">Deaths:</span>
+                  <span className={`ml-2 ${zone.deaths > 0 ? 'text-red-400' : 'text-zinc-300'}`}>
+                    {zone.deaths}
+                  </span>
+                </div>
+              )}
 
               {/* First Visited */}
               <div>
@@ -235,9 +208,7 @@ export function ZoneDetailsModal() {
               {/* Last Visited */}
               <div>
                 <span className="text-zinc-500">Last Visited:</span>
-                <span className="ml-2 text-zinc-300">
-                  {formatLastVisited(zone.last_visited)}
-                </span>
+                <span className="ml-2 text-zinc-300">{formatLastVisited(zone.last_visited)}</span>
               </div>
             </div>
           </div>
@@ -254,8 +225,7 @@ export function ZoneDetailsModal() {
               {zone.bosses.map(boss => (
                 <span
                   key={boss}
-                  className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/30 rounded"
-                >
+                  className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/30 rounded">
                   {boss}
                 </span>
               ))}
@@ -274,8 +244,7 @@ export function ZoneDetailsModal() {
               {zone.npcs.map(npc => (
                 <span
                   key={npc}
-                  className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded"
-                >
+                  className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded">
                   {npc}
                 </span>
               ))}
@@ -294,8 +263,7 @@ export function ZoneDetailsModal() {
               {zone.points_of_interest.map(poi => (
                 <span
                   key={poi}
-                  className="px-3 py-1.5 text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded"
-                >
+                  className="px-3 py-1.5 text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded">
                   {poi}
                 </span>
               ))}
@@ -316,8 +284,7 @@ export function ZoneDetailsModal() {
                   key={connectedZone}
                   onClick={() => handleConnectedZoneClick(connectedZone)}
                   className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors cursor-pointer"
-                  title="Click to view zone details"
-                >
+                  title="Click to view zone details">
                   {connectedZone}
                 </button>
               ))}

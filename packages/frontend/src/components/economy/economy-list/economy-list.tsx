@@ -1,8 +1,8 @@
-import type { CurrencyExchangeRate } from '@/types/economy';
-import { useCurrencyList } from '@/hooks/useCurrencyList';
-import { EconomyRow } from '../economy-row/economy-row';
-import { CurrencyListControlsForm } from '../currency-list-controls-form/currency-list-controls-form';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
+import { useCurrencyList } from '@/hooks/useCurrencyList';
+import type { CurrencyExchangeRate } from '@/types/economy';
+import { CurrencyListControlsForm } from '../currency-list-controls-form/currency-list-controls-form';
+import { EconomyRow } from '../economy-row/economy-row';
 
 interface EconomyListProps {
   currencies: CurrencyExchangeRate[];
@@ -65,10 +65,7 @@ export function EconomyList({
       ) : (
         <div>
           {filteredCurrencies.map((currency, index) => (
-            <div
-              key={currency.id}
-              className={index === 0 ? 'border-t border-zinc-700/50' : ''}
-            >
+            <div key={currency.id} className={index === 0 ? 'border-t border-zinc-700/50' : ''}>
               <EconomyRow currency={currency} onClick={onCurrencyClick} />
             </div>
           ))}

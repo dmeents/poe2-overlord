@@ -9,8 +9,7 @@ export function VenusIcon({ className }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      aria-hidden="true"
-    >
+      aria-hidden="true">
       {/* Circle */}
       <circle cx="12" cy="8" r="5" />
       {/* Vertical line (cross stem) */}

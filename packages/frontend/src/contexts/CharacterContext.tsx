@@ -1,13 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
-import type { CharacterData } from '@/types/character';
+
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
-import { createContext, useContext, useState, useEffect } from 'react';
 import { useActiveCharacter, useCharacters } from '@/queries/characters';
+import type { CharacterData } from '@/types/character';
 import {
+  type CharacterDeletedEvent,
+  type CharacterUpdatedEvent,
   EVENT_KEYS,
   type ExtractPayload,
-  type CharacterUpdatedEvent,
-  type CharacterDeletedEvent,
 } from '@/utils/events/registry';
 
 interface CharacterContextValue {
@@ -18,9 +19,7 @@ interface CharacterContextValue {
   isListening: boolean;
 }
 
-const CharacterContext = createContext<CharacterContextValue | undefined>(
-  undefined
-);
+const CharacterContext = createContext<CharacterContextValue | undefined>(undefined);
 
 export function CharacterProvider({ children }: React.PropsWithChildren) {
   const {
@@ -42,9 +41,7 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     error: activeCharacterError,
   } = useActiveCharacter();
 
-  const [charactersWithUpdates, setCharactersWithUpdates] = useState<
-    CharacterData[]
-  >([]);
+  const [charactersWithUpdates, setCharactersWithUpdates] = useState<CharacterData[]>([]);
   const [activeCharacterWithUpdates, setActiveCharacterWithUpdates] =
     useState<CharacterData | null>(null);
 
@@ -81,36 +78,28 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
           });
 
           // Use functional update to avoid stale closure issue
-          setActiveCharacterWithUpdates(prev =>
-            prev?.id === character_id ? characterData : prev
-          );
+          setActiveCharacterWithUpdates(prev => (prev?.id === character_id ? characterData : prev));
         },
       },
       {
         // NOTE: Requires backend Issue #14 to publish CharacterDeleted events
         eventType: EVENT_KEYS.CharacterDeleted,
         handler: (payload: unknown) => {
-          const { character_id } =
-            payload as ExtractPayload<CharacterDeletedEvent>;
+          const { character_id } = payload as ExtractPayload<CharacterDeletedEvent>;
 
           // Remove character from list
-          setCharactersWithUpdates(prev =>
-            prev.filter(char => char.id !== character_id)
-          );
+          setCharactersWithUpdates(prev => prev.filter(char => char.id !== character_id));
 
           // Clear active character if it was deleted
-          setActiveCharacterWithUpdates(prev =>
-            prev?.id === character_id ? null : prev
-          );
+          setActiveCharacterWithUpdates(prev => (prev?.id === character_id ? null : prev));
         },
       },
     ],
-    [] // Dependencies removed - using functional updates avoids stale closures
+    [], // Dependencies removed - using functional updates avoids stale closures
   );
 
   const isLoading = charactersLoading || activeCharacterLoading;
-  const error =
-    charactersError?.message || activeCharacterError?.message || null;
+  const error = charactersError?.message || activeCharacterError?.message || null;
 
   return (
     <CharacterContext.Provider
@@ -120,8 +109,7 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
         isLoading,
         error,
         isListening,
-      }}
-    >
+      }}>
       {children}
     </CharacterContext.Provider>
   );

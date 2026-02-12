@@ -105,13 +105,7 @@ describe('CharacterCard', () => {
     const user = userEvent.setup();
     const handleSelect = vi.fn();
 
-    render(
-      <CharacterCard
-        {...defaultProps}
-        onSelect={handleSelect}
-        interactive={false}
-      />
-    );
+    render(<CharacterCard {...defaultProps} onSelect={handleSelect} interactive={false} />);
 
     await user.click(screen.getByText('TestCharacter'));
 
@@ -133,12 +127,8 @@ describe('CharacterCard', () => {
   it('does not render action buttons when interactive is false', () => {
     render(<CharacterCard {...defaultProps} interactive={false} />);
 
-    expect(
-      screen.queryByRole('button', { name: 'Edit' })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Delete' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
 
   it('renders HC prefix when hardcore is true', () => {

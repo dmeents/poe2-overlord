@@ -5,16 +5,11 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({
-  message,
-  className = '',
-}: LoadingSpinnerProps) {
+export function LoadingSpinner({ message, className = '' }: LoadingSpinnerProps) {
   return (
     <div className={`${loadingSpinnerStyles.container} ${className}`}>
       <div className={loadingSpinnerStyles.spinner}></div>
-      {message && (
-        <span className={loadingSpinnerStyles.message}>{message}</span>
-      )}
+      {message && <span className={loadingSpinnerStyles.message}>{message}</span>}
     </div>
   );
 }

@@ -1,17 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+
 import { useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
-  useCurrencyExchange,
-  useAggregatedTopCurrencies,
   economyQueryKeys,
+  useAggregatedTopCurrencies,
+  useCurrencyExchange,
 } from '@/queries/economy';
+import type { CurrencyExchangeData, EconomyType, TopCurrencyItem } from '@/types/economy';
 import { useCharacter } from './CharacterContext';
-import type {
-  CurrencyExchangeData,
-  EconomyType,
-  TopCurrencyItem,
-} from '@/types/economy';
 
 interface EconomyContextValue {
   currencyData: CurrencyExchangeData | undefined;
@@ -27,16 +24,13 @@ interface EconomyContextValue {
   isLoadingAggregated: boolean;
 }
 
-const EconomyContext = createContext<EconomyContextValue | undefined>(
-  undefined
-);
+const EconomyContext = createContext<EconomyContextValue | undefined>(undefined);
 
 export function EconomyProvider({ children }: React.PropsWithChildren) {
   const { activeCharacter } = useCharacter();
   const queryClient = useQueryClient();
 
-  const [selectedEconomyType, setSelectedEconomyType] =
-    useState<EconomyType>('Currency');
+  const [selectedEconomyType, setSelectedEconomyType] = useState<EconomyType>('Currency');
 
   const league = activeCharacter?.league || 'Rise of the Abyssal';
   const isHardcore = activeCharacter?.hardcore || false;
@@ -85,14 +79,10 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
       isSoloSelfFound,
       aggregatedTopCurrencies,
       isLoadingAggregated,
-    ]
+    ],
   );
 
-  return (
-    <EconomyContext.Provider value={contextValue}>
-      {children}
-    </EconomyContext.Provider>
-  );
+  return <EconomyContext.Provider value={contextValue}>{children}</EconomyContext.Provider>;
 }
 
 export function useEconomy() {

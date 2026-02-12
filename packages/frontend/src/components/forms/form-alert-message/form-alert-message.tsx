@@ -6,11 +6,7 @@ interface AlertMessageProps {
   className?: string;
 }
 
-export function AlertMessage({
-  type,
-  message,
-  className = '',
-}: AlertMessageProps) {
+export function AlertMessage({ type, message, className = '' }: AlertMessageProps) {
   if (!message) return null;
 
   const alertClasses = {
@@ -19,9 +15,7 @@ export function AlertMessage({
   };
 
   return (
-    <div
-      className={`${formAlertMessageStyles.container} ${alertClasses[type]} ${className}`}
-    >
+    <div className={`${formAlertMessageStyles.container} ${alertClasses[type]} ${className}`}>
       {message}
     </div>
   );

@@ -7,8 +7,7 @@ import type { CharacterData } from '../types/character';
 export const characterQueryKeys = {
   all: ['characters'] as const,
   lists: () => [...characterQueryKeys.all, 'list'] as const,
-  list: (filters: string) =>
-    [...characterQueryKeys.lists(), { filters }] as const,
+  list: (filters: string) => [...characterQueryKeys.lists(), { filters }] as const,
   details: () => [...characterQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...characterQueryKeys.details(), id] as const,
   active: () => [...characterQueryKeys.all, 'active'] as const,
@@ -81,7 +80,7 @@ export function useCreateCharacter() {
       // Invalidate and refetch character queries
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.all });
     },
-    onError: (error) => {
+    onError: error => {
       console.error('[DEBUG useCreateCharacter] onError:', error);
     },
   });
@@ -116,10 +115,7 @@ export function useUpdateCharacter() {
     },
     onSuccess: updatedCharacter => {
       // Update the specific character in cache
-      queryClient.setQueryData(
-        characterQueryKeys.detail(updatedCharacter.id),
-        updatedCharacter
-      );
+      queryClient.setQueryData(characterQueryKeys.detail(updatedCharacter.id), updatedCharacter);
       // Invalidate lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });

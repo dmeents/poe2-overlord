@@ -7,7 +7,7 @@ describe('FormField', () => {
     render(
       <FormField label="Test Label">
         <input type="text" data-testid="test-input" />
-      </FormField>
+      </FormField>,
     );
 
     expect(screen.getByText('Test Label')).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('FormField', () => {
     render(
       <FormField label="Test Label" description="Test description">
         <input type="text" />
-      </FormField>
+      </FormField>,
     );
 
     expect(screen.getByText('Test description')).toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('FormField', () => {
     render(
       <FormField label="Test Label">
         <input type="text" />
-      </FormField>
+      </FormField>,
     );
 
     expect(screen.queryByText('Test description')).not.toBeInTheDocument();
@@ -38,7 +38,7 @@ describe('FormField', () => {
     render(
       <FormField label="Email" htmlFor="email-input">
         <input type="email" id="email-input" />
-      </FormField>
+      </FormField>,
     );
 
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe('FormField', () => {
     const { container } = render(
       <FormField label="Test Label" className="custom-class">
         <input type="text" />
-      </FormField>
+      </FormField>,
     );
 
     expect(container.querySelector('.custom-class')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('FormField', () => {
     render(
       <FormField label={<span data-testid="custom-label">Custom Label</span>}>
         <input type="text" />
-      </FormField>
+      </FormField>,
     );
 
     expect(screen.getByTestId('custom-label')).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe('FormField', () => {
     const { container } = render(
       <FormField label="Test Label">
         <input type="text" />
-      </FormField>
+      </FormField>,
     );
 
     // The divider is the second child in the fragment
@@ -80,7 +80,7 @@ describe('FormField', () => {
     const { container } = render(
       <FormField label="Test Label" className="last-form-item">
         <input type="text" />
-      </FormField>
+      </FormField>,
     );
 
     // Count divider elements - should have fewer when last item

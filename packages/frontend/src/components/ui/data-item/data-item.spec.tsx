@@ -35,11 +35,7 @@ describe('DataItem', () => {
 
   it('renders icon when provided', () => {
     render(
-      <DataItem
-        label="Label"
-        value="Value"
-        icon={<span data-testid="test-icon">Icon</span>}
-      />
+      <DataItem label="Label" value="Value" icon={<span data-testid="test-icon">Icon</span>} />,
     );
 
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
@@ -52,28 +48,19 @@ describe('DataItem', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <DataItem label="Label" value="Value" className="custom-class" />
-    );
+    const { container } = render(<DataItem label="Label" value="Value" className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
 
   it('applies border color when color is provided', () => {
-    const { container } = render(
-      <DataItem label="Label" value="Value" color="#ff0000" />
-    );
+    const { container } = render(<DataItem label="Label" value="Value" color="#ff0000" />);
 
     expect(container.firstChild).toHaveStyle({ borderLeftColor: '#ff0000' });
   });
 
   it('renders ReactNode as label', () => {
-    render(
-      <DataItem
-        label={<span data-testid="custom-label">Custom Label</span>}
-        value="Value"
-      />
-    );
+    render(<DataItem label={<span data-testid="custom-label">Custom Label</span>} value="Value" />);
 
     expect(screen.getByTestId('custom-label')).toBeInTheDocument();
   });

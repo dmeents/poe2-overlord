@@ -7,9 +7,7 @@ describe('Button', () => {
   it('renders children correctly', () => {
     render(<Button>Click me</Button>);
 
-    expect(
-      screen.getByRole('button', { name: 'Click me' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
   });
 
   it('calls onClick when clicked', async () => {
@@ -30,7 +28,7 @@ describe('Button', () => {
     render(
       <Button onClick={handleClick} disabled>
         Click me
-      </Button>
+      </Button>,
     );
 
     await user.click(screen.getByRole('button'));
@@ -66,7 +64,7 @@ describe('Button', () => {
     render(
       <Button id="test-id" title="test title">
         Click me
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByRole('button');
@@ -105,7 +103,7 @@ describe('Button', () => {
       render(
         <Button onClick={handleClick} loading>
           Click me
-        </Button>
+        </Button>,
       );
 
       await user.click(screen.getByRole('button'));

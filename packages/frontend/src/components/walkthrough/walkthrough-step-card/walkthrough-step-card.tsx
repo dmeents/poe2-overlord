@@ -10,14 +10,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo } from 'react';
-
-import type {
-  WalkthroughStep,
-  WalkthroughStepResult,
-} from '../../../types/walkthrough';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import { useWalkthrough } from '../../../contexts/WalkthroughContext';
 import { useZone } from '../../../contexts/ZoneContext';
+import type { WalkthroughStep, WalkthroughStepResult } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
 import { Button } from '../../ui/button/button';
 import { Card } from '../../ui/card/card';
@@ -66,9 +62,7 @@ export function WalkthroughStepCard({
   const progress = isActiveVariant ? walkthroughContext.progress : null;
   const currentStep = isActiveVariant ? walkthroughContext.currentStep : null;
   const previousStep = isActiveVariant ? walkthroughContext.previousStep : null;
-  const activeCharacter = isActiveVariant
-    ? characterContext.activeCharacter
-    : null;
+  const activeCharacter = isActiveVariant ? characterContext.activeCharacter : null;
 
   // Determine the step data to use
   const stepData = stepProp || stepResult?.step || currentStep?.step;
@@ -78,9 +72,7 @@ export function WalkthroughStepCard({
   const filteredWikiItems = useMemo(() => {
     if (!stepData) return [];
 
-    const zoneNames = [stepData.current_zone, stepData.completion_zone].filter(
-      Boolean
-    );
+    const zoneNames = [stepData.current_zone, stepData.completion_zone].filter(Boolean);
 
     return stepData.wiki_items.filter(item => !zoneNames.includes(item));
   }, [stepData]);
@@ -126,8 +118,7 @@ export function WalkthroughStepCard({
   };
 
   const handlePreviousStep = async () => {
-    if (!isActiveVariant || !previousStep || !progress || !activeCharacter)
-      return;
+    if (!isActiveVariant || !previousStep || !progress || !activeCharacter) return;
 
     try {
       const newProgress = {
@@ -161,9 +152,7 @@ export function WalkthroughStepCard({
         <Card className={`${className} border-green-500 bg-green-500/10`}>
           <div className="flex items-center gap-4 p-4">
             <CheckCircleIcon className="w-8 h-8 text-green-500" />
-            <h4 className="text-xl font-semibold text-white">
-              Campaign Complete!
-            </h4>
+            <h4 className="text-xl font-semibold text-white">Campaign Complete!</h4>
           </div>
           <div className="flex justify-between items-center pt-3 pb-1 px-4 border-t border-zinc-700/30">
             <div className="flex items-center gap-2 text-xs text-zinc-500">
@@ -171,12 +160,7 @@ export function WalkthroughStepCard({
               Last updated: {formatLastUpdated(progress.last_updated)}
             </div>
             {onViewGuide && (
-              <Button
-                onClick={onViewGuide}
-                variant="text"
-                size="xs"
-                title="View guide"
-              >
+              <Button onClick={onViewGuide} variant="text" size="xs" title="View guide">
                 <BookOpenIcon className="w-3 h-3" />
                 Guide
               </Button>
@@ -192,12 +176,8 @@ export function WalkthroughStepCard({
         <Card className={`${className} border-blue-500 bg-blue-500/10`}>
           <div className="text-center py-8">
             <BookOpenIcon className="w-16 h-16 text-zinc-400 mx-auto mb-4" />
-            <h4 className="text-lg font-semibold text-white mb-2">
-              No Active Step
-            </h4>
-            <p className="text-zinc-300 mb-4">
-              Start your walkthrough to begin tracking progress.
-            </p>
+            <h4 className="text-lg font-semibold text-white mb-2">No Active Step</h4>
+            <p className="text-zinc-300 mb-4">Start your walkthrough to begin tracking progress.</p>
             {onViewGuide && (
               <Button onClick={onViewGuide} variant="primary" size="md">
                 <BookOpenIcon className="w-4 h-4" />
@@ -223,8 +203,7 @@ export function WalkthroughStepCard({
       title={stepData.title}
       subtitle={stepData.current_zone}
       icon={<MapPinIcon />}
-      accentColor={isActiveStep ? 'blue' : 'zinc'}
-    >
+      accentColor={isActiveStep ? 'blue' : 'zinc'}>
       <div className="p-4 space-y-4">
         {/* Completion Zone */}
         <div className="bg-blue-500/5 border border-blue-500/20 p-3">
@@ -234,8 +213,7 @@ export function WalkthroughStepCard({
               Enter{' '}
               <button
                 onClick={() => openZone(stepData.completion_zone)}
-                className="text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium"
-              >
+                className="text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium">
                 {stepData.completion_zone}
               </button>
             </span>
@@ -269,9 +247,7 @@ export function WalkthroughStepCard({
                         {objective.required !== undefined && (
                           <StarIcon
                             className={`w-3 h-3 ${
-                              objective.required
-                                ? 'text-orange-400'
-                                : 'text-zinc-400'
+                              objective.required ? 'text-orange-400' : 'text-zinc-400'
                             }`}
                             title={objective.required ? 'Required' : 'Optional'}
                           />
@@ -284,8 +260,7 @@ export function WalkthroughStepCard({
                       </div>
                       {(objective.details ||
                         objective.notes ||
-                        (objective.rewards &&
-                          objective.rewards.length > 0)) && (
+                        (objective.rewards && objective.rewards.length > 0)) && (
                         <div className="border-l-2 border-zinc-500 pl-2 ml-1.5 space-y-1">
                           {objective.details && (
                             <div className="text-xs text-zinc-400">
@@ -306,20 +281,16 @@ export function WalkthroughStepCard({
                               />
                             </div>
                           )}
-                          {objective.rewards &&
-                            objective.rewards.length > 0 && (
-                              <div className="text-xs flex items-center gap-1">
-                                <GiftIcon
-                                  className="w-3 h-3 text-purple-400"
-                                  title="Rewards"
-                                />
-                                <ParsedText
-                                  text={objective.rewards.join(', ')}
-                                  wikiItems={filteredWikiItems}
-                                  onWikiClick={handleItemClick}
-                                />
-                              </div>
-                            )}
+                          {objective.rewards && objective.rewards.length > 0 && (
+                            <div className="text-xs flex items-center gap-1">
+                              <GiftIcon className="w-3 h-3 text-purple-400" title="Rewards" />
+                              <ParsedText
+                                text={objective.rewards.join(', ')}
+                                wikiItems={filteredWikiItems}
+                                onWikiClick={handleItemClick}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -346,19 +317,13 @@ export function WalkthroughStepCard({
                     onClick={handlePreviousStep}
                     variant="text"
                     size="xs"
-                    title="Previous step"
-                  >
+                    title="Previous step">
                     <ArrowLeftIcon className="mr-1 w-3 h-3" />
                     Previous
                   </Button>
                 )}
                 {!progress.is_completed && (
-                  <Button
-                    onClick={handleAdvanceStep}
-                    variant="text"
-                    size="xs"
-                    title="Next step"
-                  >
+                  <Button onClick={handleAdvanceStep} variant="text" size="xs" title="Next step">
                     Next
                     <ArrowRightIcon className="ml-1 w-3 h-3" />
                   </Button>
@@ -369,8 +334,7 @@ export function WalkthroughStepCard({
                     variant="text"
                     size="xs"
                     className="gap-1"
-                    title="View guide"
-                  >
+                    title="View guide">
                     <BookOpenIcon className="w-3 h-3" />
                     Guide
                   </Button>
@@ -384,8 +348,7 @@ export function WalkthroughStepCard({
                 variant="text"
                 size="xs"
                 className="gap-1"
-                title="Go to this step"
-              >
+                title="Go to this step">
                 <ArrowRightIcon className="w-3 h-3" />
                 Go Here
               </Button>

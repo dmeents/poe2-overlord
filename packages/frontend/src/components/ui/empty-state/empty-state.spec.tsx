@@ -9,7 +9,7 @@ describe('EmptyState', () => {
         icon={<span data-testid="test-icon">Icon</span>}
         title="Test Title"
         description="Test description"
-      />
+      />,
     );
 
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
@@ -21,7 +21,7 @@ describe('EmptyState', () => {
         icon={<span>Icon</span>}
         title="No Items Found"
         description="There are no items to display"
-      />
+      />,
     );
 
     expect(screen.getByText('No Items Found')).toBeInTheDocument();
@@ -33,12 +33,10 @@ describe('EmptyState', () => {
         icon={<span>Icon</span>}
         title="No Items Found"
         description="There are no items to display"
-      />
+      />,
     );
 
-    expect(
-      screen.getByText('There are no items to display')
-    ).toBeInTheDocument();
+    expect(screen.getByText('There are no items to display')).toBeInTheDocument();
   });
 
   it('renders action when provided', () => {
@@ -48,12 +46,10 @@ describe('EmptyState', () => {
         title="No Items Found"
         description="There are no items to display"
         action={<button>Add Item</button>}
-      />
+      />,
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Add Item' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument();
   });
 
   it('does not render action when not provided', () => {
@@ -62,7 +58,7 @@ describe('EmptyState', () => {
         icon={<span>Icon</span>}
         title="No Items Found"
         description="There are no items to display"
-      />
+      />,
     );
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -75,7 +71,7 @@ describe('EmptyState', () => {
         title="No Items Found"
         description="There are no items to display"
         className="custom-class"
-      />
+      />,
     );
 
     expect(container.firstChild).toHaveClass('custom-class');

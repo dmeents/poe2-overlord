@@ -108,18 +108,14 @@ describe('CharacterFormModal', () => {
     it('renders create modal title', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
-      expect(
-        screen.getByRole('heading', { name: 'Create Character' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Create Character' })).toBeInTheDocument();
     });
 
     it('renders character name field', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
       expect(screen.getByText('Character Name')).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText('Enter character name')
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Enter character name')).toBeInTheDocument();
     });
 
     it('renders class field', () => {
@@ -149,25 +145,19 @@ describe('CharacterFormModal', () => {
     it('renders SSF checkbox', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
-      expect(
-        screen.getByLabelText('Solo Self-Found (SSF)')
-      ).toBeInTheDocument();
+      expect(screen.getByLabelText('Solo Self-Found (SSF)')).toBeInTheDocument();
     });
 
     it('renders create button', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
-      expect(
-        screen.getByRole('button', { name: 'Create Character' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Create Character' })).toBeInTheDocument();
     });
 
     it('renders cancel button', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
-      expect(
-        screen.getByRole('button', { name: 'Cancel' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     });
 
     it('renders name generator buttons', () => {
@@ -180,31 +170,21 @@ describe('CharacterFormModal', () => {
 
   describe('Edit Mode', () => {
     it('renders edit modal title', () => {
-      render(
-        <CharacterFormModal {...defaultProps} character={mockCharacter} />
-      );
+      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
 
-      expect(
-        screen.getByRole('heading', { name: 'Edit Character' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Edit Character' })).toBeInTheDocument();
     });
 
     it('pre-fills character name', () => {
-      render(
-        <CharacterFormModal {...defaultProps} character={mockCharacter} />
-      );
+      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
 
       expect(screen.getByDisplayValue('TestCharacter')).toBeInTheDocument();
     });
 
     it('renders update button', () => {
-      render(
-        <CharacterFormModal {...defaultProps} character={mockCharacter} />
-      );
+      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
 
-      expect(
-        screen.getByRole('button', { name: 'Update Character' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Update Character' })).toBeInTheDocument();
     });
   });
 
@@ -226,13 +206,8 @@ describe('CharacterFormModal', () => {
 
       render(<CharacterFormModal {...defaultProps} onSubmit={handleSubmit} />);
 
-      await user.type(
-        screen.getByPlaceholderText('Enter character name'),
-        'NewCharacter'
-      );
-      await user.click(
-        screen.getByRole('button', { name: 'Create Character' })
-      );
+      await user.type(screen.getByPlaceholderText('Enter character name'), 'NewCharacter');
+      await user.click(screen.getByRole('button', { name: 'Create Character' }));
 
       expect(handleSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -242,7 +217,7 @@ describe('CharacterFormModal', () => {
           league: 'Standard',
           hardcore: false,
           solo_self_found: false,
-        })
+        }),
       );
     });
 
@@ -252,9 +227,7 @@ describe('CharacterFormModal', () => {
 
       render(<CharacterFormModal {...defaultProps} onSubmit={handleSubmit} />);
 
-      await user.click(
-        screen.getByRole('button', { name: 'Create Character' })
-      );
+      await user.click(screen.getByRole('button', { name: 'Create Character' }));
 
       // Form submission should be prevented when name is empty
       expect(handleSubmit).not.toHaveBeenCalled();
@@ -291,9 +264,7 @@ describe('CharacterFormModal', () => {
     it('shows saving text when loading', () => {
       render(<CharacterFormModal {...defaultProps} isLoading={true} />);
 
-      expect(
-        screen.getByRole('button', { name: 'Saving...' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Saving...' })).toBeInTheDocument();
     });
 
     it('disables buttons when loading', () => {
@@ -308,9 +279,7 @@ describe('CharacterFormModal', () => {
     it('does not render when isOpen is false', () => {
       render(<CharacterFormModal {...defaultProps} isOpen={false} />);
 
-      expect(
-        screen.queryByRole('heading', { name: 'Create Character' })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Create Character' })).not.toBeInTheDocument();
     });
   });
 });

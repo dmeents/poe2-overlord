@@ -1,7 +1,7 @@
-import type { CurrencyExchangeRate } from '@/types/economy';
 import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useEconomy } from '@/contexts/EconomyContext';
+import type { CurrencyExchangeRate } from '@/types/economy';
 
 interface EconomyRowProps {
   currency: CurrencyExchangeRate;
@@ -24,16 +24,13 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
   });
 
   // Calculate items sold per hour (volume / primary_value)
-  const calculateItemsSoldPerHour = (
-    volume: number,
-    primaryValue: number
-  ): string => {
+  const calculateItemsSoldPerHour = (volume: number, primaryValue: number): string => {
     // Guard against division by zero or invalid values
-    if (primaryValue === 0 || !isFinite(primaryValue)) {
+    if (primaryValue === 0 || !Number.isFinite(primaryValue)) {
       return '0.00';
     }
     const itemsSold = volume / primaryValue;
-    if (!isFinite(itemsSold)) {
+    if (!Number.isFinite(itemsSold)) {
       return '0.00';
     }
     return itemsSold.toLocaleString('en-US', {
@@ -44,33 +41,19 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
 
   const tooltipContent = currencyData ? (
     <div className="space-y-1 text-xs">
-      <div className="font-semibold border-b border-zinc-600 pb-1 mb-2">
-        Raw Values
+      <div className="font-semibold border-b border-zinc-600 pb-1 mb-2">Raw Values</div>
+      <div className="flex justify-between gap-4">
+        <span className="text-zinc-400">{currencyData.primary_currency.name}:</span>
+        <span className="text-white font-mono">{currency.primary_value.toFixed(6)}</span>
       </div>
       <div className="flex justify-between gap-4">
-        <span className="text-zinc-400">
-          {currencyData.primary_currency.name}:
-        </span>
-        <span className="text-white font-mono">
-          {currency.primary_value.toFixed(6)}
-        </span>
-      </div>
-      <div className="flex justify-between gap-4">
-        <span className="text-zinc-400">
-          {currencyData.secondary_currency.name}:
-        </span>
-        <span className="text-white font-mono">
-          {currency.secondary_value.toFixed(4)}
-        </span>
+        <span className="text-zinc-400">{currencyData.secondary_currency.name}:</span>
+        <span className="text-white font-mono">{currency.secondary_value.toFixed(4)}</span>
       </div>
       {currencyData.tertiary_currency && (
         <div className="flex justify-between gap-4">
-          <span className="text-zinc-400">
-            {currencyData.tertiary_currency.name}:
-          </span>
-          <span className="text-white font-mono">
-            {currency.tertiary_value.toFixed(2)}
-          </span>
+          <span className="text-zinc-400">{currencyData.tertiary_currency.name}:</span>
+          <span className="text-white font-mono">{currency.tertiary_value.toFixed(2)}</span>
         </div>
       )}
     </div>
@@ -81,8 +64,7 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
       onClick={handleClick}
       className={`flex items-center justify-between py-3 px-6 border-b border-zinc-700/50 transition-colors ${
         onClick ? 'cursor-pointer hover:bg-zinc-800/30' : ''
-      }`}
-    >
+      }`}>
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <img
           src={currency.image_url}
@@ -97,11 +79,7 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
           <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1">
             {currency.volume !== null && currencyData && (
               <span title="Number of items sold per hour">
-                {calculateItemsSoldPerHour(
-                  currency.volume,
-                  currency.primary_value
-                )}{' '}
-                / hr
+                {calculateItemsSoldPerHour(currency.volume, currency.primary_value)} / hr
               </span>
             )}
           </div>
@@ -165,11 +143,8 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
             <div className="text-xs text-zinc-400 mt-1 flex justify-end">
               <span
                 className={`font-semibold opacity-60 ${
-                  currency.change_percent >= 0
-                    ? 'text-emerald-400'
-                    : 'text-red-400'
-                }`}
-              >
+                  currency.change_percent >= 0 ? 'text-emerald-400' : 'text-red-400'
+                }`}>
                 {currency.change_percent >= 0 ? '+' : ''}
                 {currency.change_percent.toFixed(2)}%
               </span>

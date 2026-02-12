@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useRef, useState } from 'react';
 import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
-import { Card } from '@/components/ui/card/card';
-import { PageLayout } from '@/components/layout/page-layout/page-layout';
-import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
-import { ErrorState } from '@/components/ui/error-state/error-state';
-import { useEconomy } from '@/contexts/EconomyContext';
-import { ECONOMY_TYPE_LABELS } from '@/utils/economy-icons';
 import { CurrencyListControlsForm } from '@/components/economy/currency-list-controls-form/currency-list-controls-form';
 import { EconomyRow } from '@/components/economy/economy-row/economy-row';
 import { ExchangeRatesCard } from '@/components/economy/exchange-rates-card/exchange-rates-card';
 import { TopItemsCard } from '@/components/economy/top-items-card/top-items-card';
-import { createFileRoute } from '@tanstack/react-router';
-import { formatTimeAgo } from '@/utils/format-time-ago';
-import { useSearchCurrencies } from '@/queries/economy';
+import { PageLayout } from '@/components/layout/page-layout/page-layout';
+import { Card } from '@/components/ui/card/card';
+import { ErrorState } from '@/components/ui/error-state/error-state';
+import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
+import { useEconomy } from '@/contexts/EconomyContext';
 import { useCurrencyList } from '@/hooks/useCurrencyList';
+import { useSearchCurrencies } from '@/queries/economy';
+import { ECONOMY_TYPE_LABELS } from '@/utils/economy-icons';
+import { formatTimeAgo } from '@/utils/format-time-ago';
 
 export const Route = createFileRoute('/economy')({
   component: EconomyPage,
@@ -35,20 +35,18 @@ function EconomyPage() {
   const isNoDataError =
     isError &&
     error?.message &&
-    (error.message.includes('No currency data available') ||
-      error.message.includes('not found'));
+    (error.message.includes('No currency data available') || error.message.includes('not found'));
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const debounceTimerRef = useRef<number | null>(null);
 
-  const { data: searchResults = [], isLoading: isSearching } =
-    useSearchCurrencies(
-      league,
-      isHardcore,
-      debouncedQuery,
-      debouncedQuery.length > 0
-    );
+  const { data: searchResults = [], isLoading: isSearching } = useSearchCurrencies(
+    league,
+    isHardcore,
+    debouncedQuery,
+    debouncedQuery.length > 0,
+  );
 
   // Debounce search query with proper cleanup
   useEffect(() => {
@@ -112,8 +110,7 @@ function EconomyPage() {
                 className="mx-auto h-12 w-12 mb-4"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+                stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -122,13 +119,10 @@ function EconomyPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-zinc-300 mb-2">
-              No Data Available
-            </h3>
+            <h3 className="text-lg font-medium text-zinc-300 mb-2">No Data Available</h3>
             <p className="text-sm text-zinc-400 max-w-md mx-auto">
-              {ECONOMY_TYPE_LABELS[selectedEconomyType]} data is not available
-              for this league yet. Try selecting a different economy type or
-              check back later.
+              {ECONOMY_TYPE_LABELS[selectedEconomyType]} data is not available for this league yet.
+              Try selecting a different economy type or check back later.
             </p>
           </div>
         );
@@ -137,11 +131,7 @@ function EconomyPage() {
     }
 
     if (!currencyData) {
-      return (
-        <div className="text-zinc-400 text-center py-8">
-          No economy data available
-        </div>
-      );
+      return <div className="text-zinc-400 text-center py-8">No economy data available</div>;
     }
 
     if (searchQuery) {
@@ -157,10 +147,7 @@ function EconomyPage() {
           ) : (
             <div>
               {searchResults.map((result, index) => (
-                <div
-                  key={result.id}
-                  className={index === 0 ? 'border-t border-zinc-700/50' : ''}
-                >
+                <div key={result.id} className={index === 0 ? 'border-t border-zinc-700/50' : ''}>
                   <EconomyRow
                     currency={{
                       id: result.id,
@@ -188,16 +175,11 @@ function EconomyPage() {
       <div>
         {filteredCurrencies.length === 0 ? (
           <div className="text-center py-8 text-zinc-400">
-            {hasActiveFilters
-              ? 'No currencies match your filters'
-              : 'No currency data available'}
+            {hasActiveFilters ? 'No currencies match your filters' : 'No currency data available'}
           </div>
         ) : (
           filteredCurrencies.map((currency, index) => (
-            <div
-              key={currency.id}
-              className={index === 0 ? 'border-t border-zinc-700/50' : ''}
-            >
+            <div key={currency.id} className={index === 0 ? 'border-t border-zinc-700/50' : ''}>
               <EconomyRow currency={currency} />
             </div>
           ))
@@ -212,8 +194,7 @@ function EconomyPage() {
       <Card
         title={ECONOMY_TYPE_LABELS[selectedEconomyType]}
         subtitle={getSubtitle()}
-        className="mt-6"
-      >
+        className="mt-6">
         {/* Controls - Always visible */}
         <div className="mb-4">
           <CurrencyListControlsForm
@@ -246,8 +227,7 @@ function EconomyPage() {
           href="https://poe.ninja"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-400 hover:text-zinc-300 underline transition-colors"
-        >
+          className="text-zinc-400 hover:text-zinc-300 underline transition-colors">
           poe.ninja
         </a>
       </div>

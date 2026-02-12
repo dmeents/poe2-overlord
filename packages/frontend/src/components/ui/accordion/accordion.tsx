@@ -1,7 +1,6 @@
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
-
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 export interface AccordionProps {
   title: string;
@@ -35,25 +34,16 @@ export function Accordion({
           onClick={onToggle}
           className="flex items-center justify-between w-full text-left hover:text-white transition-colors cursor-pointer p-3"
           aria-expanded={isExpanded}
-          aria-controls={contentId}
-        >
+          aria-controls={contentId}>
           <h3 id={headingId} className="text-base font-semibold text-white">
             {title}
           </h3>
           <div className="flex items-center gap-2">
-            {subtitle && (
-              <span className="text-xs text-zinc-400">{subtitle}</span>
-            )}
+            {subtitle && <span className="text-xs text-zinc-400">{subtitle}</span>}
             {isExpanded ? (
-              <ChevronUpIcon
-                className="w-4 h-4 text-zinc-400"
-                aria-hidden="true"
-              />
+              <ChevronUpIcon className="w-4 h-4 text-zinc-400" aria-hidden="true" />
             ) : (
-              <ChevronDownIcon
-                className="w-4 h-4 text-zinc-400"
-                aria-hidden="true"
-              />
+              <ChevronDownIcon className="w-4 h-4 text-zinc-400" aria-hidden="true" />
             )}
           </div>
         </button>
@@ -61,12 +51,7 @@ export function Accordion({
 
       {/* Accordion Content */}
       {isExpanded && (
-        <div
-          id={contentId}
-          role="region"
-          aria-labelledby={headingId}
-          className="p-3"
-        >
+        <div id={contentId} role="region" aria-labelledby={headingId} className="p-3">
           {children}
         </div>
       )}

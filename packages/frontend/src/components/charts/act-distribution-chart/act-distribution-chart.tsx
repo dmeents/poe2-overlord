@@ -1,10 +1,10 @@
-import type { CharacterData } from '@/types/character';
-import { formatDuration } from '@/utils/format-duration';
 import { ChartPieIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import type { CharacterData } from '@/types/character';
+import { formatDuration } from '@/utils/format-duration';
+import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
-import { Card } from '../../ui/card/card';
 
 interface ActDistributionChartProps {
   character: CharacterData;
@@ -19,10 +19,7 @@ interface ActData {
   hexColor: string;
 }
 
-export function ActDistributionChart({
-  character,
-  className = '',
-}: ActDistributionChartProps) {
+export function ActDistributionChart({ character, className = '' }: ActDistributionChartProps) {
   // Extract act data from character summary
   const actData: ActData[] = [
     {
@@ -82,11 +79,7 @@ export function ActDistributionChart({
 
   if (activeActs.length === 0) {
     return (
-      <Card
-        title="Act Distribution"
-        icon={<ChartPieIcon />}
-        className={className}
-      >
+      <Card title="Act Distribution" icon={<ChartPieIcon />} className={className}>
         <EmptyState
           icon={<ChartPieIcon className="w-8 h-8" />}
           title="No Act Data"
@@ -129,11 +122,7 @@ export function ActDistributionChart({
   };
 
   return (
-    <Card
-      title="Act Distribution"
-      icon={<ChartPieIcon />}
-      className={className}
-    >
+    <Card title="Act Distribution" icon={<ChartPieIcon />} className={className}>
       <div className="space-y-6">
         <div className="relative flex items-center justify-center h-48">
           <ResponsiveContainer width="100%" height={200}>
@@ -147,8 +136,7 @@ export function ActDistributionChart({
                 paddingAngle={2}
                 dataKey="value"
                 stroke="none"
-                className="transition-all duration-300"
-              >
+                className="transition-all duration-300">
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -161,12 +149,8 @@ export function ActDistributionChart({
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <div className="text-2xl font-bold text-white">
-              {activeActs.length}
-            </div>
-            <div className="text-xs text-zinc-400 uppercase tracking-wide">
-              Acts
-            </div>
+            <div className="text-2xl font-bold text-white">{activeActs.length}</div>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide">Acts</div>
           </div>
         </div>
         <div>

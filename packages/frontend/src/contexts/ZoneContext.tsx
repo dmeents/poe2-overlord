@@ -1,14 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
+
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ZoneStats } from '@/types/character';
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-} from 'react';
-import { useCharacter } from './CharacterContext';
 import { createPlaceholderZone } from '@/utils/zone-utils';
+import { useCharacter } from './CharacterContext';
 
 interface ZoneContextValue {
   selectedZone: ZoneStats | null;
@@ -26,10 +21,7 @@ export function ZoneProvider({ children }: React.PropsWithChildren) {
   const [selectedZone, setSelectedZone] = useState<ZoneStats | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const allZones = useMemo(
-    () => activeCharacter?.zones || [],
-    [activeCharacter?.zones]
-  );
+  const allZones = useMemo(() => activeCharacter?.zones || [], [activeCharacter?.zones]);
 
   const openZone = useCallback(
     (zoneName: string) => {
@@ -40,7 +32,7 @@ export function ZoneProvider({ children }: React.PropsWithChildren) {
 
       setIsModalOpen(true);
     },
-    [allZones]
+    [allZones],
   );
 
   const closeModal = useCallback(() => {
@@ -60,12 +52,10 @@ export function ZoneProvider({ children }: React.PropsWithChildren) {
       navigateToZone,
       allZones,
     }),
-    [selectedZone, isModalOpen, openZone, closeModal, navigateToZone, allZones]
+    [selectedZone, isModalOpen, openZone, closeModal, navigateToZone, allZones],
   );
 
-  return (
-    <ZoneContext.Provider value={contextValue}>{children}</ZoneContext.Provider>
-  );
+  return <ZoneContext.Provider value={contextValue}>{children}</ZoneContext.Provider>;
 }
 
 export function useZone() {

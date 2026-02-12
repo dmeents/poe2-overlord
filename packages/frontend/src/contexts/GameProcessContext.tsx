@@ -1,12 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import type {
-  GameProcessStatus,
-  GameProcessStatusChangedEvent,
-} from '@/types/process';
-import { useAppEventListener } from '@/hooks/useAppEventListener';
-import { createContext, useContext, useState, useEffect } from 'react';
-import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
+
 import { invoke } from '@tauri-apps/api/core';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useAppEventListener } from '@/hooks/useAppEventListener';
+import type { GameProcessStatus, GameProcessStatusChangedEvent } from '@/types/process';
+import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 
 interface GameProcessContextValue {
   processInfo: GameProcessStatus | null;
@@ -14,9 +12,7 @@ interface GameProcessContextValue {
   isListening: boolean;
 }
 
-const GameProcessContext = createContext<GameProcessContextValue | undefined>(
-  undefined
-);
+const GameProcessContext = createContext<GameProcessContextValue | undefined>(undefined);
 
 // Type for the ProcessInfo returned by get_game_process_status command
 // (differs slightly from GameProcessStatus - no detected_at field)
@@ -27,9 +23,7 @@ interface ProcessInfo {
 }
 
 export function GameProcessProvider({ children }: React.PropsWithChildren) {
-  const [processInfo, setProcessInfo] = useState<GameProcessStatus | null>(
-    null
-  );
+  const [processInfo, setProcessInfo] = useState<GameProcessStatus | null>(null);
 
   // Fetch initial game process status on mount
   useEffect(() => {
@@ -53,8 +47,7 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
     {
       eventType: EVENT_KEYS.GameProcessStatusChanged,
       handler: (payload: unknown) => {
-        const { new_status } =
-          payload as ExtractPayload<GameProcessStatusChangedEvent>;
+        const { new_status } = payload as ExtractPayload<GameProcessStatusChangedEvent>;
         setProcessInfo(new_status);
       },
     },
@@ -66,8 +59,7 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
         processInfo,
         gameRunning: processInfo?.running || false,
         isListening,
-      }}
-    >
+      }}>
       {children}
     </GameProcessContext.Provider>
   );

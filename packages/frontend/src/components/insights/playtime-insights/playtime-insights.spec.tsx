@@ -1,11 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CharacterData, CharacterSummary, ZoneStats } from '@/types/character';
 import { PlaytimeInsights } from './playtime-insights';
-import type {
-  CharacterData,
-  ZoneStats,
-  CharacterSummary,
-} from '@/types/character';
 
 const mockUseCharacter = vi.hoisted(() => vi.fn());
 
@@ -13,9 +9,7 @@ vi.mock('@/contexts/CharacterContext', () => ({
   useCharacter: mockUseCharacter,
 }));
 
-const createMockSummary = (
-  overrides: Partial<CharacterSummary> = {}
-): CharacterSummary => ({
+const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 7200, // 2 hours
   total_hideout_time: 1800, // 30 minutes
@@ -50,7 +44,7 @@ const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
 
 const createMockCharacter = (
   summaryOverrides: Partial<CharacterSummary> = {},
-  zones: ZoneStats[] = []
+  zones: ZoneStats[] = [],
 ): CharacterData =>
   ({
     id: 'char-1',
@@ -74,9 +68,7 @@ describe('PlaytimeInsights', () => {
 
       render(<PlaytimeInsights />);
 
-      expect(
-        screen.getByText('Loading playtime insights...')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Loading playtime insights...')).toBeInTheDocument();
     });
   });
 
@@ -89,12 +81,8 @@ describe('PlaytimeInsights', () => {
 
       render(<PlaytimeInsights />);
 
-      expect(
-        screen.getByText('No Character Data Available')
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('Select a character to view playtime insights')
-      ).toBeInTheDocument();
+      expect(screen.getByText('No Character Data Available')).toBeInTheDocument();
+      expect(screen.getByText('Select a character to view playtime insights')).toBeInTheDocument();
     });
 
     it('shows empty state when character has no summary', () => {
@@ -105,9 +93,7 @@ describe('PlaytimeInsights', () => {
 
       render(<PlaytimeInsights />);
 
-      expect(
-        screen.getByText('No Character Data Available')
-      ).toBeInTheDocument();
+      expect(screen.getByText('No Character Data Available')).toBeInTheDocument();
     });
   });
 
@@ -301,9 +287,7 @@ describe('PlaytimeInsights', () => {
       const contextZones = [
         createMockZone({ zone_name: 'Context Zone', duration: 100, deaths: 0 }),
       ];
-      const propZones = [
-        createMockZone({ zone_name: 'Prop Zone', duration: 500, deaths: 0 }),
-      ];
+      const propZones = [createMockZone({ zone_name: 'Prop Zone', duration: 500, deaths: 0 })];
 
       mockUseCharacter.mockReturnValue({
         activeCharacter: {

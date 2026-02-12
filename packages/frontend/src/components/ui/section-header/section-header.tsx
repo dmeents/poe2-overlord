@@ -6,11 +6,7 @@ interface SectionHeaderProps {
   className?: string;
 }
 
-export function SectionHeader({
-  title,
-  icon,
-  className = '',
-}: SectionHeaderProps) {
+export function SectionHeader({ title, icon, className = '' }: SectionHeaderProps) {
   return (
     <div className={`my-2 ${className}`}>
       <div className="flex items-center space-x-2 text-zinc-300">

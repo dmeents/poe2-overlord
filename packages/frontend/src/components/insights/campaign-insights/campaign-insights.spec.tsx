@@ -57,7 +57,7 @@ describe('CampaignInsights', () => {
 
     it('applies custom className', () => {
       const { container } = render(
-        <CampaignInsights guide={createMockGuide()} className="custom-class" />
+        <CampaignInsights guide={createMockGuide()} className="custom-class" />,
       );
 
       expect(container.querySelector('.custom-class')).toBeInTheDocument();

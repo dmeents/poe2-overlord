@@ -1,16 +1,12 @@
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import {
-  APP_EVENTS,
-  type AppEventPayload,
-  type AppEventRegistry,
-} from './registry';
+import { APP_EVENTS, type AppEventPayload, type AppEventRegistry } from './registry';
 
 /**
  * Type-safe wrapper around Tauri's listen that automatically unwraps AppEvent variants.
  */
 export async function listenToAppEvent<K extends keyof AppEventRegistry>(
   eventType: K,
-  handler: (payload: AppEventPayload<K>) => void
+  handler: (payload: AppEventPayload<K>) => void,
 ): Promise<UnlistenFn> {
   const eventName = APP_EVENTS[eventType];
 
@@ -30,10 +26,10 @@ export async function setupAppEventListeners<K extends keyof AppEventRegistry>(
   listeners: Array<{
     eventType: K;
     handler: (payload: AppEventPayload<K>) => void;
-  }>
+  }>,
 ): Promise<UnlistenFn[]> {
   const unlistenPromises = listeners.map(({ eventType, handler }) =>
-    listenToAppEvent(eventType, handler)
+    listenToAppEvent(eventType, handler),
   );
 
   return Promise.all(unlistenPromises);

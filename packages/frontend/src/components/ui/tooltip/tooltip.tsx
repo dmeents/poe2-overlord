@@ -1,5 +1,5 @@
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { tooltipStyles } from './tooltip.styles';
 
@@ -24,12 +24,7 @@ interface TooltipProps {
  *   <button>Hover me</button>
  * </Tooltip>
  */
-export function Tooltip({
-  content,
-  children,
-  className = '',
-  showIcon = false,
-}: TooltipProps) {
+export function Tooltip({ content, children, className = '', showIcon = false }: TooltipProps) {
   // Use null to indicate tooltip is hidden; position is calculated before showing
   const [position, setPosition] = useState<{
     top: number;
@@ -88,8 +83,7 @@ export function Tooltip({
         top: `${position.top}px`,
         left: `${position.left}px`,
         transform: 'translate(-50%, calc(-100% - 8px))',
-      }}
-    >
+      }}>
       <div className={tooltipStyles.content}>
         {content}
         {/* Arrow pointing down */}
@@ -104,19 +98,12 @@ export function Tooltip({
         ref={triggerRef}
         className={tooltipStyles.trigger}
         onMouseEnter={showTooltip}
-        onMouseLeave={hideTooltip}
-      >
+        onMouseLeave={hideTooltip}>
         {children}
-        {showIcon && (
-          <InformationCircleIcon
-            className={tooltipStyles.icon}
-            aria-hidden="true"
-          />
-        )}
+        {showIcon && <InformationCircleIcon className={tooltipStyles.icon} aria-hidden="true" />}
       </div>
 
-      {typeof document !== 'undefined' &&
-        createPortal(tooltipContent, document.body)}
+      {typeof document !== 'undefined' && createPortal(tooltipContent, document.body)}
     </div>
   );
 }

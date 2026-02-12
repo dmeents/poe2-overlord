@@ -7,9 +7,7 @@ vi.mock('recharts', () => ({
   ResponsiveContainer: vi.fn(({ children }) => (
     <div data-testid="responsive-container">{children}</div>
   )),
-  PieChart: vi.fn(({ children }) => (
-    <div data-testid="pie-chart">{children}</div>
-  )),
+  PieChart: vi.fn(({ children }) => <div data-testid="pie-chart">{children}</div>),
   Pie: vi.fn(({ children, data }) => (
     <div data-testid="pie" data-entries={data?.length}>
       {children}
@@ -40,9 +38,7 @@ describe('ClassDistributionChart', () => {
       render(<ClassDistributionChart classDistribution={{}} />);
 
       expect(screen.getByText('No Class Data')).toBeInTheDocument();
-      expect(
-        screen.getByText('Create characters to see class distribution')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Create characters to see class distribution')).toBeInTheDocument();
     });
 
     it('renders Classes title in empty state', () => {
@@ -76,7 +72,7 @@ describe('ClassDistributionChart', () => {
             Warrior: 4,
             Ranger: 2,
           }}
-        />
+        />,
       );
 
       // 3 unique classes - use getAllByText since 3 also appears as character count
@@ -91,7 +87,7 @@ describe('ClassDistributionChart', () => {
             Witch: 3,
             Warrior: 2,
           }}
-        />
+        />,
       );
 
       expect(screen.getByText('Witch')).toBeInTheDocument();
@@ -105,7 +101,7 @@ describe('ClassDistributionChart', () => {
             Witch: 5,
             Warrior: 3,
           }}
-        />
+        />,
       );
 
       expect(screen.getByText('5')).toBeInTheDocument();
@@ -122,7 +118,7 @@ describe('ClassDistributionChart', () => {
             Witch: 5,
             Warrior: 5,
           }}
-        />
+        />,
       );
 
       // Both should be 50.0%
@@ -137,7 +133,7 @@ describe('ClassDistributionChart', () => {
             Witch: 3, // 75%
             Warrior: 1, // 25%
           }}
-        />
+        />,
       );
 
       expect(screen.getByText('75.0%')).toBeInTheDocument();
@@ -154,7 +150,7 @@ describe('ClassDistributionChart', () => {
             Witch: 5,
             Warrior: 3,
           }}
-        />
+        />,
       );
 
       // Get all class labels - they should be in order: Witch (5), Warrior (3), Ranger (1)
@@ -169,10 +165,7 @@ describe('ClassDistributionChart', () => {
   describe('Custom ClassName', () => {
     it('applies custom className', () => {
       const { container } = render(
-        <ClassDistributionChart
-          classDistribution={{ Witch: 1 }}
-          className="custom-class"
-        />
+        <ClassDistributionChart classDistribution={{ Witch: 1 }} className="custom-class" />,
       );
 
       expect(container.querySelector('.custom-class')).toBeInTheDocument();
@@ -199,7 +192,7 @@ describe('ClassDistributionChart', () => {
             Monk: 2,
             Sorceress: 2,
           }}
-        />
+        />,
       );
 
       // Should show 6 classes in center
@@ -218,7 +211,7 @@ describe('ClassDistributionChart', () => {
           classDistribution={{
             Witch: 1,
           }}
-        />
+        />,
       );
 
       // '1' appears as both class count in center and character count
@@ -233,7 +226,7 @@ describe('ClassDistributionChart', () => {
             Witch: 100,
             Warrior: 50,
           }}
-        />
+        />,
       );
 
       expect(screen.getByText('100')).toBeInTheDocument();

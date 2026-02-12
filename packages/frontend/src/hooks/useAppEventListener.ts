@@ -1,17 +1,14 @@
-import { useEffect, useState } from 'react';
 import type { UnlistenFn } from '@tauri-apps/api/event';
+import { useEffect, useState } from 'react';
 import { listenToAppEvent } from '@/utils/events/listener';
-import type {
-  AppEventPayload,
-  AppEventRegistry,
-} from '@/utils/events/registry';
+import type { AppEventPayload, AppEventRegistry } from '@/utils/events/registry';
 
 export function useAppEventListener(
   listeners: Array<{
     eventType: keyof AppEventRegistry;
     handler: (payload: unknown) => void;
   }>,
-  deps: React.DependencyList = []
+  deps: React.DependencyList = [],
 ) {
   const [isListening, setIsListening] = useState(false);
 
@@ -23,10 +20,8 @@ export function useAppEventListener(
         const promises = listeners.map(({ eventType, handler }) =>
           listenToAppEvent(
             eventType as keyof AppEventRegistry,
-            handler as (
-              payload: AppEventPayload<keyof AppEventRegistry>
-            ) => void
-          )
+            handler as (payload: AppEventPayload<keyof AppEventRegistry>) => void,
+          ),
         );
 
         const results = await Promise.all(promises);
@@ -51,7 +46,7 @@ export function useAppEventListener(
       setIsListening(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps]);
+  }, [...deps, listeners]);
 
   return { isListening };
 }

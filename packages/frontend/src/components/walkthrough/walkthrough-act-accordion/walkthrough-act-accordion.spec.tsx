@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { WalkthroughActAccordion } from './walkthrough-act-accordion';
 import type { WalkthroughAct, WalkthroughStep } from '@/types/walkthrough';
+import { WalkthroughActAccordion } from './walkthrough-act-accordion';
 
 const mockOpenZone = vi.hoisted(() => vi.fn());
 
@@ -99,9 +99,7 @@ describe('WalkthroughActAccordion', () => {
     const user = userEvent.setup();
     const handleToggle = vi.fn();
 
-    render(
-      <WalkthroughActAccordion {...defaultProps} onToggle={handleToggle} />
-    );
+    render(<WalkthroughActAccordion {...defaultProps} onToggle={handleToggle} />);
 
     // Click on the accordion header (Act 1)
     await user.click(screen.getByText('Act 1'));
@@ -110,9 +108,7 @@ describe('WalkthroughActAccordion', () => {
   });
 
   it('highlights current step', () => {
-    render(
-      <WalkthroughActAccordion {...defaultProps} currentStepId="act1_step_1" />
-    );
+    render(<WalkthroughActAccordion {...defaultProps} currentStepId="act1_step_1" />);
 
     // The current step should have the active styling
     const firstStepCard = screen.getByText('First Step').closest('div');
@@ -122,12 +118,7 @@ describe('WalkthroughActAccordion', () => {
   it('passes onWikiClick to step cards', () => {
     const handleWikiClick = vi.fn();
 
-    render(
-      <WalkthroughActAccordion
-        {...defaultProps}
-        onWikiClick={handleWikiClick}
-      />
-    );
+    render(<WalkthroughActAccordion {...defaultProps} onWikiClick={handleWikiClick} />);
 
     // Step cards are rendered with onWikiClick prop
     expect(screen.getByText('First Step')).toBeInTheDocument();
@@ -147,7 +138,7 @@ describe('WalkthroughActAccordion', () => {
         {...defaultProps}
         currentStepId="act1_step_1"
         onSkipToStep={vi.fn()}
-      />
+      />,
     );
 
     // The "Go Here" button should appear on the non-current step
@@ -163,7 +154,7 @@ describe('WalkthroughActAccordion', () => {
         {...defaultProps}
         currentStepId="act1_step_1"
         onSkipToStep={handleSkip}
-      />
+      />,
     );
 
     await user.click(screen.getByText('Go Here'));
@@ -185,13 +176,7 @@ describe('WalkthroughActAccordion', () => {
       steps: {},
     };
 
-    render(
-      <WalkthroughActAccordion
-        {...defaultProps}
-        act={emptyAct}
-        actKey="act_2"
-      />
-    );
+    render(<WalkthroughActAccordion {...defaultProps} act={emptyAct} actKey="act_2" />);
 
     expect(screen.getByText('Empty Act')).toBeInTheDocument();
     expect(screen.getByText('0 steps')).toBeInTheDocument();

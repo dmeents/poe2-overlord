@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Modal } from './modal';
@@ -8,7 +8,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={vi.fn()}>
         <div>Modal Content</div>
-      </Modal>
+      </Modal>,
     );
 
     expect(screen.getByText('Modal Content')).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={false} onClose={vi.fn()}>
         <div>Modal Content</div>
-      </Modal>
+      </Modal>,
     );
 
     expect(screen.queryByText('Modal Content')).not.toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={vi.fn()} title="Test Title">
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
@@ -36,13 +36,9 @@ describe('Modal', () => {
 
   it('renders icon when provided', () => {
     render(
-      <Modal
-        isOpen={true}
-        onClose={vi.fn()}
-        icon={<span data-testid="test-icon">Icon</span>}
-      >
+      <Modal isOpen={true} onClose={vi.fn()} icon={<span data-testid="test-icon">Icon</span>}>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
@@ -52,24 +48,20 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={vi.fn()}>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Close modal' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close modal' })).toBeInTheDocument();
   });
 
   it('hides close button when showCloseButton is false', () => {
     render(
       <Modal isOpen={true} onClose={vi.fn()} showCloseButton={false}>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
-    expect(
-      screen.queryByRole('button', { name: 'Close modal' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close modal' })).not.toBeInTheDocument();
   });
 
   it('calls onClose when close button is clicked', async () => {
@@ -79,7 +71,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={handleClose}>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     await user.click(screen.getByRole('button', { name: 'Close modal' }));
@@ -93,7 +85,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={handleClose}>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -107,7 +99,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={handleClose} closeOnEscape={false}>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -122,7 +114,7 @@ describe('Modal', () => {
     render(
       <Modal isOpen={true} onClose={handleClose} disabled>
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     await user.click(screen.getByRole('button', { name: 'Close modal' }));
@@ -134,7 +126,7 @@ describe('Modal', () => {
     const { container } = render(
       <Modal isOpen={true} onClose={vi.fn()} className="custom-class">
         <div>Content</div>
-      </Modal>
+      </Modal>,
     );
 
     expect(container.querySelector('.custom-class')).toBeInTheDocument();
@@ -150,7 +142,7 @@ describe('Modal', () => {
       render(
         <Modal isOpen={true} onClose={vi.fn()}>
           <div>Content</div>
-        </Modal>
+        </Modal>,
       );
 
       expect(document.body.style.overflow).toBe('hidden');
@@ -160,7 +152,7 @@ describe('Modal', () => {
       const { rerender } = render(
         <Modal isOpen={true} onClose={vi.fn()}>
           <div>Content</div>
-        </Modal>
+        </Modal>,
       );
 
       expect(document.body.style.overflow).toBe('hidden');
@@ -168,7 +160,7 @@ describe('Modal', () => {
       rerender(
         <Modal isOpen={false} onClose={vi.fn()}>
           <div>Content</div>
-        </Modal>
+        </Modal>,
       );
 
       expect(document.body.style.overflow).toBe('unset');
@@ -183,7 +175,7 @@ describe('Modal', () => {
           <Modal isOpen={true} onClose={vi.fn()}>
             <div>Second Modal</div>
           </Modal>
-        </>
+        </>,
       );
 
       // Both modals open - scroll should be locked
@@ -198,7 +190,7 @@ describe('Modal', () => {
           <Modal isOpen={false} onClose={vi.fn()}>
             <div>Second Modal</div>
           </Modal>
-        </>
+        </>,
       );
 
       // One modal still open - scroll should still be locked
@@ -213,7 +205,7 @@ describe('Modal', () => {
           <Modal isOpen={false} onClose={vi.fn()}>
             <div>Second Modal</div>
           </Modal>
-        </>
+        </>,
       );
 
       // All modals closed - scroll should be unlocked
@@ -224,7 +216,7 @@ describe('Modal', () => {
       const { unmount } = render(
         <Modal isOpen={true} onClose={vi.fn()}>
           <div>Content</div>
-        </Modal>
+        </Modal>,
       );
 
       expect(document.body.style.overflow).toBe('hidden');

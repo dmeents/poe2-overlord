@@ -16,7 +16,7 @@ interface ParsedTextProps {
 const parseTextWithWikiLinks = (
   text: string,
   wikiItems: string[],
-  onWikiClick: (itemName: string) => void
+  onWikiClick: (itemName: string) => void,
 ): React.ReactNode[] => {
   if (!wikiItems.length) {
     return [text];
@@ -25,9 +25,7 @@ const parseTextWithWikiLinks = (
   // Create a regex pattern that matches any of the wiki items
   // Sort by length (longest first) to avoid partial matches
   const sortedWikiItems = [...wikiItems].sort((a, b) => b.length - a.length);
-  const escapedItems = sortedWikiItems.map(item =>
-    item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  );
+  const escapedItems = sortedWikiItems.map(item => item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const pattern = new RegExp(`\\b(${escapedItems.join('|')})\\b`, 'gi');
 
   const result: React.ReactNode[] = [];
@@ -44,9 +42,7 @@ const parseTextWithWikiLinks = (
     }
 
     // Find the exact wiki item that matched
-    const wikiItem = sortedWikiItems.find(
-      item => item.toLowerCase() === match![0].toLowerCase()
-    );
+    const wikiItem = sortedWikiItems.find(item => item.toLowerCase() === match?.[0].toLowerCase());
 
     if (wikiItem) {
       result.push(
@@ -61,8 +57,8 @@ const parseTextWithWikiLinks = (
             className:
               'text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer',
           },
-          match[0]
-        )
+          match[0],
+        ),
       );
     } else {
       // Fallback if no wiki item found
@@ -83,11 +79,7 @@ const parseTextWithWikiLinks = (
 /**
  * Component that renders parsed text with wiki links
  */
-export function ParsedText({
-  text,
-  wikiItems,
-  onWikiClick,
-}: ParsedTextProps): React.JSX.Element {
+export function ParsedText({ text, wikiItems, onWikiClick }: ParsedTextProps): React.JSX.Element {
   const parsedElements = parseTextWithWikiLinks(text, wikiItems, onWikiClick);
 
   return (

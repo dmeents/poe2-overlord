@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EconomyRow } from './economy-row';
 import type { CurrencyExchangeRate } from '@/types/economy';
+import { EconomyRow } from './economy-row';
 
 const mockCurrencyData = {
   primary_currency: {
@@ -29,7 +29,7 @@ const mockCurrencyData = {
 const mockUseEconomy = vi.hoisted(() =>
   vi.fn(() => ({
     currencyData: mockCurrencyData,
-  }))
+  })),
 );
 
 vi.mock('@/contexts/EconomyContext', () => ({
@@ -119,9 +119,7 @@ describe('EconomyRow', () => {
   });
 
   it('renders cursor-pointer when onClick is provided', () => {
-    const { container } = render(
-      <EconomyRow currency={mockCurrency} onClick={vi.fn()} />
-    );
+    const { container } = render(<EconomyRow currency={mockCurrency} onClick={vi.fn()} />);
 
     const row = container.firstChild as HTMLElement;
     expect(row.className).toContain('cursor-pointer');

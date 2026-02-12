@@ -19,7 +19,7 @@ describe('Select', () => {
           onChange={vi.fn()}
           options={mockOptions}
           variant="basic"
-        />
+        />,
       );
 
       expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -33,15 +33,11 @@ describe('Select', () => {
           onChange={vi.fn()}
           options={mockOptions}
           variant="basic"
-        />
+        />,
       );
 
-      expect(
-        screen.getByRole('option', { name: 'Option 1' })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('option', { name: 'Option 2' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Option 1' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Option 2' })).toBeInTheDocument();
     });
 
     it('calls onChange when option is selected', async () => {
@@ -55,7 +51,7 @@ describe('Select', () => {
           onChange={handleChange}
           options={mockOptions}
           variant="basic"
-        />
+        />,
       );
 
       await user.selectOptions(screen.getByRole('combobox'), 'option1');
@@ -72,7 +68,7 @@ describe('Select', () => {
           options={mockOptions}
           variant="basic"
           label="Select Option"
-        />
+        />,
       );
 
       expect(screen.getByText('Select Option')).toBeInTheDocument();
@@ -87,7 +83,7 @@ describe('Select', () => {
           options={mockOptions}
           variant="basic"
           disabled
-        />
+        />,
       );
 
       expect(screen.getByRole('combobox')).toBeDisabled();
@@ -103,12 +99,10 @@ describe('Select', () => {
           variant="basic"
           isValid={false}
           warningMessage="Please select a valid option"
-        />
+        />,
       );
 
-      expect(
-        screen.getByText(/Please select a valid option/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Please select a valid option/)).toBeInTheDocument();
     });
   });
 
@@ -121,7 +115,7 @@ describe('Select', () => {
           onChange={vi.fn()}
           options={mockOptions}
           variant="dropdown"
-        />
+        />,
       );
 
       expect(screen.getByRole('button')).toBeInTheDocument();
@@ -136,7 +130,7 @@ describe('Select', () => {
           options={mockOptions}
           variant="dropdown"
           placeholder="Choose one"
-        />
+        />,
       );
 
       expect(screen.getByText('Choose one')).toBeInTheDocument();
@@ -152,7 +146,7 @@ describe('Select', () => {
           onChange={vi.fn()}
           options={mockOptions}
           variant="dropdown"
-        />
+        />,
       );
 
       await user.click(screen.getByRole('button'));
@@ -171,7 +165,7 @@ describe('Select', () => {
           onChange={handleChange}
           options={mockOptions}
           variant="dropdown"
-        />
+        />,
       );
 
       await user.click(screen.getByRole('button'));
@@ -184,13 +178,7 @@ describe('Select', () => {
       const user = userEvent.setup();
 
       render(
-        <Select
-          id="test-select"
-          value=""
-          onChange={vi.fn()}
-          options={[]}
-          variant="dropdown"
-        />
+        <Select id="test-select" value="" onChange={vi.fn()} options={[]} variant="dropdown" />,
       );
 
       await user.click(screen.getByRole('button'));

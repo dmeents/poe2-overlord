@@ -1,13 +1,9 @@
-import type { ZoneStats } from '@/types/character';
-import {
-  MapIcon,
-  HomeIcon,
-  BuildingStorefrontIcon,
-} from '@heroicons/react/24/outline';
+import { BuildingStorefrontIcon, HomeIcon, MapIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
-import { TimeDisplay } from '../../ui/time-display/time-display';
-import { getDisplayAct } from '@/utils/zone-utils';
 import { useZone } from '@/contexts/ZoneContext';
+import type { ZoneStats } from '@/types/character';
+import { getDisplayAct } from '@/utils/zone-utils';
+import { TimeDisplay } from '../../ui/time-display/time-display';
 
 interface ZoneCardProps {
   zone: ZoneStats;
@@ -44,13 +40,10 @@ export const ZoneCard = memo(function ZoneCard({
       `}
       style={{
         gridTemplateColumns: '5fr 1fr 1fr 1fr 1fr 1fr',
-      }}
-    >
+      }}>
       {/* Zone Name with Icon */}
       <div className="flex items-center gap-2 min-w-0">
-        {zone.has_waypoint && (
-          <MapIcon className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
-        )}
+        {zone.has_waypoint && <MapIcon className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />}
         <span className="text-zinc-200 truncate">{zone.zone_name}</span>
         {zone.is_town && (
           <BuildingStorefrontIcon className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
@@ -62,16 +55,12 @@ export const ZoneCard = memo(function ZoneCard({
 
       {/* Act */}
       <div className="flex items-center justify-end text-xs">
-        {getDisplayAct(zone) && (
-          <span className="text-zinc-400">{getDisplayAct(zone)}</span>
-        )}
+        {getDisplayAct(zone) && <span className="text-zinc-400">{getDisplayAct(zone)}</span>}
       </div>
 
       {/* Level */}
       <div className="flex items-center justify-end text-xs">
-        {zone.area_level && (
-          <span className="text-zinc-400">{zone.area_level}</span>
-        )}
+        {zone.area_level && <span className="text-zinc-400">{zone.area_level}</span>}
       </div>
 
       {/* Visits */}

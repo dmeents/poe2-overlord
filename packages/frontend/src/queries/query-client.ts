@@ -29,9 +29,7 @@ import { queryClient } from '../main';
  */
 export function getQueryClient(): QueryClient {
   if (!queryClient) {
-    throw new Error(
-      'QueryClient not initialized. Ensure this is called after app startup.'
-    );
+    throw new Error('QueryClient not initialized. Ensure this is called after app startup.');
   }
   return queryClient;
 }

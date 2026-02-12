@@ -1,8 +1,5 @@
-import type {
-  ZoneFilters as ZoneFiltersType,
-  ZoneSortOption,
-} from '@/hooks/useZoneList';
 import { memo, useEffect, useRef, useState } from 'react';
+import type { ZoneFilters as ZoneFiltersType, ZoneSortOption } from '@/hooks/useZoneList';
 import { FilterToggle } from '../../forms/form-filter-toggle/form-filter-toggle';
 import { Input } from '../../forms/form-input/form-input';
 import { Select } from '../../forms/form-select/form-select';
@@ -18,17 +15,11 @@ import {
 
 interface ZoneListControlsFormProps {
   filters: ZoneFiltersType;
-  onFilterChange: <K extends keyof ZoneFiltersType>(
-    key: K,
-    value: ZoneFiltersType[K]
-  ) => void;
+  onFilterChange: <K extends keyof ZoneFiltersType>(key: K, value: ZoneFiltersType[K]) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
   sort: ZoneSortOption;
-  onSortChange: (
-    field: ZoneSortOption['field'],
-    direction?: ZoneSortOption['direction']
-  ) => void;
+  onSortChange: (field: ZoneSortOption['field'], direction?: ZoneSortOption['direction']) => void;
   onResetSort: () => void;
 }
 
@@ -67,10 +58,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsExpanded(false);
       }
     };
@@ -117,9 +105,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
           <Input
             id="zone-search"
             value={filters.search}
-            onChange={(value: string | number | null) =>
-              onFilterChange('search', value as string)
-            }
+            onChange={(value: string | number | null) => onFilterChange('search', value as string)}
             type="search"
             placeholder="Search zones, acts, or location types..."
             label="Search"
@@ -137,8 +123,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
               isExpanded={isExpanded}
               onToggle={() => setIsExpanded(!isExpanded)}
               label={hasActiveFilters ? 'Filters Active' : 'All Filters'}
-              activeCount={activeFilterCount}
-            >
+              activeCount={activeFilterCount}>
               <div className="space-y-3">
                 {/* Act Filter */}
                 <div className={filterSectionClasses}>
@@ -156,16 +141,9 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                 <div className={filterSectionClasses}>
                   <Select
                     id="town-filter"
-                    value={
-                      filters.isTown === null
-                        ? 'All'
-                        : filters.isTown
-                          ? 'Town'
-                          : 'Non-Town'
-                    }
+                    value={filters.isTown === null ? 'All' : filters.isTown ? 'Town' : 'Non-Town'}
                     onChange={value => {
-                      const newValue =
-                        value === 'All' ? null : value === 'Town';
+                      const newValue = value === 'All' ? null : value === 'Town';
                       onFilterChange('isTown', newValue);
                     }}
                     options={[
@@ -183,15 +161,10 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                   <Select
                     id="active-filter"
                     value={
-                      filters.isActive === null
-                        ? 'All'
-                        : filters.isActive
-                          ? 'Active'
-                          : 'Inactive'
+                      filters.isActive === null ? 'All' : filters.isActive ? 'Active' : 'Inactive'
                     }
                     onChange={value => {
-                      const newValue =
-                        value === 'All' ? null : value === 'Active';
+                      const newValue = value === 'All' ? null : value === 'Active';
                       onFilterChange('isActive', newValue);
                     }}
                     options={[
@@ -216,8 +189,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           : 'NoBosses'
                     }
                     onChange={value => {
-                      const newValue =
-                        value === 'All' ? null : value === 'HasBosses';
+                      const newValue = value === 'All' ? null : value === 'HasBosses';
                       onFilterChange('hasBosses', newValue);
                     }}
                     options={[
@@ -242,8 +214,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           : 'NoWaypoint'
                     }
                     onChange={value => {
-                      const newValue =
-                        value === 'All' ? null : value === 'HasWaypoint';
+                      const newValue = value === 'All' ? null : value === 'HasWaypoint';
                       onFilterChange('hasWaypoint', newValue);
                     }}
                     options={[
@@ -261,15 +232,10 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                   <Select
                     id="npcs-filter"
                     value={
-                      filters.hasNpcs === null
-                        ? 'All'
-                        : filters.hasNpcs
-                          ? 'HasNpcs'
-                          : 'NoNpcs'
+                      filters.hasNpcs === null ? 'All' : filters.hasNpcs ? 'HasNpcs' : 'NoNpcs'
                     }
                     onChange={value => {
-                      const newValue =
-                        value === 'All' ? null : value === 'HasNpcs';
+                      const newValue = value === 'All' ? null : value === 'HasNpcs';
                       onFilterChange('hasNpcs', newValue);
                     }}
                     options={[
@@ -288,9 +254,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                     <Input
                       id="min-visits-filter"
                       value={filters.minVisits}
-                      onChange={value =>
-                        onFilterChange('minVisits', value as number | null)
-                      }
+                      onChange={value => onFilterChange('minVisits', value as number | null)}
                       type="number"
                       label="Min Visits"
                       placeholder="Any"
@@ -299,9 +263,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                     <Input
                       id="max-visits-filter"
                       value={filters.maxVisits}
-                      onChange={value =>
-                        onFilterChange('maxVisits', value as number | null)
-                      }
+                      onChange={value => onFilterChange('maxVisits', value as number | null)}
                       type="number"
                       label="Max Visits"
                       placeholder="Any"
@@ -316,9 +278,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                     <Input
                       id="min-deaths-filter"
                       value={filters.minDeaths}
-                      onChange={value =>
-                        onFilterChange('minDeaths', value as number | null)
-                      }
+                      onChange={value => onFilterChange('minDeaths', value as number | null)}
                       type="number"
                       label="Min Deaths"
                       placeholder="Any"
@@ -327,9 +287,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                     <Input
                       id="max-deaths-filter"
                       value={filters.maxDeaths}
-                      onChange={value =>
-                        onFilterChange('maxDeaths', value as number | null)
-                      }
+                      onChange={value => onFilterChange('maxDeaths', value as number | null)}
                       type="number"
                       label="Max Deaths"
                       placeholder="Any"
@@ -341,17 +299,14 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                 {/* Active Filter Chips */}
                 {hasActiveFilters && (
                   <div className={filterSectionClasses}>
-                    <h4 className={filterSectionTitleClasses}>
-                      Active Filters
-                    </h4>
+                    <h4 className={filterSectionTitleClasses}>Active Filters</h4>
                     <div className="flex flex-wrap gap-2">
                       {filters.act !== 'All' && (
                         <span className={activeFilterChipClasses}>
                           Act: {filters.act}
                           <button
                             onClick={() => onFilterChange('act', 'All')}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -361,8 +316,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           {filters.isTown ? 'Towns' : 'Non-Towns'}
                           <button
                             onClick={() => onFilterChange('isTown', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -372,8 +326,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           {filters.isActive ? 'Active' : 'Inactive'}
                           <button
                             onClick={() => onFilterChange('isActive', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -383,8 +336,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           Min Visits: {filters.minVisits}
                           <button
                             onClick={() => onFilterChange('minVisits', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -394,8 +346,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           Max Visits: {filters.maxVisits}
                           <button
                             onClick={() => onFilterChange('maxVisits', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -405,8 +356,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           Min Deaths: {filters.minDeaths}
                           <button
                             onClick={() => onFilterChange('minDeaths', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -416,8 +366,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           Max Deaths: {filters.maxDeaths}
                           <button
                             onClick={() => onFilterChange('maxDeaths', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -427,8 +376,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           Search: {filters.search}
                           <button
                             onClick={() => onFilterChange('search', '')}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -438,8 +386,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           {filters.hasBosses ? 'Has Bosses' : 'No Bosses'}
                           <button
                             onClick={() => onFilterChange('hasBosses', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -449,8 +396,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           {filters.hasWaypoint ? 'Has Waypoint' : 'No Waypoint'}
                           <button
                             onClick={() => onFilterChange('hasWaypoint', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -460,8 +406,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                           {filters.hasNpcs ? 'Has NPCs' : 'No NPCs'}
                           <button
                             onClick={() => onFilterChange('hasNpcs', null)}
-                            className={chipRemoveButtonClasses}
-                          >
+                            className={chipRemoveButtonClasses}>
                             ×
                           </button>
                         </span>
@@ -477,8 +422,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                       onClick={onClearFilters}
                       variant="outline"
                       size="sm"
-                      className={clearButtonClasses}
-                    >
+                      className={clearButtonClasses}>
                       Clear All Filters
                     </Button>
                   </div>
@@ -505,11 +449,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
           </div>
           <div className="flex flex-col justify-end">
             <div className="h-6"></div>
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              className="h-10 px-4 text-sm"
-            >
+            <Button onClick={handleReset} variant="outline" className="h-10 px-4 text-sm">
               Reset All
             </Button>
           </div>

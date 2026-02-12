@@ -5,35 +5,19 @@ import { FilterToggle } from './form-filter-toggle';
 
 describe('FilterToggle', () => {
   it('renders label correctly', () => {
-    render(
-      <FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters" />
-    );
+    render(<FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters" />);
 
     expect(screen.getByText('Filters')).toBeInTheDocument();
   });
 
   it('shows active count when provided', () => {
-    render(
-      <FilterToggle
-        isExpanded={false}
-        onToggle={vi.fn()}
-        label="Filters"
-        activeCount={3}
-      />
-    );
+    render(<FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters" activeCount={3} />);
 
     expect(screen.getByText('Filters (3)')).toBeInTheDocument();
   });
 
   it('does not show count when zero', () => {
-    render(
-      <FilterToggle
-        isExpanded={false}
-        onToggle={vi.fn()}
-        label="Filters"
-        activeCount={0}
-      />
-    );
+    render(<FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters" activeCount={0} />);
 
     expect(screen.getByText('Filters')).toBeInTheDocument();
     expect(screen.queryByText('Filters (0)')).not.toBeInTheDocument();
@@ -43,13 +27,7 @@ describe('FilterToggle', () => {
     const user = userEvent.setup();
     const handleToggle = vi.fn();
 
-    render(
-      <FilterToggle
-        isExpanded={false}
-        onToggle={handleToggle}
-        label="Filters"
-      />
-    );
+    render(<FilterToggle isExpanded={false} onToggle={handleToggle} label="Filters" />);
 
     await user.click(screen.getByRole('button'));
 
@@ -60,7 +38,7 @@ describe('FilterToggle', () => {
     render(
       <FilterToggle isExpanded={true} onToggle={vi.fn()} label="Filters">
         <div>Filter Content</div>
-      </FilterToggle>
+      </FilterToggle>,
     );
 
     expect(screen.getByText('Filter Content')).toBeInTheDocument();
@@ -70,21 +48,14 @@ describe('FilterToggle', () => {
     render(
       <FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters">
         <div>Filter Content</div>
-      </FilterToggle>
+      </FilterToggle>,
     );
 
     expect(screen.queryByText('Filter Content')).not.toBeInTheDocument();
   });
 
   it('disables button when disabled prop is true', () => {
-    render(
-      <FilterToggle
-        isExpanded={false}
-        onToggle={vi.fn()}
-        label="Filters"
-        disabled
-      />
-    );
+    render(<FilterToggle isExpanded={false} onToggle={vi.fn()} label="Filters" disabled />);
 
     expect(screen.getByRole('button')).toBeDisabled();
   });
@@ -96,7 +67,7 @@ describe('FilterToggle', () => {
         onToggle={vi.fn()}
         label="Filters"
         className="custom-class"
-      />
+      />,
     );
 
     expect(container.firstChild).toHaveClass('custom-class');

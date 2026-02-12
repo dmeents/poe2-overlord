@@ -165,10 +165,7 @@ export const DEFAULT_CLASS_COLORS: ClassColorScheme = {
  * Get the complete color scheme for a character class
  */
 export function getClassColorScheme(characterClass: string): ClassColorScheme {
-  return (
-    CLASS_COLOR_SCHEMES[characterClass as CharacterClass] ||
-    DEFAULT_CLASS_COLORS
-  );
+  return CLASS_COLOR_SCHEMES[characterClass as CharacterClass] || DEFAULT_CLASS_COLORS;
 }
 
 /**

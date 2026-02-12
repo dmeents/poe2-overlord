@@ -4,11 +4,7 @@ interface TimeDisplayProps {
   className?: string;
 }
 
-export function TimeDisplay({
-  seconds,
-  showSeconds = true,
-  className = '',
-}: TimeDisplayProps) {
+export function TimeDisplay({ seconds, showSeconds = true, className = '' }: TimeDisplayProps) {
   const formatTime = (totalSeconds: number): string => {
     // Floor first to ensure consistent integer display (fixes fractional seconds issue)
     const flooredSeconds = Math.floor(totalSeconds);

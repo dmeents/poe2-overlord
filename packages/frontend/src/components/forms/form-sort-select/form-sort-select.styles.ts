@@ -16,8 +16,7 @@ export const formSortSelectStyles = {
   chevronOpen: 'rotate-180',
 
   // Dropdown
-  dropdown:
-    'fixed mt-2 bg-zinc-800 border border-zinc-700 shadow-2xl z-50 p-4 w-64 min-w-max',
+  dropdown: 'fixed mt-2 bg-zinc-800 border border-zinc-700 shadow-2xl z-50 p-4 w-64 min-w-max',
   header: 'flex items-center justify-between mb-3',
   headerTitle: 'text-sm font-medium text-zinc-300',
   resetButton: 'text-xs text-zinc-400 hover:text-white transition-colors',

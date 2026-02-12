@@ -1,16 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { ActDistributionChart } from './act-distribution-chart';
 import type { CharacterData, CharacterSummary } from '@/types/character';
+import { ActDistributionChart } from './act-distribution-chart';
 
 // Mock Recharts components since they require DOM measurements
 vi.mock('recharts', () => ({
   ResponsiveContainer: vi.fn(({ children }) => (
     <div data-testid="responsive-container">{children}</div>
   )),
-  PieChart: vi.fn(({ children }) => (
-    <div data-testid="pie-chart">{children}</div>
-  )),
+  PieChart: vi.fn(({ children }) => <div data-testid="pie-chart">{children}</div>),
   Pie: vi.fn(({ children, data }) => (
     <div data-testid="pie" data-entries={data?.length}>
       {children}
@@ -20,9 +18,7 @@ vi.mock('recharts', () => ({
   Tooltip: vi.fn(() => <div data-testid="tooltip" />),
 }));
 
-const createMockSummary = (
-  overrides: Partial<CharacterSummary> = {}
-): CharacterSummary => ({
+const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 7200,
   total_hideout_time: 600,
@@ -39,9 +35,7 @@ const createMockSummary = (
   ...overrides,
 });
 
-const createMockCharacter = (
-  summaryOverrides: Partial<CharacterSummary> = {}
-): CharacterData => ({
+const createMockCharacter = (summaryOverrides: Partial<CharacterSummary> = {}): CharacterData => ({
   id: 'char-1',
   name: 'TestChar',
   class: 'Witch',
@@ -76,9 +70,7 @@ describe('ActDistributionChart', () => {
       render(<ActDistributionChart character={character} />);
 
       expect(screen.getByText('No Act Data')).toBeInTheDocument();
-      expect(
-        screen.getByText('Start playing to see act distribution')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Start playing to see act distribution')).toBeInTheDocument();
     });
 
     it('renders Act Distribution title in empty state', () => {
@@ -188,10 +180,7 @@ describe('ActDistributionChart', () => {
   describe('Custom ClassName', () => {
     it('applies custom className', () => {
       const { container } = render(
-        <ActDistributionChart
-          character={createMockCharacter()}
-          className="custom-class"
-        />
+        <ActDistributionChart character={createMockCharacter()} className="custom-class" />,
       );
 
       expect(container.querySelector('.custom-class')).toBeInTheDocument();

@@ -1,11 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { WalkthroughStep, WalkthroughStepResult } from '@/types/walkthrough';
 import { WalkthroughStepCard } from './walkthrough-step-card';
-import type {
-  WalkthroughStep,
-  WalkthroughStepResult,
-} from '@/types/walkthrough';
 
 const mockOpenZone = vi.hoisted(() => vi.fn());
 const mockInvoke = vi.hoisted(() => vi.fn());
@@ -72,63 +69,31 @@ describe('WalkthroughStepCard', () => {
 
   describe('preview variant', () => {
     it('renders step title', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       expect(screen.getByText('First Steps')).toBeInTheDocument();
     });
 
     it('renders current zone as subtitle', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       expect(screen.getByText('Twilight Strand')).toBeInTheDocument();
     });
 
     it('renders completion zone', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       expect(screen.getByText('The Coast')).toBeInTheDocument();
     });
 
     it('renders step description', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
-      expect(
-        screen.getByText(/Begin your journey by heading to the beach/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Begin your journey by heading to the beach/)).toBeInTheDocument();
     });
 
     it('renders objectives', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       expect(screen.getByText(/Talk to the NPC/)).toBeInTheDocument();
       expect(screen.getByText(/Kill the boss/)).toBeInTheDocument();
@@ -136,39 +101,19 @@ describe('WalkthroughStepCard', () => {
     });
 
     it('renders objective details', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
-      expect(
-        screen.getByText(/Find the NPC near the entrance/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Find the NPC near the entrance/)).toBeInTheDocument();
     });
 
     it('renders objective notes', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       expect(screen.getByText(/Important quest reward/)).toBeInTheDocument();
     });
 
     it('renders objective rewards', () => {
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       expect(screen.getByText(/Skill Gem/)).toBeInTheDocument();
     });
@@ -176,13 +121,7 @@ describe('WalkthroughStepCard', () => {
     it('opens zone when completion zone is clicked', async () => {
       const user = userEvent.setup();
 
-      render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
-      );
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
       await user.click(screen.getByText('The Coast'));
 
@@ -194,11 +133,7 @@ describe('WalkthroughStepCard', () => {
       const handleWikiClick = vi.fn();
 
       render(
-        <WalkthroughStepCard
-          step={mockStep}
-          variant="preview"
-          onWikiClick={handleWikiClick}
-        />
+        <WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={handleWikiClick} />,
       );
 
       // Find a wiki item link (Skill Gem)
@@ -217,7 +152,7 @@ describe('WalkthroughStepCard', () => {
           isCurrent={false}
           onWikiClick={vi.fn()}
           onSkipToStep={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Go Here')).toBeInTheDocument();
@@ -234,7 +169,7 @@ describe('WalkthroughStepCard', () => {
           isCurrent={false}
           onWikiClick={vi.fn()}
           onSkipToStep={handleSkip}
-        />
+        />,
       );
 
       await user.click(screen.getByText('Go Here'));
@@ -249,7 +184,7 @@ describe('WalkthroughStepCard', () => {
           variant="preview"
           className="custom-class"
           onWikiClick={vi.fn()}
-        />
+        />,
       );
 
       expect(container.firstChild).toHaveClass('custom-class');
@@ -259,11 +194,7 @@ describe('WalkthroughStepCard', () => {
   describe('with stepResult prop', () => {
     it('renders step from stepResult', () => {
       render(
-        <WalkthroughStepCard
-          stepResult={mockStepResult}
-          variant="preview"
-          onWikiClick={vi.fn()}
-        />
+        <WalkthroughStepCard stepResult={mockStepResult} variant="preview" onWikiClick={vi.fn()} />,
       );
 
       expect(screen.getByText('First Steps')).toBeInTheDocument();
@@ -278,7 +209,7 @@ describe('WalkthroughStepCard', () => {
           variant="preview"
           isCurrent={true}
           onWikiClick={vi.fn()}
-        />
+        />,
       );
 
       expect(container.firstChild).toHaveClass('border-blue-500');
@@ -287,9 +218,7 @@ describe('WalkthroughStepCard', () => {
 
   describe('without step data', () => {
     it('returns null when no step data in preview mode', () => {
-      const { container } = render(
-        <WalkthroughStepCard variant="preview" onWikiClick={vi.fn()} />
-      );
+      const { container } = render(<WalkthroughStepCard variant="preview" onWikiClick={vi.fn()} />);
 
       expect(container.firstChild).toBeNull();
     });

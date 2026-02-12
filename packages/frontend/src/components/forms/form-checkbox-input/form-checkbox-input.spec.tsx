@@ -6,12 +6,7 @@ import { CheckboxInput } from './form-checkbox-input';
 describe('CheckboxInput', () => {
   it('renders with label', () => {
     render(
-      <CheckboxInput
-        id="test-checkbox"
-        checked={false}
-        onChange={vi.fn()}
-        label="Test Label"
-      />
+      <CheckboxInput id="test-checkbox" checked={false} onChange={vi.fn()} label="Test Label" />,
     );
 
     expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
@@ -19,12 +14,7 @@ describe('CheckboxInput', () => {
 
   it('renders checked state correctly', () => {
     render(
-      <CheckboxInput
-        id="test-checkbox"
-        checked={true}
-        onChange={vi.fn()}
-        label="Test Label"
-      />
+      <CheckboxInput id="test-checkbox" checked={true} onChange={vi.fn()} label="Test Label" />,
     );
 
     expect(screen.getByRole('checkbox')).toBeChecked();
@@ -32,12 +22,7 @@ describe('CheckboxInput', () => {
 
   it('renders unchecked state correctly', () => {
     render(
-      <CheckboxInput
-        id="test-checkbox"
-        checked={false}
-        onChange={vi.fn()}
-        label="Test Label"
-      />
+      <CheckboxInput id="test-checkbox" checked={false} onChange={vi.fn()} label="Test Label" />,
     );
 
     expect(screen.getByRole('checkbox')).not.toBeChecked();
@@ -53,7 +38,7 @@ describe('CheckboxInput', () => {
         checked={false}
         onChange={handleChange}
         label="Test Label"
-      />
+      />,
     );
 
     await user.click(screen.getByRole('checkbox'));
@@ -69,7 +54,7 @@ describe('CheckboxInput', () => {
         onChange={vi.fn()}
         label="Test Label"
         description="This is a description"
-      />
+      />,
     );
 
     expect(screen.getByText('This is a description')).toBeInTheDocument();
@@ -77,12 +62,7 @@ describe('CheckboxInput', () => {
 
   it('does not render description when not provided', () => {
     render(
-      <CheckboxInput
-        id="test-checkbox"
-        checked={false}
-        onChange={vi.fn()}
-        label="Test Label"
-      />
+      <CheckboxInput id="test-checkbox" checked={false} onChange={vi.fn()} label="Test Label" />,
     );
 
     expect(screen.queryByText('This is a description')).not.toBeInTheDocument();
@@ -96,7 +76,7 @@ describe('CheckboxInput', () => {
         onChange={vi.fn()}
         label="Test Label"
         className="custom-class"
-      />
+      />,
     );
 
     expect(container.querySelector('.custom-class')).toBeInTheDocument();
@@ -109,7 +89,7 @@ describe('CheckboxInput', () => {
         checked={false}
         onChange={vi.fn()}
         label={<span data-testid="custom-label">Custom Label</span>}
-      />
+      />,
     );
 
     expect(screen.getByTestId('custom-label')).toBeInTheDocument();

@@ -1,15 +1,15 @@
-import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
-import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
-import { EmptyState } from '@/components/ui/empty-state/empty-state';
-import { PageLayout } from '@/components/layout/page-layout/page-layout';
-import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
-import { ZoneList } from '@/components/zones/zone-list/zone-list';
-import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
-import { Card } from '@/components/ui/card/card';
-import { useCharacter } from '@/contexts/CharacterContext';
-import { useZoneList } from '@/hooks/useZoneList';
 import { ClockIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
+import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
+import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
+import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
+import { PageLayout } from '@/components/layout/page-layout/page-layout';
+import { Card } from '@/components/ui/card/card';
+import { EmptyState } from '@/components/ui/empty-state/empty-state';
+import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
+import { ZoneList } from '@/components/zones/zone-list/zone-list';
+import { useCharacter } from '@/contexts/CharacterContext';
+import { useZoneList } from '@/hooks/useZoneList';
 
 export const Route = createFileRoute('/playtime')({
   component: PlaytimePage,
@@ -50,8 +50,7 @@ function PlaytimePage() {
           <Card
             title="Zones"
             subtitle={`${zoneCount} of ${totalCount} zones`}
-            icon={<MapPinIcon className="w-5 h-5" />}
-          >
+            icon={<MapPinIcon className="w-5 h-5" />}>
             <ZoneList
               zones={filteredZones}
               filters={filters}

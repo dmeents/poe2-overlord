@@ -1,18 +1,13 @@
+import { ChartBarIcon, CogIcon, ComputerDesktopIcon, UserIcon } from '@heroicons/react/16/solid';
+import { useNavigate } from '@tanstack/react-router';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { useGameProcess } from '@/contexts/GameProcessContext';
 import { useServerStatus } from '@/contexts/ServerStatusContext';
-import { useCharacter } from '@/contexts/CharacterContext';
 import type { ServerStatus } from '@/types/server';
-import {
-  ChartBarIcon,
-  CogIcon,
-  ComputerDesktopIcon,
-  UserIcon,
-} from '@heroicons/react/16/solid';
-import { useNavigate } from '@tanstack/react-router';
+import { getDisplayAct } from '@/utils/zone-utils';
 import { Button } from '../../ui/button/button';
 import { StatusIndicator } from '../status-indicator/status-indicator';
 import { statusBarStyles } from './status-bar.styles';
-import { getDisplayAct } from '@/utils/zone-utils';
 
 export const StatusBar = () => {
   const { processInfo } = useGameProcess();
@@ -81,11 +76,7 @@ export const StatusBar = () => {
       </div>
       <div className={statusBarStyles.rightSection}>
         <div title="Settings">
-          <Button
-            variant="icon"
-            size="xs"
-            onClick={() => navigate({ to: '/settings' })}
-          >
+          <Button variant="icon" size="xs" onClick={() => navigate({ to: '/settings' })}>
             <CogIcon />
           </Button>
         </div>

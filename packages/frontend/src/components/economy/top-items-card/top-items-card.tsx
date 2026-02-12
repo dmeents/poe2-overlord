@@ -5,10 +5,7 @@ import { useEconomy } from '@/contexts/EconomyContext';
 import type { TopCurrencyItem } from '@/types/economy';
 
 // Calculate items sold per hour (volume / primary_value)
-const calculateItemsSoldPerHour = (
-  volume: number,
-  primaryValue: number
-): string => {
+const calculateItemsSoldPerHour = (volume: number, primaryValue: number): string => {
   const itemsSold = volume / primaryValue;
   return itemsSold.toLocaleString('en-US', {
     minimumFractionDigits: 2,
@@ -28,8 +25,7 @@ export function TopItemsCard() {
           {aggregatedTopCurrencies.map((currency: TopCurrencyItem) => (
             <div
               key={`${currency.economy_type}-${currency.id}`}
-              className="flex items-start justify-between text-sm p-2 hover:bg-zinc-700/30"
-            >
+              className="flex items-start justify-between text-sm p-2 hover:bg-zinc-700/30">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <img
                   src={currency.image_url}
@@ -41,11 +37,7 @@ export function TopItemsCard() {
                   <div className="flex items-center gap-3 text-xs text-zinc-400 mt-0.5">
                     {currency.volume !== null && (
                       <span title="Number of items sold per hour">
-                        {calculateItemsSoldPerHour(
-                          currency.volume,
-                          currency.primary_value
-                        )}{' '}
-                        / hr
+                        {calculateItemsSoldPerHour(currency.volume, currency.primary_value)} / hr
                       </span>
                     )}
                   </div>
@@ -67,11 +59,8 @@ export function TopItemsCard() {
                   <div className="text-xs text-zinc-400 mt-1 flex justify-end">
                     <span
                       className={`font-semibold opacity-60 ${
-                        currency.change_percent >= 0
-                          ? 'text-emerald-400'
-                          : 'text-red-400'
-                      }`}
-                    >
+                        currency.change_percent >= 0 ? 'text-emerald-400' : 'text-red-400'
+                      }`}>
                       {currency.change_percent >= 0 ? '+' : ''}
                       {currency.change_percent.toFixed(2)}%
                     </span>
@@ -83,8 +72,7 @@ export function TopItemsCard() {
         </div>
       ) : (
         <div className="text-zinc-400 text-sm text-center py-8">
-          No aggregated data yet. Browse different economy types to populate
-          this list.
+          No aggregated data yet. Browse different economy types to populate this list.
         </div>
       )}
     </Card>

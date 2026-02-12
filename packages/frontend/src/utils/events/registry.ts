@@ -1,8 +1,8 @@
+import type { ConfigurationChangedEvent as ConfigurationChangedEventData } from '@/types/app-config';
+import type { CharacterData } from '@/types/character';
 import type { GameProcessStatusChangedEvent } from '@/types/process';
 import type { ServerStatusChangedEvent } from '@/types/server';
-import type { CharacterData } from '@/types/character';
 import type { WalkthroughStepResult } from '@/types/walkthrough';
-import type { ConfigurationChangedEvent as ConfigurationChangedEventData } from '@/types/app-config';
 
 /**
  * Centralized registry mapping AppEvent variants to their Tauri event names.
@@ -43,9 +43,7 @@ export const EVENT_KEYS = {
 } as const satisfies { [K in keyof typeof APP_EVENTS]: K };
 
 /** Extracts the payload type from an AppEvent tagged union wrapper. */
-export type ExtractPayload<T> = T extends { [K in keyof T]: infer P }
-  ? P
-  : never;
+export type ExtractPayload<T> = T extends { [K in keyof T]: infer P } ? P : never;
 
 /** Event type for character updates */
 export type CharacterUpdatedEvent = {
@@ -112,9 +110,7 @@ export type AppEventRegistry = {
 };
 
 /** Gets the payload type for a specific event variant. */
-export type AppEventPayload<K extends keyof AppEventRegistry> = ExtractPayload<
-  AppEventRegistry[K]
->;
+export type AppEventPayload<K extends keyof AppEventRegistry> = ExtractPayload<AppEventRegistry[K]>;
 
 export function isAppEventKey(key: string): key is keyof typeof APP_EVENTS {
   return key in APP_EVENTS;

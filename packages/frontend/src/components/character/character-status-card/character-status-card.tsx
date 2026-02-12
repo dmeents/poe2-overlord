@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router';
 import { useCharacter } from '../../../contexts/CharacterContext';
+import { Button } from '../../ui/button/button';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
-import { Button } from '../../ui/button/button';
 import { CharacterCard } from '../character-card/character-card';
 import { characterStatusCardStyles } from './character-status-card.styles';
 
@@ -10,9 +10,7 @@ interface CharacterStatusCardProps {
   className?: string;
 }
 
-export function CharacterStatusCard({
-  className = '',
-}: CharacterStatusCardProps) {
+export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps) {
   const { activeCharacter, isLoading } = useCharacter();
 
   if (isLoading) {

@@ -12,19 +12,19 @@ const mockNavigate = vi.hoisted(() => vi.fn());
 const mockUseGameProcess = vi.hoisted(() =>
   vi.fn(() => ({
     processInfo: null as GameProcessStatus | null,
-  }))
+  })),
 );
 
 const mockUseServerStatus = vi.hoisted(() =>
   vi.fn(() => ({
     serverStatus: null as ServerStatus | null,
-  }))
+  })),
 );
 
 const mockUseCharacter = vi.hoisted(() =>
   vi.fn(() => ({
     activeCharacter: null as CharacterData | null,
-  }))
+  })),
 );
 
 vi.mock('@/contexts/GameProcessContext', () => ({
@@ -51,7 +51,7 @@ const createMockCharacter = (
     is_town: boolean;
     has_waypoint: boolean;
     area_level: number;
-  } | null
+  } | null,
 ): CharacterData => ({
   id: 'test-id',
   name,
@@ -162,9 +162,7 @@ describe('StatusBar', () => {
   it('shows server attempting to connect when status is null', () => {
     render(<StatusBar />);
 
-    expect(
-      screen.getByTitle('Attempting to connect to POE2 server...')
-    ).toBeInTheDocument();
+    expect(screen.getByTitle('Attempting to connect to POE2 server...')).toBeInTheDocument();
   });
 
   it('shows server online status', () => {
@@ -244,8 +242,6 @@ describe('StatusBar', () => {
     render(<StatusBar />);
 
     // getDisplayAct returns consistent format "Act N" for regular acts
-    expect(
-      screen.getByText(/TestCharacter - Act 2 - The Coast/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/TestCharacter - Act 2 - The Coast/)).toBeInTheDocument();
   });
 });

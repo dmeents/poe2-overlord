@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import {
+  type Ascendency,
   CHARACTER_CLASSES,
-  LEAGUES,
-  getAscendenciesForClass,
   type CharacterClass,
   type CharacterData,
-  type Ascendency,
+  getAscendenciesForClass,
+  LEAGUES,
   type League,
 } from '../types/character';
 
@@ -38,7 +38,7 @@ export function useCharacterConfig() {
         value: cls,
         label: cls,
       })),
-    []
+    [],
   );
 
   const leagues = useMemo<LeagueOption[]>(
@@ -47,25 +47,21 @@ export function useCharacterConfig() {
         value: league,
         label: league,
       })),
-    []
+    [],
   );
 
   // Pre-compute all ascendencies by class
-  const ascendencies = useMemo<
-    Record<CharacterClass, AscendencyOption[]>
-  >(() => {
+  const ascendencies = useMemo<Record<CharacterClass, AscendencyOption[]>>(() => {
     const result: Record<CharacterClass, AscendencyOption[]> = {} as Record<
       CharacterClass,
       AscendencyOption[]
     >;
 
     for (const characterClass of CHARACTER_CLASSES) {
-      result[characterClass] = getAscendenciesForClass(characterClass).map(
-        ascendency => ({
-          value: ascendency,
-          label: ascendency,
-        })
-      );
+      result[characterClass] = getAscendenciesForClass(characterClass).map(ascendency => ({
+        value: ascendency,
+        label: ascendency,
+      }));
     }
 
     return result;
@@ -77,7 +73,7 @@ export function useCharacterConfig() {
       (characterClass: CharacterClass): AscendencyOption[] => {
         return ascendencies[characterClass] || [];
       },
-    [ascendencies]
+    [ascendencies],
   );
 
   // Helper to get default form data for character creation/editing
@@ -91,7 +87,7 @@ export function useCharacterConfig() {
         hardcore: character?.hardcore || false,
         solo_self_found: character?.solo_self_found || false,
       }),
-    []
+    [],
   );
 
   return {

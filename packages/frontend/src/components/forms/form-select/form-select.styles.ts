@@ -19,14 +19,12 @@ export const formSelectStyles = {
     'flex items-center justify-between w-full px-4 py-2 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-600 text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
   triggerText: 'text-sm font-medium truncate',
   triggerIcons: 'flex items-center space-x-2',
-  clearButton:
-    'text-zinc-400 hover:text-white text-lg leading-none px-1 transition-colors',
+  clearButton: 'text-zinc-400 hover:text-white text-lg leading-none px-1 transition-colors',
   chevron: 'w-4 h-4 text-white transition-transform',
   chevronOpen: 'rotate-180',
 
   // Dropdown
-  dropdown:
-    'fixed mt-2 bg-zinc-800 border border-zinc-700 shadow-2xl z-50 w-64 min-w-max',
+  dropdown: 'fixed mt-2 bg-zinc-800 border border-zinc-700 shadow-2xl z-50 w-64 min-w-max',
   optionsList: 'py-2',
 
   // Options

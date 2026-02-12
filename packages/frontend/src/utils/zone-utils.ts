@@ -1,4 +1,4 @@
-import type { ZoneStats, EnrichedLocationState } from '../types/character';
+import type { EnrichedLocationState, ZoneStats } from '../types/character';
 
 /**
  * Maps a zone to its display act name.
@@ -12,9 +12,7 @@ import type { ZoneStats, EnrichedLocationState } from '../types/character';
  * getDisplayAct(act6Zone) // "Interlude"
  * getDisplayAct(act3Zone) // "Act 3"
  */
-export function getDisplayAct(
-  zone: ZoneStats | EnrichedLocationState
-): string | undefined {
+export function getDisplayAct(zone: ZoneStats | EnrichedLocationState): string | undefined {
   if (zone.zone_name.toLowerCase().includes('hideout')) {
     return 'Endgame';
   }

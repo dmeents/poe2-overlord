@@ -11,22 +11,13 @@ describe('Input', () => {
   });
 
   it('renders with label when provided', () => {
-    render(
-      <Input id="test-input" value="" onChange={vi.fn()} label="Test Label" />
-    );
+    render(<Input id="test-input" value="" onChange={vi.fn()} label="Test Label" />);
 
     expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
   });
 
   it('renders placeholder text', () => {
-    render(
-      <Input
-        id="test-input"
-        value=""
-        onChange={vi.fn()}
-        placeholder="Enter text"
-      />
-    );
+    render(<Input id="test-input" value="" onChange={vi.fn()} placeholder="Enter text" />);
 
     expect(screen.getByPlaceholderText('Enter text')).toBeInTheDocument();
   });
@@ -46,9 +37,7 @@ describe('Input', () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
 
-    render(
-      <Input id="test-input" value="" onChange={handleChange} type="number" />
-    );
+    render(<Input id="test-input" value="" onChange={handleChange} type="number" />);
 
     await user.type(screen.getByRole('spinbutton'), '5');
 
@@ -59,9 +48,7 @@ describe('Input', () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
 
-    render(
-      <Input id="test-input" value={5} onChange={handleChange} type="number" />
-    );
+    render(<Input id="test-input" value={5} onChange={handleChange} type="number" />);
 
     await user.clear(screen.getByRole('spinbutton'));
 
@@ -82,21 +69,15 @@ describe('Input', () => {
   });
 
   it('shows clear button for search input with value', () => {
-    render(
-      <Input id="test-input" value="test" onChange={vi.fn()} type="search" />
-    );
+    render(<Input id="test-input" value="test" onChange={vi.fn()} type="search" />);
 
-    expect(
-      screen.getByRole('button', { name: 'Clear input' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear input' })).toBeInTheDocument();
   });
 
   it('hides clear button when search input is empty', () => {
     render(<Input id="test-input" value="" onChange={vi.fn()} type="search" />);
 
-    expect(
-      screen.queryByRole('button', { name: 'Clear input' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear input' })).not.toBeInTheDocument();
   });
 
   it('clears input when clear button is clicked', async () => {
@@ -111,7 +92,7 @@ describe('Input', () => {
         onChange={handleChange}
         type="search"
         onClear={handleClear}
-      />
+      />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Clear input' }));
@@ -128,7 +109,7 @@ describe('Input', () => {
         onChange={vi.fn()}
         isValid={false}
         warningMessage="This is invalid"
-      />
+      />,
     );
 
     expect(screen.getByText(/This is invalid/)).toBeInTheDocument();
@@ -142,21 +123,14 @@ describe('Input', () => {
         onChange={vi.fn()}
         isValid={true}
         warningMessage="This is invalid"
-      />
+      />,
     );
 
     expect(screen.queryByText(/This is invalid/)).not.toBeInTheDocument();
   });
 
   it('applies custom className', () => {
-    render(
-      <Input
-        id="test-input"
-        value=""
-        onChange={vi.fn()}
-        className="custom-class"
-      />
-    );
+    render(<Input id="test-input" value="" onChange={vi.fn()} className="custom-class" />);
 
     expect(screen.getByRole('textbox')).toHaveClass('custom-class');
   });
@@ -171,7 +145,7 @@ describe('Input', () => {
         min={0}
         max={10}
         step={2}
-      />
+      />,
     );
 
     const input = screen.getByRole('spinbutton');

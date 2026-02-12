@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { TopItemsCard } from './top-items-card';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TopCurrencyItem } from '@/types/economy';
+import { TopItemsCard } from './top-items-card';
 
 const mockUseEconomy = vi.hoisted(() => vi.fn());
 
@@ -9,9 +9,7 @@ vi.mock('@/contexts/EconomyContext', () => ({
   useEconomy: mockUseEconomy,
 }));
 
-const createMockTopCurrency = (
-  overrides: Partial<TopCurrencyItem> = {}
-): TopCurrencyItem => ({
+const createMockTopCurrency = (overrides: Partial<TopCurrencyItem> = {}): TopCurrencyItem => ({
   id: 'divine',
   name: 'Divine Orb',
   economy_type: 'Currency',
@@ -55,9 +53,7 @@ describe('TopItemsCard', () => {
 
     it('renders primary value', () => {
       mockUseEconomy.mockReturnValue({
-        aggregatedTopCurrencies: [
-          createMockTopCurrency({ primary_value: 100 }),
-        ],
+        aggregatedTopCurrencies: [createMockTopCurrency({ primary_value: 100 })],
         isLoadingAggregated: false,
       });
 
@@ -68,9 +64,7 @@ describe('TopItemsCard', () => {
 
     it('renders volume per hour when available', () => {
       mockUseEconomy.mockReturnValue({
-        aggregatedTopCurrencies: [
-          createMockTopCurrency({ volume: 5000, primary_value: 100 }),
-        ],
+        aggregatedTopCurrencies: [createMockTopCurrency({ volume: 5000, primary_value: 100 })],
         isLoadingAggregated: false,
       });
 
@@ -82,9 +76,7 @@ describe('TopItemsCard', () => {
 
     it('renders change percent with correct color for positive', () => {
       mockUseEconomy.mockReturnValue({
-        aggregatedTopCurrencies: [
-          createMockTopCurrency({ change_percent: 5.5 }),
-        ],
+        aggregatedTopCurrencies: [createMockTopCurrency({ change_percent: 5.5 })],
         isLoadingAggregated: false,
       });
 
@@ -97,9 +89,7 @@ describe('TopItemsCard', () => {
 
     it('renders change percent with correct color for negative', () => {
       mockUseEconomy.mockReturnValue({
-        aggregatedTopCurrencies: [
-          createMockTopCurrency({ change_percent: -3.25 }),
-        ],
+        aggregatedTopCurrencies: [createMockTopCurrency({ change_percent: -3.25 })],
         isLoadingAggregated: false,
       });
 
@@ -180,9 +170,7 @@ describe('TopItemsCard', () => {
 
     it('does not render change percent when null', () => {
       mockUseEconomy.mockReturnValue({
-        aggregatedTopCurrencies: [
-          createMockTopCurrency({ change_percent: null }),
-        ],
+        aggregatedTopCurrencies: [createMockTopCurrency({ change_percent: null })],
         isLoadingAggregated: false,
       });
 

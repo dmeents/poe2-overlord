@@ -9,8 +9,7 @@ export function MarsIcon({ className }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      aria-hidden="true"
-    >
+      aria-hidden="true">
       {/* Circle */}
       <circle cx="10" cy="14" r="6" />
       {/* Arrow shaft */}

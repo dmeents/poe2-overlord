@@ -10,12 +10,7 @@ describe('SectionHeader', () => {
   });
 
   it('renders icon when provided', () => {
-    render(
-      <SectionHeader
-        title="Test Section"
-        icon={<span data-testid="test-icon">Icon</span>}
-      />
-    );
+    render(<SectionHeader title="Test Section" icon={<span data-testid="test-icon">Icon</span>} />);
 
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
   });
@@ -27,9 +22,7 @@ describe('SectionHeader', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <SectionHeader title="Test Section" className="custom-class" />
-    );
+    const { container } = render(<SectionHeader title="Test Section" className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });

@@ -22,13 +22,7 @@ describe('AlertMessage', () => {
   });
 
   it('applies custom className', () => {
-    render(
-      <AlertMessage
-        type="error"
-        message="Test message"
-        className="custom-class"
-      />
-    );
+    render(<AlertMessage type="error" message="Test message" className="custom-class" />);
 
     expect(screen.getByText('Test message')).toHaveClass('custom-class');
   });

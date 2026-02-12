@@ -46,7 +46,7 @@ describe('Providers', () => {
     render(
       <Providers>
         <div data-testid="app-content">App Content</div>
-      </Providers>
+      </Providers>,
     );
 
     // Get all provider elements
@@ -71,7 +71,7 @@ describe('Providers', () => {
     render(
       <Providers>
         <div data-testid="app-content">App Content</div>
-      </Providers>
+      </Providers>,
     );
 
     const characterProvider = screen.getByTestId('character-provider');
@@ -89,7 +89,7 @@ describe('Providers', () => {
     render(
       <Providers>
         <div data-testid="test-child">Test Child</div>
-      </Providers>
+      </Providers>,
     );
 
     expect(screen.getByTestId('test-child')).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe('Providers', () => {
     const { container } = render(
       <Providers>
         <span>Nested Content</span>
-      </Providers>
+      </Providers>,
     );
 
     // All providers should be present in the DOM

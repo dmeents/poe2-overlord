@@ -1,13 +1,7 @@
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { formInputStyles } from './form-input.styles';
 
-export type InputType =
-  | 'text'
-  | 'number'
-  | 'search'
-  | 'email'
-  | 'password'
-  | 'url';
+export type InputType = 'text' | 'number' | 'search' | 'email' | 'password' | 'url';
 
 export interface InputProps {
   id: string;
@@ -45,9 +39,7 @@ export function Input({
   onClear,
 }: InputProps) {
   const validationClasses =
-    value && !isValid
-      ? formInputStyles.invalidInput
-      : formInputStyles.validInput;
+    value && !isValid ? formInputStyles.invalidInput : formInputStyles.validInput;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
@@ -57,7 +49,7 @@ export function Input({
         onChange(null);
       } else {
         const numValue = parseFloat(inputValue);
-        if (!isNaN(numValue)) {
+        if (!Number.isNaN(numValue)) {
           onChange(numValue);
         }
       }
@@ -108,8 +100,7 @@ export function Input({
             type="button"
             onClick={handleClear}
             className={formInputStyles.clearButton}
-            aria-label="Clear input"
-          >
+            aria-label="Clear input">
             <XMarkIcon className={formInputStyles.clearIcon} />
           </button>
         )}

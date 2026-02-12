@@ -63,18 +63,14 @@ describe('DeleteCharacterModal', () => {
     render(<DeleteCharacterModal {...defaultProps} />);
 
     // Title is in a heading element
-    expect(
-      screen.getByRole('heading', { name: 'Delete Character' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Delete Character' })).toBeInTheDocument();
   });
 
   it('renders character name in confirmation message', () => {
     render(<DeleteCharacterModal {...defaultProps} />);
 
     expect(screen.getByText('TestCharacter')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Are you sure you want to delete/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
   });
 
   it('renders character class', () => {
@@ -115,9 +111,7 @@ describe('DeleteCharacterModal', () => {
       hardcore: true,
     };
 
-    render(
-      <DeleteCharacterModal {...defaultProps} character={hardcoreCharacter} />
-    );
+    render(<DeleteCharacterModal {...defaultProps} character={hardcoreCharacter} />);
 
     expect(screen.getByText(/HC/)).toBeInTheDocument();
   });
@@ -126,9 +120,7 @@ describe('DeleteCharacterModal', () => {
     render(<DeleteCharacterModal {...defaultProps} />);
 
     expect(screen.getByText('Warning:')).toBeInTheDocument();
-    expect(
-      screen.getByText(/This action cannot be undone/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/This action cannot be undone/)).toBeInTheDocument();
   });
 
   it('renders cancel button', () => {
@@ -140,18 +132,14 @@ describe('DeleteCharacterModal', () => {
   it('renders delete button', () => {
     render(<DeleteCharacterModal {...defaultProps} />);
 
-    expect(
-      screen.getByRole('button', { name: 'Delete Character' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete Character' })).toBeInTheDocument();
   });
 
   it('calls onConfirm when delete button is clicked', async () => {
     const user = userEvent.setup();
     const handleConfirm = vi.fn();
 
-    render(
-      <DeleteCharacterModal {...defaultProps} onConfirm={handleConfirm} />
-    );
+    render(<DeleteCharacterModal {...defaultProps} onConfirm={handleConfirm} />);
 
     await user.click(screen.getByRole('button', { name: 'Delete Character' }));
 
@@ -172,9 +160,7 @@ describe('DeleteCharacterModal', () => {
   it('shows loading state when isLoading is true', () => {
     render(<DeleteCharacterModal {...defaultProps} isLoading={true} />);
 
-    expect(
-      screen.getByRole('button', { name: 'Deleting...' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Deleting...' })).toBeInTheDocument();
   });
 
   it('disables buttons when isLoading is true', () => {
@@ -185,9 +171,7 @@ describe('DeleteCharacterModal', () => {
   });
 
   it('returns null when no character is provided', () => {
-    const { container } = render(
-      <DeleteCharacterModal {...defaultProps} character={undefined} />
-    );
+    const { container } = render(<DeleteCharacterModal {...defaultProps} character={undefined} />);
 
     expect(container.firstChild).toBeNull();
   });

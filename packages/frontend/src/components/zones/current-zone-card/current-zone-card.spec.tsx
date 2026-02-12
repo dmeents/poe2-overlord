@@ -1,8 +1,8 @@
-import { render, screen, act } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { CurrentZoneCard } from './current-zone-card';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ZoneStats } from '@/types/character';
+import { CurrentZoneCard } from './current-zone-card';
 
 const mockOpenZone = vi.hoisted(() => vi.fn());
 
@@ -93,7 +93,7 @@ describe('CurrentZoneCard', () => {
   describe('Zone Icons', () => {
     it('shows waypoint icon for zones with waypoints', () => {
       const { container } = render(
-        <CurrentZoneCard zone={createMockZone({ has_waypoint: true })} />
+        <CurrentZoneCard zone={createMockZone({ has_waypoint: true })} />,
       );
 
       // MapIcon should be present for waypoints
@@ -102,9 +102,7 @@ describe('CurrentZoneCard', () => {
     });
 
     it('does not show waypoint icon for zones without waypoints', () => {
-      render(
-        <CurrentZoneCard zone={createMockZone({ has_waypoint: false })} />
-      );
+      render(<CurrentZoneCard zone={createMockZone({ has_waypoint: false })} />);
 
       // The waypoint icon should not be present
       // We check this by verifying the component renders correctly
@@ -112,9 +110,7 @@ describe('CurrentZoneCard', () => {
     });
 
     it('shows town icon for town zones', () => {
-      const { container } = render(
-        <CurrentZoneCard zone={createMockZone({ is_town: true })} />
-      );
+      const { container } = render(<CurrentZoneCard zone={createMockZone({ is_town: true })} />);
 
       // BuildingStorefrontIcon should be present for towns
       const svgs = container.querySelectorAll('svg');
@@ -123,7 +119,7 @@ describe('CurrentZoneCard', () => {
 
     it('shows hideout icon for hideout zones', () => {
       const { container } = render(
-        <CurrentZoneCard zone={createMockZone({ zone_name: 'My Hideout' })} />
+        <CurrentZoneCard zone={createMockZone({ zone_name: 'My Hideout' })} />,
       );
 
       // HomeIcon should be present for hideouts
@@ -146,9 +142,7 @@ describe('CurrentZoneCard', () => {
 
   describe('Edge Cases', () => {
     it('handles zones without area_level', () => {
-      render(
-        <CurrentZoneCard zone={createMockZone({ area_level: undefined })} />
-      );
+      render(<CurrentZoneCard zone={createMockZone({ area_level: undefined })} />);
 
       expect(screen.queryByText(/Level/)).not.toBeInTheDocument();
     });
@@ -161,7 +155,7 @@ describe('CurrentZoneCard', () => {
             deaths: 0,
             duration: 0,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText('The Coast')).toBeInTheDocument();

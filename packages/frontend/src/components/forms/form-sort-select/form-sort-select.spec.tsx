@@ -19,7 +19,7 @@ describe('SortSelect', () => {
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
-      />
+      />,
     );
 
     expect(screen.getByText('Name')).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe('SortSelect', () => {
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
-      />
+      />,
     );
 
     expect(screen.getByText('Sort by...')).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('SortSelect', () => {
         onReset={vi.fn()}
         options={mockOptions}
         label="Sort By"
-      />
+      />,
     );
 
     expect(screen.getByText('Sort By')).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('SortSelect', () => {
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
-      />
+      />,
     );
 
     await user.click(screen.getByRole('button', { name: /name/i }));
@@ -88,7 +88,7 @@ describe('SortSelect', () => {
         onChange={handleChange}
         onReset={vi.fn()}
         options={mockOptions}
-      />
+      />,
     );
 
     await user.click(screen.getByRole('button', { name: /name/i }));
@@ -109,7 +109,7 @@ describe('SortSelect', () => {
         onChange={vi.fn()}
         onReset={handleReset}
         options={mockOptions}
-      />
+      />,
     );
 
     await user.click(screen.getByRole('button', { name: /name/i }));
@@ -127,7 +127,7 @@ describe('SortSelect', () => {
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
-      />
+      />,
     );
 
     expect(screen.getByText('↑')).toBeInTheDocument();
@@ -142,7 +142,7 @@ describe('SortSelect', () => {
         onChange={vi.fn()}
         onReset={vi.fn()}
         options={mockOptions}
-      />
+      />,
     );
 
     expect(screen.getByText('↓')).toBeInTheDocument();
@@ -158,7 +158,7 @@ describe('SortSelect', () => {
         onReset={vi.fn()}
         options={mockOptions}
         disabled
-      />
+      />,
     );
 
     expect(screen.getByRole('button', { name: /name/i })).toBeDisabled();

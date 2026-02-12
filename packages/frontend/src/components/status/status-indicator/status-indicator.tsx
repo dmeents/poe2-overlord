@@ -23,8 +23,7 @@ export const StatusIndicator = ({
         ${statusIndicatorStyles.statusClasses[status]}
         ${status !== 'success' ? statusIndicatorStyles.animated : ''}
         ${className}
-      `}
-    >
+      `}>
       {icon}
     </div>
   );

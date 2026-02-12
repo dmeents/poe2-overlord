@@ -10,18 +10,8 @@ import type {
 // Query keys for consistent caching
 export const economyQueryKeys = {
   all: ['economy'] as const,
-  currencyExchange: (
-    league: string,
-    isHardcore: boolean,
-    economyType: EconomyType
-  ) =>
-    [
-      ...economyQueryKeys.all,
-      'currency-exchange',
-      league,
-      isHardcore,
-      economyType,
-    ] as const,
+  currencyExchange: (league: string, isHardcore: boolean, economyType: EconomyType) =>
+    [...economyQueryKeys.all, 'currency-exchange', league, isHardcore, economyType] as const,
   aggregatedTop: (league: string, isHardcore: boolean) =>
     [...economyQueryKeys.all, 'aggregated-top', league, isHardcore] as const,
   search: (league: string, isHardcore: boolean, query: string) =>
@@ -32,14 +22,10 @@ export const economyQueryKeys = {
 export function useCurrencyExchange(
   league: string = 'Rise of the Abyssal',
   isHardcore: boolean = false,
-  economyType: EconomyType = 'Currency'
+  economyType: EconomyType = 'Currency',
 ) {
   return useQuery({
-    queryKey: economyQueryKeys.currencyExchange(
-      league,
-      isHardcore,
-      economyType
-    ),
+    queryKey: economyQueryKeys.currencyExchange(league, isHardcore, economyType),
     queryFn: async (): Promise<CurrencyExchangeData> => {
       return await invoke<CurrencyExchangeData>('get_currency_exchange_data', {
         league,
@@ -59,7 +45,7 @@ export function useSearchCurrencies(
   league: string = 'Rise of the Abyssal',
   isHardcore: boolean = false,
   query: string = '',
-  enabled: boolean = true
+  enabled: boolean = true,
 ) {
   return useQuery({
     queryKey: economyQueryKeys.search(league, isHardcore, query),
@@ -81,7 +67,7 @@ export function useSearchCurrencies(
 // Hook to get aggregated top currencies across all economy types
 export function useAggregatedTopCurrencies(
   league: string = 'Rise of the Abyssal',
-  isHardcore: boolean = false
+  isHardcore: boolean = false,
 ) {
   return useQuery({
     queryKey: economyQueryKeys.aggregatedTop(league, isHardcore),

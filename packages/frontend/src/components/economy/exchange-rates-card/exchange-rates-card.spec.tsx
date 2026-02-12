@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExchangeRatesCard } from './exchange-rates-card';
 
 const mockUseEconomy = vi.hoisted(() => vi.fn());
@@ -134,9 +134,7 @@ describe('ExchangeRatesCard', () => {
 
       render(<ExchangeRatesCard />);
 
-      expect(
-        screen.getByText('No exchange rate data available')
-      ).toBeInTheDocument();
+      expect(screen.getByText('No exchange rate data available')).toBeInTheDocument();
     });
   });
 

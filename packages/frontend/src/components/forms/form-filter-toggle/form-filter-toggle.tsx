@@ -40,10 +40,7 @@ export function FilterToggle({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         if (isExpanded) {
           onToggle();
         }
@@ -60,17 +57,13 @@ export function FilterToggle({
   }, [isExpanded, onToggle]);
 
   return (
-    <div
-      className={`${formFilterToggleStyles.container} ${className}`}
-      ref={dropdownRef}
-    >
+    <div className={`${formFilterToggleStyles.container} ${className}`} ref={dropdownRef}>
       <button
         ref={buttonRef}
         type="button"
         onClick={onToggle}
         disabled={disabled}
-        className={formFilterToggleStyles.toggleButton}
-      >
+        className={formFilterToggleStyles.toggleButton}>
         <span className={formFilterToggleStyles.toggleText}>
           {hasActiveFilters ? `${label} (${activeCount})` : label}
         </span>
@@ -87,8 +80,7 @@ export function FilterToggle({
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
-          }}
-        >
+          }}>
           {children}
         </div>
       )}

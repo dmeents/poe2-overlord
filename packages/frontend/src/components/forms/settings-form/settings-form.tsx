@@ -1,20 +1,20 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
+import { useAppEventListener } from '@/hooks/useAppEventListener';
 import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
+import {
+  type ConfigurationChangedEvent,
+  EVENT_KEYS,
+  type ExtractPayload,
+} from '@/utils/events/registry';
 import { tauriUtils } from '@/utils/tauri';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '../../ui/button/button';
 import { AlertMessage } from '../form-alert-message/form-alert-message';
 import { FormField } from '../form-field/form-field';
 import { Input } from '../form-input/form-input';
 import { Select } from '../form-select/form-select';
-import { Button } from '../../ui/button/button';
 import { settingsFormStyles } from './settings-form.styles';
-import { useAppEventListener } from '@/hooks/useAppEventListener';
-import {
-  EVENT_KEYS,
-  type ExtractPayload,
-  type ConfigurationChangedEvent,
-} from '@/utils/events/registry';
 
 /** Valid log levels matching backend validation */
 const VALID_LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error'];
@@ -35,7 +35,7 @@ function extractErrorMessage(err: unknown): string {
 function formatConfigError(
   err: unknown,
   operation: 'save' | 'load' | 'reset',
-  context?: { logLevel?: string }
+  context?: { logLevel?: string },
 ): string {
   const message = extractErrorMessage(err);
 
@@ -72,9 +72,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [zoneRefreshOptions, setZoneRefreshOptions] = useState<
-    ZoneRefreshIntervalOption[]
-  >([]);
+  const [zoneRefreshOptions, setZoneRefreshOptions] = useState<ZoneRefreshIntervalOption[]>([]);
 
   // Track timeout refs for cleanup to prevent memory leaks
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,8 +104,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       {
         eventType: EVENT_KEYS.ConfigurationChanged,
         handler: (payload: unknown) => {
-          const { new_config } =
-            payload as ExtractPayload<ConfigurationChangedEvent>;
+          const { new_config } = payload as ExtractPayload<ConfigurationChangedEvent>;
           // Update local state with the new config from the event
           setConfig(new_config);
           // Notify parent component if callback provided
@@ -115,14 +112,14 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         },
       },
     ],
-    [] // No dependencies - using functional updates
+    [], // No dependencies - using functional updates
   );
 
   // Load configuration and options on component mount
   useEffect(() => {
     loadConfig();
     loadZoneRefreshOptions();
-  }, []);
+  }, [loadConfig, loadZoneRefreshOptions]);
 
   const loadConfig = async () => {
     try {
@@ -143,7 +140,10 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       setZoneRefreshOptions(options);
     } catch (err) {
       // Non-critical - use default options, but log for debugging
-      console.warn('Failed to load zone refresh options, using defaults:', extractErrorMessage(err));
+      console.warn(
+        'Failed to load zone refresh options, using defaults:',
+        extractErrorMessage(err),
+      );
     }
   };
 
@@ -157,7 +157,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
 
     if (!VALID_LOG_LEVELS.includes(config.log_level.toLowerCase())) {
       setError(
-        `Invalid log level: ${config.log_level}. Valid levels: ${VALID_LOG_LEVELS.join(', ')}`
+        `Invalid log level: ${config.log_level}. Valid levels: ${VALID_LOG_LEVELS.join(', ')}`,
       );
       return;
     }
@@ -198,10 +198,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     }
   };
 
-  const handleInputChange = (
-    field: keyof AppConfig,
-    value: string | boolean
-  ) => {
+  const handleInputChange = (field: keyof AppConfig, value: string | boolean) => {
     setConfig(prev => ({
       ...prev,
       [field]: value,
@@ -216,9 +213,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
 
     // Must have valid extension (.txt or .log)
     const validExtensions = ['.txt', '.log'];
-    const hasValidExtension = validExtensions.some(ext =>
-      pathLower.endsWith(ext)
-    );
+    const hasValidExtension = validExtensions.some(ext => pathLower.endsWith(ext));
 
     if (!hasValidExtension) return false;
 
@@ -261,8 +256,8 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
             content={
               <div>
                 <p className="mb-2">
-                  <strong>POE Client Log Path:</strong> This should point to the
-                  client.txt file in your Path of Exile installation directory.
+                  <strong>POE Client Log Path:</strong> This should point to the client.txt file in
+                  your Path of Exile installation directory.
                 </p>
                 <p>
                   The file is typically located at:{' '}
@@ -275,8 +270,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                   <li>
                     Steam:{' '}
                     <code className="bg-zinc-700 px-1 text-zinc-200">
-                      C:\Program Files (x86)\Steam\steamapps\common\Path of
-                      Exile\logs\client.txt
+                      C:\Program Files (x86)\Steam\steamapps\common\Path of Exile\logs\client.txt
                     </code>
                   </li>
                   <li>
@@ -287,19 +281,15 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                   </li>
                 </ul>
               </div>
-            }
-          >
+            }>
             POE Client Log Path
           </Tooltip>
         }
-        htmlFor="poe-client-log-path"
-      >
+        htmlFor="poe-client-log-path">
         <Input
           id="poe-client-log-path"
           value={config.poe_client_log_path}
-          onChange={value =>
-            handleInputChange('poe_client_log_path', value as string)
-          }
+          onChange={value => handleInputChange('poe_client_log_path', value as string)}
           type="text"
           placeholder="Enter path to client.txt file (e.g., C:\Games\Path of Exile\logs\client.txt)"
           isValid={isPoePathValid}
@@ -314,20 +304,18 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
             content={
               <div>
                 <p className="mb-2">
-                  <strong>Log Level:</strong> Controls the verbosity of
-                  application logging.
+                  <strong>Log Level:</strong> Controls the verbosity of application logging.
                 </p>
                 <div className="space-y-1 text-zinc-300">
                   <p>
-                    <strong>Trace:</strong> Most detailed logging, shows every
-                    operation
+                    <strong>Trace:</strong> Most detailed logging, shows every operation
                   </p>
                   <p>
                     <strong>Debug:</strong> Detailed logging for troubleshooting
                   </p>
                   <p>
-                    <strong>Info:</strong> General information about application
-                    operation (recommended)
+                    <strong>Info:</strong> General information about application operation
+                    (recommended)
                   </p>
                   <p>
                     <strong>Warn:</strong> Only warnings and errors
@@ -337,17 +325,15 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                   </p>
                 </div>
                 <p className="mt-2 text-zinc-300">
-                  Use "Info" for normal operation, "Debug" for troubleshooting,
-                  or "Error" for minimal logging.
+                  Use "Info" for normal operation, "Debug" for troubleshooting, or "Error" for
+                  minimal logging.
                 </p>
               </div>
-            }
-          >
+            }>
             Log Level
           </Tooltip>
         }
-        htmlFor="log-level"
-      >
+        htmlFor="log-level">
         <Select
           id="log-level"
           value={config.log_level}
@@ -364,17 +350,15 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
             content={
               <div>
                 <p className="mb-2">
-                  <strong>Zone Refresh Interval:</strong> Controls how often
-                  zone metadata should be refreshed from the POE wiki.
+                  <strong>Zone Refresh Interval:</strong> Controls how often zone metadata should be
+                  refreshed from the POE wiki.
                 </p>
                 <div className="space-y-1 text-zinc-300">
                   <p>
-                    <strong>5 Minutes:</strong> Very frequent updates (useful
-                    for testing)
+                    <strong>5 Minutes:</strong> Very frequent updates (useful for testing)
                   </p>
                   <p>
-                    <strong>1 Hour:</strong> Frequent updates for active
-                    development
+                    <strong>1 Hour:</strong> Frequent updates for active development
                   </p>
                   <p>
                     <strong>12 Hours:</strong> Twice daily updates
@@ -386,23 +370,20 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                     <strong>3 Days:</strong> Occasional updates
                   </p>
                   <p>
-                    <strong>7 Days:</strong> Weekly updates (recommended for
-                    normal use)
+                    <strong>7 Days:</strong> Weekly updates (recommended for normal use)
                   </p>
                 </div>
                 <p className="mt-2 text-zinc-300">
-                  Use shorter intervals for testing zone data updates, or longer
-                  intervals to reduce wiki requests.
+                  Use shorter intervals for testing zone data updates, or longer intervals to reduce
+                  wiki requests.
                 </p>
               </div>
-            }
-          >
+            }>
             Zone Refresh Interval
           </Tooltip>
         }
         htmlFor="zone-refresh-interval"
-        className="last-form-item"
-      >
+        className="last-form-item">
         <Select
           id="zone-refresh-interval"
           value={config.zone_refresh_interval}
@@ -417,30 +398,15 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
 
       {/* Action Buttons */}
       <div className={settingsFormStyles.actionButtons}>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          variant="primary"
-          size="md"
-        >
+        <Button onClick={handleSave} disabled={isSaving} variant="primary" size="md">
           {isSaving ? 'Saving...' : 'Save Configuration'}
         </Button>
 
-        <Button
-          onClick={handleReset}
-          disabled={isSaving}
-          variant="secondary"
-          size="md"
-        >
+        <Button onClick={handleReset} disabled={isSaving} variant="secondary" size="md">
           Reset to Defaults
         </Button>
 
-        <Button
-          onClick={loadConfig}
-          disabled={isSaving}
-          variant="outline"
-          size="md"
-        >
+        <Button onClick={loadConfig} disabled={isSaving} variant="outline" size="md">
           Reload
         </Button>
       </div>

@@ -18,10 +18,7 @@ describe('MarsIcon', () => {
   it('has aria-hidden attribute', () => {
     const { container } = render(<MarsIcon />);
 
-    expect(container.querySelector('svg')).toHaveAttribute(
-      'aria-hidden',
-      'true'
-    );
+    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('renders circle element', () => {

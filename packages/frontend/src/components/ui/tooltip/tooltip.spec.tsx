@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { Tooltip } from './tooltip';
 
@@ -7,7 +7,7 @@ describe('Tooltip', () => {
     render(
       <Tooltip content="Tooltip text">
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     expect(screen.getByText('Hover me')).toBeInTheDocument();
@@ -17,7 +17,7 @@ describe('Tooltip', () => {
     render(
       <Tooltip content="Tooltip text">
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     fireEvent.mouseEnter(screen.getByText('Hover me'));
@@ -29,7 +29,7 @@ describe('Tooltip', () => {
     render(
       <Tooltip content="Tooltip text">
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     const trigger = screen.getByText('Hover me');
@@ -43,7 +43,7 @@ describe('Tooltip', () => {
     render(
       <Tooltip content={<span data-testid="custom-content">Custom</span>}>
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     fireEvent.mouseEnter(screen.getByText('Hover me'));
@@ -55,7 +55,7 @@ describe('Tooltip', () => {
     const { container } = render(
       <Tooltip content="Tooltip text" className="custom-class">
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     expect(container.firstChild).toHaveClass('custom-class');
@@ -65,7 +65,7 @@ describe('Tooltip', () => {
     const { container } = render(
       <Tooltip content="Tooltip text" showIcon>
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     // Check for SVG icon presence
@@ -76,7 +76,7 @@ describe('Tooltip', () => {
     const { container } = render(
       <Tooltip content="Tooltip text">
         <span>Hover me</span>
-      </Tooltip>
+      </Tooltip>,
     );
 
     // No SVG icon by default
@@ -91,7 +91,7 @@ describe('Tooltip', () => {
       render(
         <Tooltip content="Tooltip text">
           <span>Hover me</span>
-        </Tooltip>
+        </Tooltip>,
       );
 
       const trigger = screen.getByText('Hover me');
@@ -100,30 +100,16 @@ describe('Tooltip', () => {
       fireEvent.mouseEnter(trigger);
 
       // Verify scroll listener added with capture phase
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'scroll',
-        expect.any(Function),
-        true
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), true);
       // Verify resize listener added
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'resize',
-        expect.any(Function)
-      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
 
       // Hide tooltip
       fireEvent.mouseLeave(trigger);
 
       // Verify listeners removed
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'scroll',
-        expect.any(Function),
-        true
-      );
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'resize',
-        expect.any(Function)
-      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), true);
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
 
       addEventListenerSpy.mockRestore();
       removeEventListenerSpy.mockRestore();
@@ -133,7 +119,7 @@ describe('Tooltip', () => {
       render(
         <Tooltip content="Tooltip text">
           <span>Hover me</span>
-        </Tooltip>
+        </Tooltip>,
       );
 
       fireEvent.mouseEnter(screen.getByText('Hover me'));
@@ -146,7 +132,7 @@ describe('Tooltip', () => {
       render(
         <Tooltip content="Tooltip text">
           <span>Hover me</span>
-        </Tooltip>
+        </Tooltip>,
       );
 
       fireEvent.mouseEnter(screen.getByText('Hover me'));
@@ -162,7 +148,7 @@ describe('Tooltip', () => {
       const { unmount } = render(
         <Tooltip content="Tooltip text">
           <span>Hover me</span>
-        </Tooltip>
+        </Tooltip>,
       );
 
       // Show tooltip
@@ -172,15 +158,8 @@ describe('Tooltip', () => {
       unmount();
 
       // Verify listeners were cleaned up
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'scroll',
-        expect.any(Function),
-        true
-      );
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'resize',
-        expect.any(Function)
-      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), true);
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
 
       removeEventListenerSpy.mockRestore();
     });

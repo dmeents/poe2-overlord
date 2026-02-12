@@ -13,9 +13,7 @@ export interface NameGeneratorOptions {
 /**
  * Generates a random fantasy name based on the selected style
  */
-export function generateFantasyName(
-  options: NameGeneratorOptions = {}
-): string {
+export function generateFantasyName(options: NameGeneratorOptions = {}): string {
   const {
     style = getRandomStyle(),
     minLength = 3,
@@ -84,12 +82,10 @@ function capitalizeFirstLetter(str: string): string {
 function generateFromPrefixSuffix(
   nameStyle: (typeof NAME_STYLES)[NameStyleType],
   gender?: Gender,
-  blendStyle?: (typeof NAME_STYLES)[NameStyleType] | null
+  blendStyle?: (typeof NAME_STYLES)[NameStyleType] | null,
 ): string {
   const prefixes =
-    gender === 'female' && nameStyle.femalePrefixes
-      ? nameStyle.femalePrefixes
-      : nameStyle.prefixes;
+    gender === 'female' && nameStyle.femalePrefixes ? nameStyle.femalePrefixes : nameStyle.prefixes;
 
   // Use blend style for suffix if provided
   const suffixSource = blendStyle || nameStyle;
@@ -117,12 +113,10 @@ function generateFromPrefixSuffix(
 function generateFromThreeParts(
   nameStyle: (typeof NAME_STYLES)[NameStyleType],
   gender?: Gender,
-  blendStyle?: (typeof NAME_STYLES)[NameStyleType] | null
+  blendStyle?: (typeof NAME_STYLES)[NameStyleType] | null,
 ): string {
   const prefixes =
-    gender === 'female' && nameStyle.femalePrefixes
-      ? nameStyle.femalePrefixes
-      : nameStyle.prefixes;
+    gender === 'female' && nameStyle.femalePrefixes ? nameStyle.femalePrefixes : nameStyle.prefixes;
 
   // Use blend style for middle and suffix if provided
   const middleSource = blendStyle || nameStyle;
@@ -151,16 +145,12 @@ function generateFromThreeParts(
  */
 function generateSinglePart(
   nameStyle: (typeof NAME_STYLES)[NameStyleType],
-  gender?: Gender
+  gender?: Gender,
 ): string {
   const prefixes =
-    gender === 'female' && nameStyle.femalePrefixes
-      ? nameStyle.femalePrefixes
-      : nameStyle.prefixes;
+    gender === 'female' && nameStyle.femalePrefixes ? nameStyle.femalePrefixes : nameStyle.prefixes;
   const suffixes =
-    gender === 'female' && nameStyle.femaleSuffixes
-      ? nameStyle.femaleSuffixes
-      : nameStyle.suffixes;
+    gender === 'female' && nameStyle.femaleSuffixes ? nameStyle.femaleSuffixes : nameStyle.suffixes;
 
   const useSuffix = Math.random() > 0.5;
   return useSuffix ? getRandomElement(suffixes) : getRandomElement(prefixes);
@@ -205,10 +195,7 @@ function getRandomStyle(): NameStyleType {
 /**
  * Generates multiple names at once
  */
-export function generateMultipleNames(
-  count: number,
-  options: NameGeneratorOptions = {}
-): string[] {
+export function generateMultipleNames(count: number, options: NameGeneratorOptions = {}): string[] {
   const names = new Set<string>();
   let attempts = 0;
   const maxAttempts = count * 10;

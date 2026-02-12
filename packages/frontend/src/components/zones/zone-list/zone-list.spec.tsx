@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { ZoneList } from './zone-list';
-import type { ZoneStats } from '@/types/character';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ZoneFilters, ZoneSortOption } from '@/hooks/useZoneList';
+import type { ZoneStats } from '@/types/character';
+import { ZoneList } from './zone-list';
 
 // Mock child components
 vi.mock('../zone-card/zone-card', () => ({
@@ -91,9 +91,7 @@ describe('ZoneList', () => {
       render(<ZoneList {...defaultProps} zones={[]} totalCount={0} />);
 
       expect(screen.getByText('No Zone Data Available')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Start playing Path of Exile 2/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Start playing Path of Exile 2/)).toBeInTheDocument();
     });
   });
 
@@ -109,9 +107,7 @@ describe('ZoneList', () => {
 
       expect(screen.getByTestId('zone-card-The Coast')).toBeInTheDocument();
       expect(screen.getByTestId('zone-card-The Mud Flats')).toBeInTheDocument();
-      expect(
-        screen.getByTestId('zone-card-The Submerged Passage')
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('zone-card-The Submerged Passage')).toBeInTheDocument();
     });
 
     it('passes correct isEven prop to zone cards', () => {
@@ -123,18 +119,9 @@ describe('ZoneList', () => {
 
       render(<ZoneList {...defaultProps} zones={zones} totalCount={3} />);
 
-      expect(screen.getByTestId('zone-card-Zone1')).toHaveAttribute(
-        'data-even',
-        'true'
-      );
-      expect(screen.getByTestId('zone-card-Zone2')).toHaveAttribute(
-        'data-even',
-        'false'
-      );
-      expect(screen.getByTestId('zone-card-Zone3')).toHaveAttribute(
-        'data-even',
-        'true'
-      );
+      expect(screen.getByTestId('zone-card-Zone1')).toHaveAttribute('data-even', 'true');
+      expect(screen.getByTestId('zone-card-Zone2')).toHaveAttribute('data-even', 'false');
+      expect(screen.getByTestId('zone-card-Zone3')).toHaveAttribute('data-even', 'true');
     });
 
     it('renders the controls form', () => {
@@ -157,30 +144,14 @@ describe('ZoneList', () => {
 
   describe('Filtered Empty State', () => {
     it('shows no results message when zones array is empty but totalCount > 0', () => {
-      render(
-        <ZoneList
-          {...defaultProps}
-          zones={[]}
-          totalCount={5}
-          hasActiveFilters={true}
-        />
-      );
+      render(<ZoneList {...defaultProps} zones={[]} totalCount={5} hasActiveFilters={true} />);
 
       expect(screen.getByText('No zones found')).toBeInTheDocument();
-      expect(
-        screen.getByText(/No zones match your current search/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/No zones match your current search/)).toBeInTheDocument();
     });
 
     it('shows clear filters button in filtered empty state', () => {
-      render(
-        <ZoneList
-          {...defaultProps}
-          zones={[]}
-          totalCount={5}
-          hasActiveFilters={true}
-        />
-      );
+      render(<ZoneList {...defaultProps} zones={[]} totalCount={5} hasActiveFilters={true} />);
 
       expect(screen.getByText('Clear All Filters')).toBeInTheDocument();
     });
@@ -196,7 +167,7 @@ describe('ZoneList', () => {
           totalCount={5}
           hasActiveFilters={true}
           onClearFilters={handleClearFilters}
-        />
+        />,
       );
 
       await user.click(screen.getByText('Clear All Filters'));
@@ -210,9 +181,7 @@ describe('ZoneList', () => {
       const user = userEvent.setup();
       const handleClearFilters = vi.fn();
 
-      render(
-        <ZoneList {...defaultProps} onClearFilters={handleClearFilters} />
-      );
+      render(<ZoneList {...defaultProps} onClearFilters={handleClearFilters} />);
 
       await user.click(screen.getByTestId('clear-filters-controls'));
 

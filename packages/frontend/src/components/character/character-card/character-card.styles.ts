@@ -6,10 +6,10 @@
  */
 
 import {
-  getClassTextColor,
-  getClassBorderColor as getClassBorderColorUtil,
   getClassBgGradient,
+  getClassBorderColor as getClassBorderColorUtil,
   getClassLevelColors as getClassLevelColorsUtil,
+  getClassTextColor,
 } from '../../../utils/class-colors';
 
 /**
@@ -112,8 +112,7 @@ export function getAscendencyOverlayStyles(): {
         transparent 100%
       )
     `,
-    boxShadow:
-      'inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.1)',
+    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.1)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
   };
 }
@@ -163,7 +162,6 @@ export function getDetailsSectionOverlayStyles(): {
   background: string;
 } {
   return {
-    background:
-      'linear-gradient(to-r, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%)',
+    background: 'linear-gradient(to-r, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%)',
   };
 }

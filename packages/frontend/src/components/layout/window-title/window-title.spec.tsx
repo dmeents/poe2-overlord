@@ -33,25 +33,19 @@ describe('WindowTitle', () => {
   it('renders minimize button', () => {
     render(<WindowTitle />);
 
-    expect(
-      screen.getByRole('button', { name: 'Minimize window' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Minimize window' })).toBeInTheDocument();
   });
 
   it('renders maximize button', () => {
     render(<WindowTitle />);
 
-    expect(
-      screen.getByRole('button', { name: 'Maximize window' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Maximize window' })).toBeInTheDocument();
   });
 
   it('renders close button', () => {
     render(<WindowTitle />);
 
-    expect(
-      screen.getByRole('button', { name: 'Close window' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close window' })).toBeInTheDocument();
   });
 
   it('calls minimize when minimize button is clicked', async () => {

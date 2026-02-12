@@ -15,7 +15,7 @@ export function CampaignInsights({
 }: CampaignInsightsProps): React.JSX.Element {
   const totalSteps = Object.values(guide.acts).reduce(
     (total, act) => total + Object.keys(act.steps).length,
-    0
+    0,
   );
 
   const totalActs = Object.keys(guide.acts).length;

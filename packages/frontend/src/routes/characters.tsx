@@ -1,25 +1,25 @@
+import { UsersIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { AlertMessage } from '../components/forms/form-alert-message/form-alert-message';
-import { Card } from '../components/ui/card/card';
-import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
-import { CharacterInsights } from '../components/insights/character-insights/character-insights';
-import { CharacterList } from '../components/character/character-list/character-list';
-import { ClassDistributionChart } from '../components/charts/class-distribution-chart/class-distribution-chart';
-import { DeleteCharacterModal } from '../components/character/delete-character-modal/delete-character-modal';
-import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
-import { PageLayout } from '../components/layout/page-layout/page-layout';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
-import { useCharacterList } from '../hooks/useCharacterList';
+import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
+import { CharacterList } from '../components/character/character-list/character-list';
+import { DeleteCharacterModal } from '../components/character/delete-character-modal/delete-character-modal';
+import { ClassDistributionChart } from '../components/charts/class-distribution-chart/class-distribution-chart';
+import { AlertMessage } from '../components/forms/form-alert-message/form-alert-message';
+import { CharacterInsights } from '../components/insights/character-insights/character-insights';
+import { PageLayout } from '../components/layout/page-layout/page-layout';
+import { Card } from '../components/ui/card/card';
+import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useCharacterList } from '../hooks/useCharacterList';
 import {
   useCreateCharacter,
-  useUpdateCharacter,
   useDeleteCharacter,
   useSetActiveCharacter,
+  useUpdateCharacter,
 } from '../queries/characters';
 import type { CharacterData } from '../types/character';
-import { UsersIcon } from '@heroicons/react/24/outline';
 
 export const Route = createFileRoute('/characters')({
   component: CharactersPage,
@@ -32,10 +32,8 @@ function CharactersPage() {
   const deleteCharacterMutation = useDeleteCharacter();
   const setActiveCharacterMutation = useSetActiveCharacter();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCharacter, setEditingCharacter] =
-    useState<CharacterData | null>(null);
-  const [deletingCharacter, setDeletingCharacter] =
-    useState<CharacterData | null>(null);
+  const [editingCharacter, setEditingCharacter] = useState<CharacterData | null>(null);
+  const [deletingCharacter, setDeletingCharacter] = useState<CharacterData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -132,8 +130,7 @@ function CharactersPage() {
       rightAction={{
         label: 'Create Character',
         onClick: () => setShowCreateModal(true),
-      }}
-    >
+      }}>
       {isLoading ? (
         <LoadingSpinner message="Loading characters..." className="h-64" />
       ) : (
@@ -163,7 +160,7 @@ function CharactersPage() {
       acc[c.class] = (acc[c.class] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   const rightColumn = (
@@ -185,8 +182,7 @@ function CharactersPage() {
           {leftColumn}
         </>
       }
-      rightColumn={rightColumn}
-    >
+      rightColumn={rightColumn}>
       <CharacterFormModal
         isOpen={showCreateModal}
         onSubmit={handleCreateCharacter}

@@ -1,9 +1,9 @@
 import { UsersIcon } from '@heroicons/react/24/outline';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { getClassHexColor } from '../../../utils/class-colors';
+import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
-import { Card } from '../../ui/card/card';
 
 interface ClassDistributionChartProps {
   classDistribution: Record<string, number>;
@@ -22,15 +22,11 @@ export function ClassDistributionChart({
   classDistribution,
   className = '',
 }: ClassDistributionChartProps) {
-  const totalCharacters = Object.values(classDistribution).reduce(
-    (sum, count) => sum + count,
-    0
-  );
+  const totalCharacters = Object.values(classDistribution).reduce((sum, count) => sum + count, 0);
 
   const chartData: ClassData[] = Object.entries(classDistribution)
     .map(([className, count]) => {
-      const percentage =
-        totalCharacters > 0 ? (count / totalCharacters) * 100 : 0;
+      const percentage = totalCharacters > 0 ? (count / totalCharacters) * 100 : 0;
       const hexColor = getClassHexColor(className);
 
       return {
@@ -57,8 +53,7 @@ export function ClassDistributionChart({
         <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg relative z-50">
           <p className="text-white font-medium">{data.name}</p>
           <p className="text-zinc-300 text-sm">
-            {data.value} character{data.value !== 1 ? 's' : ''} (
-            {data.percentage.toFixed(1)}%)
+            {data.value} character{data.value !== 1 ? 's' : ''} ({data.percentage.toFixed(1)}%)
           </p>
         </div>
       );
@@ -93,8 +88,7 @@ export function ClassDistributionChart({
                 paddingAngle={1}
                 dataKey="value"
                 stroke="none"
-                className="transition-all duration-300"
-              >
+                className="transition-all duration-300">
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -107,12 +101,8 @@ export function ClassDistributionChart({
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <div className="text-2xl font-bold text-white">
-              {chartData.length}
-            </div>
-            <div className="text-xs text-zinc-400 uppercase tracking-wide">
-              Classes
-            </div>
+            <div className="text-2xl font-bold text-white">{chartData.length}</div>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide">Classes</div>
           </div>
         </div>
         <div>

@@ -9,22 +9,20 @@ const mockGetConfig = vi.hoisted(() =>
       poe_client_log_path: 'C:\\Games\\Path of Exile\\logs\\client.txt',
       log_level: 'info',
       zone_refresh_interval: 'SevenDays',
-    })
-  )
+    }),
+  ),
 );
 
 const mockUpdateConfig = vi.hoisted(() => vi.fn(() => Promise.resolve()));
-const mockResetConfigToDefaults = vi.hoisted(() =>
-  vi.fn(() => Promise.resolve())
-);
+const mockResetConfigToDefaults = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const mockGetZoneRefreshIntervalOptions = vi.hoisted(() =>
   vi.fn(() =>
     Promise.resolve([
       { value: 'FiveMinutes', label: '5 Minutes' },
       { value: 'OneHour', label: '1 Hour' },
       { value: 'SevenDays', label: '7 Days' },
-    ])
-  )
+    ]),
+  ),
 );
 
 vi.mock('@/utils/tauri', () => ({
@@ -79,9 +77,7 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save Configuration' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
     });
   });
 
@@ -89,9 +85,7 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Reset to Defaults' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
     });
   });
 
@@ -99,9 +93,7 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Reload' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
     });
   });
 
@@ -127,14 +119,10 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save Configuration' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
     });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Save Configuration' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
 
     await waitFor(() => {
       expect(mockUpdateConfig).toHaveBeenCalled();
@@ -147,19 +135,13 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save Configuration' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
     });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Save Configuration' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Configuration saved successfully!')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Configuration saved successfully!')).toBeInTheDocument();
     });
   });
 
@@ -170,14 +152,10 @@ describe('SettingsForm', () => {
     render(<SettingsForm onConfigUpdate={handleConfigUpdate} />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save Configuration' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
     });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Save Configuration' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
 
     await waitFor(() => {
       expect(handleConfigUpdate).toHaveBeenCalled();
@@ -190,9 +168,7 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Reset to Defaults' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
@@ -208,17 +184,13 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Reset to Defaults' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Configuration reset to defaults!')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Configuration reset to defaults!')).toBeInTheDocument();
     });
   });
 
@@ -228,9 +200,7 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Reload' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
     });
 
     // Clear initial call
@@ -249,9 +219,7 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Failed to load configuration: Network error')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Failed to load configuration: Network error')).toBeInTheDocument();
     });
   });
 
@@ -262,19 +230,13 @@ describe('SettingsForm', () => {
     render(<SettingsForm />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save Configuration' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
     });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Save Configuration' })
-    );
+    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Failed to save configuration: Save failed')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Failed to save configuration: Save failed')).toBeInTheDocument();
     });
   });
 
@@ -289,9 +251,7 @@ describe('SettingsForm', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /This path doesn't look like a typical POE client log file/
-        )
+        screen.getByText(/This path doesn't look like a typical POE client log file/),
       ).toBeInTheDocument();
     });
   });

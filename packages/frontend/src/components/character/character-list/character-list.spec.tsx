@@ -1,29 +1,27 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { CharacterList } from './character-list';
-import type { CharacterData } from '@/types/character';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CharacterFilters, SortOption } from '@/hooks/useCharacterList';
+import type { CharacterData } from '@/types/character';
+import { CharacterList } from './character-list';
 
 // Mock child components to simplify testing
 vi.mock('../character-card/character-card', () => ({
-  CharacterCard: vi.fn(
-    ({ character, isActive, onSelect, onEdit, onDelete }) => (
-      <div data-testid={`character-card-${character.id}`}>
-        <span>{character.name}</span>
-        {isActive && <span data-testid="active-indicator">Active</span>}
-        <button onClick={onSelect} data-testid={`select-${character.id}`}>
-          Select
-        </button>
-        <button onClick={onEdit} data-testid={`edit-${character.id}`}>
-          Edit
-        </button>
-        <button onClick={onDelete} data-testid={`delete-${character.id}`}>
-          Delete
-        </button>
-      </div>
-    )
-  ),
+  CharacterCard: vi.fn(({ character, isActive, onSelect, onEdit, onDelete }) => (
+    <div data-testid={`character-card-${character.id}`}>
+      <span>{character.name}</span>
+      {isActive && <span data-testid="active-indicator">Active</span>}
+      <button onClick={onSelect} data-testid={`select-${character.id}`}>
+        Select
+      </button>
+      <button onClick={onEdit} data-testid={`edit-${character.id}`}>
+        Edit
+      </button>
+      <button onClick={onDelete} data-testid={`delete-${character.id}`}>
+        Delete
+      </button>
+    </div>
+  )),
 }));
 
 vi.mock('../character-list-controls-form/character-list-controls-form', () => ({
@@ -36,9 +34,7 @@ vi.mock('../character-list-controls-form/character-list-controls-form', () => ({
   )),
 }));
 
-const createMockCharacter = (
-  overrides: Partial<CharacterData> = {}
-): CharacterData => ({
+const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData => ({
   id: 'char-1',
   name: 'TestCharacter',
   class: 'Warrior',
@@ -119,24 +115,16 @@ describe('CharacterList', () => {
 
   describe('Empty State', () => {
     it('shows empty state when totalCount is 0', () => {
-      render(
-        <CharacterList {...defaultProps} characters={[]} totalCount={0} />
-      );
+      render(<CharacterList {...defaultProps} characters={[]} totalCount={0} />);
 
       expect(screen.getByText('No Characters')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Create your first character/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Create your first character/)).toBeInTheDocument();
     });
 
     it('shows create character button in empty state', () => {
-      render(
-        <CharacterList {...defaultProps} characters={[]} totalCount={0} />
-      );
+      render(<CharacterList {...defaultProps} characters={[]} totalCount={0} />);
 
-      expect(
-        screen.getByRole('button', { name: 'Create Character' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Create Character' })).toBeInTheDocument();
     });
 
     it('calls onCreateCharacter when create button is clicked', async () => {
@@ -149,12 +137,10 @@ describe('CharacterList', () => {
           characters={[]}
           totalCount={0}
           onCreateCharacter={handleCreate}
-        />
+        />,
       );
 
-      await user.click(
-        screen.getByRole('button', { name: 'Create Character' })
-      );
+      await user.click(screen.getByRole('button', { name: 'Create Character' }));
 
       expect(handleCreate).toHaveBeenCalledTimes(1);
     });
@@ -168,13 +154,7 @@ describe('CharacterList', () => {
         createMockCharacter({ id: 'char-3', name: 'Character Three' }),
       ];
 
-      render(
-        <CharacterList
-          {...defaultProps}
-          characters={characters}
-          totalCount={3}
-        />
-      );
+      render(<CharacterList {...defaultProps} characters={characters} totalCount={3} />);
 
       expect(screen.getByTestId('character-card-char-1')).toBeInTheDocument();
       expect(screen.getByTestId('character-card-char-2')).toBeInTheDocument();
@@ -193,7 +173,7 @@ describe('CharacterList', () => {
           characters={characters}
           activeCharacterId="char-2"
           totalCount={2}
-        />
+        />,
       );
 
       // Only the active character should have the active indicator
@@ -219,7 +199,7 @@ describe('CharacterList', () => {
           {...defaultProps}
           characters={[character]}
           onSelectCharacter={handleSelect}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId('select-char-1'));
@@ -233,11 +213,7 @@ describe('CharacterList', () => {
       const character = createMockCharacter({ id: 'char-1' });
 
       render(
-        <CharacterList
-          {...defaultProps}
-          characters={[character]}
-          onEditCharacter={handleEdit}
-        />
+        <CharacterList {...defaultProps} characters={[character]} onEditCharacter={handleEdit} />,
       );
 
       await user.click(screen.getByTestId('edit-char-1'));
@@ -255,7 +231,7 @@ describe('CharacterList', () => {
           {...defaultProps}
           characters={[character]}
           onDeleteCharacter={handleDelete}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId('delete-char-1'));
@@ -267,28 +243,16 @@ describe('CharacterList', () => {
   describe('Filtered Empty State', () => {
     it('shows no results message when characters array is empty but totalCount > 0', () => {
       render(
-        <CharacterList
-          {...defaultProps}
-          characters={[]}
-          totalCount={5}
-          hasActiveFilters={true}
-        />
+        <CharacterList {...defaultProps} characters={[]} totalCount={5} hasActiveFilters={true} />,
       );
 
       expect(screen.getByText('No characters found')).toBeInTheDocument();
-      expect(
-        screen.getByText(/No characters match your current search/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/No characters match your current search/)).toBeInTheDocument();
     });
 
     it('shows clear filters button in filtered empty state', () => {
       render(
-        <CharacterList
-          {...defaultProps}
-          characters={[]}
-          totalCount={5}
-          hasActiveFilters={true}
-        />
+        <CharacterList {...defaultProps} characters={[]} totalCount={5} hasActiveFilters={true} />,
       );
 
       expect(screen.getByText('Clear All Filters')).toBeInTheDocument();
@@ -305,7 +269,7 @@ describe('CharacterList', () => {
           totalCount={5}
           hasActiveFilters={true}
           onClearFilters={handleClearFilters}
-        />
+        />,
       );
 
       await user.click(screen.getByText('Clear All Filters'));
@@ -326,9 +290,7 @@ describe('CharacterList', () => {
       const user = userEvent.setup();
       const handleClearFilters = vi.fn();
 
-      render(
-        <CharacterList {...defaultProps} onClearFilters={handleClearFilters} />
-      );
+      render(<CharacterList {...defaultProps} onClearFilters={handleClearFilters} />);
 
       await user.click(screen.getByTestId('clear-filters-controls'));
 

@@ -1,9 +1,5 @@
-import type {
-  AppConfig,
-  ZoneRefreshInterval,
-  ZoneRefreshIntervalOption,
-} from '@/types/app-config';
 import { invoke } from '@tauri-apps/api/core';
+import type { AppConfig, ZoneRefreshInterval, ZoneRefreshIntervalOption } from '@/types/app-config';
 
 export const tauriUtils = {
   // Configuration commands
@@ -132,9 +128,7 @@ export const tauriUtils = {
 
   async getZoneRefreshIntervalOptions(): Promise<ZoneRefreshIntervalOption[]> {
     try {
-      return await invoke<ZoneRefreshIntervalOption[]>(
-        'get_zone_refresh_interval_options'
-      );
+      return await invoke<ZoneRefreshIntervalOption[]>('get_zone_refresh_interval_options');
     } catch (error) {
       console.error('Failed to get zone refresh interval options:', error);
       throw error;

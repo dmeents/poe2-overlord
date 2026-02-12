@@ -1,14 +1,14 @@
 import { BookOpenIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
+import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
 import { CampaignInsights } from '../components/insights/campaign-insights/campaign-insights';
-import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
+import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
-import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { SectionHeader } from '../components/ui/section-header/section-header';
-import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { WalkthroughGuide } from '../components/walkthrough/walkthrough-guide/walkthrough-guide';
+import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
 import { handleWikiClick } from '../utils/wiki-utils';
@@ -36,10 +36,7 @@ function WalkthroughPage() {
       <CharacterStatusCard />
       {activeCharacter && (
         <>
-          <SectionHeader
-            title="Progress"
-            icon={<ChartBarIcon className="w-4 h-4" />}
-          />
+          <SectionHeader title="Progress" icon={<ChartBarIcon className="w-4 h-4" />} />
           {progress && (
             <WalkthroughStepCard
               key={`${progress.current_step_id}-${progress.last_updated}`}

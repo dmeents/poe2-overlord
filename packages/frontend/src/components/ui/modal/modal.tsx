@@ -1,5 +1,5 @@
+import { useEffect, useId, useRef } from 'react';
 import { cn } from '@/utils/tailwind';
-import { useEffect, useRef, useId } from 'react';
 import { modalStyles } from './modal.styles';
 
 /**
@@ -78,12 +78,10 @@ export function Modal({
     previouslyFocusedElementRef.current = document.activeElement as HTMLElement;
 
     const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[
-      focusableElements.length - 1
-    ] as HTMLElement;
+    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
     // Focus first element
     if (firstElement) {
@@ -114,10 +112,7 @@ export function Modal({
     // Cleanup: restore focus to previously focused element
     return () => {
       modal.removeEventListener('keydown', handleTabKey);
-      if (
-        previouslyFocusedElementRef.current &&
-        previouslyFocusedElementRef.current.focus
-      ) {
+      if (previouslyFocusedElementRef.current?.focus) {
         previouslyFocusedElementRef.current.focus();
       }
     };
@@ -151,12 +146,7 @@ export function Modal({
           aria-modal="true"
           aria-labelledby={title ? titleId : undefined}
           aria-describedby={contentId}
-          className={cn(
-            modalStyles.modal,
-            modalStyles.sizeClasses[size],
-            className
-          )}
-        >
+          className={cn(modalStyles.modal, modalStyles.sizeClasses[size], className)}>
           <div className={modalStyles.content}>
             {(title || icon || showCloseButton) && (
               <div className={modalStyles.header}>
@@ -177,15 +167,13 @@ export function Modal({
                     onClick={onClose}
                     className={modalStyles.closeButton}
                     disabled={disabled}
-                    aria-label="Close modal"
-                  >
+                    aria-label="Close modal">
                     <svg
                       className={modalStyles.closeIcon}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      aria-hidden="true"
-                    >
+                      aria-hidden="true">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

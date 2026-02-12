@@ -29,17 +29,11 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
     const levels = characters.map(c => c.level);
     const highestLevel = Math.max(...levels);
     const averageLevel = Math.round(
-      levels.reduce((sum, level) => sum + level, 0) / totalCharacters
+      levels.reduce((sum, level) => sum + level, 0) / totalCharacters,
     );
 
-    const totalPlayTime = characters.reduce(
-      (sum, c) => sum + c.summary.total_play_time,
-      0
-    );
-    const totalDeaths = characters.reduce(
-      (sum, c) => sum + c.summary.total_deaths,
-      0
-    );
+    const totalPlayTime = characters.reduce((sum, c) => sum + c.summary.total_play_time, 0);
+    const totalDeaths = characters.reduce((sum, c) => sum + c.summary.total_deaths, 0);
 
     const hardcoreCount = characters.filter(c => c.hardcore).length;
     const ssfCount = characters.filter(c => c.solo_self_found).length;
@@ -49,11 +43,11 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         acc[c.league] = (acc[c.league] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     const mostPlayedCharacter = characters.reduce((max, c) =>
-      c.summary.total_play_time > max.summary.total_play_time ? c : max
+      c.summary.total_play_time > max.summary.total_play_time ? c : max,
     );
 
     return {
@@ -99,7 +93,7 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
             label="Most Played"
             value={metrics.mostPlayedCharacter.name}
             subValue={`Level ${metrics.mostPlayedCharacter.level} • ${formatPlayTime(
-              metrics.mostPlayedCharacter.summary.total_play_time
+              metrics.mostPlayedCharacter.summary.total_play_time,
             )}`}
           />
         )}
@@ -108,10 +102,7 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label="Average Level" value={metrics.averageLevel} />
       </div>
       <div>
-        <DataItem
-          label="Total Play Time"
-          value={formatPlayTime(metrics.totalPlayTime)}
-        />
+        <DataItem label="Total Play Time" value={formatPlayTime(metrics.totalPlayTime)} />
         <DataItem label="Total Deaths" value={metrics.totalDeaths} />
       </div>
       <div>
@@ -119,15 +110,13 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label="SSF Characters" value={metrics.ssfCount} />
       </div>
       {Object.keys(metrics.leagueDistribution).length > 0 && (
-        <>
-          <div>
-            {Object.entries(metrics.leagueDistribution)
-              .sort(([, a], [, b]) => b - a)
-              .map(([league, count]) => (
-                <DataItem key={league} label={league} value={count} />
-              ))}
-          </div>
-        </>
+        <div>
+          {Object.entries(metrics.leagueDistribution)
+            .sort(([, a], [, b]) => b - a)
+            .map(([league, count]) => (
+              <DataItem key={league} label={league} value={count} />
+            ))}
+        </div>
       )}
     </Card>
   );

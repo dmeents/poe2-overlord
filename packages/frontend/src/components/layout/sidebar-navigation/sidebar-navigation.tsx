@@ -49,16 +49,14 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
         to={path}
         className="block"
         aria-label={title}
-        aria-current={active ? 'page' : undefined}
-      >
+        aria-current={active ? 'page' : undefined}>
         <div
           title={title}
           className={`${sidebarNavigationStyles.navButton} ${
             active
               ? sidebarNavigationStyles.navButtonActive
               : sidebarNavigationStyles.navButtonInactive
-          }`}
-        >
+          }`}>
           <Icon className={sidebarNavigationStyles.icon} aria-hidden="true" />
         </div>
       </Link>
@@ -68,18 +66,12 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
   return (
     <div className={`${sidebarNavigationStyles.container} ${className}`}>
       {/* Primary Navigation */}
-      <nav
-        className={sidebarNavigationStyles.primaryNav}
-        aria-label="Primary navigation"
-      >
+      <nav className={sidebarNavigationStyles.primaryNav} aria-label="Primary navigation">
         {primaryNavItems.map(renderNavItem)}
       </nav>
 
       {/* Secondary Navigation (Settings) */}
-      <nav
-        className={sidebarNavigationStyles.secondaryNav}
-        aria-label="Secondary navigation"
-      >
+      <nav className={sidebarNavigationStyles.secondaryNav} aria-label="Secondary navigation">
         {secondaryNavItems.map(renderNavItem)}
       </nav>
     </div>

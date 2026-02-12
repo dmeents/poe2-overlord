@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { formFieldStyles } from './form-field.styles';
 
 interface FormFieldProps {
@@ -27,9 +27,7 @@ export function FormField({
           </label>
           <div className={formFieldStyles.childrenContainer}>{children}</div>
         </div>
-        {description && (
-          <p className={formFieldStyles.description}>{description}</p>
-        )}
+        {description && <p className={formFieldStyles.description}>{description}</p>}
       </div>
       {!isLastItem && <div className={formFieldStyles.divider}></div>}
     </>

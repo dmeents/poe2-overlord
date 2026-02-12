@@ -8,7 +8,7 @@ describe('Card', () => {
     render(
       <Card>
         <div>Card Content</div>
-      </Card>
+      </Card>,
     );
 
     expect(screen.getByText('Card Content')).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('Card', () => {
     render(
       <Card title="Test Title">
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('Card', () => {
     render(
       <Card title="Test Title" subtitle="Test Subtitle">
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
@@ -38,7 +38,7 @@ describe('Card', () => {
     render(
       <Card title="Title" icon={<span data-testid="test-icon">Icon</span>}>
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
@@ -49,12 +49,9 @@ describe('Card', () => {
     const handleClick = vi.fn();
 
     render(
-      <Card
-        title="Title"
-        rightAction={{ label: 'Action', onClick: handleClick }}
-      >
+      <Card title="Title" rightAction={{ label: 'Action', onClick: handleClick }}>
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     const actionButton = screen.getByRole('button', { name: 'Action' });
@@ -66,13 +63,9 @@ describe('Card', () => {
 
   it('hides subtitle when rightAction is provided', () => {
     render(
-      <Card
-        title="Title"
-        subtitle="Subtitle"
-        rightAction={{ label: 'Action', onClick: vi.fn() }}
-      >
+      <Card title="Title" subtitle="Subtitle" rightAction={{ label: 'Action', onClick: vi.fn() }}>
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     expect(screen.queryByText('Subtitle')).not.toBeInTheDocument();
@@ -82,7 +75,7 @@ describe('Card', () => {
     const { container } = render(
       <Card className="custom-class">
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     expect(container.firstChild).toHaveClass('custom-class');
@@ -92,7 +85,7 @@ describe('Card', () => {
     render(
       <Card>
         <div>Content Only</div>
-      </Card>
+      </Card>,
     );
 
     // Header should not be present when there's no title
@@ -103,7 +96,7 @@ describe('Card', () => {
     const { container } = render(
       <Card title="Title" showStatusIndicator>
         <div>Content</div>
-      </Card>
+      </Card>,
     );
 
     // Check for the animate-pulse class which is on the status indicator

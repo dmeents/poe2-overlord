@@ -1,5 +1,5 @@
+import type React from 'react';
 import { cn } from '@/utils/tailwind';
-import React from 'react';
 import { buttonStyles } from './button.styles';
 
 interface ButtonProps {
@@ -32,16 +32,8 @@ function LoadingSpinner({ size }: { size: 'xs' | 'sm' | 'md' | 'lg' }) {
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
+      aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"
@@ -85,9 +77,8 @@ export function Button({
         buttonStyles.variants[variant],
         getSizeClasses(),
         loading && 'cursor-wait',
-        className
-      )}
-    >
+        className,
+      )}>
       {loading && (
         <span className="mr-2">
           <LoadingSpinner size={size} />

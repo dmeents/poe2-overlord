@@ -26,10 +26,7 @@ export class WalkthroughService {
   /**
    * Update walkthrough progress for a character
    */
-  static async updateProgress(
-    characterId: string,
-    progress: WalkthroughProgress
-  ): Promise<void> {
+  static async updateProgress(characterId: string, progress: WalkthroughProgress): Promise<void> {
     return await invoke('update_character_walkthrough_progress', {
       characterId,
       progress,
@@ -41,7 +38,7 @@ export class WalkthroughService {
    */
   static async moveToStep(characterId: string, stepId: string): Promise<void> {
     // Get current progress first
-    const currentProgress = await this.getProgress(characterId);
+    const currentProgress = await WalkthroughService.getProgress(characterId);
 
     // Create new progress with the target step
     const newProgress = {
@@ -62,7 +59,7 @@ export class WalkthroughService {
    */
   static async markCampaignCompleted(characterId: string): Promise<void> {
     // Get current progress first
-    const currentProgress = await this.getProgress(characterId);
+    const currentProgress = await WalkthroughService.getProgress(characterId);
 
     // Create new progress marking campaign as completed
     const newProgress = {
@@ -88,10 +85,7 @@ export class WalkthroughService {
   /**
    * Find a step in the guide by its ID
    */
-  static findStepInGuide(
-    guide: WalkthroughGuide,
-    stepId: string
-  ): WalkthroughStepResult | null {
+  static findStepInGuide(guide: WalkthroughGuide, stepId: string): WalkthroughStepResult | null {
     for (const act of Object.values(guide.acts)) {
       if (act.steps[stepId]) {
         return {
@@ -109,10 +103,10 @@ export class WalkthroughService {
    */
   static getStepFromGuide(
     guide: WalkthroughGuide,
-    stepId: string | null
+    stepId: string | null,
   ): WalkthroughStepResult | null {
     if (!stepId) return null;
-    return this.findStepInGuide(guide, stepId);
+    return WalkthroughService.findStepInGuide(guide, stepId);
   }
 
   /**
@@ -122,16 +116,16 @@ export class WalkthroughService {
     guide: WalkthroughGuide,
     currentStepId: string | null,
     nextStepId: string | null,
-    previousStepId: string | null
+    previousStepId: string | null,
   ): {
     currentStep: WalkthroughStepResult | null;
     nextStep: WalkthroughStepResult | null;
     previousStep: WalkthroughStepResult | null;
   } {
     return {
-      currentStep: this.getStepFromGuide(guide, currentStepId),
-      nextStep: this.getStepFromGuide(guide, nextStepId),
-      previousStep: this.getStepFromGuide(guide, previousStepId),
+      currentStep: WalkthroughService.getStepFromGuide(guide, currentStepId),
+      nextStep: WalkthroughService.getStepFromGuide(guide, nextStepId),
+      previousStep: WalkthroughService.getStepFromGuide(guide, previousStepId),
     };
   }
 }

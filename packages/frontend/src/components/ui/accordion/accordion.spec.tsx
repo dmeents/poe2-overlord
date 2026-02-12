@@ -8,7 +8,7 @@ describe('Accordion', () => {
     render(
       <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
         <div>Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
@@ -16,14 +16,9 @@ describe('Accordion', () => {
 
   it('renders subtitle when provided', () => {
     render(
-      <Accordion
-        title="Test Title"
-        subtitle="Test Subtitle"
-        isExpanded={false}
-        onToggle={vi.fn()}
-      >
+      <Accordion title="Test Title" subtitle="Test Subtitle" isExpanded={false} onToggle={vi.fn()}>
         <div>Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
@@ -33,7 +28,7 @@ describe('Accordion', () => {
     render(
       <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
         <div>Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(screen.queryByText('Test Subtitle')).not.toBeInTheDocument();
@@ -43,7 +38,7 @@ describe('Accordion', () => {
     render(
       <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
         <div>Expanded Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(screen.getByText('Expanded Content')).toBeInTheDocument();
@@ -53,7 +48,7 @@ describe('Accordion', () => {
     render(
       <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
         <div>Hidden Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(screen.queryByText('Hidden Content')).not.toBeInTheDocument();
@@ -66,7 +61,7 @@ describe('Accordion', () => {
     render(
       <Accordion title="Test Title" isExpanded={false} onToggle={handleToggle}>
         <div>Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     await user.click(screen.getByRole('button'));
@@ -76,14 +71,9 @@ describe('Accordion', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <Accordion
-        title="Test Title"
-        isExpanded={false}
-        onToggle={vi.fn()}
-        className="custom-class"
-      >
+      <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()} className="custom-class">
         <div>Content</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(container.firstChild).toHaveClass('custom-class');
@@ -94,7 +84,7 @@ describe('Accordion', () => {
       <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
         <div data-testid="child-1">Child 1</div>
         <div data-testid="child-2">Child 2</div>
-      </Accordion>
+      </Accordion>,
     );
 
     expect(screen.getByTestId('child-1')).toBeInTheDocument();
@@ -106,7 +96,7 @@ describe('Accordion', () => {
       render(
         <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
           <div>Content</div>
-        </Accordion>
+        </Accordion>,
       );
 
       const button = screen.getByRole('button', { name: /test title/i });
@@ -118,7 +108,7 @@ describe('Accordion', () => {
       render(
         <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
           <div>Content</div>
-        </Accordion>
+        </Accordion>,
       );
 
       const button = screen.getByRole('button', { name: /test title/i });
@@ -134,7 +124,7 @@ describe('Accordion', () => {
       render(
         <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
           <div>Expanded Content</div>
-        </Accordion>
+        </Accordion>,
       );
 
       const button = screen.getByRole('button', { name: /test title/i });
@@ -150,7 +140,7 @@ describe('Accordion', () => {
       const { container } = render(
         <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
           <div>Content</div>
-        </Accordion>
+        </Accordion>,
       );
 
       const icons = container.querySelectorAll('svg');
@@ -168,7 +158,7 @@ describe('Accordion', () => {
           <Accordion title="Accordion 2" isExpanded={true} onToggle={vi.fn()}>
             <div>Content 2</div>
           </Accordion>
-        </>
+        </>,
       );
 
       const buttons = screen.getAllByRole('button');

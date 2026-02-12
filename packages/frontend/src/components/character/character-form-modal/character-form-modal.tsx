@@ -1,25 +1,17 @@
 import { useEffect, useState } from 'react';
+import { CHARACTER_FORM_VALIDATION } from '../../../config/form-config';
+import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
+import type { Ascendency, CharacterClass, CharacterData, League } from '../../../types/character';
+import { generateFantasyName } from '../../../utils/name-generator/name-generator';
 import { CheckboxInput } from '../../forms/form-checkbox-input/form-checkbox-input';
 import { FormField } from '../../forms/form-field/form-field';
 import { Input } from '../../forms/form-input/form-input';
 import { Select } from '../../forms/form-select/form-select';
-import { CHARACTER_FORM_VALIDATION } from '../../../config/form-config';
-import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
-import type {
-  Ascendency,
-  CharacterClass,
-  CharacterData,
-  League,
-} from '../../../types/character';
-import { Button } from '../../ui/button/button';
-import { Modal } from '../../ui/modal/modal';
-import {
-  getFormActionsClasses,
-  getFormFieldClasses,
-} from './character-form-modal.styles';
-import { generateFantasyName } from '../../../utils/name-generator/name-generator';
 import { MarsIcon } from '../../icons/mars-icon';
 import { VenusIcon } from '../../icons/venus-icon';
+import { Button } from '../../ui/button/button';
+import { Modal } from '../../ui/modal/modal';
+import { getFormActionsClasses, getFormFieldClasses } from './character-form-modal.styles';
 
 interface CharacterFormModalProps {
   isOpen: boolean;
@@ -45,12 +37,8 @@ export function CharacterFormModal({
   onClose,
   isLoading,
 }: CharacterFormModalProps) {
-  const {
-    characterClasses,
-    leagues,
-    getAscendenciesForClass,
-    getDefaultFormData,
-  } = useCharacterConfig();
+  const { characterClasses, leagues, getAscendenciesForClass, getDefaultFormData } =
+    useCharacterConfig();
 
   const [formData, setFormData] = useState<CharacterFormData>({
     name: '',
@@ -123,10 +111,7 @@ export function CharacterFormModal({
     if (validateForm()) onSubmit(formData);
   };
 
-  const handleInputChange = (
-    field: keyof CharacterFormData,
-    value: string | boolean
-  ) => {
+  const handleInputChange = (field: keyof CharacterFormData, value: string | boolean) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       return newData;
@@ -153,8 +138,7 @@ export function CharacterFormModal({
       onClose={onClose}
       size="2xl"
       title={character ? 'Edit Character' : 'Create Character'}
-      disabled={isLoading}
-    >
+      disabled={isLoading}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className={getFormFieldClasses()}>
           <FormField label="Character Name">
@@ -179,8 +163,7 @@ export function CharacterFormModal({
                   onClick={() => handleGenerateName('male')}
                   disabled={isLoading}
                   title="Generate masculine name"
-                  className="shrink-0"
-                >
+                  className="shrink-0">
                   <MarsIcon className="h-4 w-4" />
                 </Button>
                 <Button
@@ -190,8 +173,7 @@ export function CharacterFormModal({
                   onClick={() => handleGenerateName('female')}
                   disabled={isLoading}
                   title="Generate feminine name"
-                  className="shrink-0"
-                >
+                  className="shrink-0">
                   <VenusIcon className="h-4 w-4" />
                 </Button>
               </div>
@@ -240,20 +222,11 @@ export function CharacterFormModal({
           />
         </div>
         <div className={getFormActionsClasses()}>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button type="submit" variant="primary" disabled={isLoading}>
-            {isLoading
-              ? 'Saving...'
-              : character
-                ? 'Update Character'
-                : 'Create Character'}
+            {isLoading ? 'Saving...' : character ? 'Update Character' : 'Create Character'}
           </Button>
         </div>
       </form>

@@ -1,15 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router';
 import { MapPinIcon } from '@heroicons/react/24/outline';
+import { createFileRoute } from '@tanstack/react-router';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
-import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
+import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
-import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { Card } from '../components/ui/card/card';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
+import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
+import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
 import { handleWikiClick } from '../utils/wiki-utils';
-import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
 
 export const Route = createFileRoute('/')({
   component: Index,
@@ -42,10 +42,7 @@ function Index() {
           {activeZone ? (
             <CurrentZoneCard zone={activeZone} />
           ) : (
-            <Card
-              title="Current Location"
-              icon={<MapPinIcon className="w-5 h-5" />}
-            >
+            <Card title="Current Location" icon={<MapPinIcon className="w-5 h-5" />}>
               <EmptyState
                 icon={<MapPinIcon className="w-12 h-12" />}
                 title="No active zone"

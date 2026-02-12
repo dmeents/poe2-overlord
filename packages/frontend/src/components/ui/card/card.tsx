@@ -27,8 +27,7 @@ export function Card({
   showStatusIndicator = false,
   rightAction,
 }: CardProps) {
-  const baseClasses =
-    'bg-zinc-800/25 border border-zinc-700/50 overflow-hidden';
+  const baseClasses = 'bg-zinc-800/25 border border-zinc-700/50 overflow-hidden';
 
   const variantClasses = {
     default: '',
@@ -63,9 +62,7 @@ export function Card({
   return (
     <div className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
       {title && (
-        <div
-          className={`${accentGradients[accentColor]} px-5 py-3 border-b border-zinc-800`}
-        >
+        <div className={`${accentGradients[accentColor]} px-5 py-3 border-b border-zinc-800`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {showStatusIndicator && (
@@ -73,29 +70,21 @@ export function Card({
                   className={`w-2 h-2 ${accentDotColors[accentColor]} rounded-full animate-pulse`}
                 />
               )}
-              {icon && (
-                <span className={`${accentTextColors[accentColor]} w-4 h-4`}>
-                  {icon}
-                </span>
-              )}
+              {icon && <span className={`${accentTextColors[accentColor]} w-4 h-4`}>{icon}</span>}
               <span
-                className={`text-xs ${accentTextColors[accentColor]} font-medium uppercase tracking-wider`}
-              >
+                className={`text-xs ${accentTextColors[accentColor]} font-medium uppercase tracking-wider`}>
                 {title}
               </span>
             </div>
             {subtitle && !rightAction && (
-              <span className="text-xs text-zinc-400 font-normal">
-                {subtitle}
-              </span>
+              <span className="text-xs text-zinc-400 font-normal">{subtitle}</span>
             )}
             {rightAction && (
               <Button
                 onClick={rightAction.onClick}
                 variant="text"
                 size="xs"
-                className="text-zinc-400 hover:text-zinc-200 h-auto py-0"
-              >
+                className="text-zinc-400 hover:text-zinc-200 h-auto py-0">
                 {rightAction.label}
               </Button>
             )}

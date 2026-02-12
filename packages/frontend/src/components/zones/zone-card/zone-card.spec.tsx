@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ZoneCard } from './zone-card';
 import type { ZoneStats } from '@/types/character';
+import { ZoneCard } from './zone-card';
 
 const mockOpenZone = vi.hoisted(() => vi.fn());
 
@@ -127,9 +127,7 @@ describe('ZoneCard', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <ZoneCard zone={mockZone} className="custom-class" />
-    );
+    const { container } = render(<ZoneCard zone={mockZone} className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });

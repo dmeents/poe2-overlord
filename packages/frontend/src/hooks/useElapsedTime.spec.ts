@@ -1,5 +1,5 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useElapsedTime } from './useElapsedTime';
 
 describe('useElapsedTime', () => {
@@ -19,9 +19,7 @@ describe('useElapsedTime', () => {
       const entryTimestamp = new Date('2024-01-10T11:59:30Z').toISOString(); // 30 seconds ago
       const baseDuration = 100; // 100 seconds already accumulated
 
-      const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp, baseDuration })
-      );
+      const { result } = renderHook(() => useElapsedTime({ entryTimestamp, baseDuration }));
 
       // Should be 100 + 30 = 130 seconds
       expect(result.current).toBe(130);
@@ -34,9 +32,7 @@ describe('useElapsedTime', () => {
       const entryTimestamp = now.toISOString();
       const baseDuration = 100;
 
-      const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp, baseDuration })
-      );
+      const { result } = renderHook(() => useElapsedTime({ entryTimestamp, baseDuration }));
 
       expect(result.current).toBe(100); // 0 elapsed
 
@@ -61,7 +57,7 @@ describe('useElapsedTime', () => {
       const baseDuration = 0;
 
       const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp, baseDuration, intervalMs: 500 })
+        useElapsedTime({ entryTimestamp, baseDuration, intervalMs: 500 }),
       );
 
       expect(result.current).toBe(0);
@@ -83,7 +79,7 @@ describe('useElapsedTime', () => {
   describe('Inactive Timer', () => {
     it('returns only base duration when no entry timestamp', () => {
       const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp: undefined, baseDuration: 100 })
+        useElapsedTime({ entryTimestamp: undefined, baseDuration: 100 }),
       );
 
       expect(result.current).toBe(100);
@@ -104,7 +100,7 @@ describe('useElapsedTime', () => {
           entryTimestamp: now.toISOString(),
           baseDuration: 100,
           isActive: false,
-        })
+        }),
       );
 
       expect(result.current).toBe(100);
@@ -124,14 +120,13 @@ describe('useElapsedTime', () => {
       const firstEntry = new Date('2024-01-10T11:59:00Z').toISOString();
 
       const { result, rerender } = renderHook(
-        ({ entryTimestamp, baseDuration }) =>
-          useElapsedTime({ entryTimestamp, baseDuration }),
+        ({ entryTimestamp, baseDuration }) => useElapsedTime({ entryTimestamp, baseDuration }),
         {
           initialProps: {
             entryTimestamp: firstEntry,
             baseDuration: 100,
           },
-        }
+        },
       );
 
       // Should show 100 + 60 = 160
@@ -166,7 +161,7 @@ describe('useElapsedTime', () => {
       const futureEntry = new Date('2024-01-10T12:00:10Z').toISOString();
 
       const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp: futureEntry, baseDuration: 100 })
+        useElapsedTime({ entryTimestamp: futureEntry, baseDuration: 100 }),
       );
 
       // Should use Math.max(0, ...) to prevent negative elapsed time
@@ -183,7 +178,7 @@ describe('useElapsedTime', () => {
         useElapsedTime({
           entryTimestamp: now.toISOString(),
           baseDuration: 0,
-        })
+        }),
       );
 
       unmount();
@@ -197,9 +192,7 @@ describe('useElapsedTime', () => {
 
       const entryTimestamp = new Date('2024-01-10T11:59:55Z').toISOString(); // 5 seconds ago
 
-      const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp, baseDuration: 0 })
-      );
+      const { result } = renderHook(() => useElapsedTime({ entryTimestamp, baseDuration: 0 }));
 
       expect(result.current).toBe(5);
     });
@@ -211,9 +204,7 @@ describe('useElapsedTime', () => {
       const entryTimestamp = now.toISOString();
       const baseDuration = 86400; // 24 hours in seconds
 
-      const { result } = renderHook(() =>
-        useElapsedTime({ entryTimestamp, baseDuration })
-      );
+      const { result } = renderHook(() => useElapsedTime({ entryTimestamp, baseDuration }));
 
       expect(result.current).toBe(86400);
 

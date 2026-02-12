@@ -54,10 +54,7 @@ export function SortSelect({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -96,10 +93,7 @@ export function SortSelect({
   };
 
   return (
-    <div
-      className={`${formSortSelectStyles.container} ${className}`}
-      ref={dropdownRef}
-    >
+    <div className={`${formSortSelectStyles.container} ${className}`} ref={dropdownRef}>
       {label && (
         <label htmlFor={id} className={formSortSelectStyles.label}>
           {label}
@@ -113,15 +107,10 @@ export function SortSelect({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           aria-haspopup="listbox"
-          aria-expanded={isOpen}
-        >
-          <span className={formSortSelectStyles.triggerText}>
-            {getCurrentSortLabel()}
-          </span>
+          aria-expanded={isOpen}>
+          <span className={formSortSelectStyles.triggerText}>{getCurrentSortLabel()}</span>
           <div className={formSortSelectStyles.triggerIcons}>
-            <span className={formSortSelectStyles.directionIcon}>
-              {getDirectionIcon()}
-            </span>
+            <span className={formSortSelectStyles.directionIcon}>{getDirectionIcon()}</span>
             <ChevronDownIcon
               className={`${formSortSelectStyles.chevron} ${isOpen ? formSortSelectStyles.chevronOpen : ''}`}
             />
@@ -136,15 +125,13 @@ export function SortSelect({
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
             minWidth: `${dropdownPosition.width}px`,
-          }}
-        >
+          }}>
           <div className={formSortSelectStyles.header}>
             <h4 className={formSortSelectStyles.headerTitle}>Sort Options</h4>
             <button
               type="button"
               onClick={handleReset}
-              className={formSortSelectStyles.resetButton}
-            >
+              className={formSortSelectStyles.resetButton}>
               Reset
             </button>
           </div>
@@ -160,14 +147,9 @@ export function SortSelect({
                   }`}
                   onClick={() => handleOptionSelect(option.value)}
                   role="option"
-                  aria-selected={isSelected}
-                >
-                  <span className={formSortSelectStyles.optionLabel}>
-                    {option.label}
-                  </span>
-                  {isSelected && (
-                    <CheckIcon className={formSortSelectStyles.optionIcon} />
-                  )}
+                  aria-selected={isSelected}>
+                  <span className={formSortSelectStyles.optionLabel}>{option.label}</span>
+                  {isSelected && <CheckIcon className={formSortSelectStyles.optionIcon} />}
                 </div>
               );
             })}
@@ -178,14 +160,11 @@ export function SortSelect({
             <button
               type="button"
               onClick={handleDirectionToggle}
-              className={formSortSelectStyles.directionButton}
-            >
+              className={formSortSelectStyles.directionButton}>
               <span className={formSortSelectStyles.directionText}>
                 {direction === 'desc' ? 'Descending' : 'Ascending'}
               </span>
-              <span className={formSortSelectStyles.directionIconLarge}>
-                {getDirectionIcon()}
-              </span>
+              <span className={formSortSelectStyles.directionIconLarge}>{getDirectionIcon()}</span>
             </button>
           </div>
         </div>

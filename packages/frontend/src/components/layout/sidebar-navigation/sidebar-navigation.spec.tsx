@@ -23,8 +23,7 @@ vi.mock('@tanstack/react-router', () => ({
       className={className}
       data-testid={`link-${to}`}
       aria-label={ariaLabel}
-      aria-current={ariaCurrent}
-    >
+      aria-current={ariaCurrent}>
       {children}
     </a>
   ),
@@ -86,9 +85,7 @@ describe('SidebarNavigation', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <SidebarNavigation className="custom-class" />
-    );
+    const { container } = render(<SidebarNavigation className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
@@ -156,48 +153,26 @@ describe('SidebarNavigation', () => {
     it('provides aria-label on all navigation links', () => {
       render(<SidebarNavigation />);
 
-      expect(screen.getByTestId('link-/')).toHaveAttribute(
-        'aria-label',
-        'Dashboard'
-      );
-      expect(screen.getByTestId('link-/walkthrough')).toHaveAttribute(
-        'aria-label',
-        'Walkthrough'
-      );
-      expect(screen.getByTestId('link-/playtime')).toHaveAttribute(
-        'aria-label',
-        'Playtime'
-      );
-      expect(screen.getByTestId('link-/economy')).toHaveAttribute(
-        'aria-label',
-        'Economy'
-      );
-      expect(screen.getByTestId('link-/characters')).toHaveAttribute(
-        'aria-label',
-        'Characters'
-      );
-      expect(screen.getByTestId('link-/settings')).toHaveAttribute(
-        'aria-label',
-        'Settings'
-      );
+      expect(screen.getByTestId('link-/')).toHaveAttribute('aria-label', 'Dashboard');
+      expect(screen.getByTestId('link-/walkthrough')).toHaveAttribute('aria-label', 'Walkthrough');
+      expect(screen.getByTestId('link-/playtime')).toHaveAttribute('aria-label', 'Playtime');
+      expect(screen.getByTestId('link-/economy')).toHaveAttribute('aria-label', 'Economy');
+      expect(screen.getByTestId('link-/characters')).toHaveAttribute('aria-label', 'Characters');
+      expect(screen.getByTestId('link-/settings')).toHaveAttribute('aria-label', 'Settings');
     });
 
     it('provides aria-label on navigation regions', () => {
       render(<SidebarNavigation />);
 
-      expect(
-        screen.getByRole('navigation', { name: 'Primary navigation' })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('navigation', { name: 'Secondary navigation' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: 'Secondary navigation' })).toBeInTheDocument();
     });
 
     it('hides decorative icons from screen readers', () => {
       const { container } = render(<SidebarNavigation />);
 
       const icons = container.querySelectorAll('svg');
-      icons.forEach((icon) => {
+      icons.forEach(icon => {
         expect(icon).toHaveAttribute('aria-hidden', 'true');
       });
     });

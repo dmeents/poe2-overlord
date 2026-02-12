@@ -5,10 +5,7 @@ import { PageLayout } from './page-layout';
 describe('PageLayout', () => {
   it('renders left column content', () => {
     render(
-      <PageLayout
-        leftColumn={<div>Left Content</div>}
-        rightColumn={<div>Right Content</div>}
-      />
+      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
     );
 
     expect(screen.getByText('Left Content')).toBeInTheDocument();
@@ -16,10 +13,7 @@ describe('PageLayout', () => {
 
   it('renders right column content', () => {
     render(
-      <PageLayout
-        leftColumn={<div>Left Content</div>}
-        rightColumn={<div>Right Content</div>}
-      />
+      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
     );
 
     expect(screen.getByText('Right Content')).toBeInTheDocument();
@@ -27,12 +21,9 @@ describe('PageLayout', () => {
 
   it('renders children when provided', () => {
     render(
-      <PageLayout
-        leftColumn={<div>Left Content</div>}
-        rightColumn={<div>Right Content</div>}
-      >
+      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>}>
         <div>Child Content</div>
-      </PageLayout>
+      </PageLayout>,
     );
 
     expect(screen.getByText('Child Content')).toBeInTheDocument();
@@ -40,10 +31,7 @@ describe('PageLayout', () => {
 
   it('does not require children', () => {
     const { container } = render(
-      <PageLayout
-        leftColumn={<div>Left Content</div>}
-        rightColumn={<div>Right Content</div>}
-      />
+      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
     );
 
     expect(container.firstChild).toBeInTheDocument();
@@ -55,7 +43,7 @@ describe('PageLayout', () => {
         leftColumn={<div>Left Content</div>}
         rightColumn={<div>Right Content</div>}
         className="custom-class"
-      />
+      />,
     );
 
     expect(container.firstChild).toHaveClass('custom-class');
@@ -63,10 +51,7 @@ describe('PageLayout', () => {
 
   it('applies base styling classes', () => {
     const { container } = render(
-      <PageLayout
-        leftColumn={<div>Left Content</div>}
-        rightColumn={<div>Right Content</div>}
-      />
+      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
     );
 
     expect(container.firstChild).toHaveClass('min-h-screen');

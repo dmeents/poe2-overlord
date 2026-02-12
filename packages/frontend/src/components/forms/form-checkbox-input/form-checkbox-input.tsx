@@ -34,9 +34,7 @@ export function CheckboxInput({
             />
           </div>
         </div>
-        {description && (
-          <p className={formCheckboxInputStyles.description}>{description}</p>
-        )}
+        {description && <p className={formCheckboxInputStyles.description}>{description}</p>}
       </div>
       <div className={formCheckboxInputStyles.divider}></div>
     </>

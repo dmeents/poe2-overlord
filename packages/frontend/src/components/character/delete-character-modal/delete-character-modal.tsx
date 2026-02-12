@@ -32,12 +32,7 @@ export function DeleteCharacterModal({
   if (!character) return null;
 
   const warningIcon = (
-    <svg
-      className={getWarningIconClasses()}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
+    <svg className={getWarningIconClasses()} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -54,24 +49,19 @@ export function DeleteCharacterModal({
       size="md"
       title="Delete Character"
       icon={warningIcon}
-      disabled={isLoading}
-    >
+      disabled={isLoading}>
       <div className={getModalContentClasses()}>
         <p className="text-zinc-300 mb-4">
-          Are you sure you want to delete{' '}
-          <strong className="text-white">{character.name}</strong>?
+          Are you sure you want to delete <strong className="text-white">{character.name}</strong>?
         </p>
 
         <div className={getCharacterInfoClasses()}>
           <div className={getCharacterInfoTextClasses()}>
             <div>
-              <span className={getCharacterInfoLabelClasses()}>Class:</span>{' '}
-              {character.class}
+              <span className={getCharacterInfoLabelClasses()}>Class:</span> {character.class}
             </div>
             <div>
-              <span className={getCharacterInfoLabelClasses()}>
-                Ascendency:
-              </span>{' '}
+              <span className={getCharacterInfoLabelClasses()}>Ascendency:</span>{' '}
               {character.ascendency}
             </div>
             <div>
@@ -85,9 +75,9 @@ export function DeleteCharacterModal({
 
         <div className={getWarningContainerClasses()}>
           <p className={getWarningTextClasses()}>
-            <strong className={getWarningStrongClasses()}>Warning:</strong> This
-            action cannot be undone. All time tracking data and statistics for
-            this character will be permanently deleted.
+            <strong className={getWarningStrongClasses()}>Warning:</strong> This action cannot be
+            undone. All time tracking data and statistics for this character will be permanently
+            deleted.
           </p>
         </div>
       </div>
@@ -100,8 +90,7 @@ export function DeleteCharacterModal({
           variant="outline"
           onClick={onConfirm}
           disabled={isLoading}
-          className={getDeleteButtonClasses()}
-        >
+          className={getDeleteButtonClasses()}>
           {isLoading ? 'Deleting...' : 'Delete Character'}
         </Button>
       </div>

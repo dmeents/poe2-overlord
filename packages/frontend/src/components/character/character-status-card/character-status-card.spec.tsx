@@ -50,7 +50,7 @@ const mockUseCharacter = vi.hoisted(() =>
   vi.fn(() => ({
     activeCharacter: null as CharacterData | null,
     isLoading: false,
-  }))
+  })),
 );
 
 vi.mock('../../../contexts/CharacterContext', () => ({
@@ -96,9 +96,7 @@ describe('CharacterStatusCard', () => {
 
     expect(screen.getByText('Active Character')).toBeInTheDocument();
     expect(screen.getByText('No Active Character')).toBeInTheDocument();
-    expect(
-      screen.getByText('Create or select a character to start tracking')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Create or select a character to start tracking')).toBeInTheDocument();
   });
 
   it('renders manage characters button in empty state', () => {
@@ -109,9 +107,7 @@ describe('CharacterStatusCard', () => {
 
     render(<CharacterStatusCard />);
 
-    expect(
-      screen.getByRole('button', { name: 'Manage Characters' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Manage Characters' })).toBeInTheDocument();
     expect(screen.getByTestId('link-/characters')).toBeInTheDocument();
   });
 
@@ -134,9 +130,7 @@ describe('CharacterStatusCard', () => {
       isLoading: false,
     });
 
-    const { container } = render(
-      <CharacterStatusCard className="custom-class" />
-    );
+    const { container } = render(<CharacterStatusCard className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
@@ -147,9 +141,7 @@ describe('CharacterStatusCard', () => {
       isLoading: false,
     });
 
-    const { container } = render(
-      <CharacterStatusCard className="custom-class" />
-    );
+    const { container } = render(<CharacterStatusCard className="custom-class" />);
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
@@ -163,11 +155,7 @@ describe('CharacterStatusCard', () => {
     render(<CharacterStatusCard />);
 
     // Edit and Delete buttons should not be present
-    expect(
-      screen.queryByRole('button', { name: 'Edit' })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Delete' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
 });

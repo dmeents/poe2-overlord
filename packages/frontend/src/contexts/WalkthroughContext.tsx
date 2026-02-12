@@ -1,28 +1,22 @@
 /* eslint-disable react-refresh/only-export-components */
+
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useAppEventListener } from '@/hooks/useAppEventListener';
+import { useWalkthroughGuide } from '@/queries/walkthrough';
 import type {
   WalkthroughGuide,
   WalkthroughProgress,
   WalkthroughStepResult,
 } from '@/types/walkthrough';
-import { useAppEventListener } from '@/hooks/useAppEventListener';
-import { useCharacter } from './CharacterContext';
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from 'react';
-import { WalkthroughService } from '@/utils/walkthrough';
 import {
   EVENT_KEYS,
   type ExtractPayload,
-  type WalkthroughStepCompletedEvent,
-  type WalkthroughStepAdvancedEvent,
   type WalkthroughCampaignCompletedEvent,
+  type WalkthroughStepAdvancedEvent,
+  type WalkthroughStepCompletedEvent,
 } from '@/utils/events/registry';
-import { useWalkthroughGuide } from '@/queries/walkthrough';
+import { WalkthroughService } from '@/utils/walkthrough';
+import { useCharacter } from './CharacterContext';
 
 interface WalkthroughContextValue {
   guide: WalkthroughGuide | null;
@@ -36,28 +30,19 @@ interface WalkthroughContextValue {
   characterId: string | null;
 }
 
-const WalkthroughContext = createContext<WalkthroughContextValue | undefined>(
-  undefined
-);
+const WalkthroughContext = createContext<WalkthroughContextValue | undefined>(undefined);
 
 export function WalkthroughProvider({ children }: React.PropsWithChildren) {
   const { activeCharacter, isLoading: characterLoading } = useCharacter();
   const characterId = activeCharacter?.id || null;
 
-  const {
-    data: guide,
-    isLoading: guideLoading,
-    error: guideError,
-  } = useWalkthroughGuide();
+  const { data: guide, isLoading: guideLoading, error: guideError } = useWalkthroughGuide();
 
   const progress = activeCharacter?.walkthrough_progress || null;
 
-  const [currentStep, setCurrentStep] = useState<WalkthroughStepResult | null>(
-    null
-  );
+  const [currentStep, setCurrentStep] = useState<WalkthroughStepResult | null>(null);
 
-  const [previousStep, setPreviousStep] =
-    useState<WalkthroughStepResult | null>(null);
+  const [previousStep, setPreviousStep] = useState<WalkthroughStepResult | null>(null);
 
   const [lastEvent, setLastEvent] = useState<string | null>(null);
 
@@ -66,7 +51,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       if (!guide || !stepId) return null;
       return WalkthroughService.getStepFromGuide(guide, stepId);
     },
-    [guide]
+    [guide],
   );
 
   useEffect(() => {
@@ -81,9 +66,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       setCurrentStep(currentStepData);
 
       if (currentStepData?.step.previous_step_id) {
-        const previousStepData = getStepFromGuide(
-          currentStepData.step.previous_step_id
-        );
+        const previousStepData = getStepFromGuide(currentStepData.step.previous_step_id);
         setPreviousStep(previousStepData);
       } else {
         setPreviousStep(null);
@@ -99,8 +82,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       {
         eventType: EVENT_KEYS.WalkthroughStepCompleted,
         handler: (payload: unknown) => {
-          const { character_id } =
-            payload as ExtractPayload<WalkthroughStepCompletedEvent>;
+          const { character_id } = payload as ExtractPayload<WalkthroughStepCompletedEvent>;
 
           if (character_id !== characterId) return;
           setLastEvent('step_completed');
@@ -125,15 +107,14 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       {
         eventType: EVENT_KEYS.WalkthroughCampaignCompleted,
         handler: (payload: unknown) => {
-          const { character_id } =
-            payload as ExtractPayload<WalkthroughCampaignCompletedEvent>;
+          const { character_id } = payload as ExtractPayload<WalkthroughCampaignCompletedEvent>;
 
           if (character_id !== characterId) return;
           setLastEvent('campaign_completed');
         },
       },
     ],
-    [characterId, getStepFromGuide]
+    [characterId, getStepFromGuide],
   );
 
   useEffect(() => {
@@ -163,14 +144,10 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       lastEvent,
       isListening,
       characterId,
-    ]
+    ],
   );
 
-  return (
-    <WalkthroughContext.Provider value={contextValue}>
-      {children}
-    </WalkthroughContext.Provider>
-  );
+  return <WalkthroughContext.Provider value={contextValue}>{children}</WalkthroughContext.Provider>;
 }
 
 export function useWalkthrough() {

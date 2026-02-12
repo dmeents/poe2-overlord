@@ -1,10 +1,7 @@
-import type {
-  ZoneFilters as ZoneFiltersType,
-  ZoneSortOption,
-} from '@/hooks/useZoneList';
-import type { ZoneStats } from '@/types/character';
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { memo, useCallback } from 'react';
+import type { ZoneFilters as ZoneFiltersType, ZoneSortOption } from '@/hooks/useZoneList';
+import type { ZoneStats } from '@/types/character';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { ZoneCard } from '../zone-card/zone-card';
 import { ZoneListControlsForm } from '../zone-list-controls-form/zone-list-controls-form';
@@ -12,17 +9,11 @@ import { ZoneListControlsForm } from '../zone-list-controls-form/zone-list-contr
 interface ZoneListProps {
   zones: ZoneStats[];
   filters: ZoneFiltersType;
-  onFilterChange: <K extends keyof ZoneFiltersType>(
-    key: K,
-    value: ZoneFiltersType[K]
-  ) => void;
+  onFilterChange: <K extends keyof ZoneFiltersType>(key: K, value: ZoneFiltersType[K]) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
   sort: ZoneSortOption;
-  onSortChange: (
-    field: ZoneSortOption['field'],
-    direction?: ZoneSortOption['direction']
-  ) => void;
+  onSortChange: (field: ZoneSortOption['field'], direction?: ZoneSortOption['direction']) => void;
   onResetSort: () => void;
   totalCount: number;
 }
@@ -42,17 +33,14 @@ export const ZoneList = memo(function ZoneList({
     <K extends keyof ZoneFiltersType>(key: K, value: ZoneFiltersType[K]) => {
       onFilterChange(key, value);
     },
-    [onFilterChange]
+    [onFilterChange],
   );
 
   const handleSortChange = useCallback(
-    (
-      field: ZoneSortOption['field'],
-      direction?: ZoneSortOption['direction']
-    ) => {
+    (field: ZoneSortOption['field'], direction?: ZoneSortOption['direction']) => {
       onSortChange(field, direction);
     },
-    [onSortChange]
+    [onSortChange],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -90,8 +78,7 @@ export const ZoneList = memo(function ZoneList({
             className="grid gap-2 px-4 py-2 bg-zinc-800/50 border-b border-zinc-700/50 text-xs font-medium text-zinc-400 uppercase tracking-wider"
             style={{
               gridTemplateColumns: '5fr 1fr 1fr 1fr 1fr 1fr',
-            }}
-          >
+            }}>
             <div>Zone</div>
             <div className="text-right">Act</div>
             <div className="text-right">Level</div>
@@ -100,13 +87,7 @@ export const ZoneList = memo(function ZoneList({
             <div className="text-right">Duration</div>
           </div>
           {zones.map((zone, index) => {
-            return (
-              <ZoneCard
-                key={zone.zone_name}
-                zone={zone}
-                isEven={index % 2 === 0}
-              />
-            );
+            return <ZoneCard key={zone.zone_name} zone={zone} isEven={index % 2 === 0} />;
           })}
         </div>
       ) : (
@@ -114,17 +95,14 @@ export const ZoneList = memo(function ZoneList({
           <div className="w-16 h-16 bg-zinc-800/50 flex items-center justify-center mb-4">
             <MagnifyingGlassIcon className="w-8 h-8 text-zinc-500" />
           </div>
-          <h3 className="text-lg font-medium text-zinc-300 mb-2">
-            No zones found
-          </h3>
+          <h3 className="text-lg font-medium text-zinc-300 mb-2">No zones found</h3>
           <p className="text-zinc-500 mb-4 max-w-md">
-            No zones match your current search and filter criteria. Try
-            adjusting your filters or search terms.
+            No zones match your current search and filter criteria. Try adjusting your filters or
+            search terms.
           </p>
           <button
             onClick={handleClearFilters}
-            className="px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
-          >
+            className="px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors">
             Clear All Filters
           </button>
         </div>

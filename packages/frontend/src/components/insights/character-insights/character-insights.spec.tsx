@@ -1,11 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { CharacterInsights } from './character-insights';
 import type { CharacterData, CharacterSummary } from '@/types/character';
+import { CharacterInsights } from './character-insights';
 
-const createMockSummary = (
-  overrides: Partial<CharacterSummary> = {}
-): CharacterSummary => ({
+const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 3600,
   total_hideout_time: 600,
@@ -20,9 +18,7 @@ const createMockSummary = (
   ...overrides,
 });
 
-const createMockCharacter = (
-  overrides: Partial<CharacterData> = {}
-): CharacterData =>
+const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData =>
   ({
     id: 'char-1',
     name: 'TestChar',
@@ -46,9 +42,7 @@ describe('CharacterInsights', () => {
       render(<CharacterInsights characters={[]} />);
 
       expect(screen.getByText('No Characters to Analyze')).toBeInTheDocument();
-      expect(
-        screen.getByText('Create some characters to view insights')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Create some characters to view insights')).toBeInTheDocument();
     });
 
     it('renders Character Insights title in empty state', () => {

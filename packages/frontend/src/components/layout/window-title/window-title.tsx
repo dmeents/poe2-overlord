@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button/button';
 import { MinusIcon, WindowIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { Button } from '@/components/ui/button/button';
 import { windowTitleStyles } from './window-title.styles';
 
 const appWindow = getCurrentWindow();
@@ -42,8 +42,7 @@ export const WindowTitle = () => {
           variant="ghost"
           size="sm"
           onClick={handleMinimize}
-          className={windowTitleStyles.controlButton}
-        >
+          className={windowTitleStyles.controlButton}>
           <MinusIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
         <Button
@@ -51,8 +50,7 @@ export const WindowTitle = () => {
           variant="ghost"
           size="sm"
           onClick={handleMaximize}
-          className={windowTitleStyles.controlButton}
-        >
+          className={windowTitleStyles.controlButton}>
           <WindowIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
         <Button
@@ -60,8 +58,7 @@ export const WindowTitle = () => {
           variant="ghost"
           size="sm"
           onClick={handleClose}
-          className={windowTitleStyles.controlButton}
-        >
+          className={windowTitleStyles.controlButton}>
           <XMarkIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
       </div>

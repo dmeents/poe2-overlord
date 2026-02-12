@@ -1,23 +1,17 @@
-import type { ZoneStats } from '@/types/character';
-import {
-  MapIcon,
-  HomeIcon,
-  BuildingStorefrontIcon,
-} from '@heroicons/react/24/outline';
+import { BuildingStorefrontIcon, HomeIcon, MapIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
-import { TimeDisplay } from '../../ui/time-display/time-display';
-import { getDisplayAct } from '@/utils/zone-utils';
 import { useZone } from '@/contexts/ZoneContext';
-import { Card } from '../../ui/card/card';
 import { useElapsedTime } from '@/hooks/useElapsedTime';
+import type { ZoneStats } from '@/types/character';
+import { getDisplayAct } from '@/utils/zone-utils';
+import { Card } from '../../ui/card/card';
+import { TimeDisplay } from '../../ui/time-display/time-display';
 
 interface CurrentZoneCardProps {
   zone: ZoneStats;
 }
 
-export const CurrentZoneCard = memo(function CurrentZoneCard({
-  zone,
-}: CurrentZoneCardProps) {
+export const CurrentZoneCard = memo(function CurrentZoneCard({ zone }: CurrentZoneCardProps) {
   const { openZone } = useZone();
   const handleViewDetails = () => openZone(zone.zone_name);
 
@@ -36,14 +30,11 @@ export const CurrentZoneCard = memo(function CurrentZoneCard({
       rightAction={{
         label: 'View Details →',
         onClick: handleViewDetails,
-      }}
-    >
+      }}>
       <div className="p-4">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-white mb-1 truncate">
-              {zone.zone_name}
-            </h3>
+            <h3 className="text-xl font-bold text-white mb-1 truncate">{zone.zone_name}</h3>
             <div className="flex items-center gap-2 flex-wrap">
               {getDisplayAct(zone) && (
                 <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-xs rounded">
@@ -59,9 +50,7 @@ export const CurrentZoneCard = memo(function CurrentZoneCard({
           </div>
           <div className="flex gap-1.5 ml-3">
             {zone.has_waypoint && <MapIcon className="w-4 h-4 text-zinc-400" />}
-            {zone.is_town && (
-              <BuildingStorefrontIcon className="w-4 h-4 text-zinc-400" />
-            )}
+            {zone.is_town && <BuildingStorefrontIcon className="w-4 h-4 text-zinc-400" />}
             {zone.zone_name.toLowerCase().includes('hideout') && (
               <HomeIcon className="w-4 h-4 text-zinc-400" />
             )}

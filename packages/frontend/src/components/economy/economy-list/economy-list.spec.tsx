@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { EconomyList } from './economy-list';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CurrencyExchangeRate } from '@/types/economy';
+import { EconomyList } from './economy-list';
 
 // Mock child components
 vi.mock('../economy-row/economy-row', () => ({
@@ -11,15 +11,11 @@ vi.mock('../economy-row/economy-row', () => ({
 }));
 
 vi.mock('../currency-list-controls-form/currency-list-controls-form', () => ({
-  CurrencyListControlsForm: vi.fn(() => (
-    <div data-testid="currency-list-controls">Controls</div>
-  )),
+  CurrencyListControlsForm: vi.fn(() => <div data-testid="currency-list-controls">Controls</div>),
 }));
 
 vi.mock('@/components/ui/loading-spinner/loading-spinner', () => ({
-  LoadingSpinner: vi.fn(() => (
-    <div data-testid="loading-spinner">Loading...</div>
-  )),
+  LoadingSpinner: vi.fn(() => <div data-testid="loading-spinner">Loading...</div>),
 }));
 
 // Mock the useCurrencyList hook
@@ -30,7 +26,7 @@ vi.mock('@/hooks/useCurrencyList', () => ({
 }));
 
 const createMockCurrency = (
-  overrides: Partial<CurrencyExchangeRate> = {}
+  overrides: Partial<CurrencyExchangeRate> = {},
 ): CurrencyExchangeRate => ({
   id: 'chaos',
   name: 'Chaos Orb',
@@ -136,9 +132,7 @@ describe('EconomyList', () => {
 
       render(<EconomyList {...defaultProps} searchQuery="nonexistent" />);
 
-      expect(
-        screen.getByText(/No currencies found matching "nonexistent"/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/No currencies found matching "nonexistent"/)).toBeInTheDocument();
     });
 
     it('shows filter empty message when no results and hasActiveFilters', () => {
@@ -155,9 +149,7 @@ describe('EconomyList', () => {
 
       render(<EconomyList {...defaultProps} searchQuery="" />);
 
-      expect(
-        screen.getByText('No currencies match your search')
-      ).toBeInTheDocument();
+      expect(screen.getByText('No currencies match your search')).toBeInTheDocument();
     });
 
     it('shows no data message when no currencies at all', () => {
@@ -174,9 +166,7 @@ describe('EconomyList', () => {
 
       render(<EconomyList {...defaultProps} currencies={[]} searchQuery="" />);
 
-      expect(
-        screen.getByText('No currency data available')
-      ).toBeInTheDocument();
+      expect(screen.getByText('No currency data available')).toBeInTheDocument();
     });
   });
 });

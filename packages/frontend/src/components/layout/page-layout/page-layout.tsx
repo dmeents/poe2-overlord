@@ -7,12 +7,7 @@ interface PageLayoutProps {
   className?: string;
 }
 
-export function PageLayout({
-  children,
-  leftColumn,
-  rightColumn,
-  className = '',
-}: PageLayoutProps) {
+export function PageLayout({ children, leftColumn, rightColumn, className = '' }: PageLayoutProps) {
   return (
     <div className={`min-h-screen bg-zinc-900 text-white ${className}`}>
       <div className="px-6 py-8 pb-16">

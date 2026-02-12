@@ -26,10 +26,7 @@ export interface SelectProps {
   dropdownClassName?: string;
   showClearButton?: boolean;
   onClear?: () => void;
-  renderTrigger?: (
-    isOpen: boolean,
-    selectedOption?: SelectOption
-  ) => React.ReactNode;
+  renderTrigger?: (isOpen: boolean, selectedOption?: SelectOption) => React.ReactNode;
   renderOption?: (option: SelectOption, isSelected: boolean) => React.ReactNode;
 }
 
@@ -78,10 +75,7 @@ export function Select({
     if (variant !== 'dropdown') return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -111,9 +105,7 @@ export function Select({
   // Basic select variant
   if (variant === 'basic') {
     const validationClasses =
-      value && !isValid
-        ? formSelectStyles.invalidSelect
-        : formSelectStyles.validSelect;
+      value && !isValid ? formSelectStyles.invalidSelect : formSelectStyles.validSelect;
 
     return (
       <div className={formSelectStyles.container}>
@@ -127,14 +119,9 @@ export function Select({
           value={value}
           onChange={e => onChange(e.target.value)}
           disabled={disabled}
-          className={`${formSelectStyles.basicSelect} ${validationClasses} ${className}`}
-        >
+          className={`${formSelectStyles.basicSelect} ${validationClasses} ${className}`}>
           {placeholder && (
-            <option
-              value=""
-              disabled
-              className={formSelectStyles.placeholderOption}
-            >
+            <option value="" disabled className={formSelectStyles.placeholderOption}>
               {placeholder}
             </option>
           )}
@@ -143,8 +130,7 @@ export function Select({
               key={option.value}
               value={option.value}
               disabled={option.disabled}
-              className={formSelectStyles.option}
-            >
+              className={formSelectStyles.option}>
               {option.label}
             </option>
           ))}
@@ -157,18 +143,14 @@ export function Select({
   }
 
   // Dropdown select variant
-  const defaultRenderTrigger = (
-    isOpen: boolean,
-    selectedOption?: SelectOption
-  ) => (
+  const defaultRenderTrigger = (isOpen: boolean, selectedOption?: SelectOption) => (
     <button
       type="button"
       className={`${formSelectStyles.trigger} ${triggerClassName}`}
       onClick={() => !disabled && setIsOpen(!isOpen)}
       disabled={disabled}
       aria-haspopup="listbox"
-      aria-expanded={isOpen}
-    >
+      aria-expanded={isOpen}>
       <span className={formSelectStyles.triggerText}>
         {selectedOption ? selectedOption.label : placeholder}
       </span>
@@ -178,8 +160,7 @@ export function Select({
             type="button"
             onClick={handleClear}
             className={formSelectStyles.clearButton}
-            aria-label="Clear selection"
-          >
+            aria-label="Clear selection">
             ×
           </button>
         )}
@@ -198,18 +179,14 @@ export function Select({
       } ${option.disabled ? formSelectStyles.optionDisabled : ''}`}
       onClick={() => !option.disabled && handleOptionSelect(option.value)}
       role="option"
-      aria-selected={isSelected}
-    >
+      aria-selected={isSelected}>
       <span className={formSelectStyles.optionLabel}>{option.label}</span>
       {isSelected && <CheckIcon className="w-4 h-4 text-emerald-400" />}
     </div>
   );
 
   return (
-    <div
-      className={`${formSelectStyles.container} ${className}`}
-      ref={dropdownRef}
-    >
+    <div className={`${formSelectStyles.container} ${className}`} ref={dropdownRef}>
       {label && (
         <label htmlFor={id} className={formSelectStyles.label}>
           {label}
@@ -229,13 +206,10 @@ export function Select({
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
             minWidth: `${dropdownPosition.width}px`,
-          }}
-        >
+          }}>
           <div className={formSelectStyles.optionsList} role="listbox">
             {options.length === 0 ? (
-              <div className={formSelectStyles.emptyState}>
-                No options available
-              </div>
+              <div className={formSelectStyles.emptyState}>No options available</div>
             ) : (
               options.map(option => {
                 const isSelected = option.value === value;

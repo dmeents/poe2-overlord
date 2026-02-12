@@ -1,21 +1,17 @@
-import { memo } from 'react';
 import { XMarkIcon } from '@heroicons/react/20/solid';
+import { memo } from 'react';
+import { useEconomy } from '@/contexts/EconomyContext';
+import type { CurrencySortOption } from '@/hooks/useCurrencyList';
+import { ECONOMY_TYPE_ICONS, ECONOMY_TYPE_LABELS, ECONOMY_TYPES } from '@/utils/economy-icons';
 import { Input } from '../../forms/form-input/form-input';
 import { SortSelect } from '../../forms/form-sort-select/form-sort-select';
 import { Button } from '../../ui/button/button';
-import { useEconomy } from '@/contexts/EconomyContext';
 import {
-  ECONOMY_TYPE_ICONS,
-  ECONOMY_TYPE_LABELS,
-  ECONOMY_TYPES,
-} from '@/utils/economy-icons';
-import type { CurrencySortOption } from '@/hooks/useCurrencyList';
-import {
+  clearButtonClasses,
   controlsContainerClasses,
+  countDisplayClasses,
   searchInputContainerClasses,
   sortSelectContainerClasses,
-  countDisplayClasses,
-  clearButtonClasses,
 } from './currency-list-controls-form.styles';
 
 interface CurrencyListControlsFormProps {
@@ -27,7 +23,7 @@ interface CurrencyListControlsFormProps {
   sort: CurrencySortOption;
   onSortChange: (
     field: CurrencySortOption['field'],
-    direction?: CurrencySortOption['direction']
+    direction?: CurrencySortOption['direction'],
   ) => void;
   onResetSort: () => void;
   currencyCount: number;
@@ -67,8 +63,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
               if (searchQuery) {
                 onSearchChange('');
               }
-            }}
-          >
+            }}>
             <img
               src={ECONOMY_TYPE_ICONS[type]}
               alt={ECONOMY_TYPE_LABELS[type]}
@@ -96,8 +91,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
               size="sm"
               onClick={() => onSearchChange('')}
               className="absolute right-2 top-1/2 -translate-y-1/2"
-              title="Clear search"
-            >
+              title="Clear search">
               <XMarkIcon className="w-4 h-4" />
             </Button>
           )}
@@ -117,11 +111,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
       </div>
       <div className="flex items-center">
         {hasActiveFilters && (
-          <button
-            onClick={onClearFilters}
-            className={clearButtonClasses}
-            type="button"
-          >
+          <button onClick={onClearFilters} className={clearButtonClasses} type="button">
             Clear search
           </button>
         )}
@@ -131,8 +121,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             <span>Searching...</span>
           ) : searchQuery ? (
             <span>
-              Found {currencyCount} result{currencyCount !== 1 ? 's' : ''}{' '}
-              across all types
+              Found {currencyCount} result{currencyCount !== 1 ? 's' : ''} across all types
             </span>
           ) : currencyCount === totalCount ? (
             <span>Showing all {totalCount} items</span>

@@ -138,6 +138,8 @@ export function Modal({
 
   return (
     <div className={modalStyles.overlay}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: Backdrop click to close modal; keyboard handled via Escape key */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape key handler exists for keyboard accessibility */}
       <div className={modalStyles.container} onClick={handleBackdropClick}>
         <div className={modalStyles.backdrop} aria-hidden="true" />
         <div
@@ -164,6 +166,7 @@ export function Modal({
                 </div>
                 {showCloseButton && (
                   <button
+                    type="button"
                     onClick={onClose}
                     className={modalStyles.closeButton}
                     disabled={disabled}

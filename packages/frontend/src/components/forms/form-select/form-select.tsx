@@ -178,7 +178,14 @@ export function Select({
         isSelected ? formSelectStyles.optionSelected : ''
       } ${option.disabled ? formSelectStyles.optionDisabled : ''}`}
       onClick={() => !option.disabled && handleOptionSelect(option.value)}
+      onKeyDown={e => {
+        if (!option.disabled && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          handleOptionSelect(option.value);
+        }
+      }}
       role="option"
+      tabIndex={option.disabled ? -1 : 0}
       aria-selected={isSelected}>
       <span className={formSelectStyles.optionLabel}>{option.label}</span>
       {isSelected && <CheckIcon className="w-4 h-4 text-emerald-400" />}

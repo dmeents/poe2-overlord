@@ -125,9 +125,9 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Filters */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
+          <span className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
             Filters
-          </label>
+          </span>
           <FilterToggle
             isExpanded={isExpanded}
             onToggle={() => setIsExpanded(!isExpanded)}
@@ -247,6 +247,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       <span className={activeFilterChipClasses}>
                         League: {filters.league}
                         <button
+                          type="button"
                           onClick={() => onFilterChange('league', 'All')}
                           className={chipRemoveButtonClasses}>
                           ×
@@ -257,6 +258,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       <span className={activeFilterChipClasses}>
                         {filters.hardcore ? 'Hardcore' : 'Non-Hardcore'}
                         <button
+                          type="button"
                           onClick={() => onFilterChange('hardcore', null)}
                           className={chipRemoveButtonClasses}>
                           ×
@@ -267,6 +269,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       <span className={activeFilterChipClasses}>
                         {filters.soloSelfFound ? 'SSF' : 'Non-SSF'}
                         <button
+                          type="button"
                           onClick={() => onFilterChange('soloSelfFound', null)}
                           className={chipRemoveButtonClasses}>
                           ×
@@ -277,6 +280,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       <span className={activeFilterChipClasses}>
                         Class: {filters.classes[0]}
                         <button
+                          type="button"
                           onClick={() => onFilterChange('classes', [])}
                           className={chipRemoveButtonClasses}>
                           ×
@@ -287,6 +291,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       <span className={activeFilterChipClasses}>
                         Ascendency: {filters.ascendencies[0]}
                         <button
+                          type="button"
                           onClick={() => onFilterChange('ascendencies', [])}
                           className={chipRemoveButtonClasses}>
                           ×
@@ -297,6 +302,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       <span className={activeFilterChipClasses}>
                         Name: {filters.nameSearch}
                         <button
+                          type="button"
                           onClick={() => onFilterChange('nameSearch', '')}
                           className={chipRemoveButtonClasses}>
                           ×
@@ -325,9 +331,9 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
 
         {/* Sort */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
+          <span className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
             Sort
-          </label>
+          </span>
           <div className="flex gap-2">
             <div className="flex-1">
               <SortSelect

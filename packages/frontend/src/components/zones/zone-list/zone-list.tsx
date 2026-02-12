@@ -101,6 +101,7 @@ export const ZoneList = memo(function ZoneList({
             search terms.
           </p>
           <button
+            type="button"
             onClick={handleClearFilters}
             className="px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-colors">
             Clear All Filters

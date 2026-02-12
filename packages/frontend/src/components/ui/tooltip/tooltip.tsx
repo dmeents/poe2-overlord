@@ -94,11 +94,14 @@ export function Tooltip({ content, children, className = '', showIcon = false }:
 
   return (
     <div className={`${tooltipStyles.container} ${className}`}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: Tooltip trigger uses mouse events for hover interaction */}
       <div
         ref={triggerRef}
         className={tooltipStyles.trigger}
         onMouseEnter={showTooltip}
-        onMouseLeave={hideTooltip}>
+        onMouseLeave={hideTooltip}
+        onFocus={showTooltip}
+        onBlur={hideTooltip}>
         {children}
         {showIcon && <InformationCircleIcon className={tooltipStyles.icon} aria-hidden="true" />}
       </div>

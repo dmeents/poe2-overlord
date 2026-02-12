@@ -45,7 +45,7 @@ describe('EmptyState', () => {
         icon={<span>Icon</span>}
         title="No Items Found"
         description="There are no items to display"
-        action={<button>Add Item</button>}
+        action={<button type="button">Add Item</button>}
       />,
     );
 

@@ -98,7 +98,18 @@ export const CharacterCard = memo(function CharacterCard({
     onDelete();
   }, [onDelete]);
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (interactive && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        onSelect();
+      }
+    },
+    [interactive, onSelect],
+  );
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: handleSelect is a no-op when interactive is false
     <div
       className={`group relative border transition-all duration-200 overflow-hidden ${
         interactive ? 'cursor-pointer' : ''
@@ -108,7 +119,10 @@ export const CharacterCard = memo(function CharacterCard({
           : 'border-zinc-700 bg-gradient-to-br from-zinc-800/50 to-zinc-900/30 hover:border-zinc-600 hover:bg-gradient-to-br hover:from-zinc-800/70 hover:to-zinc-900/50'
       }`}
       style={backgroundStyles}
-      onClick={handleSelect}>
+      onClick={handleSelect}
+      onKeyDown={handleKeyDown}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}>
       {/* Ascendency Background Overlay */}
       {ascendencyImage && <div className="absolute inset-0" style={overlayStyles} />}
       {/* Header Section with Gradient Background */}
@@ -126,16 +140,18 @@ export const CharacterCard = memo(function CharacterCard({
           {/* Toggle Details Button */}
           {showDetails && (
             <button
+              type="button"
               onClick={handleToggleDetails}
               className="p-1.5 bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors duration-200 opacity-0 group-hover:opacity-100"
-              title={isDetailsExpanded ? 'Hide details' : 'Show details'}>
+              aria-label={isDetailsExpanded ? 'Hide details' : 'Show details'}>
               <svg
                 className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
                   isDetailsExpanded ? 'rotate-180' : ''
                 }`}
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24">
+                viewBox="0 0 24 24"
+                aria-hidden="true">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

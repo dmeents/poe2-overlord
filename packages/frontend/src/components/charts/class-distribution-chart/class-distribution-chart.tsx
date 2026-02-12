@@ -89,9 +89,9 @@ export function ClassDistributionChart({
                 dataKey="value"
                 stroke="none"
                 className="transition-all duration-300">
-                {chartData.map((entry, index) => (
+                {chartData.map(entry => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={`cell-${entry.name}`}
                     fill={entry.hexColor}
                     className="transition-all duration-300 hover:opacity-80 cursor-pointer"
                   />

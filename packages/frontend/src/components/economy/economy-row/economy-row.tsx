@@ -59,9 +59,20 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
     </div>
   ) : null;
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick(currency);
+    }
+  };
+
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: handleClick is a no-op when onClick is undefined
     <div
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       className={`flex items-center justify-between py-3 px-6 border-b border-zinc-700/50 transition-colors ${
         onClick ? 'cursor-pointer hover:bg-zinc-800/30' : ''
       }`}>

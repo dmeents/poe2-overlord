@@ -215,7 +215,7 @@ describe('StatusBar', () => {
     const button = settingsWrapper.querySelector('button');
     expect(button).not.toBeNull();
 
-    await user.click(button!);
+    if (button) await user.click(button);
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/settings' });
   });

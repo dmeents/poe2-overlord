@@ -116,9 +116,9 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Filters */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
+            <span className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
               Filters
-            </label>
+            </span>
             <FilterToggle
               isExpanded={isExpanded}
               onToggle={() => setIsExpanded(!isExpanded)}
@@ -305,6 +305,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           Act: {filters.act}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('act', 'All')}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -315,6 +316,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           {filters.isTown ? 'Towns' : 'Non-Towns'}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('isTown', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -325,6 +327,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           {filters.isActive ? 'Active' : 'Inactive'}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('isActive', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -335,6 +338,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           Min Visits: {filters.minVisits}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('minVisits', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -345,6 +349,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           Max Visits: {filters.maxVisits}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('maxVisits', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -355,6 +360,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           Min Deaths: {filters.minDeaths}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('minDeaths', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -365,6 +371,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           Max Deaths: {filters.maxDeaths}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('maxDeaths', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -375,6 +382,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           Search: {filters.search}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('search', '')}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -385,6 +393,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           {filters.hasBosses ? 'Has Bosses' : 'No Bosses'}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('hasBosses', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -395,6 +404,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           {filters.hasWaypoint ? 'Has Waypoint' : 'No Waypoint'}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('hasWaypoint', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -405,6 +415,7 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                         <span className={activeFilterChipClasses}>
                           {filters.hasNpcs ? 'Has NPCs' : 'No NPCs'}
                           <button
+                            type="button"
                             onClick={() => onFilterChange('hasNpcs', null)}
                             className={chipRemoveButtonClasses}>
                             ×
@@ -431,9 +442,9 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
             </FilterToggle>
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
+            <span className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
               Sort
-            </label>
+            </span>
             <div className="flex gap-2">
               <div className="flex-1">
                 <SortSelect

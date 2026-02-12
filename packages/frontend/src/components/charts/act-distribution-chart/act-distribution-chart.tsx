@@ -137,9 +137,9 @@ export function ActDistributionChart({ character, className = '' }: ActDistribut
                 dataKey="value"
                 stroke="none"
                 className="transition-all duration-300">
-                {chartData.map((entry, index) => (
+                {chartData.map(entry => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={`cell-${entry.name}`}
                     fill={entry.color}
                     className="transition-all duration-300 hover:opacity-80 cursor-pointer"
                   />

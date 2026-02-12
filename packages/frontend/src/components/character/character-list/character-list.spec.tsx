@@ -11,13 +11,13 @@ vi.mock('../character-card/character-card', () => ({
     <div data-testid={`character-card-${character.id}`}>
       <span>{character.name}</span>
       {isActive && <span data-testid="active-indicator">Active</span>}
-      <button onClick={onSelect} data-testid={`select-${character.id}`}>
+      <button type="button" onClick={onSelect} data-testid={`select-${character.id}`}>
         Select
       </button>
-      <button onClick={onEdit} data-testid={`edit-${character.id}`}>
+      <button type="button" onClick={onEdit} data-testid={`edit-${character.id}`}>
         Edit
       </button>
-      <button onClick={onDelete} data-testid={`delete-${character.id}`}>
+      <button type="button" onClick={onDelete} data-testid={`delete-${character.id}`}>
         Delete
       </button>
     </div>
@@ -27,7 +27,7 @@ vi.mock('../character-card/character-card', () => ({
 vi.mock('../character-list-controls-form/character-list-controls-form', () => ({
   CharacterListControlsForm: vi.fn(({ onClearFilters }) => (
     <div data-testid="character-list-controls">
-      <button onClick={onClearFilters} data-testid="clear-filters-controls">
+      <button type="button" onClick={onClearFilters} data-testid="clear-filters-controls">
         Clear Filters
       </button>
     </div>

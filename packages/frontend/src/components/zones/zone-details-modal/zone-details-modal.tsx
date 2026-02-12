@@ -158,6 +158,7 @@ export function ZoneDetailsModal() {
             {zone.wiki_url && (
               <div className="col-span-2">
                 <button
+                  type="button"
                   onClick={handleWikiClick}
                   className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
                   <ArrowTopRightOnSquareIcon className="w-4 h-4" />
@@ -281,6 +282,7 @@ export function ZoneDetailsModal() {
             <div className="flex flex-wrap gap-2">
               {zone.connected_zones.map(connectedZone => (
                 <button
+                  type="button"
                   key={connectedZone}
                   onClick={() => handleConnectedZoneClick(connectedZone)}
                   className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors cursor-pointer"

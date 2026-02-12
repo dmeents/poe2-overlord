@@ -70,7 +70,7 @@ describe('ErrorState', () => {
   });
 
   it('renders action when provided', () => {
-    render(<ErrorState action={<button>Retry</button>} />);
+    render(<ErrorState action={<button type="button">Retry</button>} />);
 
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });

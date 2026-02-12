@@ -32,7 +32,12 @@ export function DeleteCharacterModal({
   if (!character) return null;
 
   const warningIcon = (
-    <svg className={getWarningIconClasses()} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className={getWarningIconClasses()}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"

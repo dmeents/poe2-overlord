@@ -146,7 +146,14 @@ export function SortSelect({
                     isSelected ? formSortSelectStyles.optionSelected : ''
                   }`}
                   onClick={() => handleOptionSelect(option.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleOptionSelect(option.value);
+                    }
+                  }}
                   role="option"
+                  tabIndex={0}
                   aria-selected={isSelected}>
                   <span className={formSortSelectStyles.optionLabel}>{option.label}</span>
                   {isSelected && <CheckIcon className={formSortSelectStyles.optionIcon} />}

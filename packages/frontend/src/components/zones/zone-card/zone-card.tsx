@@ -22,9 +22,20 @@ export const ZoneCard = memo(function ZoneCard({
     openZone(zone.zone_name);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openZone(zone.zone_name);
+    }
+  };
+
   return (
+    // biome-ignore lint/a11y/useSemanticElements: Grid layout requires div; button cannot contain child divs
     <div
       onClick={handleRowClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       className={`
         grid gap-2 px-4 py-3
         cursor-pointer transition-all

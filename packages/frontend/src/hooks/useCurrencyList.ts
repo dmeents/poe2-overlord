@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { CurrencyExchangeRate } from '../types/economy';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// biome-ignore lint/complexity/noBannedTypes: Empty filters interface for future expansion
 export type CurrencyFilters = {};
 
 export interface CurrencySortOption {

@@ -110,7 +110,8 @@ function EconomyPage() {
                 className="mx-auto h-12 w-12 mb-4"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor">
+                stroke="currentColor"
+                aria-hidden="true">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

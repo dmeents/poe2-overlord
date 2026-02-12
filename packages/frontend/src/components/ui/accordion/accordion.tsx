@@ -51,9 +51,9 @@ export function Accordion({
 
       {/* Accordion Content */}
       {isExpanded && (
-        <div id={contentId} role="region" aria-labelledby={headingId} className="p-3">
+        <section id={contentId} aria-labelledby={headingId} className="p-3">
           {children}
-        </div>
+        </section>
       )}
     </div>
   );

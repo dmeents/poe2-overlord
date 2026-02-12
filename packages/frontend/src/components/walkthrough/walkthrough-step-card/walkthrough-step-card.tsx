@@ -212,6 +212,7 @@ export function WalkthroughStepCard({
             <span className="text-zinc-300 font-medium text-sm">
               Enter{' '}
               <button
+                type="button"
                 onClick={() => openZone(stepData.completion_zone)}
                 className="text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium">
                 {stepData.completion_zone}
@@ -238,8 +239,10 @@ export function WalkthroughStepCard({
               Objectives ({stepData.objectives.length}):
             </h5>
             <ul className="space-y-4">
-              {stepData.objectives.map((objective, index) => (
-                <li key={index} className="text-xs">
+              {stepData.objectives.map((objective, objectiveIndex) => (
+                <li
+                  key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`}
+                  className="text-xs">
                   <div className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0" />
                     <div className="flex-1 space-y-1">

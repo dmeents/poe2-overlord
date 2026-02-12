@@ -35,6 +35,7 @@ const parseTextWithWikiLinks = (
   // Reset regex lastIndex to ensure we start from the beginning
   pattern.lastIndex = 0;
 
+  // biome-ignore lint/suspicious/noAssignInExpressions: Standard regex exec loop pattern
   while ((match = pattern.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
@@ -50,6 +51,7 @@ const parseTextWithWikiLinks = (
           'button',
           {
             key: `wiki-${match.index}`,
+            type: 'button',
             onClick: (e: React.MouseEvent) => {
               e.stopPropagation();
               onWikiClick(wikiItem);
@@ -85,6 +87,7 @@ export function ParsedText({ text, wikiItems, onWikiClick }: ParsedTextProps): R
   return (
     <span>
       {parsedElements.map((element, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Parsed text elements lack stable unique identifiers
         <React.Fragment key={index}>{element}</React.Fragment>
       ))}
     </span>

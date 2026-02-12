@@ -115,13 +115,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     [], // No dependencies - using functional updates
   );
 
-  // Load configuration and options on component mount
-  useEffect(() => {
-    loadConfig();
-    loadZoneRefreshOptions();
-  }, [loadConfig, loadZoneRefreshOptions]);
-
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -132,9 +126,9 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loadZoneRefreshOptions = async () => {
+  const loadZoneRefreshOptions = useCallback(async () => {
     try {
       const options = await tauriUtils.getZoneRefreshIntervalOptions();
       setZoneRefreshOptions(options);
@@ -145,7 +139,13 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         extractErrorMessage(err),
       );
     }
-  };
+  }, []);
+
+  // Load configuration and options on component mount
+  useEffect(() => {
+    loadConfig();
+    loadZoneRefreshOptions();
+  }, [loadConfig, loadZoneRefreshOptions]);
 
   const handleSave = async () => {
     // Pre-validate before backend call

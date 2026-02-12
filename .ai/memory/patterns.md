@@ -36,6 +36,8 @@ All design tokens are defined in `globals.css` under the `@theme` block. This is
 
 ### Color Palette
 
+**UI Colors:**
+
 | Token   | Purpose                              |
 |---------|--------------------------------------|
 | `ember` | Primary accent (volcanic orange)     |
@@ -44,6 +46,35 @@ All design tokens are defined in `globals.css` under the `@theme` block. This is
 | `bone`  | Muted text, subtle highlights        |
 | `stone` | Neutral backgrounds (warm gray)      |
 | `ash`   | Disabled/muted states (cool gray)    |
+
+**Class Colors** (character identity):
+
+| Token     | Class     | Concept                    |
+|-----------|-----------|----------------------------|
+| `blood`   | Warrior   | Martial aggression         |
+| `arcane`  | Sorceress | Mystical deep blue         |
+| `verdant` | Ranger    | Forest moss green          |
+| `molten`  | Huntress  | Golden predator            |
+| `spirit`  | Monk      | Contemplative violet       |
+| `ember`   | Mercenary | Volcanic fire              |
+| `hex`     | Witch     | Dark magic magenta         |
+| `primal`  | Druid     | Ancient nature teal        |
+
+### Class Colors Utility
+
+Use `@/utils/class-colors.ts` for character-specific styling:
+
+```tsx
+import { getClassTextColor, getClassBorderColor, getClassTheme } from '@/utils/class-colors';
+
+// Returns Tailwind classes
+getClassTextColor('Warrior')   // 'text-blood-400'
+getClassBorderColor('Warrior') // 'border-blood-500'
+getClassTheme('Warrior')       // 'blood'
+
+// For charts (returns hex values from CSS variables)
+getClassHexColor('Warrior')    // '#dc2626'
+```
 
 ### Shadow Scale
 

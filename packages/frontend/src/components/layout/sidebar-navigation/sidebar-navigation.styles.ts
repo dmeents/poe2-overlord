@@ -8,7 +8,7 @@ export const sidebarNavigationStyles = {
     'fixed left-0 top-[28px] bottom-6 w-12 bg-stone-950/95 backdrop-blur-sm flex flex-col z-50 border-r border-stone-800/50 shadow-[4px_0_6px_rgba(0,0,0,0.7)]',
   logo: 'w-full h-12 flex items-center justify-center border-b border-stone-800/50',
   logoImage: 'w-8 h-8',
-  primaryNav: 'flex-1 flex flex-col pt-2',
+  primaryNav: 'flex-1 flex flex-col',
   secondaryNav: 'flex flex-col pb-2',
   navButton:
     'w-full h-14 flex items-center justify-center transition-all duration-200 cursor-pointer relative',

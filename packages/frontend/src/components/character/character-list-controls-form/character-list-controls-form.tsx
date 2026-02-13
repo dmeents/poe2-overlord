@@ -125,7 +125,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Filters */}
         <div>
-          <span className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
+          <span className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
             Filters
           </span>
           <FilterToggle
@@ -331,7 +331,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
 
         {/* Sort */}
         <div>
-          <span className="block text-sm font-medium text-zinc-300 uppercase tracking-wide mb-2">
+          <span className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
             Sort
           </span>
           <div className="flex gap-2">

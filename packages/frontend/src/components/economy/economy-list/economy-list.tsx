@@ -3,6 +3,7 @@ import { useCurrencyList } from '@/hooks/useCurrencyList';
 import type { CurrencyExchangeRate } from '@/types/economy';
 import { CurrencyListControlsForm } from '../currency-list-controls-form/currency-list-controls-form';
 import { EconomyRow } from '../economy-row/economy-row';
+import { economyListStyles } from './economy-list.styles';
 
 interface EconomyListProps {
   currencies: CurrencyExchangeRate[];
@@ -36,7 +37,7 @@ export function EconomyList({
   return (
     <div>
       {/* Controls */}
-      <div className="mb-4">
+      <div className={economyListStyles.controlsContainer}>
         <CurrencyListControlsForm
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
@@ -55,7 +56,7 @@ export function EconomyList({
       {isSearching ? (
         <LoadingSpinner className="py-12" />
       ) : filteredCurrencies.length === 0 ? (
-        <div className="text-center py-8 text-zinc-400">
+        <div className={economyListStyles.emptyState}>
           {searchQuery
             ? `No currencies found matching "${searchQuery}"`
             : hasActiveFilters
@@ -65,7 +66,7 @@ export function EconomyList({
       ) : (
         <div>
           {filteredCurrencies.map((currency, index) => (
-            <div key={currency.id} className={index === 0 ? 'border-t border-zinc-700/50' : ''}>
+            <div key={currency.id} className={index === 0 ? economyListStyles.firstRow : ''}>
               <EconomyRow currency={currency} onClick={onCurrencyClick} />
             </div>
           ))}

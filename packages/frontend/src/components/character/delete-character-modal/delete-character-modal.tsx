@@ -56,7 +56,7 @@ export function DeleteCharacterModal({
       icon={warningIcon}
       disabled={isLoading}>
       <div className={getModalContentClasses()}>
-        <p className="text-zinc-300 mb-4">
+        <p className="text-stone-300 mb-4">
           Are you sure you want to delete <strong className="text-white">{character.name}</strong>?
         </p>
 

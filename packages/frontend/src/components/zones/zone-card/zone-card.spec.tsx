@@ -140,21 +140,21 @@ describe('ZoneCard', () => {
 
     const { container } = render(<ZoneCard zone={activeZone} />);
 
-    expect(container.firstChild).toHaveClass('border-l-emerald-500');
+    expect(container.firstChild).toHaveClass('border-l-verdant-500');
   });
 
   it('shows even row styling when isEven is true', () => {
     const { container } = render(<ZoneCard zone={mockZone} isEven={true} />);
 
     const div = container.firstChild as HTMLElement;
-    expect(div.className).toContain('bg-zinc-900/30');
+    expect(div.className).toContain('bg-stone-900/30');
   });
 
   it('shows odd row styling when isEven is false', () => {
     const { container } = render(<ZoneCard zone={mockZone} isEven={false} />);
 
     const div = container.firstChild as HTMLElement;
-    expect(div.className).toContain('bg-zinc-900/60');
+    expect(div.className).toContain('bg-stone-900/60');
   });
 
   it('renders act display', () => {

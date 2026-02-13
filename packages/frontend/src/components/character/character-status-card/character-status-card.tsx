@@ -28,7 +28,7 @@ export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps
         <h3 className={characterStatusCardStyles.title}>Active Character</h3>
         <EmptyState
           icon={
-            <div className="h-12 w-12 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-400 text-xl">
+            <div className="h-12 w-12 rounded-full bg-stone-700 flex items-center justify-center text-stone-400 text-xl">
               👤
             </div>
           }

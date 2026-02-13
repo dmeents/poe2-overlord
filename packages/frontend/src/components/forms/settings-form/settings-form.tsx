@@ -261,21 +261,21 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                 </p>
                 <p>
                   The file is typically located at:{' '}
-                  <code className="bg-zinc-700 px-1 text-zinc-200">
+                  <code className="bg-stone-700 px-1 text-stone-200">
                     [POE Install]/logs/client.txt
                   </code>
                 </p>
-                <p className="mt-2 text-zinc-300">Common locations:</p>
-                <ul className="list-disc list-inside text-zinc-300 mt-1 space-y-1">
+                <p className="mt-2 text-stone-300">Common locations:</p>
+                <ul className="list-disc list-inside text-stone-300 mt-1 space-y-1">
                   <li>
                     Steam:{' '}
-                    <code className="bg-zinc-700 px-1 text-zinc-200">
+                    <code className="bg-stone-700 px-1 text-stone-200">
                       C:\Program Files (x86)\Steam\steamapps\common\Path of Exile\logs\client.txt
                     </code>
                   </li>
                   <li>
                     Standalone:{' '}
-                    <code className="bg-zinc-700 px-1 text-zinc-200">
+                    <code className="bg-stone-700 px-1 text-stone-200">
                       C:\Games\Path of Exile\logs\client.txt
                     </code>
                   </li>
@@ -306,7 +306,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                 <p className="mb-2">
                   <strong>Log Level:</strong> Controls the verbosity of application logging.
                 </p>
-                <div className="space-y-1 text-zinc-300">
+                <div className="space-y-1 text-stone-300">
                   <p>
                     <strong>Trace:</strong> Most detailed logging, shows every operation
                   </p>
@@ -324,7 +324,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                     <strong>Error:</strong> Only error messages
                   </p>
                 </div>
-                <p className="mt-2 text-zinc-300">
+                <p className="mt-2 text-stone-300">
                   Use "Info" for normal operation, "Debug" for troubleshooting, or "Error" for
                   minimal logging.
                 </p>
@@ -353,7 +353,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                   <strong>Zone Refresh Interval:</strong> Controls how often zone metadata should be
                   refreshed from the POE wiki.
                 </p>
-                <div className="space-y-1 text-zinc-300">
+                <div className="space-y-1 text-stone-300">
                   <p>
                     <strong>5 Minutes:</strong> Very frequent updates (useful for testing)
                   </p>
@@ -373,7 +373,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
                     <strong>7 Days:</strong> Weekly updates (recommended for normal use)
                   </p>
                 </div>
-                <p className="mt-2 text-zinc-300">
+                <p className="mt-2 text-stone-300">
                   Use shorter intervals for testing zone data updates, or longer intervals to reduce
                   wiki requests.
                 </p>

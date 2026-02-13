@@ -122,7 +122,7 @@ describe('SidebarNavigation', () => {
     render(<SidebarNavigation />);
 
     const walkthroughNav = screen.getByTitle('Walkthrough');
-    expect(walkthroughNav.className).toContain('text-zinc-400');
+    expect(walkthroughNav.className).toContain('text-stone-400');
     expect(walkthroughNav.className).not.toContain('shadow-lg');
   });
 

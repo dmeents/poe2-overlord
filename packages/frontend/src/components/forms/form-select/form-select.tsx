@@ -174,7 +174,7 @@ export function Select({
   const defaultRenderOption = (option: SelectOption, isSelected: boolean) => (
     <div
       key={option.value}
-      className={`px-4 py-2 hover:bg-zinc-700/50 cursor-pointer transition-colors flex items-center justify-between ${
+      className={`px-4 py-2 hover:bg-stone-700/50 cursor-pointer transition-colors flex items-center justify-between ${
         isSelected ? formSelectStyles.optionSelected : ''
       } ${option.disabled ? formSelectStyles.optionDisabled : ''}`}
       onClick={() => !option.disabled && handleOptionSelect(option.value)}
@@ -188,7 +188,7 @@ export function Select({
       tabIndex={option.disabled ? -1 : 0}
       aria-selected={isSelected}>
       <span className={formSelectStyles.optionLabel}>{option.label}</span>
-      {isSelected && <CheckIcon className="w-4 h-4 text-emerald-400" />}
+      {isSelected && <CheckIcon className="w-4 h-4 text-verdant-400" />}
     </div>
   );
 

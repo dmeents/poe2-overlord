@@ -105,7 +105,7 @@ function EconomyPage() {
       if (isNoDataError) {
         return (
           <div className="text-center py-12">
-            <div className="text-zinc-400 mb-2">
+            <div className="text-stone-400 mb-2">
               <svg
                 className="mx-auto h-12 w-12 mb-4"
                 fill="none"
@@ -120,8 +120,8 @@ function EconomyPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-zinc-300 mb-2">No Data Available</h3>
-            <p className="text-sm text-zinc-400 max-w-md mx-auto">
+            <h3 className="text-lg font-medium text-stone-300 mb-2">No Data Available</h3>
+            <p className="text-sm text-stone-400 max-w-md mx-auto">
               {ECONOMY_TYPE_LABELS[selectedEconomyType]} data is not available for this league yet.
               Try selecting a different economy type or check back later.
             </p>
@@ -132,7 +132,7 @@ function EconomyPage() {
     }
 
     if (!currencyData) {
-      return <div className="text-zinc-400 text-center py-8">No economy data available</div>;
+      return <div className="text-stone-400 text-center py-8">No economy data available</div>;
     }
 
     if (searchQuery) {
@@ -142,13 +142,13 @@ function EconomyPage() {
           {isSearching ? (
             <LoadingSpinner className="py-12" />
           ) : searchResults.length === 0 ? (
-            <div className="text-center py-8 text-zinc-400">
+            <div className="text-center py-8 text-stone-400">
               No currencies found matching "{searchQuery}"
             </div>
           ) : (
             <div>
               {searchResults.map((result, index) => (
-                <div key={result.id} className={index === 0 ? 'border-t border-zinc-700/50' : ''}>
+                <div key={result.id} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
                   <EconomyRow
                     currency={{
                       id: result.id,
@@ -175,12 +175,12 @@ function EconomyPage() {
     return (
       <div>
         {filteredCurrencies.length === 0 ? (
-          <div className="text-center py-8 text-zinc-400">
+          <div className="text-center py-8 text-stone-400">
             {hasActiveFilters ? 'No currencies match your filters' : 'No currency data available'}
           </div>
         ) : (
           filteredCurrencies.map((currency, index) => (
-            <div key={currency.id} className={index === 0 ? 'border-t border-zinc-700/50' : ''}>
+            <div key={currency.id} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
               <EconomyRow currency={currency} />
             </div>
           ))
@@ -222,13 +222,13 @@ function EconomyPage() {
     <>
       <ExchangeRatesCard />
       <TopItemsCard />
-      <div className="text-xs text-zinc-500 text-center">
+      <div className="text-xs text-stone-500 text-center">
         Economy data provided by{' '}
         <a
           href="https://poe.ninja"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-400 hover:text-zinc-300 underline transition-colors">
+          className="text-stone-400 hover:text-stone-300 underline transition-colors">
           poe.ninja
         </a>
       </div>

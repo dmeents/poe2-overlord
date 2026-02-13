@@ -1,5 +1,6 @@
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import type { ReactNode } from 'react';
+import { errorStateStyles } from './error-state.styles';
 
 interface ErrorStateProps {
   title?: string;
@@ -48,13 +49,13 @@ export function ErrorState({
   const errorMessage = message || getErrorMessage(error);
 
   return (
-    <div className={`text-center py-8 ${className}`}>
-      <div className="text-red-400 mb-4">
-        <div className="mx-auto h-12 w-12">{icon || <ExclamationTriangleIcon />}</div>
+    <div className={`${errorStateStyles.container} ${className}`}>
+      <div className={errorStateStyles.iconContainer}>
+        <div className={errorStateStyles.icon}>{icon || <ExclamationTriangleIcon />}</div>
       </div>
-      <h3 className="text-lg font-semibold text-red-400 mb-2">{title}</h3>
-      <p className="text-sm text-zinc-400">{errorMessage}</p>
-      {action && <div className="mt-4">{action}</div>}
+      <h3 className={errorStateStyles.title}>{title}</h3>
+      <p className={errorStateStyles.message}>{errorMessage}</p>
+      {action && <div className={errorStateStyles.actionContainer}>{action}</div>}
     </div>
   );
 }

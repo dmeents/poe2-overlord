@@ -3,13 +3,14 @@
  *
  * This file contains styling-related functions and constants
  * for the DeleteCharacterModal component.
+ * Uses stone/blood color palette from theme.
  */
 
 /**
  * Get warning icon classes
  */
 export function getWarningIconClasses(): string {
-  return 'h-6 w-6 text-red-400';
+  return 'h-6 w-6 text-blood-400';
 }
 
 /**
@@ -23,35 +24,35 @@ export function getModalContentClasses(): string {
  * Get character info display container classes
  */
 export function getCharacterInfoClasses(): string {
-  return 'bg-zinc-900/50 p-4 rounded-lg border border-zinc-700';
+  return 'bg-stone-900/50 p-4 rounded-lg border border-stone-700';
 }
 
 /**
  * Get character info text classes
  */
 export function getCharacterInfoTextClasses(): string {
-  return 'text-sm text-zinc-400 space-y-1';
+  return 'text-sm text-stone-400 space-y-1';
 }
 
 /**
  * Get character info label classes
  */
 export function getCharacterInfoLabelClasses(): string {
-  return 'text-zinc-500';
+  return 'text-stone-500';
 }
 
 /**
  * Get warning container classes
  */
 export function getWarningContainerClasses(): string {
-  return 'mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg';
+  return 'mt-4 p-3 bg-blood-500/10 border border-blood-500/20 rounded-lg';
 }
 
 /**
  * Get warning text classes
  */
 export function getWarningTextClasses(): string {
-  return 'text-sm text-red-400';
+  return 'text-sm text-blood-400';
 }
 
 /**
@@ -72,5 +73,5 @@ export function getModalActionsClasses(): string {
  * Get delete button classes
  */
 export function getDeleteButtonClasses(): string {
-  return 'text-red-400 hover:text-red-300 hover:border-red-400';
+  return 'text-blood-400 hover:text-blood-300 hover:border-blood-400';
 }

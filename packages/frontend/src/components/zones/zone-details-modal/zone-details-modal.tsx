@@ -11,6 +11,7 @@ import { useZone } from '@/contexts/ZoneContext';
 import { createPlaceholderZone, getDisplayAct } from '@/utils/zone-utils';
 import { Modal } from '../../ui/modal/modal';
 import { TimeDisplay } from '../../ui/time-display/time-display';
+import { zoneDetailsModalStyles as styles } from './zone-details-modal.styles';
 
 export function ZoneDetailsModal() {
   const { selectedZone: zone, isModalOpen, closeModal, navigateToZone, allZones } = useZone();
@@ -67,16 +68,16 @@ export function ZoneDetailsModal() {
       size="2xl"
       title={zone.zone_name}
       icon={<MapIcon className="w-6 h-6" />}>
-      <div className="space-y-6">
+      <div className={styles.container}>
         {/* Unvisited Zone Message */}
         {isUnvisitedZone && (
-          <div className="bg-zinc-800/50 border border-zinc-700/50 p-6 text-center">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
-                <MapIcon className="w-6 h-6 text-zinc-500" />
+          <div className={styles.unvisitedContainer}>
+            <div className={styles.unvisitedContent}>
+              <div className={styles.unvisitedIconContainer}>
+                <MapIcon className={styles.unvisitedIcon} />
               </div>
-              <h3 className="text-lg font-medium text-zinc-300">Zone Not Yet Visited</h3>
-              <p className="text-sm text-zinc-400 max-w-md">
+              <h3 className={styles.unvisitedTitle}>Zone Not Yet Visited</h3>
+              <p className={styles.unvisitedText}>
                 You haven't visited this zone yet. Once you explore it in-game, detailed statistics
                 and information will be available here.
               </p>
@@ -85,11 +86,11 @@ export function ZoneDetailsModal() {
         )}
         {/* Zone Image */}
         {!isUnvisitedZone && zone.image_url && (
-          <div className="relative w-full h-64 overflow-hidden bg-zinc-800">
+          <div className={styles.imageContainer}>
             <img
               src={zone.image_url}
               alt=""
-              className="w-full h-full object-cover"
+              className={styles.image}
               onError={e => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -99,23 +100,23 @@ export function ZoneDetailsModal() {
 
         {/* Description */}
         {!isUnvisitedZone && zone.description && (
-          <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
               <SparklesIcon className="w-4 h-4" />
               Description
             </h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">{zone.description}</p>
+            <p className={styles.sectionText}>{zone.description}</p>
           </div>
         )}
 
         {/* Zone Metadata Section - Always show */}
-        <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-          <h3 className="text-sm font-medium text-zinc-300 mb-3">Zone Information</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitleWithMargin}>Zone Information</h3>
+          <div className={styles.grid}>
             {/* Zone Type */}
             <div>
-              <span className="text-zinc-500">Type:</span>
-              <span className="ml-2 text-zinc-300">
+              <span className={styles.label}>Type:</span>
+              <span className={styles.value}>
                 {zone.is_town
                   ? 'Town'
                   : zone.zone_name.toLowerCase().includes('hideout')
@@ -127,40 +128,37 @@ export function ZoneDetailsModal() {
             {/* Act */}
             {getDisplayAct(zone) && (
               <div>
-                <span className="text-zinc-500">Act:</span>
-                <span className="ml-2 text-zinc-300">{getDisplayAct(zone)}</span>
+                <span className={styles.label}>Act:</span>
+                <span className={styles.value}>{getDisplayAct(zone)}</span>
               </div>
             )}
 
             {/* Area Level */}
             {zone.area_level && (
               <div>
-                <span className="text-zinc-500">Level:</span>
-                <span className="ml-2 text-zinc-300">{zone.area_level}</span>
+                <span className={styles.label}>Level:</span>
+                <span className={styles.value}>{zone.area_level}</span>
               </div>
             )}
 
             {/* Waypoint */}
             <div>
-              <span className="text-zinc-500">Waypoint:</span>
-              <span className="ml-2 text-zinc-300">{zone.has_waypoint ? 'Yes' : 'No'}</span>
+              <span className={styles.label}>Waypoint:</span>
+              <span className={styles.value}>{zone.has_waypoint ? 'Yes' : 'No'}</span>
             </div>
 
             {/* Area ID */}
             {zone.area_id && (
               <div>
-                <span className="text-zinc-500">Area ID:</span>
-                <span className="ml-2 text-zinc-300 font-mono text-xs">{zone.area_id}</span>
+                <span className={styles.label}>Area ID:</span>
+                <span className={styles.valueMonoSmall}>{zone.area_id}</span>
               </div>
             )}
 
             {/* Wiki Link */}
             {zone.wiki_url && (
               <div className="col-span-2">
-                <button
-                  type="button"
-                  onClick={handleWikiClick}
-                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
+                <button type="button" onClick={handleWikiClick} className={styles.wikiButton}>
                   <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                   <span>View on Wiki</span>
                 </button>
@@ -171,28 +169,28 @@ export function ZoneDetailsModal() {
 
         {/* Player Statistics Section - Only show if visited */}
         {!isUnvisitedZone && (
-          <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3">Your Statistics</h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitleWithMargin}>Your Statistics</h3>
+            <div className={styles.grid}>
               {/* Time Spent */}
               <div>
-                <span className="text-zinc-500">Time Spent:</span>
-                <span className="ml-2 text-zinc-300 font-mono">
+                <span className={styles.label}>Time Spent:</span>
+                <span className={styles.valueMono}>
                   <TimeDisplay seconds={zone.duration} showSeconds={false} />
                 </span>
               </div>
 
               {/* Visits */}
               <div>
-                <span className="text-zinc-500">Visits:</span>
-                <span className="ml-2 text-zinc-300">{zone.visits}</span>
+                <span className={styles.label}>Visits:</span>
+                <span className={styles.value}>{zone.visits}</span>
               </div>
 
               {/* Deaths */}
               {!zone.is_town && !zone.zone_name.toLowerCase().includes('hideout') && (
                 <div>
-                  <span className="text-zinc-500">Deaths:</span>
-                  <span className={`ml-2 ${zone.deaths > 0 ? 'text-red-400' : 'text-zinc-300'}`}>
+                  <span className={styles.label}>Deaths:</span>
+                  <span className={zone.deaths > 0 ? styles.valueDeaths : styles.value}>
                     {zone.deaths}
                   </span>
                 </div>
@@ -200,16 +198,16 @@ export function ZoneDetailsModal() {
 
               {/* First Visited */}
               <div>
-                <span className="text-zinc-500">First Visited:</span>
-                <span className="ml-2 text-zinc-300">
+                <span className={styles.label}>First Visited:</span>
+                <span className={styles.value}>
                   {new Date(zone.first_visited).toLocaleDateString()}
                 </span>
               </div>
 
               {/* Last Visited */}
               <div>
-                <span className="text-zinc-500">Last Visited:</span>
-                <span className="ml-2 text-zinc-300">{formatLastVisited(zone.last_visited)}</span>
+                <span className={styles.label}>Last Visited:</span>
+                <span className={styles.value}>{formatLastVisited(zone.last_visited)}</span>
               </div>
             </div>
           </div>
@@ -217,16 +215,14 @@ export function ZoneDetailsModal() {
 
         {/* Bosses - Always show if data exists */}
         {zone.bosses && zone.bosses.length > 0 && (
-          <div className="bg-zinc-900/80 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <div className={styles.sectionAlt}>
+            <h3 className={styles.sectionTitleWithIcon}>
               <FlagIcon className="w-4 h-4" />
               Bosses ({zone.bosses.length})
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className={styles.tagContainer}>
               {zone.bosses.map(boss => (
-                <span
-                  key={boss}
-                  className="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/30 rounded">
+                <span key={boss} className={styles.tagBoss}>
                   {boss}
                 </span>
               ))}
@@ -236,16 +232,14 @@ export function ZoneDetailsModal() {
 
         {/* NPCs - Always show if data exists */}
         {zone.npcs && zone.npcs.length > 0 && (
-          <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitleWithIcon}>
               <UserGroupIcon className="w-4 h-4" />
               NPCs ({zone.npcs.length})
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className={styles.tagContainer}>
               {zone.npcs.map(npc => (
-                <span
-                  key={npc}
-                  className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded">
+                <span key={npc} className={styles.tagNpc}>
                   {npc}
                 </span>
               ))}
@@ -255,16 +249,14 @@ export function ZoneDetailsModal() {
 
         {/* Points of Interest - Always show if data exists */}
         {zone.points_of_interest && zone.points_of_interest.length > 0 && (
-          <div className="bg-zinc-900/80 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <div className={styles.sectionAlt}>
+            <h3 className={styles.sectionTitleWithIcon}>
               <MapIcon className="w-4 h-4" />
               Points of Interest ({zone.points_of_interest.length})
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className={styles.tagContainer}>
               {zone.points_of_interest.map(poi => (
-                <span
-                  key={poi}
-                  className="px-3 py-1.5 text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded">
+                <span key={poi} className={styles.tagPoi}>
                   {poi}
                 </span>
               ))}
@@ -274,18 +266,18 @@ export function ZoneDetailsModal() {
 
         {/* Connected Zones - Always show if data exists */}
         {zone.connected_zones && zone.connected_zones.length > 0 && (
-          <div className="bg-zinc-800/50 p-4 border border-zinc-700/50">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitleWithIcon}>
               <LinkIcon className="w-4 h-4" />
               Connected Zones ({zone.connected_zones.length})
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className={styles.tagContainer}>
               {zone.connected_zones.map(connectedZone => (
                 <button
                   type="button"
                   key={connectedZone}
                   onClick={() => handleConnectedZoneClick(connectedZone)}
-                  className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors cursor-pointer"
+                  className={styles.tagConnected}
                   title="Click to view zone details">
                   {connectedZone}
                 </button>

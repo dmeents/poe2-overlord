@@ -38,6 +38,7 @@ export function ClassDistributionChart({
     })
     .sort((a, b) => b.value - a.value); // Sort by count descending
 
+  // z-20: Tooltips (see patterns.md for z-index scale)
   const CustomTooltip = ({
     active,
     payload,
@@ -50,10 +51,9 @@ export function ClassDistributionChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        {/* z-20: Tooltips (see patterns.md for z-index scale) */}
         <div className="bg-stone-800 border border-stone-700 rounded-lg p-3 shadow-lg relative z-20">
           <p className="text-white font-medium">{data.name}</p>
-          <p className="text-zinc-300 text-sm">
+          <p className="text-stone-300 text-sm">
             {data.value} character{data.value !== 1 ? 's' : ''} ({data.percentage.toFixed(1)}%)
           </p>
         </div>
@@ -103,7 +103,7 @@ export function ClassDistributionChart({
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <div className="text-2xl font-bold text-white">{chartData.length}</div>
-            <div className="text-xs text-zinc-400 uppercase tracking-wide">Classes</div>
+            <div className="text-xs text-stone-400 uppercase tracking-wide">Classes</div>
           </div>
         </div>
         <div>

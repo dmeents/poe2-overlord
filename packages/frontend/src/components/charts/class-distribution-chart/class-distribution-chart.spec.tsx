@@ -154,7 +154,7 @@ describe('ClassDistributionChart', () => {
       );
 
       // Get all class labels - they should be in order: Witch (5), Warrior (3), Ranger (1)
-      const labels = container.querySelectorAll('.text-zinc-200');
+      const labels = container.querySelectorAll('.text-stone-200');
       const labelTexts = Array.from(labels).map(el => el.textContent);
 
       // First entry should be Witch since it has the most characters

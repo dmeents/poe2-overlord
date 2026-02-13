@@ -3,13 +3,14 @@
  *
  * This file contains styling-related functions and constants
  * for the ZoneCard component.
+ * Uses stone/arcane/spirit/verdant/molten color palette from theme.
  */
 
 /**
  * Get main zone card container classes
  */
 export function getZoneCardClasses(): string {
-  return 'p-4 bg-zinc-900/80 border border-zinc-700';
+  return 'p-4 bg-stone-900/80 border border-stone-700';
 }
 
 /**
@@ -44,14 +45,14 @@ export function getZoneStatsContainerClasses(): string {
  * Get zone duration classes
  */
 export function getZoneDurationClasses(): string {
-  return 'text-zinc-400 font-mono text-lg';
+  return 'text-stone-400 font-mono text-lg';
 }
 
 /**
  * Get zone metadata container classes
  */
 export function getZoneMetadataContainerClasses(): string {
-  return 'flex items-center justify-between text-sm text-zinc-400';
+  return 'flex items-center justify-between text-sm text-stone-400';
 }
 
 /**
@@ -72,7 +73,7 @@ export function getZonePillClasses(): string {
  * Get zone pill base classes
  */
 export function getZonePillBaseClasses(): string {
-  return 'bg-zinc-700/50';
+  return 'bg-stone-700/50';
 }
 
 /**
@@ -81,15 +82,15 @@ export function getZonePillBaseClasses(): string {
 export function getZonePillColorClasses(type: string): string {
   switch (type) {
     case 'Zone':
-      return 'text-blue-400';
+      return 'text-arcane-400';
     case 'Act':
-      return 'text-purple-400';
+      return 'text-spirit-400';
     case 'Hideout':
-      return 'text-green-400';
+      return 'text-verdant-400';
     case 'Town':
-      return 'text-yellow-400';
+      return 'text-molten-400';
     default:
-      return 'text-zinc-400';
+      return 'text-stone-400';
   }
 }
 
@@ -97,7 +98,7 @@ export function getZonePillColorClasses(type: string): string {
  * Get zone wiki button classes
  */
 export function getZoneWikiButtonClasses(): string {
-  return 'text-xs text-zinc-400 font-medium bg-zinc-700/50 px-2 py-0.5 rounded hover:bg-zinc-600/50 transition-colors duration-200 flex items-center space-x-1 cursor-pointer';
+  return 'text-xs text-stone-400 font-medium bg-stone-700/50 px-2 py-0.5 rounded hover:bg-stone-600/50 transition-colors duration-200 flex items-center space-x-1 cursor-pointer';
 }
 
 /**
@@ -111,12 +112,12 @@ export function getZoneStatusIndicatorClasses(): string {
  * Get zone active indicator classes
  */
 export function getZoneActiveIndicatorClasses(): string {
-  return 'w-2 h-2 bg-emerald-400 rounded-full animate-pulse';
+  return 'w-2 h-2 bg-verdant-400 rounded-full animate-pulse';
 }
 
 /**
  * Get zone active text classes
  */
 export function getZoneActiveTextClasses(): string {
-  return 'text-xs text-emerald-400 font-medium';
+  return 'text-xs text-verdant-400 font-medium';
 }

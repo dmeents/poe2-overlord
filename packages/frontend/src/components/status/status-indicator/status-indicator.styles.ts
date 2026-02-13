@@ -10,7 +10,7 @@ export const statusIndicatorStyles = {
     lg: 'w-6 h-6',
   },
   statusClasses: {
-    success: 'text-green-500',
+    success: 'text-verdant-500',
     warning: 'text-molten-400',
     error: 'text-blood-500',
     info: 'text-stone-500',

@@ -17,6 +17,7 @@ import type { WalkthroughStep, WalkthroughStepResult } from '../../../types/walk
 import { ParsedText } from '../../../utils/text-parser';
 import { Button } from '../../ui/button/button';
 import { Card } from '../../ui/card/card';
+import { walkthroughStepCardStyles as styles } from './walkthrough-step-card.styles';
 
 interface WalkthroughStepCardProps {
   // Data sources (mutually exclusive with variant)
@@ -149,14 +150,14 @@ export function WalkthroughStepCard({
     // Completion state
     if (progress.is_completed) {
       return (
-        <Card className={`${className} border-green-500 bg-green-500/10`}>
-          <div className="flex items-center gap-4 p-4">
-            <CheckCircleIcon className="w-8 h-8 text-green-500" />
-            <h4 className="text-xl font-semibold text-white">Campaign Complete!</h4>
+        <Card className={`${className} ${styles.completedCard}`}>
+          <div className={styles.completedContent}>
+            <CheckCircleIcon className={styles.completedIcon} />
+            <h4 className={styles.completedTitle}>Campaign Complete!</h4>
           </div>
-          <div className="flex justify-between items-center pt-3 pb-1 px-4 border-t border-zinc-700/30">
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
-              <ClockIcon className="w-3 h-3" />
+          <div className={styles.footer}>
+            <div className={styles.footerTimestamp}>
+              <ClockIcon className={styles.footerTimestampIcon} />
               Last updated: {formatLastUpdated(progress.last_updated)}
             </div>
             {onViewGuide && (
@@ -173,11 +174,11 @@ export function WalkthroughStepCard({
     // No active step state
     if (!stepData) {
       return (
-        <Card className={`${className} border-blue-500 bg-blue-500/10`}>
-          <div className="text-center py-8">
-            <BookOpenIcon className="w-16 h-16 text-zinc-400 mx-auto mb-4" />
-            <h4 className="text-lg font-semibold text-white mb-2">No Active Step</h4>
-            <p className="text-zinc-300 mb-4">Start your walkthrough to begin tracking progress.</p>
+        <Card className={`${className} ${styles.noStepCard}`}>
+          <div className={styles.noStepContent}>
+            <BookOpenIcon className={styles.noStepIcon} />
+            <h4 className={styles.noStepTitle}>No Active Step</h4>
+            <p className={styles.noStepText}>Start your walkthrough to begin tracking progress.</p>
             {onViewGuide && (
               <Button onClick={onViewGuide} variant="primary" size="md">
                 <BookOpenIcon className="w-4 h-4" />
@@ -195,7 +196,7 @@ export function WalkthroughStepCard({
 
   // Determine card styling
   const isActiveStep = isActiveVariant || isCurrent;
-  const cardBorderClass = isActiveStep ? 'border-blue-500 bg-blue-500/10' : '';
+  const cardBorderClass = isActiveStep ? styles.activeCard : '';
 
   return (
     <Card
@@ -203,18 +204,18 @@ export function WalkthroughStepCard({
       title={stepData.title}
       subtitle={stepData.current_zone}
       icon={<MapPinIcon />}
-      accentColor={isActiveStep ? 'blue' : 'zinc'}>
+      accentColor={isActiveStep ? 'arcane' : 'stone'}>
       <div className="p-4 space-y-4">
         {/* Completion Zone */}
-        <div className="bg-blue-500/5 border border-blue-500/20 p-3">
-          <div className="flex items-center gap-2">
-            <MapPinIcon className="w-4 h-4 text-blue-400 flex-shrink-0" />
-            <span className="text-zinc-300 font-medium text-sm">
+        <div className={styles.completionZoneContainer}>
+          <div className={styles.completionZoneContent}>
+            <MapPinIcon className={styles.completionZoneIcon} />
+            <span className={styles.completionZoneLabel}>
               Enter{' '}
               <button
                 type="button"
                 onClick={() => openZone(stepData.completion_zone)}
-                className="text-zinc-300 hover:text-zinc-200 underline decoration-blue-400 hover:decoration-blue-300 cursor-pointer font-medium">
+                className={styles.completionZoneLink}>
                 {stepData.completion_zone}
               </button>
             </span>
@@ -222,8 +223,8 @@ export function WalkthroughStepCard({
         </div>
 
         {/* Description */}
-        <div className="bg-zinc-800/30 border border-zinc-700/20 p-3">
-          <p className="text-sm text-zinc-300">
+        <div className={styles.descriptionContainer}>
+          <p className={styles.descriptionText}>
             <ParsedText
               text={stepData.description}
               wikiItems={filteredWikiItems}
@@ -234,24 +235,24 @@ export function WalkthroughStepCard({
 
         {/* Objectives */}
         {stepData.objectives.length > 0 && (
-          <div className="bg-zinc-800/40 p-4 border border-zinc-700/30">
-            <h5 className="text-sm font-medium text-zinc-200 mb-3">
-              Objectives ({stepData.objectives.length}):
-            </h5>
-            <ul className="space-y-4">
+          <div className={styles.objectivesContainer}>
+            <h5 className={styles.objectivesTitle}>Objectives ({stepData.objectives.length}):</h5>
+            <ul className={styles.objectivesList}>
               {stepData.objectives.map((objective, objectiveIndex) => (
                 <li
                   key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`}
-                  className="text-xs">
-                  <div className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 mt-1.5 flex-shrink-0" />
-                    <div className="flex-1 space-y-1">
-                      <div className="font-medium text-zinc-200 flex items-center gap-2">
+                  className={styles.objectiveItem}>
+                  <div className={styles.objectiveContent}>
+                    <div className={styles.objectiveBullet} />
+                    <div className={styles.objectiveInner}>
+                      <div className={styles.objectiveText}>
                         {objective.required !== undefined && (
                           <StarIcon
-                            className={`w-3 h-3 ${
-                              objective.required ? 'text-orange-400' : 'text-zinc-400'
-                            }`}
+                            className={
+                              objective.required
+                                ? styles.objectiveRequired
+                                : styles.objectiveOptional
+                            }
                             title={objective.required ? 'Required' : 'Optional'}
                           />
                         )}
@@ -264,9 +265,9 @@ export function WalkthroughStepCard({
                       {(objective.details ||
                         objective.notes ||
                         (objective.rewards && objective.rewards.length > 0)) && (
-                        <div className="border-l-2 border-zinc-500 pl-2 ml-1.5 space-y-1">
+                        <div className={styles.objectiveDetails}>
                           {objective.details && (
-                            <div className="text-xs text-zinc-400">
+                            <div className={styles.objectiveDetailsText}>
                               <ParsedText
                                 text={objective.details}
                                 wikiItems={filteredWikiItems}
@@ -275,7 +276,7 @@ export function WalkthroughStepCard({
                             </div>
                           )}
                           {objective.notes && (
-                            <div className="text-xs text-blue-400 italic">
+                            <div className={styles.objectiveNotesText}>
                               Note:{' '}
                               <ParsedText
                                 text={objective.notes}
@@ -286,7 +287,7 @@ export function WalkthroughStepCard({
                           )}
                           {objective.rewards && objective.rewards.length > 0 && (
                             <div className="text-xs flex items-center gap-1">
-                              <GiftIcon className="w-3 h-3 text-purple-400" title="Rewards" />
+                              <GiftIcon className={styles.rewardIcon} title="Rewards" />
                               <ParsedText
                                 text={objective.rewards.join(', ')}
                                 wikiItems={filteredWikiItems}
@@ -307,14 +308,14 @@ export function WalkthroughStepCard({
 
       {/* Footer */}
       {(isActiveVariant || (onSkipToStep && !isCurrent)) && (
-        <div className="flex justify-between items-center py-2 px-4 border-t border-zinc-700/30">
+        <div className={styles.footer}>
           {isActiveVariant && progress ? (
             <>
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
-                <ClockIcon className="w-3 h-3" />
+              <div className={styles.footerTimestamp}>
+                <ClockIcon className={styles.footerTimestampIcon} />
                 Last updated: {formatLastUpdated(progress.last_updated)}
               </div>
-              <div className="flex gap-2">
+              <div className={styles.footerActions}>
                 {hasPreviousStep && (
                   <Button
                     onClick={handlePreviousStep}
@@ -345,7 +346,7 @@ export function WalkthroughStepCard({
               </div>
             </>
           ) : (
-            <div className="flex justify-end w-full">
+            <div className={styles.footerActionsEnd}>
               <Button
                 onClick={() => onSkipToStep?.(stepData.id)}
                 variant="text"

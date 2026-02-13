@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useEconomy } from '@/contexts/EconomyContext';
 import type { TopCurrencyItem } from '@/types/economy';
+import { topItemsCardStyles } from './top-items-card.styles';
 
 // Calculate items sold per hour (volume / primary_value)
 const calculateItemsSoldPerHour = (volume: number, primaryValue: number): string => {
@@ -21,20 +22,18 @@ export function TopItemsCard() {
       {isLoadingAggregated ? (
         <LoadingSpinner />
       ) : aggregatedTopCurrencies.length > 0 ? (
-        <div className="space-y-2">
+        <div className={topItemsCardStyles.container}>
           {aggregatedTopCurrencies.map((currency: TopCurrencyItem) => (
-            <div
-              key={`${currency.economy_type}-${currency.id}`}
-              className="flex items-start justify-between text-sm p-2 hover:bg-zinc-700/30">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div key={`${currency.economy_type}-${currency.id}`} className={topItemsCardStyles.row}>
+              <div className={topItemsCardStyles.leftSection}>
                 <img
                   src={currency.image_url}
                   alt={currency.name}
-                  className="w-6 h-6 flex-shrink-0"
+                  className={topItemsCardStyles.image}
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="text-white truncate">{currency.name}</div>
-                  <div className="flex items-center gap-3 text-xs text-zinc-400 mt-0.5">
+                <div className={topItemsCardStyles.nameContainer}>
+                  <div className={topItemsCardStyles.name}>{currency.name}</div>
+                  <div className={topItemsCardStyles.statsRow}>
                     {currency.volume !== null && (
                       <span title="Number of items sold per hour">
                         {calculateItemsSoldPerHour(currency.volume, currency.primary_value)} / hr
@@ -43,24 +42,26 @@ export function TopItemsCard() {
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-zinc-300 font-semibold flex items-center justify-end gap-1">
+              <div className={topItemsCardStyles.valueContainer}>
+                <div className={topItemsCardStyles.valueRow}>
                   {currency.primary_value.toLocaleString('en-US', {
                     maximumFractionDigits: 0,
                   })}
                   <img
                     src={currency.primary_currency_image_url}
                     alt={currency.primary_currency_name}
-                    className="w-4 h-4"
+                    className={topItemsCardStyles.valueIcon}
                     title={currency.primary_currency_name}
                   />
                 </div>
                 {currency.change_percent !== null && (
-                  <div className="text-xs text-zinc-400 mt-1 flex justify-end">
+                  <div className={topItemsCardStyles.changeContainer}>
                     <span
-                      className={`font-semibold opacity-60 ${
-                        currency.change_percent >= 0 ? 'text-emerald-400' : 'text-red-400'
-                      }`}>
+                      className={
+                        currency.change_percent >= 0
+                          ? topItemsCardStyles.changePositive
+                          : topItemsCardStyles.changeNegative
+                      }>
                       {currency.change_percent >= 0 ? '+' : ''}
                       {currency.change_percent.toFixed(2)}%
                     </span>
@@ -71,7 +72,7 @@ export function TopItemsCard() {
           ))}
         </div>
       ) : (
-        <div className="text-zinc-400 text-sm text-center py-8">
+        <div className={topItemsCardStyles.emptyState}>
           No aggregated data yet. Browse different economy types to populate this list.
         </div>
       )}

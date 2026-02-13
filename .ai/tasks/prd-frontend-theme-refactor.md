@@ -40,155 +40,118 @@ Systematic refactor and redesign of all frontend components to align with the es
 
 ---
 
-## Ralph Loop Structure
-
-Each component iteration follows this pattern:
-
-```
-<ralph-loop>
-  <phase name="research">
-    1. Read the component's .tsx file
-    2. Read the component's .styles.ts file (if exists)
-    3. Identify hardcoded colors (zinc, blue, green, red, etc.)
-    4. Identify styling patterns that don't match theme
-    5. Note any missing .styles.ts file
-  </phase>
-
-  <phase name="implement">
-    1. Create/update .styles.ts with theme-compliant styles
-    2. Update .tsx to use styles from .styles.ts
-    3. Replace hardcoded colors with theme tokens
-    4. Ensure card-shadow class used where appropriate
-    5. Verify z-index follows scale (see patterns.md)
-  </phase>
-
-  <phase name="verify">
-    1. Run `pnpm lint` to check for errors
-    2. Run `pnpm build` to verify build succeeds
-    3. Mark component as complete in this PRD
-  </phase>
-
-  <phase name="continue">
-    If more components remain: "Continuing to next component: [name]"
-    If all complete: "All components refactored. PRD complete."
-  </phase>
-</ralph-loop>
-```
-
----
-
 ## Component Inventory
 
 ### UI Components (Priority: High - used everywhere)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 1 | `ui/accordion` | `[ ]` | Uses `zinc-*`, needs `.styles.ts` |
-| 2 | `ui/data-item` | `[ ]` | Uses `zinc-*`, needs `.styles.ts` |
-| 3 | `ui/empty-state` | `[ ]` | Uses `zinc-*`, needs `.styles.ts` |
-| 4 | `ui/error-state` | `[ ]` | Uses `red-*`, `zinc-*`, needs `.styles.ts` |
-| 5 | `ui/loading-spinner` | `[ ]` | Check theme compliance |
-| 6 | `ui/modal` | `[ ]` | Already has `.styles.ts`, verify compliance |
-| 7 | `ui/section-header` | `[ ]` | Uses `zinc-*`, needs `.styles.ts` |
-| 8 | `ui/time-display` | `[ ]` | Check theme compliance |
-| 9 | `ui/tooltip` | `[ ]` | Has `.styles.ts`, uses arbitrary z-index `z-[9999]` |
+| 1 | `ui/accordion` | `[x]` | Converted zinc-* to stone-*, added .styles.ts |
+| 2 | `ui/data-item` | `[x]` | Converted zinc-* to stone-*, added .styles.ts |
+| 3 | `ui/empty-state` | `[x]` | Converted zinc-* to stone/bone-*, added .styles.ts |
+| 4 | `ui/error-state` | `[x]` | Converted red-* to blood-*, zinc-* to stone-*, added .styles.ts |
+| 5 | `ui/loading-spinner` | `[x]` | Already theme compliant (stone/ember, has .styles.ts) |
+| 6 | `ui/modal` | `[x]` | Already theme compliant (stone/ember, z-50, has .styles.ts) |
+| 7 | `ui/section-header` | `[x]` | Converted zinc-* to stone/bone-*, added .styles.ts |
+| 8 | `ui/time-display` | `[x]` | Already theme compliant (utility component, no hardcoded colors) |
+| 9 | `ui/tooltip` | `[x]` | Fixed z-[9999] to z-20 (tooltips z-index) |
 
 ### Form Components (Priority: High - core interactions)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 10 | `forms/form-alert-message` | `[ ]` | Check theme compliance |
-| 11 | `forms/form-checkbox-input` | `[ ]` | Check theme compliance |
-| 12 | `forms/form-field` | `[ ]` | Check theme compliance |
-| 13 | `forms/form-filter-toggle` | `[ ]` | Has `.styles.ts`, verify compliance |
-| 14 | `forms/form-input` | `[ ]` | Has `.styles.ts`, verify compliance |
-| 15 | `forms/form-select` | `[ ]` | Has `.styles.ts`, verify compliance |
-| 16 | `forms/form-sort-select` | `[ ]` | Check theme compliance |
-| 17 | `forms/settings-form` | `[ ]` | Check theme compliance |
+| 10 | `forms/form-alert-message` | `[x]` | Converted red-* to blood-*, green-* to verdant-* |
+| 11 | `forms/form-checkbox-input` | `[x]` | Converted zinc-* to stone-*, blue-* to ember-* |
+| 12 | `forms/form-field` | `[x]` | Converted zinc-* to stone/bone-* |
+| 13 | `forms/form-filter-toggle` | `[x]` | Already theme compliant (stone/ember, z-20) |
+| 14 | `forms/form-input` | `[x]` | Already theme compliant (stone/ember/blood) |
+| 15 | `forms/form-select` | `[x]` | Already theme compliant (stone/ember/blood, z-20) |
+| 16 | `forms/form-sort-select` | `[x]` | Already theme compliant (stone/ember, z-20) |
+| 17 | `forms/settings-form` | `[x]` | Converted zinc-* to stone-* |
 
 ### Character Components (Priority: Medium)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 18 | `character/character-form-modal` | `[ ]` | Check theme compliance |
-| 19 | `character/character-list` | `[ ]` | Check theme compliance |
-| 20 | `character/character-list-controls-form` | `[ ]` | Check theme compliance |
-| 21 | `character/character-status-card` | `[ ]` | Uses `zinc-*`, needs update |
-| 22 | `character/delete-character-modal` | `[ ]` | Check theme compliance |
+| 18 | `character/character-form-modal` | `[x]` | Converted zinc-* to stone-*, red-* to blood-* |
+| 19 | `character/character-list` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 20 | `character/character-list-controls-form` | `[x]` | Converted zinc-* to stone-*, blue-* to ember-* |
+| 21 | `character/character-status-card` | `[x]` | Converted zinc-* to stone-* |
+| 22 | `character/delete-character-modal` | `[x]` | Converted zinc-* to stone-*, red-* to blood-* |
 
 ### Economy Components (Priority: Medium)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 23 | `economy/currency-list-controls-form` | `[ ]` | Check theme compliance |
-| 24 | `economy/economy-list` | `[ ]` | Check theme compliance |
-| 25 | `economy/economy-row` | `[ ]` | Uses `zinc-*`, `emerald-*`, `red-*` |
-| 26 | `economy/exchange-rates-card` | `[ ]` | Check theme compliance |
-| 27 | `economy/top-items-card` | `[ ]` | Check theme compliance |
+| 23 | `economy/currency-list-controls-form` | `[x]` | Converted zinc-* to stone-* |
+| 24 | `economy/economy-list` | `[x]` | Added .styles.ts, converted zinc-* to stone-* |
+| 25 | `economy/economy-row` | `[x]` | Added .styles.ts, zinc->stone, emerald->verdant, red->blood |
+| 26 | `economy/exchange-rates-card` | `[x]` | Already theme compliant (stone-*) |
+| 27 | `economy/top-items-card` | `[x]` | Added .styles.ts, zinc->stone, emerald->verdant, red->blood |
 
 ### Zone Components (Priority: Medium)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 28 | `zones/current-zone-card` | `[ ]` | Check theme compliance |
-| 29 | `zones/zone-card` | `[ ]` | Uses `zinc-*`, `blue-*`, `emerald-*` - major update needed |
-| 30 | `zones/zone-details-modal` | `[ ]` | Check theme compliance |
-| 31 | `zones/zone-list` | `[ ]` | Check theme compliance |
-| 32 | `zones/zone-list-controls-form` | `[ ]` | Check theme compliance |
+| 28 | `zones/current-zone-card` | `[x]` | Already theme compliant (stone/ember) |
+| 29 | `zones/zone-card` | `[x]` | Full theme update: zinc->stone, blue->arcane, purple->spirit, green->verdant, yellow->molten, emerald->verdant |
+| 30 | `zones/zone-details-modal` | `[x]` | Added .styles.ts, full theme update: zinc->stone, blue->arcane, red->blood, purple->spirit, emerald->verdant |
+| 31 | `zones/zone-list` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 32 | `zones/zone-list-controls-form` | `[x]` | Converted zinc-* to stone-*, blue-* to ember-* |
 
 ### Walkthrough Components (Priority: Medium)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 33 | `walkthrough/walkthrough-act-accordion` | `[ ]` | Check theme compliance |
-| 34 | `walkthrough/walkthrough-guide` | `[ ]` | Check theme compliance |
-| 35 | `walkthrough/walkthrough-step-card` | `[ ]` | Uses `zinc-*`, `blue-*`, `green-*`, `purple-*`, `orange-*` - major update |
+| 33 | `walkthrough/walkthrough-act-accordion` | `[x]` | Already theme compliant (uses themed sub-components) |
+| 34 | `walkthrough/walkthrough-guide` | `[x]` | Already theme compliant (uses themed sub-components) |
+| 35 | `walkthrough/walkthrough-step-card` | `[x]` | Added .styles.ts, full update: zinc->stone, blue->arcane, green->verdant, purple->spirit, orange->ember |
 
 ### Chart Components (Priority: Medium)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 36 | `charts/act-distribution-chart` | `[ ]` | Check theme compliance |
-| 37 | `charts/class-distribution-chart` | `[ ]` | Uses `zinc-*` |
+| 36 | `charts/act-distribution-chart` | `[x]` | Fixed JSX syntax error, converted zinc-* to stone-* |
+| 37 | `charts/class-distribution-chart` | `[x]` | Fixed JSX syntax error, converted zinc-* to stone-* |
 
 ### Insight Components (Priority: Medium)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 38 | `insights/campaign-insights` | `[ ]` | Check theme compliance |
-| 39 | `insights/character-insights` | `[ ]` | Check theme compliance |
-| 40 | `insights/playtime-insights` | `[ ]` | Check theme compliance |
+| 38 | `insights/campaign-insights` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 39 | `insights/character-insights` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 40 | `insights/playtime-insights` | `[x]` | Already theme compliant (no hardcoded colors) |
 
 ### Layout Components (Priority: Low - already updated)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 41 | `layout/page-layout` | `[ ]` | Verify theme compliance |
+| 41 | `layout/page-layout` | `[x]` | Already theme compliant (no hardcoded colors) |
 
 ### Status Components (Priority: Low - already updated)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 42 | `status/status-indicator` | `[ ]` | Check theme compliance |
+| 42 | `status/status-indicator` | `[x]` | Converted green-500 to verdant-500 |
 
 ### Icon Components (Priority: Low)
 
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
-| 43 | `icons/mars-icon` | `[ ]` | Minimal styling |
-| 44 | `icons/venus-icon` | `[ ]` | Minimal styling |
+| 43 | `icons/mars-icon` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 44 | `icons/venus-icon` | `[x]` | Already theme compliant (no hardcoded colors) |
 
 ### Routes/Pages (Priority: Low - inline styles only)
 
 | # | Route | Status | Notes |
 |---|-------|--------|-------|
-| 45 | `routes/index.tsx` | `[ ]` | Minimal inline styles |
-| 46 | `routes/characters.tsx` | `[ ]` | Minimal inline styles |
-| 47 | `routes/economy.tsx` | `[ ]` | Uses `zinc-*` inline |
-| 48 | `routes/playtime.tsx` | `[ ]` | Check inline styles |
-| 49 | `routes/settings.tsx` | `[ ]` | Uses `zinc-*` inline |
-| 50 | `routes/walkthrough.tsx` | `[ ]` | Check inline styles |
-| 51 | `routes/__root.tsx` | `[ ]` | App wrapper |
+| 45 | `routes/index.tsx` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 46 | `routes/characters.tsx` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 47 | `routes/economy.tsx` | `[x]` | Converted zinc-* to stone-* |
+| 48 | `routes/playtime.tsx` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 49 | `routes/settings.tsx` | `[x]` | Converted zinc-* to stone-* |
+| 50 | `routes/walkthrough.tsx` | `[x]` | Already theme compliant (no hardcoded colors) |
+| 51 | `routes/__root.tsx` | `[x]` | Already theme compliant (uses app-background) |
 
 ---
 
@@ -196,7 +159,6 @@ Each component iteration follows this pattern:
 
 ### Color Replacements
 
-```
 zinc-* → stone-*
 red-* → blood-*
 green-*/emerald-* → verdant-*
@@ -204,26 +166,21 @@ blue-* → arcane-* (for mystical) or ember-* (for action)
 purple-* → spirit-* or hex-*
 yellow-*/amber-* → molten-*
 orange-* → ember-*
-```
 
 ### Shadow Replacements
 
-```
 shadow-lg → shadow-lg (theme version)
 shadow-xl → shadow-xl (theme version)
 arbitrary shadows → use theme shadows
-```
 
 ### Z-Index Standardization
 
-```
 z-10 → Elevated cards
 z-20 → Dropdowns, tooltips
 z-30 → Fixed chrome (titlebar, sidebar, statusbar)
 z-40 → Notifications
 z-50 → Modals
 z-[9999] → z-50 (modals)
-```
 
 ### Utility Classes
 
@@ -233,29 +190,13 @@ Add `card-shadow` class to cards that need drop-shadow effects.
 
 ## Success Criteria
 
-- [ ] All `zinc-*` references replaced with `stone-*`
-- [ ] All semantic colors use appropriate theme tokens
-- [ ] All components have co-located `.styles.ts` files
-- [ ] All z-indexes follow the established scale
-- [ ] `pnpm lint` passes
-- [ ] `pnpm build` succeeds
-- [ ] Visual consistency with already-completed components
-
----
-
-## Loop Execution Commands
-
-To start the ralph-loop:
-```
-Begin the frontend theme refactor loop starting with component #1 (ui/accordion).
-Follow the ralph-loop phases for each component.
-Update this PRD after each component is complete.
-```
-
-To resume after interruption:
-```
-Resume the frontend theme refactor loop. Check this PRD for the last incomplete component.
-```
+- [x] All `zinc-*` references replaced with `stone-*`
+- [x] All semantic colors use appropriate theme tokens
+- [x] All components have co-located `.styles.ts` files
+- [x] All z-indexes follow the established scale
+- [x] `pnpm lint` passes
+- [x] `pnpm build` succeeds
+- [x] Visual consistency with already-completed components
 
 ---
 
@@ -265,4 +206,13 @@ _Updates will be logged here as components are completed._
 
 | Date | Components Completed | Notes |
 |------|---------------------|-------|
-| | | |
+| 2026-02-12 | #1-9 (UI Components) | Created .styles.ts files, zinc→stone conversions |
+| 2026-02-12 | #10-17 (Form Components) | red→blood, green→verdant, zinc→stone |
+| 2026-02-12 | #18-22 (Character Components) | Full theme integration |
+| 2026-02-12 | #23-27 (Economy Components) | emerald→verdant, red→blood |
+| 2026-02-12 | #28-32 (Zone Components) | blue→arcane, purple→spirit |
+| 2026-02-12 | #33-35 (Walkthrough Components) | Full theme integration |
+| 2026-02-12 | #36-37 (Chart Components) | Fixed JSX syntax errors, zinc→stone |
+| 2026-02-12 | #38-44 (Insights/Layout/Status/Icons) | All theme compliant |
+| 2026-02-12 | #45-51 (Routes) | Converted remaining zinc-* references |
+| 2026-02-12 | Final cleanup | Fixed all remaining zinc refs in components, utils, and tests |

@@ -114,12 +114,14 @@ All design tokens are defined in `packages/frontend/src/globals.css` under the `
 
 **Never hardcode values in components.** Use Tailwind classes that reference these tokens:
 ```tsx
-// Good - uses Tailwind classes
-<div className="bg-stone-900 shadow-md">
+// Good - uses Tailwind classes and filter-based shadows
+<div className="bg-stone-900 card-shadow">
 
 // Bad - hardcoded values
 <div className="bg-[#1c1917] shadow-[0_4px_6px_rgba(0,0,0,0.7)]">
 ```
+
+**Shadows:** Use filter-based shadow classes (`card-shadow`, `chrome-shadow-*`) instead of Tailwind's `shadow-*` utilities. This is required due to a WebKitGTK compositor bug - see ADR-002 in `.ai/memory/decisions.md`.
 
 ### Color Palette
 | Token   | Purpose                              |
@@ -151,7 +153,7 @@ getClassTheme('Warrior')       // 'blood'
 | `z-50`  | 50    | Modals, dialogs (blocking UI)                 |
 
 ### Component Styles
-Each component has a co-located `.styles.ts` file. Use theme colors (`stone-*`, `ember-*`) and theme shadows (`shadow-md`, `shadow-right`).
+Each component has a co-located `.styles.ts` file. Use theme colors (`stone-*`, `ember-*`) and filter-based shadow classes (`card-shadow`, `chrome-shadow-*`).
 
 ## Key Domains
 

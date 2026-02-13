@@ -163,8 +163,8 @@ export const characterCardStyles = {
   actionButton: 'bg-stone-800/80',
   deleteButton: 'text-blood-400 hover:text-blood-300 hover:border-blood-500 bg-stone-800/80',
 
-  // Stats footer
-  footer: 'relative px-4 py-2.5 bg-stone-950 border-t border-stone-800',
+  // Stats footer - uses filter shadow for WebKitGTK compatibility
+  footer: 'relative px-4 py-2.5 bg-stone-950 border-t border-stone-800 chrome-shadow-top',
   statsGrid: 'flex items-center justify-between gap-4',
   stat: 'flex items-center gap-1.5',
   statIcon: 'w-4 h-4 text-stone-400',
@@ -180,9 +180,7 @@ export const characterCardStyles = {
  * Get background image styles for ascendency artwork
  */
 export function getAscendencyBackgroundStyles(ascendencyImage: string | null): React.CSSProperties {
-  if (!ascendencyImage) {
-    return {};
-  }
+  if (!ascendencyImage) return {};
 
   return {
     backgroundImage: `url(${ascendencyImage})`,

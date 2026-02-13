@@ -3,8 +3,9 @@
 
 export const sidebarNavigationStyles = {
   // z-30: Fixed UI chrome (see patterns.md for z-index scale)
+  // Uses chrome-shadow-right (filter-based) for WebKitGTK compatibility
   container:
-    'fixed left-0 top-7 bottom-6 w-12 bg-stone-950/95 backdrop-blur-sm flex flex-col z-30 border-r border-stone-800/50 shadow-right',
+    'fixed left-0 top-7 bottom-6 w-12 bg-stone-950 flex flex-col z-30 border-r border-stone-800/50 chrome-shadow-right',
   logo: 'w-full h-12 flex items-center justify-center border-b border-stone-800/50',
   logoImage: 'w-8 h-8',
   primaryNav: 'flex-1 flex flex-col',

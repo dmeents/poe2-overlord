@@ -76,18 +76,22 @@ getClassTheme('Warrior')       // 'blood'
 getClassHexColor('Warrior')    // '#dc2626'
 ```
 
-### Shadow Scale
+### Shadow Implementation
 
-| Class          | Use case                    |
-|----------------|-----------------------------|
-| `shadow-sm`    | Subtle depth                |
-| `shadow-md`    | Cards, dropdowns            |
-| `shadow-lg`    | Modals, popovers            |
-| `shadow-xl`    | Floating elements           |
-| `shadow-top`   | Bottom-docked panels        |
-| `shadow-right` | Left-docked panels (sidebar)|
-| `shadow-bottom`| Top-docked panels (titlebar)|
-| `shadow-left`  | Right-docked panels         |
+**IMPORTANT:** Due to a WebKitGTK compositor bug in Tauri on Linux, all shadows MUST use `filter: drop-shadow()` instead of `box-shadow`. Never mix shadow types. See ADR-002 in `decisions.md`.
+
+**Use these filter-based shadow classes (defined in `globals.css`):**
+
+| Class                 | Use case                              |
+|-----------------------|---------------------------------------|
+| `.card-shadow`        | Cards, elevated content               |
+| `.chrome-shadow-top`  | Bottom-docked panels (statusbar)      |
+| `.chrome-shadow-right`| Left-docked panels (sidebar)          |
+| `.chrome-shadow-bottom`| Top-docked panels (titlebar)         |
+
+**DO NOT use Tailwind's `shadow-*` utilities** (e.g., `shadow-md`, `shadow-lg`) - these use `box-shadow` and will cause rendering issues when mixed with `filter: drop-shadow()`.
+
+The theme variables (`--shadow-top`, `--shadow-right`, etc.) are defined for reference but should only be used via the filter-based utility classes above.
 
 ### Z-Index Scale
 
@@ -108,7 +112,7 @@ Consistent layering prevents z-index conflicts. Use these values:
 - Modals use `z-50` - they block everything else
 - Avoid arbitrary z-index values; stick to the scale
 
-**Note on card shadows:** Cards use the `.card-shadow` class which applies `filter: drop-shadow()` with GPU hints. This is required due to a compositing issue - see `.ai/tasks/prd-compositing-layer-root-cause.md` for details.
+**Note on shadows:** All shadows use `filter: drop-shadow()` with GPU hints due to a WebKitGTK compositor bug. See ADR-002 in `decisions.md` for the full investigation.
 
 ### Component Styles
 

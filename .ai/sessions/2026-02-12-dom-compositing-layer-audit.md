@@ -1,9 +1,9 @@
 # DOM Structure & Compositing Layer Audit Report
 
 **Date:** 2026-02-12
-**Status:** Complete - Structural fixes implemented, root cause investigation deferred
+**Status:** Complete - Root cause identified and fixed
 
-**Follow-up:** `.ai/tasks/prd-compositing-layer-root-cause.md` - Experiments to identify why `box-shadow` requires compositing layer
+**Resolution:** WebKitGTK compositor bug when mixing `box-shadow` with `filter: drop-shadow()`. Solution: Use `filter: drop-shadow()` exclusively for all shadows. See ADR-002 in `decisions.md` and completed PRD at `.ai/archive/completed-prds/2026-02-12-prd-compositing-layer-root-cause.md`.
 
 ---
 

@@ -265,6 +265,28 @@ textarea:focus {
   transform: translateZ(0);
 }
 
+/* Chrome shadow classes - uses filter for WebKitGTK compatibility
+ * These replace box-shadow with filter: drop-shadow() to avoid
+ * compositor conflicts when mixing shadow types in WebKitGTK.
+ */
+.chrome-shadow-top {
+  filter: drop-shadow(0 -4px 6px rgba(0, 0, 0, 0.7));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.chrome-shadow-right {
+  filter: drop-shadow(4px 0 6px rgba(0, 0, 0, 0.7));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.chrome-shadow-bottom {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
 /* Ember glow effect for interactive elements */
 .glow-ember {
   box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);

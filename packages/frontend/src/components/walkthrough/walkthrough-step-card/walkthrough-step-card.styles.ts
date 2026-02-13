@@ -1,12 +1,7 @@
 // Walkthrough Step Card Styles
-// Uses stone/verdant/arcane/ember/spirit color palette from theme
+// Uses stone/arcane/ember/spirit color palette from theme
 
 export const walkthroughStepCardStyles = {
-  // Completion state
-  completedCard: 'border-verdant-500 bg-verdant-500/10',
-  completedContent: 'flex items-center gap-4 p-4',
-  completedIcon: 'w-8 h-8 text-verdant-500',
-  completedTitle: 'text-xl font-semibold text-white',
   // No active step state
   noStepCard: 'border-arcane-500 bg-arcane-500/10',
   noStepContent: 'text-center py-8',

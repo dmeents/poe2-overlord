@@ -7,6 +7,7 @@ import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { SectionHeader } from '../components/ui/section-header/section-header';
+import { CampaignCompleteCard } from '../components/walkthrough/campaign-complete-card/campaign-complete-card';
 import { WalkthroughGuide } from '../components/walkthrough/walkthrough-guide/walkthrough-guide';
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -37,13 +38,21 @@ function WalkthroughPage() {
       {activeCharacter && (
         <>
           <SectionHeader title="Progress" icon={<ChartBarIcon className="w-4 h-4" />} />
-          {progress && (
-            <WalkthroughStepCard
-              key={`${progress.current_step_id}-${progress.last_updated}`}
-              variant="active"
-              onWikiClick={handleWikiClick}
+          {progress?.is_completed ? (
+            <CampaignCompleteCard
+              lastUpdated={progress.last_updated}
+              character={activeCharacter}
               className="mb-6"
             />
+          ) : (
+            progress && (
+              <WalkthroughStepCard
+                key={`${progress.current_step_id}-${progress.last_updated}`}
+                variant="active"
+                onWikiClick={handleWikiClick}
+                className="mb-6"
+              />
+            )
           )}
           {guide && (
             <WalkthroughGuide

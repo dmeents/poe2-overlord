@@ -1,5 +1,5 @@
 export const cardStyles = {
-  base: 'bg-stone-900 border border-stone-800 card-shadow',
+  base: 'bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 border border-stone-800 card-shadow',
   header: 'px-5 py-3 border-b border-stone-800/50',
   headerContent: 'flex items-center justify-between',
   headerLeft: 'flex items-center gap-2',

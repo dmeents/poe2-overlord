@@ -2,7 +2,6 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   BookOpenIcon,
-  CheckCircleIcon,
   ClockIcon,
   GiftIcon,
   MapPinIcon,
@@ -146,30 +145,6 @@ export function WalkthroughStepCard({
   // Active variant: Check for special states
   if (isActiveVariant) {
     if (!progress) return null;
-
-    // Completion state
-    if (progress.is_completed) {
-      return (
-        <Card className={`${className} ${styles.completedCard}`}>
-          <div className={styles.completedContent}>
-            <CheckCircleIcon className={styles.completedIcon} />
-            <h4 className={styles.completedTitle}>Campaign Complete!</h4>
-          </div>
-          <div className={styles.footer}>
-            <div className={styles.footerTimestamp}>
-              <ClockIcon className={styles.footerTimestampIcon} />
-              Last updated: {formatLastUpdated(progress.last_updated)}
-            </div>
-            {onViewGuide && (
-              <Button onClick={onViewGuide} variant="text" size="xs" title="View guide">
-                <BookOpenIcon className="w-3 h-3" />
-                Guide
-              </Button>
-            )}
-          </div>
-        </Card>
-      );
-    }
 
     // No active step state
     if (!stepData) {

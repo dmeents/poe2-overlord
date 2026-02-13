@@ -289,11 +289,11 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         <Input
           id="poe-client-log-path"
           value={config.poe_client_log_path}
-          onChange={value => handleInputChange('poe_client_log_path', value as string)}
+          onChange={value => handleInputChange('poe_client_log_path', value)}
           type="text"
           placeholder="Enter path to client.txt file (e.g., C:\Games\Path of Exile\logs\client.txt)"
-          isValid={isPoePathValid}
-          warningMessage="This path doesn't look like a typical POE client log file. Please verify the path."
+          isInvalid={!isPoePathValid}
+          errorMessage="This path doesn't look like a typical POE client log file. Please verify the path."
         />
       </FormField>
 

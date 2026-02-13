@@ -83,7 +83,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
             type="text"
             placeholder="Search all currencies..."
             value={searchQuery}
-            onChange={value => onSearchChange(String(value || ''))}
+            onChange={onSearchChange}
           />
           {searchQuery && (
             <Button

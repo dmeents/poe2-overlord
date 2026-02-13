@@ -112,12 +112,9 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
         <Input
           id="character-search"
           value={filters.nameSearch}
-          onChange={(value: string | number | null) =>
-            onFilterChange('nameSearch', value as string)
-          }
+          onChange={value => onFilterChange('nameSearch', value)}
           type="search"
           placeholder="Enter character name..."
-          label="Search"
         />
       </div>
 

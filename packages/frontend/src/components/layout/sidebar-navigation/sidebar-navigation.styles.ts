@@ -13,8 +13,8 @@ export const sidebarNavigationStyles = {
   navButton:
     'w-full h-14 flex items-center justify-center transition-all duration-200 cursor-pointer relative',
   navButtonActive:
-    'bg-gradient-to-r from-stone-900 to-stone-900/50 text-ember-400 shadow-[inset_2px_0_0_0_#ea580c]',
+    'bg-gradient-to-r from-stone-900 to-stone-900/50 text-ember-400 border-l-2 border-ember-500',
   navButtonInactive:
-    'text-stone-500 hover:bg-gradient-to-r hover:from-stone-900 hover:to-transparent hover:text-stone-300',
+    'text-stone-500 hover:bg-gradient-to-r hover:from-stone-900 hover:to-transparent hover:text-stone-300 border-l-2 border-transparent',
   icon: 'w-5 h-5',
 } as const;

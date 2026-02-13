@@ -4,13 +4,10 @@
 @import "tailwindcss";
 
 @theme {
-  /* Typography */
   --font-sans: "Roboto", sans-serif;
   --font-cursive: "Macondo", cursive;
 
-  /* ==========================================================================
-     EMBER - Primary accent (volcanic orange-red glow)
-     ========================================================================== */
+  /* Ember - primary accent */
   --color-ember-50: #fff7ed;
   --color-ember-100: #ffedd5;
   --color-ember-200: #fed7aa;
@@ -23,9 +20,7 @@
   --color-ember-900: #7c2d12;
   --color-ember-950: #431407;
 
-  /* ==========================================================================
-     MOLTEN - Secondary accent (gold/amber highlights)
-     ========================================================================== */
+  /* Molten - secondary accent */
   --color-molten-50: #fffbeb;
   --color-molten-100: #fef3c7;
   --color-molten-200: #fde68a;
@@ -38,9 +33,7 @@
   --color-molten-900: #451a03;
   --color-molten-950: #271004;
 
-  /* ==========================================================================
-     BLOOD - Danger/hardcore states
-     ========================================================================== */
+  /* Blood - danger states, Warrior class */
   --color-blood-50: #fef2f2;
   --color-blood-100: #fee2e2;
   --color-blood-200: #fecaca;
@@ -53,44 +46,32 @@
   --color-blood-900: #450a0a;
   --color-blood-950: #2a0505;
 
-  /* ==========================================================================
-     ARCANE - Sorceress (mystical deep blue)
-     ========================================================================== */
+  /* Arcane - Sorceress */
   --color-arcane-400: #7c9fd4;
   --color-arcane-500: #5b82c2;
   --color-arcane-600: #4567a0;
 
-  /* ==========================================================================
-     VERDANT - Ranger (forest moss green)
-     ========================================================================== */
+  /* Verdant - Ranger */
   --color-verdant-400: #6db578;
   --color-verdant-500: #4a9958;
   --color-verdant-600: #367a42;
 
-  /* ==========================================================================
-     SPIRIT - Monk (contemplative violet)
-     ========================================================================== */
+  /* Spirit - Monk */
   --color-spirit-400: #a78bdb;
   --color-spirit-500: #8b6bc4;
   --color-spirit-600: #6f4fa8;
 
-  /* ==========================================================================
-     HEX - Witch (dark magic magenta)
-     ========================================================================== */
+  /* Hex - Witch */
   --color-hex-400: #d17eb5;
   --color-hex-500: #b85c98;
   --color-hex-600: #974279;
 
-  /* ==========================================================================
-     PRIMAL - Druid (ancient nature teal)
-     ========================================================================== */
+  /* Primal - Druid */
   --color-primal-400: #5eb8a8;
   --color-primal-500: #3d9989;
   --color-primal-600: #2d7a6c;
 
-  /* ==========================================================================
-     BONE - Muted text and subtle highlights
-     ========================================================================== */
+  /* Bone - muted text */
   --color-bone-50: #fdfcfb;
   --color-bone-100: #e8dcc8;
   --color-bone-200: #d4c5b5;
@@ -98,9 +79,7 @@
   --color-bone-400: #a89888;
   --color-bone-500: #8a7a6a;
 
-  /* ==========================================================================
-     ASH - Cool neutral for disabled/muted states
-     ========================================================================== */
+  /* Ash - disabled states */
   --color-ash-400: #9ca3af;
   --color-ash-500: #6b7280;
   --color-ash-600: #4b5563;
@@ -108,10 +87,7 @@
   --color-ash-800: #1f2937;
   --color-ash-900: #111827;
 
-  /* ==========================================================================
-     STONE - Using Tailwind's stone palette (already built-in, but ensuring
-     consistency with our dark theme values)
-     ========================================================================== */
+  /* Stone - neutral backgrounds */
   --color-stone-50: #fafaf9;
   --color-stone-100: #f5f5f4;
   --color-stone-200: #e7e5e4;
@@ -124,38 +100,28 @@
   --color-stone-900: #1c1917;
   --color-stone-950: #0c0a09;
 
-  /* ==========================================================================
-     SHADOWS - High opacity for dark backgrounds
-     ========================================================================== */
+  /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.7);
   --shadow-lg: 0 8px 12px rgba(0, 0, 0, 0.7);
   --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.8);
-  /* Directional shadows for docked panels */
   --shadow-top: 0 -4px 6px rgba(0, 0, 0, 0.7);
   --shadow-right: 4px 0 6px rgba(0, 0, 0, 0.7);
   --shadow-bottom: 0 4px 6px rgba(0, 0, 0, 0.7);
   --shadow-left: -4px 0 6px rgba(0, 0, 0, 0.7);
 
-  /* ==========================================================================
-     SPACING - Layout constants
-     ========================================================================== */
+  /* Layout */
   --spacing-sidebar: 48px;
   --spacing-titlebar: 28px;
   --spacing-statusbar: 24px;
 }
 
-/* =============================================================================
-   BASE STYLES
-   ============================================================================= */
-
 html,
 body {
-  background-color: #0c0a09; /* stone-950 */
-  color: #fafaf9; /* stone-50 */
+  background-color: #0c0a09;
+  color: #fafaf9;
 }
 
-/* App background with texture - gradient overlay composited directly */
 .app-background {
   min-height: 100vh;
   background:
@@ -168,11 +134,7 @@ body {
     url("/background.png") center / cover no-repeat fixed;
 }
 
-/* =============================================================================
-   FORM ELEMENTS
-   ============================================================================= */
-
-/* Custom select styling for sharp, fantasy-adjacent design */
+/* Select styling */
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -184,7 +146,6 @@ select {
   padding-right: 2.5rem;
 }
 
-/* Remove default focus outline and add custom focus ring */
 select:focus {
   outline: none;
   box-shadow:
@@ -192,19 +153,16 @@ select:focus {
     0 0 0 1px #ea580c;
 }
 
-/* Style select options */
 select option {
   background-color: #1c1917;
   color: #fafaf9;
   padding: 0.5rem;
 }
 
-/* Hover state for options */
 select option:hover {
   background-color: #292524;
 }
 
-/* Input focus states */
 input:focus,
 textarea:focus {
   outline: none;
@@ -212,11 +170,7 @@ textarea:focus {
   border-color: #ea580c;
 }
 
-/* =============================================================================
-   SCROLLBAR STYLING
-   ============================================================================= */
-
-/* Webkit browsers */
+/* Scrollbar - webkit */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -235,40 +189,22 @@ textarea:focus {
   background: #57534e;
 }
 
-/* Firefox */
+/* Scrollbar - Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: #44403c #1c1917;
 }
 
-/* =============================================================================
-   UTILITY CLASSES
-   ============================================================================= */
-
-/* Card shadow - uses drop-shadow filter for consistent rendering
- *
- * Why these properties are ALL required:
- * 1. filter: drop-shadow() - Renders shadow during composite phase (not paint phase),
- *    which avoids clipping by ancestor overflow/stacking contexts that hide box-shadow
- * 2. will-change: filter - Hints browser to pre-allocate a compositing layer
- * 3. transform: translateZ(0) - Forces GPU layer promotion to prevent intermittent
- *    rendering where shadows would flicker/pop during route navigation
- *
- * Without will-change + transform, the browser inconsistently promotes elements to
- * compositing layers during navigation, causing shadows to appear/disappear.
- *
- * See: .ai/sessions/2026-02-12-dom-compositing-layer-audit.md for full investigation
- */
+/* Card shadow - uses drop-shadow filter + GPU layer promotion to avoid
+ * WebKitGTK compositor bugs where shadows flicker during navigation.
+ * See: .ai/sessions/2026-02-12-dom-compositing-layer-audit.md */
 .card-shadow {
   filter: drop-shadow(var(--shadow-md));
   will-change: filter;
   transform: translateZ(0);
 }
 
-/* Chrome shadow classes - uses filter for WebKitGTK compatibility
- * These replace box-shadow with filter: drop-shadow() to avoid
- * compositor conflicts when mixing shadow types in WebKitGTK.
- */
+/* Chrome shadows - filter-based for WebKitGTK compatibility */
 .chrome-shadow-top {
   filter: drop-shadow(0 -4px 6px rgba(0, 0, 0, 0.7));
   will-change: filter;
@@ -287,7 +223,7 @@ textarea:focus {
   transform: translateZ(0);
 }
 
-/* Ember glow effect for interactive elements */
+/* Glow effects */
 .glow-ember {
   box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
 }
@@ -296,17 +232,14 @@ textarea:focus {
   box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
 }
 
-/* Molten gold glow */
 .glow-molten {
   box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
 }
 
-/* Blood red glow for danger states */
 .glow-blood {
   box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
 }
 
-/* Text glow effects */
 .text-glow-ember {
   text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
 }

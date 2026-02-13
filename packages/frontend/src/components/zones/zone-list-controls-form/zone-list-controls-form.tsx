@@ -102,13 +102,17 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
       <div className="space-y-4">
         {/* First Row: Search Bar */}
         <div className="mb-4">
+          <label
+            htmlFor="zone-search"
+            className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
+            Search
+          </label>
           <Input
             id="zone-search"
             value={filters.search}
-            onChange={(value: string | number | null) => onFilterChange('search', value as string)}
+            onChange={value => onFilterChange('search', value)}
             type="search"
             placeholder="Search zones, acts, or location types..."
-            label="Search"
           />
         </div>
 
@@ -251,48 +255,80 @@ export const ZoneListControlsForm = memo(function ZoneListControlsForm({
                 {/* Visit Count Filters */}
                 <div className={filterSectionClasses}>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      id="min-visits-filter"
-                      value={filters.minVisits}
-                      onChange={value => onFilterChange('minVisits', value as number | null)}
-                      type="number"
-                      label="Min Visits"
-                      placeholder="Any"
-                      min={0}
-                    />
-                    <Input
-                      id="max-visits-filter"
-                      value={filters.maxVisits}
-                      onChange={value => onFilterChange('maxVisits', value as number | null)}
-                      type="number"
-                      label="Max Visits"
-                      placeholder="Any"
-                      min={0}
-                    />
+                    <div>
+                      <label
+                        htmlFor="min-visits-filter"
+                        className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
+                        Min Visits
+                      </label>
+                      <Input
+                        id="min-visits-filter"
+                        value={filters.minVisits ?? ''}
+                        onChange={value =>
+                          onFilterChange('minVisits', value ? parseInt(value, 10) : null)
+                        }
+                        type="number"
+                        placeholder="Any"
+                        min={0}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="max-visits-filter"
+                        className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
+                        Max Visits
+                      </label>
+                      <Input
+                        id="max-visits-filter"
+                        value={filters.maxVisits ?? ''}
+                        onChange={value =>
+                          onFilterChange('maxVisits', value ? parseInt(value, 10) : null)
+                        }
+                        type="number"
+                        placeholder="Any"
+                        min={0}
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Death Count Filters */}
                 <div className={filterSectionClasses}>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      id="min-deaths-filter"
-                      value={filters.minDeaths}
-                      onChange={value => onFilterChange('minDeaths', value as number | null)}
-                      type="number"
-                      label="Min Deaths"
-                      placeholder="Any"
-                      min={0}
-                    />
-                    <Input
-                      id="max-deaths-filter"
-                      value={filters.maxDeaths}
-                      onChange={value => onFilterChange('maxDeaths', value as number | null)}
-                      type="number"
-                      label="Max Deaths"
-                      placeholder="Any"
-                      min={0}
-                    />
+                    <div>
+                      <label
+                        htmlFor="min-deaths-filter"
+                        className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
+                        Min Deaths
+                      </label>
+                      <Input
+                        id="min-deaths-filter"
+                        value={filters.minDeaths ?? ''}
+                        onChange={value =>
+                          onFilterChange('minDeaths', value ? parseInt(value, 10) : null)
+                        }
+                        type="number"
+                        placeholder="Any"
+                        min={0}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="max-deaths-filter"
+                        className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
+                        Max Deaths
+                      </label>
+                      <Input
+                        id="max-deaths-filter"
+                        value={filters.maxDeaths ?? ''}
+                        onChange={value =>
+                          onFilterChange('maxDeaths', value ? parseInt(value, 10) : null)
+                        }
+                        type="number"
+                        placeholder="Any"
+                        min={0}
+                      />
+                    </div>
                   </div>
                 </div>
 

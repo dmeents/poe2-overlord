@@ -147,11 +147,11 @@ export function CharacterFormModal({
                 <Input
                   id="character-name"
                   value={formData.name}
-                  onChange={value => handleInputChange('name', value as string)}
+                  onChange={value => handleInputChange('name', value)}
                   type="text"
                   placeholder="Enter character name"
-                  isValid={!errors.name}
-                  warningMessage={errors.name}
+                  isInvalid={!!errors.name}
+                  errorMessage={errors.name}
                 />
               </div>
               <div className="flex items-center gap-1 border border-gray-700 bg-gray-800/50 px-2">

@@ -8,7 +8,7 @@ export const formSelectStyles = {
 
   // Basic select
   basicSelect:
-    'w-full h-10 px-3 py-2 pr-8 bg-stone-800/50 border border-stone-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 transition-colors appearance-none cursor-pointer rounded',
+    'w-full h-10 px-3 py-2 pr-8 bg-stone-800/50 border border-stone-600 text-white text-sm focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 transition-colors appearance-none cursor-pointer',
   validSelect: 'border-stone-600',
   invalidSelect: 'border-blood-500 focus:ring-blood-500/50 focus:border-blood-500',
   placeholderOption: 'bg-stone-800 text-stone-400',
@@ -17,7 +17,7 @@ export const formSelectStyles = {
   // Dropdown select
   triggerContainer: 'relative',
   trigger:
-    'flex items-center justify-between w-full px-4 py-2 bg-stone-800/50 hover:bg-stone-700 border border-stone-600 text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed rounded',
+    'flex items-center justify-between w-full px-4 py-2 bg-stone-800/50 hover:bg-stone-700 border border-stone-600 text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
   triggerText: 'text-sm font-medium truncate',
   triggerIcons: 'flex items-center space-x-2',
   clearButton: 'text-stone-400 hover:text-white text-lg leading-none px-1 transition-colors',
@@ -26,7 +26,7 @@ export const formSelectStyles = {
 
   // Dropdown - z-20: Dropdowns/popovers (see patterns.md for z-index scale)
   dropdown:
-    'fixed mt-2 bg-stone-800 border border-stone-700 shadow-2xl z-20 w-64 min-w-max rounded',
+    'fixed mt-2 bg-stone-800 border border-stone-700 shadow-2xl z-20 w-64 min-w-max',
   optionsList: 'py-2',
 
   // Options

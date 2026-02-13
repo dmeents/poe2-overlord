@@ -1,11 +1,8 @@
 import { BookOpenIcon } from '@heroicons/react/24/outline';
-import { invoke } from '@tauri-apps/api/core';
 import { useState } from 'react';
 
-import type {
-  WalkthroughGuide as WalkthroughGuideType,
-  WalkthroughProgress,
-} from '../../../types/walkthrough';
+import { useStepNavigation } from '../../../hooks/useStepNavigation';
+import type { WalkthroughGuide as WalkthroughGuideType } from '../../../types/walkthrough';
 import { handleWikiClick } from '../../../utils/wiki-utils';
 import { SectionHeader } from '../../ui/section-header/section-header';
 import { WalkthroughActAccordion } from '../walkthrough-act-accordion/walkthrough-act-accordion';
@@ -25,6 +22,12 @@ export function WalkthroughGuide({
 }: WalkthroughGuideProps): React.JSX.Element {
   const [expandedActs, setExpandedActs] = useState<Set<string>>(new Set());
 
+  // Use shared navigation hook
+  const { skipToStep } = useStepNavigation({
+    characterId: characterId ?? null,
+    progress: null, // Guide doesn't need current progress
+  });
+
   const toggleAct = (actId: string) => {
     const newExpanded = new Set(expandedActs);
     if (newExpanded.has(actId)) {
@@ -36,24 +39,7 @@ export function WalkthroughGuide({
   };
 
   const handleSkipToStep = async (stepId: string) => {
-    if (!characterId) return;
-
-    try {
-      // Create new progress with the selected step
-      const newProgress: WalkthroughProgress = {
-        current_step_id: stepId,
-        is_completed: false,
-        last_updated: new Date().toISOString(),
-      };
-
-      await invoke('update_character_walkthrough_progress', {
-        characterId,
-        progress: newProgress,
-      });
-      // Events will handle the UI update
-    } catch (err) {
-      console.error('Failed to skip to step:', err);
-    }
+    await skipToStep(stepId);
   };
 
   return (

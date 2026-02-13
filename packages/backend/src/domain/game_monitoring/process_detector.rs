@@ -59,7 +59,7 @@ impl ProcessDetectorImpl {
 
         // Extract filename - handle both Unix (/) and Windows (\) separators
         let filename = path_str
-            .rsplit(|c| c == '/' || c == '\\')
+            .rsplit(['/', '\\'])
             .next()
             .unwrap_or("")
             .to_lowercase();
@@ -150,7 +150,7 @@ impl ProcessDetector for ProcessDetectorImpl {
                     .map(|arg| arg.to_string_lossy())
                     .find(|arg| self.path_contains_poe(arg))
                     .and_then(|path| {
-                        path.rsplit(|c| c == '/' || c == '\\')
+                        path.rsplit(['/', '\\'])
                             .next()
                             .map(|s| s.to_string())
                     })

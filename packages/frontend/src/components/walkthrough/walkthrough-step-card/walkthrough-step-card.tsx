@@ -3,19 +3,18 @@ import {
   ArrowRightIcon,
   BookOpenIcon,
   ClockIcon,
-  GiftIcon,
   MapPinIcon,
-  StarIcon,
 } from '@heroicons/react/24/outline';
-import { invoke } from '@tauri-apps/api/core';
 import { useMemo } from 'react';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import { useWalkthrough } from '../../../contexts/WalkthroughContext';
 import { useZone } from '../../../contexts/ZoneContext';
+import { useStepNavigation } from '../../../hooks/useStepNavigation';
 import type { WalkthroughStep, WalkthroughStepResult } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
 import { Button } from '../../ui/button/button';
 import { Card } from '../../ui/card/card';
+import { StepObjectiveList } from './step-objective-list';
 import { walkthroughStepCardStyles as styles } from './walkthrough-step-card.styles';
 
 interface WalkthroughStepCardProps {
@@ -77,6 +76,12 @@ export function WalkthroughStepCard({
     return stepData.wiki_items.filter(item => !zoneNames.includes(item));
   }, [stepData]);
 
+  // Navigation hook (shared logic)
+  const { advanceStep, goToPreviousStep } = useStepNavigation({
+    characterId: activeCharacter?.id ?? null,
+    progress,
+  });
+
   // Handle item clicks (zones vs wiki)
   const handleItemClick = (itemName: string) => {
     if (!stepData) return;
@@ -92,49 +97,13 @@ export function WalkthroughStepCard({
 
   // Navigation handlers (active variant only)
   const handleAdvanceStep = async () => {
-    if (!isActiveVariant || !stepData || !progress || !activeCharacter) return;
-
-    try {
-      const nextStepId = stepData.next_step_id;
-      if (!nextStepId) {
-        console.error('No next step available. Campaign may be completed.');
-        return;
-      }
-
-      const newProgress = {
-        ...progress,
-        current_step_id: nextStepId,
-        is_completed: false,
-        last_updated: new Date().toISOString(),
-      };
-
-      await invoke('update_character_walkthrough_progress', {
-        characterId: activeCharacter.id,
-        progress: newProgress,
-      });
-    } catch (err) {
-      console.error('Failed to advance step:', err);
-    }
+    if (!isActiveVariant || !stepData) return;
+    await advanceStep(stepData.next_step_id);
   };
 
   const handlePreviousStep = async () => {
-    if (!isActiveVariant || !previousStep || !progress || !activeCharacter) return;
-
-    try {
-      const newProgress = {
-        ...progress,
-        current_step_id: previousStep.step.id,
-        is_completed: false,
-        last_updated: new Date().toISOString(),
-      };
-
-      await invoke('update_character_walkthrough_progress', {
-        characterId: activeCharacter.id,
-        progress: newProgress,
-      });
-    } catch (err) {
-      console.error('Failed to go to previous step:', err);
-    }
+    if (!isActiveVariant || !previousStep) return;
+    await goToPreviousStep(previousStep.step.id);
   };
 
   const formatLastUpdated = (timestamp: string) => {
@@ -173,166 +142,91 @@ export function WalkthroughStepCard({
   const isActiveStep = isActiveVariant || isCurrent;
   const cardBorderClass = isActiveStep ? styles.activeCard : '';
 
+  // Right action for preview cards (skip to step)
+  const rightAction =
+    !isActiveVariant && onSkipToStep && !isCurrent
+      ? {
+          label: 'Jump to Step',
+          onClick: () => onSkipToStep(stepData.id),
+        }
+      : undefined;
+
   return (
     <Card
       className={`${className} ${cardBorderClass}`}
       title={stepData.title}
-      subtitle={stepData.current_zone}
       icon={<MapPinIcon />}
-      accentColor={isActiveStep ? 'arcane' : 'stone'}>
-      <div className="p-4 space-y-4">
-        {/* Completion Zone */}
-        <div className={styles.completionZoneContainer}>
-          <div className={styles.completionZoneContent}>
-            <MapPinIcon className={styles.completionZoneIcon} />
-            <span className={styles.completionZoneLabel}>
-              Enter{' '}
-              <button
-                type="button"
-                onClick={() => openZone(stepData.completion_zone)}
-                className={styles.completionZoneLink}>
-                {stepData.completion_zone}
-              </button>
-            </span>
-          </div>
+      accentColor={isActiveStep ? 'ember' : 'stone'}
+      rightAction={rightAction}>
+      <div className="space-y-4 pb-4">
+        {/* Zone flow: Current → Completion */}
+        <div className={styles.zoneFlow}>
+          <Button
+            onClick={() => openZone(stepData.current_zone)}
+            variant="text"
+            size="xs"
+            className={styles.zoneFlowCurrent}>
+            {stepData.current_zone}
+          </Button>
+          <ArrowRightIcon className={styles.zoneFlowArrow} />
+          <Button
+            onClick={() => openZone(stepData.completion_zone)}
+            variant="text"
+            size="xs"
+            className={styles.zoneFlowTarget}>
+            {stepData.completion_zone}
+          </Button>
         </div>
 
-        {/* Description */}
-        <div className={styles.descriptionContainer}>
-          <p className={styles.descriptionText}>
-            <ParsedText
-              text={stepData.description}
-              wikiItems={filteredWikiItems}
-              onWikiClick={handleItemClick}
-            />
-          </p>
-        </div>
+        {/* Description (provides context) */}
+        <p className={styles.descriptionText}>
+          <ParsedText
+            text={stepData.description}
+            wikiItems={filteredWikiItems}
+            onWikiClick={handleItemClick}
+          />
+        </p>
 
         {/* Objectives */}
-        {stepData.objectives.length > 0 && (
-          <div className={styles.objectivesContainer}>
-            <h5 className={styles.objectivesTitle}>Objectives ({stepData.objectives.length}):</h5>
-            <ul className={styles.objectivesList}>
-              {stepData.objectives.map((objective, objectiveIndex) => (
-                <li
-                  key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`}
-                  className={styles.objectiveItem}>
-                  <div className={styles.objectiveContent}>
-                    <div className={styles.objectiveBullet} />
-                    <div className={styles.objectiveInner}>
-                      <div className={styles.objectiveText}>
-                        {objective.required !== undefined && (
-                          <StarIcon
-                            className={
-                              objective.required
-                                ? styles.objectiveRequired
-                                : styles.objectiveOptional
-                            }
-                            title={objective.required ? 'Required' : 'Optional'}
-                          />
-                        )}
-                        <ParsedText
-                          text={objective.text}
-                          wikiItems={filteredWikiItems}
-                          onWikiClick={handleItemClick}
-                        />
-                      </div>
-                      {(objective.details ||
-                        objective.notes ||
-                        (objective.rewards && objective.rewards.length > 0)) && (
-                        <div className={styles.objectiveDetails}>
-                          {objective.details && (
-                            <div className={styles.objectiveDetailsText}>
-                              <ParsedText
-                                text={objective.details}
-                                wikiItems={filteredWikiItems}
-                                onWikiClick={handleItemClick}
-                              />
-                            </div>
-                          )}
-                          {objective.notes && (
-                            <div className={styles.objectiveNotesText}>
-                              Note:{' '}
-                              <ParsedText
-                                text={objective.notes}
-                                wikiItems={filteredWikiItems}
-                                onWikiClick={handleItemClick}
-                              />
-                            </div>
-                          )}
-                          {objective.rewards && objective.rewards.length > 0 && (
-                            <div className="text-xs flex items-center gap-1">
-                              <GiftIcon className={styles.rewardIcon} title="Rewards" />
-                              <ParsedText
-                                text={objective.rewards.join(', ')}
-                                wikiItems={filteredWikiItems}
-                                onWikiClick={handleItemClick}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <StepObjectiveList
+          objectives={stepData.objectives}
+          wikiItems={filteredWikiItems}
+          onWikiClick={handleItemClick}
+        />
       </div>
 
-      {/* Footer */}
-      {(isActiveVariant || (onSkipToStep && !isCurrent)) && (
+      {/* Footer - only for active variant */}
+      {isActiveVariant && progress && (
         <div className={styles.footer}>
-          {isActiveVariant && progress ? (
-            <>
-              <div className={styles.footerTimestamp}>
-                <ClockIcon className={styles.footerTimestampIcon} />
-                Last updated: {formatLastUpdated(progress.last_updated)}
-              </div>
-              <div className={styles.footerActions}>
-                {hasPreviousStep && (
-                  <Button
-                    onClick={handlePreviousStep}
-                    variant="text"
-                    size="xs"
-                    title="Previous step">
-                    <ArrowLeftIcon className="mr-1 w-3 h-3" />
-                    Previous
-                  </Button>
-                )}
-                {!progress.is_completed && (
-                  <Button onClick={handleAdvanceStep} variant="text" size="xs" title="Next step">
-                    Next
-                    <ArrowRightIcon className="ml-1 w-3 h-3" />
-                  </Button>
-                )}
-                {onViewGuide && (
-                  <Button
-                    onClick={onViewGuide}
-                    variant="text"
-                    size="xs"
-                    className="gap-1"
-                    title="View guide">
-                    <BookOpenIcon className="w-3 h-3" />
-                    Guide
-                  </Button>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className={styles.footerActionsEnd}>
+          <div className={styles.footerTimestamp}>
+            <ClockIcon className={styles.footerTimestampIcon} />
+            Last updated: {formatLastUpdated(progress.last_updated)}
+          </div>
+          <div className={styles.footerActions}>
+            {hasPreviousStep && (
+              <Button onClick={handlePreviousStep} variant="text" size="xs" title="Previous step">
+                <ArrowLeftIcon className="mr-1 w-3 h-3" />
+                Previous
+              </Button>
+            )}
+            {!progress.is_completed && (
+              <Button onClick={handleAdvanceStep} variant="text" size="xs" title="Next step">
+                Next
+                <ArrowRightIcon className="ml-1 w-3 h-3" />
+              </Button>
+            )}
+            {onViewGuide && (
               <Button
-                onClick={() => onSkipToStep?.(stepData.id)}
+                onClick={onViewGuide}
                 variant="text"
                 size="xs"
                 className="gap-1"
-                title="Go to this step">
-                <ArrowRightIcon className="w-3 h-3" />
-                Go Here
+                title="View guide">
+                <BookOpenIcon className="w-3 h-3" />
+                Guide
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </Card>

@@ -57,7 +57,7 @@ const parseTextWithWikiLinks = (
               onWikiClick(wikiItem);
             },
             className:
-              'text-stone-300 hover:text-stone-200 underline decoration-arcane-400 hover:decoration-arcane-300 cursor-pointer',
+              'text-stone-300 hover:text-stone-200 underline decoration-ember-500/50 hover:decoration-ember-400 cursor-pointer',
           },
           match[0],
         ),

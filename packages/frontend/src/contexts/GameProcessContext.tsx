@@ -9,7 +9,6 @@ import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 interface GameProcessContextValue {
   processInfo: GameProcessStatus | null;
   gameRunning: boolean;
-  isListening: boolean;
 }
 
 const GameProcessContext = createContext<GameProcessContextValue | undefined>(undefined);
@@ -43,7 +42,7 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
     fetchInitialStatus();
   }, []);
 
-  const { isListening } = useAppEventListener([
+  useAppEventListener([
     {
       eventType: EVENT_KEYS.GameProcessStatusChanged,
       handler: (payload: unknown) => {
@@ -58,7 +57,6 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
       value={{
         processInfo,
         gameRunning: processInfo?.running || false,
-        isListening,
       }}>
       {children}
     </GameProcessContext.Provider>

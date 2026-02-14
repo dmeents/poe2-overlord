@@ -2,6 +2,8 @@ import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useEconomy } from '@/contexts/EconomyContext';
 import type { CurrencyExchangeRate } from '@/types/economy';
+import { calculateItemsSoldPerHour } from '@/utils/economy-utils';
+import { hideOnError } from '@/utils/image-utils';
 import { economyRowStyles } from './economy-row.styles';
 
 interface EconomyRowProps {
@@ -23,22 +25,6 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
     minimumFractionDigits: display_value.value >= 10 ? 1 : 2,
     maximumFractionDigits: display_value.value >= 10 ? 1 : 2,
   });
-
-  // Calculate items sold per hour (volume / primary_value)
-  const calculateItemsSoldPerHour = (volume: number, primaryValue: number): string => {
-    // Guard against division by zero or invalid values
-    if (primaryValue === 0 || !Number.isFinite(primaryValue)) {
-      return '0.00';
-    }
-    const itemsSold = volume / primaryValue;
-    if (!Number.isFinite(itemsSold)) {
-      return '0.00';
-    }
-    return itemsSold.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
 
   const tooltipContent = currencyData ? (
     <div className={economyRowStyles.tooltipContainer}>
@@ -86,9 +72,7 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
           src={currency.image_url}
           alt={currency.name}
           className={economyRowStyles.image}
-          onError={e => {
-            e.currentTarget.style.display = 'none';
-          }}
+          onError={hideOnError}
         />
         <div className={economyRowStyles.nameContainer}>
           <div className={economyRowStyles.name}>{currency.name}</div>

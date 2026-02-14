@@ -15,7 +15,7 @@ import {
   type WalkthroughStepAdvancedEvent,
   type WalkthroughStepCompletedEvent,
 } from '@/utils/events/registry';
-import { WalkthroughService } from '@/utils/walkthrough';
+import { getStepFromGuide as getStepFromGuideUtil } from '@/utils/walkthrough';
 import { useCharacter } from './CharacterContext';
 
 interface WalkthroughContextValue {
@@ -26,7 +26,6 @@ interface WalkthroughContextValue {
   currentStep: WalkthroughStepResult | null;
   previousStep: WalkthroughStepResult | null;
   lastEvent: string | null;
-  isListening: boolean;
   characterId: string | null;
 }
 
@@ -49,7 +48,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
   const getStepFromGuide = useCallback(
     (stepId: string | null): WalkthroughStepResult | null => {
       if (!guide || !stepId) return null;
-      return WalkthroughService.getStepFromGuide(guide, stepId);
+      return getStepFromGuideUtil(guide, stepId);
     },
     [guide],
   );
@@ -77,7 +76,7 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
     }
   }, [progress, guide, getStepFromGuide]);
 
-  const { isListening } = useAppEventListener(
+  useAppEventListener(
     [
       {
         eventType: EVENT_KEYS.WalkthroughStepCompleted,
@@ -130,7 +129,6 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       currentStep,
       previousStep,
       lastEvent,
-      isListening,
       characterId,
     }),
     [
@@ -142,7 +140,6 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       currentStep,
       previousStep,
       lastEvent,
-      isListening,
       characterId,
     ],
   );

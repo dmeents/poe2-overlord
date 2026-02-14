@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { open } from '@tauri-apps/plugin-shell';
 import { useZone } from '@/contexts/ZoneContext';
+import { hideOnError } from '@/utils/image-utils';
 import { createPlaceholderZone, getDisplayAct } from '@/utils/zone-utils';
 import { Modal } from '../../ui/modal/modal';
 import { TimeDisplay } from '../../ui/time-display/time-display';
@@ -87,14 +88,7 @@ export function ZoneDetailsModal() {
         {/* Zone Image */}
         {!isUnvisitedZone && zone.image_url && (
           <div className={styles.imageContainer}>
-            <img
-              src={zone.image_url}
-              alt=""
-              className={styles.image}
-              onError={e => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            <img src={zone.image_url} alt="" className={styles.image} onError={hideOnError} />
           </div>
         )}
 

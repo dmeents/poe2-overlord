@@ -49,23 +49,12 @@ function CharactersPage() {
     totalCount,
   } = useCharacterList(characters);
 
-  console.log('[DEBUG CharactersPage] State:', {
-    charactersFromContext: characters.length,
-    filteredCharacters: filteredCharacters.length,
-    totalCount,
-    isLoading,
-    error,
-  });
-
   const handleCreateCharacter = async (data: CharacterFormData) => {
-    console.log('[DEBUG handleCreateCharacter] Called with data:', data);
     try {
       setIsSubmitting(true);
       await createCharacterMutation.mutateAsync(data);
-      console.log('[DEBUG handleCreateCharacter] Success - closing modal');
       setShowCreateModal(false);
-    } catch (error) {
-      console.error('[DEBUG handleCreateCharacter] Error:', error);
+    } catch {
       // Error is handled by the parent component
     } finally {
       setIsSubmitting(false);

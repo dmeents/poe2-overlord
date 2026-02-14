@@ -5,7 +5,7 @@ import { errorStateStyles } from './error-state.styles';
 interface ErrorStateProps {
   title?: string;
   message?: string;
-  error?: Error | string | unknown;
+  error?: unknown;
   icon?: ReactNode;
   action?: ReactNode;
   className?: string;

@@ -1,25 +1,11 @@
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import type { ZoneStats } from '../../../types/character';
+import { formatDurationMinutes } from '../../../utils/format-duration';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
-
-// Format duration without seconds, rounding to nearest minute
-function formatDurationMinutes(seconds: number): string {
-  if (seconds === 0) return '0m';
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.round(seconds / 60);
-
-  if (hours > 0) {
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
-  }
-
-  return `${minutes}m`;
-}
 
 interface PlaytimeInsightsProps {
   zones?: ZoneStats[];

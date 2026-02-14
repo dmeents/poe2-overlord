@@ -1,12 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { WalkthroughProgress } from '../types/walkthrough';
 
-export interface UseStepNavigationOptions {
+interface UseStepNavigationOptions {
   characterId: string | null;
   progress: WalkthroughProgress | null;
 }
 
-export interface UseStepNavigationResult {
+interface UseStepNavigationResult {
   advanceStep: (nextStepId: string | null) => Promise<void>;
   goToPreviousStep: (previousStepId: string) => Promise<void>;
   skipToStep: (stepId: string) => Promise<void>;

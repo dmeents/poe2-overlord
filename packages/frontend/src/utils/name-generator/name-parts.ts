@@ -3,7 +3,7 @@
  * Inspired by dark fantasy themes similar to Path of Exile
  */
 
-export interface NameStyle {
+interface NameStyle {
   prefixes: string[];
   middles: string[];
   suffixes: string[];
@@ -1084,33 +1084,3 @@ export const NAME_STYLES = {
 } as const;
 
 export type NameStyleType = keyof typeof NAME_STYLES;
-
-/**
- * Additional vowels and consonants for random generation
- */
-export const PHONEMES = {
-  vowels: ['a', 'e', 'i', 'o', 'u', 'y'],
-  softConsonants: ['l', 'r', 'n', 'm', 's', 'v', 'th'],
-  hardConsonants: ['k', 'g', 'd', 't', 'b', 'p', 'x', 'z'],
-  consonantClusters: [
-    'br',
-    'cr',
-    'dr',
-    'gr',
-    'pr',
-    'tr',
-    'bl',
-    'cl',
-    'fl',
-    'gl',
-    'pl',
-    'sl',
-    'sc',
-    'sk',
-    'sm',
-    'sn',
-    'sp',
-    'st',
-    'sw',
-  ],
-};

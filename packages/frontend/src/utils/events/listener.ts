@@ -20,28 +20,3 @@ export async function listenToAppEvent<K extends keyof AppEventRegistry>(
     }
   });
 }
-
-/** Sets up multiple event listeners at once. */
-export async function setupAppEventListeners<K extends keyof AppEventRegistry>(
-  listeners: Array<{
-    eventType: K;
-    handler: (payload: AppEventPayload<K>) => void;
-  }>,
-): Promise<UnlistenFn[]> {
-  const unlistenPromises = listeners.map(({ eventType, handler }) =>
-    listenToAppEvent(eventType, handler),
-  );
-
-  return Promise.all(unlistenPromises);
-}
-
-/** Safely cleans up all unlisten functions. */
-export function cleanupListeners(unlistenFns: UnlistenFn[]): void {
-  unlistenFns.forEach(unlisten => {
-    try {
-      unlisten();
-    } catch (error) {
-      console.error('Error cleaning up event listener:', error);
-    }
-  });
-}

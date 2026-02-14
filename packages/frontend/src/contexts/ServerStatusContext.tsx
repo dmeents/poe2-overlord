@@ -7,7 +7,6 @@ import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 
 interface ServerStatusContextValue {
   serverStatus: ServerStatus | null;
-  isListening: boolean;
 }
 
 const ServerStatusContext = createContext<ServerStatusContextValue | undefined>(undefined);
@@ -15,7 +14,7 @@ const ServerStatusContext = createContext<ServerStatusContextValue | undefined>(
 export function ServerStatusProvider({ children }: React.PropsWithChildren) {
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
 
-  const { isListening } = useAppEventListener([
+  useAppEventListener([
     {
       eventType: EVENT_KEYS.ServerStatusChanged,
       handler: (payload: unknown) => {
@@ -26,9 +25,7 @@ export function ServerStatusProvider({ children }: React.PropsWithChildren) {
   ]);
 
   return (
-    <ServerStatusContext.Provider value={{ serverStatus, isListening }}>
-      {children}
-    </ServerStatusContext.Provider>
+    <ServerStatusContext.Provider value={{ serverStatus }}>{children}</ServerStatusContext.Provider>
   );
 }
 

@@ -3,8 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import type { CharacterData } from '../types/character';
 
-// Query keys for consistent caching
-export const characterQueryKeys = {
+const characterQueryKeys = {
   all: ['characters'] as const,
   lists: () => [...characterQueryKeys.all, 'list'] as const,
   list: (filters: string) => [...characterQueryKeys.lists(), { filters }] as const,
@@ -13,21 +12,16 @@ export const characterQueryKeys = {
   active: () => [...characterQueryKeys.all, 'active'] as const,
 };
 
-// Hook to get all characters
 export function useCharacters() {
   return useQuery({
     queryKey: characterQueryKeys.lists(),
     queryFn: async (): Promise<CharacterData[]> => {
-      console.log('[DEBUG useCharacters] Calling get_all_characters...');
-      const result = await invoke<CharacterData[]>('get_all_characters');
-      console.log('[DEBUG useCharacters] Result:', { count: result.length, characters: result });
-      return result;
+      return await invoke<CharacterData[]>('get_all_characters');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
-// Hook to get active character
 export function useActiveCharacter() {
   return useQuery({
     queryKey: characterQueryKeys.active(),
@@ -38,55 +32,26 @@ export function useActiveCharacter() {
   });
 }
 
-// Hook to get a specific character by ID
-export function useCharacter(characterId: string) {
-  return useQuery({
-    queryKey: characterQueryKeys.detail(characterId),
-    queryFn: async (): Promise<CharacterData | null> => {
-      return await invoke<CharacterData | null>('get_character', {
-        characterId,
-      });
-    },
-    enabled: !!characterId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-
-// Hook to create a new character
 export function useCreateCharacter() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CharacterFormData): Promise<CharacterData> => {
-      console.log('[DEBUG useCreateCharacter] Invoking create_character with data:', data);
-      try {
-        const result = await invoke<CharacterData>('create_character', {
-          name: data.name,
-          class: data.class,
-          ascendency: data.ascendency,
-          league: data.league,
-          hardcore: data.hardcore,
-          soloSelfFound: data.solo_self_found,
-        });
-        console.log('[DEBUG useCreateCharacter] Success:', result);
-        return result;
-      } catch (error) {
-        console.error('[DEBUG useCreateCharacter] Error:', error);
-        throw error;
-      }
+      return await invoke<CharacterData>('create_character', {
+        name: data.name,
+        class: data.class,
+        ascendency: data.ascendency,
+        league: data.league,
+        hardcore: data.hardcore,
+        soloSelfFound: data.solo_self_found,
+      });
     },
     onSuccess: () => {
-      console.log('[DEBUG useCreateCharacter] onSuccess - invalidating queries');
-      // Invalidate and refetch character queries
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.all });
-    },
-    onError: error => {
-      console.error('[DEBUG useCreateCharacter] onError:', error);
     },
   });
 }
 
-// Hook to update a character
 export function useUpdateCharacter() {
   const queryClient = useQueryClient();
 
@@ -123,7 +88,6 @@ export function useUpdateCharacter() {
   });
 }
 
-// Hook to delete a character
 export function useDeleteCharacter() {
   const queryClient = useQueryClient();
 
@@ -143,7 +107,6 @@ export function useDeleteCharacter() {
   });
 }
 
-// Hook to set active character
 export function useSetActiveCharacter() {
   const queryClient = useQueryClient();
 

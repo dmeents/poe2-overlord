@@ -3,11 +3,11 @@ import { memo } from 'react';
 import { useEconomy } from '@/contexts/EconomyContext';
 import type { CurrencySortOption } from '@/hooks/useCurrencyList';
 import { ECONOMY_TYPE_ICONS, ECONOMY_TYPE_LABELS, ECONOMY_TYPES } from '@/utils/economy-icons';
+import { hideOnError } from '@/utils/image-utils';
 import { Input } from '../../forms/form-input/form-input';
 import { SortSelect } from '../../forms/form-sort-select/form-sort-select';
 import { Button } from '../../ui/button/button';
 import {
-  clearButtonClasses,
   controlsContainerClasses,
   countDisplayClasses,
   searchInputContainerClasses,
@@ -18,8 +18,6 @@ interface CurrencyListControlsFormProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   isSearching: boolean;
-  onClearFilters: () => void;
-  hasActiveFilters: boolean;
   sort: CurrencySortOption;
   onSortChange: (
     field: CurrencySortOption['field'],
@@ -41,8 +39,6 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
   searchQuery,
   onSearchChange,
   isSearching,
-  onClearFilters,
-  hasActiveFilters,
   sort,
   onSortChange,
   onResetSort,
@@ -68,9 +64,7 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
               src={ECONOMY_TYPE_ICONS[type]}
               alt={ECONOMY_TYPE_LABELS[type]}
               className="w-4 h-4 mr-2"
-              onError={e => {
-                e.currentTarget.style.display = 'none';
-              }}
+              onError={hideOnError}
             />
             {ECONOMY_TYPE_LABELS[type]}
           </Button>
@@ -110,12 +104,6 @@ export const CurrencyListControlsForm = memo(function CurrencyListControlsForm({
         </div>
       </div>
       <div className="flex items-center">
-        {hasActiveFilters && (
-          <button onClick={onClearFilters} className={clearButtonClasses} type="button">
-            Clear search
-          </button>
-        )}
-
         <div className={countDisplayClasses}>
           {isSearching ? (
             <span>Searching...</span>

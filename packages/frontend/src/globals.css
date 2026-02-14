@@ -223,21 +223,45 @@ textarea:focus {
   transform: translateZ(0);
 }
 
-/* Glow effects */
+/* Glow effects - filter-based for WebKitGTK compatibility */
 .glow-ember {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.15));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-ember:hover {
+  filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.25));
 }
 
 .glow-ember-strong {
-  box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+  filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.25));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-ember-strong:hover {
+  filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.35));
 }
 
 .glow-molten {
-  box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.2));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-molten:hover {
+  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.3));
 }
 
 .glow-blood {
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+  filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.15));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-blood:hover {
+  filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.25));
 }
 
 .text-glow-ember {

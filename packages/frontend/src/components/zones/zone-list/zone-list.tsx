@@ -1,8 +1,9 @@
-import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
-import { memo, useCallback } from 'react';
+import { MapPinIcon } from '@heroicons/react/24/outline';
+import { memo } from 'react';
 import type { ZoneFilters as ZoneFiltersType, ZoneSortOption } from '@/hooks/useZoneList';
 import type { ZoneStats } from '@/types/character';
 import { EmptyState } from '../../ui/empty-state/empty-state';
+import { FilteredEmptyState } from '../../ui/filtered-empty-state/filtered-empty-state';
 import { ZoneCard } from '../zone-card/zone-card';
 import { ZoneListControlsForm } from '../zone-list-controls-form/zone-list-controls-form';
 
@@ -29,28 +30,6 @@ export const ZoneList = memo(function ZoneList({
   onResetSort,
   totalCount,
 }: ZoneListProps) {
-  const handleFilterChange = useCallback(
-    <K extends keyof ZoneFiltersType>(key: K, value: ZoneFiltersType[K]) => {
-      onFilterChange(key, value);
-    },
-    [onFilterChange],
-  );
-
-  const handleSortChange = useCallback(
-    (field: ZoneSortOption['field'], direction?: ZoneSortOption['direction']) => {
-      onSortChange(field, direction);
-    },
-    [onSortChange],
-  );
-
-  const handleClearFilters = useCallback(() => {
-    onClearFilters();
-  }, [onClearFilters]);
-
-  const handleResetSort = useCallback(() => {
-    onResetSort();
-  }, [onResetSort]);
-
   if (totalCount === 0) {
     return (
       <EmptyState
@@ -65,12 +44,12 @@ export const ZoneList = memo(function ZoneList({
     <div className="space-y-4">
       <ZoneListControlsForm
         filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
+        onFilterChange={onFilterChange}
+        onClearFilters={onClearFilters}
         hasActiveFilters={hasActiveFilters}
         sort={sort}
-        onSortChange={handleSortChange}
-        onResetSort={handleResetSort}
+        onSortChange={onSortChange}
+        onResetSort={onResetSort}
       />
       {zones.length > 0 ? (
         <div className="bg-stone-900/50 border border-stone-700/50 overflow-hidden">
@@ -91,22 +70,7 @@ export const ZoneList = memo(function ZoneList({
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-          <div className="w-16 h-16 bg-stone-800/50 flex items-center justify-center mb-4">
-            <MagnifyingGlassIcon className="w-8 h-8 text-stone-500" />
-          </div>
-          <h3 className="text-lg font-medium text-stone-300 mb-2">No zones found</h3>
-          <p className="text-stone-500 mb-4 max-w-md">
-            No zones match your current search and filter criteria. Try adjusting your filters or
-            search terms.
-          </p>
-          <button
-            type="button"
-            onClick={handleClearFilters}
-            className="px-4 py-2 text-sm font-medium text-ember-400 hover:text-ember-300 bg-ember-500/10 hover:bg-ember-500/20 border border-ember-500/30 transition-colors">
-            Clear All Filters
-          </button>
-        </div>
+        <FilteredEmptyState itemType="zones" onClearFilters={onClearFilters} />
       )}
     </div>
   );

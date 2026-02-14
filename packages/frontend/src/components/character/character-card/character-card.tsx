@@ -40,18 +40,18 @@ function formatCharacterAge(createdAt: string): string {
 export interface CharacterCardProps {
   character: CharacterData;
   isActive: boolean;
-  onSelect: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onSelect?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   interactive?: boolean;
 }
 
 export const CharacterCard = memo(function CharacterCard({
   character,
   isActive,
-  onSelect,
-  onEdit,
-  onDelete,
+  onSelect = () => {},
+  onEdit = () => {},
+  onDelete = () => {},
   interactive = true,
 }: CharacterCardProps) {
   const ascendencyImage = useMemo(

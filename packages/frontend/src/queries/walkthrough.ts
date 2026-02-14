@@ -2,13 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { WalkthroughGuide } from '@/types/walkthrough';
 
-// Query keys for consistent caching
-export const walkthroughQueryKeys = {
+const walkthroughQueryKeys = {
   all: ['walkthrough'] as const,
   guide: () => [...walkthroughQueryKeys.all, 'guide'] as const,
 };
 
-// Hook to get the walkthrough guide (global data, loaded once)
 export function useWalkthroughGuide() {
   return useQuery({
     queryKey: walkthroughQueryKeys.guide(),

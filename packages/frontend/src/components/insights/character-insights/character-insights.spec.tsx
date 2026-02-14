@@ -136,7 +136,7 @@ describe('CharacterInsights', () => {
 
       expect(screen.getByText('Most Played')).toBeInTheDocument();
       expect(screen.getByText('HardcoreGamer')).toBeInTheDocument();
-      expect(screen.getByText('Level 80 • 10h 0m')).toBeInTheDocument();
+      expect(screen.getByText('Level 80 • 10h')).toBeInTheDocument();
     });
   });
 

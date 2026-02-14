@@ -46,15 +46,6 @@ export interface Objective {
   notes?: string;
 }
 
-export interface WikiItem {
-  /** Title of the wiki item */
-  title: string;
-  /** URL to the wiki page */
-  url: string;
-  /** Brief description of the item */
-  description: string;
-}
-
 export interface WalkthroughAct {
   /** Name of the act (e.g., "Act 4") */
   act_name: string;
@@ -76,13 +67,4 @@ export interface WalkthroughStepResult {
   act_name: string;
   /** The act number */
   act_number: number;
-}
-
-export interface CharacterWalkthroughProgress {
-  /** The character's progress */
-  progress: WalkthroughProgress;
-  /** The next step ID (if available) */
-  next_step_id: string | null;
-  /** The previous step ID (if available) */
-  previous_step_id: string | null;
 }

@@ -63,10 +63,8 @@ describe('EconomyList', () => {
     mockUseCurrencyList.mockReturnValue({
       sort: { field: 'chaos_equivalent', direction: 'desc' },
       updateSort: vi.fn(),
-      clearFilters: vi.fn(),
       resetSort: vi.fn(),
-      hasActiveFilters: false,
-      filteredCurrencies: [createMockCurrency()],
+      sortedCurrencies: [createMockCurrency()],
       currencyCount: 1,
       totalCount: 1,
     });
@@ -88,10 +86,8 @@ describe('EconomyList', () => {
       mockUseCurrencyList.mockReturnValue({
         sort: { field: 'chaos_equivalent', direction: 'desc' },
         updateSort: vi.fn(),
-        clearFilters: vi.fn(),
         resetSort: vi.fn(),
-        hasActiveFilters: false,
-        filteredCurrencies: currencies,
+        sortedCurrencies: currencies,
         currencyCount: 2,
         totalCount: 2,
       });
@@ -122,10 +118,8 @@ describe('EconomyList', () => {
       mockUseCurrencyList.mockReturnValue({
         sort: { field: 'chaos_equivalent', direction: 'desc' },
         updateSort: vi.fn(),
-        clearFilters: vi.fn(),
         resetSort: vi.fn(),
-        hasActiveFilters: false,
-        filteredCurrencies: [],
+        sortedCurrencies: [],
         currencyCount: 0,
         totalCount: 10,
       });
@@ -135,31 +129,12 @@ describe('EconomyList', () => {
       expect(screen.getByText(/No currencies found matching "nonexistent"/)).toBeInTheDocument();
     });
 
-    it('shows filter empty message when no results and hasActiveFilters', () => {
-      mockUseCurrencyList.mockReturnValue({
-        sort: { field: 'chaos_equivalent', direction: 'desc' },
-        updateSort: vi.fn(),
-        clearFilters: vi.fn(),
-        resetSort: vi.fn(),
-        hasActiveFilters: true,
-        filteredCurrencies: [],
-        currencyCount: 0,
-        totalCount: 10,
-      });
-
-      render(<EconomyList {...defaultProps} searchQuery="" />);
-
-      expect(screen.getByText('No currencies match your search')).toBeInTheDocument();
-    });
-
     it('shows no data message when no currencies at all', () => {
       mockUseCurrencyList.mockReturnValue({
         sort: { field: 'chaos_equivalent', direction: 'desc' },
         updateSort: vi.fn(),
-        clearFilters: vi.fn(),
         resetSort: vi.fn(),
-        hasActiveFilters: false,
-        filteredCurrencies: [],
+        sortedCurrencies: [],
         currencyCount: 0,
         totalCount: 0,
       });

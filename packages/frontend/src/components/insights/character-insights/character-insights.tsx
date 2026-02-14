@@ -1,6 +1,7 @@
 import { ChartBarIcon, InboxIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
 import type { CharacterData } from '../../../types/character';
+import { formatDurationMinutes } from '../../../utils/format-duration';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
@@ -53,16 +54,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
     };
   }, [characters]);
 
-  const formatPlayTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
-  };
-
   if (characters.length === 0) {
     return (
       <Card title="Character Insights" icon={<ChartBarIcon />}>
@@ -82,7 +73,7 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
           <DataItem
             label="Most Played"
             value={metrics.mostPlayedCharacter.name}
-            subValue={`Level ${metrics.mostPlayedCharacter.level} • ${formatPlayTime(
+            subValue={`Level ${metrics.mostPlayedCharacter.level} • ${formatDurationMinutes(
               metrics.mostPlayedCharacter.summary.total_play_time,
             )}`}
           />
@@ -92,7 +83,7 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label="Average Level" value={metrics.averageLevel} />
       </div>
       <div>
-        <DataItem label="Total Play Time" value={formatPlayTime(metrics.totalPlayTime)} />
+        <DataItem label="Total Play Time" value={formatDurationMinutes(metrics.totalPlayTime)} />
         <DataItem label="Total Deaths" value={metrics.totalDeaths} />
       </div>
       <div>

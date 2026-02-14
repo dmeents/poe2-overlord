@@ -9,7 +9,7 @@ export const formSortSelectStyles = {
   // Trigger button
   triggerContainer: 'relative',
   trigger:
-    'flex items-center justify-between w-full px-4 py-2 bg-stone-700/50 hover:bg-stone-700 border border-stone-600 text-stone-300 hover:text-white transition-colors h-10 focus:outline-none focus:ring-2 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
+    'flex items-center justify-between w-full px-4 py-2 bg-stone-700/50 hover:bg-stone-700 border border-stone-600 text-stone-300 hover:text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
   triggerText: 'text-sm font-medium',
   triggerIcons: 'flex items-center space-x-2',
   directionIcon: 'text-xs text-stone-400',
@@ -17,7 +17,7 @@ export const formSortSelectStyles = {
   chevronOpen: 'rotate-180',
 
   // Dropdown - z-20: Dropdowns/popovers (see patterns.md for z-index scale)
-  dropdown: 'fixed mt-2 bg-stone-800 border border-stone-700 shadow-2xl z-20 p-4 w-64 min-w-max',
+  dropdown: 'fixed mt-2 bg-stone-800 border border-stone-700 card-shadow z-20 p-4 w-64 min-w-max',
   header: 'flex items-center justify-between mb-3',
   headerTitle: 'text-sm font-medium text-stone-300',
   resetButton: 'text-xs text-stone-400 hover:text-white transition-colors',

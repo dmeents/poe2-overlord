@@ -6,7 +6,7 @@ export const modalStyles = {
   overlay: 'fixed inset-0 z-50 overflow-y-auto',
   container: 'flex min-h-full items-center justify-center p-4',
   backdrop: 'fixed inset-0 bg-stone-950/80 backdrop-blur-sm transition-opacity',
-  modal: 'relative w-full bg-stone-900 shadow-xl border border-stone-700/50 rounded-lg',
+  modal: 'relative w-full bg-stone-900 card-shadow border border-stone-700/50 rounded-lg',
   content: 'p-6',
   header: 'flex items-center justify-between mb-6',
   headerContent: 'flex items-center gap-3',

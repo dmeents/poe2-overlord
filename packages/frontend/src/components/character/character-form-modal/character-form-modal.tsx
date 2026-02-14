@@ -154,8 +154,8 @@ export function CharacterFormModal({
                   errorMessage={errors.name}
                 />
               </div>
-              <div className="flex items-center gap-1 border border-gray-700 bg-gray-800/50 px-2">
-                <span className="text-xs text-gray-400">Generate:</span>
+              <div className="flex items-center gap-1 border border-stone-700 bg-stone-800/50 px-2">
+                <span className="text-xs text-stone-400">Generate:</span>
                 <Button
                   type="button"
                   variant="icon"

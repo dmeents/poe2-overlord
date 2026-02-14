@@ -48,14 +48,7 @@ export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps
 
   return (
     <div className={className}>
-      <CharacterCard
-        character={activeCharacter}
-        isActive={true}
-        onSelect={() => {}} // No-op since it's already the active character
-        onEdit={() => {}} // No-op since interactive is false
-        onDelete={() => {}} // No-op since interactive is false
-        interactive={false}
-      />
+      <CharacterCard character={activeCharacter} isActive={true} interactive={false} />
     </div>
   );
 }

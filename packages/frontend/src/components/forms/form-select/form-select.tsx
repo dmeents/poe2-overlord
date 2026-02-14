@@ -24,10 +24,6 @@ export interface SelectProps {
   className?: string;
   triggerClassName?: string;
   dropdownClassName?: string;
-  showClearButton?: boolean;
-  onClear?: () => void;
-  renderTrigger?: (isOpen: boolean, selectedOption?: SelectOption) => React.ReactNode;
-  renderOption?: (option: SelectOption, isSelected: boolean) => React.ReactNode;
 }
 
 export function Select({
@@ -44,10 +40,6 @@ export function Select({
   className = '',
   triggerClassName = '',
   dropdownClassName = '',
-  showClearButton = false,
-  onClear,
-  renderTrigger,
-  renderOption,
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -93,12 +85,6 @@ export function Select({
 
   const handleOptionSelect = (optionValue: string) => {
     onChange(optionValue);
-    setIsOpen(false);
-  };
-
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClear?.();
     setIsOpen(false);
   };
 
@@ -155,15 +141,6 @@ export function Select({
         {selectedOption ? selectedOption.label : placeholder}
       </span>
       <div className={formSelectStyles.triggerIcons}>
-        {showClearButton && selectedOption && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className={formSelectStyles.clearButton}
-            aria-label="Clear selection">
-            ×
-          </button>
-        )}
         <ChevronDownIcon
           className={`${formSelectStyles.chevron} ${isOpen ? formSelectStyles.chevronOpen : ''}`}
         />
@@ -201,9 +178,7 @@ export function Select({
       )}
 
       <div className={formSelectStyles.triggerContainer} ref={triggerRef}>
-        {renderTrigger
-          ? renderTrigger(isOpen, selectedOption)
-          : defaultRenderTrigger(isOpen, selectedOption)}
+        {defaultRenderTrigger(isOpen, selectedOption)}
       </div>
 
       {isOpen && (
@@ -220,9 +195,7 @@ export function Select({
             ) : (
               options.map(option => {
                 const isSelected = option.value === value;
-                return renderOption
-                  ? renderOption(option, isSelected)
-                  : defaultRenderOption(option, isSelected);
+                return defaultRenderOption(option, isSelected);
               })
             )}
           </div>

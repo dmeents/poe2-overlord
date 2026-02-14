@@ -49,17 +49,11 @@ interface ProvidersProps {
  */
 export function Providers({ children }: ProvidersProps): React.JSX.Element {
   return (
-    // Independent - Monitors game process (PathOfExileSteam.exe)
     <GameProcessProvider>
-      {/* Independent - Monitors POE server status */}
       <ServerStatusProvider>
-        {/* ROOT OF CHARACTER TREE - Required by Zone, Economy, Walkthrough */}
         <CharacterProvider>
-          {/* Depends on CharacterProvider - uses activeCharacter.zones */}
           <ZoneProvider>
-            {/* Depends on CharacterProvider - uses activeCharacter.league/hardcore/ssf */}
             <EconomyProvider>
-              {/* Depends on CharacterProvider - uses activeCharacter.walkthrough_progress */}
               <WalkthroughProvider>{children}</WalkthroughProvider>
             </EconomyProvider>
           </ZoneProvider>

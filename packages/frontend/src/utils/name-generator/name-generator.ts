@@ -191,38 +191,3 @@ function getRandomStyle(): NameStyleType {
   const styles: NameStyleType[] = Object.keys(NAME_STYLES) as NameStyleType[];
   return getRandomElement(styles);
 }
-
-/**
- * Generates multiple names at once
- */
-export function generateMultipleNames(count: number, options: NameGeneratorOptions = {}): string[] {
-  const names = new Set<string>();
-  let attempts = 0;
-  const maxAttempts = count * 10;
-
-  while (names.size < count && attempts < maxAttempts) {
-    const name = generateFantasyName(options);
-    names.add(name);
-    attempts++;
-  }
-
-  return Array.from(names);
-}
-
-/**
- * Gets all available name styles
- */
-export function getAvailableStyles(): {
-  value: NameStyleType;
-  label: string;
-}[] {
-  return [
-    { value: 'nordic', label: 'Nordic' },
-    { value: 'arcane', label: 'Arcane' },
-    { value: 'shadow', label: 'Shadow' },
-    { value: 'ancient', label: 'Ancient' },
-    { value: 'exotic', label: 'Exotic' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'primal', label: 'Primal' },
-  ];
-}

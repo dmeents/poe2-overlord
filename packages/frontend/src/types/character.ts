@@ -13,7 +13,7 @@ export const CHARACTER_CLASSES = [
 
 export const LEAGUES = ['Standard', 'Rise of the Abyssal', 'The Fate of the Vaal'] as const;
 
-export const ALL_ASCENDENCIES = [
+const ALL_ASCENDENCIES = [
   'Titan',
   'Warbringer',
   'Smith of Katava',
@@ -39,7 +39,7 @@ export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
 export type League = (typeof LEAGUES)[number];
 export type Ascendency = (typeof ALL_ASCENDENCIES)[number];
 
-export const ASCENDENCIES_BY_CLASS: Record<CharacterClass, readonly Ascendency[]> = {
+const ASCENDENCIES_BY_CLASS: Record<CharacterClass, readonly Ascendency[]> = {
   Warrior: ['Titan', 'Warbringer', 'Smith of Katava'],
   Sorceress: ['Stormweaver', 'Chronomancer'],
   Ranger: ['Deadeye', 'Pathfinder'],
@@ -54,19 +54,7 @@ export function getAscendenciesForClass(characterClass: CharacterClass): readonl
   return ASCENDENCIES_BY_CLASS[characterClass] || [];
 }
 
-export function isValidAscendencyForClass(
-  ascendency: Ascendency,
-  characterClass: CharacterClass,
-): boolean {
-  return getAscendenciesForClass(characterClass).includes(ascendency);
-}
-
-export type LocationType = 'Zone' | 'Hideout' | 'Town';
-
-export interface LocationState {
-  zone_name: string;
-  last_updated: string;
-}
+type LocationType = 'Zone' | 'Hideout' | 'Town';
 
 export interface EnrichedLocationState {
   zone_name: string;

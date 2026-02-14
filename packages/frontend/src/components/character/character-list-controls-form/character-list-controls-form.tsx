@@ -107,7 +107,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
 
   return (
     <div className="space-y-4 p-4">
-      {/* First Row: Search Bar */}
       <div className="mb-4">
         <Input
           id="character-search"
@@ -118,9 +117,7 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
         />
       </div>
 
-      {/* Second Row: Sorts, Filters, and Reset */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Filters */}
         <div>
           <span className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
             Filters
@@ -131,7 +128,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
             label={hasActiveFilters ? 'Filters Active' : 'All Filters'}
             activeCount={activeFilterCount}>
             <div className="space-y-3">
-              {/* League Filter */}
               <div className={filterSectionClasses}>
                 <Select
                   id="league-filter"
@@ -143,7 +139,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                 />
               </div>
 
-              {/* Game Mode Filters */}
               <div className={filterSectionClasses}>
                 <Select
                   id="hardcore-filter"
@@ -195,7 +190,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                 />
               </div>
 
-              {/* Class Filter */}
               <div className={filterSectionClasses}>
                 <Select
                   id="class-filter"
@@ -213,7 +207,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                 />
               </div>
 
-              {/* Ascendency Filter */}
               <div className={filterSectionClasses}>
                 <Select
                   id="ascendency-filter"
@@ -235,7 +228,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                 />
               </div>
 
-              {/* Active Filter Chips */}
               {hasActiveFilters && (
                 <div className={filterSectionClasses}>
                   <h4 className={filterSectionTitleClasses}>Active Filters</h4>
@@ -310,7 +302,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                 </div>
               )}
 
-              {/* Clear Filters Button */}
               {hasActiveFilters && (
                 <div className="flex justify-end">
                   <Button
@@ -326,7 +317,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
           </FilterToggle>
         </div>
 
-        {/* Sort */}
         <div>
           <span className="block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2">
             Sort
@@ -345,7 +335,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
           </div>
         </div>
 
-        {/* Reset All Button */}
         <div className="flex flex-col justify-end">
           <div className="h-6"></div>
           <Button onClick={handleReset} variant="outline" className="h-10 px-4 text-sm">

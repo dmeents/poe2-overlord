@@ -16,7 +16,6 @@ interface CharacterContextValue {
   activeCharacter: CharacterData | null;
   isLoading: boolean;
   error: string | null;
-  isListening: boolean;
 }
 
 const CharacterContext = createContext<CharacterContextValue | undefined>(undefined);
@@ -27,13 +26,6 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     isLoading: charactersLoading,
     error: charactersError,
   } = useCharacters();
-
-  console.log('[DEBUG CharacterContext] useCharacters result:', {
-    characters,
-    count: characters.length,
-    isLoading: charactersLoading,
-    error: charactersError,
-  });
 
   const {
     data: activeCharacter = null,
@@ -46,10 +38,6 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     useState<CharacterData | null>(null);
 
   useEffect(() => {
-    console.log('[DEBUG CharacterContext] Effect triggered - setting characters:', {
-      count: characters.length,
-      characters,
-    });
     setCharactersWithUpdates(characters);
   }, [characters]);
 
@@ -57,7 +45,7 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     setActiveCharacterWithUpdates(activeCharacter);
   }, [activeCharacter]);
 
-  const { isListening } = useAppEventListener(
+  useAppEventListener(
     [
       {
         eventType: EVENT_KEYS.CharacterUpdated,
@@ -65,19 +53,10 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
           const { character_id, data: characterData } =
             payload as ExtractPayload<CharacterUpdatedEvent>;
 
-          console.log('[DEBUG CharacterContext] Received character-updated event:', {
-            character_id,
-            characterData,
-          });
+          setCharactersWithUpdates(prev =>
+            prev.map(char => (char.id === character_id ? characterData : char)),
+          );
 
-          setCharactersWithUpdates(prev => {
-            console.log('[DEBUG CharacterContext] Updating characters - prev count:', prev.length);
-            const updated = prev.map(char => (char.id === character_id ? characterData : char));
-            console.log('[DEBUG CharacterContext] Updated characters count:', updated.length);
-            return updated;
-          });
-
-          // Use functional update to avoid stale closure issue
           setActiveCharacterWithUpdates(prev => (prev?.id === character_id ? characterData : prev));
         },
       },
@@ -108,7 +87,6 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
         activeCharacter: activeCharacterWithUpdates,
         isLoading,
         error,
-        isListening,
       }}>
       {children}
     </CharacterContext.Provider>

@@ -7,7 +7,6 @@
 
 import { getClassTheme } from '@/utils/class-colors';
 
-// Class theme to header gradient
 const CLASS_HEADER_GRADIENT: Record<string, string> = {
   blood: 'from-blood-500/15 via-blood-600/5 to-transparent',
   arcane: 'from-arcane-500/15 via-arcane-600/5 to-transparent',
@@ -20,7 +19,6 @@ const CLASS_HEADER_GRADIENT: Record<string, string> = {
   ash: 'from-ash-500/15 via-ash-600/5 to-transparent',
 };
 
-// Class theme to level badge styles
 const CLASS_LEVEL_BADGE: Record<string, { bg: string; border: string; text: string }> = {
   blood: {
     bg: 'bg-gradient-to-br from-blood-500/30 to-blood-700/20',
@@ -69,7 +67,6 @@ const CLASS_LEVEL_BADGE: Record<string, { bg: string; border: string; text: stri
   },
 };
 
-// Class theme to text color
 const CLASS_TEXT: Record<string, string> = {
   blood: 'text-blood-400',
   arcane: 'text-arcane-400',
@@ -82,7 +79,6 @@ const CLASS_TEXT: Record<string, string> = {
   ash: 'text-ash-400',
 };
 
-// Class theme to border color (active state) - uses ! for specificity over base border
 const CLASS_BORDER: Record<string, string> = {
   blood: '!border-blood-500/60',
   arcane: '!border-arcane-500/60',
@@ -95,7 +91,6 @@ const CLASS_BORDER: Record<string, string> = {
   ash: '!border-ash-500/60',
 };
 
-// Class theme to hover border color
 const CLASS_HOVER_BORDER: Record<string, string> = {
   blood: 'hover:border-blood-500/40',
   arcane: 'hover:border-arcane-500/40',
@@ -109,27 +104,22 @@ const CLASS_HOVER_BORDER: Record<string, string> = {
 };
 
 export const characterCardStyles = {
-  // Base card container
-  // Note: overflow-hidden is required to clip the ascendancy background image
+  // overflow-hidden clips the ascendancy background image
   base: 'group relative bg-stone-900 border border-stone-800 card-shadow overflow-hidden',
   baseInteractive: 'cursor-pointer',
   baseHoverBg: 'hover:bg-gradient-to-r hover:from-stone-800/50 hover:to-transparent',
 
-  // Hover border (class-colored)
   hoverBorder: (characterClass: string) =>
     CLASS_HOVER_BORDER[getClassTheme(characterClass)] ?? CLASS_HOVER_BORDER.ash,
 
-  // Active state border (class-colored, always visible)
   activeBorder: (characterClass: string) =>
     CLASS_BORDER[getClassTheme(characterClass)] ?? CLASS_BORDER.ash,
 
-  // Header section
   header: 'relative px-4 py-3',
   headerGradient: (characterClass: string) =>
     `bg-gradient-to-r ${CLASS_HEADER_GRADIENT[getClassTheme(characterClass)] ?? CLASS_HEADER_GRADIENT.ash}`,
   headerContent: 'flex items-start gap-3',
 
-  // Level badge
   levelBadge: 'w-12 h-12 flex items-center justify-center flex-shrink-0 border card-shadow',
   levelBadgeStyles: (characterClass: string) => {
     const theme = getClassTheme(characterClass);
@@ -141,7 +131,6 @@ export const characterCardStyles = {
     return `text-lg font-bold ${CLASS_LEVEL_BADGE[theme]?.text ?? CLASS_LEVEL_BADGE.ash.text}`;
   },
 
-  // Character info
   info: 'flex-1 min-w-0',
   name: 'text-lg font-bold text-stone-50 truncate',
   details: 'flex items-center gap-2 text-sm mt-0.5',
@@ -150,20 +139,18 @@ export const characterCardStyles = {
   separator: 'text-stone-600',
   ascendency: 'text-stone-400',
 
-  // League info row
   leagueRow: 'flex items-center gap-2 mt-1',
   leagueBadge: 'text-xs text-stone-500',
   hardcoreBadge: 'text-xs font-medium text-blood-400 bg-blood-500/10 px-1.5 py-0.5',
   ssfBadge: 'text-xs font-medium text-molten-400 bg-molten-500/10 px-1.5 py-0.5',
 
-  // Action buttons
-  // Note: backdrop-blur removed - buttons are on opaque card background, nothing to blur
+  // backdrop-blur removed - buttons are on opaque background, nothing to blur
   actions:
     'flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-auto flex-shrink-0',
   actionButton: 'bg-stone-800/80',
   deleteButton: 'text-blood-400 hover:text-blood-300 hover:border-blood-500 bg-stone-800/80',
 
-  // Stats footer - uses filter shadow for WebKitGTK compatibility
+  // uses filter shadow for WebKitGTK compatibility
   footer: 'relative px-4 py-2.5 bg-stone-950 border-t border-stone-800 chrome-shadow-top',
   statsGrid: 'flex items-center justify-between gap-4',
   stat: 'flex items-center gap-1.5',
@@ -171,14 +158,10 @@ export const characterCardStyles = {
   statValue: 'text-sm font-medium text-stone-200',
   statLabel: 'text-xs text-stone-400 hidden sm:inline',
 
-  // Ascendency background
   ascendencyBg: 'absolute inset-0 pointer-events-none',
   ascendencyOverlay: 'absolute inset-0',
 } as const;
 
-/**
- * Get background image styles for ascendency artwork
- */
 export function getAscendencyBackgroundStyles(ascendencyImage: string | null): React.CSSProperties {
   if (!ascendencyImage) return {};
 
@@ -190,11 +173,7 @@ export function getAscendencyBackgroundStyles(ascendencyImage: string | null): R
   };
 }
 
-/**
- * Get overlay gradient that fades the ascendency image
- * Uses stone-900 base to match theme
- * Opaque on left, fades to transparent on right to reveal character art
- */
+// Opaque on left, fades to transparent on right to reveal character art
 export function getAscendencyOverlayStyles(): React.CSSProperties {
   return {
     background: `
@@ -209,9 +188,6 @@ export function getAscendencyOverlayStyles(): React.CSSProperties {
   };
 }
 
-/**
- * Get hardcore accent gradient (top and bottom red glow)
- */
 export function getHardcoreAccentStyles(): React.CSSProperties {
   return {
     background: `
@@ -229,9 +205,6 @@ export function getHardcoreAccentStyles(): React.CSSProperties {
   };
 }
 
-/**
- * Format a date string to a readable format
- */
 export function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',

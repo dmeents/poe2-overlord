@@ -3,16 +3,8 @@ import { Card } from '@/components/ui/card/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useEconomy } from '@/contexts/EconomyContext';
 import type { TopCurrencyItem } from '@/types/economy';
+import { calculateItemsSoldPerHour } from '@/utils/economy-utils';
 import { topItemsCardStyles } from './top-items-card.styles';
-
-// Calculate items sold per hour (volume / primary_value)
-const calculateItemsSoldPerHour = (volume: number, primaryValue: number): string => {
-  const itemsSold = volume / primaryValue;
-  return itemsSold.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
 
 export function TopItemsCard() {
   const { aggregatedTopCurrencies, isLoadingAggregated } = useEconomy();

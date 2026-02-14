@@ -81,7 +81,7 @@ export function DistributionDonutChart({
                 outerRadius={60}
                 paddingAngle={1}
                 dataKey="value"
-                stroke="#1c1917"
+                stroke="var(--color-stone-900)"
                 strokeWidth={2}
                 className={chartStyles.pie}>
                 {chartData.map(entry => (

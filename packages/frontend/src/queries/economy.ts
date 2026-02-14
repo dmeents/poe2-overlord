@@ -7,7 +7,6 @@ import type {
   TopCurrencyItem,
 } from '@/types/economy';
 
-// Query keys for consistent caching
 export const economyQueryKeys = {
   all: ['economy'] as const,
   currencyExchange: (league: string, isHardcore: boolean, economyType: EconomyType) =>
@@ -18,7 +17,6 @@ export const economyQueryKeys = {
     [...economyQueryKeys.all, 'search', league, isHardcore, query] as const,
 };
 
-// Hook to get currency exchange data via Tauri backend
 export function useCurrencyExchange(
   league: string = 'Rise of the Abyssal',
   isHardcore: boolean = false,
@@ -40,7 +38,6 @@ export function useCurrencyExchange(
   });
 }
 
-// Hook to search currencies across all economy types
 export function useSearchCurrencies(
   league: string = 'Rise of the Abyssal',
   isHardcore: boolean = false,
@@ -64,7 +61,6 @@ export function useSearchCurrencies(
   });
 }
 
-// Hook to get aggregated top currencies across all economy types
 export function useAggregatedTopCurrencies(
   league: string = 'Rise of the Abyssal',
   isHardcore: boolean = false,

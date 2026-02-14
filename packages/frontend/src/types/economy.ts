@@ -23,38 +23,6 @@ export type EconomyType =
   | 'Breach';
 
 /**
- * Represents which tier of currency should be used for display
- */
-export type CurrencyTier = 'Primary' | 'Secondary' | 'Tertiary';
-
-/**
- * Smart display value that automatically selects the most appropriate currency tier
- */
-export interface DisplayValue {
-  /** Which tier this value is displayed in */
-  tier: CurrencyTier;
-  /** The calculated value in the selected tier's currency */
-  value: number;
-  /** Whether the display is inverted (e.g., "X items per currency" vs "X currency per item") */
-  inverted: boolean;
-  /** ID of the currency used for display */
-  currency_id: string;
-  /** Name of the currency used for display */
-  currency_name: string;
-  /** Image URL of the currency used for display */
-  currency_image_url: string;
-}
-
-/**
- * Basic currency information
- */
-export interface CurrencyInfo {
-  id: string;
-  name: string;
-  image_url: string;
-}
-
-/**
  * Enriched currency exchange rate with all relevant data
  */
 export interface CurrencyExchangeRate {

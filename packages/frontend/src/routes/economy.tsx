@@ -83,17 +83,9 @@ function EconomyPage() {
     return `${leaguePrefix} • Updated ${formatTimeAgo(currencyData.fetched_at)}`;
   };
 
-  // Use currency list hook for sorting/filtering (only when we have data)
-  const {
-    sort,
-    updateSort,
-    clearFilters,
-    resetSort,
-    hasActiveFilters,
-    filteredCurrencies,
-    currencyCount,
-    totalCount,
-  } = useCurrencyList(currencyData?.currencies || []);
+  // Use currency list hook for sorting (only when we have data)
+  const { sort, updateSort, resetSort, sortedCurrencies, currencyCount, totalCount } =
+    useCurrencyList(currencyData?.currencies || []);
 
   // Render list content based on state
   const renderListContent = () => {
@@ -174,12 +166,10 @@ function EconomyPage() {
     // Show normal economy list (with filtering and sorting applied)
     return (
       <div>
-        {filteredCurrencies.length === 0 ? (
-          <div className="text-center py-8 text-stone-400">
-            {hasActiveFilters ? 'No currencies match your filters' : 'No currency data available'}
-          </div>
+        {sortedCurrencies.length === 0 ? (
+          <div className="text-center py-8 text-stone-400">No currency data available</div>
         ) : (
-          filteredCurrencies.map((currency, index) => (
+          sortedCurrencies.map((currency, index) => (
             <div key={currency.id} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
               <EconomyRow currency={currency} />
             </div>
@@ -202,8 +192,6 @@ function EconomyPage() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             isSearching={isSearching}
-            onClearFilters={clearFilters}
-            hasActiveFilters={hasActiveFilters}
             sort={sort}
             onSortChange={updateSort}
             onResetSort={resetSort}

@@ -111,7 +111,3 @@ export type AppEventRegistry = {
 
 /** Gets the payload type for a specific event variant. */
 export type AppEventPayload<K extends keyof AppEventRegistry> = ExtractPayload<AppEventRegistry[K]>;
-
-export function isAppEventKey(key: string): key is keyof typeof APP_EVENTS {
-  return key in APP_EVENTS;
-}

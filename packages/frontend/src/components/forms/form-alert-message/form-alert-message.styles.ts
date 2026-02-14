@@ -5,5 +5,5 @@
 export const formAlertMessageStyles = {
   container: 'px-4 py-3',
   error: 'bg-blood-950/20 border border-blood-800 text-blood-400',
-  success: 'bg-verdant-950/20 border border-verdant-800 text-verdant-400',
+  success: 'bg-verdant-600/20 border border-verdant-600 text-verdant-400',
 } as const;

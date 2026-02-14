@@ -1,3 +1,5 @@
+import { getThemeHexColor } from './theme-utils';
+
 const ACT_TO_THEME: Record<string, string> = {
   'Act 1': 'verdant',
   'Act 2': 'arcane',
@@ -9,11 +11,11 @@ const ACT_TO_THEME: Record<string, string> = {
 
 const DEFAULT_THEME = 'ash';
 
-export function getActTheme(actName: string): string {
+function getActTheme(actName: string): string {
   return ACT_TO_THEME[actName] ?? DEFAULT_THEME;
 }
 
 export function getActHexColor(actName: string): string {
   const theme = getActTheme(actName);
-  return getComputedStyle(document.documentElement).getPropertyValue(`--color-${theme}-500`).trim();
+  return getThemeHexColor(`${theme}-500`);
 }

@@ -1,15 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { CurrencyExchangeRate } from '../types/economy';
 
-// biome-ignore lint/complexity/noBannedTypes: Empty filters interface for future expansion
-export type CurrencyFilters = {};
-
 export interface CurrencySortOption {
   field: 'name' | 'primary_value' | 'volume' | 'change_percent';
   direction: 'asc' | 'desc';
 }
-
-const defaultFilters: CurrencyFilters = {};
 
 const defaultSort: CurrencySortOption = {
   field: 'primary_value',
@@ -17,15 +12,7 @@ const defaultSort: CurrencySortOption = {
 };
 
 export function useCurrencyList(currencies: CurrencyExchangeRate[]) {
-  const [filters, setFilters] = useState<CurrencyFilters>(defaultFilters);
   const [sort, setSort] = useState<CurrencySortOption>(defaultSort);
-
-  const updateFilter = useCallback(
-    <K extends keyof CurrencyFilters>(key: K, value: CurrencyFilters[K]) => {
-      setFilters(prev => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
 
   const updateSort = useCallback(
     (field: CurrencySortOption['field'], direction?: CurrencySortOption['direction']) => {
@@ -38,20 +25,14 @@ export function useCurrencyList(currencies: CurrencyExchangeRate[]) {
     [],
   );
 
-  const clearFilters = useCallback(() => {
-    setFilters(defaultFilters);
-  }, []);
-
   const resetSort = useCallback(() => {
     setSort(defaultSort);
   }, []);
 
-  const { filteredCurrencies, currencyCount, totalCount, hasActiveFilters } = useMemo(() => {
-    // Apply filters (currently none - just use all currencies)
-    const filtered = [...currencies];
+  const { sortedCurrencies, currencyCount, totalCount } = useMemo(() => {
+    const sorted = [...currencies];
 
-    // Sort the filtered currencies
-    filtered.sort((a, b) => {
+    sorted.sort((a, b) => {
       let comparison = 0;
 
       switch (sort.field) {
@@ -83,30 +64,19 @@ export function useCurrencyList(currencies: CurrencyExchangeRate[]) {
       return sort.direction === 'asc' ? comparison : -comparison;
     });
 
-    // Check if any filters are active
-    const hasActive = false;
-
     return {
-      filteredCurrencies: filtered,
-      currencyCount: filtered.length,
+      sortedCurrencies: sorted,
+      currencyCount: sorted.length,
       totalCount: currencies.length,
-      hasActiveFilters: hasActive,
     };
   }, [currencies, sort]);
 
   return {
-    // State
-    filters,
     sort,
-    // Actions
-    updateFilter,
     updateSort,
-    clearFilters,
     resetSort,
-    // Computed
-    filteredCurrencies,
+    sortedCurrencies,
     currencyCount,
     totalCount,
-    hasActiveFilters,
   };
 }

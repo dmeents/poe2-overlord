@@ -22,17 +22,9 @@ export function EconomyList({
   isSearching,
   searchResultsCount,
 }: EconomyListProps) {
-  // Currency list with filtering and sorting
-  const {
-    sort,
-    updateSort,
-    clearFilters,
-    resetSort,
-    hasActiveFilters,
-    filteredCurrencies,
-    currencyCount,
-    totalCount,
-  } = useCurrencyList(currencies);
+  // Currency list with sorting
+  const { sort, updateSort, resetSort, sortedCurrencies, currencyCount, totalCount } =
+    useCurrencyList(currencies);
 
   return (
     <div>
@@ -42,8 +34,6 @@ export function EconomyList({
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
           isSearching={isSearching}
-          onClearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
           sort={sort}
           onSortChange={updateSort}
           onResetSort={resetSort}
@@ -55,17 +45,15 @@ export function EconomyList({
       {/* Currency List */}
       {isSearching ? (
         <LoadingSpinner className="py-12" />
-      ) : filteredCurrencies.length === 0 ? (
+      ) : sortedCurrencies.length === 0 ? (
         <div className={economyListStyles.emptyState}>
           {searchQuery
             ? `No currencies found matching "${searchQuery}"`
-            : hasActiveFilters
-              ? 'No currencies match your search'
-              : 'No currency data available'}
+            : 'No currency data available'}
         </div>
       ) : (
         <div>
-          {filteredCurrencies.map((currency, index) => (
+          {sortedCurrencies.map((currency, index) => (
             <div key={currency.id} className={index === 0 ? economyListStyles.firstRow : ''}>
               <EconomyRow currency={currency} onClick={onCurrencyClick} />
             </div>

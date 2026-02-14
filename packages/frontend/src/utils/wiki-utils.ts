@@ -5,7 +5,7 @@ import { open } from '@tauri-apps/plugin-shell';
  * @param itemName - The name of the item to convert
  * @returns The formatted item name for the wiki URL
  */
-export const getWikiUrl = (itemName: string): string => {
+const getWikiUrl = (itemName: string): string => {
   const capitalizedSnakeCase = itemName
     .replace(/\s+/g, '_') // Replace spaces with underscores
     .replace(/[^a-zA-Z0-9_'-.]/g, '') // Remove special characters except underscores, apostrophes, hyphens, and periods

@@ -30,9 +30,7 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
     { path: '/characters', title: 'Characters', icon: UserGroupIcon },
   ];
 
-  const secondaryNavItems = [
-    { path: '/settings', title: 'Settings', icon: Cog6ToothIcon },
-  ];
+  const secondaryNavItems = [{ path: '/settings', title: 'Settings', icon: Cog6ToothIcon }];
 
   const renderNavItem = ({
     path,
@@ -53,10 +51,11 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
         aria-current={active ? 'page' : undefined}>
         <div
           title={title}
-          className={`${sidebarNavigationStyles.navButton} ${active
-            ? sidebarNavigationStyles.navButtonActive
-            : sidebarNavigationStyles.navButtonInactive
-            }`}>
+          className={`${sidebarNavigationStyles.navButton} ${
+            active
+              ? sidebarNavigationStyles.navButtonActive
+              : sidebarNavigationStyles.navButtonInactive
+          }`}>
           <Icon className={sidebarNavigationStyles.icon} aria-hidden="true" />
         </div>
       </Link>

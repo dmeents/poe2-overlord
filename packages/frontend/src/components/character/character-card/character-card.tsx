@@ -81,7 +81,6 @@ export const CharacterCard = memo(function CharacterCard({
     return displayAct ? { act: displayAct, zone: null } : null;
   }, [character.current_location]);
 
-  // Event handlers
   const handleSelect = useCallback(() => {
     if (interactive) onSelect();
   }, [interactive, onSelect]);
@@ -113,7 +112,7 @@ export const CharacterCard = memo(function CharacterCard({
   );
 
   const containerClasses = useMemo(() => {
-    const classes = [styles.base];
+    const classes: string[] = [styles.base];
 
     if (interactive) {
       classes.push(styles.baseInteractive, styles.baseHoverBg, styles.hoverBorder(character.class));
@@ -219,7 +218,9 @@ export const CharacterCard = memo(function CharacterCard({
             </div>
           )}
           <div className={styles.stat} title="Last Played">
-            <span className={styles.statValue}>{character.last_played ? formatDate(character.last_played) : 'Not Played'}</span>
+            <span className={styles.statValue}>
+              {character.last_played ? formatDate(character.last_played) : 'Not Played'}
+            </span>
           </div>
         </div>
       </div>

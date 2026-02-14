@@ -24,10 +24,11 @@ describe('WindowTitle', () => {
     vi.clearAllMocks();
   });
 
-  it('renders title text', () => {
-    render(<WindowTitle />);
+  it('renders drag region', () => {
+    const { container } = render(<WindowTitle />);
 
-    expect(screen.getByText('POE Overlord')).toBeInTheDocument();
+    const dragRegion = container.querySelector('[data-tauri-drag-region]');
+    expect(dragRegion).toBeInTheDocument();
   });
 
   it('renders minimize button', () => {

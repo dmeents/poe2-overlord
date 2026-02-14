@@ -51,7 +51,10 @@ describe('Accordion', () => {
       </Accordion>,
     );
 
-    expect(screen.queryByText('Hidden Content')).not.toBeInTheDocument();
+    // Content is in DOM for animation but marked as hidden
+    const content = screen.getByText('Hidden Content');
+    const section = content.closest('section');
+    expect(section).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('calls onToggle when header is clicked', async () => {
@@ -118,6 +121,8 @@ describe('Accordion', () => {
       // Verify the content region exists and is properly labeled
       const region = screen.getByRole('region', { name: /test title/i });
       expect(region).toBeInTheDocument();
+      // Content should NOT have aria-hidden when expanded
+      expect(region).not.toHaveAttribute('aria-hidden');
     });
 
     it('links button to content panel via aria-controls', () => {

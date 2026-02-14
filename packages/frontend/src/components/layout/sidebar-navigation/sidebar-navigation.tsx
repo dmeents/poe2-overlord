@@ -27,10 +27,10 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
     { path: '/walkthrough', title: 'Walkthrough', icon: BookOpenIcon },
     { path: '/playtime', title: 'Playtime', icon: ClockIcon },
     { path: '/economy', title: 'Economy', icon: BanknotesIcon },
+    { path: '/characters', title: 'Characters', icon: UserGroupIcon },
   ];
 
   const secondaryNavItems = [
-    { path: '/characters', title: 'Characters', icon: UserGroupIcon },
     { path: '/settings', title: 'Settings', icon: Cog6ToothIcon },
   ];
 
@@ -53,11 +53,10 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
         aria-current={active ? 'page' : undefined}>
         <div
           title={title}
-          className={`${sidebarNavigationStyles.navButton} ${
-            active
-              ? sidebarNavigationStyles.navButtonActive
-              : sidebarNavigationStyles.navButtonInactive
-          }`}>
+          className={`${sidebarNavigationStyles.navButton} ${active
+            ? sidebarNavigationStyles.navButtonActive
+            : sidebarNavigationStyles.navButtonInactive
+            }`}>
           <Icon className={sidebarNavigationStyles.icon} aria-hidden="true" />
         </div>
       </Link>
@@ -66,17 +65,12 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
 
   return (
     <div className={`${sidebarNavigationStyles.container} ${className}`}>
-      {/* Logo */}
       <Link to="/" className={sidebarNavigationStyles.logo} aria-label="Home">
         <img src={logoNoText} alt="" className={sidebarNavigationStyles.logoImage} />
       </Link>
-
-      {/* Primary Navigation */}
       <nav className={sidebarNavigationStyles.primaryNav} aria-label="Primary navigation">
         {primaryNavItems.map(renderNavItem)}
       </nav>
-
-      {/* Secondary Navigation (Settings) */}
       <nav className={sidebarNavigationStyles.secondaryNav} aria-label="Secondary navigation">
         {secondaryNavItems.map(renderNavItem)}
       </nav>

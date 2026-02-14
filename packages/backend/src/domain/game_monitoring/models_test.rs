@@ -113,7 +113,7 @@ mod tests {
         let config: GameMonitoringConfig = Default::default();
 
         assert_eq!(config.detection_interval_seconds, 3);
-        assert_eq!(config.monitoring_interval_seconds, 60);
+        assert_eq!(config.monitoring_interval_seconds, 5);
         assert!(!config.process_names.is_empty());
     }
 

@@ -1,11 +1,10 @@
-import { ClockIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
 import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
 import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { Card } from '@/components/ui/card/card';
-import { EmptyState } from '@/components/ui/empty-state/empty-state';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { ZoneList } from '@/components/zones/zone-list/zone-list';
 import { useCharacter } from '@/contexts/CharacterContext';
@@ -71,13 +70,6 @@ function PlaytimePage() {
   const rightColumn = (
     <>
       <PlaytimeInsights zones={zones} />
-      {!isLoading && activeCharacter && zones.length === 0 && (
-        <EmptyState
-          icon={<ClockIcon className="h-12 w-12" />}
-          title="No Time Tracking Data"
-          description={`Start playing Path of Exile 2 with ${activeCharacter?.name} to begin tracking your time in different locations.`}
-        />
-      )}
       {activeCharacter && <ActDistributionChart character={activeCharacter} />}
     </>
   );

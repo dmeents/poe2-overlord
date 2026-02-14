@@ -149,11 +149,7 @@ impl ProcessDetector for ProcessDetectorImpl {
                     .iter()
                     .map(|arg| arg.to_string_lossy())
                     .find(|arg| self.path_contains_poe(arg))
-                    .and_then(|path| {
-                        path.rsplit(['/', '\\'])
-                            .next()
-                            .map(|s| s.to_string())
-                    })
+                    .and_then(|path| path.rsplit(['/', '\\']).next().map(|s| s.to_string()))
                     .unwrap_or_else(|| "PathOfExile".to_string());
 
                 return Ok(GameProcessStatus::new(display_name, pid.as_u32(), true));

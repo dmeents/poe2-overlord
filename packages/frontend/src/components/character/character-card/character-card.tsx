@@ -20,9 +20,6 @@ import {
   characterCardStyles as styles,
 } from './character-card.styles';
 
-/**
- * Calculate deaths per hour from total deaths and play time (in seconds)
- */
 function formatDeathsPerHour(deaths: number, playTimeSeconds: number): string {
   if (playTimeSeconds < 60) return '0.0'; // Not enough data
   const hours = playTimeSeconds / 3600;
@@ -30,9 +27,6 @@ function formatDeathsPerHour(deaths: number, playTimeSeconds: number): string {
   return deathsPerHour.toFixed(1);
 }
 
-/**
- * Calculate character age in days from created_at timestamp
- */
 function formatCharacterAge(createdAt: string): string {
   const created = new Date(createdAt);
   const now = new Date();
@@ -60,30 +54,30 @@ export const CharacterCard = memo(function CharacterCard({
   onDelete,
   interactive = true,
 }: CharacterCardProps) {
-  // Memoize ascendency image and styles
   const ascendencyImage = useMemo(
     () => getAscendencyImage(character.ascendency),
     [character.ascendency],
   );
+
   const backgroundStyles = useMemo(
     () => getAscendencyBackgroundStyles(ascendencyImage),
     [ascendencyImage],
   );
+
   const overlayStyles = useMemo(() => getAscendencyOverlayStyles(), []);
+
   const hardcoreStyles = useMemo(
     () => (character.hardcore ? getHardcoreAccentStyles() : undefined),
     [character.hardcore],
   );
 
-  // Format current location
   const locationDisplay = useMemo(() => {
     const location = character.current_location;
     if (!location) return null;
 
     const displayAct = getDisplayAct(location);
-    if (location.zone_name) {
-      return { act: displayAct, zone: location.zone_name };
-    }
+
+    if (location.zone_name) return { act: displayAct, zone: location.zone_name };
     return displayAct ? { act: displayAct, zone: null } : null;
   }, [character.current_location]);
 
@@ -118,7 +112,6 @@ export const CharacterCard = memo(function CharacterCard({
     [onDelete],
   );
 
-  // Build container classes
   const containerClasses = useMemo(() => {
     const classes = [styles.base];
 
@@ -141,44 +134,30 @@ export const CharacterCard = memo(function CharacterCard({
       onKeyDown={handleKeyDown}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}>
-      {/* Ascendency Background Layer */}
       {ascendencyImage && (
         <div className={styles.ascendencyBg} style={backgroundStyles}>
           <div className={styles.ascendencyOverlay} style={overlayStyles} />
         </div>
       )}
-
-      {/* Hardcore Accent Overlay */}
       {hardcoreStyles && <div className={styles.ascendencyOverlay} style={hardcoreStyles} />}
-
-      {/* Header Section */}
       <div className={`${styles.header} ${styles.headerGradient(character.class)}`}>
         <div className={styles.headerContent}>
-          {/* Level Badge */}
           <div className={`${styles.levelBadge} ${styles.levelBadgeStyles(character.class)}`}>
             <span className={styles.levelText(character.class)}>{character.level}</span>
           </div>
-
-          {/* Character Info */}
           <div className={styles.info}>
             <h3 className={styles.name}>{character.name}</h3>
-
-            {/* Class & Ascendency */}
             <div className={styles.details}>
               <span className={styles.classText(character.class)}>{character.class}</span>
               <span className={styles.separator}>/</span>
               <span className={styles.ascendency}>{character.ascendency}</span>
             </div>
-
-            {/* League Info */}
             <div className={styles.leagueRow}>
               {character.hardcore && <span className={styles.hardcoreBadge}>HC</span>}
               {character.solo_self_found && <span className={styles.ssfBadge}>SSF</span>}
               <span className={styles.leagueBadge}>{character.league}</span>
             </div>
           </div>
-
-          {/* Action Buttons */}
           {interactive && (
             <div className={styles.actions}>
               <Button
@@ -199,25 +178,18 @@ export const CharacterCard = memo(function CharacterCard({
           )}
         </div>
       </div>
-
-      {/* Stats Footer */}
       <div className={styles.footer}>
         <div className={styles.statsGrid}>
-          {/* Play Time */}
           <div className={styles.stat} title="Play Time">
             <ClockIcon className={styles.statIcon} aria-hidden="true" />
             <span className={styles.statValue}>
               {formatDuration(character.summary?.total_play_time || 0)}
             </span>
           </div>
-
-          {/* Deaths */}
           <div className={styles.stat} title="Deaths">
             <XCircleIcon className={styles.statIcon} aria-hidden="true" />
             <span className={styles.statValue}>{character.summary?.total_deaths || 0}</span>
           </div>
-
-          {/* Deaths per Hour */}
           <div className={styles.stat} title="Deaths per Hour">
             <ExclamationTriangleIcon className={styles.statIcon} aria-hidden="true" />
             <span className={styles.statValue}>
@@ -228,20 +200,14 @@ export const CharacterCard = memo(function CharacterCard({
               /hr
             </span>
           </div>
-
-          {/* Zones Visited */}
           <div className={styles.stat} title="Zones Visited">
             <MapIcon className={styles.statIcon} aria-hidden="true" />
             <span className={styles.statValue}>{character.summary?.total_zones_visited || 0}</span>
           </div>
-
-          {/* Character Age */}
           <div className={styles.stat} title="Character Age">
             <CalendarDaysIcon className={styles.statIcon} aria-hidden="true" />
             <span className={styles.statValue}>{formatCharacterAge(character.created_at)}</span>
           </div>
-
-          {/* Location */}
           {locationDisplay && (
             <div
               className={styles.stat}
@@ -252,13 +218,9 @@ export const CharacterCard = memo(function CharacterCard({
               </span>
             </div>
           )}
-
-          {/* Last Played (only if not active) */}
-          {!isActive && character.last_played && (
-            <div className={styles.stat} title="Last Played">
-              <span className={styles.statValue}>{formatDate(character.last_played)}</span>
-            </div>
-          )}
+          <div className={styles.stat} title="Last Played">
+            <span className={styles.statValue}>{character.last_played ? formatDate(character.last_played) : 'Not Played'}</span>
+          </div>
         </div>
       </div>
     </div>

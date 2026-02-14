@@ -1,6 +1,7 @@
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
+import { cn } from '@/utils/tailwind';
 import { accordionStyles } from './accordion.styles';
 
 export interface AccordionProps {
@@ -26,36 +27,76 @@ export function Accordion({
   const headingId = useId();
 
   return (
-    <div className={`${accordionStyles.container} ${className}`}>
-      {/* Accordion Header */}
-      <div className={accordionStyles.header}>
-        <button
-          type="button"
-          id={buttonId}
-          onClick={onToggle}
-          className={accordionStyles.button}
-          aria-expanded={isExpanded}
-          aria-controls={contentId}>
-          <h3 id={headingId} className={accordionStyles.title}>
-            {title}
-          </h3>
-          <div className="flex items-center gap-2">
-            {subtitle && <span className={accordionStyles.subtitle}>{subtitle}</span>}
-            {isExpanded ? (
-              <ChevronUpIcon className={accordionStyles.icon} aria-hidden="true" />
-            ) : (
-              <ChevronDownIcon className={accordionStyles.icon} aria-hidden="true" />
-            )}
-          </div>
-        </button>
-      </div>
+    <div className={cn(accordionStyles.container, className)}>
+      {/* Collapsible Section Divider */}
+      <button
+        type="button"
+        id={buttonId}
+        onClick={onToggle}
+        className={accordionStyles.button}
+        aria-expanded={isExpanded}
+        aria-controls={contentId}>
+        {/* Chevron Icon */}
+        <ChevronDownIcon
+          className={cn(
+            accordionStyles.icon,
+            isExpanded ? accordionStyles.iconExpanded : accordionStyles.iconCollapsed,
+          )}
+          aria-hidden="true"
+        />
 
-      {/* Accordion Content */}
-      {isExpanded && (
-        <section id={contentId} aria-labelledby={headingId} className={accordionStyles.content}>
+        {/* Title */}
+        <h3
+          id={headingId}
+          className={cn(
+            accordionStyles.title,
+            isExpanded ? accordionStyles.titleExpanded : accordionStyles.titleCollapsed,
+          )}>
+          {title}
+        </h3>
+
+        {/* Subtitle with dot separator */}
+        {subtitle && (
+          <>
+            <span aria-hidden="true" className="text-stone-500">
+              ·
+            </span>
+            <span
+              className={cn(
+                accordionStyles.subtitle,
+                isExpanded ? accordionStyles.subtitleExpanded : accordionStyles.subtitleCollapsed,
+              )}>
+              {subtitle}
+            </span>
+          </>
+        )}
+
+        {/* Divider line */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            accordionStyles.divider,
+            isExpanded ? accordionStyles.dividerExpanded : accordionStyles.dividerCollapsed,
+          )}
+        />
+      </button>
+
+      {/* Content with grid animation */}
+      <div
+        className={cn(
+          accordionStyles.contentWrapper,
+          isExpanded
+            ? accordionStyles.contentWrapperExpanded
+            : accordionStyles.contentWrapperCollapsed,
+        )}>
+        <section
+          id={contentId}
+          aria-labelledby={headingId}
+          aria-hidden={!isExpanded || undefined}
+          className={accordionStyles.content}>
           {children}
         </section>
-      )}
+      </div>
     </div>
   );
 }

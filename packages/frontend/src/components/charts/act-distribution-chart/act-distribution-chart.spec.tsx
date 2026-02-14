@@ -18,6 +18,21 @@ vi.mock('recharts', () => ({
   Tooltip: vi.fn(() => <div data-testid="tooltip" />),
 }));
 
+// Mock the act colors utility
+vi.mock('@/utils/act-colors', () => ({
+  getActHexColor: vi.fn((actName: string) => {
+    const colors: Record<string, string> = {
+      'Act 1': '#10b981',
+      'Act 2': '#3b82f6',
+      'Act 3': '#8b5cf6',
+      'Act 4': '#f59e0b',
+      'Act 5': '#ec4899',
+      Interlude: '#ef4444',
+    };
+    return colors[actName] || '#6b7280';
+  }),
+}));
+
 const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
   character_id: 'char-1',
   total_play_time: 7200,

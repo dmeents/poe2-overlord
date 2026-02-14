@@ -13,7 +13,7 @@ export interface DataItemProps {
 export function DataItem({ label, value, subValue, className = '', color, icon }: DataItemProps) {
   return (
     <div
-      className={`${dataItemStyles.container} ${className}`}
+      className={`${dataItemStyles.container} ${color ? dataItemStyles.containerColored : ''} ${className}`}
       style={color ? { borderLeftColor: color } : undefined}>
       <div className={dataItemStyles.labelContainer}>
         {icon && <div className={dataItemStyles.icon}>{icon}</div>}

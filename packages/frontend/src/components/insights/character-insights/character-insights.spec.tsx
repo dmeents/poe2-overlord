@@ -195,36 +195,6 @@ describe('CharacterInsights', () => {
     });
   });
 
-  describe('League Distribution', () => {
-    it('renders league distribution', () => {
-      const characters = [
-        createMockCharacter({ id: 'char-1', league: 'Standard' }),
-        createMockCharacter({ id: 'char-2', league: 'Standard' }),
-        createMockCharacter({ id: 'char-3', league: 'Rise of the Abyssal' }),
-      ];
-
-      render(<CharacterInsights characters={characters} />);
-
-      expect(screen.getByText('Standard')).toBeInTheDocument();
-      expect(screen.getByText('Rise of the Abyssal')).toBeInTheDocument();
-    });
-
-    it('sorts leagues by character count descending', () => {
-      const characters = [
-        createMockCharacter({ id: 'char-1', league: 'Rise of the Abyssal' }),
-        createMockCharacter({ id: 'char-2', league: 'Standard' }),
-        createMockCharacter({ id: 'char-3', league: 'Standard' }),
-        createMockCharacter({ id: 'char-4', league: 'Standard' }),
-      ];
-
-      render(<CharacterInsights characters={characters} />);
-
-      // Standard should appear first (3 chars) then Rise of the Abyssal (1 char)
-      expect(screen.getByText('Standard')).toBeInTheDocument();
-      expect(screen.getByText('Rise of the Abyssal')).toBeInTheDocument();
-    });
-  });
-
   describe('Edge Cases', () => {
     it('handles single character', () => {
       const character = createMockCharacter({

@@ -45,7 +45,8 @@ describe('SidebarNavigation', () => {
   it('renders Dashboard link', () => {
     render(<SidebarNavigation />);
 
-    expect(screen.getByTestId('link-/')).toBeInTheDocument();
+    const dashboardLinks = screen.getAllByTestId('link-/');
+    expect(dashboardLinks.length).toBeGreaterThanOrEqual(2);
     expect(screen.getByTitle('Dashboard')).toBeInTheDocument();
   });
 
@@ -95,8 +96,7 @@ describe('SidebarNavigation', () => {
     render(<SidebarNavigation />);
 
     const dashboardNav = screen.getByTitle('Dashboard');
-    expect(dashboardNav.className).toContain('shadow-lg');
-    expect(dashboardNav.className).toContain('text-white');
+    expect(dashboardNav.className).toContain('text-ember-400');
   });
 
   it('highlights active Walkthrough link', () => {
@@ -104,8 +104,7 @@ describe('SidebarNavigation', () => {
     render(<SidebarNavigation />);
 
     const walkthroughNav = screen.getByTitle('Walkthrough');
-    expect(walkthroughNav.className).toContain('shadow-lg');
-    expect(walkthroughNav.className).toContain('text-white');
+    expect(walkthroughNav.className).toContain('text-ember-400');
   });
 
   it('highlights active Settings link', () => {
@@ -113,8 +112,7 @@ describe('SidebarNavigation', () => {
     render(<SidebarNavigation />);
 
     const settingsNav = screen.getByTitle('Settings');
-    expect(settingsNav.className).toContain('shadow-lg');
-    expect(settingsNav.className).toContain('text-white');
+    expect(settingsNav.className).toContain('text-ember-400');
   });
 
   it('shows inactive state for non-current routes', () => {
@@ -122,7 +120,7 @@ describe('SidebarNavigation', () => {
     render(<SidebarNavigation />);
 
     const walkthroughNav = screen.getByTitle('Walkthrough');
-    expect(walkthroughNav.className).toContain('text-stone-400');
+    expect(walkthroughNav.className).toContain('text-stone-500');
     expect(walkthroughNav.className).not.toContain('shadow-lg');
   });
 
@@ -153,7 +151,11 @@ describe('SidebarNavigation', () => {
     it('provides aria-label on all navigation links', () => {
       render(<SidebarNavigation />);
 
-      expect(screen.getByTestId('link-/')).toHaveAttribute('aria-label', 'Dashboard');
+      const dashboardLinks = screen.getAllByTestId('link-/');
+      const dashboardNavLink = dashboardLinks.find(
+        link => link.getAttribute('aria-label') === 'Dashboard',
+      );
+      expect(dashboardNavLink).toHaveAttribute('aria-label', 'Dashboard');
       expect(screen.getByTestId('link-/walkthrough')).toHaveAttribute('aria-label', 'Walkthrough');
       expect(screen.getByTestId('link-/playtime')).toHaveAttribute('aria-label', 'Playtime');
       expect(screen.getByTestId('link-/economy')).toHaveAttribute('aria-label', 'Economy');

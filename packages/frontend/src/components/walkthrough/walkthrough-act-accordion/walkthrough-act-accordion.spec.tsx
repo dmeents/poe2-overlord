@@ -141,8 +141,8 @@ describe('WalkthroughActAccordion', () => {
       />,
     );
 
-    // The "Go Here" button should appear on the non-current step
-    expect(screen.getByText('Go Here')).toBeInTheDocument();
+    // The "Jump to Step" button should appear on the non-current step
+    expect(screen.getByText('Jump to Step')).toBeInTheDocument();
   });
 
   it('calls onSkipToStep when skip button is clicked', async () => {
@@ -157,7 +157,7 @@ describe('WalkthroughActAccordion', () => {
       />,
     );
 
-    await user.click(screen.getByText('Go Here'));
+    await user.click(screen.getByText('Jump to Step'));
 
     expect(handleSkip).toHaveBeenCalledWith('act1_step_2');
   });

@@ -155,7 +155,7 @@ describe('WalkthroughStepCard', () => {
         />,
       );
 
-      expect(screen.getByText('Go Here')).toBeInTheDocument();
+      expect(screen.getByText('Jump to Step')).toBeInTheDocument();
     });
 
     it('calls onSkipToStep when skip button is clicked', async () => {
@@ -172,7 +172,7 @@ describe('WalkthroughStepCard', () => {
         />,
       );
 
-      await user.click(screen.getByText('Go Here'));
+      await user.click(screen.getByText('Jump to Step'));
 
       expect(handleSkip).toHaveBeenCalledWith('step-1');
     });
@@ -212,7 +212,7 @@ describe('WalkthroughStepCard', () => {
         />,
       );
 
-      expect(container.firstChild).toHaveClass('border-blue-500');
+      expect(container.firstChild).toHaveClass('border-ember-700/50');
     });
   });
 

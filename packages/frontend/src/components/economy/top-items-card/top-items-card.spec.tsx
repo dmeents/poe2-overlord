@@ -84,7 +84,7 @@ describe('TopItemsCard', () => {
 
       const changeElement = screen.getByText('+5.50%');
       expect(changeElement).toBeInTheDocument();
-      expect(changeElement.className).toContain('text-emerald-400');
+      expect(changeElement.className).toContain('text-verdant-400');
     });
 
     it('renders change percent with correct color for negative', () => {
@@ -97,7 +97,7 @@ describe('TopItemsCard', () => {
 
       const changeElement = screen.getByText('-3.25%');
       expect(changeElement).toBeInTheDocument();
-      expect(changeElement.className).toContain('text-red-400');
+      expect(changeElement.className).toContain('text-blood-400');
     });
 
     it('renders multiple items', () => {

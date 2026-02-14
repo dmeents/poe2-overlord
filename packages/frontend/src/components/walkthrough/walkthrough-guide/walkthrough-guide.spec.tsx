@@ -160,8 +160,10 @@ describe('WalkthroughGuide', () => {
     it('starts with all acts collapsed', () => {
       render(<WalkthroughGuide guide={createMockGuide()} />);
 
-      // Steps should not be visible initially
-      expect(screen.queryByText('First Step')).not.toBeInTheDocument();
+      // Content is in DOM for animation but section should be hidden
+      const content = screen.getByText('First Step');
+      const section = content.closest('section');
+      expect(section).toHaveAttribute('aria-hidden', 'true');
     });
 
     it('expands an act when clicked', async () => {
@@ -179,11 +181,14 @@ describe('WalkthroughGuide', () => {
 
       // Expand
       await user.click(screen.getByText('Act 1'));
-      expect(screen.getByText('First Step')).toBeInTheDocument();
+      const content = screen.getByText('First Step');
+      let section = content.closest('section');
+      expect(section).not.toHaveAttribute('aria-hidden');
 
       // Collapse
       await user.click(screen.getByText('Act 1'));
-      expect(screen.queryByText('First Step')).not.toBeInTheDocument();
+      section = content.closest('section');
+      expect(section).toHaveAttribute('aria-hidden', 'true');
     });
 
     it('allows multiple acts to be expanded simultaneously', async () => {
@@ -225,9 +230,9 @@ describe('WalkthroughGuide', () => {
 
       await user.click(screen.getByText('Act 1'));
 
-      // Find and click the "Go Here" button for non-current steps (title is "Go to this step")
-      const goHereButtons = screen.getAllByTitle('Go to this step');
-      await user.click(goHereButtons[0]);
+      // Find and click the "Jump to Step" button for non-current steps
+      const jumpButtons = screen.getAllByText('Jump to Step');
+      await user.click(jumpButtons[0]);
 
       await waitFor(() => {
         expect(mockInvoke).toHaveBeenCalledWith(
@@ -250,9 +255,9 @@ describe('WalkthroughGuide', () => {
 
       await user.click(screen.getByText('Act 1'));
 
-      const goHereButtons = screen.queryAllByTitle('Go to this step');
-      if (goHereButtons.length > 0) {
-        await user.click(goHereButtons[0]);
+      const jumpButtons = screen.queryAllByText('Jump to Step');
+      if (jumpButtons.length > 0) {
+        await user.click(jumpButtons[0]);
       }
 
       expect(mockInvoke).not.toHaveBeenCalled();
@@ -273,8 +278,8 @@ describe('WalkthroughGuide', () => {
 
       await user.click(screen.getByText('Act 1'));
 
-      const goHereButtons = screen.getAllByTitle('Go to this step');
-      await user.click(goHereButtons[0]);
+      const jumpButtons = screen.getAllByText('Jump to Step');
+      await user.click(jumpButtons[0]);
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('Failed to skip to step:', expect.any(Error));

@@ -20,7 +20,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         totalDeaths: 0,
         hardcoreCount: 0,
         ssfCount: 0,
-        leagueDistribution: {},
         mostPlayedCharacter: null,
       };
     }
@@ -38,14 +37,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
     const hardcoreCount = characters.filter(c => c.hardcore).length;
     const ssfCount = characters.filter(c => c.solo_self_found).length;
 
-    const leagueDistribution = characters.reduce(
-      (acc, c) => {
-        acc[c.league] = (acc[c.league] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
     const mostPlayedCharacter = characters.reduce((max, c) =>
       c.summary.total_play_time > max.summary.total_play_time ? c : max,
     );
@@ -58,7 +49,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
       totalDeaths,
       hardcoreCount,
       ssfCount,
-      leagueDistribution,
       mostPlayedCharacter,
     };
   }, [characters]);
@@ -109,15 +99,6 @@ export function CharacterInsights({ characters }: CharacterInsightsProps) {
         <DataItem label="Hardcore Characters" value={metrics.hardcoreCount} />
         <DataItem label="SSF Characters" value={metrics.ssfCount} />
       </div>
-      {Object.keys(metrics.leagueDistribution).length > 0 && (
-        <div>
-          {Object.entries(metrics.leagueDistribution)
-            .sort(([, a], [, b]) => b - a)
-            .map(([league, count]) => (
-              <DataItem key={league} label={league} value={count} />
-            ))}
-        </div>
-      )}
     </Card>
   );
 }

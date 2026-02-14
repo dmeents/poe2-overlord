@@ -6,6 +6,7 @@ import { CharacterFormModal } from '../components/character/character-form-modal
 import { CharacterList } from '../components/character/character-list/character-list';
 import { DeleteCharacterModal } from '../components/character/delete-character-modal/delete-character-modal';
 import { ClassDistributionChart } from '../components/charts/class-distribution-chart/class-distribution-chart';
+import { LeagueDistributionChart } from '../components/charts/league-distribution-chart/league-distribution-chart';
 import { AlertMessage } from '../components/forms/form-alert-message/form-alert-message';
 import { CharacterInsights } from '../components/insights/character-insights/character-insights';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
@@ -163,9 +164,19 @@ function CharactersPage() {
     {} as Record<string, number>,
   );
 
+  // Compute league distribution
+  const leagueDistribution = characters.reduce(
+    (acc, c) => {
+      acc[c.league] = (acc[c.league] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
   const rightColumn = (
     <div className="space-y-4">
       <CharacterInsights characters={characters} />
+      <LeagueDistributionChart leagueDistribution={leagueDistribution} />
       <ClassDistributionChart classDistribution={classDistribution} />
     </div>
   );

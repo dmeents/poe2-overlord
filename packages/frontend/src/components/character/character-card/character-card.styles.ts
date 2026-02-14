@@ -130,7 +130,7 @@ export const characterCardStyles = {
   headerContent: 'flex items-start gap-3',
 
   // Level badge
-  levelBadge: 'w-12 h-12 flex items-center justify-center flex-shrink-0 border',
+  levelBadge: 'w-12 h-12 flex items-center justify-center flex-shrink-0 border card-shadow',
   levelBadgeStyles: (characterClass: string) => {
     const theme = getClassTheme(characterClass);
     const styles = CLASS_LEVEL_BADGE[theme] ?? CLASS_LEVEL_BADGE.ash;

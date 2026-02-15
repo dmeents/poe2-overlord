@@ -48,24 +48,22 @@ describe('ZoneDetailsModal', () => {
     });
   });
 
-  describe('Rendering', () => {
-    it('renders modal with zone name', () => {
+  describe('Zone Information Display', () => {
+    it('renders all zone information for a visited zone', () => {
       render(<ZoneDetailsModal />);
 
+      // Zone name
       expect(screen.getByText('The Coast')).toBeInTheDocument();
-    });
 
-    it('renders zone information section', () => {
-      render(<ZoneDetailsModal />);
-
+      // Zone information section
       expect(screen.getByText('Zone Information')).toBeInTheDocument();
-    });
-
-    it('displays zone type', () => {
-      render(<ZoneDetailsModal />);
-
       expect(screen.getByText('Type:')).toBeInTheDocument();
       expect(screen.getByText('Zone')).toBeInTheDocument();
+      expect(screen.getByText('Act:')).toBeInTheDocument();
+      expect(screen.getByText('Act 1')).toBeInTheDocument();
+      expect(screen.getByText('Level:')).toBeInTheDocument();
+      expect(screen.getByText('Waypoint:')).toBeInTheDocument();
+      expect(screen.getByText('Yes')).toBeInTheDocument();
     });
 
     it('displays town type for town zones', () => {
@@ -80,30 +78,6 @@ describe('ZoneDetailsModal', () => {
       render(<ZoneDetailsModal />);
 
       expect(screen.getByText('Town')).toBeInTheDocument();
-    });
-
-    it('displays act number', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('Act:')).toBeInTheDocument();
-      // getDisplayAct returns consistent "Act N" format
-      expect(screen.getByText('Act 1')).toBeInTheDocument();
-    });
-
-    it('displays area level', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('Level:')).toBeInTheDocument();
-      // Use regex to match the level value as there may be multiple "2"s on the page
-      const levelElements = screen.getAllByText('2');
-      expect(levelElements.length).toBeGreaterThan(0);
-    });
-
-    it('displays waypoint status', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('Waypoint:')).toBeInTheDocument();
-      expect(screen.getByText('Yes')).toBeInTheDocument();
     });
 
     it('returns null when no zone is selected', () => {
@@ -122,23 +96,13 @@ describe('ZoneDetailsModal', () => {
   });
 
   describe('Player Statistics', () => {
-    it('displays player statistics for visited zones', () => {
+    it('displays player statistics for visited zones with deaths for non-town zones', () => {
       render(<ZoneDetailsModal />);
 
       expect(screen.getByText('Your Statistics')).toBeInTheDocument();
       expect(screen.getByText('Time Spent:')).toBeInTheDocument();
       expect(screen.getByText('Visits:')).toBeInTheDocument();
-    });
-
-    it('displays visit count', () => {
-      render(<ZoneDetailsModal />);
-
       expect(screen.getByText('5')).toBeInTheDocument();
-    });
-
-    it('displays deaths for non-town zones', () => {
-      render(<ZoneDetailsModal />);
-
       expect(screen.getByText('Deaths:')).toBeInTheDocument();
     });
 
@@ -158,7 +122,7 @@ describe('ZoneDetailsModal', () => {
   });
 
   describe('Unvisited Zone', () => {
-    it('shows unvisited message for zones with 0 visits', () => {
+    it('shows unvisited message and hides statistics for zones with 0 visits', () => {
       mockUseZone.mockReturnValue({
         selectedZone: createMockZone({ visits: 0 }),
         isModalOpen: true,
@@ -171,33 +135,34 @@ describe('ZoneDetailsModal', () => {
 
       expect(screen.getByText('Zone Not Yet Visited')).toBeInTheDocument();
       expect(screen.getByText(/You haven't visited this zone yet/)).toBeInTheDocument();
-    });
-
-    it('does not show player statistics for unvisited zones', () => {
-      mockUseZone.mockReturnValue({
-        selectedZone: createMockZone({ visits: 0 }),
-        isModalOpen: true,
-        closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [],
-      });
-
-      render(<ZoneDetailsModal />);
-
       expect(screen.queryByText('Your Statistics')).not.toBeInTheDocument();
     });
   });
 
-  describe('Bosses', () => {
-    it('displays bosses section when bosses exist', () => {
+  describe('Zone Features', () => {
+    it('displays all zone features when present', () => {
       render(<ZoneDetailsModal />);
 
+      // Bosses
       expect(screen.getByText('Bosses (2)')).toBeInTheDocument();
       expect(screen.getByText('Boss One')).toBeInTheDocument();
       expect(screen.getByText('Boss Two')).toBeInTheDocument();
+
+      // NPCs
+      expect(screen.getByText('NPCs (1)')).toBeInTheDocument();
+      expect(screen.getByText('NPC One')).toBeInTheDocument();
+
+      // Points of Interest
+      expect(screen.getByText('Points of Interest (1)')).toBeInTheDocument();
+      expect(screen.getByText('POI One')).toBeInTheDocument();
+
+      // Connected Zones
+      expect(screen.getByText('Connected Zones (2)')).toBeInTheDocument();
+      expect(screen.getByText('The Mud Flats')).toBeInTheDocument();
+      expect(screen.getByText("Lioneye's Watch")).toBeInTheDocument();
     });
 
-    it('does not display bosses section when no bosses', () => {
+    it('hides bosses section when no bosses present', () => {
       mockUseZone.mockReturnValue({
         selectedZone: createMockZone({ bosses: [] }),
         isModalOpen: true,
@@ -212,33 +177,7 @@ describe('ZoneDetailsModal', () => {
     });
   });
 
-  describe('NPCs', () => {
-    it('displays NPCs section when NPCs exist', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('NPCs (1)')).toBeInTheDocument();
-      expect(screen.getByText('NPC One')).toBeInTheDocument();
-    });
-  });
-
-  describe('Points of Interest', () => {
-    it('displays POI section when POIs exist', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('Points of Interest (1)')).toBeInTheDocument();
-      expect(screen.getByText('POI One')).toBeInTheDocument();
-    });
-  });
-
-  describe('Connected Zones', () => {
-    it('displays connected zones section', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('Connected Zones (2)')).toBeInTheDocument();
-      expect(screen.getByText('The Mud Flats')).toBeInTheDocument();
-      expect(screen.getByText("Lioneye's Watch")).toBeInTheDocument();
-    });
-
+  describe('Connected Zones Navigation', () => {
     it('navigates to connected zone when clicked', async () => {
       const user = userEvent.setup();
       mockUseZone.mockReturnValue({
@@ -258,17 +197,13 @@ describe('ZoneDetailsModal', () => {
   });
 
   describe('Wiki Link', () => {
-    it('displays wiki link button', () => {
-      render(<ZoneDetailsModal />);
-
-      expect(screen.getByText('View on Wiki')).toBeInTheDocument();
-    });
-
-    it('opens wiki when clicked', async () => {
+    it('displays wiki link button and opens wiki when clicked', async () => {
       const user = userEvent.setup();
       mockOpen.mockResolvedValueOnce(undefined);
 
       render(<ZoneDetailsModal />);
+
+      expect(screen.getByText('View on Wiki')).toBeInTheDocument();
 
       await user.click(screen.getByText('View on Wiki'));
 

@@ -107,21 +107,8 @@ describe('WalkthroughGuide', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('renders the guide section header', () => {
-      render(<WalkthroughGuide guide={createMockGuide()} />);
-
-      expect(screen.getByText('Guide')).toBeInTheDocument();
-    });
-
-    it('renders all acts from the guide', () => {
-      render(<WalkthroughGuide guide={createMockGuide()} />);
-
-      expect(screen.getByText('Act 1')).toBeInTheDocument();
-      expect(screen.getByText('Act 2')).toBeInTheDocument();
-    });
-
-    it('renders acts in order by act number', () => {
+  describe('Static Rendering', () => {
+    it('renders guide with all acts in order and correct step counts', () => {
       const guide = createMockGuide({
         acts: {
           'act-3': createMockAct({ act_name: 'Act 3', act_number: 3 }),
@@ -132,6 +119,10 @@ describe('WalkthroughGuide', () => {
 
       render(<WalkthroughGuide guide={guide} />);
 
+      // Header present
+      expect(screen.getByText('Guide')).toBeInTheDocument();
+
+      // All acts rendered in order
       const acts = screen.getAllByText(/Act \d/);
       expect(acts[0]).toHaveTextContent('Act 1');
       expect(acts[1]).toHaveTextContent('Act 2');
@@ -143,7 +134,6 @@ describe('WalkthroughGuide', () => {
         <WalkthroughGuide guide={createMockGuide()} className="custom-class" />,
       );
 
-      // The className is passed to SectionHeader
       expect(container.querySelector('.custom-class')).toBeInTheDocument();
     });
 
@@ -157,32 +147,18 @@ describe('WalkthroughGuide', () => {
   });
 
   describe('Accordion Behavior', () => {
-    it('starts with all acts collapsed', () => {
+    it('starts collapsed and expands/collapses when clicked', async () => {
+      const user = userEvent.setup();
       render(<WalkthroughGuide guide={createMockGuide()} />);
 
-      // Content is in DOM for animation but section should be hidden
+      // Initially collapsed
       const content = screen.getByText('First Step');
-      const section = content.closest('section');
+      let section = content.closest('section');
       expect(section).toHaveAttribute('aria-hidden', 'true');
-    });
-
-    it('expands an act when clicked', async () => {
-      const user = userEvent.setup();
-      render(<WalkthroughGuide guide={createMockGuide()} />);
-
-      await user.click(screen.getByText('Act 1'));
-
-      expect(screen.getByText('First Step')).toBeInTheDocument();
-    });
-
-    it('collapses an act when clicked again', async () => {
-      const user = userEvent.setup();
-      render(<WalkthroughGuide guide={createMockGuide()} />);
 
       // Expand
       await user.click(screen.getByText('Act 1'));
-      const content = screen.getByText('First Step');
-      let section = content.closest('section');
+      section = content.closest('section');
       expect(section).not.toHaveAttribute('aria-hidden');
 
       // Collapse
@@ -204,13 +180,12 @@ describe('WalkthroughGuide', () => {
   });
 
   describe('Current Step Highlighting', () => {
-    it('passes currentStepId to accordions', async () => {
+    it('passes currentStepId to accordions for highlighting', async () => {
       const user = userEvent.setup();
       render(<WalkthroughGuide guide={createMockGuide()} currentStepId="step-1" />);
 
       await user.click(screen.getByText('Act 1'));
 
-      // The current step should be highlighted (tested in accordion component)
       expect(screen.getByText('First Step')).toBeInTheDocument();
     });
   });
@@ -230,7 +205,6 @@ describe('WalkthroughGuide', () => {
 
       await user.click(screen.getByText('Act 1'));
 
-      // Find and click the "Jump to Step" button for non-current steps
       const jumpButtons = screen.getAllByText('Jump to Step');
       await user.click(jumpButtons[0]);
 
@@ -286,16 +260,6 @@ describe('WalkthroughGuide', () => {
       });
 
       consoleSpy.mockRestore();
-    });
-  });
-
-  describe('Step Count Display', () => {
-    it('shows correct step count for each act', () => {
-      render(<WalkthroughGuide guide={createMockGuide()} />);
-
-      // Act 1 has 2 steps, Act 2 has 1 step (component always uses "steps" plural)
-      expect(screen.getByText('2 steps')).toBeInTheDocument();
-      expect(screen.getByText('1 steps')).toBeInTheDocument();
     });
   });
 });

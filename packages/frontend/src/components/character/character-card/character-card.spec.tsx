@@ -60,96 +60,70 @@ describe('CharacterCard', () => {
     vi.clearAllMocks();
   });
 
-  it('renders character name', () => {
-    render(<CharacterCard {...defaultProps} />);
+  describe('Static Rendering', () => {
+    it('renders all character information correctly', () => {
+      render(<CharacterCard {...defaultProps} />);
 
-    expect(screen.getByText('TestCharacter')).toBeInTheDocument();
+      expect(screen.getByText('TestCharacter')).toBeInTheDocument();
+      expect(screen.getByText('50')).toBeInTheDocument();
+      expect(screen.getByText('Warrior')).toBeInTheDocument();
+      expect(screen.getByText('Titan')).toBeInTheDocument();
+      expect(screen.getByText('Standard')).toBeInTheDocument();
+    });
   });
 
-  it('renders character level', () => {
-    render(<CharacterCard {...defaultProps} />);
+  describe('Click Interactions', () => {
+    it('calls onSelect when card is clicked', async () => {
+      const user = userEvent.setup();
+      const handleSelect = vi.fn();
 
-    expect(screen.getByText('50')).toBeInTheDocument();
+      render(<CharacterCard {...defaultProps} onSelect={handleSelect} />);
+
+      await user.click(screen.getByText('TestCharacter'));
+
+      expect(handleSelect).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call onSelect when interactive is false', async () => {
+      const user = userEvent.setup();
+      const handleSelect = vi.fn();
+
+      render(<CharacterCard {...defaultProps} onSelect={handleSelect} interactive={false} />);
+
+      await user.click(screen.getByText('TestCharacter'));
+
+      expect(handleSelect).not.toHaveBeenCalled();
+    });
   });
 
-  it('renders character class', () => {
-    render(<CharacterCard {...defaultProps} />);
+  describe('Interactive Mode', () => {
+    it('renders action buttons when interactive is true', () => {
+      render(<CharacterCard {...defaultProps} interactive={true} />);
 
-    expect(screen.getByText('Warrior')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    });
+
+    it('does not render action buttons when interactive is false', () => {
+      render(<CharacterCard {...defaultProps} interactive={false} />);
+
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    });
   });
 
-  it('renders character ascendency', () => {
-    render(<CharacterCard {...defaultProps} />);
+  describe('League Mode Indicators', () => {
+    it('renders HC and SSF prefixes when applicable', () => {
+      const specialCharacter = {
+        ...mockCharacter,
+        hardcore: true,
+        solo_self_found: true,
+      };
 
-    expect(screen.getByText('Titan')).toBeInTheDocument();
-  });
+      render(<CharacterCard {...defaultProps} character={specialCharacter} />);
 
-  it('renders character league', () => {
-    render(<CharacterCard {...defaultProps} />);
-
-    expect(screen.getByText('Standard')).toBeInTheDocument();
-  });
-
-  it('calls onSelect when card is clicked', async () => {
-    const user = userEvent.setup();
-    const handleSelect = vi.fn();
-
-    render(<CharacterCard {...defaultProps} onSelect={handleSelect} />);
-
-    await user.click(screen.getByText('TestCharacter'));
-
-    expect(handleSelect).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not call onSelect when interactive is false', async () => {
-    const user = userEvent.setup();
-    const handleSelect = vi.fn();
-
-    render(<CharacterCard {...defaultProps} onSelect={handleSelect} interactive={false} />);
-
-    await user.click(screen.getByText('TestCharacter'));
-
-    expect(handleSelect).not.toHaveBeenCalled();
-  });
-
-  it('renders edit button when interactive', () => {
-    render(<CharacterCard {...defaultProps} interactive={true} />);
-
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
-  });
-
-  it('renders delete button when interactive', () => {
-    render(<CharacterCard {...defaultProps} interactive={true} />);
-
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
-  });
-
-  it('does not render action buttons when interactive is false', () => {
-    render(<CharacterCard {...defaultProps} interactive={false} />);
-
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
-  });
-
-  it('renders HC prefix when hardcore is true', () => {
-    const hardcoreCharacter = {
-      ...mockCharacter,
-      hardcore: true,
-    };
-
-    render(<CharacterCard {...defaultProps} character={hardcoreCharacter} />);
-
-    expect(screen.getByText(/HC/)).toBeInTheDocument();
-  });
-
-  it('renders SSF prefix when solo_self_found is true', () => {
-    const ssfCharacter = {
-      ...mockCharacter,
-      solo_self_found: true,
-    };
-
-    render(<CharacterCard {...defaultProps} character={ssfCharacter} />);
-
-    expect(screen.getByText(/SSF/)).toBeInTheDocument();
+      expect(screen.getByText(/HC/)).toBeInTheDocument();
+      expect(screen.getByText(/SSF/)).toBeInTheDocument();
+    });
   });
 });

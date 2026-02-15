@@ -104,86 +104,45 @@ describe('CharacterFormModal', () => {
     vi.clearAllMocks();
   });
 
-  describe('Create Mode', () => {
-    it('renders create modal title', () => {
+  describe('Create Mode - Static Rendering', () => {
+    it('renders all form fields and buttons correctly', () => {
       render(<CharacterFormModal {...defaultProps} />);
 
+      // Modal title
       expect(screen.getByRole('heading', { name: 'Create Character' })).toBeInTheDocument();
-    });
 
-    it('renders character name field', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
+      // Form fields
       expect(screen.getByText('Character Name')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Enter character name')).toBeInTheDocument();
-    });
-
-    it('renders class field', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
       expect(screen.getByText('Class')).toBeInTheDocument();
-    });
-
-    it('renders ascendency field', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
       expect(screen.getByText('Ascendency')).toBeInTheDocument();
-    });
-
-    it('renders league field', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
       expect(screen.getByText('League')).toBeInTheDocument();
-    });
 
-    it('renders hardcore checkbox', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
+      // Checkboxes
       expect(screen.getByLabelText('Hardcore')).toBeInTheDocument();
-    });
-
-    it('renders SSF checkbox', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
       expect(screen.getByLabelText('Solo Self-Found (SSF)')).toBeInTheDocument();
-    });
 
-    it('renders create button', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
+      // Buttons
       expect(screen.getByRole('button', { name: 'Create Character' })).toBeInTheDocument();
-    });
-
-    it('renders cancel button', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    });
 
-    it('renders name generator buttons', () => {
-      render(<CharacterFormModal {...defaultProps} />);
-
+      // Name generator buttons
       expect(screen.getByTitle('Generate masculine name')).toBeInTheDocument();
       expect(screen.getByTitle('Generate feminine name')).toBeInTheDocument();
     });
   });
 
-  describe('Edit Mode', () => {
-    it('renders edit modal title', () => {
+  describe('Edit Mode - Static Rendering', () => {
+    it('renders edit modal with pre-filled data and update button', () => {
       render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
 
+      // Modal title
       expect(screen.getByRole('heading', { name: 'Edit Character' })).toBeInTheDocument();
-    });
 
-    it('pre-fills character name', () => {
-      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
-
+      // Pre-filled character name
       expect(screen.getByDisplayValue('TestCharacter')).toBeInTheDocument();
-    });
 
-    it('renders update button', () => {
-      render(<CharacterFormModal {...defaultProps} character={mockCharacter} />);
-
+      // Update button
       expect(screen.getByRole('button', { name: 'Update Character' })).toBeInTheDocument();
     });
   });
@@ -261,15 +220,10 @@ describe('CharacterFormModal', () => {
   });
 
   describe('Loading State', () => {
-    it('shows saving text when loading', () => {
+    it('shows saving text and disables buttons when loading', () => {
       render(<CharacterFormModal {...defaultProps} isLoading={true} />);
 
       expect(screen.getByRole('button', { name: 'Saving...' })).toBeInTheDocument();
-    });
-
-    it('disables buttons when loading', () => {
-      render(<CharacterFormModal {...defaultProps} isLoading={true} />);
-
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Saving...' })).toBeDisabled();
     });

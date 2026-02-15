@@ -27,51 +27,28 @@ import warbringerImage from '../assets/ascendencies/warbringer.jpeg';
 import witchHunterImage from '../assets/ascendencies/witch_hunter.jpeg';
 import type { Ascendency } from '../types/character';
 
-/**
- * Mapping of ascendency names to their corresponding image assets
- * Add new ascendency images here as they become available
- */
 const ASCENDENCY_IMAGES: Record<Ascendency, string | null> = {
-  // Warrior ascendencies
   Titan: titanImage,
   Warbringer: warbringerImage,
   'Smith of Katava': smithOfKatavaImage,
-
-  // Sorceress ascendencies
   Stormweaver: stormweaverImage,
   Chronomancer: chronomancerImage,
-
-  // Ranger ascendencies
   Deadeye: deadeyeImage,
   Pathfinder: pathfinderImage,
-
-  // Huntress ascendencies
   Ritualist: ritualistImage,
   Amazon: amazonImage,
-
-  // Monk ascendencies
   Invoker: invokerImage,
   'Acolyte of Chayula': acolyteImage,
-
-  // Mercenary ascendencies
   'Gemling Legionnaire': gemlingImage,
   Tactitian: tacticianImage,
   Witchhunter: witchHunterImage,
-
-  // Witch ascendencies
   'Blood Mage': bloodMageImage,
   Infernalist: infernalistImage,
   Lich: lichImage,
-
-  // Druid ascendencies
   Shaman: shamanImage,
   Oracle: oracleImage,
 };
 
-/**
- * Get the background image URL for a specific ascendency
- * Returns null if no image is available for the ascendency
- */
 export function getAscendencyImage(ascendency: Ascendency): string | null {
   return ASCENDENCY_IMAGES[ascendency] || null;
 }

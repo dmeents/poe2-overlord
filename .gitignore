@@ -70,3 +70,6 @@ venv/
 *.o
 *.bin
 incremental/
+
+# Tests
+coverage

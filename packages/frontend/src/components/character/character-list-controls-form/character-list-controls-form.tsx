@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
 import type {
   CharacterFilters as CharacterFiltersType,
@@ -49,9 +49,6 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
   onResetSort,
 }: CharacterListControlsFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [availableAscendencies, setAvailableAscendencies] = useState<
-    { value: Ascendency; label: string }[]
-  >([]);
 
   const { leagues, characterClasses, getAscendenciesForClass } = useCharacterConfig();
 
@@ -60,28 +57,13 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
 
   const characterClassOptions = [{ value: 'all', label: 'All Classes' }, ...characterClasses];
 
-  // Update ascendencies when a class is selected
-  useEffect(() => {
+  // Compute available ascendencies based on selected class
+  const availableAscendencies = useMemo(() => {
     if (filters.classes.length > 0) {
-      const ascendencies = getAscendenciesForClass(filters.classes[0] as CharacterClass);
-      setAvailableAscendencies(ascendencies);
-
-      // Clear ascendency filter if current selection is not valid for the new class
-      if (filters.ascendencies.length > 0) {
-        const currentAscendency = filters.ascendencies[0];
-        const isValidAscendency = ascendencies.some(asc => asc.value === currentAscendency);
-        if (!isValidAscendency) {
-          onFilterChange('ascendencies', []);
-        }
-      }
-    } else {
-      setAvailableAscendencies([]);
-      // Clear ascendency filter when no class is selected
-      if (filters.ascendencies.length > 0) {
-        onFilterChange('ascendencies', []);
-      }
+      return getAscendenciesForClass(filters.classes[0] as CharacterClass);
     }
-  }, [filters.classes, getAscendenciesForClass, filters.ascendencies, onFilterChange]);
+    return [];
+  }, [filters.classes, getAscendenciesForClass]);
 
   // Build ascendency options based on selected class
   const ascendencyOptions = [{ value: 'all', label: 'All Ascendencies' }, ...availableAscendencies];
@@ -197,8 +179,20 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                   onChange={(value: string) => {
                     if (value === 'all') {
                       onFilterChange('classes', []);
+                      // Clear ascendency when class is deselected
+                      if (filters.ascendencies.length > 0) {
+                        onFilterChange('ascendencies', []);
+                      }
                     } else {
                       onFilterChange('classes', [value as CharacterClass]);
+                      // Clear ascendency if it's invalid for the new class
+                      if (filters.ascendencies.length > 0) {
+                        const newAscendencies = getAscendenciesForClass(value as CharacterClass);
+                        const isValid = newAscendencies.some(a => a.value === filters.ascendencies[0]);
+                        if (!isValid) {
+                          onFilterChange('ascendencies', []);
+                        }
+                      }
                     }
                   }}
                   options={characterClassOptions}

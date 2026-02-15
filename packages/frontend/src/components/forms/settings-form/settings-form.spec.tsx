@@ -39,229 +39,156 @@ describe('SettingsForm', () => {
     vi.clearAllMocks();
   });
 
-  it('renders loading state initially', async () => {
-    render(<SettingsForm />);
+  describe('Initial Loading and Rendering', () => {
+    it('renders loading state then loads and displays all form fields', async () => {
+      render(<SettingsForm />);
 
-    expect(screen.getByText('Loading configuration...')).toBeInTheDocument();
-    // Wait for async state updates to complete
-    await waitFor(() => {
-      expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
-    });
-  });
+      // Loading state
+      expect(screen.getByText('Loading configuration...')).toBeInTheDocument();
 
-  it('renders form after loading', async () => {
-    render(<SettingsForm />);
+      // Wait for form to load
+      await waitFor(() => {
+        expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
+      });
 
-    await waitFor(() => {
-      expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
-    });
-  });
-
-  it('renders log level field', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
+      // All form fields should be present
       expect(screen.getByText('Log Level')).toBeInTheDocument();
-    });
-  });
-
-  it('renders zone refresh interval field', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
       expect(screen.getByText('Zone Refresh Interval')).toBeInTheDocument();
-    });
-  });
 
-  it('renders save button', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
+      // All buttons should be present
       expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
-    });
-  });
-
-  it('renders reset button', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
-    });
-  });
-
-  it('renders reload button', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
-    });
-  });
 
-  it('loads config on mount', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
+      // Config should be loaded
       expect(mockGetConfig).toHaveBeenCalled();
-    });
-  });
-
-  it('loads zone refresh options on mount', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
       expect(mockGetZoneRefreshIntervalOptions).toHaveBeenCalled();
-    });
-  });
 
-  it('saves config when save button is clicked', async () => {
-    const user = userEvent.setup();
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
-
-    await waitFor(() => {
-      expect(mockUpdateConfig).toHaveBeenCalled();
-    });
-  });
-
-  it('shows success message after save', async () => {
-    const user = userEvent.setup();
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Configuration saved successfully!')).toBeInTheDocument();
-    });
-  });
-
-  it('calls onConfigUpdate callback after save', async () => {
-    const user = userEvent.setup();
-    const handleConfigUpdate = vi.fn();
-
-    render(<SettingsForm onConfigUpdate={handleConfigUpdate} />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
-
-    await waitFor(() => {
-      expect(handleConfigUpdate).toHaveBeenCalled();
-    });
-  });
-
-  it('resets config when reset button is clicked', async () => {
-    const user = userEvent.setup();
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
-
-    await waitFor(() => {
-      expect(mockResetConfigToDefaults).toHaveBeenCalled();
-    });
-  });
-
-  it('shows success message after reset', async () => {
-    const user = userEvent.setup();
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Configuration reset to defaults!')).toBeInTheDocument();
-    });
-  });
-
-  it('reloads config when reload button is clicked', async () => {
-    const user = userEvent.setup();
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
-    });
-
-    // Clear initial call
-    mockGetConfig.mockClear();
-
-    await user.click(screen.getByRole('button', { name: 'Reload' }));
-
-    await waitFor(() => {
-      expect(mockGetConfig).toHaveBeenCalled();
-    });
-  });
-
-  it('shows error when config fails to load', async () => {
-    mockGetConfig.mockRejectedValueOnce(new Error('Network error'));
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Failed to load configuration: Network error')).toBeInTheDocument();
-    });
-  });
-
-  it('shows error when save fails', async () => {
-    const user = userEvent.setup();
-    mockUpdateConfig.mockRejectedValueOnce(new Error('Save failed'));
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Failed to save configuration: Save failed')).toBeInTheDocument();
-    });
-  });
-
-  it('shows warning for invalid POE path', async () => {
-    mockGetConfig.mockResolvedValueOnce({
-      poe_client_log_path: 'invalid/path',
-      log_level: 'info',
-      zone_refresh_interval: 'SevenDays',
-    });
-
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/This path doesn't look like a typical POE client log file/),
-      ).toBeInTheDocument();
-    });
-  });
-
-  it('displays correct log level from config', async () => {
-    render(<SettingsForm />);
-
-    await waitFor(() => {
-      // The dropdown should show the current log level
+      // Log level should display correctly
       expect(screen.getByRole('button', { name: /info/i })).toBeInTheDocument();
+    });
+  });
+
+  describe('Save Configuration', () => {
+    it('saves config and shows success message', async () => {
+      const user = userEvent.setup();
+
+      render(<SettingsForm />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
+
+      await waitFor(() => {
+        expect(mockUpdateConfig).toHaveBeenCalled();
+        expect(screen.getByText('Configuration saved successfully!')).toBeInTheDocument();
+      });
+    });
+
+    it('calls onConfigUpdate callback after save', async () => {
+      const user = userEvent.setup();
+      const handleConfigUpdate = vi.fn();
+
+      render(<SettingsForm onConfigUpdate={handleConfigUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
+
+      await waitFor(() => {
+        expect(handleConfigUpdate).toHaveBeenCalled();
+      });
+    });
+
+    it('shows error when save fails', async () => {
+      const user = userEvent.setup();
+      mockUpdateConfig.mockRejectedValueOnce(new Error('Save failed'));
+
+      render(<SettingsForm />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Save Configuration' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to save configuration: Save failed')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Reset Configuration', () => {
+    it('resets config and shows success message', async () => {
+      const user = userEvent.setup();
+
+      render(<SettingsForm />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
+
+      await waitFor(() => {
+        expect(mockResetConfigToDefaults).toHaveBeenCalled();
+        expect(screen.getByText('Configuration reset to defaults!')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Reload Configuration', () => {
+    it('reloads config when reload button is clicked', async () => {
+      const user = userEvent.setup();
+
+      render(<SettingsForm />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+      });
+
+      // Clear initial call
+      mockGetConfig.mockClear();
+
+      await user.click(screen.getByRole('button', { name: 'Reload' }));
+
+      await waitFor(() => {
+        expect(mockGetConfig).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('shows error when config fails to load', async () => {
+      mockGetConfig.mockRejectedValueOnce(new Error('Network error'));
+
+      render(<SettingsForm />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load configuration: Network error')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Validation', () => {
+    it('shows warning for invalid POE path', async () => {
+      mockGetConfig.mockResolvedValueOnce({
+        poe_client_log_path: 'invalid/path',
+        log_level: 'info',
+        zone_refresh_interval: 'SevenDays',
+      });
+
+      render(<SettingsForm />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/This path doesn't look like a typical POE client log file/),
+        ).toBeInTheDocument();
+      });
     });
   });
 });

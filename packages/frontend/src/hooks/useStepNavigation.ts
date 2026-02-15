@@ -23,7 +23,7 @@ export function useStepNavigation({
   const advanceStep = async (nextStepId: string | null) => {
     if (!characterId || !progress || !nextStepId) {
       if (!nextStepId) {
-        console.error('No next step available. Campaign may be completed.');
+        console.warn('No next step available. Campaign may be completed.');
       }
       return;
     }

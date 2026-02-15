@@ -3,20 +3,22 @@ import { describe, expect, it } from 'vitest';
 import { PageLayout } from './page-layout';
 
 describe('PageLayout', () => {
-  it('renders left column content', () => {
-    render(
-      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
-    );
+  describe('Static Rendering', () => {
+    it('renders page layout correctly', () => {
+      const { container } = render(
+        <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
+      );
 
-    expect(screen.getByText('Left Content')).toBeInTheDocument();
-  });
+      // Left column content
+      expect(screen.getByText('Left Content')).toBeInTheDocument();
 
-  it('renders right column content', () => {
-    render(
-      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
-    );
+      // Right column content
+      expect(screen.getByText('Right Content')).toBeInTheDocument();
 
-    expect(screen.getByText('Right Content')).toBeInTheDocument();
+      // Base styling classes
+      expect(container.firstChild).toHaveClass('min-h-screen');
+      expect(container.firstChild).toHaveClass('text-white');
+    });
   });
 
   it('renders children when provided', () => {
@@ -47,14 +49,5 @@ describe('PageLayout', () => {
     );
 
     expect(container.firstChild).toHaveClass('custom-class');
-  });
-
-  it('applies base styling classes', () => {
-    const { container } = render(
-      <PageLayout leftColumn={<div>Left Content</div>} rightColumn={<div>Right Content</div>} />,
-    );
-
-    expect(container.firstChild).toHaveClass('min-h-screen');
-    expect(container.firstChild).toHaveClass('text-white');
   });
 });

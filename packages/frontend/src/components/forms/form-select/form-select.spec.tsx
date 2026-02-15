@@ -11,33 +11,25 @@ const mockOptions = [
 
 describe('Select', () => {
   describe('basic variant', () => {
-    it('renders native select element', () => {
-      render(
-        <Select
-          id="test-select"
-          value=""
-          onChange={vi.fn()}
-          options={mockOptions}
-          variant="basic"
-        />,
-      );
+    describe('Static Rendering', () => {
+      it('renders select correctly', () => {
+        render(
+          <Select
+            id="test-select"
+            value=""
+            onChange={vi.fn()}
+            options={mockOptions}
+            variant="basic"
+          />,
+        );
 
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
-    });
+        // Native select element
+        expect(screen.getByRole('combobox')).toBeInTheDocument();
 
-    it('renders options', () => {
-      render(
-        <Select
-          id="test-select"
-          value=""
-          onChange={vi.fn()}
-          options={mockOptions}
-          variant="basic"
-        />,
-      );
-
-      expect(screen.getByRole('option', { name: 'Option 1' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'Option 2' })).toBeInTheDocument();
+        // Options
+        expect(screen.getByRole('option', { name: 'Option 1' })).toBeInTheDocument();
+        expect(screen.getByRole('option', { name: 'Option 2' })).toBeInTheDocument();
+      });
     });
 
     it('calls onChange when option is selected', async () => {

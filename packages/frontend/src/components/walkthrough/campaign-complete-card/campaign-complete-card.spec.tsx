@@ -9,18 +9,16 @@ describe('CampaignCompleteCard', () => {
     lastUpdated: '2024-01-15T12:00:00Z',
   };
 
-  it('renders the campaign complete title', () => {
-    render(<CampaignCompleteCard {...defaultProps} />);
+  describe('Static Rendering', () => {
+    it('renders campaign complete card information correctly', () => {
+      render(<CampaignCompleteCard {...defaultProps} />);
 
-    expect(screen.getByText('Campaign Conquered')).toBeInTheDocument();
-  });
+      // Title
+      expect(screen.getByText('Campaign Conquered')).toBeInTheDocument();
 
-  it('renders the completion message', () => {
-    render(<CampaignCompleteCard {...defaultProps} />);
-
-    expect(
-      screen.getByText(/Your journey through Wraeclast is complete/),
-    ).toBeInTheDocument();
+      // Completion message
+      expect(screen.getByText(/Your journey through Wraeclast is complete/)).toBeInTheDocument();
+    });
   });
 
   it('formats completion date correctly', () => {

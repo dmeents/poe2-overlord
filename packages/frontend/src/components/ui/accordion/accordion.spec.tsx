@@ -4,44 +4,37 @@ import { describe, expect, it, vi } from 'vitest';
 import { Accordion } from './accordion';
 
 describe('Accordion', () => {
-  it('renders title correctly', () => {
-    render(
-      <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
-        <div>Content</div>
-      </Accordion>,
-    );
+  describe('Static Rendering', () => {
+    it('renders accordion information correctly when collapsed', () => {
+      render(
+        <Accordion title="Test Title" subtitle="Test Subtitle" isExpanded={false} onToggle={vi.fn()}>
+          <div>Content</div>
+        </Accordion>,
+      );
 
-    expect(screen.getByText('Test Title')).toBeInTheDocument();
-  });
+      // Title
+      expect(screen.getByText('Test Title')).toBeInTheDocument();
 
-  it('renders subtitle when provided', () => {
-    render(
-      <Accordion title="Test Title" subtitle="Test Subtitle" isExpanded={false} onToggle={vi.fn()}>
-        <div>Content</div>
-      </Accordion>,
-    );
+      // Subtitle when provided
+      expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
+    });
 
-    expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
-  });
+    it('renders accordion information correctly when expanded', () => {
+      render(
+        <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
+          <div>Expanded Content</div>
+          <div data-testid="child-1">Child 1</div>
+          <div data-testid="child-2">Child 2</div>
+        </Accordion>,
+      );
 
-  it('does not render subtitle when not provided', () => {
-    render(
-      <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
-        <div>Content</div>
-      </Accordion>,
-    );
+      // Content is visible
+      expect(screen.getByText('Expanded Content')).toBeInTheDocument();
 
-    expect(screen.queryByText('Test Subtitle')).not.toBeInTheDocument();
-  });
-
-  it('shows content when expanded', () => {
-    render(
-      <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
-        <div>Expanded Content</div>
-      </Accordion>,
-    );
-
-    expect(screen.getByText('Expanded Content')).toBeInTheDocument();
+      // Complex children are rendered
+      expect(screen.getByTestId('child-1')).toBeInTheDocument();
+      expect(screen.getByTestId('child-2')).toBeInTheDocument();
+    });
   });
 
   it('hides content when collapsed', () => {
@@ -82,76 +75,47 @@ describe('Accordion', () => {
     expect(container.firstChild).toHaveClass('custom-class');
   });
 
-  it('renders complex children when expanded', () => {
-    render(
-      <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
-        <div data-testid="child-1">Child 1</div>
-        <div data-testid="child-2">Child 2</div>
-      </Accordion>,
-    );
-
-    expect(screen.getByTestId('child-1')).toBeInTheDocument();
-    expect(screen.getByTestId('child-2')).toBeInTheDocument();
-  });
-
   describe('Accessibility', () => {
-    it('has proper ARIA attributes when collapsed', () => {
-      render(
-        <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
-          <div>Content</div>
-        </Accordion>,
-      );
-
-      const button = screen.getByRole('button', { name: /test title/i });
-      expect(button).toHaveAttribute('aria-expanded', 'false');
-      expect(button).toHaveAttribute('aria-controls');
-    });
-
-    it('has proper ARIA attributes when expanded', () => {
-      render(
-        <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
-          <div>Content</div>
-        </Accordion>,
-      );
-
-      const button = screen.getByRole('button', { name: /test title/i });
-      expect(button).toHaveAttribute('aria-expanded', 'true');
-      expect(button).toHaveAttribute('aria-controls');
-
-      // Verify the content region exists and is properly labeled
-      const region = screen.getByRole('region', { name: /test title/i });
-      expect(region).toBeInTheDocument();
-      // Content should NOT have aria-hidden when expanded
-      expect(region).not.toHaveAttribute('aria-hidden');
-    });
-
-    it('links button to content panel via aria-controls', () => {
-      render(
-        <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
-          <div>Expanded Content</div>
-        </Accordion>,
-      );
-
-      const button = screen.getByRole('button', { name: /test title/i });
-      const controlsId = button.getAttribute('aria-controls');
-
-      expect(controlsId).toBeTruthy();
-
-      const region = screen.getByRole('region');
-      expect(region).toHaveAttribute('id', controlsId);
-    });
-
-    it('hides decorative icons from screen readers', () => {
+    it('has correct accessibility attributes when collapsed', () => {
       const { container } = render(
         <Accordion title="Test Title" isExpanded={false} onToggle={vi.fn()}>
           <div>Content</div>
         </Accordion>,
       );
 
+      // ARIA attributes
+      const button = screen.getByRole('button', { name: /test title/i });
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(button).toHaveAttribute('aria-controls');
+
+      // Decorative icons hidden from screen readers
       const icons = container.querySelectorAll('svg');
       icons.forEach(icon => {
         expect(icon).toHaveAttribute('aria-hidden', 'true');
       });
+    });
+
+    it('has correct accessibility attributes when expanded', () => {
+      render(
+        <Accordion title="Test Title" isExpanded={true} onToggle={vi.fn()}>
+          <div>Content</div>
+        </Accordion>,
+      );
+
+      // ARIA attributes
+      const button = screen.getByRole('button', { name: /test title/i });
+      expect(button).toHaveAttribute('aria-expanded', 'true');
+      expect(button).toHaveAttribute('aria-controls');
+
+      // Content region exists and is properly labeled
+      const region = screen.getByRole('region', { name: /test title/i });
+      expect(region).toBeInTheDocument();
+      expect(region).not.toHaveAttribute('aria-hidden');
+
+      // Button linked to content panel via aria-controls
+      const controlsId = button.getAttribute('aria-controls');
+      expect(controlsId).toBeTruthy();
+      expect(region).toHaveAttribute('id', controlsId);
     });
 
     it('uses unique IDs for multiple accordions', () => {

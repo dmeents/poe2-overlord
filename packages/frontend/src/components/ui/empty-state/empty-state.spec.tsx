@@ -3,40 +3,25 @@ import { describe, expect, it } from 'vitest';
 import { EmptyState } from './empty-state';
 
 describe('EmptyState', () => {
-  it('renders icon correctly', () => {
-    render(
-      <EmptyState
-        icon={<span data-testid="test-icon">Icon</span>}
-        title="Test Title"
-        description="Test description"
-      />,
-    );
+  describe('Static Rendering', () => {
+    it('renders empty state information correctly', () => {
+      render(
+        <EmptyState
+          icon={<span data-testid="test-icon">Icon</span>}
+          title="No Items Found"
+          description="There are no items to display"
+        />,
+      );
 
-    expect(screen.getByTestId('test-icon')).toBeInTheDocument();
-  });
+      // Icon
+      expect(screen.getByTestId('test-icon')).toBeInTheDocument();
 
-  it('renders title correctly', () => {
-    render(
-      <EmptyState
-        icon={<span>Icon</span>}
-        title="No Items Found"
-        description="There are no items to display"
-      />,
-    );
+      // Title
+      expect(screen.getByText('No Items Found')).toBeInTheDocument();
 
-    expect(screen.getByText('No Items Found')).toBeInTheDocument();
-  });
-
-  it('renders description correctly', () => {
-    render(
-      <EmptyState
-        icon={<span>Icon</span>}
-        title="No Items Found"
-        description="There are no items to display"
-      />,
-    );
-
-    expect(screen.getByText('There are no items to display')).toBeInTheDocument();
+      // Description
+      expect(screen.getByText('There are no items to display')).toBeInTheDocument();
+    });
   });
 
   it('renders action when provided', () => {

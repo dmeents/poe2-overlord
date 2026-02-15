@@ -59,39 +59,39 @@ describe('DeleteCharacterModal', () => {
     vi.clearAllMocks();
   });
 
-  it('renders modal title', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
+  describe('Static Rendering', () => {
+    it('renders delete character modal information correctly', () => {
+      render(<DeleteCharacterModal {...defaultProps} />);
 
-    // Title is in a heading element
-    expect(screen.getByRole('heading', { name: 'Delete Character' })).toBeInTheDocument();
-  });
+      // Modal title (heading element)
+      expect(screen.getByRole('heading', { name: 'Delete Character' })).toBeInTheDocument();
 
-  it('renders character name in confirmation message', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
+      // Character name in confirmation message
+      expect(screen.getByText('TestCharacter')).toBeInTheDocument();
+      expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
 
-    expect(screen.getByText('TestCharacter')).toBeInTheDocument();
-    expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
-  });
+      // Character class
+      expect(screen.getByText('Warrior')).toBeInTheDocument();
+      expect(screen.getByText('Class:')).toBeInTheDocument();
 
-  it('renders character class', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
+      // Character ascendency
+      expect(screen.getByText('Titan')).toBeInTheDocument();
+      expect(screen.getByText('Ascendency:')).toBeInTheDocument();
 
-    expect(screen.getByText('Warrior')).toBeInTheDocument();
-    expect(screen.getByText('Class:')).toBeInTheDocument();
-  });
+      // Character league
+      expect(screen.getByText('Standard')).toBeInTheDocument();
+      expect(screen.getByText('League:')).toBeInTheDocument();
 
-  it('renders character ascendency', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
+      // Warning message
+      expect(screen.getByText('Warning:')).toBeInTheDocument();
+      expect(screen.getByText(/This action cannot be undone/)).toBeInTheDocument();
 
-    expect(screen.getByText('Titan')).toBeInTheDocument();
-    expect(screen.getByText('Ascendency:')).toBeInTheDocument();
-  });
+      // Cancel button
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 
-  it('renders character league', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
-
-    expect(screen.getByText('Standard')).toBeInTheDocument();
-    expect(screen.getByText('League:')).toBeInTheDocument();
+      // Delete button
+      expect(screen.getByRole('button', { name: 'Delete Character' })).toBeInTheDocument();
+    });
   });
 
   it('renders SSF prefix when solo_self_found is true', () => {
@@ -114,25 +114,6 @@ describe('DeleteCharacterModal', () => {
     render(<DeleteCharacterModal {...defaultProps} character={hardcoreCharacter} />);
 
     expect(screen.getByText(/HC/)).toBeInTheDocument();
-  });
-
-  it('renders warning message', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
-
-    expect(screen.getByText('Warning:')).toBeInTheDocument();
-    expect(screen.getByText(/This action cannot be undone/)).toBeInTheDocument();
-  });
-
-  it('renders cancel button', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
-
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-  });
-
-  it('renders delete button', () => {
-    render(<DeleteCharacterModal {...defaultProps} />);
-
-    expect(screen.getByRole('button', { name: 'Delete Character' })).toBeInTheDocument();
   });
 
   it('calls onConfirm when delete button is clicked', async () => {

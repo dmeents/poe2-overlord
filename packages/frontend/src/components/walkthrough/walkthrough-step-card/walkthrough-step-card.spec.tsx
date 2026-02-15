@@ -68,54 +68,36 @@ describe('WalkthroughStepCard', () => {
   });
 
   describe('preview variant', () => {
-    it('renders step title', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
+    describe('Static Rendering', () => {
+      it('renders walkthrough step information correctly', () => {
+        render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
 
-      expect(screen.getByText('First Steps')).toBeInTheDocument();
-    });
+        // Step title
+        expect(screen.getByText('First Steps')).toBeInTheDocument();
 
-    it('renders current zone as subtitle', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
+        // Current zone as subtitle
+        expect(screen.getByText('Twilight Strand')).toBeInTheDocument();
 
-      expect(screen.getByText('Twilight Strand')).toBeInTheDocument();
-    });
+        // Completion zone
+        expect(screen.getByText('The Coast')).toBeInTheDocument();
 
-    it('renders completion zone', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
+        // Step description
+        expect(screen.getByText(/Begin your journey by heading to the beach/)).toBeInTheDocument();
 
-      expect(screen.getByText('The Coast')).toBeInTheDocument();
-    });
+        // Objectives
+        expect(screen.getByText(/Talk to the NPC/)).toBeInTheDocument();
+        expect(screen.getByText(/Kill the boss/)).toBeInTheDocument();
+        expect(screen.getByText('Objectives (2):')).toBeInTheDocument();
 
-    it('renders step description', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
+        // Objective details
+        expect(screen.getByText(/Find the NPC near the entrance/)).toBeInTheDocument();
 
-      expect(screen.getByText(/Begin your journey by heading to the beach/)).toBeInTheDocument();
-    });
+        // Objective notes
+        expect(screen.getByText(/Important quest reward/)).toBeInTheDocument();
 
-    it('renders objectives', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
-
-      expect(screen.getByText(/Talk to the NPC/)).toBeInTheDocument();
-      expect(screen.getByText(/Kill the boss/)).toBeInTheDocument();
-      expect(screen.getByText('Objectives (2):')).toBeInTheDocument();
-    });
-
-    it('renders objective details', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
-
-      expect(screen.getByText(/Find the NPC near the entrance/)).toBeInTheDocument();
-    });
-
-    it('renders objective notes', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
-
-      expect(screen.getByText(/Important quest reward/)).toBeInTheDocument();
-    });
-
-    it('renders objective rewards', () => {
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
-
-      expect(screen.getByText(/Skill Gem/)).toBeInTheDocument();
+        // Objective rewards
+        expect(screen.getByText(/Skill Gem/)).toBeInTheDocument();
+      });
     });
 
     it('opens zone when completion zone is clicked', async () => {

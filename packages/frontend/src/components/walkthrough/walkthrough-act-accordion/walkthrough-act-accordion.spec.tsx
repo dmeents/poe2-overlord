@@ -76,16 +76,16 @@ describe('WalkthroughActAccordion', () => {
     vi.clearAllMocks();
   });
 
-  it('renders act name', () => {
-    render(<WalkthroughActAccordion {...defaultProps} />);
+  describe('Static Rendering', () => {
+    it('renders walkthrough act accordion information correctly', () => {
+      render(<WalkthroughActAccordion {...defaultProps} />);
 
-    expect(screen.getByText('Act 1')).toBeInTheDocument();
-  });
+      // Act name
+      expect(screen.getByText('Act 1')).toBeInTheDocument();
 
-  it('renders step count subtitle', () => {
-    render(<WalkthroughActAccordion {...defaultProps} />);
-
-    expect(screen.getByText('2 steps')).toBeInTheDocument();
+      // Step count subtitle
+      expect(screen.getByText('2 steps')).toBeInTheDocument();
+    });
   });
 
   it('renders all steps when expanded', () => {

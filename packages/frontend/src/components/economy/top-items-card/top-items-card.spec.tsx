@@ -28,8 +28,8 @@ describe('TopItemsCard', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('renders card with title', () => {
+  describe('Static Rendering', () => {
+    it('renders top items card information correctly', () => {
       mockUseEconomy.mockReturnValue({
         aggregatedTopCurrencies: [createMockTopCurrency()],
         isLoadingAggregated: false,
@@ -37,17 +37,10 @@ describe('TopItemsCard', () => {
 
       render(<TopItemsCard />);
 
+      // Card title
       expect(screen.getByText('Top Items')).toBeInTheDocument();
-    });
 
-    it('renders currency name', () => {
-      mockUseEconomy.mockReturnValue({
-        aggregatedTopCurrencies: [createMockTopCurrency()],
-        isLoadingAggregated: false,
-      });
-
-      render(<TopItemsCard />);
-
+      // Currency name
       expect(screen.getByText('Divine Orb')).toBeInTheDocument();
     });
 

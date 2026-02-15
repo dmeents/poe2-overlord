@@ -4,10 +4,26 @@ import { describe, expect, it, vi } from 'vitest';
 import { Button } from './button';
 
 describe('Button', () => {
-  it('renders children correctly', () => {
-    render(<Button>Click me</Button>);
+  describe('Static Rendering', () => {
+    it('renders button information correctly', () => {
+      render(
+        <Button id="test-id" title="test title">
+          Click me
+        </Button>,
+      );
 
-    expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
+      const button = screen.getByRole('button', { name: 'Click me' });
+
+      // Children
+      expect(button).toBeInTheDocument();
+
+      // Defaults to type="button"
+      expect(button).toHaveAttribute('type', 'button');
+
+      // id and title attributes
+      expect(button).toHaveAttribute('id', 'test-id');
+      expect(button).toHaveAttribute('title', 'test title');
+    });
   });
 
   it('calls onClick when clicked', async () => {
@@ -42,12 +58,6 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toBeDisabled();
   });
 
-  it('defaults to type="button"', () => {
-    render(<Button>Click me</Button>);
-
-    expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
-  });
-
   it('accepts custom type prop', () => {
     render(<Button type="submit">Submit</Button>);
 
@@ -60,40 +70,24 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveClass('custom-class');
   });
 
-  it('applies id and title attributes', () => {
-    render(
-      <Button id="test-id" title="test title">
-        Click me
-      </Button>,
-    );
-
-    const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('id', 'test-id');
-    expect(button).toHaveAttribute('title', 'test title');
-  });
-
   describe('loading state', () => {
-    it('shows loading spinner when loading is true', () => {
+    it('renders loading state correctly', () => {
       render(<Button loading>Click me</Button>);
 
-      // The spinner should be visible (svg with animate-spin class)
       const button = screen.getByRole('button');
+
+      // Loading spinner visible (svg with animate-spin class)
       const spinner = button.querySelector('svg.animate-spin');
       expect(spinner).toBeInTheDocument();
-    });
 
-    it('hides loading spinner when loading is false', () => {
-      render(<Button loading={false}>Click me</Button>);
+      // Disabled when loading
+      expect(button).toBeDisabled();
 
-      const button = screen.getByRole('button');
-      const spinner = button.querySelector('svg.animate-spin');
-      expect(spinner).not.toBeInTheDocument();
-    });
+      // aria-busy attribute set
+      expect(button).toHaveAttribute('aria-busy', 'true');
 
-    it('is disabled when loading', () => {
-      render(<Button loading>Click me</Button>);
-
-      expect(screen.getByRole('button')).toBeDisabled();
+      // cursor-wait class applied
+      expect(button).toHaveClass('cursor-wait');
     });
 
     it('does not call onClick when loading', async () => {
@@ -111,22 +105,18 @@ describe('Button', () => {
       expect(handleClick).not.toHaveBeenCalled();
     });
 
-    it('sets aria-busy when loading', () => {
-      render(<Button loading>Click me</Button>);
+    it('hides loading spinner when loading is false', () => {
+      render(<Button loading={false}>Click me</Button>);
 
-      expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'true');
+      const button = screen.getByRole('button');
+      const spinner = button.querySelector('svg.animate-spin');
+      expect(spinner).not.toBeInTheDocument();
     });
 
     it('does not set aria-busy when not loading', () => {
       render(<Button>Click me</Button>);
 
       expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'false');
-    });
-
-    it('applies cursor-wait class when loading', () => {
-      render(<Button loading>Click me</Button>);
-
-      expect(screen.getByRole('button')).toHaveClass('cursor-wait');
     });
   });
 });

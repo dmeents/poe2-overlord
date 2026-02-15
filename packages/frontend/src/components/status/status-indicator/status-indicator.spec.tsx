@@ -3,16 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { StatusIndicator } from './status-indicator';
 
 describe('StatusIndicator', () => {
-  it('renders icon correctly', () => {
-    render(<StatusIndicator status="success" icon={<span data-testid="test-icon">Icon</span>} />);
+  describe('Static Rendering', () => {
+    it('renders status indicator correctly', () => {
+      const { container } = render(
+        <StatusIndicator status="success" icon={<span data-testid="test-icon">Icon</span>} />,
+      );
 
-    expect(screen.getByTestId('test-icon')).toBeInTheDocument();
-  });
+      // Icon
+      expect(screen.getByTestId('test-icon')).toBeInTheDocument();
 
-  it('renders success status', () => {
-    const { container } = render(<StatusIndicator status="success" icon={<span>Icon</span>} />);
-
-    expect(container.firstChild).toBeInTheDocument();
+      // Component renders
+      expect(container.firstChild).toBeInTheDocument();
+    });
   });
 
   it('renders warning status', () => {
@@ -45,12 +47,6 @@ describe('StatusIndicator', () => {
     const { container } = render(
       <StatusIndicator status="success" icon={<span>Icon</span>} size="sm" />,
     );
-
-    expect(container.firstChild).toBeInTheDocument();
-  });
-
-  it('renders with medium size by default', () => {
-    const { container } = render(<StatusIndicator status="success" icon={<span>Icon</span>} />);
 
     expect(container.firstChild).toBeInTheDocument();
   });

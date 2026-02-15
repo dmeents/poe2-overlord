@@ -42,40 +42,30 @@ describe('ZoneCard', () => {
     vi.clearAllMocks();
   });
 
-  it('renders zone name', () => {
-    render(<ZoneCard zone={mockZone} />);
+  describe('Static Rendering', () => {
+    it('renders zone information correctly', () => {
+      const { container } = render(<ZoneCard zone={mockZone} />);
 
-    expect(screen.getByText('The Coast')).toBeInTheDocument();
-  });
+      // Zone name
+      expect(screen.getByText('The Coast')).toBeInTheDocument();
 
-  it('renders visit count', () => {
-    render(<ZoneCard zone={mockZone} />);
+      // Visit count
+      expect(screen.getByText('5')).toBeInTheDocument();
 
-    expect(screen.getByText('5')).toBeInTheDocument();
-  });
+      // Death count and area level (both have value 2)
+      const elements = screen.getAllByText('2');
+      expect(elements.length).toBe(2);
 
-  it('renders death count', () => {
-    render(<ZoneCard zone={mockZone} />);
+      // Act display
+      expect(screen.getByText('Act 1')).toBeInTheDocument();
 
-    // Both death count (2) and area level (2) have value 2
-    const elements = screen.getAllByText('2');
-    expect(elements.length).toBeGreaterThan(0);
-  });
+      // Duration (3600 seconds = 1h 0m)
+      expect(screen.getByText(/1h 0m/)).toBeInTheDocument();
 
-  it('renders area level', () => {
-    render(<ZoneCard zone={mockZone} />);
-
-    // area_level is 2, deaths is also 2
-    const elements = screen.getAllByText('2');
-    expect(elements.length).toBe(2);
-  });
-
-  it('renders waypoint icon when has_waypoint is true', () => {
-    const { container } = render(<ZoneCard zone={mockZone} />);
-
-    // MapIcon should be present
-    const svgs = container.querySelectorAll('svg');
-    expect(svgs.length).toBeGreaterThan(0);
+      // Waypoint icon (MapIcon should be present)
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBeGreaterThan(0);
+    });
   });
 
   it('does not render waypoint icon when has_waypoint is false', () => {
@@ -157,13 +147,6 @@ describe('ZoneCard', () => {
     expect(div.className).toContain('bg-stone-900/60');
   });
 
-  it('renders act display', () => {
-    render(<ZoneCard zone={mockZone} />);
-
-    // Act should be displayed with "Act" prefix for consistency
-    expect(screen.getByText('Act 1')).toBeInTheDocument();
-  });
-
   it('does not render area level when undefined', () => {
     const noLevelZone = {
       ...mockZone,
@@ -174,12 +157,5 @@ describe('ZoneCard', () => {
 
     // 2 was the area level, should not appear as a level now
     // We can't easily check this without more specific selectors
-  });
-
-  it('renders duration using TimeDisplay', () => {
-    render(<ZoneCard zone={mockZone} />);
-
-    // 3600 seconds = 1 hour = "1h 0m" format
-    expect(screen.getByText(/1h 0m/)).toBeInTheDocument();
   });
 });

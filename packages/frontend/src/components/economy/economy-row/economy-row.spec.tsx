@@ -64,29 +64,30 @@ describe('EconomyRow', () => {
     });
   });
 
-  it('renders currency name', () => {
-    render(<EconomyRow currency={mockCurrency} />);
+  describe('Static Rendering', () => {
+    it('renders economy row information correctly', () => {
+      const { container } = render(<EconomyRow currency={mockCurrency} />);
 
-    expect(screen.getByText('Test Currency')).toBeInTheDocument();
-  });
+      // Currency name
+      expect(screen.getByText('Test Currency')).toBeInTheDocument();
 
-  it('renders currency image', () => {
-    render(<EconomyRow currency={mockCurrency} />);
+      // Currency image
+      const images = screen.getAllByAltText('Test Currency');
+      expect(images.length).toBeGreaterThan(0);
 
-    const images = screen.getAllByAltText('Test Currency');
-    expect(images.length).toBeGreaterThan(0);
-  });
+      // Formatted display value
+      expect(screen.getByText('10.5')).toBeInTheDocument();
 
-  it('renders formatted display value', () => {
-    render(<EconomyRow currency={mockCurrency} />);
+      // Change percent with positive indicator
+      expect(screen.getByText('+5.25%')).toBeInTheDocument();
 
-    expect(screen.getByText('10.5')).toBeInTheDocument();
-  });
+      // Items sold per hour (volume / primary_value = 1000 / 10.5 = 95.24)
+      expect(screen.getByText('95.24 / hr')).toBeInTheDocument();
 
-  it('renders change percent with positive indicator', () => {
-    render(<EconomyRow currency={mockCurrency} />);
-
-    expect(screen.getByText('+5.25%')).toBeInTheDocument();
+      // No cursor-pointer when onClick not provided
+      const row = container.firstChild as HTMLElement;
+      expect(row.className).not.toContain('cursor-pointer');
+    });
   });
 
   it('renders change percent with negative indicator', () => {
@@ -111,25 +112,11 @@ describe('EconomyRow', () => {
     expect(handleClick).toHaveBeenCalledWith(mockCurrency);
   });
 
-  it('does not render click handler when onClick is not provided', () => {
-    const { container } = render(<EconomyRow currency={mockCurrency} />);
-
-    const row = container.firstChild as HTMLElement;
-    expect(row.className).not.toContain('cursor-pointer');
-  });
-
   it('renders cursor-pointer when onClick is provided', () => {
     const { container } = render(<EconomyRow currency={mockCurrency} onClick={vi.fn()} />);
 
     const row = container.firstChild as HTMLElement;
     expect(row.className).toContain('cursor-pointer');
-  });
-
-  it('renders items sold per hour when volume is available', () => {
-    render(<EconomyRow currency={mockCurrency} />);
-
-    // volume (1000) / primary_value (10.5) = 95.24
-    expect(screen.getByText('95.24 / hr')).toBeInTheDocument();
   });
 
   it('does not render items sold per hour when volume is null', () => {

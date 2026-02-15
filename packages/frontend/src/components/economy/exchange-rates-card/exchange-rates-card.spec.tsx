@@ -35,8 +35,8 @@ describe('ExchangeRatesCard', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('renders card with title', () => {
+  describe('Static Rendering', () => {
+    it('renders exchange rates card information correctly', () => {
       mockUseEconomy.mockReturnValue({
         currencyData: createMockCurrencyData(),
         isLoading: false,
@@ -44,29 +44,14 @@ describe('ExchangeRatesCard', () => {
 
       render(<ExchangeRatesCard />);
 
+      // Card title
       expect(screen.getByText('Exchange Rates')).toBeInTheDocument();
-    });
 
-    it('renders primary currency', () => {
-      mockUseEconomy.mockReturnValue({
-        currencyData: createMockCurrencyData(),
-        isLoading: false,
-      });
-
-      render(<ExchangeRatesCard />);
-
+      // Primary currency
       expect(screen.getByText('Divine Orb')).toBeInTheDocument();
       expect(screen.getByText('1')).toBeInTheDocument();
-    });
 
-    it('renders secondary currency with rate', () => {
-      mockUseEconomy.mockReturnValue({
-        currencyData: createMockCurrencyData(),
-        isLoading: false,
-      });
-
-      render(<ExchangeRatesCard />);
-
+      // Secondary currency with rate
       expect(screen.getByText('Chaos Orb')).toBeInTheDocument();
       expect(screen.getByText('100.50')).toBeInTheDocument();
     });

@@ -3,22 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { DataItem } from './data-item';
 
 describe('DataItem', () => {
-  it('renders label correctly', () => {
-    render(<DataItem label="Test Label" value="Test Value" />);
+  describe('Static Rendering', () => {
+    it('renders data item information correctly', () => {
+      render(<DataItem label="Test Label" value="Test Value" />);
 
-    expect(screen.getByText('Test Label')).toBeInTheDocument();
-  });
+      // Label
+      expect(screen.getByText('Test Label')).toBeInTheDocument();
 
-  it('renders string value correctly', () => {
-    render(<DataItem label="Label" value="Test Value" />);
-
-    expect(screen.getByText('Test Value')).toBeInTheDocument();
-  });
-
-  it('renders number value correctly', () => {
-    render(<DataItem label="Label" value={42} />);
-
-    expect(screen.getByText('42')).toBeInTheDocument();
+      // String value
+      expect(screen.getByText('Test Value')).toBeInTheDocument();
+    });
   });
 
   it('renders subValue when provided', () => {

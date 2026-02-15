@@ -33,16 +33,14 @@ const createMockGuide = (numActs = 2, stepsPerAct = 3): WalkthroughGuide => {
 };
 
 describe('CampaignInsights', () => {
-  describe('Rendering', () => {
-    it('renders card with Insights title', () => {
-      render(<CampaignInsights guide={createMockGuide()} />);
-
-      expect(screen.getByText('Insights')).toBeInTheDocument();
-    });
-
-    it('renders total acts count', () => {
+  describe('Static Rendering', () => {
+    it('renders campaign insights information correctly', () => {
       render(<CampaignInsights guide={createMockGuide(2, 3)} />);
 
+      // Card title
+      expect(screen.getByText('Insights')).toBeInTheDocument();
+
+      // Total acts count
       expect(screen.getByText('Total Acts')).toBeInTheDocument();
       expect(screen.getByText('2')).toBeInTheDocument();
     });

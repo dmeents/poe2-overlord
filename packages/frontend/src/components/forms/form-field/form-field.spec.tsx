@@ -3,25 +3,23 @@ import { describe, expect, it } from 'vitest';
 import { FormField } from './form-field';
 
 describe('FormField', () => {
-  it('renders label and children correctly', () => {
-    render(
-      <FormField label="Test Label">
-        <input type="text" data-testid="test-input" />
-      </FormField>,
-    );
+  describe('Static Rendering', () => {
+    it('renders form field information correctly', () => {
+      render(
+        <FormField label="Test Label" description="Test description">
+          <input type="text" data-testid="test-input" />
+        </FormField>,
+      );
 
-    expect(screen.getByText('Test Label')).toBeInTheDocument();
-    expect(screen.getByTestId('test-input')).toBeInTheDocument();
-  });
+      // Label
+      expect(screen.getByText('Test Label')).toBeInTheDocument();
 
-  it('renders description when provided', () => {
-    render(
-      <FormField label="Test Label" description="Test description">
-        <input type="text" />
-      </FormField>,
-    );
+      // Children
+      expect(screen.getByTestId('test-input')).toBeInTheDocument();
 
-    expect(screen.getByText('Test description')).toBeInTheDocument();
+      // Description when provided
+      expect(screen.getByText('Test description')).toBeInTheDocument();
+    });
   });
 
   it('does not render description when not provided', () => {

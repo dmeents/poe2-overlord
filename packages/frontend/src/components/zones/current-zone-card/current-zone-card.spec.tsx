@@ -37,55 +37,28 @@ describe('CurrentZoneCard', () => {
     vi.clearAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('renders card with Active Zone title', () => {
+  describe('Static Rendering', () => {
+    it('renders current zone card information correctly', () => {
       render(<CurrentZoneCard zone={createMockZone()} />);
 
+      // Card title
       expect(screen.getByText('Active Zone')).toBeInTheDocument();
-    });
 
-    it('renders zone name', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
+      // Zone name
       expect(screen.getByText('The Coast')).toBeInTheDocument();
-    });
 
-    it('renders act badge when act is present', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
-      // getDisplayAct returns consistent "Act N" format
+      // Act badge (getDisplayAct returns consistent "Act N" format)
       expect(screen.getByText('Act 1')).toBeInTheDocument();
-    });
 
-    it('renders area level', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
+      // Area level
       expect(screen.getByText('Level 2')).toBeInTheDocument();
-    });
 
-    it('renders view details button', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
+      // View details button
       expect(screen.getByText('View Details →')).toBeInTheDocument();
-    });
-  });
 
-  describe('Stats Display', () => {
-    it('renders time stat box', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
+      // Stats display
       expect(screen.getByText('Time')).toBeInTheDocument();
-    });
-
-    it('renders visits stat box', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
       expect(screen.getByText('Visits')).toBeInTheDocument();
-    });
-
-    it('renders deaths stat box', () => {
-      render(<CurrentZoneCard zone={createMockZone()} />);
-
       expect(screen.getByText('Deaths')).toBeInTheDocument();
     });
   });

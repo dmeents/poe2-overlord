@@ -4,20 +4,18 @@ import { describe, expect, it, vi } from 'vitest';
 import { CheckboxInput } from './form-checkbox-input';
 
 describe('CheckboxInput', () => {
-  it('renders with label', () => {
-    render(
-      <CheckboxInput id="test-checkbox" checked={false} onChange={vi.fn()} label="Test Label" />,
-    );
+  describe('Static Rendering', () => {
+    it('renders checkbox input correctly', () => {
+      render(
+        <CheckboxInput id="test-checkbox" checked={true} onChange={vi.fn()} label="Test Label" />,
+      );
 
-    expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
-  });
+      // Label
+      expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
 
-  it('renders checked state correctly', () => {
-    render(
-      <CheckboxInput id="test-checkbox" checked={true} onChange={vi.fn()} label="Test Label" />,
-    );
-
-    expect(screen.getByRole('checkbox')).toBeChecked();
+      // Checked state
+      expect(screen.getByRole('checkbox')).toBeChecked();
+    });
   });
 
   it('renders unchecked state correctly', () => {

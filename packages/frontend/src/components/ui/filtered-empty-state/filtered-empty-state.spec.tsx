@@ -9,10 +9,23 @@ describe('FilteredEmptyState', () => {
     onClearFilters: vi.fn(),
   };
 
-  it('renders the component', () => {
-    render(<FilteredEmptyState {...defaultProps} />);
+  describe('Static Rendering', () => {
+    it('renders filtered empty state information correctly', () => {
+      const { container } = render(<FilteredEmptyState {...defaultProps} />);
 
-    expect(screen.getByText('No characters found')).toBeInTheDocument();
+      // Message with itemType
+      expect(screen.getByText('No characters found')).toBeInTheDocument();
+
+      // Search icon
+      const icon = container.querySelector('svg');
+      expect(icon).toBeInTheDocument();
+
+      // Clear All Filters button
+      expect(screen.getByRole('button', { name: 'Clear All Filters' })).toBeInTheDocument();
+
+      // Helper text
+      expect(screen.getByText(/Try adjusting your filters or search terms/)).toBeInTheDocument();
+    });
   });
 
   it('displays the correct message with itemType', () => {
@@ -24,19 +37,6 @@ describe('FilteredEmptyState', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the search icon', () => {
-    const { container } = render(<FilteredEmptyState {...defaultProps} />);
-
-    const icon = container.querySelector('svg');
-    expect(icon).toBeInTheDocument();
-  });
-
-  it('renders the Clear All Filters button', () => {
-    render(<FilteredEmptyState {...defaultProps} />);
-
-    expect(screen.getByRole('button', { name: 'Clear All Filters' })).toBeInTheDocument();
-  });
-
   it('calls onClearFilters when button is clicked', async () => {
     const user = userEvent.setup();
     const handleClearFilters = vi.fn();
@@ -46,13 +46,5 @@ describe('FilteredEmptyState', () => {
     await user.click(screen.getByRole('button', { name: 'Clear All Filters' }));
 
     expect(handleClearFilters).toHaveBeenCalledTimes(1);
-  });
-
-  it('displays helper text', () => {
-    render(<FilteredEmptyState {...defaultProps} />);
-
-    expect(
-      screen.getByText(/Try adjusting your filters or search terms/),
-    ).toBeInTheDocument();
   });
 });

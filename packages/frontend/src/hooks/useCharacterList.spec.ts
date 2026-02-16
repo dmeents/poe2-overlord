@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { createMockCharacter } from '../test/mock-data';
+import { createMockCharacter, createMockSummary } from '../test/mock-data';
 import { useCharacterList } from './useCharacterList';
 
 describe('useCharacterList', () => {
@@ -16,7 +16,7 @@ describe('useCharacterList', () => {
       solo_self_found: false,
       created_at: '2024-01-01T00:00:00Z',
       last_played: '2024-01-10T00:00:00Z',
-      summary: { total_play_time: 3600 } as any,
+      summary: createMockSummary({ total_play_time: 3600 }),
     }),
     createMockCharacter({
       id: '2',
@@ -29,7 +29,7 @@ describe('useCharacterList', () => {
       solo_self_found: false,
       created_at: '2024-01-05T00:00:00Z',
       last_played: '2024-01-15T00:00:00Z',
-      summary: { total_play_time: 7200 } as any,
+      summary: createMockSummary({ total_play_time: 7200 }),
     }),
     createMockCharacter({
       id: '3',
@@ -42,7 +42,7 @@ describe('useCharacterList', () => {
       solo_self_found: true,
       created_at: '2024-01-03T00:00:00Z',
       last_played: '2024-01-12T00:00:00Z',
-      summary: { total_play_time: 5400 } as any,
+      summary: createMockSummary({ total_play_time: 5400 }),
     }),
   ];
 

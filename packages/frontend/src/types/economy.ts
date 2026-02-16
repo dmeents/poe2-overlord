@@ -5,6 +5,32 @@
  */
 
 /**
+ * Currency tier levels
+ */
+export type CurrencyTier = 'Primary' | 'Secondary' | 'Tertiary';
+
+/**
+ * Display value with tier and direction info
+ */
+export interface DisplayValue {
+  tier: CurrencyTier;
+  value: number;
+  inverted: boolean;
+  currency_id: string;
+  currency_name: string;
+  currency_image_url: string;
+}
+
+/**
+ * Basic currency information
+ */
+export interface CurrencyInfo {
+  id: string;
+  name: string;
+  image_url: string;
+}
+
+/**
  * Types of economy data available from poe.ninja API
  */
 export type EconomyType =

@@ -4,7 +4,7 @@ import type {
   EnrichedLocationState,
   ZoneStats,
 } from '../types/character';
-import type { CurrencyExchangeRate, DisplayValue } from '../types/economy';
+import type { CurrencyExchangeRate } from '../types/economy';
 import type {
   Objective,
   WalkthroughGuide,
@@ -105,11 +105,13 @@ export function createMockCurrency(
     name: 'Test Currency',
     image_url: 'https://example.com/currency.png',
     display_value: {
+      tier: 'Primary',
       value: 1.5,
-      tier: 'primary',
-      direction: 'receive',
+      inverted: false,
+      currency_id: 'divine-orb',
       currency_name: 'Divine Orb',
-    } as DisplayValue,
+      currency_image_url: 'https://example.com/divine.png',
+    },
     primary_value: 1.5,
     secondary_value: 150,
     tertiary_value: 2,

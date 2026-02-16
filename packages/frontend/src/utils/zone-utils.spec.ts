@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockLocation, createMockZone } from '../test/mock-data';
 import { createPlaceholderZone, getDisplayAct } from './zone-utils';
 

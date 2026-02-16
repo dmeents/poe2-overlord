@@ -112,7 +112,9 @@ describe('ParsedText', () => {
     const handleWikiClick = vi.fn();
     const handleContainerClick = vi.fn();
 
-    const { container } = render(
+    render(
+      // biome-ignore lint/a11y/useKeyWithClickEvents: Test wrapper only
+      // biome-ignore lint/a11y/noStaticElementInteractions: Test wrapper only
       <div onClick={handleContainerClick}>
         <ParsedText text="Defeat Tukohama" wikiItems={['Tukohama']} onWikiClick={handleWikiClick} />
       </div>,

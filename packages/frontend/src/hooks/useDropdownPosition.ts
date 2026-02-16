@@ -14,8 +14,8 @@ interface UseDropdownPositionOptions {
 }
 
 interface UseDropdownPositionReturn {
-  dropdownRef: RefObject<HTMLDivElement>;
-  triggerRef: RefObject<HTMLElement>;
+  dropdownRef: RefObject<HTMLDivElement | null>;
+  triggerRef: RefObject<HTMLElement | null>;
   dropdownPosition: DropdownPosition;
 }
 

@@ -31,8 +31,8 @@ describe('useAppEventListener', () => {
 
   it('registers event listeners on mount', async () => {
     const listeners = [
-      { eventType: 'character:created' as const, handler: mockHandler },
-      { eventType: 'character:updated' as const, handler: mockHandler },
+      { eventType: 'CharacterUpdated' as const, handler: mockHandler },
+      { eventType: 'CharacterDeleted' as const, handler: mockHandler },
     ];
 
     renderHook(() => useAppEventListener(listeners));
@@ -44,7 +44,7 @@ describe('useAppEventListener', () => {
   });
 
   it('sets isListening to true after successful setup', async () => {
-    const listeners = [{ eventType: 'character:created' as const, handler: mockHandler }];
+    const listeners = [{ eventType: 'CharacterUpdated' as const, handler: mockHandler }];
 
     const { result } = renderHook(() => useAppEventListener(listeners));
 
@@ -55,8 +55,8 @@ describe('useAppEventListener', () => {
 
   it('registers multiple listeners simultaneously', async () => {
     const listeners = [
-      { eventType: 'character:created' as const, handler: mockHandler },
-      { eventType: 'character:updated' as const, handler: mockHandler },
+      { eventType: 'CharacterUpdated' as const, handler: mockHandler },
+      { eventType: 'CharacterDeleted' as const, handler: mockHandler },
     ];
 
     renderHook(() => useAppEventListener(listeners));
@@ -64,11 +64,11 @@ describe('useAppEventListener', () => {
     await waitFor(() => {
       expect(eventListener.listenToAppEvent).toHaveBeenCalledTimes(2);
       expect(eventListener.listenToAppEvent).toHaveBeenCalledWith(
-        'character:created',
+        'CharacterUpdated',
         expect.any(Function),
       );
       expect(eventListener.listenToAppEvent).toHaveBeenCalledWith(
-        'character:updated',
+        'CharacterDeleted',
         expect.any(Function),
       );
     });
@@ -82,7 +82,7 @@ describe('useAppEventListener', () => {
   });
 
   it('re-registers listeners when deps change', async () => {
-    const listeners = [{ eventType: 'character:created' as const, handler: mockHandler }];
+    const listeners = [{ eventType: 'CharacterUpdated' as const, handler: mockHandler }];
 
     const { rerender } = renderHook(({ deps }) => useAppEventListener(listeners, deps), {
       initialProps: { deps: [1] },
@@ -106,7 +106,7 @@ describe('useAppEventListener', () => {
       new Error('Setup failed'),
     );
 
-    const listeners = [{ eventType: 'character:created' as const, handler: mockHandler }];
+    const listeners = [{ eventType: 'CharacterUpdated' as const, handler: mockHandler }];
 
     const { result } = renderHook(() => useAppEventListener(listeners));
 

@@ -13,12 +13,14 @@ const createMockSummary = (overrides: Partial<CharacterSummary> = {}): Character
   character_id: 'char-1',
   total_play_time: 7200, // 2 hours
   total_hideout_time: 1800, // 30 minutes
+  total_town_time: 0,
   total_zones_visited: 10,
   total_deaths: 5,
   play_time_act1: 3600,
   play_time_act2: 1800,
   play_time_act3: 1000,
   play_time_act4: 500,
+  play_time_act5: 0,
   play_time_interlude: 200,
   play_time_endgame: 100,
   ...overrides,

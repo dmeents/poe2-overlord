@@ -1,9 +1,9 @@
 import { GiftIcon, StarIcon } from '@heroicons/react/24/outline';
-import type { WalkthroughObjective } from '../../../types/walkthrough';
+import type { Objective } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
 
 interface StepObjectiveListProps {
-  objectives: WalkthroughObjective[];
+  objectives: Objective[];
   wikiItems: string[];
   onWikiClick: (itemName: string) => void;
 }

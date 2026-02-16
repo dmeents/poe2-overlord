@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { Macondo, Roboto } from 'next/font/google';
+import { Cinzel, Roboto } from 'next/font/google';
 import './globals.css';
 import { Footer } from '../components/footer/footer.component';
-import { Header } from '../components/navigation/navigation.component';
+import { Navigation } from '../components/navigation/navigation.component';
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -11,8 +11,8 @@ const roboto = Roboto({
   display: 'swap',
 });
 
-const macondo = Macondo({
-  weight: '400',
+const cinzel = Cinzel({
+  weight: ['400', '500', '600', '700', '800', '900'],
   subsets: ['latin'],
   variable: '--font-cursive',
   display: 'swap',
@@ -34,9 +34,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${roboto.variable} ${macondo.variable}`}>
+    <html lang="en" className={`${roboto.variable} ${cinzel.variable}`}>
       <body className="font-sans antialiased text-stone-50 bg-linear-to-br from-stone-900 via-stone-900 to-stone-950">
-        <Header />
+        <Navigation />
         <div>{children}</div>
         <Footer />
       </body>

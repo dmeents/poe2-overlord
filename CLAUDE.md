@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-POE2 Overlord is a game overlay for Path of Exile 2 built with Tauri. It's a monorepo with:
-- **packages/frontend**: React 19 + TypeScript + Vite
-- **packages/backend**: Rust + Tauri 2.8
+POE2 Overlord is a game overlay for Path of Exile 2 built with Tauri, with a marketing website. It's a monorepo with:
+- **packages/theme**: Shared Tailwind v4 design tokens + utilities (consumed by frontend & website)
+- **packages/frontend**: React 19 + TypeScript + Vite (desktop app UI)
+- **packages/backend**: Rust + Tauri 2.8 (desktop app backend)
+- **packages/website**: Next.js 15 (marketing site for downloads & docs)
 
 ## AI Workspace (`.ai/` directory)
 
@@ -38,13 +40,20 @@ POE2 Overlord is a game overlay for Path of Exile 2 built with Tauri. It's a mon
 ## Common Commands
 
 ```bash
-# Development
+# Desktop App Development
 pnpm dev                    # Start Tauri dev mode (frontend + backend)
 pnpm build                  # Production build
 
+# Website Development
+pnpm dev:website            # Start Next.js dev server
+pnpm build:website          # Production build for website
+pnpm start:website          # Start production server
+pnpm lint:website           # Lint website code
+pnpm typecheck:website      # Type check website
+
 # Linting & Formatting
-pnpm lint                   # Run all linters (TypeScript + Rust)
-pnpm format                 # Format all code (Prettier + rustfmt)
+pnpm lint                   # Run all linters (all packages)
+pnpm format                 # Format all code (all packages)
 
 # Testing
 pnpm test                   # Run all tests
@@ -53,6 +62,7 @@ pnpm test:backend:verbose   # Rust tests with output
 pnpm test:backend:watch     # Rust tests in watch mode
 
 # Type Checking
+pnpm typecheck              # Type check all packages
 pnpm check:backend          # Run cargo check
 ```
 
@@ -109,8 +119,29 @@ const result = await invoke<CharacterData>('create_character', { name, class: ch
 
 ## Theming & Styling
 
+### Shared Theme Package
+Design tokens are centralized in `@poe2-overlord/theme` (`packages/theme/src/css/tokens.css`). This package is shared between the desktop app and website for visual consistency.
+
+**Package structure:**
+- `src/css/tokens.css` - Tailwind v4 `@theme` block with all colors, shadows, spacing
+- `src/cn.ts` - `cn()` utility for merging Tailwind classes
+- `src/theme-utils.ts` - `getThemeHexColor()` for reading CSS variable values
+- `src/index.ts` - Barrel exports
+
+**Usage in packages:**
+```css
+/* In globals.css */
+@import "tailwindcss";
+@import "@poe2-overlord/theme/tokens.css";
+```
+
+```tsx
+/* In TypeScript files */
+import { cn, getThemeHexColor } from '@poe2-overlord/theme';
+```
+
 ### Design Tokens
-All design tokens are defined in `packages/frontend/src/globals.css` under the `@theme` block. This is the **single source of truth** for colors, shadows, and spacing.
+All design tokens (colors, shadows, spacing) are defined in the shared theme package. This is the **single source of truth**.
 
 **Never hardcode values in components.** Use Tailwind classes that reference these tokens:
 ```tsx

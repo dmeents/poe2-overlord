@@ -1,7 +1,7 @@
-use std::sync::Arc;
 use crate::domain::walkthrough::models::{CharacterWalkthroughProgress, WalkthroughGuide};
 use crate::domain::walkthrough::traits::WalkthroughService;
 use crate::{to_command_result, CommandResult};
+use std::sync::Arc;
 use tauri::State;
 
 /// Tauri command to get the complete walkthrough guide

@@ -1,4 +1,4 @@
-import { getThemeHexColor } from './theme-utils';
+import { getThemeHexColor } from '@poe2-overlord/theme';
 
 const ACT_TO_THEME: Record<string, string> = {
   'Act 1': 'verdant',

@@ -50,3 +50,8 @@ incremental/
 
 # Tests
 coverage
+
+# Next.js
+.next/
+out/
+.vercel

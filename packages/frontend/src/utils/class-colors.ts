@@ -1,5 +1,5 @@
+import { getThemeHexColor } from '@poe2-overlord/theme';
 import type { CharacterClass } from '../types/character';
-import { getThemeHexColor } from './theme-utils';
 
 const CLASS_TO_THEME: Record<CharacterClass, string> = {
   Warrior: 'blood',

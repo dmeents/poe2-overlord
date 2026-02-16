@@ -1,5 +1,5 @@
+import { cn } from '@poe2-overlord/theme';
 import type React from 'react';
-import { cn } from '@/utils/tailwind';
 import { buttonStyles } from './button.styles';
 
 interface ButtonProps {

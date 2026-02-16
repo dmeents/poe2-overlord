@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@poe2-overlord/theme/tokens.css";
+
+/* Website-specific styles */
+/* No WebKitGTK constraints - standard box-shadow and backdrop-filter work fine */
+
+html,
+body {
+  background-color: #0c0a09;
+  color: #fafaf9;
+}

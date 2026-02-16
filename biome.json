@@ -17,7 +17,8 @@
       "!**/routeTree.gen.ts",
       "!**/.ai",
       "!**/.claude",
-      "!**/CLAUDE.md"
+      "!**/CLAUDE.md",
+      "!**/.next"
     ]
   },
   "formatter": {

@@ -1,0 +1,112 @@
+@theme {
+  --font-sans: "Roboto", sans-serif;
+  --font-cursive: "Macondo", cursive;
+
+  /* Ember - primary accent */
+  --color-ember-50: #fff7ed;
+  --color-ember-100: #ffedd5;
+  --color-ember-200: #fed7aa;
+  --color-ember-300: #fdba74;
+  --color-ember-400: #fb923c;
+  --color-ember-500: #f97316;
+  --color-ember-600: #ea580c;
+  --color-ember-700: #c2410c;
+  --color-ember-800: #9a3412;
+  --color-ember-900: #7c2d12;
+  --color-ember-950: #431407;
+
+  /* Molten - secondary accent */
+  --color-molten-50: #fffbeb;
+  --color-molten-100: #fef3c7;
+  --color-molten-200: #fde68a;
+  --color-molten-300: #fcd34d;
+  --color-molten-400: #fbbf24;
+  --color-molten-500: #d4a437;
+  --color-molten-600: #b8942a;
+  --color-molten-700: #92400e;
+  --color-molten-800: #78350f;
+  --color-molten-900: #451a03;
+  --color-molten-950: #271004;
+
+  /* Blood - danger states, Warrior class */
+  --color-blood-50: #fef2f2;
+  --color-blood-100: #fee2e2;
+  --color-blood-200: #fecaca;
+  --color-blood-300: #fca5a5;
+  --color-blood-400: #f87171;
+  --color-blood-500: #dc2626;
+  --color-blood-600: #b91c1c;
+  --color-blood-700: #8b0000;
+  --color-blood-800: #6b0000;
+  --color-blood-900: #450a0a;
+  --color-blood-950: #2a0505;
+
+  /* Arcane - Sorceress */
+  --color-arcane-400: #7c9fd4;
+  --color-arcane-500: #5b82c2;
+  --color-arcane-600: #4567a0;
+
+  /* Verdant - Ranger */
+  --color-verdant-400: #6db578;
+  --color-verdant-500: #4a9958;
+  --color-verdant-600: #367a42;
+
+  /* Spirit - Monk */
+  --color-spirit-400: #a78bdb;
+  --color-spirit-500: #8b6bc4;
+  --color-spirit-600: #6f4fa8;
+
+  /* Hex - Witch */
+  --color-hex-400: #d17eb5;
+  --color-hex-500: #b85c98;
+  --color-hex-600: #974279;
+
+  /* Primal - Druid */
+  --color-primal-400: #5eb8a8;
+  --color-primal-500: #3d9989;
+  --color-primal-600: #2d7a6c;
+
+  /* Bone - muted text */
+  --color-bone-50: #fdfcfb;
+  --color-bone-100: #e8dcc8;
+  --color-bone-200: #d4c5b5;
+  --color-bone-300: #c0aea2;
+  --color-bone-400: #a89888;
+  --color-bone-500: #8a7a6a;
+
+  /* Ash - disabled states */
+  --color-ash-400: #9ca3af;
+  --color-ash-500: #6b7280;
+  --color-ash-600: #4b5563;
+  --color-ash-700: #374151;
+  --color-ash-800: #1f2937;
+  --color-ash-900: #111827;
+
+  /* Stone - neutral backgrounds */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 8px 12px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.8);
+  --shadow-top: 0 -4px 6px rgba(0, 0, 0, 0.7);
+  --shadow-right: 4px 0 6px rgba(0, 0, 0, 0.7);
+  --shadow-bottom: 0 4px 6px rgba(0, 0, 0, 0.7);
+  --shadow-left: -4px 0 6px rgba(0, 0, 0, 0.7);
+
+  /* Layout */
+  --spacing-sidebar: 48px;
+  --spacing-titlebar: 28px;
+  --spacing-statusbar: 24px;
+}

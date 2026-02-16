@@ -2,9 +2,9 @@
 
 ## Theming & Styling
 
-### Design Tokens (`globals.css`)
+### Design Tokens (Shared Theme Package)
 
-All design tokens are defined in `globals.css` under the `@theme` block. This is the **single source of truth** for colors, shadows, and spacing.
+All design tokens are defined in `@poe2-overlord/theme` (`packages/theme/src/css/tokens.css`). This is the **single source of truth** for colors, shadows, and spacing shared between the desktop app and website.
 
 ```css
 @theme {
@@ -152,3 +152,32 @@ All design tokens are defined in `globals.css`. Refer to the `@theme` block for:
 - Layout spacing constants
 
 There is no separate theme.ts file - everything is CSS-native for proper Tailwind integration.
+
+### Importing Shared Theme
+
+**In CSS files:**
+```css
+@import "tailwindcss";
+@import "@poe2-overlord/theme/tokens.css";
+```
+
+**CRITICAL:** `@import "tailwindcss"` must come BEFORE the theme import. Tailwind v4 merges imported `@theme` blocks with the base theme.
+
+**In TypeScript/React files:**
+```tsx
+import { cn } from '@poe2-overlord/theme';
+import { getThemeHexColor } from '@poe2-overlord/theme';
+
+// cn() - merge and deduplicate Tailwind classes
+const className = cn('bg-stone-900', props.className);
+
+// getThemeHexColor() - read CSS variable value
+const hexColor = getThemeHexColor('ember-500'); // Returns '#f97316'
+```
+
+**Game-domain utilities** (character/league/act colors) remain in frontend:
+```tsx
+import { getClassTextColor } from '@/utils/class-colors';
+import { getLeagueHexColor } from '@/utils/league-colors';
+import { getActHexColor } from '@/utils/act-colors';
+```

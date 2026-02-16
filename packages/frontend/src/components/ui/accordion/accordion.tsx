@@ -1,7 +1,7 @@
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { cn } from '@poe2-overlord/theme';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
-import { cn } from '@/utils/tailwind';
 import { accordionStyles } from './accordion.styles';
 
 export interface AccordionProps {

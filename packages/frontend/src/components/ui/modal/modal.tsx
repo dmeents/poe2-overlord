@@ -1,5 +1,5 @@
+import { cn } from '@poe2-overlord/theme';
 import { useEffect, useId, useRef } from 'react';
-import { cn } from '@/utils/tailwind';
 import { modalStyles } from './modal.styles';
 
 /**

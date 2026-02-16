@@ -3,5 +3,5 @@
   "buildCommand": "pnpm --filter @poe2-overlord/website build",
   "outputDirectory": "packages/website/.next",
   "installCommand": "pnpm install",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ./packages/website ./packages/theme"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ./packages/website ./packages/theme ./vercel.json"
 }

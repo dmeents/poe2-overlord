@@ -2,5 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "pnpm --filter @poe2-overlord/website build",
   "outputDirectory": "packages/website/.next",
-  "installCommand": "pnpm install"
+  "installCommand": "pnpm install",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./packages/website ./packages/theme"
 }

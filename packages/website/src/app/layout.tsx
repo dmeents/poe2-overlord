@@ -21,6 +21,15 @@ const macondo = Macondo({
 export const metadata: Metadata = {
   title: 'POE2 Overlord - Game Overlay for Path of Exile 2',
   description: 'Track characters, zone statistics, campaign progress, and more.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

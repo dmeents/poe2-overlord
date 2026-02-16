@@ -64,6 +64,7 @@ interface SettingsFormProps {
 
 export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   const [config, setConfig] = useState<AppConfig>({
+    config_version: 1,
     poe_client_log_path: '',
     log_level: 'info',
     zone_refresh_interval: 'SevenDays',

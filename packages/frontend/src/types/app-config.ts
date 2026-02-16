@@ -14,6 +14,8 @@ export interface ZoneRefreshIntervalOption {
 }
 
 export interface AppConfig {
+  /** Configuration schema version for migration compatibility */
+  config_version: number;
   poe_client_log_path: string;
   log_level: string;
   zone_refresh_interval: ZoneRefreshInterval;

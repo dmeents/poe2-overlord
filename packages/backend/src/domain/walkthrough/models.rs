@@ -17,6 +17,9 @@ pub struct Objective {
     pub required: bool,
     /// Rewards for completing this objective
     pub rewards: Vec<String>,
+    /// Whether this objective only needs to be completed once per league (on first character)
+    #[serde(default, rename = "leagueStart")]
+    pub league_start: bool,
     /// Additional notes for this objective
     pub notes: Option<String>,
 }

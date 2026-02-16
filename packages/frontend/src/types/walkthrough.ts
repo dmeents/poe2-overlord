@@ -42,6 +42,8 @@ export interface Objective {
   required: boolean;
   /** Rewards for completing this objective */
   rewards: string[];
+  /** Whether this objective only needs to be completed once per league (on first character) */
+  leagueStart?: boolean;
   /** Additional notes for this objective */
   notes?: string;
 }

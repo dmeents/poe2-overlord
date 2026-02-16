@@ -42,12 +42,19 @@ export function StepObjectiveList({
               {/* Objective content */}
               <div className="flex-1 space-y-1.5">
                 {/* Main text */}
-                <div className="font-medium text-stone-200">
+                <div className="font-medium text-stone-200 flex items-center gap-2 flex-wrap">
                   <ParsedText
                     text={objective.text}
                     wikiItems={wikiItems}
                     onWikiClick={onWikiClick}
                   />
+                  {objective.leagueStart && (
+                    <span
+                      className="text-[10px] font-semibold text-molten-400"
+                      title="Only needs to be completed on your first character per league">
+                      LEAGUE START
+                    </span>
+                  )}
                 </div>
 
                 {/* Details, notes, rewards */}

@@ -258,6 +258,7 @@ mod tests {
                     details: None,
                     required: true,
                     rewards: vec![],
+                    league_start: false,
                     notes: None,
                 }],
                 current_zone: "Starting Area".to_string(),

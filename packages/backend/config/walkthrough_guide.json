@@ -429,7 +429,8 @@
                 "details": "The Smithing Tools unlock the Salvage Bench for item crafting.",
                 "required": false,
                 "rewards": ["Salvage Bench"],
-                "notes": "Only needs to be completed on your first character per league."
+                "leagueStart": true,
+                "notes": ""
               },
               {
                 "text": "Defeat The Executioner",
@@ -1895,9 +1896,10 @@
             "objectives": [
               {
                 "text": "Defeat the boss in Molten Vault",
-                "details": "Find and kill the boss, then return to town and speak with Oswald to unlock the reforging bench. Only needed on first character per league.",
+                "details": "Find and kill the boss, then return to town and speak with Oswald to unlock the reforging bench.",
                 "required": true,
                 "rewards": ["Unlocks the reforging bench"],
+                "leagueStart": true,
                 "notes": ""
               },
               {

@@ -39,14 +39,6 @@ Files:
 ### `prompts/`
 **Purpose**: Reusable prompt templates for common tasks
 
-Files:
-- `refactor-component.md` - Standard refactoring template
-- `add-feature.md` - New feature template
-- `fix-tests.md` - Test fixing template
-- `add-docs.md` - Documentation template
-
-**When to update**: When you create a prompt you'll reuse
-
 ### `archive/`
 **Purpose**: Completed work kept for reference
 

@@ -16,9 +16,8 @@ pub struct ConfigurationServiceImpl {
 }
 
 impl ConfigurationServiceImpl {
-    pub async fn new() -> AppResult<Self> {
+    pub async fn new(event_bus: Arc<EventBus>) -> AppResult<Self> {
         let repository = Arc::new(ConfigurationRepositoryImpl::new().await?);
-        let event_bus = Arc::new(EventBus::new());
 
         let service = Self {
             repository,

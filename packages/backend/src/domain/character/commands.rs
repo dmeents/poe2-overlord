@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use tauri::State;
 
 use crate::domain::character::models::CharacterDataResponse;
@@ -12,7 +13,7 @@ pub async fn create_character(
     league: crate::domain::character::models::League,
     hardcore: bool,
     solo_self_found: bool,
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<CharacterDataResponse> {
     log::info!(
         "[DEBUG] create_character command called: name={}, class={:?}, ascendency={:?}, league={:?}",
@@ -38,14 +39,14 @@ pub async fn create_character(
 #[tauri::command]
 pub async fn get_character(
     character_id: String,
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<CharacterDataResponse> {
     to_command_result(character_service.get_character(&character_id).await)
 }
 
 #[tauri::command]
 pub async fn get_all_characters(
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<Vec<CharacterDataResponse>> {
     log::info!("[DEBUG] get_all_characters command called");
     let result = character_service.get_all_characters().await;
@@ -63,7 +64,7 @@ pub async fn get_all_characters(
 pub async fn update_character(
     character_id: String,
     update_params: crate::domain::character::models::CharacterUpdateParams,
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<CharacterDataResponse> {
     to_command_result(
         character_service
@@ -75,7 +76,7 @@ pub async fn update_character(
 #[tauri::command]
 pub async fn delete_character(
     character_id: String,
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(character_service.delete_character(&character_id).await)
 }
@@ -83,7 +84,7 @@ pub async fn delete_character(
 #[tauri::command]
 pub async fn set_active_character(
     character_id: Option<String>,
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(
         character_service
@@ -94,7 +95,7 @@ pub async fn set_active_character(
 
 #[tauri::command]
 pub async fn get_active_character(
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<Option<CharacterDataResponse>> {
     to_command_result(character_service.get_active_character().await)
 }
@@ -102,7 +103,7 @@ pub async fn get_active_character(
 #[tauri::command]
 pub async fn reconcile_character_storage(
     strategy: crate::domain::character::models::CleanupStrategy,
-    character_service: State<'_, Box<dyn CharacterService + Send + Sync>>,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<crate::domain::character::models::OrphanCleanupReport> {
     to_command_result(
         character_service

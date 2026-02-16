@@ -34,14 +34,13 @@ impl ServiceInitializer {
     ) -> Result<ServiceInstances, Box<dyn std::error::Error>> {
         info!("Starting service initialization...");
 
-        let config_service = Arc::new(
-            tauri::async_runtime::block_on(ConfigurationServiceImpl::new())
-                .expect("Failed to create configuration service"),
-        );
-        app.manage(config_service.clone());
-
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
+
+        let config_service = Arc::new(
+            tauri::async_runtime::block_on(ConfigurationServiceImpl::new(event_bus.clone()))?,
+        );
+        app.manage(config_service.clone());
 
         let economy_service = EconomyService::new();
         app.manage(economy_service);
@@ -68,24 +67,7 @@ impl ServiceInitializer {
         })?;
 
         let character_arc = Arc::new(character_service) as Arc<dyn CharacterService + Send + Sync>;
-
-        let character_box = Box::new(
-            tauri::async_runtime::block_on(
-                crate::domain::character::service::CharacterServiceImpl::with_default_repository(
-                    event_bus.clone(),
-                    zone_config_service.clone(),
-                ),
-            )
-            .map_err(|e| {
-                error!(
-                    "Failed to initialize CharacterService for state management: {}",
-                    e
-                );
-                e
-            })?,
-        ) as Box<dyn CharacterService + Send + Sync>;
-
-        app.manage(character_box);
+        app.manage(character_arc.clone());
 
         let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(std::path::PathBuf::from(
             "config/walkthrough_guide.json",
@@ -94,17 +76,8 @@ impl ServiceInitializer {
             walkthrough_repo,
             character_arc.clone(),
             event_bus.clone(),
-        ));
-
-        let walkthrough_box = Box::new(WalkthroughServiceImpl::new(
-            Arc::new(WalkthroughRepositoryImpl::new(std::path::PathBuf::from(
-                "config/walkthrough_guide.json",
-            ))),
-            character_arc.clone(),
-            event_bus.clone(),
-        )) as Box<dyn WalkthroughService + Send + Sync>;
-
-        app.manage(walkthrough_box);
+        )) as Arc<dyn WalkthroughService + Send + Sync>;
+        app.manage(walkthrough_service.clone());
 
         let ping_provider = Arc::new(SystemPingProvider::new());
         let server_status_repository =
@@ -213,14 +186,49 @@ impl ServiceInstances {
     pub async fn shutdown_services(&self) -> Result<(), Box<dyn std::error::Error>> {
         log::info!("Starting application shutdown cleanup...");
 
+        // Stop monitoring services
+        if let Err(e) = self.game_monitoring_service.stop_monitoring().await {
+            log::error!("Failed to stop game monitoring: {}", e);
+        } else {
+            log::info!("Game monitoring stopped successfully");
+        }
+
+        if let Err(e) = self.log_analysis_service.stop_monitoring().await {
+            log::error!("Failed to stop log monitoring: {}", e);
+        } else {
+            log::info!("Log monitoring stopped successfully");
+        }
+
+        if let Err(e) = self.server_monitoring_service.stop_ping_monitoring().await {
+            log::error!("Failed to stop server monitoring: {}", e);
+        } else {
+            log::info!("Server monitoring stopped successfully");
+        }
+
+        // Finalize character data
         if let Err(e) = self.character_service.finalize_all_active_zones().await {
             log::error!("Failed to finalize character tracking data: {}", e);
         } else {
             log::info!("Character tracking data finalized successfully");
         }
 
-        log::info!("Background services shutdown completed");
+        // Flush configuration
+        if let Err(e) = self.config_service.flush().await {
+            log::error!("Failed to flush configuration: {}", e);
+        } else {
+            log::info!("Configuration flushed successfully");
+        }
 
+        // Emit system shutdown event
+        if let Err(e) = self
+            .event_bus
+            .publish(crate::infrastructure::events::AppEvent::system_shutdown())
+            .await
+        {
+            log::error!("Failed to publish system shutdown event: {}", e);
+        }
+
+        log::info!("Background services shutdown completed");
         log::info!("Application shutdown cleanup completed");
         Ok(())
     }

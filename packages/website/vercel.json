@@ -1,0 +1,7 @@
+{
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "ignoreCommand": "cd ../.. && bash -c '[[ ! $(git diff --name-only HEAD^ HEAD | grep -E \"^(packages/website|packages/theme|packages/website/vercel\\.json)\") ]]'"
+}

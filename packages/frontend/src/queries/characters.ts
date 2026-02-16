@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { parseError } from '@/utils/error-handling';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import type { CharacterData } from '../types/character';
 
@@ -34,6 +36,7 @@ export function useActiveCharacter() {
 
 export function useCreateCharacter() {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (data: CharacterFormData): Promise<CharacterData> => {
@@ -49,11 +52,16 @@ export function useCreateCharacter() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.all });
     },
+    onError: err => {
+      const error = parseError(err);
+      handleError(error);
+    },
   });
 }
 
 export function useUpdateCharacter() {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async ({
@@ -85,11 +93,16 @@ export function useUpdateCharacter() {
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
     },
+    onError: err => {
+      const error = parseError(err);
+      handleError(error);
+    },
   });
 }
 
 export function useDeleteCharacter() {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (characterId: string): Promise<void> => {
@@ -104,11 +117,16 @@ export function useDeleteCharacter() {
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
     },
+    onError: err => {
+      const error = parseError(err);
+      handleError(error);
+    },
   });
 }
 
 export function useSetActiveCharacter() {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (characterId: string): Promise<void> => {
@@ -117,6 +135,10 @@ export function useSetActiveCharacter() {
     onSuccess: () => {
       // Invalidate active character query to refetch
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
+    },
+    onError: err => {
+      const error = parseError(err);
+      handleError(error);
     },
   });
 }

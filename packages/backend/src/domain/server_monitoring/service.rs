@@ -92,7 +92,7 @@ impl ServerMonitoringServiceImpl {
         Ok(())
     }
 
-    async fn ping_server(&self, ip_address: &str) -> Result<u64, String> {
+    async fn ping_server(&self, ip_address: &str) -> AppResult<u64> {
         self.ping_provider.ping(ip_address).await
     }
 }

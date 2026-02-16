@@ -11,7 +11,7 @@ pub trait ServerStatusRepository: Send + Sync {
 
 #[async_trait]
 pub trait PingProvider: Send + Sync {
-    async fn ping(&self, ip_address: &str) -> Result<u64, String>;
+    async fn ping(&self, ip_address: &str) -> AppResult<u64>;
 }
 
 #[async_trait]

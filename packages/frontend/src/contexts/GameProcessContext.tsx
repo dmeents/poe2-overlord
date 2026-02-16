@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import type { GameProcessStatus, GameProcessStatusChangedEvent } from '@/types/process';
+import { parseError } from '@/utils/error-handling';
 import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 
 interface GameProcessContextValue {
@@ -34,8 +35,9 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
           ...status,
           detected_at: new Date().toISOString(),
         });
-      } catch (error) {
-        console.error('Failed to fetch initial game process status:', error);
+      } catch (err) {
+        const error = parseError(err);
+        console.error('Failed to fetch initial game process status:', error.message);
       }
     };
 

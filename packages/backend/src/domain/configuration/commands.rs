@@ -22,17 +22,15 @@ pub async fn update_config(
     config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
     new_config: AppConfig,
 ) -> CommandResult<()> {
-    to_command_result(config_service.update_config(new_config).await)?;
-    Ok(())
+    to_command_result(config_service.update_config(new_config).await)
 }
 
 #[tauri::command]
 pub async fn reset_config_to_defaults(
     config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
 ) -> CommandResult<()> {
-    to_command_result(config_service.reset_to_defaults().await)?;
     info!("Configuration reset to defaults successfully");
-    Ok(())
+    to_command_result(config_service.reset_to_defaults().await)
 }
 
 #[tauri::command]
@@ -47,9 +45,8 @@ pub async fn set_zone_refresh_interval(
     config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
     interval: ZoneRefreshInterval,
 ) -> CommandResult<()> {
-    to_command_result(config_service.set_zone_refresh_interval(interval).await)?;
     info!("Zone refresh interval set to: {}", interval);
-    Ok(())
+    to_command_result(config_service.set_zone_refresh_interval(interval).await)
 }
 
 #[tauri::command]

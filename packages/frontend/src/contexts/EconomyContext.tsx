@@ -8,13 +8,15 @@ import {
   useCurrencyExchange,
 } from '@/queries/economy';
 import type { CurrencyExchangeData, EconomyType, TopCurrencyItem } from '@/types/economy';
+import type { AppError } from '@/types/error';
+import { parseError } from '@/utils/error-handling';
 import { useCharacter } from './CharacterContext';
 
 interface EconomyContextValue {
   currencyData: CurrencyExchangeData | undefined;
   isLoading: boolean;
   isError: boolean;
-  error: Error | null;
+  error: AppError | null;
   selectedEconomyType: EconomyType;
   setSelectedEconomyType: (type: EconomyType) => void;
   league: string;
@@ -59,7 +61,7 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
       currencyData,
       isLoading,
       isError,
-      error: error as Error | null,
+      error: error ? parseError(error) : null,
       selectedEconomyType,
       setSelectedEconomyType,
       league,

@@ -83,11 +83,11 @@ mod tests {
 
     #[async_trait::async_trait]
     impl PingProvider for MockPingProvider {
-        async fn ping(&self, _ip_address: &str) -> Result<u64, String> {
+        async fn ping(&self, _ip_address: &str) -> crate::errors::AppResult<u64> {
             if self.should_succeed {
                 Ok(self.latency)
             } else {
-                Err("Mock ping failure".to_string())
+                Err(crate::errors::AppError::network_error("mock_ping", "Mock ping failure"))
             }
         }
     }
@@ -107,6 +107,8 @@ mod tests {
         let result = provider.ping("192.168.1.1").await;
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Mock ping failure");
+        // Just check that we got an error - don't compare the exact error
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("Mock ping failure"));
     }
 }

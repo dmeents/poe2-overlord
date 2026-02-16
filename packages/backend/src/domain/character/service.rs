@@ -258,7 +258,7 @@ impl CharacterService for CharacterServiceImpl {
         // Validate character exists (if not None)
         if let Some(id) = character_id {
             if !index.has_character(id) {
-                return Err(AppError::internal_error(
+                return Err(AppError::validation_error(
                     "set_active_character",
                     &format!("Character with ID '{}' not found", id),
                 ));

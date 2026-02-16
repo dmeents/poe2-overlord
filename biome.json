@@ -43,7 +43,10 @@
       "correctness": {
         "recommended": true,
         "useExhaustiveDependencies": "warn",
-        "noUnusedImports": "error"
+        "noUnusedImports": {
+          "level": "error",
+          "fix": "safe"
+        }
       },
       "performance": {
         "recommended": true,

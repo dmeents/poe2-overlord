@@ -176,7 +176,7 @@ function CharactersPage() {
         <>
           {error && (
             <div className="mb-6">
-              <AlertMessage type="error" message={error} />
+              <AlertMessage type="error" message={error.message} />
             </div>
           )}
           {leftColumn}

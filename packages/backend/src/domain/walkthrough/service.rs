@@ -153,12 +153,13 @@ impl WalkthroughService for WalkthroughServiceImpl {
                 .any(|act| act.steps.contains_key(step_id));
 
             if !step_exists {
-                return Err(AppError::Validation {
-                    message: format!(
+                return Err(AppError::validation_error(
+                    "update_character_progress",
+                    &format!(
                         "Invalid step ID '{}' - does not exist in walkthrough guide",
                         step_id
                     ),
-                });
+                ));
             }
         }
 

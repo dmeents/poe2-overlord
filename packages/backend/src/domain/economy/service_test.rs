@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn test_service_creation() {
-        let service = EconomyService::new();
+        let service = EconomyService::new().expect("Failed to create service");
         assert!(service.client.get("https://example.com").build().is_ok());
     }
 
@@ -141,7 +141,7 @@ mod tests {
     async fn test_concurrent_requests_no_deadlock() {
         // Test that multiple concurrent requests for the same cache key
         // don't cause deadlocks (they should wait and coalesce)
-        let service = Arc::new(EconomyService::new());
+        let service = Arc::new(EconomyService::new().expect("Failed to create service"));
 
         // Spawn 3 concurrent requests for same league+type
         let handle1 = tokio::spawn({
@@ -187,7 +187,7 @@ mod tests {
     #[tokio::test]
     async fn test_different_cache_keys_dont_block() {
         // Test that requests for different leagues/types don't block each other
-        let service = Arc::new(EconomyService::new());
+        let service = Arc::new(EconomyService::new().expect("Failed to create service"));
 
         // Spawn concurrent requests for DIFFERENT cache keys
         let handle1 = tokio::spawn({

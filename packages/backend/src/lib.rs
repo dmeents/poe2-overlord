@@ -23,10 +23,10 @@ pub use domain::walkthrough::commands::*; // Walkthrough guide and progress trac
 pub use errors::*;
 
 // Tauri command utilities
-pub type CommandResult<T> = Result<T, String>;
+pub type CommandResult<T> = Result<T, SerializableError>;
 
 pub fn to_command_result<T>(result: AppResult<T>) -> CommandResult<T> {
-    result.map_err(|e| e.to_string())
+    result.map_err(SerializableError::from)
 }
 
 // Game monitoring models and state

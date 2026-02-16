@@ -69,7 +69,10 @@ impl ServiceInitializer {
             Arc::new(config_service_impl) as Arc<dyn ConfigurationService + Send + Sync>;
         app.manage(config_service.clone());
 
-        let economy_service = EconomyService::new();
+        let economy_service = EconomyService::new().map_err(|e| {
+            error!("Failed to initialize EconomyService: {}", e);
+            e
+        })?;
         app.manage(economy_service);
 
         let zone_config_repo = Arc::new(tauri::async_runtime::block_on(

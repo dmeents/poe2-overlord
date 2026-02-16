@@ -100,15 +100,17 @@ pub struct EconomyService {
 }
 
 impl EconomyService {
-    pub fn new() -> Self {
-        Self {
-            client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(HTTP_TOTAL_TIMEOUT_SECS))
-                .connect_timeout(Duration::from_secs(HTTP_CONNECT_TIMEOUT_SECS))
-                .build()
-                .expect("Failed to build HTTP client"),
+    pub fn new() -> AppResult<Self> {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(HTTP_TOTAL_TIMEOUT_SECS))
+            .connect_timeout(Duration::from_secs(HTTP_CONNECT_TIMEOUT_SECS))
+            .build()
+            .map_err(|e| AppError::internal_error("build_http_client", &format!("{}", e)))?;
+
+        Ok(Self {
+            client,
             in_flight: Arc::new(RwLock::new(HashMap::new())),
-        }
+        })
     }
 
     /// Build the poe.ninja API URL for a given league and economy type.
@@ -150,9 +152,10 @@ impl EconomyService {
     ) -> AppResult<CurrencyExchangeData> {
         // Validate league name is not empty
         if league.trim().is_empty() {
-            return Err(AppError::Validation {
-                message: "League name cannot be empty".to_string(),
-            });
+            return Err(AppError::validation_error(
+                "fetch_currency_exchange_data",
+                "League name cannot be empty",
+            ));
         }
 
         // FAST PATH: Check for fresh cache without acquiring any locks
@@ -354,8 +357,8 @@ impl EconomyService {
         }
 
         // All retries exhausted
-        Err(last_error.unwrap_or_else(|| AppError::Network {
-            message: "All retry attempts failed with no error captured".to_string(),
+        Err(last_error.unwrap_or_else(|| {
+            AppError::network_error("fetch_from_poe_ninja", "All retry attempts failed with no error captured")
         }))
     }
 
@@ -363,9 +366,7 @@ impl EconomyService {
     async fn try_fetch_from_poe_ninja(&self, url: &str) -> AppResult<CurrencyExchangeData> {
         let response = self.client.get(url).send().await.map_err(|e| {
             log::error!("Failed to fetch currency data: {}", e);
-            AppError::Network {
-                message: format!("Failed to fetch currency data: {}", e),
-            }
+            AppError::network_error("fetch_currency_data", &format!("{}", e))
         })?;
 
         if !response.status().is_success() {
@@ -374,13 +375,15 @@ impl EconomyService {
 
             // Differentiate between 4xx (client error) and 5xx (server error)
             return if status.is_client_error() {
-                Err(AppError::Validation {
-                    message: format!("poe.ninja API client error: {}", status),
-                })
+                Err(AppError::validation_error(
+                    "poe.ninja_api",
+                    &format!("API client error: {}", status),
+                ))
             } else {
-                Err(AppError::Network {
-                    message: format!("poe.ninja API server error: {}", status),
-                })
+                Err(AppError::network_error(
+                    "poe.ninja_api",
+                    &format!("API server error: {}", status),
+                ))
             };
         }
 
@@ -389,9 +392,7 @@ impl EconomyService {
             .await
             .map_err(|e| {
                 log::error!("Failed to parse currency data: {}", e);
-                AppError::Serialization {
-                    message: format!("Failed to parse currency data: {}", e),
-                }
+                AppError::serialization_error("parse_currency_data", &format!("{}", e))
             })?;
 
         api_response.into_frontend_data().map_err(|e| {
@@ -402,11 +403,9 @@ impl EconomyService {
             );
 
             if e.contains("No currency data available") {
-                AppError::Validation { message: e }
+                AppError::validation_error("convert_api_response", &e)
             } else {
-                AppError::Serialization {
-                    message: format!("Failed to process currency data: {}", e),
-                }
+                AppError::serialization_error("process_currency_data", &e)
             }
         })
     }
@@ -588,8 +587,3 @@ impl EconomyService {
     }
 }
 
-impl Default for EconomyService {
-    fn default() -> Self {
-        Self::new()
-    }
-}

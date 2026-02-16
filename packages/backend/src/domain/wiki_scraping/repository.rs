@@ -50,8 +50,3 @@ impl WikiRepository {
     }
 }
 
-impl Default for WikiRepository {
-    fn default() -> Self {
-        Self::new().expect("Failed to create default WikiRepository - this is a critical error")
-    }
-}

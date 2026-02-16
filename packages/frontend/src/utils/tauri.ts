@@ -1,13 +1,15 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { AppConfig, ZoneRefreshInterval, ZoneRefreshIntervalOption } from '@/types/app-config';
+import { parseError } from '@/utils/error-handling';
 
 export const tauriUtils = {
   // Configuration commands
   async getConfig(): Promise<AppConfig> {
     try {
       return await invoke<AppConfig>('get_config');
-    } catch (error) {
-      console.error('Failed to get config:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get config:', error.message);
       throw error;
     }
   },
@@ -15,8 +17,9 @@ export const tauriUtils = {
   async getDefaultConfig(): Promise<AppConfig> {
     try {
       return await invoke<AppConfig>('get_default_config');
-    } catch (error) {
-      console.error('Failed to get default config:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get default config:', error.message);
       throw error;
     }
   },
@@ -24,8 +27,9 @@ export const tauriUtils = {
   async updateConfig(config: AppConfig): Promise<void> {
     try {
       await invoke('update_config', { newConfig: config });
-    } catch (error) {
-      console.error('Failed to update config:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to update config:', error.message);
       throw error;
     }
   },
@@ -33,8 +37,9 @@ export const tauriUtils = {
   async resetConfigToDefaults(): Promise<void> {
     try {
       await invoke('reset_config_to_defaults');
-    } catch (error) {
-      console.error('Failed to reset config to defaults:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to reset config to defaults:', error.message);
       throw error;
     }
   },
@@ -44,8 +49,9 @@ export const tauriUtils = {
     try {
       const config = await this.getConfig();
       return config.poe_client_log_path;
-    } catch (error) {
-      console.error('Failed to get POE client log path:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get POE client log path:', error.message);
       throw error;
     }
   },
@@ -55,8 +61,9 @@ export const tauriUtils = {
       const config = await this.getConfig();
       const updatedConfig = { ...config, poe_client_log_path: path };
       await this.updateConfig(updatedConfig);
-    } catch (error) {
-      console.error('Failed to set POE client log path:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to set POE client log path:', error.message);
       throw error;
     }
   },
@@ -65,8 +72,9 @@ export const tauriUtils = {
     try {
       const config = await this.getConfig();
       return config.log_level;
-    } catch (error) {
-      console.error('Failed to get log level:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get log level:', error.message);
       throw error;
     }
   },
@@ -76,8 +84,9 @@ export const tauriUtils = {
       const config = await this.getConfig();
       const updatedConfig = { ...config, log_level: level };
       await this.updateConfig(updatedConfig);
-    } catch (error) {
-      console.error('Failed to set log level:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to set log level:', error.message);
       throw error;
     }
   },
@@ -86,8 +95,9 @@ export const tauriUtils = {
     try {
       const defaultConfig = await this.getDefaultConfig();
       return defaultConfig.poe_client_log_path;
-    } catch (error) {
-      console.error('Failed to get default POE client log path:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get default POE client log path:', error.message);
       throw error;
     }
   },
@@ -101,8 +111,9 @@ export const tauriUtils = {
         poe_client_log_path: defaultConfig.poe_client_log_path,
       };
       await this.updateConfig(updatedConfig);
-    } catch (error) {
-      console.error('Failed to reset POE client log path to default:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to reset POE client log path to default:', error.message);
       throw error;
     }
   },
@@ -111,8 +122,9 @@ export const tauriUtils = {
   async getZoneRefreshInterval(): Promise<ZoneRefreshInterval> {
     try {
       return await invoke<ZoneRefreshInterval>('get_zone_refresh_interval');
-    } catch (error) {
-      console.error('Failed to get zone refresh interval:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get zone refresh interval:', error.message);
       throw error;
     }
   },
@@ -120,8 +132,9 @@ export const tauriUtils = {
   async setZoneRefreshInterval(interval: ZoneRefreshInterval): Promise<void> {
     try {
       await invoke('set_zone_refresh_interval', { interval });
-    } catch (error) {
-      console.error('Failed to set zone refresh interval:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to set zone refresh interval:', error.message);
       throw error;
     }
   },
@@ -129,8 +142,9 @@ export const tauriUtils = {
   async getZoneRefreshIntervalOptions(): Promise<ZoneRefreshIntervalOption[]> {
     try {
       return await invoke<ZoneRefreshIntervalOption[]>('get_zone_refresh_interval_options');
-    } catch (error) {
-      console.error('Failed to get zone refresh interval options:', error);
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get zone refresh interval options:', error.message);
       throw error;
     }
   },

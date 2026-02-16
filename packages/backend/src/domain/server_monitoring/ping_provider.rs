@@ -1,6 +1,7 @@
 //! Ping provider implementations for server connectivity testing.
 
 use crate::domain::server_monitoring::traits::PingProvider;
+use crate::errors::AppError;
 use async_trait::async_trait;
 
 const PING_COUNT: &str = "1";
@@ -39,7 +40,7 @@ impl Default for SystemPingProvider {
 
 #[async_trait]
 impl PingProvider for SystemPingProvider {
-    async fn ping(&self, ip_address: &str) -> Result<u64, String> {
+    async fn ping(&self, ip_address: &str) -> crate::errors::AppResult<u64> {
         let start = std::time::Instant::now();
 
         let output = tokio::process::Command::new("ping")
@@ -57,10 +58,10 @@ impl PingProvider for SystemPingProvider {
                     let ping_ms = start.elapsed().as_millis() as u64;
                     Ok(ping_ms)
                 } else {
-                    Err("Ping failed: server unreachable".to_string())
+                    Err(AppError::network_error("ping", "server unreachable"))
                 }
             }
-            Err(e) => Err(format!("Ping command failed: {}", e)),
+            Err(e) => Err(AppError::network_error("ping_command", &format!("{}", e))),
         }
     }
 }

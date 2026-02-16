@@ -52,13 +52,13 @@ mod tests {
 
     #[async_trait]
     impl PingProvider for MockPingProvider {
-        async fn ping(&self, _ip_address: &str) -> Result<u64, String> {
+        async fn ping(&self, _ip_address: &str) -> AppResult<u64> {
             *self.call_count.write().await += 1;
 
             if *self.should_succeed.read().await {
                 Ok(*self.latency.read().await)
             } else {
-                Err("Mock ping failure".to_string())
+                Err(crate::errors::AppError::network_error("mock_ping", "Mock ping failure"))
             }
         }
     }

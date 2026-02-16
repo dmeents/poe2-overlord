@@ -1,5 +1,5 @@
 use crate::domain::character::CharacterData;
-use crate::errors::AppError;
+use crate::errors::AppResult;
 
 /// Zone tracking service that provides pure business logic for zone operations.
 /// All methods are synchronous and operate on CharacterData without performing I/O.
@@ -12,17 +12,17 @@ pub trait ZoneTrackingService: Send + Sync {
         zone_name: &str,
         act: Option<u32>,
         is_town: bool,
-    ) -> Result<(), AppError>;
+    ) -> AppResult<()>;
 
     /// Leaves a zone for a character (modifies character_data in place)
     fn leave_zone(
         &self,
         character_data: &mut CharacterData,
         zone_name: &str,
-    ) -> Result<(), AppError>;
+    ) -> AppResult<()>;
 
     /// Records a death in the current active zone (modifies character_data in place)
-    fn record_death(&self, character_data: &mut CharacterData) -> Result<(), AppError>;
+    fn record_death(&self, character_data: &mut CharacterData) -> AppResult<()>;
 
     /// Adds time to a specific zone (modifies character_data in place)
     fn add_zone_time(
@@ -30,10 +30,10 @@ pub trait ZoneTrackingService: Send + Sync {
         character_data: &mut CharacterData,
         zone_name: &str,
         seconds: u64,
-    ) -> Result<(), AppError>;
+    ) -> AppResult<()>;
 
     /// Finalizes all active zones for a character - stops timers (modifies character_data in place)
-    fn finalize_active_zones(&self, character_data: &mut CharacterData) -> Result<(), AppError>;
+    fn finalize_active_zones(&self, character_data: &mut CharacterData) -> AppResult<()>;
 
     /// Updates the summary statistics from zone data (modifies character_data in place)
     fn update_summary(&self, character_data: &mut CharacterData);

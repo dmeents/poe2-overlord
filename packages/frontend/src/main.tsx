@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
+import { ErrorBoundary } from './components/error-boundary/error-boundary';
 import { Providers } from './providers';
 
 // Import the generated route tree
@@ -44,11 +45,13 @@ if (rootElement && !rootElement.innerHTML) {
 
   root.render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Providers>
-          <RouterProvider router={router} />
-        </Providers>
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <Providers>
+            <RouterProvider router={router} />
+          </Providers>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </StrictMode>,
   );
 }

@@ -16,7 +16,7 @@ pub async fn create_character(
     character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<CharacterDataResponse> {
     log::info!(
-        "[DEBUG] create_character command called: name={}, class={:?}, ascendency={:?}, league={:?}",
+        "create_character command called: name={}, class={:?}, ascendency={:?}, league={:?}",
         name, class, ascendency, league
     );
     let result = character_service
@@ -30,8 +30,8 @@ pub async fn create_character(
         )
         .await;
     match &result {
-        Ok(char) => log::info!("[DEBUG] create_character success: id={}", char.id),
-        Err(e) => log::error!("[DEBUG] create_character error: {:?}", e),
+        Ok(char) => log::info!("create_character success: id={}", char.id),
+        Err(e) => log::error!("create_character error: {:?}", e),
     }
     to_command_result(result)
 }
@@ -48,14 +48,14 @@ pub async fn get_character(
 pub async fn get_all_characters(
     character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<Vec<CharacterDataResponse>> {
-    log::info!("[DEBUG] get_all_characters command called");
+    log::info!("get_all_characters command called");
     let result = character_service.get_all_characters().await;
     match &result {
         Ok(chars) => log::info!(
-            "[DEBUG] get_all_characters returning {} characters",
+            "get_all_characters returning {} characters",
             chars.len()
         ),
-        Err(e) => log::error!("[DEBUG] get_all_characters error: {:?}", e),
+        Err(e) => log::error!("get_all_characters error: {:?}", e),
     }
     to_command_result(result)
 }

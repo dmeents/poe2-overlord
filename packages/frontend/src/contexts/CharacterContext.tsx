@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { useActiveCharacter, useCharacters } from '@/queries/characters';
 import type { CharacterData } from '@/types/character';
+import type { AppError } from '@/types/error';
+import { parseError } from '@/utils/error-handling';
 import {
   type CharacterDeletedEvent,
   type CharacterUpdatedEvent,
@@ -15,7 +17,7 @@ interface CharacterContextValue {
   characters: CharacterData[];
   activeCharacter: CharacterData | null;
   isLoading: boolean;
-  error: string | null;
+  error: AppError | null;
 }
 
 const CharacterContext = createContext<CharacterContextValue | undefined>(undefined);
@@ -78,7 +80,11 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
   );
 
   const isLoading = charactersLoading || activeCharacterLoading;
-  const error = charactersError?.message || activeCharacterError?.message || null;
+  const error = charactersError
+    ? parseError(charactersError)
+    : activeCharacterError
+      ? parseError(activeCharacterError)
+      : null;
 
   return (
     <CharacterContext.Provider

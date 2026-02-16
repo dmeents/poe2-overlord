@@ -12,8 +12,7 @@ use tauri::State;
 pub async fn get_walkthrough_guide(
     walkthrough_service: State<'_, Arc<dyn WalkthroughService + Send + Sync>>,
 ) -> CommandResult<WalkthroughGuide> {
-    let result = to_command_result(walkthrough_service.get_guide().await)?;
-    Ok(result)
+    to_command_result(walkthrough_service.get_guide().await)
 }
 
 /// Tauri command to get a character's walkthrough progress
@@ -25,12 +24,11 @@ pub async fn get_character_walkthrough_progress(
     character_id: String,
     walkthrough_service: State<'_, Arc<dyn WalkthroughService + Send + Sync>>,
 ) -> CommandResult<CharacterWalkthroughProgress> {
-    let result = to_command_result(
+    to_command_result(
         walkthrough_service
             .get_character_progress(&character_id)
             .await,
-    )?;
-    Ok(result)
+    )
 }
 
 /// Tauri command to update a character's walkthrough progress
@@ -47,6 +45,5 @@ pub async fn update_character_walkthrough_progress(
         walkthrough_service
             .update_character_progress(&character_id, progress)
             .await,
-    )?;
-    Ok(())
+    )
 }

@@ -188,7 +188,9 @@ export const CharacterListControlsForm = memo(function CharacterListControlsForm
                       // Clear ascendency if it's invalid for the new class
                       if (filters.ascendencies.length > 0) {
                         const newAscendencies = getAscendenciesForClass(value as CharacterClass);
-                        const isValid = newAscendencies.some(a => a.value === filters.ascendencies[0]);
+                        const isValid = newAscendencies.some(
+                          a => a.value === filters.ascendencies[0],
+                        );
                         if (!isValid) {
                           onFilterChange('ascendencies', []);
                         }

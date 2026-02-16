@@ -1,0 +1,19 @@
+# Normalize line endings to LF for all text files
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+
+# Suppress noisy diffs for lock files
+Cargo.lock -diff
+pnpm-lock.yaml -diff

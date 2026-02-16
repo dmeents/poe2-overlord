@@ -21,7 +21,7 @@ describe('useZoneList', () => {
       last_visited: '2024-01-01T10:05:00Z',
     }),
     createMockZone({
-      zone_name: 'Lioneye\'s Watch',
+      zone_name: "Lioneye's Watch",
       act: 1,
       is_town: true,
       is_active: true,
@@ -71,7 +71,7 @@ describe('useZoneList', () => {
       const { result } = renderHook(() => useZoneList(mockZones));
 
       expect(result.current.filteredZones[0].zone_name).toBe('The Mud Burrow');
-      expect(result.current.filteredZones[1].zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.filteredZones[1].zone_name).toBe("Lioneye's Watch");
       expect(result.current.filteredZones[2].zone_name).toBe('The Coast');
     });
   });
@@ -108,7 +108,7 @@ describe('useZoneList', () => {
       });
 
       expect(result.current.filteredZones).toHaveLength(1);
-      expect(result.current.filteredZones[0].zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.filteredZones[0].zone_name).toBe("Lioneye's Watch");
     });
 
     it('searches case-insensitively', () => {
@@ -347,7 +347,7 @@ describe('useZoneList', () => {
         result.current.updateSort('first_visited', 'asc');
       });
 
-      expect(result.current.filteredZones[0].zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.filteredZones[0].zone_name).toBe("Lioneye's Watch");
       expect(result.current.filteredZones[2].zone_name).toBe('The Mud Burrow');
     });
 
@@ -395,7 +395,7 @@ describe('useZoneList', () => {
       });
 
       // undefined area_level is treated as 0
-      expect(result.current.filteredZones[0].zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.filteredZones[0].zone_name).toBe("Lioneye's Watch");
       expect(result.current.filteredZones[1].area_level).toBe(2);
       expect(result.current.filteredZones[2].area_level).toBe(4);
     });
@@ -407,7 +407,7 @@ describe('useZoneList', () => {
         result.current.updateSort('zone_name', 'asc');
       });
 
-      expect(result.current.filteredZones[0].zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.filteredZones[0].zone_name).toBe("Lioneye's Watch");
       expect(result.current.filteredZones[1].zone_name).toBe('The Coast');
       expect(result.current.filteredZones[2].zone_name).toBe('The Mud Burrow');
     });
@@ -447,13 +447,13 @@ describe('useZoneList', () => {
     it('identifies most visited zone', () => {
       const { result } = renderHook(() => useZoneList(mockZones));
 
-      expect(result.current.summary.mostVisitedZone?.zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.summary.mostVisitedZone?.zone_name).toBe("Lioneye's Watch");
     });
 
     it('identifies longest time zone', () => {
       const { result } = renderHook(() => useZoneList(mockZones));
 
-      expect(result.current.summary.longestTimeZone?.zone_name).toBe('Lioneye\'s Watch');
+      expect(result.current.summary.longestTimeZone?.zone_name).toBe("Lioneye's Watch");
     });
 
     it('handles empty zone list', () => {

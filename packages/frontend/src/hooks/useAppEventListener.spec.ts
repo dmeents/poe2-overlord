@@ -84,12 +84,9 @@ describe('useAppEventListener', () => {
   it('re-registers listeners when deps change', async () => {
     const listeners = [{ eventType: 'character:created' as const, handler: mockHandler }];
 
-    const { rerender } = renderHook(
-      ({ deps }) => useAppEventListener(listeners, deps),
-      {
-        initialProps: { deps: [1] },
-      },
-    );
+    const { rerender } = renderHook(({ deps }) => useAppEventListener(listeners, deps), {
+      initialProps: { deps: [1] },
+    });
 
     await waitFor(() => {
       expect(eventListener.listenToAppEvent).toHaveBeenCalledTimes(1);

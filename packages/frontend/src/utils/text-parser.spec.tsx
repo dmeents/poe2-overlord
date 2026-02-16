@@ -12,11 +12,7 @@ describe('ParsedText', () => {
   it('converts single wiki item to clickable link', () => {
     const handleClick = vi.fn();
     render(
-      <ParsedText
-        text="Defeat the Tukohama"
-        wikiItems={['Tukohama']}
-        onWikiClick={handleClick}
-      />,
+      <ParsedText text="Defeat the Tukohama" wikiItems={['Tukohama']} onWikiClick={handleClick} />,
     );
 
     const link = screen.getByRole('button', { name: 'Tukohama' });
@@ -29,11 +25,7 @@ describe('ParsedText', () => {
     const handleClick = vi.fn();
 
     render(
-      <ParsedText
-        text="Defeat the Tukohama"
-        wikiItems={['Tukohama']}
-        onWikiClick={handleClick}
-      />,
+      <ParsedText text="Defeat the Tukohama" wikiItems={['Tukohama']} onWikiClick={handleClick} />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Tukohama' }));
@@ -71,11 +63,7 @@ describe('ParsedText', () => {
 
   it('matches wiki items case-insensitively', () => {
     render(
-      <ParsedText
-        text="Defeat the TUKOHAMA"
-        wikiItems={['Tukohama']}
-        onWikiClick={vi.fn()}
-      />,
+      <ParsedText text="Defeat the TUKOHAMA" wikiItems={['Tukohama']} onWikiClick={vi.fn()} />,
     );
 
     const link = screen.getByRole('button', { name: 'TUKOHAMA' });
@@ -110,11 +98,7 @@ describe('ParsedText', () => {
 
   it('only matches whole words', () => {
     render(
-      <ParsedText
-        text="The Coastline and The Coast"
-        wikiItems={['Coast']}
-        onWikiClick={vi.fn()}
-      />,
+      <ParsedText text="The Coastline and The Coast" wikiItems={['Coast']} onWikiClick={vi.fn()} />,
     );
 
     // Should only match "Coast" as a whole word, not "Coastline"

@@ -26,18 +26,18 @@ pub async fn update_config(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
     new_config: AppConfig,
 ) -> CommandResult<()> {
-    let result = to_command_result(config_service.update_config(new_config).await)?;
+    to_command_result(config_service.update_config(new_config).await)?;
     info!("Configuration updated successfully");
-    Ok(result)
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn reset_config_to_defaults(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
 ) -> CommandResult<()> {
-    let result = to_command_result(config_service.reset_to_defaults().await)?;
+    to_command_result(config_service.reset_to_defaults().await)?;
     info!("Configuration reset to defaults successfully");
-    Ok(result)
+    Ok(())
 }
 
 #[tauri::command]
@@ -52,9 +52,9 @@ pub async fn set_poe_client_log_path(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
     path: String,
 ) -> CommandResult<()> {
-    let result = to_command_result(config_service.set_poe_client_log_path(path.clone()).await)?;
+    to_command_result(config_service.set_poe_client_log_path(path.clone()).await)?;
     info!("POE client log path set to: {}", path);
-    Ok(result)
+    Ok(())
 }
 
 #[tauri::command]
@@ -69,9 +69,9 @@ pub async fn get_default_poe_client_log_path(
 pub async fn reset_poe_client_log_path_to_default(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
 ) -> CommandResult<()> {
-    let result = to_command_result(config_service.reset_poe_client_log_path_to_default().await)?;
+    to_command_result(config_service.reset_poe_client_log_path_to_default().await)?;
     info!("POE client log path reset to default successfully");
-    Ok(result)
+    Ok(())
 }
 
 #[tauri::command]
@@ -86,9 +86,9 @@ pub async fn set_log_level(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
     level: String,
 ) -> CommandResult<()> {
-    let result = to_command_result(config_service.set_log_level(level.clone()).await)?;
+    to_command_result(config_service.set_log_level(level.clone()).await)?;
     info!("Log level set to: {}", level);
-    Ok(result)
+    Ok(())
 }
 
 #[tauri::command]
@@ -118,9 +118,9 @@ pub async fn set_zone_refresh_interval(
     config_service: State<'_, Arc<ConfigurationServiceImpl>>,
     interval: ZoneRefreshInterval,
 ) -> CommandResult<()> {
-    let result = to_command_result(config_service.set_zone_refresh_interval(interval).await)?;
+    to_command_result(config_service.set_zone_refresh_interval(interval).await)?;
     info!("Zone refresh interval set to: {}", interval);
-    Ok(result)
+    Ok(())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

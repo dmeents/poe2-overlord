@@ -83,6 +83,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         });
 
         let event_bridge = TauriEventBridge::new(services.event_bus.clone(), main_window.clone());
+
         if let Err(e) = tauri::async_runtime::block_on(event_bridge.start_forwarding()) {
             error!("Failed to start Tauri event bridge: {}", e);
         } else {
@@ -119,6 +120,5 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     }
 
     info!("Application setup completed successfully");
-
     Ok(())
 }

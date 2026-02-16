@@ -3,6 +3,7 @@
     "rust-lang.rust-analyzer",
     "tamasfe.even-better-toml",
     "serayuzgur.crates",
-    "esbenp.prettier-vscode"
+    "biomejs.biome",
+    "EditorConfig.EditorConfig"
   ]
 }

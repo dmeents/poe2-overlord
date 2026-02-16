@@ -143,9 +143,7 @@ export function createMockObjective(overrides?: Partial<Objective>): Objective {
   return { ...defaultObjective, ...overrides };
 }
 
-export function createMockWalkthroughStep(
-  overrides?: Partial<WalkthroughStep>,
-): WalkthroughStep {
+export function createMockWalkthroughStep(overrides?: Partial<WalkthroughStep>): WalkthroughStep {
   const defaultStep: WalkthroughStep = {
     id: 'test-step-id',
     title: 'Test Step',

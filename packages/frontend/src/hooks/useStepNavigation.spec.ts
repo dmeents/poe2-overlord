@@ -19,9 +19,7 @@ describe('useStepNavigation', () => {
 
   describe('advanceStep', () => {
     it('invokes update command with correct parameters', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.advanceStep('step-2');
 
@@ -35,9 +33,7 @@ describe('useStepNavigation', () => {
     });
 
     it('does not invoke when characterId is null', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId: null, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId: null, progress }));
 
       await result.current.advanceStep('step-2');
 
@@ -45,9 +41,7 @@ describe('useStepNavigation', () => {
     });
 
     it('does not invoke when progress is null', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress: null }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress: null }));
 
       await result.current.advanceStep('step-2');
 
@@ -57,9 +51,7 @@ describe('useStepNavigation', () => {
     it('does not invoke when nextStepId is null', async () => {
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.advanceStep(null);
 
@@ -75,9 +67,7 @@ describe('useStepNavigation', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (invoke as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Failed'));
 
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.advanceStep('step-2');
 
@@ -89,9 +79,7 @@ describe('useStepNavigation', () => {
 
   describe('goToPreviousStep', () => {
     it('invokes update command with correct parameters', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.goToPreviousStep('step-0');
 
@@ -105,9 +93,7 @@ describe('useStepNavigation', () => {
     });
 
     it('does not invoke when characterId is null', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId: null, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId: null, progress }));
 
       await result.current.goToPreviousStep('step-0');
 
@@ -115,9 +101,7 @@ describe('useStepNavigation', () => {
     });
 
     it('does not invoke when progress is null', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress: null }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress: null }));
 
       await result.current.goToPreviousStep('step-0');
 
@@ -128,9 +112,7 @@ describe('useStepNavigation', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (invoke as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Failed'));
 
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.goToPreviousStep('step-0');
 
@@ -145,9 +127,7 @@ describe('useStepNavigation', () => {
 
   describe('skipToStep', () => {
     it('invokes update command with correct parameters', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.skipToStep('step-5');
 
@@ -161,9 +141,7 @@ describe('useStepNavigation', () => {
     });
 
     it('does not invoke when characterId is null', async () => {
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId: null, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId: null, progress }));
 
       await result.current.skipToStep('step-5');
 
@@ -174,9 +152,7 @@ describe('useStepNavigation', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (invoke as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Failed'));
 
-      const { result } = renderHook(() =>
-        useStepNavigation({ characterId, progress }),
-      );
+      const { result } = renderHook(() => useStepNavigation({ characterId, progress }));
 
       await result.current.skipToStep('step-5');
 

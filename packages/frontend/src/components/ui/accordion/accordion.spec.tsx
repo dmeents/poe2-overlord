@@ -7,7 +7,11 @@ describe('Accordion', () => {
   describe('Static Rendering', () => {
     it('renders accordion information correctly when collapsed', () => {
       render(
-        <Accordion title="Test Title" subtitle="Test Subtitle" isExpanded={false} onToggle={vi.fn()}>
+        <Accordion
+          title="Test Title"
+          subtitle="Test Subtitle"
+          isExpanded={false}
+          onToggle={vi.fn()}>
           <div>Content</div>
         </Accordion>,
       );

@@ -5,9 +5,27 @@ import { useCurrencyList } from './useCurrencyList';
 
 describe('useCurrencyList', () => {
   const mockCurrencies = [
-    createMockCurrency({ id: '1', name: 'Alpha', primary_value: 100, volume: 500, change_percent: 5 }),
-    createMockCurrency({ id: '2', name: 'Beta', primary_value: 50, volume: 1000, change_percent: -3 }),
-    createMockCurrency({ id: '3', name: 'Gamma', primary_value: 200, volume: 250, change_percent: 10 }),
+    createMockCurrency({
+      id: '1',
+      name: 'Alpha',
+      primary_value: 100,
+      volume: 500,
+      change_percent: 5,
+    }),
+    createMockCurrency({
+      id: '2',
+      name: 'Beta',
+      primary_value: 50,
+      volume: 1000,
+      change_percent: -3,
+    }),
+    createMockCurrency({
+      id: '3',
+      name: 'Gamma',
+      primary_value: 200,
+      volume: 250,
+      change_percent: 10,
+    }),
   ];
 
   describe('initial state', () => {

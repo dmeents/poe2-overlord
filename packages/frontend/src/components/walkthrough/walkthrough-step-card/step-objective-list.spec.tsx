@@ -12,9 +12,7 @@ describe('StepObjectiveList', () => {
   };
 
   it('returns null when objectives array is empty', () => {
-    const { container } = render(
-      <StepObjectiveList {...defaultProps} objectives={[]} />,
-    );
+    const { container } = render(<StepObjectiveList {...defaultProps} objectives={[]} />);
 
     expect(container.firstChild).toBeNull();
   });
@@ -172,9 +170,7 @@ describe('StepObjectiveList', () => {
       }),
     ];
 
-    render(
-      <StepObjectiveList {...defaultProps} objectives={objectives} wikiItems={['Nessa']} />,
-    );
+    render(<StepObjectiveList {...defaultProps} objectives={objectives} wikiItems={['Nessa']} />);
 
     expect(screen.getByRole('button', { name: 'Nessa' })).toBeInTheDocument();
   });

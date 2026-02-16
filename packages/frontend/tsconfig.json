@@ -34,11 +34,7 @@
     // Path mapping for better imports
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@/components/*": ["src/components/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      "@/utils/*": ["src/utils/*"],
-      "@/types/*": ["src/types/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src/**/*", "src/**/*.ts", "src/**/*.tsx", "vite-env.d.ts"],

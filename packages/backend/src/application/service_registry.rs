@@ -37,9 +37,9 @@ impl ServiceInitializer {
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
 
-        let config_service = Arc::new(
-            tauri::async_runtime::block_on(ConfigurationServiceImpl::new(event_bus.clone()))?,
-        );
+        let config_service = Arc::new(tauri::async_runtime::block_on(
+            ConfigurationServiceImpl::new(event_bus.clone()),
+        )?);
         app.manage(config_service.clone());
 
         let economy_service = EconomyService::new();

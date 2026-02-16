@@ -9,18 +9,20 @@
   "scripts": {
     "build": "tauri build --config packages/backend/tauri.conf.json",
     "dev": "tauri dev --config packages/backend/tauri.conf.json",
-    "format": "pnpm format:ts && pnpm format:rust",
+    "format": "pnpm --filter '@poe2-overlord/*' --parallel run format",
     "format:rust": "pnpm --filter @poe2-overlord/backend format",
     "format:rust:check": "pnpm --filter @poe2-overlord/backend format:check",
     "format:ts": "pnpm --filter @poe2-overlord/frontend format",
-    "lint": "pnpm lint:ts && pnpm lint:rust",
+    "lint": "pnpm --filter '@poe2-overlord/*' --parallel run lint",
     "lint:rust": "pnpm --filter @poe2-overlord/backend lint",
     "lint:ts": "pnpm --filter @poe2-overlord/frontend lint",
-    "test": "pnpm test:backend && pnpm test:frontend",
+    "typecheck": "pnpm --filter @poe2-overlord/frontend typecheck",
+    "test": "pnpm --filter '@poe2-overlord/*' --parallel run test",
     "test:backend": "pnpm --filter @poe2-overlord/backend test",
     "test:backend:verbose": "pnpm --filter @poe2-overlord/backend test:verbose",
     "test:backend:watch": "pnpm --filter @poe2-overlord/backend test:watch",
     "test:frontend": "pnpm --filter @poe2-overlord/frontend test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "check:backend": "pnpm --filter @poe2-overlord/backend check"
   },
   "devDependencies": {

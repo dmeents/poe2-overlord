@@ -5,7 +5,9 @@ import { SectionHeader } from './section-header';
 describe('SectionHeader', () => {
   describe('Static Rendering', () => {
     it('renders section header information correctly', () => {
-      render(<SectionHeader title="Test Section" icon={<span data-testid="test-icon">Icon</span>} />);
+      render(
+        <SectionHeader title="Test Section" icon={<span data-testid="test-icon">Icon</span>} />,
+      );
 
       // Title
       expect(screen.getByText('Test Section')).toBeInTheDocument();

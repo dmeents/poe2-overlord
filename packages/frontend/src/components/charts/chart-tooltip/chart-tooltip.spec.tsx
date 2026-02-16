@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ChartTooltip, formatCountTooltip, formatDurationTooltip } from './chart-tooltip';
 
 describe('ChartTooltip', () => {
-  const mockFormatContent = vi.fn((data) => `${data.value} (${data.percentage}%)`);
+  const mockFormatContent = vi.fn(data => `${data.value} (${data.percentage}%)`);
 
   const mockPayload = [
     {
@@ -40,9 +40,7 @@ describe('ChartTooltip', () => {
   });
 
   it('renders tooltip when active with payload', () => {
-    render(
-      <ChartTooltip active={true} payload={mockPayload} formatContent={mockFormatContent} />,
-    );
+    render(<ChartTooltip active={true} payload={mockPayload} formatContent={mockFormatContent} />);
 
     expect(screen.getByText('Test Item')).toBeInTheDocument();
     expect(mockFormatContent).toHaveBeenCalledWith({
@@ -53,9 +51,7 @@ describe('ChartTooltip', () => {
   });
 
   it('renders formatted content', () => {
-    render(
-      <ChartTooltip active={true} payload={mockPayload} formatContent={mockFormatContent} />,
-    );
+    render(<ChartTooltip active={true} payload={mockPayload} formatContent={mockFormatContent} />);
 
     expect(screen.getByText('100 (25.5%)')).toBeInTheDocument();
   });
@@ -87,10 +83,7 @@ describe('formatDurationTooltip', () => {
   const mockFormatDuration = vi.fn((ms: number) => `${ms}s`);
 
   it('formats duration with percentage', () => {
-    const result = formatDurationTooltip(
-      { value: 3600, percentage: 50.5 },
-      mockFormatDuration,
-    );
+    const result = formatDurationTooltip({ value: 3600, percentage: 50.5 }, mockFormatDuration);
 
     expect(mockFormatDuration).toHaveBeenCalledWith(3600);
     expect(result).toBe('3600s (50.5%)');

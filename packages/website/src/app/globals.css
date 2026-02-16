@@ -1,11 +1,46 @@
 @import "tailwindcss";
 @import "@poe2-overlord/theme/tokens.css";
 
-/* Website-specific styles */
-/* No WebKitGTK constraints - standard box-shadow and backdrop-filter work fine */
-
 html,
 body {
   background-color: #0c0a09;
   color: #fafaf9;
+}
+
+/* Scrollbar - webkit */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1917;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #44403c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #57534e;
+}
+
+/* Scrollbar - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #44403c #1c1917;
+}
+
+/* Text glow effects */
+.text-glow-ember {
+  text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+}
+
+/* Input/textarea focus styling */
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ea580c;
+  border-color: #ea580c;
 }

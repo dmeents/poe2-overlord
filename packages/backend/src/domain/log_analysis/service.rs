@@ -31,6 +31,7 @@ pub struct LogAnalysisServiceImpl {
     last_position: Arc<RwLock<u64>>,
     zone_level_cache: Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     last_log_timestamp: Arc<RwLock<Option<chrono::DateTime<chrono::Utc>>>>,
+    monitoring_task_handle: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 impl LogAnalysisServiceImpl {
@@ -63,6 +64,7 @@ impl LogAnalysisServiceImpl {
             last_position: Arc::new(RwLock::new(0)),
             zone_level_cache: Arc::new(RwLock::new(None)),
             last_log_timestamp: Arc::new(RwLock::new(None)),
+            monitoring_task_handle: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -95,6 +97,7 @@ impl LogAnalysisServiceImpl {
             last_position: Arc::new(RwLock::new(0)),
             zone_level_cache: Arc::new(RwLock::new(None)),
             last_log_timestamp: Arc::new(RwLock::new(None)),
+            monitoring_task_handle: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -165,8 +168,9 @@ impl LogAnalysisServiceImpl {
         let last_log_timestamp = Arc::clone(&self.last_log_timestamp);
         let log_analysis_config = Arc::clone(&self.config);
         let parser_manager = self.parser_manager.clone();
+        let monitoring_task_handle = Arc::clone(&self.monitoring_task_handle);
 
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
             let mut interval = time::interval(Duration::from_millis(interval_ms));
 
             loop {
@@ -218,6 +222,9 @@ impl LogAnalysisServiceImpl {
                 }
             }
         });
+
+        // Store the handle for later cleanup
+        *monitoring_task_handle.write().await = Some(handle);
 
         Ok(())
     }
@@ -846,6 +853,17 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         }
 
         *is_running = false;
+        drop(is_running); // Release lock before awaiting task
+
+        // Wait for the monitoring task to complete
+        let mut handle_guard = self.monitoring_task_handle.write().await;
+        if let Some(handle) = handle_guard.take() {
+            if let Err(e) = handle.await {
+                error!("Error waiting for log monitoring task to complete: {}", e);
+            } else {
+                info!("Log monitoring task completed successfully");
+            }
+        }
 
         info!("Log monitoring stopped");
         Ok(())

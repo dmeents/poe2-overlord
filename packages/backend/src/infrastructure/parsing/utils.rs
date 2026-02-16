@@ -39,11 +39,12 @@ pub fn extract_content_between_delimiters<'a>(
 
 /// Rejects empty and placeholder values like "(null)" or "undefined"
 pub fn validate_content(content: &str) -> bool {
+    let lower = content.to_lowercase();
     !content.is_empty()
-        && content != "(null)"
-        && content != "(undefined)"
-        && content != "(unknown)"
-        && content != "undefined"
-        && content.to_lowercase() != "null"
-        && content.to_lowercase() != "undefined"
+        && lower != "(null)"
+        && lower != "(undefined)"
+        && lower != "(unknown)"
+        && lower != "null"
+        && lower != "undefined"
+        && lower != "unknown"
 }

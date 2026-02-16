@@ -90,7 +90,7 @@ impl AppEvent {
         match self {
             AppEvent::ServerStatusChanged { timestamp, .. } => timestamp.clone(),
             AppEvent::ServerPingCompleted { timestamp, .. } => timestamp.clone(),
-            AppEvent::ConfigurationChanged(event) => event.timestamp.to_rfc3339(),
+            AppEvent::ConfigurationChanged(event) => event.timestamp.clone(),
             AppEvent::CharacterUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::CharacterDeleted { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughProgressUpdated { timestamp, .. } => timestamp.clone(),
@@ -238,85 +238,19 @@ impl EventType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChannelConfig {
     pub capacity: usize,
-    /// Drops oldest events when channel is full
-    pub drop_old_events: bool,
-    pub enable_logging: bool,
-    pub track_subscribers: bool,
 }
 
 impl ChannelConfig {
     pub fn for_event_type(event_type: EventType) -> Self {
         Self {
             capacity: event_type.default_capacity(),
-            drop_old_events: true,
-            enable_logging: true,
-            track_subscribers: true,
-        }
-    }
-
-    /// Disables logging for performance on high-volume events
-    pub fn high_capacity(capacity: usize) -> Self {
-        Self {
-            capacity,
-            drop_old_events: true,
-            enable_logging: false,
-            track_subscribers: true,
-        }
-    }
-
-    /// Preserves all events for critical low-volume events
-    pub fn low_capacity(capacity: usize) -> Self {
-        Self {
-            capacity,
-            drop_old_events: false,
-            enable_logging: true,
-            track_subscribers: true,
         }
     }
 }
 
 impl Default for ChannelConfig {
     fn default() -> Self {
-        Self {
-            capacity: 100,
-            drop_old_events: true,
-            enable_logging: true,
-            track_subscribers: true,
-        }
+        Self { capacity: 100 }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChannelStats {
-    pub event_type: EventType,
-    pub subscriber_count: usize,
-    pub events_published: u64,
-    pub events_received: u64,
-    pub created_at: String,
-    pub last_activity: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EventSubscription {
-    pub subscription_id: String,
-    pub event_type: EventType,
-    pub subscriber_name: String,
-    pub created_at: String,
-    pub is_active: bool,
-}
-
-impl EventSubscription {
-    pub fn new(event_type: EventType, subscriber_name: String) -> Self {
-        Self {
-            subscription_id: uuid::Uuid::new_v4().to_string(),
-            event_type,
-            subscriber_name,
-            created_at: chrono::Utc::now().to_rfc3339(),
-            is_active: true,
-        }
-    }
-
-    pub fn deactivate(&mut self) {
-        self.is_active = false;
-    }
-}

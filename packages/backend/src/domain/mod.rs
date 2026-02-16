@@ -26,9 +26,7 @@ pub use economy::{
     CurrencyExchangeData, CurrencyExchangeRate, CurrencyInfo, EconomyService, EconomyType,
 };
 
-pub use crate::infrastructure::events::{
-    AppEvent, ChannelConfig, ChannelManager, EventBus, EventType,
-};
+pub use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 
 pub use game_monitoring::{
     GameMonitoringService, GameMonitoringServiceImpl, GameProcessStatus, ProcessDetector,
@@ -36,8 +34,8 @@ pub use game_monitoring::{
 };
 
 pub use log_analysis::{
-    LogAnalysisConfig, LogAnalysisError, LogAnalysisEvent, LogAnalysisService,
-    LogAnalysisServiceImpl, LogFileInfo, LogLineAnalysis,
+    LogAnalysisConfig, LogAnalysisError, LogAnalysisService, LogAnalysisServiceImpl, LogFileInfo,
+    LogLineAnalysis,
 };
 
 pub use server_monitoring::{ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatus};

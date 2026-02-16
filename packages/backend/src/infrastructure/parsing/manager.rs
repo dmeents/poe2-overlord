@@ -28,8 +28,13 @@ impl LogParserManager {
                     Ok(result) => {
                         return Ok(Some(result));
                     }
-                    Err(_e) => {
-                        // Parser matched but failed to parse
+                    Err(e) => {
+                        // Parser matched but failed to parse - log the error
+                        log::warn!(
+                            "Parser '{}' matched but failed to parse line: {}",
+                            parser.parser_name(),
+                            e
+                        );
                     }
                 }
             }
@@ -37,24 +42,13 @@ impl LogParserManager {
 
         Ok(None)
     }
-
-    pub fn get_active_parser_names(&self) -> Vec<&str> {
-        self.parsers
-            .iter()
-            .map(|parser| parser.parser_name())
-            .collect()
-    }
-
-    pub fn get_parser_by_name(
-        &self,
-        parser_name: &str,
-    ) -> Option<Box<dyn LogParser<Event = ParserResult> + Send + Sync>> {
-        ParserFactory::create_parser(parser_name)
-    }
 }
 
 impl Clone for LogParserManager {
     fn clone(&self) -> Self {
+        // Creates a new instance rather than cloning state because:
+        // 1. Parsers are stateless and cheap to reconstruct
+        // 2. Box<dyn LogParser> is not Clone, so we can't clone the Vec
         Self::new()
     }
 }

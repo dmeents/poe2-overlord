@@ -221,7 +221,7 @@ impl Default for AppConfig {
 pub struct ConfigurationChangedEvent {
     pub new_config: AppConfig,
     pub previous_config: AppConfig,
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub timestamp: String,
 }
 
 impl ConfigurationChangedEvent {
@@ -229,7 +229,7 @@ impl ConfigurationChangedEvent {
         Self {
             new_config,
             previous_config,
-            timestamp: chrono::Utc::now(),
+            timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
 }

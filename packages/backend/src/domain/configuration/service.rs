@@ -4,11 +4,10 @@ use crate::domain::configuration::models::{
 use crate::domain::configuration::repository::ConfigurationRepositoryImpl;
 use crate::domain::configuration::traits::{ConfigurationRepository, ConfigurationService};
 use crate::errors::{AppError, AppResult};
-use crate::infrastructure::events::{AppEvent, EventBus, EventType};
+use crate::infrastructure::events::{AppEvent, EventBus};
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::sync::Arc;
-use tokio::sync::broadcast;
 
 pub struct ConfigurationServiceImpl {
     repository: Arc<ConfigurationRepositoryImpl>,
@@ -191,10 +190,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
     async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()> {
         let default_path = AppConfig::get_default_poe_client_log_path();
         self.set_poe_client_log_path(default_path).await
-    }
-
-    async fn subscribe_to_config_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>> {
-        self.event_bus.get_receiver(EventType::Configuration).await
     }
 
     async fn get_zone_refresh_interval(

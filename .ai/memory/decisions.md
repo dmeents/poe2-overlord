@@ -1,5 +1,55 @@
 # Architecture Decisions
 
+## ADR-004: AppEvent Domain-Infrastructure Coupling
+
+**Date:** 2026-02-15
+
+**Status:** Accepted
+
+**Context:**
+During the backend infrastructure audit, we identified that domain services directly construct `AppEvent` variants (an infrastructure type defined in `infrastructure/events/types.rs`). This creates a bidirectional dependency between the domain and infrastructure layers, which violates typical clean architecture principles.
+
+**Trade-offs Considered:**
+
+**Option 1: Move AppEvent to a shared types location**
+- Pros: Clear separation, no circular dependencies
+- Cons: Large refactor, event bus and domain both import from shared layer, breaks current layering
+
+**Option 2: Create domain event types and map to AppEvent**
+- Pros: Clean separation, domain layer independent
+- Cons: Significant boilerplate, double the event definitions, mapping logic in infrastructure
+
+**Option 3: Accept the coupling with factory methods**
+- Pros: Minimal code, pragmatic for application-level architecture
+- Cons: Domain depends on infrastructure (but indirectly, via factory methods)
+
+**Decision:**
+Accept the domain-to-infrastructure coupling for `AppEvent` with the following constraints:
+- Domain services call `event_bus.publish(AppEvent::factory_method(...))` using factory methods
+- All `AppEvent` variants have factory methods (e.g., `character_updated()`, `server_status_changed()`)
+- Domain services never construct `AppEvent` directly with struct literals
+- The coupling is one-directional: domain → infrastructure (not bidirectional)
+- This pattern is already established and working well in practice
+
+**Rationale:**
+1. This is an application, not a library - the pragmatic benefits outweigh theoretical purity
+2. The factory methods already exist and provide a clean API
+3. The coupling is minimal and explicit
+4. Alternative approaches would add significant complexity with little practical benefit
+5. The event bus is a cross-cutting concern that both layers need to interact with
+
+**Consequences:**
+- Domain layer imports `infrastructure::events::AppEvent`
+- Domain layer imports `infrastructure::events::EventBus`
+- The pattern is explicit and well-documented
+- Future refactoring to separate layers is possible if needed, but not prioritized
+
+**Related Code:**
+- `infrastructure/events/types.rs` - AppEvent definition and factory methods
+- `domain/*/service.rs` - Domain services that publish events
+
+---
+
 ## ADR-002: Filter-Based Shadows for WebKitGTK Compatibility
 
 **Date:** 2026-02-12

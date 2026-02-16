@@ -16,9 +16,6 @@ pub enum ParseError {
 
     #[error("Configuration error: {message}")]
     ConfigurationError { message: String },
-
-    #[error("Unsupported parser type: {parser_type}")]
-    UnsupportedParserType { parser_type: String },
 }
 
 impl ParseError {
@@ -49,12 +46,6 @@ impl ParseError {
     pub fn configuration_error(message: &str) -> Self {
         Self::ConfigurationError {
             message: message.to_string(),
-        }
-    }
-
-    pub fn unsupported_parser_type(parser_type: &str) -> Self {
-        Self::UnsupportedParserType {
-            parser_type: parser_type.to_string(),
         }
     }
 }

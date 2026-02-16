@@ -20,7 +20,7 @@ use crate::domain::walkthrough::{
 use crate::domain::zone_configuration::{
     repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
 };
-use crate::infrastructure::events::EventBus;
+use crate::infrastructure::events::{EventBus, TauriEventBridge};
 use log::{error, info};
 use std::sync::Arc;
 use tauri::Manager;
@@ -167,6 +167,7 @@ impl ServiceInitializer {
             log_analysis_service: log_analysis_arc,
             server_monitoring_service: server_monitoring_arc,
             game_monitoring_service,
+            event_bridge: None,
         })
     }
 }
@@ -180,11 +181,25 @@ pub struct ServiceInstances {
     pub log_analysis_service: Arc<dyn LogAnalysisService>,
     pub server_monitoring_service: Arc<dyn ServerMonitoringService>,
     pub game_monitoring_service: Arc<dyn GameMonitoringService>,
+    pub event_bridge: Option<Arc<TauriEventBridge>>,
 }
 
 impl ServiceInstances {
+    pub fn set_event_bridge(&mut self, bridge: Arc<TauriEventBridge>) {
+        self.event_bridge = Some(bridge);
+    }
+
     pub async fn shutdown_services(&self) -> Result<(), Box<dyn std::error::Error>> {
         log::info!("Starting application shutdown cleanup...");
+
+        // Stop event bridge forwarding
+        if let Some(bridge) = &self.event_bridge {
+            if let Err(e) = bridge.stop_forwarding().await {
+                log::error!("Failed to stop event bridge: {}", e);
+            } else {
+                log::info!("Event bridge stopped successfully");
+            }
+        }
 
         // Stop monitoring services
         if let Err(e) = self.game_monitoring_service.stop_monitoring().await {

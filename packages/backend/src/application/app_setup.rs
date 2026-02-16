@@ -1,4 +1,5 @@
 use log::{error, info, warn};
+use std::sync::Arc;
 use tauri::Manager;
 
 use crate::application::service_orchestrator::{
@@ -10,7 +11,7 @@ use crate::domain::configuration::traits::ConfigurationService;
 use crate::infrastructure::events::TauriEventBridge;
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let services = ServiceInitializer::initialize_services(app)?;
+    let mut services = ServiceInitializer::initialize_services(app)?;
 
     app.manage(services.clone());
 
@@ -82,13 +83,19 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
             }
         });
 
-        let event_bridge = TauriEventBridge::new(services.event_bus.clone(), main_window.clone());
+        let event_bridge = Arc::new(TauriEventBridge::new(
+            services.event_bus.clone(),
+            main_window.clone(),
+        ));
 
         if let Err(e) = tauri::async_runtime::block_on(event_bridge.start_forwarding()) {
             error!("Failed to start Tauri event bridge: {}", e);
         } else {
             info!("Tauri event bridge started successfully");
         }
+
+        // Store bridge in services for shutdown
+        services.set_event_bridge(event_bridge);
 
         let _log_monitoring_handle = start_log_monitoring(services.log_analysis_service.clone());
 

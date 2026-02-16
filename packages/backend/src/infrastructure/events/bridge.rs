@@ -1,45 +1,101 @@
-use crate::errors::AppResult;
 use crate::infrastructure::events::{AppEvent, EventBus, EventType};
+use crate::errors::AppResult;
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};
+use tokio::sync::RwLock;
+use tokio::task::JoinHandle;
+use tokio_util::sync::CancellationToken;
 
 pub struct TauriEventBridge {
     event_bus: Arc<EventBus>,
     window: WebviewWindow,
+    forwarding_tasks: Arc<RwLock<Vec<JoinHandle<()>>>>,
+    cancellation_token: CancellationToken,
 }
 
 impl TauriEventBridge {
     pub fn new(event_bus: Arc<EventBus>, window: WebviewWindow) -> Self {
-        Self { event_bus, window }
+        Self {
+            event_bus,
+            window,
+            forwarding_tasks: Arc::new(RwLock::new(Vec::new())),
+            cancellation_token: CancellationToken::new(),
+        }
     }
 
     pub async fn start_forwarding(&self) -> AppResult<()> {
         info!("Starting Tauri event bridge forwarding");
 
+        let mut handles = Vec::new();
+
         for event_type in EventType::all() {
-            let subscription = self
-                .event_bus
-                .subscribe(event_type, "tauri-bridge".to_string())
-                .await?;
-
-            debug!(
-                "Subscribed to {:?} events with ID: {}",
-                event_type, subscription.subscription_id
-            );
-
             let event_bus = Arc::clone(&self.event_bus);
             let window = self.window.clone();
+            let cancellation_token = self.cancellation_token.clone();
 
-            tokio::spawn(async move {
+            debug!("Starting forwarding for event type: {:?}", event_type);
+
+            let handle = tokio::spawn(async move {
                 if let Ok(mut receiver) = event_bus.get_receiver(event_type).await {
-                    while let Ok(event) = receiver.recv().await {
-                        Self::forward_event_to_frontend(&window, &event).await;
+                    loop {
+                        tokio::select! {
+                            _ = cancellation_token.cancelled() => {
+                                info!("Forwarding task for {:?} cancelled", event_type);
+                                break;
+                            }
+                            result = receiver.recv() => {
+                                match result {
+                                    Ok(event) => {
+                                        Self::forward_event_to_frontend(&window, &event).await;
+                                    }
+                                    Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                                        error!(
+                                            "Event bridge lagged by {} events for {:?}, continuing",
+                                            n, event_type
+                                        );
+                                        // Continue receiving - receiver is still valid
+                                    }
+                                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                        error!(
+                                            "Event channel closed for {:?}, exiting forwarding task",
+                                            event_type
+                                        );
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
+                } else {
+                    error!("Failed to get receiver for event type: {:?}", event_type);
                 }
             });
+
+            handles.push(handle);
         }
 
+        // Store handles for later cleanup
+        *self.forwarding_tasks.write().await = handles;
+
+        Ok(())
+    }
+
+    pub async fn stop_forwarding(&self) -> AppResult<()> {
+        info!("Stopping Tauri event bridge forwarding");
+
+        // Signal all tasks to stop
+        self.cancellation_token.cancel();
+
+        // Wait for all tasks to complete
+        let mut handles = self.forwarding_tasks.write().await;
+        for handle in handles.drain(..) {
+            if let Err(e) = handle.await {
+                error!("Error waiting for forwarding task to complete: {}", e);
+            }
+        }
+
+        info!("All forwarding tasks stopped");
         Ok(())
     }
 

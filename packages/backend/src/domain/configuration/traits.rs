@@ -2,9 +2,7 @@ use crate::domain::configuration::models::{
     AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
 };
 use crate::errors::AppResult;
-use crate::infrastructure::events::AppEvent;
 use async_trait::async_trait;
-use tokio::sync::broadcast;
 
 #[async_trait]
 pub trait ConfigurationService: Send + Sync {
@@ -47,8 +45,6 @@ pub trait ConfigurationService: Send + Sync {
         &self,
         interval: crate::domain::configuration::models::ZoneRefreshInterval,
     ) -> AppResult<()>;
-
-    async fn subscribe_to_config_changes(&self) -> AppResult<broadcast::Receiver<AppEvent>>;
 }
 
 #[async_trait]

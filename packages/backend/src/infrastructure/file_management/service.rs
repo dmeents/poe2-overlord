@@ -49,56 +49,6 @@ impl FileService {
         Self::write(path, &json_content).await
     }
 
-    /// Atomically write JSON with version check (optimistic locking)
-    ///
-    /// Reads current file, validates version matches expected, then writes.
-    /// Uses temp file + rename for atomic filesystem write.
-    ///
-    /// # Arguments
-    /// * `path` - File path to write to
-    /// * `data` - Data to serialize and write
-    /// * `expected_version` - The version we expect the file to have (0 if file doesn't exist)
-    /// * `get_version` - Function to extract version from data type
-    ///
-    /// # Errors
-    /// Returns `AppError::ConcurrentModification` if current file version doesn't match expected
-    pub async fn write_json_with_version_check<T>(
-        path: impl AsRef<Path>,
-        data: &T,
-        expected_version: u64,
-        get_version: impl Fn(&T) -> u64,
-    ) -> AppResult<()>
-    where
-        T: Serialize + DeserializeOwned,
-    {
-        let path = path.as_ref();
-
-        // Read current version from disk (if file exists)
-        if Self::exists(path).await? {
-            let current_data: T = Self::read_json(path).await?;
-            let current_version = get_version(&current_data);
-
-            if current_version != expected_version {
-                return Err(AppError::concurrent_modification_error(
-                    "write_json_with_version_check",
-                    expected_version,
-                    current_version,
-                ));
-            }
-        } else if expected_version != 0 {
-            // File doesn't exist but we expected a specific version (not new config)
-            // This is also a concurrent modification (file was deleted)
-            return Err(AppError::concurrent_modification_error(
-                "write_json_with_version_check",
-                expected_version,
-                0,
-            ));
-        }
-
-        // Version matches (or file doesn't exist and we expected 0) - proceed with write
-        Self::write_json(path, data).await
-    }
-
     pub async fn delete(path: impl AsRef<Path>) -> AppResult<()> {
         let path = path.as_ref();
 
@@ -163,22 +113,30 @@ impl FileService {
             )
         })?;
 
-        fs::rename(&temp_path, path).await.map_err(|e| {
-            let _ = std::fs::remove_file(&temp_path);
-            AppError::file_system_error(
+        if let Err(e) = fs::rename(&temp_path, path).await {
+            // Clean up temp file using async I/O
+            let _ = tokio::fs::remove_file(&temp_path).await;
+            return Err(AppError::file_system_error(
                 "rename_temp_file",
                 &format!(
                     "Failed to rename temp file {:?} to {:?}: {}",
                     temp_path, path, e
                 ),
-            )
-        })?;
+            ));
+        }
 
         debug!("Wrote file atomically: {:?}", path);
         Ok(())
     }
 
     fn get_temp_path(path: &Path) -> std::path::PathBuf {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+
+        let pid = std::process::id();
+        let counter = COUNTER.fetch_add(1, Ordering::Relaxed);
+        let unique_suffix = format!("{}.{}", pid, counter);
+
         let mut temp_path = path.to_path_buf();
         let mut extension = path
             .extension()
@@ -187,9 +145,9 @@ impl FileService {
             .to_string();
 
         if !extension.is_empty() {
-            extension.push_str(".tmp");
+            extension.push_str(&format!(".{}.tmp", unique_suffix));
         } else {
-            extension = "tmp".to_string();
+            extension = format!("{}.tmp", unique_suffix);
         }
 
         temp_path.set_extension(extension);

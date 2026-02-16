@@ -1,6 +1,7 @@
 use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::{
-    service::ConfigurationServiceImpl, traits::ConfigurationService,
+    repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
+    traits::ConfigurationService,
 };
 use crate::domain::economy::EconomyService;
 use crate::domain::game_monitoring::{
@@ -37,9 +38,35 @@ impl ServiceInitializer {
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
 
-        let config_service = Arc::new(tauri::async_runtime::block_on(
-            ConfigurationServiceImpl::new(event_bus.clone()),
-        )?);
+        // Create configuration repository
+        let config_repository = Arc::new(tauri::async_runtime::block_on(
+            ConfigurationRepositoryImpl::new(),
+        )?) as Arc<dyn crate::domain::configuration::traits::ConfigurationRepository + Send + Sync>;
+
+        // Create configuration service with DI
+        let config_service_impl = tauri::async_runtime::block_on(async {
+            let service =
+                ConfigurationServiceImpl::new(config_repository.clone(), event_bus.clone());
+
+            // Load config or use defaults
+            match config_repository.load().await {
+                Ok(_) => {
+                    log::info!("Configuration loaded successfully");
+                }
+                Err(e) => {
+                    log::warn!("Failed to load config, using defaults: {}", e);
+                    let default_config = crate::domain::configuration::models::AppConfig::default();
+                    if let Err(save_err) = config_repository.save(&default_config).await {
+                        log::warn!("Failed to save default config: {}", save_err);
+                    }
+                }
+            }
+
+            service
+        });
+
+        let config_service =
+            Arc::new(config_service_impl) as Arc<dyn ConfigurationService + Send + Sync>;
         app.manage(config_service.clone());
 
         let economy_service = EconomyService::new();
@@ -127,8 +154,9 @@ impl ServiceInitializer {
         let config_service_clone = config_service.clone();
         let log_analysis_clone = log_analysis_arc.clone();
         tauri::async_runtime::block_on(async move {
-            match config_service_clone.get_poe_client_log_path().await {
-                Ok(log_path) => {
+            match config_service_clone.get_config().await {
+                Ok(config) => {
+                    let log_path = config.poe_client_log_path;
                     if !log_path.is_empty() {
                         if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
                             error!("Failed to update log path in LogAnalysisService: {}", e);
@@ -140,7 +168,7 @@ impl ServiceInitializer {
                     }
                 }
                 Err(e) => {
-                    error!("Failed to get log path from configuration service: {}", e);
+                    error!("Failed to get config from configuration service: {}", e);
                 }
             }
         });
@@ -174,7 +202,7 @@ impl ServiceInitializer {
 
 #[derive(Clone)]
 pub struct ServiceInstances {
-    pub config_service: Arc<ConfigurationServiceImpl>,
+    pub config_service: Arc<dyn ConfigurationService + Send + Sync>,
     pub event_bus: Arc<EventBus>,
     pub character_service: Arc<dyn CharacterService + Send + Sync>,
     pub walkthrough_service: Arc<dyn WalkthroughService + Send + Sync>,

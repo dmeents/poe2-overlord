@@ -1,6 +1,4 @@
-use crate::domain::configuration::models::{
-    AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationValidationResult,
-};
+use crate::domain::configuration::models::{AppConfig, ConfigurationChangedEvent};
 use crate::domain::configuration::repository::ConfigurationRepositoryImpl;
 use crate::domain::configuration::traits::{ConfigurationRepository, ConfigurationService};
 use crate::errors::{AppError, AppResult};
@@ -10,18 +8,29 @@ use log::{debug, info, warn};
 use std::sync::Arc;
 
 pub struct ConfigurationServiceImpl {
-    repository: Arc<ConfigurationRepositoryImpl>,
+    repository: Arc<dyn ConfigurationRepository + Send + Sync>,
     event_bus: Arc<EventBus>,
 }
 
 impl ConfigurationServiceImpl {
-    pub async fn new(event_bus: Arc<EventBus>) -> AppResult<Self> {
-        let repository = Arc::new(ConfigurationRepositoryImpl::new().await?);
-
-        let service = Self {
+    /// Create a new configuration service with dependency injection
+    pub fn new(
+        repository: Arc<dyn ConfigurationRepository + Send + Sync>,
+        event_bus: Arc<EventBus>,
+    ) -> Self {
+        Self {
             repository,
             event_bus,
-        };
+        }
+    }
+
+    /// Create a new configuration service with the default repository implementation
+    /// This is a convenience factory for typical usage
+    pub async fn with_default_repository(event_bus: Arc<EventBus>) -> AppResult<Self> {
+        let repository = Arc::new(ConfigurationRepositoryImpl::new().await?)
+            as Arc<dyn ConfigurationRepository + Send + Sync>;
+
+        let service = Self::new(repository, event_bus);
 
         if let Err(e) = service.load_config().await {
             warn!("Failed to load config, using defaults: {}", e);
@@ -43,6 +52,19 @@ impl ConfigurationServiceImpl {
         Ok(service)
     }
 
+    /// Load configuration from repository (internal use)
+    async fn load_config(&self) -> AppResult<()> {
+        self.repository.load().await?;
+        info!("Configuration loaded successfully");
+        Ok(())
+    }
+
+    /// Save current configuration to repository (internal use)
+    async fn save_config(&self) -> AppResult<()> {
+        let config = self.repository.get_in_memory_config().await?;
+        self.repository.save(&config).await
+    }
+
     async fn publish_config_change(&self, new_config: AppConfig, previous_config: AppConfig) {
         let event = AppEvent::ConfigurationChanged(ConfigurationChangedEvent::new(
             new_config,
@@ -60,7 +82,11 @@ impl ConfigurationService for ConfigurationServiceImpl {
         self.repository.get_in_memory_config().await
     }
 
-    async fn update_config(&self, new_config: AppConfig) -> AppResult<()> {
+    async fn update_config(&self, mut new_config: AppConfig) -> AppResult<()> {
+        // Normalize log level to lowercase
+        new_config.log_level = AppConfig::normalize_log_level(&new_config.log_level)
+            .map_err(|e| AppError::validation_error("normalize_log_level", &e))?;
+
         let validation_result = self.repository.validate_config(&new_config).await?;
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
@@ -74,73 +100,13 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         let previous_config = self.get_config().await?;
 
-        self.repository
-            .update_in_memory_config(new_config.clone())
-            .await?;
+        // save() handles in-memory update and schedules debounced disk write
         self.repository.save(&new_config).await?;
 
         self.publish_config_change(new_config, previous_config)
             .await;
 
         info!("Configuration updated successfully");
-        Ok(())
-    }
-
-    async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
-        let previous_config = self.get_config().await?;
-        let mut new_config = previous_config.clone();
-
-        new_config.poe_client_log_path = path;
-
-        let validation_result = self.repository.validate_config(&new_config).await?;
-        if !validation_result.is_valid {
-            return Err(AppError::validation_error(
-                "validate_config",
-                &format!(
-                    "Configuration validation failed: {}",
-                    validation_result.errors.join(", ")
-                ),
-            ));
-        }
-
-        self.repository
-            .update_in_memory_config(new_config.clone())
-            .await?;
-        self.repository.save(&new_config).await?;
-
-        self.publish_config_change(new_config, previous_config)
-            .await;
-
-        debug!("POE client log path updated successfully");
-        Ok(())
-    }
-
-    async fn set_log_level(&self, level: String) -> AppResult<()> {
-        let previous_config = self.get_config().await?;
-        let mut new_config = previous_config.clone();
-
-        new_config.log_level = level;
-
-        let validation_result = self.repository.validate_config(&new_config).await?;
-        if !validation_result.is_valid {
-            return Err(AppError::validation_error(
-                "validate_config",
-                &format!(
-                    "Configuration validation failed: {}",
-                    validation_result.errors.join(", ")
-                ),
-            ));
-        }
-
-        self.repository
-            .update_in_memory_config(new_config.clone())
-            .await?;
-        self.repository.save(&new_config).await?;
-
-        self.publish_config_change(new_config, previous_config)
-            .await;
-
-        debug!("Log level updated successfully");
         Ok(())
     }
 
@@ -151,45 +117,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
     async fn flush(&self) -> AppResult<()> {
         self.repository.flush().await
-    }
-
-    async fn load_config(&self) -> AppResult<()> {
-        self.repository.load().await?;
-        info!("Configuration loaded successfully");
-        Ok(())
-    }
-
-    async fn save_config(&self) -> AppResult<()> {
-        let config = self.repository.get_in_memory_config().await?;
-        self.repository.save(&config).await
-    }
-
-    async fn validate_config(
-        &self,
-        config: &AppConfig,
-    ) -> AppResult<ConfigurationValidationResult> {
-        self.repository.validate_config(config).await
-    }
-
-    async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo> {
-        self.repository.get_file_info().await
-    }
-
-    async fn get_poe_client_log_path(&self) -> AppResult<String> {
-        self.repository.get_poe_client_log_path().await
-    }
-
-    async fn get_log_level(&self) -> AppResult<String> {
-        self.repository.get_log_level().await
-    }
-
-    async fn get_default_poe_client_log_path(&self) -> String {
-        self.repository.get_default_poe_client_log_path().await
-    }
-
-    async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()> {
-        let default_path = AppConfig::get_default_poe_client_log_path();
-        self.set_poe_client_log_path(default_path).await
     }
 
     async fn get_zone_refresh_interval(
@@ -208,6 +135,10 @@ impl ConfigurationService for ConfigurationServiceImpl {
 
         new_config.zone_refresh_interval = interval;
 
+        // Normalize log level to lowercase
+        new_config.log_level = AppConfig::normalize_log_level(&new_config.log_level)
+            .map_err(|e| AppError::validation_error("normalize_log_level", &e))?;
+
         let validation_result = self.repository.validate_config(&new_config).await?;
         if !validation_result.is_valid {
             return Err(AppError::validation_error(
@@ -219,9 +150,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
             ));
         }
 
-        self.repository
-            .update_in_memory_config(new_config.clone())
-            .await?;
+        // save() handles in-memory update and schedules debounced disk write
         self.repository.save(&new_config).await?;
 
         self.publish_config_change(new_config, previous_config)

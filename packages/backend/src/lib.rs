@@ -57,8 +57,7 @@ pub use domain::walkthrough::{
 
 // Configuration domain models and services
 pub use domain::configuration::{
-    AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationService,
-    ConfigurationServiceImpl, ConfigurationValidationResult,
+    AppConfig, ConfigurationChangedEvent, ConfigurationService, ConfigurationServiceImpl,
 };
 
 // Unified event system
@@ -108,14 +107,6 @@ pub fn run() {
             get_default_config,
             update_config,
             reset_config_to_defaults,
-            get_poe_client_log_path,
-            set_poe_client_log_path,
-            get_default_poe_client_log_path,
-            reset_poe_client_log_path_to_default,
-            get_log_level,
-            set_log_level,
-            get_config_file_info,
-            validate_config,
             get_zone_refresh_interval,
             set_zone_refresh_interval,
             get_zone_refresh_interval_options,

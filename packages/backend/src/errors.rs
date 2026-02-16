@@ -28,10 +28,6 @@ pub enum AppError {
     /// Security violations (path traversal, unauthorized access, etc.)
     #[error("Security error: {message}")]
     Security { message: String },
-
-    /// Concurrent modification detected (optimistic locking failure)
-    #[error("Concurrent modification error: {message}")]
-    ConcurrentModification { message: String },
 }
 
 // Standard library error conversions
@@ -107,20 +103,6 @@ impl AppError {
     pub fn security_error(operation: &str, message: &str) -> Self {
         Self::Security {
             message: format!("{}: {}", operation, message),
-        }
-    }
-
-    /// Convenience constructor for concurrent modification errors
-    pub fn concurrent_modification_error(
-        operation: &str,
-        expected_version: u64,
-        actual_version: u64,
-    ) -> Self {
-        Self::ConcurrentModification {
-            message: format!(
-                "{}: Configuration was modified by another operation (expected version {}, got {})",
-                operation, expected_version, actual_version
-            ),
         }
     }
 }

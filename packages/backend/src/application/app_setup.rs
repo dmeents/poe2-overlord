@@ -7,7 +7,6 @@ use crate::application::service_orchestrator::{
 };
 use crate::application::service_registry::ServiceInitializer;
 use crate::domain::character::models::CleanupStrategy;
-use crate::domain::configuration::traits::ConfigurationService;
 use crate::infrastructure::events::TauriEventBridge;
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -19,8 +18,9 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     let log_level = tauri::async_runtime::block_on(async {
         config_service
-            .get_log_level()
+            .get_config()
             .await
+            .map(|config| config.log_level)
             .unwrap_or_else(|_| "info".to_string())
     })
     .to_lowercase();

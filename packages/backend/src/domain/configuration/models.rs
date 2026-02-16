@@ -45,24 +45,19 @@ impl ZoneRefreshInterval {
             ZoneRefreshInterval::SevenDays => "7 Days",
         }
     }
-
-    pub fn parse(s: &str) -> Option<Self> {
-        match s {
-            "FiveMinutes" => Some(ZoneRefreshInterval::FiveMinutes),
-            "OneHour" => Some(ZoneRefreshInterval::OneHour),
-            "TwelveHours" => Some(ZoneRefreshInterval::TwelveHours),
-            "TwentyFourHours" => Some(ZoneRefreshInterval::TwentyFourHours),
-            "ThreeDays" => Some(ZoneRefreshInterval::ThreeDays),
-            "SevenDays" => Some(ZoneRefreshInterval::SevenDays),
-            _ => None,
-        }
-    }
 }
 
 impl std::fmt::Display for ZoneRefreshInterval {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.label())
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ZoneRefreshIntervalOption {
+    pub value: String,
+    pub label: String,
+    pub seconds: i64,
 }
 
 /// Default config version for new configs
@@ -75,10 +70,6 @@ pub struct AppConfig {
     /// Configuration schema version for migration compatibility
     #[serde(default = "default_config_version")]
     pub config_version: u32,
-    /// Optimistic locking version - increments on every write
-    /// Used to detect concurrent modifications
-    #[serde(default)]
-    pub version: u64,
     pub poe_client_log_path: String,
     pub log_level: String,
     pub zone_refresh_interval: ZoneRefreshInterval,
@@ -91,7 +82,7 @@ impl AppConfig {
 
     /// Valid log levels for configuration
     pub const VALID_LOG_LEVELS: &'static [&'static str] =
-        &["trace", "debug", "info", "warn", "warning", "error"];
+        &["trace", "debug", "info", "warn", "error"];
 
     pub fn new() -> Self {
         Self::default()
@@ -100,23 +91,10 @@ impl AppConfig {
     pub fn with_values(poe_client_log_path: String, log_level: String) -> Self {
         Self {
             config_version: Self::CURRENT_VERSION,
-            version: 0,
             poe_client_log_path,
             log_level,
             zone_refresh_interval: ZoneRefreshInterval::default(),
         }
-    }
-
-    /// Create a new config with incremented version for optimistic locking
-    pub fn with_incremented_version(&self) -> Self {
-        let mut new_config = self.clone();
-        new_config.version = self.version.wrapping_add(1);
-        new_config
-    }
-
-    /// Get the current optimistic locking version
-    pub fn get_version(&self) -> u64 {
-        self.version
     }
 
     /// Check if a log level string is valid (case-insensitive)
@@ -127,6 +105,20 @@ impl AppConfig {
     /// Check if config needs migration to current version
     pub fn needs_migration(&self) -> bool {
         self.config_version < Self::CURRENT_VERSION
+    }
+
+    /// Normalize and validate log level (converts to lowercase)
+    pub fn normalize_log_level(level: &str) -> Result<String, String> {
+        let normalized = level.to_lowercase();
+        if Self::is_valid_log_level(&normalized) {
+            Ok(normalized)
+        } else {
+            Err(format!(
+                "Invalid log level '{}'. Valid levels are: {}",
+                level,
+                Self::VALID_LOG_LEVELS.join(", ")
+            ))
+        }
     }
 
     /// Validate configuration including security checks for paths
@@ -209,7 +201,6 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             config_version: Self::CURRENT_VERSION,
-            version: 0,
             poe_client_log_path: Self::get_default_poe_client_log_path(),
             log_level: "info".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::default(),
@@ -270,18 +261,12 @@ pub struct ConfigurationFileInfo {
 }
 
 impl ConfigurationFileInfo {
-    pub fn new(path: PathBuf) -> Self {
-        let exists = path.exists();
-        let (size, last_modified) = if exists {
-            if let Ok(metadata) = std::fs::metadata(&path) {
-                (Some(metadata.len()), metadata.modified().ok())
-            } else {
-                (None, None)
-            }
-        } else {
-            (None, None)
-        };
-
+    pub fn new(
+        path: PathBuf,
+        exists: bool,
+        size: Option<u64>,
+        last_modified: Option<std::time::SystemTime>,
+    ) -> Self {
         Self {
             path,
             exists,

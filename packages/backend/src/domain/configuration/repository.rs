@@ -1,6 +1,4 @@
-use crate::domain::configuration::models::{
-    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
-};
+use crate::domain::configuration::models::{AppConfig, ConfigurationValidationResult};
 use crate::domain::configuration::traits::ConfigurationRepository;
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::file_management::{AppPaths, FileService};
@@ -28,6 +26,8 @@ pub struct ConfigurationRepositoryImpl {
     save_signal: mpsc::UnboundedSender<()>,
     /// Notify to signal immediate flush
     flush_notify: Arc<Notify>,
+    /// Notify to confirm flush completion
+    flush_complete_notify: Arc<Notify>,
 }
 
 impl ConfigurationRepositoryImpl {
@@ -38,15 +38,23 @@ impl ConfigurationRepositoryImpl {
         let config = Arc::new(RwLock::new(AppConfig::default()));
         let (save_signal, save_rx) = mpsc::unbounded_channel();
         let flush_notify = Arc::new(Notify::new());
+        let flush_complete_notify = Arc::new(Notify::new());
 
         // Spawn debounce background task
         let config_clone = config.clone();
         let file_path_clone = file_path.clone();
         let flush_notify_clone = flush_notify.clone();
+        let flush_complete_notify_clone = flush_complete_notify.clone();
 
         tokio::spawn(async move {
-            Self::debounce_write_task(save_rx, config_clone, file_path_clone, flush_notify_clone)
-                .await;
+            Self::debounce_write_task(
+                save_rx,
+                config_clone,
+                file_path_clone,
+                flush_notify_clone,
+                flush_complete_notify_clone,
+            )
+            .await;
         });
 
         Ok(Self {
@@ -55,6 +63,7 @@ impl ConfigurationRepositoryImpl {
             data_loaded: Arc::new(AtomicBool::new(false)),
             save_signal,
             flush_notify,
+            flush_complete_notify,
         })
     }
 
@@ -66,6 +75,7 @@ impl ConfigurationRepositoryImpl {
         config: Arc<RwLock<AppConfig>>,
         file_path: PathBuf,
         flush_notify: Arc<Notify>,
+        flush_complete_notify: Arc<Notify>,
     ) {
         loop {
             // Wait for a save request
@@ -74,6 +84,7 @@ impl ConfigurationRepositoryImpl {
                 break;
             }
 
+            let mut is_flush = false;
             // Start debounce period - wait for either:
             // 1. Debounce timeout to elapse (no more save signals)
             // 2. Flush signal for immediate write
@@ -102,6 +113,7 @@ impl ConfigurationRepositoryImpl {
                     }
                     _ = flush_notify.notified() => {
                         // Flush requested, write immediately
+                        is_flush = true;
                         break;
                     }
                 }
@@ -109,6 +121,11 @@ impl ConfigurationRepositoryImpl {
 
             // Perform the actual disk write
             Self::perform_disk_write(&config, &file_path).await;
+
+            // Signal flush completion if this was a flush request
+            if is_flush {
+                flush_complete_notify.notify_one();
+            }
         }
     }
 
@@ -129,18 +146,27 @@ impl ConfigurationRepositoryImpl {
     pub async fn flush(&self) -> AppResult<()> {
         // Signal the debounce task to write immediately
         self.flush_notify.notify_one();
-        // Give the task time to process the flush
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        Ok(())
+
+        // Wait for flush completion with a reasonable timeout (5 seconds)
+        match timeout(Duration::from_secs(5), self.flush_complete_notify.notified()).await {
+            Ok(_) => {
+                debug!("Configuration flush completed successfully");
+                Ok(())
+            }
+            Err(_) => Err(AppError::internal_error(
+                "flush",
+                "Timed out waiting for configuration write to complete",
+            )),
+        }
     }
 
     /// Lazy-loads configuration on first access to avoid startup overhead
     async fn ensure_data_loaded(&self) -> AppResult<()> {
-        if !self.data_loaded.load(Ordering::Relaxed) {
+        if !self.data_loaded.load(Ordering::Acquire) {
             if let Err(e) = self.load().await {
                 debug!("Failed to load configuration, using defaults: {}", e);
                 // Set flag to prevent repeated load attempts and log spam
-                self.data_loaded.store(true, Ordering::Relaxed);
+                self.data_loaded.store(true, Ordering::Release);
                 // Ensure default config is set in memory
                 let default_config = AppConfig::default();
                 let mut config = self.config.write().await;
@@ -178,11 +204,10 @@ impl ConfigurationRepositoryImpl {
 #[async_trait]
 impl ConfigurationRepository for ConfigurationRepositoryImpl {
     async fn save(&self, config: &AppConfig) -> AppResult<()> {
-        // Update in-memory config with incremented version
-        let config_to_save = config.with_incremented_version();
+        // Update in-memory config
         {
             let mut current_config = self.config.write().await;
-            *current_config = config_to_save;
+            *current_config = config.clone();
         }
 
         // Signal the debounce task to schedule a disk write
@@ -231,7 +256,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             *current_config = config.clone();
         }
 
-        self.data_loaded.store(true, Ordering::Relaxed);
+        self.data_loaded.store(true, Ordering::Release);
         debug!("Configuration loaded successfully");
         Ok(config)
     }
@@ -242,82 +267,6 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(config.clone())
     }
 
-    async fn update_in_memory_config(&self, config: AppConfig) -> AppResult<()> {
-        self.ensure_data_loaded().await?;
-        {
-            let mut current_config = self.config.write().await;
-            *current_config = config;
-        }
-        Ok(())
-    }
-
-    async fn get_poe_client_log_path(&self) -> AppResult<String> {
-        self.ensure_data_loaded().await?;
-        let config = self.config.read().await;
-        Ok(config.poe_client_log_path.clone())
-    }
-
-    async fn get_log_level(&self) -> AppResult<String> {
-        self.ensure_data_loaded().await?;
-        let config = self.config.read().await;
-        Ok(config.log_level.clone())
-    }
-
-    async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo> {
-        self.ensure_data_loaded().await?;
-        Ok(ConfigurationFileInfo::new(self.file_path.clone()))
-    }
-
-    async fn set_poe_client_log_path(&self, path: String) -> AppResult<()> {
-        self.ensure_data_loaded().await?;
-
-        // Read current config and prepare updated config
-        let config_to_save = {
-            let config = self.config.read().await;
-            let mut updated = config.clone();
-            updated.poe_client_log_path = path;
-            updated
-        };
-
-        // Save handles in-memory update and schedules debounced disk write
-        self.save(&config_to_save).await
-    }
-
-    async fn set_log_level(&self, level: String) -> AppResult<()> {
-        self.ensure_data_loaded().await?;
-        self.ensure_valid_log_level(&level).await?;
-
-        // Read current config and prepare updated config
-        let config_to_save = {
-            let config = self.config.read().await;
-            let mut updated = config.clone();
-            updated.log_level = level;
-            updated
-        };
-
-        // Save handles in-memory update and schedules debounced disk write
-        self.save(&config_to_save).await
-    }
-
-    async fn reset_to_defaults(&self) -> AppResult<()> {
-        self.ensure_data_loaded().await?;
-
-        // Read current version for the version check
-        let current_version = {
-            let config = self.config.read().await;
-            config.version
-        };
-
-        // Create default config but preserve version for the check
-        let default_config = AppConfig {
-            version: current_version,
-            ..Default::default()
-        };
-
-        // Save handles in-memory update and schedules debounced disk write
-        self.save(&default_config).await
-    }
-
     async fn validate_config(
         &self,
         config: &AppConfig,
@@ -326,29 +275,5 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             Ok(()) => Ok(ConfigurationValidationResult::valid()),
             Err(error) => Ok(ConfigurationValidationResult::invalid(vec![error])),
         }
-    }
-
-    async fn ensure_valid_log_level(&self, level: &str) -> AppResult<()> {
-        if !AppConfig::is_valid_log_level(level) {
-            return Err(AppError::validation_error(
-                "validate_log_level",
-                &format!(
-                    "Invalid log level '{}'. Valid levels are: {}",
-                    level,
-                    AppConfig::VALID_LOG_LEVELS.join(", ")
-                ),
-            ));
-        }
-        Ok(())
-    }
-
-    async fn get_default_poe_client_log_path(&self) -> String {
-        AppConfig::get_default_poe_client_log_path()
-    }
-
-    async fn is_using_default_poe_path(&self) -> AppResult<bool> {
-        self.ensure_data_loaded().await?;
-        let config = self.config.read().await;
-        Ok(config.is_using_default_poe_path())
     }
 }

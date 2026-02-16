@@ -1,17 +1,13 @@
-use crate::domain::configuration::models::{
-    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult, ZoneRefreshInterval,
-};
-use crate::domain::configuration::service::ConfigurationServiceImpl;
+use crate::domain::configuration::models::{AppConfig, ZoneRefreshInterval};
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::{to_command_result, CommandResult};
 use log::info;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::State;
 
 #[tauri::command]
 pub async fn get_config(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
 ) -> CommandResult<AppConfig> {
     to_command_result(config_service.get_config().await)
 }
@@ -23,17 +19,16 @@ pub async fn get_default_config() -> CommandResult<AppConfig> {
 
 #[tauri::command]
 pub async fn update_config(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
     new_config: AppConfig,
 ) -> CommandResult<()> {
     to_command_result(config_service.update_config(new_config).await)?;
-    info!("Configuration updated successfully");
     Ok(())
 }
 
 #[tauri::command]
 pub async fn reset_config_to_defaults(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
 ) -> CommandResult<()> {
     to_command_result(config_service.reset_to_defaults().await)?;
     info!("Configuration reset to defaults successfully");
@@ -41,81 +36,15 @@ pub async fn reset_config_to_defaults(
 }
 
 #[tauri::command]
-pub async fn get_poe_client_log_path(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-) -> CommandResult<String> {
-    to_command_result(config_service.get_poe_client_log_path().await)
-}
-
-#[tauri::command]
-pub async fn set_poe_client_log_path(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-    path: String,
-) -> CommandResult<()> {
-    to_command_result(config_service.set_poe_client_log_path(path.clone()).await)?;
-    info!("POE client log path set to: {}", path);
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn get_default_poe_client_log_path(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-) -> CommandResult<String> {
-    let default_path = config_service.get_default_poe_client_log_path().await;
-    Ok(default_path)
-}
-
-#[tauri::command]
-pub async fn reset_poe_client_log_path_to_default(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-) -> CommandResult<()> {
-    to_command_result(config_service.reset_poe_client_log_path_to_default().await)?;
-    info!("POE client log path reset to default successfully");
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn get_log_level(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-) -> CommandResult<String> {
-    to_command_result(config_service.get_log_level().await)
-}
-
-#[tauri::command]
-pub async fn set_log_level(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-    level: String,
-) -> CommandResult<()> {
-    to_command_result(config_service.set_log_level(level.clone()).await)?;
-    info!("Log level set to: {}", level);
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn get_config_file_info(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-) -> CommandResult<ConfigurationFileInfo> {
-    to_command_result(config_service.get_file_info().await)
-}
-
-#[tauri::command]
-pub async fn validate_config(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
-) -> CommandResult<ConfigurationValidationResult> {
-    let config = to_command_result(config_service.get_config().await)?;
-    to_command_result(config_service.validate_config(&config).await)
-}
-
-#[tauri::command]
 pub async fn get_zone_refresh_interval(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
 ) -> CommandResult<ZoneRefreshInterval> {
     to_command_result(config_service.get_zone_refresh_interval().await)
 }
 
 #[tauri::command]
 pub async fn set_zone_refresh_interval(
-    config_service: State<'_, Arc<ConfigurationServiceImpl>>,
+    config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
     interval: ZoneRefreshInterval,
 ) -> CommandResult<()> {
     to_command_result(config_service.set_zone_refresh_interval(interval).await)?;
@@ -123,15 +52,10 @@ pub async fn set_zone_refresh_interval(
     Ok(())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ZoneRefreshIntervalOption {
-    pub value: String,
-    pub label: String,
-    pub seconds: i64,
-}
-
 #[tauri::command]
-pub async fn get_zone_refresh_interval_options() -> CommandResult<Vec<ZoneRefreshIntervalOption>> {
+pub async fn get_zone_refresh_interval_options(
+) -> CommandResult<Vec<crate::domain::configuration::models::ZoneRefreshIntervalOption>> {
+    use crate::domain::configuration::models::ZoneRefreshIntervalOption;
     let options = ZoneRefreshInterval::all_options()
         .into_iter()
         .map(|interval| ZoneRefreshIntervalOption {

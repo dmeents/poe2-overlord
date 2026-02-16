@@ -1,6 +1,4 @@
-use crate::domain::configuration::models::{
-    AppConfig, ConfigurationFileInfo, ConfigurationValidationResult,
-};
+use crate::domain::configuration::models::{AppConfig, ConfigurationValidationResult};
 use crate::errors::AppResult;
 use async_trait::async_trait;
 
@@ -14,28 +12,7 @@ pub trait ConfigurationService: Send + Sync {
     /// Call this on app shutdown to ensure all changes are persisted.
     async fn flush(&self) -> AppResult<()>;
 
-    async fn set_poe_client_log_path(&self, path: String) -> AppResult<()>;
-
-    async fn set_log_level(&self, level: String) -> AppResult<()>;
-
     async fn reset_to_defaults(&self) -> AppResult<()>;
-
-    async fn load_config(&self) -> AppResult<()>;
-
-    async fn save_config(&self) -> AppResult<()>;
-
-    async fn validate_config(&self, config: &AppConfig)
-        -> AppResult<ConfigurationValidationResult>;
-
-    async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo>;
-
-    async fn get_poe_client_log_path(&self) -> AppResult<String>;
-
-    async fn get_log_level(&self) -> AppResult<String>;
-
-    async fn get_default_poe_client_log_path(&self) -> String;
-
-    async fn reset_poe_client_log_path_to_default(&self) -> AppResult<()>;
 
     async fn get_zone_refresh_interval(
         &self,
@@ -59,26 +36,6 @@ pub trait ConfigurationRepository: Send + Sync {
 
     async fn get_in_memory_config(&self) -> AppResult<AppConfig>;
 
-    async fn update_in_memory_config(&self, config: AppConfig) -> AppResult<()>;
-
-    async fn get_poe_client_log_path(&self) -> AppResult<String>;
-
-    async fn get_log_level(&self) -> AppResult<String>;
-
-    async fn get_file_info(&self) -> AppResult<ConfigurationFileInfo>;
-
-    async fn set_poe_client_log_path(&self, path: String) -> AppResult<()>;
-
-    async fn set_log_level(&self, level: String) -> AppResult<()>;
-
-    async fn reset_to_defaults(&self) -> AppResult<()>;
-
     async fn validate_config(&self, config: &AppConfig)
         -> AppResult<ConfigurationValidationResult>;
-
-    async fn ensure_valid_log_level(&self, level: &str) -> AppResult<()>;
-
-    async fn get_default_poe_client_log_path(&self) -> String;
-
-    async fn is_using_default_poe_path(&self) -> AppResult<bool>;
 }

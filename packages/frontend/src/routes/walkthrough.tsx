@@ -1,5 +1,6 @@
 import { BookOpenIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
+import { open } from '@tauri-apps/plugin-shell';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
 import { CampaignInsights } from '../components/insights/campaign-insights/campaign-insights';
@@ -12,7 +13,7 @@ import { WalkthroughGuide } from '../components/walkthrough/walkthrough-guide/wa
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
-import { handleWikiClick } from '../utils/wiki-utils';
+import type { StepLink } from '../types/walkthrough';
 
 export const Route = createFileRoute('/walkthrough')({
   component: WalkthroughPage,
@@ -21,6 +22,14 @@ export const Route = createFileRoute('/walkthrough')({
 function WalkthroughPage() {
   const { activeCharacter, isLoading } = useCharacter();
   const { guide, guideLoading, progress } = useWalkthrough();
+
+  const handleLinkClick = async (link: StepLink) => {
+    try {
+      await open(link.url);
+    } catch (error) {
+      console.error('Failed to open link:', error);
+    }
+  };
 
   if (isLoading || guideLoading) {
     return (
@@ -49,7 +58,7 @@ function WalkthroughPage() {
               <WalkthroughStepCard
                 key={`${progress.current_step_id}-${progress.last_updated}`}
                 variant="active"
-                onWikiClick={handleWikiClick}
+                onLinkClick={handleLinkClick}
                 className="mb-6"
               />
             )

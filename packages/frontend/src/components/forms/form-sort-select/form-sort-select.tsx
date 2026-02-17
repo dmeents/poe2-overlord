@@ -1,5 +1,7 @@
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { useDropdownPosition } from '../../../hooks/useDropdownPosition';
+import { DropdownPortal } from '../../ui/dropdown-portal/dropdown-portal';
 import { formSortSelectStyles } from './form-sort-select.styles';
 
 export interface SortOption {
@@ -31,42 +33,12 @@ export function SortSelect({
   className = '',
 }: SortSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const [dropdownPosition, setDropdownPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
+
+  const { dropdownRef, triggerRef, dropdownPosition } = useDropdownPosition({
+    isOpen,
+    onClose: () => setIsOpen(false),
+    includeWidth: true,
   });
-
-  // Calculate dropdown position when opened
-  useLayoutEffect(() => {
-    if (isOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-    }
-  }, [isOpen]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -93,14 +65,16 @@ export function SortSelect({
   };
 
   return (
-    <div className={`${formSortSelectStyles.container} ${className}`} ref={dropdownRef}>
+    <div className={`${formSortSelectStyles.container} ${className}`}>
       {label && (
         <label htmlFor={id} className={formSortSelectStyles.label}>
           {label}
         </label>
       )}
 
-      <div className={formSortSelectStyles.triggerContainer} ref={triggerRef}>
+      <div
+        className={formSortSelectStyles.triggerContainer}
+        ref={triggerRef as React.RefObject<HTMLDivElement>}>
         <button
           type="button"
           className={formSortSelectStyles.trigger}
@@ -118,64 +92,60 @@ export function SortSelect({
         </button>
       </div>
 
-      {isOpen && (
-        <div
-          className={formSortSelectStyles.dropdown}
-          style={{
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            minWidth: `${dropdownPosition.width}px`,
-          }}>
-          <div className={formSortSelectStyles.header}>
-            <h4 className={formSortSelectStyles.headerTitle}>Sort Options</h4>
-            <button
-              type="button"
-              onClick={handleReset}
-              className={formSortSelectStyles.resetButton}>
-              Reset
-            </button>
-          </div>
-
-          <div className={formSortSelectStyles.optionsList} role="listbox">
-            {options.map(option => {
-              const isSelected = option.value === value;
-              return (
-                <div
-                  key={option.value}
-                  className={`${formSortSelectStyles.option} ${
-                    isSelected ? formSortSelectStyles.optionSelected : ''
-                  }`}
-                  onClick={() => handleOptionSelect(option.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleOptionSelect(option.value);
-                    }
-                  }}
-                  role="option"
-                  tabIndex={0}
-                  aria-selected={isSelected}>
-                  <span className={formSortSelectStyles.optionLabel}>{option.label}</span>
-                  {isSelected && <CheckIcon className={formSortSelectStyles.optionIcon} />}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Direction Toggle */}
-          <div className={formSortSelectStyles.directionToggle}>
-            <button
-              type="button"
-              onClick={handleDirectionToggle}
-              className={formSortSelectStyles.directionButton}>
-              <span className={formSortSelectStyles.directionText}>
-                {direction === 'desc' ? 'Descending' : 'Ascending'}
-              </span>
-              <span className={formSortSelectStyles.directionIconLarge}>{getDirectionIcon()}</span>
-            </button>
-          </div>
+      <DropdownPortal
+        isOpen={isOpen}
+        dropdownRef={dropdownRef}
+        position={dropdownPosition}
+        className={formSortSelectStyles.dropdown}>
+        <div className={formSortSelectStyles.header}>
+          <h4 className={formSortSelectStyles.headerTitle}>Sort Options</h4>
+          <button
+            type="button"
+            onClick={handleReset}
+            className={formSortSelectStyles.resetButton}>
+            Reset
+          </button>
         </div>
-      )}
+
+        <div className={formSortSelectStyles.optionsList} role="listbox">
+          {options.map(option => {
+            const isSelected = option.value === value;
+            return (
+              <div
+                key={option.value}
+                className={`${formSortSelectStyles.option} ${
+                  isSelected ? formSortSelectStyles.optionSelected : ''
+                }`}
+                onClick={() => handleOptionSelect(option.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleOptionSelect(option.value);
+                  }
+                }}
+                role="option"
+                tabIndex={0}
+                aria-selected={isSelected}>
+                <span className={formSortSelectStyles.optionLabel}>{option.label}</span>
+                {isSelected && <CheckIcon className={formSortSelectStyles.optionIcon} />}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Direction Toggle */}
+        <div className={formSortSelectStyles.directionToggle}>
+          <button
+            type="button"
+            onClick={handleDirectionToggle}
+            className={formSortSelectStyles.directionButton}>
+            <span className={formSortSelectStyles.directionText}>
+              {direction === 'desc' ? 'Descending' : 'Ascending'}
+            </span>
+            <span className={formSortSelectStyles.directionIconLarge}>{getDirectionIcon()}</span>
+          </button>
+        </div>
+      </DropdownPortal>
     </div>
   );
 }

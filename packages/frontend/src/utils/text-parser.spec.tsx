@@ -5,14 +5,18 @@ import { ParsedText } from './text-parser';
 
 describe('ParsedText', () => {
   it('returns plain text when no wiki items provided', () => {
-    render(<ParsedText text="This is plain text" wikiItems={[]} onWikiClick={vi.fn()} />);
+    render(<ParsedText text="This is plain text" links={[]} onLinkClick={vi.fn()} />);
     expect(screen.getByText('This is plain text')).toBeInTheDocument();
   });
 
   it('converts single wiki item to clickable link', () => {
     const handleClick = vi.fn();
     render(
-      <ParsedText text="Defeat the Tukohama" wikiItems={['Tukohama']} onWikiClick={handleClick} />,
+      <ParsedText
+        text="Defeat the Tukohama"
+        links={[{ text: 'Tukohama', url: 'https://example.com/tukohama' }]}
+        onLinkClick={handleClick}
+      />,
     );
 
     const link = screen.getByRole('button', { name: 'Tukohama' });
@@ -23,13 +27,12 @@ describe('ParsedText', () => {
   it('calls onWikiClick when link is clicked', async () => {
     const user = userEvent.setup();
     const handleClick = vi.fn();
+    const tukohama = { text: 'Tukohama', url: 'https://example.com/tukohama' };
 
-    render(
-      <ParsedText text="Defeat the Tukohama" wikiItems={['Tukohama']} onWikiClick={handleClick} />,
-    );
+    render(<ParsedText text="Defeat the Tukohama" links={[tukohama]} onLinkClick={handleClick} />);
 
     await user.click(screen.getByRole('button', { name: 'Tukohama' }));
-    expect(handleClick).toHaveBeenCalledWith('Tukohama');
+    expect(handleClick).toHaveBeenCalledWith(tukohama);
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
@@ -37,8 +40,11 @@ describe('ParsedText', () => {
     render(
       <ParsedText
         text="Defeat Tukohama and find the Karui Fortress"
-        wikiItems={['Tukohama', 'Karui Fortress']}
-        onWikiClick={vi.fn()}
+        links={[
+          { text: 'Tukohama', url: 'https://example.com/tukohama' },
+          { text: 'Karui Fortress', url: 'https://example.com/karui-fortress' },
+        ]}
+        onLinkClick={vi.fn()}
       />,
     );
 
@@ -50,8 +56,11 @@ describe('ParsedText', () => {
     render(
       <ParsedText
         text="Visit the Coast and find The Coast Guardian"
-        wikiItems={['Coast', 'The Coast Guardian']}
-        onWikiClick={vi.fn()}
+        links={[
+          { text: 'Coast', url: 'https://example.com/coast' },
+          { text: 'The Coast Guardian', url: 'https://example.com/coast-guardian' },
+        ]}
+        onLinkClick={vi.fn()}
       />,
     );
 
@@ -63,7 +72,11 @@ describe('ParsedText', () => {
 
   it('matches wiki items case-insensitively', () => {
     render(
-      <ParsedText text="Defeat the TUKOHAMA" wikiItems={['Tukohama']} onWikiClick={vi.fn()} />,
+      <ParsedText
+        text="Defeat the TUKOHAMA"
+        links={[{ text: 'Tukohama', url: 'https://example.com/tukohama' }]}
+        onLinkClick={vi.fn()}
+      />,
     );
 
     const link = screen.getByRole('button', { name: 'TUKOHAMA' });
@@ -74,8 +87,8 @@ describe('ParsedText', () => {
     render(
       <ParsedText
         text="Defeat the TUKOHAMA and tukohama again"
-        wikiItems={['Tukohama']}
-        onWikiClick={vi.fn()}
+        links={[{ text: 'Tukohama', url: 'https://example.com/tukohama' }]}
+        onLinkClick={vi.fn()}
       />,
     );
 
@@ -87,8 +100,11 @@ describe('ParsedText', () => {
     render(
       <ParsedText
         text="Find Hillock's Den and talk to Sister Cassia"
-        wikiItems={["Hillock's Den", 'Sister Cassia']}
-        onWikiClick={vi.fn()}
+        links={[
+          { text: "Hillock's Den", url: 'https://example.com/hillocks-den' },
+          { text: 'Sister Cassia', url: 'https://example.com/sister-cassia' },
+        ]}
+        onLinkClick={vi.fn()}
       />,
     );
 
@@ -98,7 +114,11 @@ describe('ParsedText', () => {
 
   it('only matches whole words', () => {
     render(
-      <ParsedText text="The Coastline and The Coast" wikiItems={['Coast']} onWikiClick={vi.fn()} />,
+      <ParsedText
+        text="The Coastline and The Coast"
+        links={[{ text: 'Coast', url: 'https://example.com/coast' }]}
+        onLinkClick={vi.fn()}
+      />,
     );
 
     // Should only match "Coast" as a whole word, not "Coastline"
@@ -116,7 +136,11 @@ describe('ParsedText', () => {
       // biome-ignore lint/a11y/useKeyWithClickEvents: Test wrapper only
       // biome-ignore lint/a11y/noStaticElementInteractions: Test wrapper only
       <div onClick={handleContainerClick}>
-        <ParsedText text="Defeat Tukohama" wikiItems={['Tukohama']} onWikiClick={handleWikiClick} />
+        <ParsedText
+          text="Defeat Tukohama"
+          links={[{ text: 'Tukohama', url: 'https://example.com/tukohama' }]}
+          onLinkClick={handleWikiClick}
+        />
       </div>,
     );
 
@@ -130,8 +154,11 @@ describe('ParsedText', () => {
     render(
       <ParsedText
         text="This text has no matching items"
-        wikiItems={['Tukohama', 'Karui']}
-        onWikiClick={vi.fn()}
+        links={[
+          { text: 'Tukohama', url: 'https://example.com/tukohama' },
+          { text: 'Karui', url: 'https://example.com/karui' },
+        ]}
+        onLinkClick={vi.fn()}
       />,
     );
 
@@ -143,8 +170,11 @@ describe('ParsedText', () => {
     render(
       <ParsedText
         text="Go to The Coast and defeat Tukohama"
-        wikiItems={['The Coast', 'Tukohama']}
-        onWikiClick={vi.fn()}
+        links={[
+          { text: 'The Coast', url: 'https://example.com/coast' },
+          { text: 'Tukohama', url: 'https://example.com/tukohama' },
+        ]}
+        onLinkClick={vi.fn()}
       />,
     );
 

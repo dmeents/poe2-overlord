@@ -1,31 +1,32 @@
 import React from 'react';
+import type { StepLink } from '../types/walkthrough';
 
 interface ParsedTextProps {
   text: string;
-  wikiItems: string[];
-  onWikiClick: (itemName: string) => void;
+  links: StepLink[];
+  onLinkClick: (link: StepLink) => void;
 }
 
 /**
- * Parses text and converts wiki items into clickable links
+ * Parses text and converts link items into clickable links
  * @param text - The text to parse
- * @param wikiItems - Array of wiki item names to convert to links
- * @param onWikiClick - Callback function when a wiki link is clicked
+ * @param links - Array of links with text and URL
+ * @param onLinkClick - Callback function when a link is clicked
  * @returns Array of React elements representing the parsed text with links
  */
-const parseTextWithWikiLinks = (
+const parseTextWithLinks = (
   text: string,
-  wikiItems: string[],
-  onWikiClick: (itemName: string) => void,
+  links: StepLink[],
+  onLinkClick: (link: StepLink) => void,
 ): React.ReactNode[] => {
-  if (!wikiItems.length) {
+  if (!links.length) {
     return [text];
   }
 
-  // Create a regex pattern that matches any of the wiki items
+  // Create a regex pattern that matches any of the link texts
   // Sort by length (longest first) to avoid partial matches
-  const sortedWikiItems = [...wikiItems].sort((a, b) => b.length - a.length);
-  const escapedItems = sortedWikiItems.map(item => item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const sortedLinks = [...links].sort((a, b) => b.text.length - a.text.length);
+  const escapedItems = sortedLinks.map(link => link.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const pattern = new RegExp(`\\b(${escapedItems.join('|')})\\b`, 'gi');
 
   const result: React.ReactNode[] = [];
@@ -42,19 +43,19 @@ const parseTextWithWikiLinks = (
       result.push(text.slice(lastIndex, match.index));
     }
 
-    // Find the exact wiki item that matched
-    const wikiItem = sortedWikiItems.find(item => item.toLowerCase() === match?.[0].toLowerCase());
+    // Find the exact link that matched
+    const link = sortedLinks.find(l => l.text.toLowerCase() === match?.[0].toLowerCase());
 
-    if (wikiItem) {
+    if (link) {
       result.push(
         React.createElement(
           'button',
           {
-            key: `wiki-${match.index}`,
+            key: `link-${match.index}`,
             type: 'button',
             onClick: (e: React.MouseEvent) => {
               e.stopPropagation();
-              onWikiClick(wikiItem);
+              onLinkClick(link);
             },
             className:
               'text-stone-300 hover:text-stone-200 underline decoration-ember-500/50 hover:decoration-ember-400 cursor-pointer',
@@ -63,7 +64,7 @@ const parseTextWithWikiLinks = (
         ),
       );
     } else {
-      // Fallback if no wiki item found
+      // Fallback if no link found
       result.push(match[0]);
     }
 
@@ -79,10 +80,10 @@ const parseTextWithWikiLinks = (
 };
 
 /**
- * Component that renders parsed text with wiki links
+ * Component that renders parsed text with clickable links
  */
-export function ParsedText({ text, wikiItems, onWikiClick }: ParsedTextProps): React.JSX.Element {
-  const parsedElements = parseTextWithWikiLinks(text, wikiItems, onWikiClick);
+export function ParsedText({ text, links, onLinkClick }: ParsedTextProps): React.JSX.Element {
+  const parsedElements = parseTextWithLinks(text, links, onLinkClick);
 
   return (
     <span>

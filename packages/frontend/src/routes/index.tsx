@@ -1,5 +1,6 @@
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
+import { open } from '@tauri-apps/plugin-shell';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
@@ -9,7 +10,7 @@ import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-
 import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
-import { handleWikiClick } from '../utils/wiki-utils';
+import type { StepLink } from '../types/walkthrough';
 
 export const Route = createFileRoute('/')({
   component: Index,
@@ -20,6 +21,14 @@ function Index() {
   const { progress } = useWalkthrough();
   const activeZone = activeCharacter?.zones?.find(zone => zone.is_active);
 
+  const handleLinkClick = async (link: StepLink) => {
+    try {
+      await open(link.url);
+    } catch (error) {
+      console.error('Failed to open link:', error);
+    }
+  };
+
   const leftColumn = (
     <>
       <CharacterStatusCard />
@@ -27,7 +36,7 @@ function Index() {
         <WalkthroughStepCard
           key={`${progress.current_step_id}-${progress.last_updated}`}
           variant="active"
-          onWikiClick={handleWikiClick}
+          onLinkClick={handleLinkClick}
           className="mt-6"
         />
       )}

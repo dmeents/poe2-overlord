@@ -10,6 +10,7 @@ export interface InputProps {
   errorMessage?: string;
   min?: number;
   max?: number;
+  disabled?: boolean;
 }
 
 export function Input({
@@ -22,6 +23,7 @@ export function Input({
   errorMessage,
   min,
   max,
+  disabled = false,
 }: InputProps) {
   return (
     <div>
@@ -33,6 +35,7 @@ export function Input({
         placeholder={placeholder}
         min={min}
         max={max}
+        disabled={disabled}
         className={`${formInputStyles.input} ${isInvalid ? formInputStyles.invalidInput : ''}`}
       />
       {isInvalid && errorMessage && <p className={formInputStyles.errorMessage}>{errorMessage}</p>}

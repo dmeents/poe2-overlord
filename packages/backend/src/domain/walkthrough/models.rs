@@ -1,6 +1,17 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+
+/// Represents a link to external resources (e.g., wiki pages).
+///
+/// Links provide explicit text and URL pairs for enriching step content
+/// with references to relevant external documentation or resources.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct StepLink {
+    /// The text to match in step content
+    pub text: String,
+    /// The URL to open when clicked
+    pub url: String,
+}
 
 /// Represents a single objective within a walkthrough step.
 ///
@@ -11,7 +22,7 @@ use std::collections::HashMap;
 pub struct Objective {
     /// The main objective text describing what needs to be done
     pub text: String,
-    /// Additional details about the objective
+    /// Additional details about the objective (may include merged notes)
     pub details: Option<String>,
     /// Whether this objective is required for step completion
     pub required: bool,
@@ -20,15 +31,13 @@ pub struct Objective {
     /// Whether this objective only needs to be completed once per league (on first character)
     #[serde(default, rename = "leagueStart")]
     pub league_start: bool,
-    /// Additional notes for this objective
-    pub notes: Option<String>,
 }
 
 /// Represents a single step in the walkthrough guide.
 ///
 /// Steps are the individual components that make up the walkthrough progression.
-/// Each step contains objectives, zone information, and navigation context
-/// to guide players through the campaign.
+/// Each step contains objectives, zone information, and external resource links
+/// to guide players through the campaign. Navigation is determined by array position.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughStep {
     /// Unique identifier for this step
@@ -43,38 +52,106 @@ pub struct WalkthroughStep {
     pub current_zone: String,
     /// The zone that indicates this step is complete
     pub completion_zone: String,
-    /// ID of the next step (None if this is the last step)
-    pub next_step_id: Option<String>,
-    /// ID of the previous step (None if this is the first step)
-    pub previous_step_id: Option<String>,
-    /// Terms that should be enriched with wiki links in the UI
-    pub wiki_items: Vec<String>,
+    /// External resource links (e.g., wiki pages) related to this step
+    pub links: Vec<StepLink>,
 }
 
 /// Represents an act in the walkthrough guide.
 ///
 /// Acts are major sections of the campaign that contain multiple walkthrough steps.
-/// Each act has a name, number for ordering, and a collection of steps that
-/// guide players through that portion of the campaign.
+/// Each act has a name and an ordered collection of steps. Act ordering is implicit
+/// in the array position within the WalkthroughGuide.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughAct {
     /// Name of the act (e.g., "Act 4")
     pub act_name: String,
-    /// Act number for ordering
-    pub act_number: u32,
-    /// Steps within this act
-    pub steps: HashMap<String, WalkthroughStep>,
+    /// Steps within this act (ordered)
+    pub steps: Vec<WalkthroughStep>,
 }
 
 /// Represents the complete walkthrough guide structure.
 ///
 /// The walkthrough guide contains all acts and steps that make up the complete
 /// campaign walkthrough. This is the top-level structure loaded from the JSON
-/// configuration file.
+/// configuration file. Acts and steps are ordered arrays, with navigation
+/// determined by array position rather than explicit next/previous references.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughGuide {
-    /// All acts in the walkthrough
-    pub acts: HashMap<String, WalkthroughAct>,
+    /// All acts in the walkthrough (ordered)
+    pub acts: Vec<WalkthroughAct>,
+}
+
+impl WalkthroughGuide {
+    /// Finds a step by its ID across all acts.
+    ///
+    /// Returns a tuple of (act_index, step_index) if found, None otherwise.
+    pub fn find_step(&self, step_id: &str) -> Option<(usize, usize)> {
+        for (act_idx, act) in self.acts.iter().enumerate() {
+            for (step_idx, step) in act.steps.iter().enumerate() {
+                if step.id == step_id {
+                    return Some((act_idx, step_idx));
+                }
+            }
+        }
+        None
+    }
+
+    /// Checks if a step with the given ID exists in the guide.
+    pub fn step_exists(&self, step_id: &str) -> bool {
+        self.find_step(step_id).is_some()
+    }
+
+    /// Gets the ID of the first step in the guide.
+    ///
+    /// Returns None if the guide has no acts or the first act has no steps.
+    pub fn first_step_id(&self) -> Option<&str> {
+        self.acts
+            .first()
+            .and_then(|act| act.steps.first())
+            .map(|step| step.id.as_str())
+    }
+
+    /// Gets the ID of the next step after the given step ID.
+    ///
+    /// Returns None if the step is not found or is the last step in the guide.
+    pub fn next_step_id(&self, step_id: &str) -> Option<String> {
+        let (act_idx, step_idx) = self.find_step(step_id)?;
+
+        // Try next step in current act
+        if let Some(next_step) = self.acts[act_idx].steps.get(step_idx + 1) {
+            return Some(next_step.id.clone());
+        }
+
+        // Try first step of next act
+        if let Some(next_act) = self.acts.get(act_idx + 1) {
+            if let Some(first_step) = next_act.steps.first() {
+                return Some(first_step.id.clone());
+            }
+        }
+
+        None
+    }
+
+    /// Gets the ID of the previous step before the given step ID.
+    ///
+    /// Returns None if the step is not found or is the first step in the guide.
+    pub fn previous_step_id(&self, step_id: &str) -> Option<String> {
+        let (act_idx, step_idx) = self.find_step(step_id)?;
+
+        // Try previous step in current act
+        if step_idx > 0 {
+            return Some(self.acts[act_idx].steps[step_idx - 1].id.clone());
+        }
+
+        // Try last step of previous act
+        if act_idx > 0 {
+            if let Some(last_step) = self.acts[act_idx - 1].steps.last() {
+                return Some(last_step.id.clone());
+            }
+        }
+
+        None
+    }
 }
 
 /// Represents a character's progress through the walkthrough.
@@ -147,7 +224,7 @@ pub struct WalkthroughStepResult {
     pub step: WalkthroughStep,
     /// The act this step belongs to
     pub act_name: String,
-    /// The act number
+    /// The act number (1-based index derived from position)
     pub act_number: u32,
 }
 

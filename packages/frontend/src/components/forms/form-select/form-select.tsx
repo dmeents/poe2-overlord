@@ -1,5 +1,6 @@
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { DropdownPortal } from '../../ui/dropdown-portal/dropdown-portal';
 import { formSelectStyles } from './form-select.styles';
 
 export interface SelectOption {
@@ -51,23 +52,29 @@ export function Select({
   });
 
   // Calculate dropdown position when opened (only for dropdown variant)
+  // Uses viewport-relative coordinates (no scroll offset) for fixed positioning in portal
   useLayoutEffect(() => {
     if (variant === 'dropdown' && isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
+        top: rect.bottom + 8,
+        left: rect.left,
         width: rect.width,
       });
     }
   }, [isOpen, variant]);
 
   // Close dropdown when clicking outside (only for dropdown variant)
+  // Must check both trigger and dropdown refs since dropdown is in a portal
   useEffect(() => {
     if (variant !== 'dropdown') return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
+      const isOutsideTrigger = triggerRef.current && !triggerRef.current.contains(target);
+
+      if (isOutsideDropdown && isOutsideTrigger) {
         setIsOpen(false);
       }
     };
@@ -170,7 +177,7 @@ export function Select({
   );
 
   return (
-    <div className={`${formSelectStyles.container} ${className}`} ref={dropdownRef}>
+    <div className={`${formSelectStyles.container} ${className}`}>
       {label && (
         <label htmlFor={id} className={formSelectStyles.label}>
           {label}
@@ -181,26 +188,22 @@ export function Select({
         {defaultRenderTrigger(isOpen, selectedOption)}
       </div>
 
-      {isOpen && (
-        <div
-          className={`${formSelectStyles.dropdown} ${dropdownClassName}`}
-          style={{
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            minWidth: `${dropdownPosition.width}px`,
-          }}>
-          <div className={formSelectStyles.optionsList} role="listbox">
-            {options.length === 0 ? (
-              <div className={formSelectStyles.emptyState}>No options available</div>
-            ) : (
-              options.map(option => {
-                const isSelected = option.value === value;
-                return defaultRenderOption(option, isSelected);
-              })
-            )}
-          </div>
+      <DropdownPortal
+        isOpen={isOpen}
+        dropdownRef={dropdownRef}
+        position={dropdownPosition}
+        className={`${formSelectStyles.dropdown} ${dropdownClassName}`}>
+        <div className={formSelectStyles.optionsList} role="listbox">
+          {options.length === 0 ? (
+            <div className={formSelectStyles.emptyState}>No options available</div>
+          ) : (
+            options.map(option => {
+              const isSelected = option.value === value;
+              return defaultRenderOption(option, isSelected);
+            })
+          )}
         </div>
-      )}
+      </DropdownPortal>
     </div>
   );
 }

@@ -1,19 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
-import { CurrencyListControlsForm } from '@/components/economy/currency-list-controls-form/currency-list-controls-form';
 import { EconomyRow } from '@/components/economy/economy-row/economy-row';
+import { EconomyTypeBar } from '@/components/economy/economy-type-bar/economy-type-bar';
 import { ExchangeRatesCard } from '@/components/economy/exchange-rates-card/exchange-rates-card';
 import { TopItemsCard } from '@/components/economy/top-items-card/top-items-card';
+import { ListControlBar } from '@/components/forms/list-control-bar/list-control-bar';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { Card } from '@/components/ui/card/card';
 import { ErrorState } from '@/components/ui/error-state/error-state';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useEconomy } from '@/contexts/EconomyContext';
-import { useCurrencyList } from '@/hooks/useCurrencyList';
+import { type CurrencySortField, currencyListConfig } from '@/hooks/configs/currency-list.config';
+import { useListControls } from '@/hooks/useListControls';
 import { useSearchCurrencies } from '@/queries/economy';
-import { ECONOMY_TYPE_LABELS } from '@/utils/economy-icons';
+import { ECONOMY_TYPE_ICONS, ECONOMY_TYPE_LABELS, ECONOMY_TYPES } from '@/utils/economy-icons';
 import { formatTimeAgo } from '@/utils/format-time-ago';
+import { hideOnError } from '@/utils/image-utils';
 
 export const Route = createFileRoute('/economy')({
   component: EconomyPage,
@@ -26,6 +29,7 @@ function EconomyPage() {
     isError,
     error,
     selectedEconomyType,
+    setSelectedEconomyType,
     league,
     isHardcore,
     isSoloSelfFound,
@@ -38,32 +42,13 @@ function EconomyPage() {
     (error.message.includes('No currency data available') || error.message.includes('not found'));
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const debounceTimerRef = useRef<number | null>(null);
 
   const { data: searchResults = [], isLoading: isSearching } = useSearchCurrencies(
     league,
     isHardcore,
-    debouncedQuery,
-    debouncedQuery.length > 0,
+    searchQuery,
+    searchQuery.length > 0,
   );
-
-  // Debounce search query with proper cleanup
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = window.setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchQuery]);
 
   // Determine the subtitle based on data freshness
   const getSubtitle = () => {
@@ -84,8 +69,27 @@ function EconomyPage() {
   };
 
   // Use currency list hook for sorting (only when we have data)
-  const { sort, updateSort, resetSort, sortedCurrencies, currencyCount, totalCount } =
-    useCurrencyList(currencyData?.currencies || []);
+  const {
+    sort,
+    updateSort,
+    resetSort,
+    result: sortedCurrencies,
+    filteredCount,
+    totalCount,
+  } = useListControls(currencyData?.currencies || [], currencyListConfig);
+
+  const typeOptions = ECONOMY_TYPES.map(type => ({
+    value: type,
+    label: ECONOMY_TYPE_LABELS[type],
+    icon: (
+      <img
+        src={ECONOMY_TYPE_ICONS[type]}
+        alt={ECONOMY_TYPE_LABELS[type]}
+        className="w-3.5 h-3.5"
+        onError={hideOnError}
+      />
+    ),
+  }));
 
   // Render list content based on state
   const renderListContent = () => {
@@ -186,19 +190,39 @@ function EconomyPage() {
         title={ECONOMY_TYPE_LABELS[selectedEconomyType]}
         subtitle={getSubtitle()}
         className="mt-6">
-        {/* Controls - Always visible */}
-        <div className="mb-4">
-          <CurrencyListControlsForm
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isSearching={isSearching}
-            sort={sort}
-            onSortChange={updateSort}
-            onResetSort={resetSort}
-            currencyCount={searchQuery ? searchResults.length : currencyCount}
-            totalCount={totalCount}
-          />
-        </div>
+        {/* Type selector bar */}
+        <EconomyTypeBar
+          types={typeOptions}
+          selectedType={selectedEconomyType}
+          onTypeChange={type => {
+            setSelectedEconomyType(type as typeof selectedEconomyType);
+            if (searchQuery) {
+              setSearchQuery('');
+            }
+          }}
+        />
+
+        {/* Search and sort controls */}
+        <ListControlBar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search all currencies..."
+          searchDebounceMs={300}
+          isSearching={isSearching}
+          sortField={sort.field}
+          sortDirection={sort.direction}
+          sortOptions={[
+            { value: 'primary_value', label: 'Value' },
+            { value: 'name', label: 'Name' },
+            { value: 'volume', label: 'Volume' },
+            { value: 'change_percent', label: 'Change %' },
+          ]}
+          onSortChange={(field, direction) => updateSort(field as CurrencySortField, direction)}
+          onResetSort={resetSort}
+          filteredCount={searchQuery ? searchResults.length : filteredCount}
+          totalCount={totalCount}
+          countLabel="items"
+        />
 
         {/* List Content - Shows loading/error states */}
         {renderListContent()}

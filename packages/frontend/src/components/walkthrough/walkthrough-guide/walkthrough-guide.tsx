@@ -1,9 +1,12 @@
 import { BookOpenIcon } from '@heroicons/react/24/outline';
+import { open } from '@tauri-apps/plugin-shell';
 import { useState } from 'react';
 
 import { useStepNavigation } from '../../../hooks/useStepNavigation';
-import type { WalkthroughGuide as WalkthroughGuideType } from '../../../types/walkthrough';
-import { handleWikiClick } from '../../../utils/wiki-utils';
+import type {
+  StepLink,
+  WalkthroughGuide as WalkthroughGuideType,
+} from '../../../types/walkthrough';
 import { SectionHeader } from '../../ui/section-header/section-header';
 import { WalkthroughActAccordion } from '../walkthrough-act-accordion/walkthrough-act-accordion';
 
@@ -20,7 +23,7 @@ export function WalkthroughGuide({
   characterId,
   className = '',
 }: WalkthroughGuideProps): React.JSX.Element {
-  const [expandedActs, setExpandedActs] = useState<Set<string>>(new Set());
+  const [expandedActs, setExpandedActs] = useState<Set<number>>(new Set());
 
   // Use shared navigation hook
   const { skipToStep } = useStepNavigation({
@@ -28,14 +31,22 @@ export function WalkthroughGuide({
     progress: null, // Guide doesn't need current progress
   });
 
-  const toggleAct = (actId: string) => {
+  const toggleAct = (actIndex: number) => {
     const newExpanded = new Set(expandedActs);
-    if (newExpanded.has(actId)) {
-      newExpanded.delete(actId);
+    if (newExpanded.has(actIndex)) {
+      newExpanded.delete(actIndex);
     } else {
-      newExpanded.add(actId);
+      newExpanded.add(actIndex);
     }
     setExpandedActs(newExpanded);
+  };
+
+  const handleLinkClick = async (link: StepLink) => {
+    try {
+      await open(link.url);
+    } catch (error) {
+      console.error('Failed to open link:', error);
+    }
   };
 
   const handleSkipToStep = async (stepId: string) => {
@@ -50,20 +61,18 @@ export function WalkthroughGuide({
         className={className}
       />
       <div className="space-y-4">
-        {Object.entries(guide.acts)
-          .sort(([, a], [, b]) => a.act_number - b.act_number)
-          .map(([actKey, act]) => (
-            <WalkthroughActAccordion
-              key={actKey}
-              act={act}
-              actKey={actKey}
-              isExpanded={expandedActs.has(actKey)}
-              currentStepId={currentStepId}
-              onToggle={toggleAct}
-              onWikiClick={handleWikiClick}
-              onSkipToStep={handleSkipToStep}
-            />
-          ))}
+        {guide.acts.map((act, actIndex) => (
+          <WalkthroughActAccordion
+            key={`act-${actIndex}`}
+            act={act}
+            actIndex={actIndex}
+            isExpanded={expandedActs.has(actIndex)}
+            currentStepId={currentStepId}
+            onToggle={toggleAct}
+            onLinkClick={handleLinkClick}
+            onSkipToStep={handleSkipToStep}
+          />
+        ))}
       </div>
     </div>
   );

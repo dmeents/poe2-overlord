@@ -37,15 +37,12 @@ const mockStep: WalkthroughStep = {
   description: 'Begin your journey by heading to the beach',
   current_zone: 'Twilight Strand',
   completion_zone: 'The Coast',
-  next_step_id: 'step-2',
-  previous_step_id: null,
   objectives: [
     {
       text: 'Talk to the NPC',
       details: 'Find the NPC near the entrance',
       required: true,
       rewards: ['Skill Gem'],
-      notes: 'Important quest reward',
     },
     {
       text: 'Kill the boss',
@@ -53,7 +50,10 @@ const mockStep: WalkthroughStep = {
       rewards: [],
     },
   ],
-  wiki_items: ['Skill Gem', 'Twilight Strand'],
+  links: [
+    { text: 'Skill Gem', url: 'https://www.poe2wiki.net/wiki/Skill_Gem' },
+    { text: 'Twilight Strand', url: 'https://www.poe2wiki.net/wiki/Twilight_Strand' },
+  ],
 };
 
 const mockStepResult: WalkthroughStepResult = {
@@ -70,7 +70,7 @@ describe('WalkthroughStepCard', () => {
   describe('preview variant', () => {
     describe('Static Rendering', () => {
       it('renders walkthrough step information correctly', () => {
-        render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
+        render(<WalkthroughStepCard step={mockStep} variant="preview" onLinkClick={vi.fn()} />);
 
         // Step title
         expect(screen.getByText('First Steps')).toBeInTheDocument();
@@ -92,9 +92,6 @@ describe('WalkthroughStepCard', () => {
         // Objective details
         expect(screen.getByText(/Find the NPC near the entrance/)).toBeInTheDocument();
 
-        // Objective notes
-        expect(screen.getByText(/Important quest reward/)).toBeInTheDocument();
-
         // Objective rewards
         expect(screen.getByText(/Skill Gem/)).toBeInTheDocument();
       });
@@ -103,26 +100,26 @@ describe('WalkthroughStepCard', () => {
     it('opens zone when completion zone is clicked', async () => {
       const user = userEvent.setup();
 
-      render(<WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={vi.fn()} />);
+      render(<WalkthroughStepCard step={mockStep} variant="preview" onLinkClick={vi.fn()} />);
 
       await user.click(screen.getByText('The Coast'));
 
       expect(mockOpenZone).toHaveBeenCalledWith('The Coast');
     });
 
-    it('calls onWikiClick for wiki items', async () => {
+    it('calls onLinkClick for wiki items', async () => {
       const user = userEvent.setup();
       const handleWikiClick = vi.fn();
 
       render(
-        <WalkthroughStepCard step={mockStep} variant="preview" onWikiClick={handleWikiClick} />,
+        <WalkthroughStepCard step={mockStep} variant="preview" onLinkClick={handleWikiClick} />,
       );
 
       // Find a wiki item link (Skill Gem)
       const wikiLinks = screen.getAllByText(/Skill Gem/);
       if (wikiLinks.length > 0) {
         await user.click(wikiLinks[0]);
-        // Wiki items that are not zones should call onWikiClick
+        // Wiki items that are not zones should call onLinkClick
       }
     });
 
@@ -132,7 +129,7 @@ describe('WalkthroughStepCard', () => {
           step={mockStep}
           variant="preview"
           isCurrent={false}
-          onWikiClick={vi.fn()}
+          onLinkClick={vi.fn()}
           onSkipToStep={vi.fn()}
         />,
       );
@@ -149,7 +146,7 @@ describe('WalkthroughStepCard', () => {
           step={mockStep}
           variant="preview"
           isCurrent={false}
-          onWikiClick={vi.fn()}
+          onLinkClick={vi.fn()}
           onSkipToStep={handleSkip}
         />,
       );
@@ -165,7 +162,7 @@ describe('WalkthroughStepCard', () => {
           step={mockStep}
           variant="preview"
           className="custom-class"
-          onWikiClick={vi.fn()}
+          onLinkClick={vi.fn()}
         />,
       );
 
@@ -176,7 +173,7 @@ describe('WalkthroughStepCard', () => {
   describe('with stepResult prop', () => {
     it('renders step from stepResult', () => {
       render(
-        <WalkthroughStepCard stepResult={mockStepResult} variant="preview" onWikiClick={vi.fn()} />,
+        <WalkthroughStepCard stepResult={mockStepResult} variant="preview" onLinkClick={vi.fn()} />,
       );
 
       expect(screen.getByText('First Steps')).toBeInTheDocument();
@@ -190,7 +187,7 @@ describe('WalkthroughStepCard', () => {
           step={mockStep}
           variant="preview"
           isCurrent={true}
-          onWikiClick={vi.fn()}
+          onLinkClick={vi.fn()}
         />,
       );
 
@@ -200,7 +197,7 @@ describe('WalkthroughStepCard', () => {
 
   describe('without step data', () => {
     it('returns null when no step data in preview mode', () => {
-      const { container } = render(<WalkthroughStepCard variant="preview" onWikiClick={vi.fn()} />);
+      const { container } = render(<WalkthroughStepCard variant="preview" onLinkClick={vi.fn()} />);
 
       expect(container.firstChild).toBeNull();
     });

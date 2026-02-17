@@ -36,9 +36,7 @@ mod tests {
 
         fn with_failure() -> Self {
             Self {
-                guide: WalkthroughGuide {
-                    acts: HashMap::new(),
-                },
+                guide: WalkthroughGuide { acts: Vec::new() },
                 should_fail: true,
             }
         }
@@ -243,82 +241,51 @@ mod tests {
 
     /// Creates a minimal valid walkthrough guide with 2 acts and 3 steps
     fn create_test_guide() -> WalkthroughGuide {
-        let mut acts = HashMap::new();
-
-        // Act 1 with 2 steps
-        let mut act1_steps = HashMap::new();
-        act1_steps.insert(
-            "act_1_step_1".to_string(),
-            WalkthroughStep {
-                id: "act_1_step_1".to_string(),
-                title: "First Step".to_string(),
-                description: "Start your journey".to_string(),
-                objectives: vec![Objective {
-                    text: "Talk to NPC".to_string(),
-                    details: None,
-                    required: true,
-                    rewards: vec![],
-                    league_start: false,
-                    notes: None,
-                }],
-                current_zone: "Starting Area".to_string(),
-                completion_zone: "The Coast".to_string(),
-                next_step_id: Some("act_1_step_2".to_string()),
-                previous_step_id: None,
-                wiki_items: vec![],
-            },
-        );
-        act1_steps.insert(
-            "act_1_step_2".to_string(),
-            WalkthroughStep {
-                id: "act_1_step_2".to_string(),
-                title: "Second Step".to_string(),
-                description: "Continue your journey".to_string(),
-                objectives: vec![],
-                current_zone: "The Coast".to_string(),
-                completion_zone: "Town Square".to_string(),
-                next_step_id: Some("act_2_step_1".to_string()),
-                previous_step_id: Some("act_1_step_1".to_string()),
-                wiki_items: vec![],
-            },
-        );
-
-        acts.insert(
-            "act_1".to_string(),
-            WalkthroughAct {
-                act_name: "Act 1".to_string(),
-                act_number: 1,
-                steps: act1_steps,
-            },
-        );
-
-        // Act 2 with 1 step (last step - no next)
-        let mut act2_steps = HashMap::new();
-        act2_steps.insert(
-            "act_2_step_1".to_string(),
-            WalkthroughStep {
-                id: "act_2_step_1".to_string(),
-                title: "Final Step".to_string(),
-                description: "Complete the campaign".to_string(),
-                objectives: vec![],
-                current_zone: "Town Square".to_string(),
-                completion_zone: "Final Boss Arena".to_string(),
-                next_step_id: None, // Last step
-                previous_step_id: Some("act_1_step_2".to_string()),
-                wiki_items: vec![],
-            },
-        );
-
-        acts.insert(
-            "act_2".to_string(),
-            WalkthroughAct {
-                act_name: "Act 2".to_string(),
-                act_number: 2,
-                steps: act2_steps,
-            },
-        );
-
-        WalkthroughGuide { acts }
+        WalkthroughGuide {
+            acts: vec![
+                WalkthroughAct {
+                    act_name: "Act 1".to_string(),
+                    steps: vec![
+                        WalkthroughStep {
+                            id: "act_1_step_1".to_string(),
+                            title: "First Step".to_string(),
+                            description: "Start your journey".to_string(),
+                            objectives: vec![Objective {
+                                text: "Talk to NPC".to_string(),
+                                details: None,
+                                required: true,
+                                rewards: vec![],
+                                league_start: false,
+                            }],
+                            current_zone: "Starting Area".to_string(),
+                            completion_zone: "The Coast".to_string(),
+                            links: vec![],
+                        },
+                        WalkthroughStep {
+                            id: "act_1_step_2".to_string(),
+                            title: "Second Step".to_string(),
+                            description: "Continue your journey".to_string(),
+                            objectives: vec![],
+                            current_zone: "The Coast".to_string(),
+                            completion_zone: "Town Square".to_string(),
+                            links: vec![],
+                        },
+                    ],
+                },
+                WalkthroughAct {
+                    act_name: "Act 2".to_string(),
+                    steps: vec![WalkthroughStep {
+                        id: "act_2_step_1".to_string(),
+                        title: "Final Step".to_string(),
+                        description: "Complete the campaign".to_string(),
+                        objectives: vec![],
+                        current_zone: "Town Square".to_string(),
+                        completion_zone: "Final Boss Arena".to_string(),
+                        links: vec![],
+                    }],
+                },
+            ],
+        }
     }
 
     /// Creates a character with default walkthrough progress (at act_1_step_1)
@@ -373,8 +340,8 @@ mod tests {
         assert!(result.is_ok());
         let returned_guide = result.unwrap();
         assert_eq!(returned_guide.acts.len(), 2);
-        assert!(returned_guide.acts.contains_key("act_1"));
-        assert!(returned_guide.acts.contains_key("act_2"));
+        assert_eq!(returned_guide.acts[0].act_name, "Act 1");
+        assert_eq!(returned_guide.acts[1].act_name, "Act 2");
     }
 
     #[tokio::test]
@@ -390,9 +357,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_guide_empty() {
-        let empty_guide = WalkthroughGuide {
-            acts: HashMap::new(),
-        };
+        let empty_guide = WalkthroughGuide { acts: Vec::new() };
         let repository = Arc::new(MockWalkthroughRepository::new(empty_guide));
         let character_service = Arc::new(MockCharacterService::new());
         let service = create_test_service(repository, character_service);
@@ -780,36 +745,6 @@ mod tests {
     }
 
     // ============= handle_scene_change() Tests - Error Cases =============
-
-    #[tokio::test]
-    async fn test_handle_scene_change_invalid_next_step_reference() {
-        // Create guide where step references nonexistent next step
-        let mut guide = create_test_guide();
-        if let Some(act) = guide.acts.get_mut("act_1") {
-            if let Some(step) = act.steps.get_mut("act_1_step_1") {
-                step.next_step_id = Some("nonexistent_step".to_string());
-            }
-        }
-
-        let character = create_character_at_step("char-1", "act_1_step_1");
-        let character_service = Arc::new(MockCharacterService::with_character(character));
-
-        let repository = Arc::new(MockWalkthroughRepository::new(guide));
-        let service = create_test_service(repository, character_service.clone());
-
-        // Scene change to completion zone - should abort due to invalid next step
-        let result = service.handle_scene_change("char-1", "The Coast").await;
-
-        assert!(result.is_ok()); // Operation succeeds but no advancement
-
-        // Verify character was NOT advanced (data integrity preserved)
-        let characters = character_service.characters.read().await;
-        let updated_char = characters.get("char-1").unwrap();
-        assert_eq!(
-            updated_char.walkthrough_progress.current_step_id,
-            Some("act_1_step_1".to_string())
-        );
-    }
 
     #[tokio::test]
     async fn test_handle_scene_change_missing_current_step_in_guide() {

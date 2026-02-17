@@ -1,21 +1,37 @@
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
-import type { ZoneFilters as ZoneFiltersType, ZoneSortOption } from '@/hooks/useZoneList';
+import type { ZoneFilters, ZoneSortField } from '@/hooks/configs/zone-list.config';
+import type { ActiveChip } from '@/hooks/useListControls';
 import type { ZoneStats } from '@/types/character';
+import { ListControlBar } from '../../forms/list-control-bar/list-control-bar';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { FilteredEmptyState } from '../../ui/filtered-empty-state/filtered-empty-state';
 import { ZoneCard } from '../zone-card/zone-card';
-import { ZoneListControlsForm } from '../zone-list-controls-form/zone-list-controls-form';
+import { ZoneFilterContent } from '../zone-filter-content/zone-filter-content';
+
+const SORT_OPTIONS = [
+  { value: 'last_visited', label: 'Last Visited' },
+  { value: 'first_visited', label: 'First Visited' },
+  { value: 'duration', label: 'Duration' },
+  { value: 'visits', label: 'Visits' },
+  { value: 'deaths', label: 'Deaths' },
+  { value: 'area_level', label: 'Level' },
+  { value: 'zone_name', label: 'Name' },
+];
 
 interface ZoneListProps {
   zones: ZoneStats[];
-  filters: ZoneFiltersType;
-  onFilterChange: <K extends keyof ZoneFiltersType>(key: K, value: ZoneFiltersType[K]) => void;
+  filters: ZoneFilters;
+  onFilterChange: <K extends keyof ZoneFilters>(key: K, value: ZoneFilters[K]) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
-  sort: ZoneSortOption;
-  onSortChange: (field: ZoneSortOption['field'], direction?: ZoneSortOption['direction']) => void;
+  activeFilterCount: number;
+  activeChips: ActiveChip[];
+  sort: { field: ZoneSortField; direction: 'asc' | 'desc' };
+  onSortChange: (field: ZoneSortField, direction?: 'asc' | 'desc') => void;
   onResetSort: () => void;
+  onResetAll: () => void;
+  filteredCount: number;
   totalCount: number;
 }
 
@@ -25,9 +41,13 @@ export const ZoneList = memo(function ZoneList({
   onFilterChange,
   onClearFilters,
   hasActiveFilters,
+  activeFilterCount,
+  activeChips,
   sort,
   onSortChange,
   onResetSort,
+  onResetAll,
+  filteredCount,
   totalCount,
 }: ZoneListProps) {
   if (totalCount === 0) {
@@ -42,14 +62,24 @@ export const ZoneList = memo(function ZoneList({
 
   return (
     <div className="space-y-4">
-      <ZoneListControlsForm
-        filters={filters}
-        onFilterChange={onFilterChange}
-        onClearFilters={onClearFilters}
+      <ListControlBar
+        searchValue={filters.search}
+        onSearchChange={value => onFilterChange('search', value)}
+        searchPlaceholder="Search zones..."
+        filterContent={<ZoneFilterContent filters={filters} onFilterChange={onFilterChange} />}
+        activeFilterCount={activeFilterCount}
         hasActiveFilters={hasActiveFilters}
-        sort={sort}
-        onSortChange={onSortChange}
+        onClearFilters={onClearFilters}
+        sortField={sort.field}
+        sortDirection={sort.direction}
+        sortOptions={SORT_OPTIONS}
+        onSortChange={(field, direction) => onSortChange(field as ZoneSortField, direction)}
         onResetSort={onResetSort}
+        filteredCount={filteredCount}
+        totalCount={totalCount}
+        countLabel="zones"
+        activeChips={activeChips}
+        onResetAll={onResetAll}
       />
       {zones.length > 0 ? (
         <div className="bg-stone-900/50 border border-stone-700/50 overflow-hidden">

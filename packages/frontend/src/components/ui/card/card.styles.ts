@@ -7,7 +7,7 @@ export const cardStyles = {
   subtitle: 'text-xs text-stone-400 font-normal',
   statusDot: 'w-2 h-2 rounded-full animate-pulse',
   icon: 'w-4 h-4',
-  body: 'p-4',
+  body: '',
   accentGradient: {
     ember: 'bg-gradient-to-r from-ember-500/10 to-transparent',
     molten: 'bg-gradient-to-r from-molten-400/10 to-transparent',

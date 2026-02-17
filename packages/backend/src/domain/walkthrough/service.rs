@@ -106,22 +106,12 @@ impl WalkthroughService for WalkthroughServiceImpl {
 
         // Get step IDs from the progress and guide for navigation context
         let (next_step_id, previous_step_id) = if let Some(step_id) = &progress.current_step_id {
-            // Load guide and find the current step to get next/previous step IDs
+            // Load guide and use array-based navigation
             let guide = self.repository.load_guide().await?;
-            let mut found_step = None;
-
-            for act in guide.acts.values() {
-                if let Some(step) = act.steps.get(step_id) {
-                    found_step = Some(step);
-                    break;
-                }
-            }
-
-            if let Some(step) = found_step {
-                (step.next_step_id.clone(), step.previous_step_id.clone())
-            } else {
-                (None, None)
-            }
+            (
+                guide.next_step_id(step_id),
+                guide.previous_step_id(step_id),
+            )
         } else {
             (None, None)
         };
@@ -147,12 +137,8 @@ impl WalkthroughService for WalkthroughServiceImpl {
         // Validate step ID exists in guide if provided
         if let Some(step_id) = &progress.current_step_id {
             let guide = self.repository.load_guide().await?;
-            let step_exists = guide
-                .acts
-                .values()
-                .any(|act| act.steps.contains_key(step_id));
 
-            if !step_exists {
+            if !guide.step_exists(step_id) {
                 return Err(AppError::validation_error(
                     "update_character_progress",
                     &format!(
@@ -200,20 +186,13 @@ impl WalkthroughService for WalkthroughServiceImpl {
 
             // Check if this zone matches the current step's completion_zone
             if let Some(step_id) = &progress.current_step_id {
-                // Load guide and find the current step
+                // Load guide and find the current step using array-based navigation
                 let guide = self.repository.load_guide().await?;
-                let mut found_step = None;
-                let mut found_act = None;
 
-                for act in guide.acts.values() {
-                    if let Some(step) = act.steps.get(step_id) {
-                        found_step = Some(step);
-                        found_act = Some(act);
-                        break;
-                    }
-                }
+                if let Some((act_idx, step_idx)) = guide.find_step(step_id) {
+                    let act = &guide.acts[act_idx];
+                    let step = &act.steps[step_idx];
 
-                if let (Some(step), Some(act)) = (found_step, found_act) {
                     if step.completion_zone == zone_name {
                         debug!(
                             "Zone {} matches completion zone for step {}, advancing",
@@ -224,25 +203,11 @@ impl WalkthroughService for WalkthroughServiceImpl {
                         let step_result = WalkthroughStepResult {
                             step: step.clone(),
                             act_name: act.act_name.clone(),
-                            act_number: act.act_number,
+                            act_number: (act_idx + 1) as u32, // 1-based index
                         };
 
                         // Get the next step ID and move to it
-                        if let Some(next_step_id) = &step.next_step_id {
-                            // Validate that next_step_id exists in the guide before advancing
-                            let next_step_exists = guide
-                                .acts
-                                .values()
-                                .any(|a| a.steps.contains_key(next_step_id));
-
-                            if !next_step_exists {
-                                error!(
-                                    "Next step ID '{}' referenced by step '{}' does not exist in guide",
-                                    next_step_id, step_id
-                                );
-                                return Ok(()); // Abort advancement to prevent corruption
-                            }
-
+                        if let Some(next_step_id) = guide.next_step_id(step_id) {
                             let from_step_id = progress.current_step_id.clone();
 
                             // Create new progress with next step

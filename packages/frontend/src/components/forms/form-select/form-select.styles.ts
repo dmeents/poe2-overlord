@@ -4,7 +4,7 @@
 
 export const formSelectStyles = {
   container: 'relative',
-  label: 'block text-sm font-medium text-stone-300 uppercase tracking-wide mb-2',
+  label: 'block text-xs font-medium text-stone-400 mb-2',
 
   // Basic select
   basicSelect:
@@ -17,7 +17,7 @@ export const formSelectStyles = {
   // Dropdown select
   triggerContainer: 'relative',
   trigger:
-    'flex items-center justify-between w-full px-4 py-2 bg-stone-800/50 hover:bg-stone-700 border border-stone-600 text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
+    'flex items-center justify-between w-full px-3 py-2 bg-stone-700/30 hover:bg-stone-700/50 border border-stone-700/50 text-stone-300 hover:text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
   triggerText: 'text-sm font-medium truncate',
   triggerIcons: 'flex items-center space-x-2',
   clearButton: 'text-stone-400 hover:text-white text-lg leading-none px-1 transition-colors',

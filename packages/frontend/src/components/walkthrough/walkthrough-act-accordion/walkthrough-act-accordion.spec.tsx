@@ -36,10 +36,8 @@ const mockStep1: WalkthroughStep = {
   description: 'Begin here',
   current_zone: 'Zone A',
   completion_zone: 'Zone B',
-  next_step_id: 'act1_step_2',
-  previous_step_id: null,
   objectives: [],
-  wiki_items: [],
+  links: [],
 };
 
 const mockStep2: WalkthroughStep = {
@@ -48,28 +46,22 @@ const mockStep2: WalkthroughStep = {
   description: 'Continue here',
   current_zone: 'Zone B',
   completion_zone: 'Zone C',
-  next_step_id: null,
-  previous_step_id: 'act1_step_1',
   objectives: [],
-  wiki_items: [],
+  links: [],
 };
 
 const mockAct: WalkthroughAct = {
   act_name: 'Act 1',
-  act_number: 1,
-  steps: {
-    act1_step_1: mockStep1,
-    act1_step_2: mockStep2,
-  },
+  steps: [mockStep1, mockStep2],
 };
 
 describe('WalkthroughActAccordion', () => {
   const defaultProps = {
     act: mockAct,
-    actKey: 'act_1',
+    actIndex: 0,
     isExpanded: true,
     onToggle: vi.fn(),
-    onWikiClick: vi.fn(),
+    onLinkClick: vi.fn(),
   };
 
   beforeEach(() => {
@@ -104,7 +96,7 @@ describe('WalkthroughActAccordion', () => {
     // Click on the accordion header (Act 1)
     await user.click(screen.getByText('Act 1'));
 
-    expect(handleToggle).toHaveBeenCalledWith('act_1');
+    expect(handleToggle).toHaveBeenCalledWith(0);
   });
 
   it('highlights current step', () => {
@@ -115,12 +107,12 @@ describe('WalkthroughActAccordion', () => {
     expect(firstStepCard).toBeInTheDocument();
   });
 
-  it('passes onWikiClick to step cards', () => {
+  it('passes onLinkClick to step cards', () => {
     const handleWikiClick = vi.fn();
 
-    render(<WalkthroughActAccordion {...defaultProps} onWikiClick={handleWikiClick} />);
+    render(<WalkthroughActAccordion {...defaultProps} onLinkClick={handleWikiClick} />);
 
-    // Step cards are rendered with onWikiClick prop
+    // Step cards are rendered with onLinkClick prop
     expect(screen.getByText('First Step')).toBeInTheDocument();
   });
 
@@ -172,11 +164,10 @@ describe('WalkthroughActAccordion', () => {
   it('handles acts with no steps', () => {
     const emptyAct: WalkthroughAct = {
       act_name: 'Empty Act',
-      act_number: 2,
-      steps: {},
+      steps: [],
     };
 
-    render(<WalkthroughActAccordion {...defaultProps} act={emptyAct} actKey="act_2" />);
+    render(<WalkthroughActAccordion {...defaultProps} act={emptyAct} actIndex={1} />);
 
     expect(screen.getByText('Empty Act')).toBeInTheDocument();
     expect(screen.getByText('0 steps')).toBeInTheDocument();

@@ -15,7 +15,7 @@ import {
   type WalkthroughStepAdvancedEvent,
   type WalkthroughStepCompletedEvent,
 } from '@/utils/events/registry';
-import { getStepFromGuide as getStepFromGuideUtil } from '@/utils/walkthrough';
+import { getPreviousStepId, getStepFromGuide as getStepFromGuideUtil } from '@/utils/walkthrough';
 import { useCharacter } from './CharacterContext';
 
 interface WalkthroughContextValue {
@@ -64,8 +64,10 @@ export function WalkthroughProvider({ children }: React.PropsWithChildren) {
       const currentStepData = getStepFromGuide(progress.current_step_id);
       setCurrentStep(currentStepData);
 
-      if (currentStepData?.step.previous_step_id) {
-        const previousStepData = getStepFromGuide(currentStepData.step.previous_step_id);
+      // Use navigation helper to get previous step ID
+      const prevStepId = getPreviousStepId(guide, progress.current_step_id);
+      if (prevStepId) {
+        const previousStepData = getStepFromGuide(prevStepId);
         setPreviousStep(previousStepData);
       } else {
         setPreviousStep(null);

@@ -7,6 +7,7 @@ import type {
 import type { CurrencyExchangeRate } from '../types/economy';
 import type {
   Objective,
+  StepLink,
   WalkthroughGuide,
   WalkthroughProgress,
   WalkthroughStep,
@@ -145,6 +146,15 @@ export function createMockObjective(overrides?: Partial<Objective>): Objective {
   return { ...defaultObjective, ...overrides };
 }
 
+export function createMockStepLink(overrides?: Partial<StepLink>): StepLink {
+  const defaultLink: StepLink = {
+    text: 'Test Link',
+    url: 'https://www.poe2wiki.net/wiki/Test_Link',
+  };
+
+  return { ...defaultLink, ...overrides };
+}
+
 export function createMockWalkthroughStep(overrides?: Partial<WalkthroughStep>): WalkthroughStep {
   const defaultStep: WalkthroughStep = {
     id: 'test-step-id',
@@ -152,10 +162,8 @@ export function createMockWalkthroughStep(overrides?: Partial<WalkthroughStep>):
     description: 'Test description',
     current_zone: 'The Coast',
     completion_zone: 'Mud Burrow',
-    next_step_id: null,
-    previous_step_id: null,
     objectives: [createMockObjective()],
-    wiki_items: [],
+    links: [],
   };
 
   return { ...defaultStep, ...overrides };
@@ -165,15 +173,12 @@ export function createMockWalkthroughGuide(
   overrides?: Partial<WalkthroughGuide>,
 ): WalkthroughGuide {
   const defaultGuide: WalkthroughGuide = {
-    acts: {
-      'act-1': {
+    acts: [
+      {
         act_name: 'Act 1',
-        act_number: 1,
-        steps: {
-          'step-1': createMockWalkthroughStep({ id: 'step-1' }),
-        },
+        steps: [createMockWalkthroughStep({ id: 'step-1' })],
       },
-    },
+    ],
   };
 
   return { ...defaultGuide, ...overrides };

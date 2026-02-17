@@ -1,13 +1,26 @@
 import { UserIcon } from '@heroicons/react/24/outline';
 import { memo, useMemo } from 'react';
-import type { CharacterFilters, SortOption } from '../../../hooks/useCharacterList';
+import type {
+  CharacterFilters,
+  CharacterSortField,
+} from '../../../hooks/configs/character-list.config';
+import type { ActiveChip } from '../../../hooks/useListControls';
 import type { CharacterData } from '../../../types/character';
+import { ListControlBar } from '../../forms/list-control-bar/list-control-bar';
 import { Button } from '../../ui/button/button';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { FilteredEmptyState } from '../../ui/filtered-empty-state/filtered-empty-state';
 import { CharacterCard } from '../character-card/character-card';
-import { CharacterListControlsForm } from '../character-list-controls-form/character-list-controls-form';
+import { CharacterFilterContent } from '../character-filter-content/character-filter-content';
 import { getCharacterGridClasses, getListContainerClasses } from './character-list.styles';
+
+const SORT_OPTIONS = [
+  { value: 'level', label: 'Level' },
+  { value: 'last_played', label: 'Last Played' },
+  { value: 'created_at', label: 'Created' },
+  { value: 'name', label: 'Name' },
+  { value: 'play_time', label: 'Play Time' },
+];
 
 interface CharacterListProps {
   characters: CharacterData[];
@@ -20,9 +33,13 @@ interface CharacterListProps {
   onFilterChange: <K extends keyof CharacterFilters>(key: K, value: CharacterFilters[K]) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
-  sort: SortOption;
-  onSortChange: (field: SortOption['field'], direction?: SortOption['direction']) => void;
+  activeFilterCount: number;
+  activeChips: ActiveChip[];
+  sort: { field: CharacterSortField; direction: 'asc' | 'desc' };
+  onSortChange: (field: CharacterSortField, direction?: 'asc' | 'desc') => void;
   onResetSort: () => void;
+  onResetAll: () => void;
+  filteredCount: number;
   totalCount: number;
 }
 
@@ -37,9 +54,13 @@ export const CharacterList = memo(function CharacterList({
   onFilterChange,
   onClearFilters,
   hasActiveFilters,
+  activeFilterCount,
+  activeChips,
   sort,
   onSortChange,
   onResetSort,
+  onResetAll,
+  filteredCount,
   totalCount,
 }: CharacterListProps) {
   const characterHandlers = useMemo(() => {
@@ -73,14 +94,24 @@ export const CharacterList = memo(function CharacterList({
 
   return (
     <div className={getListContainerClasses()}>
-      <CharacterListControlsForm
-        filters={filters}
-        onFilterChange={onFilterChange}
-        onClearFilters={onClearFilters}
+      <ListControlBar
+        searchValue={filters.nameSearch}
+        onSearchChange={value => onFilterChange('nameSearch', value)}
+        searchPlaceholder="Search characters..."
+        filterContent={<CharacterFilterContent filters={filters} onFilterChange={onFilterChange} />}
+        activeFilterCount={activeFilterCount}
         hasActiveFilters={hasActiveFilters}
-        sort={sort}
-        onSortChange={onSortChange}
+        onClearFilters={onClearFilters}
+        sortField={sort.field}
+        sortDirection={sort.direction}
+        sortOptions={SORT_OPTIONS}
+        onSortChange={(field, direction) => onSortChange(field as CharacterSortField, direction)}
         onResetSort={onResetSort}
+        filteredCount={filteredCount}
+        totalCount={totalCount}
+        countLabel="characters"
+        activeChips={activeChips}
+        onResetAll={onResetAll}
       />
 
       {characters.length > 0 ? (

@@ -53,8 +53,6 @@ const createMockStep = (overrides: Partial<WalkthroughStep> = {}): WalkthroughSt
   description: 'Complete the first step',
   current_zone: 'The Coast',
   completion_zone: 'The Mud Flats',
-  next_step_id: 'step-2',
-  previous_step_id: null,
   objectives: [
     {
       text: 'Kill the boss',
@@ -62,43 +60,37 @@ const createMockStep = (overrides: Partial<WalkthroughStep> = {}): WalkthroughSt
       rewards: ['Skill Point'],
     },
   ],
-  wiki_items: [],
+  links: [],
   ...overrides,
 });
 
 const createMockAct = (overrides: Partial<WalkthroughAct> = {}): WalkthroughAct => ({
   act_name: 'Act 1',
-  act_number: 1,
-  steps: {
-    'step-1': createMockStep(),
-    'step-2': createMockStep({
+  steps: [
+    createMockStep(),
+    createMockStep({
       id: 'step-2',
       title: 'Second Step',
       description: 'Complete the second step',
-      previous_step_id: 'step-1',
-      next_step_id: null,
     }),
-  },
+  ],
   ...overrides,
 });
 
 const createMockGuide = (overrides: Partial<WalkthroughGuideType> = {}): WalkthroughGuideType => ({
-  acts: {
-    'act-1': createMockAct(),
-    'act-2': createMockAct({
+  acts: [
+    createMockAct(),
+    createMockAct({
       act_name: 'Act 2',
-      act_number: 2,
-      steps: {
-        'step-3': createMockStep({
+      steps: [
+        createMockStep({
           id: 'step-3',
           title: 'Third Step',
           description: 'Complete the third step',
-          previous_step_id: 'step-2',
-          next_step_id: null,
         }),
-      },
+      ],
     }),
-  },
+  ],
   ...overrides,
 });
 
@@ -110,11 +102,11 @@ describe('WalkthroughGuide', () => {
   describe('Static Rendering', () => {
     it('renders guide with all acts in order and correct step counts', () => {
       const guide = createMockGuide({
-        acts: {
-          'act-3': createMockAct({ act_name: 'Act 3', act_number: 3 }),
-          'act-1': createMockAct({ act_name: 'Act 1', act_number: 1 }),
-          'act-2': createMockAct({ act_name: 'Act 2', act_number: 2 }),
-        },
+        acts: [
+          createMockAct({ act_name: 'Act 1' }),
+          createMockAct({ act_name: 'Act 2' }),
+          createMockAct({ act_name: 'Act 3' }),
+        ],
       });
 
       render(<WalkthroughGuide guide={guide} />);
@@ -138,7 +130,7 @@ describe('WalkthroughGuide', () => {
     });
 
     it('renders with empty guide', () => {
-      const emptyGuide: WalkthroughGuideType = { acts: {} };
+      const emptyGuide: WalkthroughGuideType = { acts: [] };
       const { container } = render(<WalkthroughGuide guide={emptyGuide} />);
 
       expect(screen.getByText('Guide')).toBeInTheDocument();

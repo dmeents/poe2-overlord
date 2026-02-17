@@ -2,13 +2,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { createMockObjective } from '../../../test/mock-data';
+import type { StepLink } from '../../../types/walkthrough';
 import { StepObjectiveList } from './step-objective-list';
 
 describe('StepObjectiveList', () => {
   const defaultProps = {
     objectives: [createMockObjective({ text: 'Test objective' })],
-    wikiItems: [],
-    onWikiClick: vi.fn(),
+    links: [],
+    onLinkClick: vi.fn(),
   };
 
   it('returns null when objectives array is empty', () => {
@@ -75,20 +76,6 @@ describe('StepObjectiveList', () => {
     expect(screen.getByText('Additional details here')).toBeInTheDocument();
   });
 
-  it('renders objective notes', () => {
-    const objectives = [
-      createMockObjective({
-        text: 'Main objective',
-        notes: 'Important note',
-      }),
-    ];
-
-    render(<StepObjectiveList {...defaultProps} objectives={objectives} />);
-
-    expect(screen.getByText(/Note:/)).toBeInTheDocument();
-    expect(screen.getByText(/Important note/)).toBeInTheDocument();
-  });
-
   it('renders objective rewards', () => {
     const objectives = [
       createMockObjective({
@@ -116,62 +103,48 @@ describe('StepObjectiveList', () => {
     expect(icon).toBeInTheDocument();
   });
 
-  it('renders wiki links in objective text', () => {
+  it('renders links in objective text', () => {
     const objectives = [createMockObjective({ text: 'Defeat Hillock' })];
+    const links: StepLink[] = [{ text: 'Hillock', url: 'https://www.poe2wiki.net/wiki/Hillock' }];
 
-    render(<StepObjectiveList {...defaultProps} objectives={objectives} wikiItems={['Hillock']} />);
+    render(<StepObjectiveList {...defaultProps} objectives={objectives} links={links} />);
 
     expect(screen.getByRole('button', { name: 'Hillock' })).toBeInTheDocument();
   });
 
-  it('calls onWikiClick when wiki link is clicked', async () => {
+  it('calls onLinkClick when link is clicked', async () => {
     const user = userEvent.setup();
-    const handleWikiClick = vi.fn();
+    const handleLinkClick = vi.fn();
     const objectives = [createMockObjective({ text: 'Defeat Hillock' })];
+    const links: StepLink[] = [{ text: 'Hillock', url: 'https://www.poe2wiki.net/wiki/Hillock' }];
 
     render(
       <StepObjectiveList
         {...defaultProps}
         objectives={objectives}
-        wikiItems={['Hillock']}
-        onWikiClick={handleWikiClick}
+        links={links}
+        onLinkClick={handleLinkClick}
       />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Hillock' }));
 
-    expect(handleWikiClick).toHaveBeenCalledWith('Hillock');
+    expect(handleLinkClick).toHaveBeenCalledWith(links[0]);
   });
 
-  it('renders wiki links in details', () => {
+  it('renders links in details', () => {
     const objectives = [
       createMockObjective({
         text: 'Main objective',
         details: 'Find the Karui Fortress',
       }),
     ];
-
-    render(
-      <StepObjectiveList
-        {...defaultProps}
-        objectives={objectives}
-        wikiItems={['Karui Fortress']}
-      />,
-    );
-
-    expect(screen.getByRole('button', { name: 'Karui Fortress' })).toBeInTheDocument();
-  });
-
-  it('renders wiki links in notes', () => {
-    const objectives = [
-      createMockObjective({
-        text: 'Main objective',
-        notes: 'Talk to Nessa',
-      }),
+    const links: StepLink[] = [
+      { text: 'Karui Fortress', url: 'https://www.poe2wiki.net/wiki/Karui_Fortress' },
     ];
 
-    render(<StepObjectiveList {...defaultProps} objectives={objectives} wikiItems={['Nessa']} />);
+    render(<StepObjectiveList {...defaultProps} objectives={objectives} links={links} />);
 
-    expect(screen.getByRole('button', { name: 'Nessa' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Karui Fortress' })).toBeInTheDocument();
   });
 });

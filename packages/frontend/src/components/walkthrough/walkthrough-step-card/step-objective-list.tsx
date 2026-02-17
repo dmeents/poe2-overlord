@@ -1,20 +1,20 @@
 import { GiftIcon, StarIcon } from '@heroicons/react/24/outline';
-import type { Objective } from '../../../types/walkthrough';
+import type { Objective, StepLink } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
 
 interface StepObjectiveListProps {
   objectives: Objective[];
-  wikiItems: string[];
-  onWikiClick: (itemName: string) => void;
+  links: StepLink[];
+  onLinkClick: (link: StepLink) => void;
 }
 
 /**
- * Renders the objectives section with bullets, stars, details, notes, and rewards
+ * Renders the objectives section with bullets, stars, details, and rewards
  */
 export function StepObjectiveList({
   objectives,
-  wikiItems,
-  onWikiClick,
+  links,
+  onLinkClick,
 }: StepObjectiveListProps): React.JSX.Element | null {
   if (objectives.length === 0) return null;
 
@@ -43,11 +43,7 @@ export function StepObjectiveList({
               <div className="flex-1 space-y-1.5">
                 {/* Main text */}
                 <div className="font-medium text-stone-200 flex items-center gap-2 flex-wrap">
-                  <ParsedText
-                    text={objective.text}
-                    wikiItems={wikiItems}
-                    onWikiClick={onWikiClick}
-                  />
+                  <ParsedText text={objective.text} links={links} onLinkClick={onLinkClick} />
                   {objective.leagueStart && (
                     <span
                       className="text-[10px] font-semibold text-molten-400"
@@ -57,27 +53,15 @@ export function StepObjectiveList({
                   )}
                 </div>
 
-                {/* Details, notes, rewards */}
-                {(objective.details ||
-                  objective.notes ||
-                  (objective.rewards && objective.rewards.length > 0)) && (
+                {/* Details and rewards */}
+                {(objective.details || (objective.rewards && objective.rewards.length > 0)) && (
                   <div className="border-l-2 border-ember-500/30 pl-3 space-y-1.5">
                     {objective.details && (
-                      <div className="text-xs text-stone-400">
+                      <div className="text-xs text-stone-400 whitespace-pre-wrap">
                         <ParsedText
                           text={objective.details}
-                          wikiItems={wikiItems}
-                          onWikiClick={onWikiClick}
-                        />
-                      </div>
-                    )}
-                    {objective.notes && (
-                      <div className="text-xs text-stone-300 italic">
-                        Note:{' '}
-                        <ParsedText
-                          text={objective.notes}
-                          wikiItems={wikiItems}
-                          onWikiClick={onWikiClick}
+                          links={links}
+                          onLinkClick={onLinkClick}
                         />
                       </div>
                     )}
@@ -86,8 +70,8 @@ export function StepObjectiveList({
                         <GiftIcon className="w-3.5 h-3.5 text-molten-400" title="Rewards" />
                         <ParsedText
                           text={objective.rewards.join(', ')}
-                          wikiItems={wikiItems}
-                          onWikiClick={onWikiClick}
+                          links={links}
+                          onLinkClick={onLinkClick}
                         />
                       </div>
                     )}

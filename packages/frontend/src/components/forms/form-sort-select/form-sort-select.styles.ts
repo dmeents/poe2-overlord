@@ -17,13 +17,13 @@ export const formSortSelectStyles = {
   chevronOpen: 'rotate-180',
 
   // Dropdown - z-20: Dropdowns/popovers (see patterns.md for z-index scale)
-  dropdown: 'fixed mt-2 bg-stone-800 border border-stone-700 card-shadow z-20 p-4 w-64 min-w-max',
-  header: 'flex items-center justify-between mb-3',
+  dropdown: 'fixed mt-2 bg-stone-800 border border-stone-700 card-shadow z-20 w-64 min-w-max',
+  header: 'flex items-center justify-between px-4 pt-4 pb-3 mb-3 border-b border-stone-700',
   headerTitle: 'text-sm font-medium text-stone-300',
   resetButton: 'text-xs text-stone-400 hover:text-white transition-colors',
 
   // Options
-  optionsList: 'space-y-2',
+  optionsList: 'space-y-2 px-4',
   option:
     'flex items-center justify-between px-3 py-2 hover:bg-stone-700/50 cursor-pointer transition-colors',
   optionSelected: 'bg-ember-500/20 text-ember-400',
@@ -31,7 +31,7 @@ export const formSortSelectStyles = {
   optionIcon: 'w-4 h-4 text-ember-400',
 
   // Direction toggle
-  directionToggle: 'mt-4 pt-4 border-t border-stone-700',
+  directionToggle: 'mt-4 pt-4 border-t border-stone-700 px-4 pb-4',
   directionButton:
     'w-full flex items-center justify-center space-x-2 px-3 py-2 bg-stone-700/50 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors',
   directionText: 'text-sm',

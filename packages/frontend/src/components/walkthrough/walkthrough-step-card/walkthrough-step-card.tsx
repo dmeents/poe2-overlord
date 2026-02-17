@@ -10,8 +10,9 @@ import { useCharacter } from '../../../contexts/CharacterContext';
 import { useWalkthrough } from '../../../contexts/WalkthroughContext';
 import { useZone } from '../../../contexts/ZoneContext';
 import { useStepNavigation } from '../../../hooks/useStepNavigation';
-import type { WalkthroughStep, WalkthroughStepResult } from '../../../types/walkthrough';
+import type { StepLink, WalkthroughStep, WalkthroughStepResult } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
+import { getNextStepId } from '../../../utils/walkthrough';
 import { Button } from '../../ui/button/button';
 import { Card } from '../../ui/card/card';
 import { StepObjectiveList } from './step-objective-list';
@@ -29,7 +30,7 @@ interface WalkthroughStepCardProps {
   isCurrent?: boolean;
 
   // Callbacks
-  onWikiClick: (itemName: string) => void;
+  onLinkClick: (link: StepLink) => void;
   onSkipToStep?: (stepId: string) => void;
   onViewGuide?: () => void;
 
@@ -42,7 +43,7 @@ export function WalkthroughStepCard({
   stepResult,
   variant,
   isCurrent = false,
-  onWikiClick,
+  onLinkClick,
   onSkipToStep,
   onViewGuide,
   className = '',
@@ -59,6 +60,7 @@ export function WalkthroughStepCard({
 
   // Conditionally use context data based on variant
   const progress = isActiveVariant ? walkthroughContext.progress : null;
+  const guide = isActiveVariant ? walkthroughContext.guide : null;
   const currentStep = isActiveVariant ? walkthroughContext.currentStep : null;
   const previousStep = isActiveVariant ? walkthroughContext.previousStep : null;
   const activeCharacter = isActiveVariant ? characterContext.activeCharacter : null;
@@ -67,13 +69,13 @@ export function WalkthroughStepCard({
   const stepData = stepProp || stepResult?.step || currentStep?.step;
   const hasPreviousStep = isActiveVariant && !!previousStep;
 
-  // Wiki items filtering
-  const filteredWikiItems = useMemo(() => {
+  // Filter links: exclude zone names (those are handled separately as zone buttons)
+  const filteredLinks = useMemo(() => {
     if (!stepData) return [];
 
     const zoneNames = [stepData.current_zone, stepData.completion_zone].filter(Boolean);
 
-    return stepData.wiki_items.filter(item => !zoneNames.includes(item));
+    return stepData.links.filter(link => !zoneNames.includes(link.text));
   }, [stepData]);
 
   // Navigation hook (shared logic)
@@ -82,23 +84,19 @@ export function WalkthroughStepCard({
     progress,
   });
 
-  // Handle item clicks (zones vs wiki)
-  const handleItemClick = (itemName: string) => {
-    if (!stepData) return;
+  // Use provided onLinkClick callback for handling link clicks
+  const handleLinkClick = onLinkClick;
 
-    const zoneNames = [stepData.current_zone, stepData.completion_zone];
-
-    if (zoneNames.includes(itemName)) {
-      openZone(itemName);
-    } else {
-      onWikiClick(itemName);
-    }
-  };
+  // Compute next step ID using guide
+  const nextStepId = useMemo(() => {
+    if (!isActiveVariant || !guide || !stepData) return null;
+    return getNextStepId(guide, stepData.id);
+  }, [isActiveVariant, guide, stepData]);
 
   // Navigation handlers (active variant only)
   const handleAdvanceStep = async () => {
-    if (!isActiveVariant || !stepData) return;
-    await advanceStep(stepData.next_step_id);
+    if (!isActiveVariant) return;
+    await advanceStep(nextStepId);
   };
 
   const handlePreviousStep = async () => {
@@ -182,16 +180,16 @@ export function WalkthroughStepCard({
         <p className={styles.descriptionText}>
           <ParsedText
             text={stepData.description}
-            wikiItems={filteredWikiItems}
-            onWikiClick={handleItemClick}
+            links={filteredLinks}
+            onLinkClick={handleLinkClick}
           />
         </p>
 
         {/* Objectives */}
         <StepObjectiveList
           objectives={stepData.objectives}
-          wikiItems={filteredWikiItems}
-          onWikiClick={handleItemClick}
+          links={filteredLinks}
+          onLinkClick={handleLinkClick}
         />
       </div>
 

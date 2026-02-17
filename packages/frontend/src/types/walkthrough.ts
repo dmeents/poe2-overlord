@@ -12,6 +12,26 @@ export interface WalkthroughProgress {
   last_updated: string;
 }
 
+export interface StepLink {
+  /** The text to match in step content */
+  text: string;
+  /** The URL to open when clicked */
+  url: string;
+}
+
+export interface Objective {
+  /** The main objective text */
+  text: string;
+  /** Additional details about the objective (may include merged notes) */
+  details?: string;
+  /** Whether this objective is required for step completion */
+  required: boolean;
+  /** Rewards for completing this objective */
+  rewards: string[];
+  /** Whether this objective only needs to be completed once per league (on first character) */
+  leagueStart?: boolean;
+}
+
 export interface WalkthroughStep {
   /** Unique identifier for this step */
   id: string;
@@ -23,43 +43,22 @@ export interface WalkthroughStep {
   current_zone: string;
   /** Zone that indicates completion of this step */
   completion_zone: string;
-  /** ID of the next step (null if this is the last step) */
-  next_step_id: string | null;
-  /** ID of the previous step (null if this is the first step) */
-  previous_step_id: string | null;
   /** List of objectives to complete in this step */
   objectives: Objective[];
-  /** Wiki items related to this step */
-  wiki_items: string[];
-}
-
-export interface Objective {
-  /** The main objective text */
-  text: string;
-  /** Additional details about the objective */
-  details?: string;
-  /** Whether this objective is required for step completion */
-  required: boolean;
-  /** Rewards for completing this objective */
-  rewards: string[];
-  /** Whether this objective only needs to be completed once per league (on first character) */
-  leagueStart?: boolean;
-  /** Additional notes for this objective */
-  notes?: string;
+  /** External resource links (e.g., wiki pages) related to this step */
+  links: StepLink[];
 }
 
 export interface WalkthroughAct {
   /** Name of the act (e.g., "Act 4") */
   act_name: string;
-  /** Act number for ordering */
-  act_number: number;
-  /** Steps within this act */
-  steps: { [key: string]: WalkthroughStep };
+  /** Steps within this act (ordered) */
+  steps: WalkthroughStep[];
 }
 
 export interface WalkthroughGuide {
-  /** All acts in the walkthrough */
-  acts: { [key: string]: WalkthroughAct };
+  /** All acts in the walkthrough (ordered) */
+  acts: WalkthroughAct[];
 }
 
 export interface WalkthroughStepResult {
@@ -67,6 +66,6 @@ export interface WalkthroughStepResult {
   step: WalkthroughStep;
   /** The act name this step belongs to */
   act_name: string;
-  /** The act number */
+  /** The act number (1-based index derived from position) */
   act_number: number;
 }

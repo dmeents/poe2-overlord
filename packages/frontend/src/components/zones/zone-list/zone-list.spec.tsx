@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ZoneFilters, ZoneSortOption } from '@/hooks/useZoneList';
+import type { ZoneFilters, ZoneSortField } from '@/hooks/configs/zone-list.config';
 import type { ZoneStats } from '@/types/character';
 import { ZoneList } from './zone-list';
 
@@ -14,14 +14,18 @@ vi.mock('../zone-card/zone-card', () => ({
   )),
 }));
 
-vi.mock('../zone-list-controls-form/zone-list-controls-form', () => ({
-  ZoneListControlsForm: vi.fn(({ onClearFilters }) => (
+vi.mock('../../forms/list-control-bar/list-control-bar', () => ({
+  ListControlBar: vi.fn(({ onClearFilters }) => (
     <div data-testid="zone-list-controls">
       <button type="button" onClick={onClearFilters} data-testid="clear-filters-controls">
         Clear Filters
       </button>
     </div>
   )),
+}));
+
+vi.mock('../zone-filter-content/zone-filter-content', () => ({
+  ZoneFilterContent: vi.fn(() => <div data-testid="zone-filter-content" />),
 }));
 
 vi.mock('@/contexts/ZoneContext', () => ({
@@ -55,16 +59,9 @@ const defaultFilters: ZoneFilters = {
   act: 'All',
   isTown: null,
   isActive: null,
-  minVisits: null,
-  maxVisits: null,
-  minDeaths: null,
-  maxDeaths: null,
-  hasBosses: null,
-  hasWaypoint: null,
-  hasNpcs: null,
 };
 
-const defaultSort: ZoneSortOption = {
+const defaultSort: { field: ZoneSortField; direction: 'asc' | 'desc' } = {
   field: 'last_visited',
   direction: 'desc',
 };
@@ -76,9 +73,13 @@ describe('ZoneList', () => {
     onFilterChange: vi.fn(),
     onClearFilters: vi.fn(),
     hasActiveFilters: false,
+    activeFilterCount: 0,
+    activeChips: [],
     sort: defaultSort,
     onSortChange: vi.fn(),
     onResetSort: vi.fn(),
+    onResetAll: vi.fn(),
+    filteredCount: 1,
     totalCount: 1,
   };
 
@@ -88,7 +89,7 @@ describe('ZoneList', () => {
 
   describe('Empty State', () => {
     it('shows empty state when totalCount is 0', () => {
-      render(<ZoneList {...defaultProps} zones={[]} totalCount={0} />);
+      render(<ZoneList {...defaultProps} zones={[]} filteredCount={0} totalCount={0} />);
 
       expect(screen.getByText('No Zone Data Available')).toBeInTheDocument();
       expect(screen.getByText(/Start playing Path of Exile 2/)).toBeInTheDocument();
@@ -103,7 +104,7 @@ describe('ZoneList', () => {
         createMockZone({ zone_name: 'The Submerged Passage' }),
       ];
 
-      render(<ZoneList {...defaultProps} zones={zones} totalCount={3} />);
+      render(<ZoneList {...defaultProps} zones={zones} filteredCount={3} totalCount={3} />);
 
       expect(screen.getByTestId('zone-card-The Coast')).toBeInTheDocument();
       expect(screen.getByTestId('zone-card-The Mud Flats')).toBeInTheDocument();
@@ -117,7 +118,7 @@ describe('ZoneList', () => {
         createMockZone({ zone_name: 'Zone3' }),
       ];
 
-      render(<ZoneList {...defaultProps} zones={zones} totalCount={3} />);
+      render(<ZoneList {...defaultProps} zones={zones} filteredCount={3} totalCount={3} />);
 
       expect(screen.getByTestId('zone-card-Zone1')).toHaveAttribute('data-even', 'true');
       expect(screen.getByTestId('zone-card-Zone2')).toHaveAttribute('data-even', 'false');

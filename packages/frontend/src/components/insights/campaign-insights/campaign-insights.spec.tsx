@@ -5,28 +5,25 @@ import type { WalkthroughGuide, WalkthroughStep } from '@/types/walkthrough';
 import { CampaignInsights } from './campaign-insights';
 
 const createMockGuide = (numActs = 2, stepsPerAct = 3): WalkthroughGuide => {
-  const acts: WalkthroughGuide['acts'] = {};
+  const acts: WalkthroughGuide['acts'] = [];
 
   for (let i = 1; i <= numActs; i++) {
-    const steps: { [key: string]: WalkthroughStep } = {};
+    const steps: WalkthroughStep[] = [];
     for (let j = 1; j <= stepsPerAct; j++) {
-      steps[`step-${i}-${j}`] = {
+      steps.push({
         id: `step-${i}-${j}`,
         title: `Step ${j}`,
         description: `Description for step ${j}`,
         current_zone: 'Zone A',
         completion_zone: 'Zone B',
-        next_step_id: null,
-        previous_step_id: null,
         objectives: [],
-        wiki_items: [],
-      };
+        links: [],
+      });
     }
-    acts[`act-${i}`] = {
+    acts.push({
       act_name: `Act ${i}`,
-      act_number: i,
       steps,
-    };
+    });
   }
 
   return { acts };
@@ -72,25 +69,16 @@ describe('CampaignInsights', () => {
 
     it('calculates correct total for multiple acts with varying steps', () => {
       const guide: WalkthroughGuide = {
-        acts: {
-          'act-1': {
+        acts: [
+          {
             act_name: 'Act 1',
-            act_number: 1,
-            steps: {
-              'step-1': {} as never,
-              'step-2': {} as never,
-            },
+            steps: [{} as never, {} as never],
           },
-          'act-2': {
+          {
             act_name: 'Act 2',
-            act_number: 2,
-            steps: {
-              'step-3': {} as never,
-              'step-4': {} as never,
-              'step-5': {} as never,
-            },
+            steps: [{} as never, {} as never, {} as never],
           },
-        },
+        ],
       };
 
       render(<CampaignInsights guide={guide} />);
@@ -100,7 +88,7 @@ describe('CampaignInsights', () => {
     });
 
     it('handles empty guide', () => {
-      const emptyGuide: WalkthroughGuide = { acts: {} };
+      const emptyGuide: WalkthroughGuide = { acts: [] };
 
       render(<CampaignInsights guide={emptyGuide} />);
 

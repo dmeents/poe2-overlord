@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CharacterFilters, SortOption } from '@/hooks/useCharacterList';
+import type { CharacterFilters, CharacterSortField } from '@/hooks/configs/character-list.config';
 import type { CharacterData } from '@/types/character';
 import { CharacterList } from './character-list';
 
@@ -24,14 +24,18 @@ vi.mock('../character-card/character-card', () => ({
   )),
 }));
 
-vi.mock('../character-list-controls-form/character-list-controls-form', () => ({
-  CharacterListControlsForm: vi.fn(({ onClearFilters }) => (
+vi.mock('../../forms/list-control-bar/list-control-bar', () => ({
+  ListControlBar: vi.fn(({ onClearFilters }) => (
     <div data-testid="character-list-controls">
       <button type="button" onClick={onClearFilters} data-testid="clear-filters-controls">
         Clear Filters
       </button>
     </div>
   )),
+}));
+
+vi.mock('../character-filter-content/character-filter-content', () => ({
+  CharacterFilterContent: vi.fn(() => <div data-testid="character-filter-content" />),
 }));
 
 const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData => ({
@@ -88,7 +92,7 @@ const defaultFilters: CharacterFilters = {
   nameSearch: '',
 };
 
-const defaultSort: SortOption = {
+const defaultSort: { field: CharacterSortField; direction: 'asc' | 'desc' } = {
   field: 'last_played',
   direction: 'desc',
 };
@@ -105,9 +109,13 @@ describe('CharacterList', () => {
     onFilterChange: vi.fn(),
     onClearFilters: vi.fn(),
     hasActiveFilters: false,
+    activeFilterCount: 0,
+    activeChips: [],
     sort: defaultSort,
     onSortChange: vi.fn(),
     onResetSort: vi.fn(),
+    onResetAll: vi.fn(),
+    filteredCount: 1,
     totalCount: 1,
   };
 
@@ -117,14 +125,14 @@ describe('CharacterList', () => {
 
   describe('Empty State', () => {
     it('shows empty state when totalCount is 0', () => {
-      render(<CharacterList {...defaultProps} characters={[]} totalCount={0} />);
+      render(<CharacterList {...defaultProps} characters={[]} filteredCount={0} totalCount={0} />);
 
       expect(screen.getByText('No Characters')).toBeInTheDocument();
       expect(screen.getByText(/Create your first character/)).toBeInTheDocument();
     });
 
     it('shows create character button in empty state', () => {
-      render(<CharacterList {...defaultProps} characters={[]} totalCount={0} />);
+      render(<CharacterList {...defaultProps} characters={[]} filteredCount={0} totalCount={0} />);
 
       expect(screen.getByRole('button', { name: 'Create Character' })).toBeInTheDocument();
     });
@@ -137,6 +145,7 @@ describe('CharacterList', () => {
         <CharacterList
           {...defaultProps}
           characters={[]}
+          filteredCount={0}
           totalCount={0}
           onCreateCharacter={handleCreate}
         />,
@@ -156,7 +165,14 @@ describe('CharacterList', () => {
         createMockCharacter({ id: 'char-3', name: 'Character Three' }),
       ];
 
-      render(<CharacterList {...defaultProps} characters={characters} totalCount={3} />);
+      render(
+        <CharacterList
+          {...defaultProps}
+          characters={characters}
+          filteredCount={3}
+          totalCount={3}
+        />,
+      );
 
       expect(screen.getByTestId('character-card-char-1')).toBeInTheDocument();
       expect(screen.getByTestId('character-card-char-2')).toBeInTheDocument();
@@ -174,6 +190,7 @@ describe('CharacterList', () => {
           {...defaultProps}
           characters={characters}
           activeCharacterId="char-2"
+          filteredCount={2}
           totalCount={2}
         />,
       );
@@ -245,7 +262,13 @@ describe('CharacterList', () => {
   describe('Filtered Empty State', () => {
     it('shows no results message when characters array is empty but totalCount > 0', () => {
       render(
-        <CharacterList {...defaultProps} characters={[]} totalCount={5} hasActiveFilters={true} />,
+        <CharacterList
+          {...defaultProps}
+          characters={[]}
+          filteredCount={0}
+          totalCount={5}
+          hasActiveFilters={true}
+        />,
       );
 
       expect(screen.getByText('No characters found')).toBeInTheDocument();
@@ -254,7 +277,13 @@ describe('CharacterList', () => {
 
     it('shows clear filters button in filtered empty state', () => {
       render(
-        <CharacterList {...defaultProps} characters={[]} totalCount={5} hasActiveFilters={true} />,
+        <CharacterList
+          {...defaultProps}
+          characters={[]}
+          filteredCount={0}
+          totalCount={5}
+          hasActiveFilters={true}
+        />,
       );
 
       expect(screen.getByText('Clear All Filters')).toBeInTheDocument();
@@ -268,6 +297,7 @@ describe('CharacterList', () => {
         <CharacterList
           {...defaultProps}
           characters={[]}
+          filteredCount={0}
           totalCount={5}
           hasActiveFilters={true}
           onClearFilters={handleClearFilters}

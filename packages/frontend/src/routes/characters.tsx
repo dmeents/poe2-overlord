@@ -13,7 +13,12 @@ import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { Card } from '../components/ui/card/card';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useCharacterList } from '../hooks/useCharacterList';
+import {
+  type CharacterFilters,
+  type CharacterSortField,
+  characterListConfig,
+} from '../hooks/configs/character-list.config';
+import { useListControls } from '../hooks/useListControls';
 import {
   useCreateCharacter,
   useDeleteCharacter,
@@ -44,10 +49,19 @@ function CharactersPage() {
     updateSort,
     clearFilters,
     resetSort,
+    resetAll,
     hasActiveFilters,
-    filteredCharacters,
+    activeFilterCount,
+    activeChips,
+    result: filteredCharacters,
+    filteredCount,
     totalCount,
-  } = useCharacterList(characters);
+  } = useListControls(characters, characterListConfig) as ReturnType<
+    typeof useListControls<CharacterData, CharacterFilters, CharacterSortField>
+  > & {
+    filters: CharacterFilters;
+    updateFilter: <K extends keyof CharacterFilters>(key: K, value: CharacterFilters[K]) => void;
+  };
 
   const handleCreateCharacter = async (data: CharacterFormData) => {
     try {
@@ -115,7 +129,7 @@ function CharactersPage() {
   const leftColumn = (
     <Card
       title="Characters"
-      subtitle={`${filteredCharacters.length} of ${totalCount} characters`}
+      subtitle={`${filteredCount} of ${totalCount} characters`}
       icon={<UsersIcon />}
       rightAction={{
         label: 'Create Character',
@@ -135,9 +149,13 @@ function CharactersPage() {
           onFilterChange={updateFilter}
           onClearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
+          activeFilterCount={activeFilterCount}
+          activeChips={activeChips}
           sort={sort}
           onSortChange={updateSort}
           onResetSort={resetSort}
+          onResetAll={resetAll}
+          filteredCount={filteredCount}
           totalCount={totalCount}
         />
       )}

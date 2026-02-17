@@ -8,7 +8,13 @@ import { Card } from '@/components/ui/card/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { ZoneList } from '@/components/zones/zone-list/zone-list';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useZoneList } from '@/hooks/useZoneList';
+import {
+  type ZoneFilters,
+  type ZoneSortField,
+  zoneListConfig,
+} from '@/hooks/configs/zone-list.config';
+import { useListControls } from '@/hooks/useListControls';
+import type { ZoneStats } from '@/types/character';
 
 export const Route = createFileRoute('/playtime')({
   component: PlaytimePage,
@@ -25,11 +31,19 @@ function PlaytimePage() {
     updateSort,
     clearFilters,
     resetSort,
+    resetAll,
     hasActiveFilters,
-    filteredZones,
-    zoneCount,
+    activeFilterCount,
+    activeChips,
+    result: filteredZones,
+    filteredCount,
     totalCount,
-  } = useZoneList(zones);
+  } = useListControls(zones, zoneListConfig) as ReturnType<
+    typeof useListControls<ZoneStats, ZoneFilters, ZoneSortField>
+  > & {
+    filters: ZoneFilters;
+    updateFilter: <K extends keyof ZoneFilters>(key: K, value: ZoneFilters[K]) => void;
+  };
 
   if (isLoading) {
     return (
@@ -48,7 +62,7 @@ function PlaytimePage() {
         <div className="mt-6">
           <Card
             title="Zones"
-            subtitle={`${zoneCount} of ${totalCount} zones`}
+            subtitle={`${filteredCount} of ${totalCount} zones`}
             icon={<MapPinIcon className="w-5 h-5" />}>
             <ZoneList
               zones={filteredZones}
@@ -56,9 +70,13 @@ function PlaytimePage() {
               onFilterChange={updateFilter}
               onClearFilters={clearFilters}
               hasActiveFilters={hasActiveFilters}
+              activeFilterCount={activeFilterCount}
+              activeChips={activeChips}
               sort={sort}
               onSortChange={updateSort}
               onResetSort={resetSort}
+              onResetAll={resetAll}
+              filteredCount={filteredCount}
               totalCount={totalCount}
             />
           </Card>

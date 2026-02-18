@@ -29,14 +29,12 @@
 
 use super::models::{
     CurrencyExchangeApiResponse, CurrencyExchangeData, CurrencySearchResult, EconomyType,
-    LeagueEconomyCache, TopCurrencyItem,
+    TopCurrencyItem,
 };
+use super::traits::EconomyRepository;
 use crate::errors::{AppError, AppResult};
-use crate::infrastructure::file_management::paths::AppPaths;
-use crate::infrastructure::file_management::service::FileService;
 use reqwest;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{RwLock, Semaphore};
@@ -91,16 +89,36 @@ const RETRY_BACKOFF_MULTIPLIER: u32 = 3;
 ///
 /// Uses per-cache-key semaphores to ensure only one API fetch happens at a time
 /// for the same league+hardcore+economy_type combination.
-#[derive(Debug, Clone)]
 pub struct EconomyService {
     pub(crate) client: reqwest::Client,
     /// Tracks in-flight API fetches per cache key to prevent race conditions.
     /// Key format: "{league}:{is_hardcore}:{economy_type}"
     in_flight: Arc<RwLock<HashMap<String, Arc<Semaphore>>>>,
+    repository: Arc<dyn EconomyRepository>,
+}
+
+impl std::fmt::Debug for EconomyService {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EconomyService")
+            .field("client", &"reqwest::Client")
+            .field("in_flight", &self.in_flight)
+            .field("repository", &"Arc<dyn EconomyRepository>")
+            .finish()
+    }
+}
+
+impl Clone for EconomyService {
+    fn clone(&self) -> Self {
+        Self {
+            client: self.client.clone(),
+            in_flight: self.in_flight.clone(),
+            repository: self.repository.clone(),
+        }
+    }
 }
 
 impl EconomyService {
-    pub fn new() -> AppResult<Self> {
+    pub fn new(repository: Arc<dyn EconomyRepository>) -> AppResult<Self> {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(HTTP_TOTAL_TIMEOUT_SECS))
             .connect_timeout(Duration::from_secs(HTTP_CONNECT_TIMEOUT_SECS))
@@ -110,6 +128,7 @@ impl EconomyService {
         Ok(Self {
             client,
             in_flight: Arc::new(RwLock::new(HashMap::new())),
+            repository,
         })
     }
 
@@ -159,20 +178,17 @@ impl EconomyService {
         }
 
         // FAST PATH: Check for fresh cache without acquiring any locks
-        let cache_path = Self::get_league_cache_path(league, is_hardcore).await?;
-        let cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path).await?;
-
-        if let Some(ref cache) = cache {
-            if let Some(cached) = cache.get_economy_type(economy_type) {
-                if cached.is_fresh() {
-                    log::debug!(
-                        "Fast path: Fresh cache for {}:{:?} (no lock needed)",
-                        league,
-                        economy_type
-                    );
-                    return Ok(cached.data.clone());
-                }
-            }
+        if let Some(data) = self
+            .repository
+            .load_fresh_exchange_data(league, is_hardcore, economy_type, CACHE_TTL_SECONDS)
+            .await?
+        {
+            log::debug!(
+                "Fast path: Fresh cache for {}:{:?} (no lock needed)",
+                league,
+                economy_type
+            );
+            return Ok(data);
         }
 
         // Cache is stale or missing - need to fetch with request deduplication
@@ -197,34 +213,26 @@ impl EconomyService {
         log::debug!("Acquired fetch lock for {}:{:?}", league, economy_type);
 
         // Re-check cache after acquiring lock (another request may have fetched)
-        let mut cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path)
+        if let Some(data) = self
+            .repository
+            .load_fresh_exchange_data(league, is_hardcore, economy_type, CACHE_TTL_SECONDS)
             .await?
-            .unwrap_or_else(|| LeagueEconomyCache::new(league.to_string(), is_hardcore));
-
-        if let Some(cached) = cache.get_economy_type(economy_type) {
-            if cached.is_fresh() {
-                log::info!(
-                    "Cache became fresh while waiting for lock (coalesced fetch) for {}:{:?}",
-                    league,
-                    economy_type
-                );
-                // Clean up the semaphore since we're done
-                self.cleanup_semaphore(&key).await;
-                return Ok(cached.data.clone());
-            }
+        {
             log::info!(
-                "Cache exists but is stale for league: {}, type: {} (cached {} seconds ago)",
-                league,
-                economy_type,
-                Self::seconds_since(&cached.cached_at)
-            );
-        } else {
-            log::info!(
-                "No cache found for league: {}, type: {}",
+                "Cache became fresh while waiting for lock (coalesced fetch) for {}:{:?}",
                 league,
                 economy_type
             );
+            // Clean up the semaphore since we're done
+            self.cleanup_semaphore(&key).await;
+            return Ok(data);
         }
+
+        log::info!(
+            "Cache is stale or missing for league: {}, type: {}",
+            league,
+            economy_type
+        );
 
         // Still stale - proceed with fetch from poe.ninja
         // Handle league name for hardcore economies
@@ -264,12 +272,13 @@ impl EconomyService {
                     data.currencies.len()
                 );
 
-                // Update cache with fresh data
-                cache.update_economy_type(economy_type, data.clone(), CACHE_TTL_SECONDS);
-
-                // Save cache to disk (don't fail the request if this fails)
-                if let Err(e) = FileService::write_json(&cache_path, &cache).await {
-                    log::warn!("Failed to save cache to disk: {}", e);
+                // Save to database
+                if let Err(e) = self
+                    .repository
+                    .save_exchange_data(league, is_hardcore, economy_type, &data)
+                    .await
+                {
+                    log::warn!("Failed to save cache to database: {}", e);
                 }
 
                 Ok(data)
@@ -278,15 +287,16 @@ impl EconomyService {
                 log::warn!("Failed to fetch from poe.ninja: {}", e);
 
                 // Graceful degradation - return stale cache if available
-                if let Some(cached) = cache.get_economy_type(economy_type) {
+                if let Some(mut stale_data) = self
+                    .repository
+                    .load_exchange_data(league, is_hardcore, economy_type)
+                    .await?
+                {
                     log::info!(
-                        "Returning stale cached data for league: {}, type: {} (cached {} seconds ago)",
+                        "Returning stale cached data for league: {}, type: {}",
                         league,
-                        economy_type,
-                        Self::seconds_since(&cached.cached_at)
+                        economy_type
                     );
-
-                    let mut stale_data = cached.data.clone();
                     stale_data.is_stale = Some(true);
                     Ok(stale_data)
                 } else {
@@ -415,66 +425,15 @@ impl EconomyService {
         league: &str,
         is_hardcore: bool,
     ) -> AppResult<Vec<TopCurrencyItem>> {
-        let cache_path = Self::get_league_cache_path(league, is_hardcore).await?;
-
-        // Load cache file
-        let cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path).await?;
-
-        // If no cache exists, return empty array
-        let Some(cache) = cache else {
-            log::info!("No cache found for league: {}", league);
-            return Ok(Vec::new());
-        };
-
-        // Collect ALL items from all economy types (don't truncate per type)
-        let mut all_items: Vec<TopCurrencyItem> = Vec::new();
-
-        for (economy_type_str, cached_data) in cache.economy_types.iter() {
-            // Parse economy type from string using FromStr
-            let Ok(economy_type) = economy_type_str.parse::<EconomyType>() else {
-                continue;
-            };
-
-            // Extract ALL currencies and convert to TopCurrencyItem
-            let data = &cached_data.data;
-            let currencies: Vec<TopCurrencyItem> = data
-                .currencies
-                .iter()
-                .map(|curr| TopCurrencyItem {
-                    id: curr.id.clone(),
-                    name: curr.name.clone(),
-                    image_url: curr.image_url.clone(),
-                    economy_type,
-                    primary_value: curr.primary_value,
-                    primary_currency_name: data.primary_currency.name.clone(),
-                    primary_currency_image_url: data.primary_currency.image_url.clone(),
-                    volume: curr.volume,
-                    change_percent: curr.change_percent,
-                    cached_at: cached_data.cached_at.clone(),
-                })
-                .collect();
-
-            all_items.extend(currencies);
-        }
-
-        // Sort all items by primary_value descending
-        all_items.sort_by(|a, b| {
-            b.primary_value
-                .partial_cmp(&a.primary_value)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-
-        // Take top 10 overall
-        all_items.truncate(10);
+        let items = self.repository.load_top_currencies(league, is_hardcore, 10).await?;
 
         log::info!(
-            "Loaded {} aggregated top currencies for league: {} from {} economy types",
-            all_items.len(),
-            league,
-            cache.economy_types.len()
+            "Loaded {} aggregated top currencies for league: {}",
+            items.len(),
+            league
         );
 
-        Ok(all_items)
+        Ok(items)
     }
 
     /// Search for currencies across all cached economy types by name
@@ -484,105 +443,17 @@ impl EconomyService {
         is_hardcore: bool,
         query: &str,
     ) -> AppResult<Vec<CurrencySearchResult>> {
-        let cache_path = Self::get_league_cache_path(league, is_hardcore).await?;
-
-        // Load cache file
-        let cache = FileService::read_json_optional::<LeagueEconomyCache>(&cache_path).await?;
-
-        // If no cache exists, return empty array
-        let Some(cache) = cache else {
-            log::info!("No cache found for league: {}", league);
-            return Ok(Vec::new());
-        };
-
-        // Normalize query for case-insensitive search
-        let query_lower = query.to_lowercase();
-
-        // Collect all matching items from all economy types
-        let mut results: Vec<CurrencySearchResult> = Vec::new();
-
-        for (economy_type_str, cached_data) in cache.economy_types.iter() {
-            // Parse economy type from string using FromStr
-            let Ok(economy_type) = economy_type_str.parse::<EconomyType>() else {
-                continue;
-            };
-
-            // Filter currencies by name match
-            let data = &cached_data.data;
-            let matching_currencies: Vec<CurrencySearchResult> = data
-                .currencies
-                .iter()
-                .filter(|curr| curr.name.to_lowercase().contains(&query_lower))
-                .map(|curr| CurrencySearchResult {
-                    id: curr.id.clone(),
-                    name: curr.name.clone(),
-                    image_url: curr.image_url.clone(),
-                    economy_type,
-                    primary_value: curr.primary_value,
-                    primary_currency_name: data.primary_currency.name.clone(),
-                    primary_currency_image_url: data.primary_currency.image_url.clone(),
-                    secondary_value: curr.secondary_value,
-                    tertiary_value: curr.tertiary_value,
-                    volume: curr.volume,
-                    change_percent: curr.change_percent,
-                    display_value: curr.display_value.clone(),
-                })
-                .collect();
-
-            results.extend(matching_currencies);
-        }
-
-        // Sort by primary_value descending
-        results.sort_by(|a, b| {
-            b.primary_value
-                .partial_cmp(&a.primary_value)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        let results = self.repository.search_currencies(league, is_hardcore, query).await?;
 
         log::info!(
-            "Found {} matching currencies for query '{}' in league: {} across {} economy types",
+            "Found {} matching currencies for query '{}' in league: {}",
             results.len(),
             query,
-            league,
-            cache.economy_types.len()
+            league
         );
 
         Ok(results)
     }
 
-    /// Get the cache file path for a league
-    pub async fn get_league_cache_path(league: &str, is_hardcore: bool) -> AppResult<PathBuf> {
-        let data_dir = AppPaths::ensure_data_dir().await?;
-        let cache_dir = data_dir.join("economy_cache");
-
-        // Ensure cache directory exists
-        AppPaths::ensure_dir(&cache_dir).await?;
-
-        // Strip "The " prefix to match API normalization
-        let mut league_name = league.to_string();
-        if league_name.starts_with("The ") {
-            league_name = league_name.strip_prefix("The ").unwrap().to_string();
-        }
-
-        // Prepend "HC_" to filename for hardcore leagues
-        let league_prefix = if is_hardcore { "HC_" } else { "" };
-
-        // Sanitize league name for filename
-        let safe_league_name = league_name.replace(" ", "_").replace("/", "-");
-        let filename = format!("{}{}.json", league_prefix, safe_league_name);
-
-        Ok(cache_dir.join(filename))
-    }
-
-    /// Calculate seconds since a given RFC3339 timestamp
-    fn seconds_since(timestamp: &str) -> i64 {
-        chrono::DateTime::parse_from_rfc3339(timestamp)
-            .ok()
-            .map(|time| {
-                let now = chrono::Utc::now();
-                now.signed_duration_since(time).num_seconds()
-            })
-            .unwrap_or(0)
-    }
 }
 

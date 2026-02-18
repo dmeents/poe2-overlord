@@ -18,8 +18,8 @@ pub use character::{
 };
 
 pub use configuration::{
-    AppConfig, ConfigurationChangedEvent, ConfigurationFileInfo, ConfigurationService,
-    ConfigurationServiceImpl, ConfigurationValidationResult,
+    AppConfig, ConfigurationChangedEvent, ConfigurationService, ConfigurationServiceImpl,
+    ConfigurationValidationResult,
 };
 
 pub use economy::{

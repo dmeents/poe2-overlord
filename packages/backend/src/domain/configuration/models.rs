@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ZoneRefreshInterval {
@@ -249,29 +248,5 @@ impl ConfigurationValidationResult {
     pub fn add_error(&mut self, error: String) {
         self.is_valid = false;
         self.errors.push(error);
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigurationFileInfo {
-    pub path: PathBuf,
-    pub exists: bool,
-    pub size: Option<u64>,
-    pub last_modified: Option<std::time::SystemTime>,
-}
-
-impl ConfigurationFileInfo {
-    pub fn new(
-        path: PathBuf,
-        exists: bool,
-        size: Option<u64>,
-        last_modified: Option<std::time::SystemTime>,
-    ) -> Self {
-        Self {
-            path,
-            exists,
-            size,
-            last_modified,
-        }
     }
 }

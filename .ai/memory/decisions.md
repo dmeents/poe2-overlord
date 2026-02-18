@@ -27,9 +27,11 @@ Migrated all backend data persistence from JSON files to SQLite using sqlx 0.8:
    - `characters` - Profile + timestamps + current_location reference
    - `zone_stats` - Zone tracking data (references `zone_metadata` by ID)
    - `walkthrough_progress` - Campaign progress
+5. **Economy Cache** (normalized into 2 tables with FK):
+   - `economy_exchange_rates` - Exchange rate metadata per league+type
+   - `currency_items` - Individual currency data (FK to exchange_rates with CASCADE)
 
 **NOT Migrated:**
-- **Economy cache** - Remains as JSON files (TTL cache, not relational data)
 - **Walkthrough guide** - Remains as bundled read-only JSON (`config/walkthrough_guide.json`)
 - **Game monitoring** - Runtime state only, no persistence
 - **Log analysis** - Reads game log file, no own persistence
@@ -57,6 +59,22 @@ Created `infrastructure/database/helpers.rs` with zone ID lookup functions:
 - `get_or_create_zone_id_pool()` - Pool-aware (creates stubs)
 
 Pattern: When a character enters an unknown zone, auto-create a stub `zone_metadata` row with just zone_name + timestamps. WikiScrapingService fills in metadata later.
+
+**Economy Cache Migration (Added 2026-02-17):**
+The economy domain was the last to migrate from JSON to SQLite. It followed the same repository pattern but with unique considerations for ephemeral TTL caching:
+
+**Schema Design:**
+- **Parent-child with FK**: `economy_exchange_rates` (1) → `currency_items` (N)
+- **ON DELETE CASCADE**: Deleting an exchange rate row cleans up all its currency items
+- **TTL checking in Rust**: Parse RFC3339 timestamps with chrono, avoid SQLite datetime quirks
+- **Upsert strategy**: Direct per-item upserts via `ON CONFLICT DO UPDATE`, not snapshot replacement
+- **`is_active` preservation**: Omitted from UPDATE clause so manual deactivations survive API refreshes
+- **Cross-economy queries**: SQL JOINs for top currencies and search across all economy types
+
+**Migration Pattern:**
+- No data migration needed (JSON cache is ephemeral, rebuilds from API)
+- Old JSON cache files can be deleted (no longer read)
+- DB starts empty, rebuilds on first fetch from poe.ninja API
 
 **Transaction Boundaries:**
 All multi-step operations wrapped in SQLite transactions:

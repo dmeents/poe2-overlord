@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::domain::configuration::models::*;
-    use std::path::PathBuf;
 
     // ============= ZoneRefreshInterval Tests =============
 
@@ -360,34 +359,5 @@ mod tests {
 
         assert!(!result.is_valid);
         assert_eq!(result.errors.len(), 3);
-    }
-
-    // ============= ConfigurationFileInfo Tests =============
-
-    #[test]
-    fn test_configuration_file_info_nonexistent_file() {
-        let info = ConfigurationFileInfo::new(
-            PathBuf::from("/nonexistent/path/config.json"),
-            false,
-            None,
-            None,
-        );
-        assert!(!info.exists);
-        assert!(info.size.is_none());
-        assert!(info.last_modified.is_none());
-    }
-
-    #[test]
-    fn test_configuration_file_info_serialization() {
-        let info = ConfigurationFileInfo {
-            path: PathBuf::from("/test/path"),
-            exists: true,
-            size: Some(1024),
-            last_modified: None,
-        };
-
-        let json = serde_json::to_string(&info).unwrap();
-        assert!(json.contains("\"exists\":true"));
-        assert!(json.contains("\"size\":1024"));
     }
 }

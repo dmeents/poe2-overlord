@@ -3,7 +3,7 @@ use crate::domain::configuration::{
     repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
     traits::ConfigurationService,
 };
-use crate::domain::economy::EconomyService;
+use crate::domain::economy::{EconomyRepository, EconomyRepositoryImpl, EconomyService};
 use crate::domain::game_monitoring::{
     traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
 };
@@ -83,7 +83,9 @@ impl ServiceInitializer {
             Arc::new(config_service_impl) as Arc<dyn ConfigurationService + Send + Sync>;
         app.manage(config_service.clone());
 
-        let economy_service = EconomyService::new().map_err(|e| {
+        let economy_repo = Arc::new(EconomyRepositoryImpl::new(pool.clone()))
+            as Arc<dyn EconomyRepository + Send + Sync>;
+        let economy_service = EconomyService::new(economy_repo).map_err(|e| {
             error!("Failed to initialize EconomyService: {}", e);
             e
         })?;

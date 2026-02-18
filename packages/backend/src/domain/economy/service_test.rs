@@ -1,10 +1,68 @@
 #[cfg(test)]
 mod tests {
-    use crate::domain::economy::models::EconomyType;
+    use crate::domain::economy::models::{
+        CurrencyExchangeData, CurrencySearchResult, EconomyType, TopCurrencyItem,
+    };
     use crate::domain::economy::service::EconomyService;
-    use crate::errors::AppError;
+    use crate::domain::economy::traits::EconomyRepository;
+    use crate::errors::{AppError, AppResult};
+    use async_trait::async_trait;
     use std::sync::Arc;
     use std::time::Duration;
+
+    // ============= Mock Repository =============
+
+    struct MockEconomyRepository;
+
+    #[async_trait]
+    impl EconomyRepository for MockEconomyRepository {
+        async fn load_fresh_exchange_data(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
+            _economy_type: EconomyType,
+            _ttl_seconds: u64,
+        ) -> AppResult<Option<CurrencyExchangeData>> {
+            Ok(None)
+        }
+
+        async fn load_exchange_data(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
+            _economy_type: EconomyType,
+        ) -> AppResult<Option<CurrencyExchangeData>> {
+            Ok(None)
+        }
+
+        async fn save_exchange_data(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
+            _economy_type: EconomyType,
+            _data: &CurrencyExchangeData,
+        ) -> AppResult<()> {
+            Ok(())
+        }
+
+        async fn load_top_currencies(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
+            _limit: u32,
+        ) -> AppResult<Vec<TopCurrencyItem>> {
+            Ok(Vec::new())
+        }
+
+        async fn search_currencies(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
+            _query: &str,
+        ) -> AppResult<Vec<CurrencySearchResult>> {
+            Ok(Vec::new())
+        }
+    }
 
     // ============= Helper Function Tests =============
 
@@ -112,7 +170,8 @@ mod tests {
 
     #[test]
     fn test_service_creation() {
-        let service = EconomyService::new().expect("Failed to create service");
+        let mock_repo = Arc::new(MockEconomyRepository) as Arc<dyn EconomyRepository + Send + Sync>;
+        let service = EconomyService::new(mock_repo).expect("Failed to create service");
         assert!(service.client.get("https://example.com").build().is_ok());
     }
 
@@ -141,7 +200,8 @@ mod tests {
     async fn test_concurrent_requests_no_deadlock() {
         // Test that multiple concurrent requests for the same cache key
         // don't cause deadlocks (they should wait and coalesce)
-        let service = Arc::new(EconomyService::new().expect("Failed to create service"));
+        let mock_repo = Arc::new(MockEconomyRepository) as Arc<dyn EconomyRepository + Send + Sync>;
+        let service = Arc::new(EconomyService::new(mock_repo).expect("Failed to create service"));
 
         // Spawn 3 concurrent requests for same league+type
         let handle1 = tokio::spawn({
@@ -187,7 +247,8 @@ mod tests {
     #[tokio::test]
     async fn test_different_cache_keys_dont_block() {
         // Test that requests for different leagues/types don't block each other
-        let service = Arc::new(EconomyService::new().expect("Failed to create service"));
+        let mock_repo = Arc::new(MockEconomyRepository) as Arc<dyn EconomyRepository + Send + Sync>;
+        let service = Arc::new(EconomyService::new(mock_repo).expect("Failed to create service"));
 
         // Spawn concurrent requests for DIFFERENT cache keys
         let handle1 = tokio::spawn({
@@ -228,61 +289,6 @@ mod tests {
             timeout_result.is_ok(),
             "Different cache keys should not block each other"
         );
-    }
-
-    #[tokio::test]
-    async fn test_get_cache_path_normal_league() {
-        let cache_path = EconomyService::get_league_cache_path("Rise of the Abyssal", false)
-            .await
-            .expect("Failed to get cache path");
-
-        let filename = cache_path.file_name().unwrap().to_str().unwrap();
-        assert_eq!(filename, "Rise_of_the_Abyssal.json");
-        assert!(!filename.starts_with("HC_"));
-    }
-
-    #[tokio::test]
-    async fn test_get_cache_path_hardcore_league() {
-        let cache_path = EconomyService::get_league_cache_path("Rise of the Abyssal", true)
-            .await
-            .expect("Failed to get cache path");
-
-        let filename = cache_path.file_name().unwrap().to_str().unwrap();
-        assert_eq!(filename, "HC_Rise_of_the_Abyssal.json");
-        assert!(filename.starts_with("HC_"));
-    }
-
-    #[tokio::test]
-    async fn test_get_cache_path_league_name_sanitization() {
-        let cache_path = EconomyService::get_league_cache_path("Test League/Special", false)
-            .await
-            .expect("Failed to get cache path");
-
-        let filename = cache_path.file_name().unwrap().to_str().unwrap();
-        // Spaces become underscores, slashes become dashes
-        assert_eq!(filename, "Test_League-Special.json");
-    }
-
-    #[tokio::test]
-    async fn test_get_cache_path_hardcore_league_name_sanitization() {
-        let cache_path = EconomyService::get_league_cache_path("Test League/Special", true)
-            .await
-            .expect("Failed to get cache path");
-
-        let filename = cache_path.file_name().unwrap().to_str().unwrap();
-        // HC prefix, spaces become underscores, slashes become dashes
-        assert_eq!(filename, "HC_Test_League-Special.json");
-    }
-
-    #[tokio::test]
-    async fn test_get_cache_path_standard_hardcore() {
-        // Standard + hardcore should use "Hardcore" not "HC_Standard"
-        let cache_path = EconomyService::get_league_cache_path("Standard", true)
-            .await
-            .expect("Failed to get cache path");
-
-        let filename = cache_path.file_name().unwrap().to_str().unwrap();
-        assert_eq!(filename, "HC_Standard.json");
     }
 
     #[test]

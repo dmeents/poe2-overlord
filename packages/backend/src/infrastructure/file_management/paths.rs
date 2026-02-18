@@ -26,20 +26,8 @@ pub struct AppPaths;
 impl AppPaths {
     const APP_NAME: &'static str = "poe2-overlord";
 
-    pub fn config_dir() -> PathBuf {
-        dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(Self::APP_NAME)
-    }
-
     pub fn data_dir() -> PathBuf {
         dirs::data_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join(Self::APP_NAME)
-    }
-
-    pub fn cache_dir() -> PathBuf {
-        dirs::cache_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join(Self::APP_NAME)
     }
@@ -73,22 +61,10 @@ impl AppPaths {
         }
     }
 
-    pub async fn ensure_config_dir() -> AppResult<PathBuf> {
-        let config_dir = Self::config_dir();
-        Self::ensure_dir(&config_dir).await?;
-        Ok(config_dir)
-    }
-
     pub async fn ensure_data_dir() -> AppResult<PathBuf> {
         let data_dir = Self::data_dir();
         Self::ensure_dir(&data_dir).await?;
         Ok(data_dir)
-    }
-
-    pub async fn ensure_cache_dir() -> AppResult<PathBuf> {
-        let cache_dir = Self::cache_dir();
-        Self::ensure_dir(&cache_dir).await?;
-        Ok(cache_dir)
     }
 }
 

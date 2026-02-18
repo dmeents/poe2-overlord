@@ -584,6 +584,422 @@ mod tests {
 }
 ```
 
+### SQLite Cache Migration Pattern (Ephemeral Data)
+
+When migrating ephemeral TTL caches from JSON to SQLite (e.g., economy cache from poe.ninja API), follow this pattern:
+
+#### When to Use This Pattern
+
+Use this pattern for:
+- **API response caching** with TTL (Time-To-Live)
+- **Ephemeral data** that rebuilds from external sources
+- **Data with lifecycles** (active/inactive states)
+- **Cross-domain aggregation** needs (JOINs, search)
+
+**Don't migrate** if:
+- Data is bundled/read-only (keep as JSON)
+- Cache is pure runtime (no persistence needed)
+
+#### Migration Checklist
+
+**1. Design Schema with Parent-Child FK Relationship**
+
+Example from economy domain:
+
+```sql
+-- Parent: Exchange rate context per league+type
+CREATE TABLE economy_exchange_rates (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    league            TEXT    NOT NULL,
+    is_hardcore       INTEGER NOT NULL DEFAULT 0,
+    economy_type      TEXT    NOT NULL,
+    -- ... metadata fields ...
+    fetched_at        TEXT    NOT NULL,  -- RFC3339, sent to frontend
+    last_updated      TEXT    NOT NULL,  -- RFC3339, used for TTL check
+    UNIQUE(league, is_hardcore, economy_type)
+);
+
+-- Child: Individual items with FK
+CREATE TABLE currency_items (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    exchange_rate_id  INTEGER NOT NULL REFERENCES economy_exchange_rates(id) ON DELETE CASCADE,
+    currency_id       TEXT    NOT NULL,
+    -- ... item fields ...
+    is_active         INTEGER NOT NULL DEFAULT 1,  -- Lifecycle flag
+    last_updated      TEXT    NOT NULL,
+    UNIQUE(exchange_rate_id, currency_id)
+);
+
+-- Indexes for queries
+CREATE INDEX idx_exchange_rates_lookup ON economy_exchange_rates (league, is_hardcore, economy_type);
+CREATE INDEX idx_currency_items_exchange_rate ON currency_items (exchange_rate_id);
+CREATE INDEX idx_currency_items_name ON currency_items (name);
+CREATE INDEX idx_currency_items_value ON currency_items (primary_value DESC);
+```
+
+**Key decisions:**
+- `ON DELETE CASCADE` - Child items deleted when parent removed
+- `UNIQUE` constraints enable upserts
+- `is_active` flag for soft deletes (preserves history, allows manual deactivation)
+- Separate `fetched_at` (display) and `last_updated` (TTL logic)
+
+**2. Create Repository Trait**
+
+```rust
+// traits.rs
+#[async_trait]
+pub trait EconomyRepository: Send + Sync {
+    /// Load data if fresh (within TTL)
+    async fn load_fresh_exchange_data(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        economy_type: EconomyType,
+        ttl_seconds: u64,
+    ) -> AppResult<Option<CurrencyExchangeData>>;
+
+    /// Load data regardless of TTL (stale fallback)
+    async fn load_exchange_data(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        economy_type: EconomyType,
+    ) -> AppResult<Option<CurrencyExchangeData>>;
+
+    /// Upsert data, preserving is_active
+    async fn save_exchange_data(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        economy_type: EconomyType,
+        data: &CurrencyExchangeData,
+    ) -> AppResult<()>;
+
+    /// Cross-cache queries (JOINs)
+    async fn load_top_currencies(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        limit: u32,
+    ) -> AppResult<Vec<TopCurrencyItem>>;
+
+    async fn search_currencies(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        query: &str,
+    ) -> AppResult<Vec<CurrencySearchResult>>;
+}
+```
+
+**3. Implement Repository with TTL Logic**
+
+```rust
+// repository.rs
+impl EconomyRepository for EconomyRepositoryImpl {
+    async fn load_fresh_exchange_data(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        economy_type: EconomyType,
+        ttl_seconds: u64,
+    ) -> AppResult<Option<CurrencyExchangeData>> {
+        // Query parent row
+        let rate_result = sqlx::query(
+            "SELECT id, last_updated FROM economy_exchange_rates
+             WHERE league = ? AND is_hardcore = ? AND economy_type = ?"
+        )
+        .bind(league)
+        .bind(is_hardcore as i32)
+        .bind(economy_type.as_str())
+        .fetch_optional(&self.pool)
+        .await?;
+
+        let Some(row) = rate_result else {
+            return Ok(None); // No data
+        };
+
+        let exchange_rate_id: i64 = row.get("id");
+        let last_updated: String = row.get("last_updated");
+
+        // TTL check in Rust (not SQL)
+        if !Self::is_fresh(&last_updated, ttl_seconds) {
+            return Ok(None); // Stale
+        }
+
+        // Load child items and build domain model
+        let data = self.build_exchange_data(exchange_rate_id, ...).await?;
+        Ok(Some(data))
+    }
+
+    async fn save_exchange_data(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        economy_type: EconomyType,
+        data: &CurrencyExchangeData,
+    ) -> AppResult<()> {
+        let mut tx = self.pool.begin().await?;
+        let now = Utc::now().to_rfc3339();
+
+        // 1. Upsert parent row
+        sqlx::query(
+            "INSERT INTO economy_exchange_rates (league, is_hardcore, economy_type, ..., last_updated)
+             VALUES (?, ?, ?, ..., ?)
+             ON CONFLICT(league, is_hardcore, economy_type) DO UPDATE SET
+                ..., last_updated = excluded.last_updated"
+        )
+        .bind(league)
+        .bind(is_hardcore as i32)
+        .bind(economy_type.as_str())
+        // ... bind all fields ...
+        .bind(&now)
+        .execute(&mut *tx)
+        .await?;
+
+        // 2. Get parent ID
+        let exchange_rate_id: i64 = sqlx::query_scalar(
+            "SELECT id FROM economy_exchange_rates WHERE league = ? AND is_hardcore = ? AND economy_type = ?"
+        )
+        .bind(league)
+        .bind(is_hardcore as i32)
+        .bind(economy_type.as_str())
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // 3. Upsert each child (preserves is_active!)
+        for item in &data.items {
+            sqlx::query(
+                "INSERT INTO currency_items (exchange_rate_id, currency_id, ..., is_active, last_updated)
+                 VALUES (?, ?, ..., 1, ?)
+                 ON CONFLICT(exchange_rate_id, currency_id) DO UPDATE SET
+                    ..., last_updated = excluded.last_updated
+                    -- is_active intentionally omitted from UPDATE"
+            )
+            .bind(exchange_rate_id)
+            .bind(&item.id)
+            // ... bind all fields ...
+            .bind(&now)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+}
+```
+
+**Critical:** Omit `is_active` from the `ON CONFLICT DO UPDATE` clause. This preserves manual deactivations while still updating all other fields on API refresh.
+
+**4. Refactor Service to Use Repository**
+
+```rust
+// service.rs
+pub struct EconomyService {
+    client: reqwest::Client,
+    in_flight: Arc<RwLock<HashMap<String, Arc<Semaphore>>>>,
+    repository: Arc<dyn EconomyRepository>,  // Added
+}
+
+impl EconomyService {
+    pub fn new(repository: Arc<dyn EconomyRepository>) -> AppResult<Self> {
+        // ...
+        Ok(Self { client, in_flight, repository })
+    }
+
+    pub async fn fetch_data(&self, ...) -> AppResult<Data> {
+        // FAST PATH: Check fresh cache (no lock)
+        if let Some(data) = self.repository.load_fresh_exchange_data(..., TTL).await? {
+            return Ok(data);
+        }
+
+        // Acquire semaphore for deduplication
+        let key = Self::cache_key(...);
+        let semaphore = { /* ... */ };
+        let _permit = semaphore.acquire().await?;
+
+        // Re-check after acquiring lock (coalescing)
+        if let Some(data) = self.repository.load_fresh_exchange_data(..., TTL).await? {
+            self.cleanup_semaphore(&key).await;
+            return Ok(data);
+        }
+
+        // Still stale - fetch from API
+        match self.fetch_from_api(...).await {
+            Ok(data) => {
+                // Save to DB
+                self.repository.save_exchange_data(..., &data).await?;
+                Ok(data)
+            }
+            Err(e) => {
+                // Graceful degradation - return stale data if available
+                if let Some(mut stale) = self.repository.load_exchange_data(...).await? {
+                    stale.is_stale = Some(true);
+                    Ok(stale)
+                } else {
+                    Err(e)
+                }
+            }
+        }
+    }
+}
+```
+
+**Key service changes:**
+- Remove `FileService` dependency
+- Remove `get_cache_path()` and file I/O logic
+- Replace cache checks with repository calls
+- Keep HTTP client, retry logic, semaphore deduplication
+
+**5. Update Service Registry (DI)**
+
+```rust
+// service_registry.rs
+let economy_repo = Arc::new(EconomyRepositoryImpl::new(pool.clone()))
+    as Arc<dyn EconomyRepository + Send + Sync>;
+
+let economy_service = EconomyService::new(economy_repo)?;
+app.manage(economy_service);
+```
+
+**6. Update Tests with Mock Repository**
+
+```rust
+// service_test.rs
+struct MockEconomyRepository;
+
+#[async_trait]
+impl EconomyRepository for MockEconomyRepository {
+    async fn load_fresh_exchange_data(...) -> AppResult<Option<Data>> {
+        Ok(None) // Always miss cache
+    }
+    // ... implement all trait methods ...
+}
+
+#[test]
+fn test_service_creation() {
+    let mock_repo = Arc::new(MockEconomyRepository) as Arc<dyn EconomyRepository + Send + Sync>;
+    let service = EconomyService::new(mock_repo).expect("Failed to create service");
+    // ...
+}
+```
+
+#### TTL Checking Pattern
+
+**Do TTL checks in Rust, not SQL:**
+
+```rust
+fn is_fresh(last_updated: &str, ttl_seconds: u64) -> bool {
+    chrono::DateTime::parse_from_rfc3339(last_updated)
+        .ok()
+        .map(|time| {
+            let now = Utc::now();
+            let cached_time_utc = time.with_timezone(&Utc);
+            let elapsed = now.signed_duration_since(cached_time_utc);
+            let ttl_i64 = i64::try_from(ttl_seconds).unwrap_or(i64::MAX);
+            elapsed.num_seconds() < ttl_i64
+        })
+        .unwrap_or(false)
+}
+```
+
+**Why not SQL datetime?**
+- SQLite datetime functions are quirky with timezones
+- Rust chrono handles RFC3339 parsing correctly
+- TTL logic stays in application layer (easier to test/modify)
+
+#### Cross-Cache Query Pattern
+
+Use JOINs to query across all cached entries:
+
+```rust
+async fn load_top_currencies(&self, league: &str, is_hardcore: bool, limit: u32) -> AppResult<Vec<TopCurrencyItem>> {
+    let rows = sqlx::query(
+        "SELECT ci.currency_id, ci.name, ci.image_url, er.economy_type,
+                ci.primary_value, er.primary_currency_name, ci.volume
+         FROM currency_items ci
+         JOIN economy_exchange_rates er ON ci.exchange_rate_id = er.id
+         WHERE er.league = ? AND er.is_hardcore = ? AND ci.is_active = 1
+         ORDER BY ci.primary_value DESC
+         LIMIT ?"
+    )
+    .bind(league)
+    .bind(is_hardcore as i32)
+    .bind(limit)
+    .fetch_all(&self.pool)
+    .await?;
+
+    // Map rows to domain models...
+}
+```
+
+**Benefits:**
+- Single query aggregates across all economy types
+- SQL handles sorting and limiting
+- `is_active = 1` filters deactivated items
+
+#### Migration Strategy
+
+**For ephemeral caches (economy, etc.):**
+1. No data migration needed - cache is ephemeral
+2. DB starts empty
+3. First API fetch rebuilds cache in DB
+4. Old JSON files can be manually deleted (no longer read)
+
+**Deployment checklist:**
+1. Create migration SQL file (`002_economy_cache.sql`)
+2. Migration runs automatically on app startup (sqlx)
+3. First use fetches from API and populates DB
+4. Verify cache hit rate in logs ("Fresh cache hit")
+
+#### Common Pitfalls
+
+❌ **Don't update `is_active` on upsert:**
+```sql
+ON CONFLICT DO UPDATE SET
+    value = excluded.value,
+    is_active = excluded.is_active  -- Wrong! Overwrites manual deactivations
+```
+
+✅ **Omit `is_active` from UPDATE:**
+```sql
+ON CONFLICT DO UPDATE SET
+    value = excluded.value
+    -- is_active intentionally omitted
+```
+
+❌ **Don't check TTL in SQL:**
+```sql
+WHERE datetime(last_updated) > datetime('now', '-600 seconds')  -- Timezone issues
+```
+
+✅ **Check TTL in Rust:**
+```rust
+if !Self::is_fresh(&last_updated, ttl_seconds) {
+    return Ok(None);
+}
+```
+
+❌ **Don't use snapshot replacement:**
+```sql
+DELETE FROM currency_items WHERE exchange_rate_id = ?;
+-- Insert all new rows
+```
+
+✅ **Use per-item upserts:**
+```sql
+INSERT ... ON CONFLICT(exchange_rate_id, currency_id) DO UPDATE ...
+```
+
+#### Related Documentation
+
+- **ADR-007** in `decisions.md` - SQLite migration decision with economy domain details
+- **Economy Migration** - `domain/economy/repository.rs` reference implementation
+- **Schema** - `infrastructure/database/migrations/002_economy_cache.sql`
+
+---
+
 ### Related Documentation
 
 - **ADR-007** in `decisions.md` - Full SQLite migration decision

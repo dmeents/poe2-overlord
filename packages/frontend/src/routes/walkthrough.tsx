@@ -5,6 +5,7 @@ import { CharacterStatusCard } from '../components/character/character-status-ca
 import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
 import { CampaignInsights } from '../components/insights/campaign-insights/campaign-insights';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
+import { Card } from '../components/ui/card/card';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner';
 import { SectionHeader } from '../components/ui/section-header/section-header';
@@ -78,11 +79,13 @@ function WalkthroughPage() {
   const rightColumn = (
     <>
       {!isLoading && !activeCharacter && (
-        <EmptyState
-          icon={<BookOpenIcon className="h-12 w-12" />}
-          title="No Active Character"
-          description="Please select an active character to view walkthrough progress."
-        />
+        <Card title="Campaign Progress">
+          <EmptyState
+            icon={<BookOpenIcon className="h-12 w-12" />}
+            title="No Active Character"
+            description="Please select an active character to view walkthrough progress."
+          />
+        </Card>
       )}
       {activeCharacter && guide && (
         <>

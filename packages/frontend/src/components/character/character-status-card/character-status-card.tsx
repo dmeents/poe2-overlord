@@ -1,10 +1,10 @@
 import { Link } from '@tanstack/react-router';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import { Button } from '../../ui/button/button';
+import { Card } from '../../ui/card/card';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
 import { CharacterCard } from '../character-card/character-card';
-import { characterStatusCardStyles } from './character-status-card.styles';
 
 interface CharacterStatusCardProps {
   className?: string;
@@ -15,17 +15,15 @@ export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps
 
   if (isLoading) {
     return (
-      <div className={`${characterStatusCardStyles.container} ${className}`}>
-        <h3 className={characterStatusCardStyles.title}>Active Character</h3>
+      <Card title="Active Character" className={className}>
         <LoadingSpinner message="Loading character data..." className="py-8" />
-      </div>
+      </Card>
     );
   }
 
   if (!activeCharacter) {
     return (
-      <div className={`${characterStatusCardStyles.container} ${className}`}>
-        <h3 className={characterStatusCardStyles.title}>Active Character</h3>
+      <Card title="Active Character" className={className}>
         <EmptyState
           icon={
             <div className="h-12 w-12 rounded-full bg-stone-700 flex items-center justify-center text-stone-400 text-xl">
@@ -42,7 +40,7 @@ export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps
             </Link>
           }
         />
-      </div>
+      </Card>
     );
   }
 

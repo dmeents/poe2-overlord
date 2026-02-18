@@ -1,6 +1,6 @@
 use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::{
-    repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
+    service::ConfigurationServiceImpl, sqlite_repository::ConfigurationSqliteRepository,
     traits::ConfigurationService,
 };
 use crate::domain::economy::EconomyService;
@@ -11,7 +11,7 @@ use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
 use crate::domain::server_monitoring::{
-    ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatusRepositoryImpl,
+    ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatusSqliteRepository,
     SystemPingProvider,
 };
 use crate::domain::walkthrough::{
@@ -19,9 +19,11 @@ use crate::domain::walkthrough::{
     traits::WalkthroughService,
 };
 use crate::domain::zone_configuration::{
-    repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
+    service::ZoneConfigurationServiceImpl, sqlite_repository::ZoneConfigurationSqliteRepository,
 };
+use crate::infrastructure::database::DatabasePool;
 use crate::infrastructure::events::{EventBus, TauriEventBridge};
+use crate::infrastructure::file_management::paths::AppPaths;
 use log::{error, info};
 use std::sync::Arc;
 use tauri::Manager;
@@ -35,13 +37,25 @@ impl ServiceInitializer {
     ) -> Result<ServiceInstances, Box<dyn std::error::Error>> {
         info!("Starting service initialization...");
 
+        // Initialize database pool before any repositories
+        let db_path = AppPaths::data_dir().join("poe2-overlord.db");
+        tauri::async_runtime::block_on(AppPaths::ensure_data_dir())?;
+
+        let database_pool = tauri::async_runtime::block_on(DatabasePool::new(&db_path))
+            .map_err(|e| {
+                error!("Failed to initialize database pool: {}", e);
+                e
+            })?;
+        let pool = database_pool.pool().clone();
+        info!("Database pool initialized at {:?}", db_path);
+
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
 
-        // Create configuration repository
-        let config_repository = Arc::new(tauri::async_runtime::block_on(
-            ConfigurationRepositoryImpl::new(),
-        )?) as Arc<dyn crate::domain::configuration::traits::ConfigurationRepository + Send + Sync>;
+        // Create configuration repository (SQLite-based)
+        let config_repository =
+            Arc::new(ConfigurationSqliteRepository::new(pool.clone()))
+                as Arc<dyn crate::domain::configuration::traits::ConfigurationRepository + Send + Sync>;
 
         // Create configuration service with DI
         let config_service_impl = tauri::async_runtime::block_on(async {
@@ -75,9 +89,7 @@ impl ServiceInitializer {
         })?;
         app.manage(economy_service);
 
-        let zone_config_repo = Arc::new(tauri::async_runtime::block_on(
-            ZoneConfigurationRepositoryImpl::new(),
-        )?);
+        let zone_config_repo = Arc::new(ZoneConfigurationSqliteRepository::new(pool.clone()));
         let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
         app.manage(zone_config_service.clone());
 
@@ -85,16 +97,18 @@ impl ServiceInitializer {
             Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new()?);
         app.manage(wiki_service.clone());
 
-        let character_service = tauri::async_runtime::block_on(
-            crate::domain::character::service::CharacterServiceImpl::with_default_repository(
-                event_bus.clone(),
-                zone_config_service.clone(),
-            ),
-        )
-        .map_err(|e| {
-            error!("Failed to initialize CharacterService: {}", e);
-            e
-        })?;
+        let character_repo = Arc::new(crate::domain::character::CharacterSqliteRepository::new(
+            pool.clone(),
+        )) as Arc<dyn crate::domain::character::traits::CharacterRepository + Send + Sync>;
+
+        let zone_tracking = Arc::new(crate::domain::zone_tracking::ZoneTrackingServiceImpl::new());
+
+        let character_service = crate::domain::character::service::CharacterServiceImpl::new(
+            character_repo,
+            event_bus.clone(),
+            zone_tracking,
+            zone_config_service.clone(),
+        );
 
         let character_arc = Arc::new(character_service) as Arc<dyn CharacterService + Send + Sync>;
         app.manage(character_arc.clone());
@@ -110,11 +124,7 @@ impl ServiceInitializer {
         app.manage(walkthrough_service.clone());
 
         let ping_provider = Arc::new(SystemPingProvider::new());
-        let server_status_repository =
-            tauri::async_runtime::block_on(ServerStatusRepositoryImpl::new()).map_err(|e| {
-                error!("Failed to initialize ServerStatusRepository: {}", e);
-                e
-            })?;
+        let server_status_repository = ServerStatusSqliteRepository::new(pool.clone());
         let server_monitoring_service =
             tauri::async_runtime::block_on(ServerMonitoringServiceImpl::new(
                 event_bus.clone(),

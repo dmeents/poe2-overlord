@@ -45,21 +45,21 @@ function Index() {
 
   const rightColumn = (
     <>
-      {activeCharacter && (
-        <>
-          <ExchangeRatesCard />
-          {activeZone ? (
-            <CurrentZoneCard zone={activeZone} />
-          ) : (
-            <Card title="Current Location" icon={<MapPinIcon className="w-5 h-5" />}>
-              <EmptyState
-                icon={<MapPinIcon className="w-12 h-12" />}
-                title="No active zone"
-                description="Start playing to track your location"
-              />
-            </Card>
-          )}
-        </>
+      <ExchangeRatesCard />
+      {activeZone ? (
+        <CurrentZoneCard zone={activeZone} />
+      ) : (
+        <Card title="Current Location" icon={<MapPinIcon className="w-5 h-5" />}>
+          <EmptyState
+            icon={<MapPinIcon className="w-12 h-12" />}
+            title={activeCharacter ? 'No active zone' : 'No Active Character'}
+            description={
+              activeCharacter
+                ? 'Start playing to track your location'
+                : 'Select a character to track your location'
+            }
+          />
+        </Card>
       )}
     </>
   );

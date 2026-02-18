@@ -1,5 +1,114 @@
 # Architecture Decisions
 
+## ADR-007: SQLite Migration for Data Persistence
+
+**Date:** 2026-02-17
+
+**Status:** Accepted
+
+**Context:**
+The application originally used JSON files for all data persistence (character data, configuration, zone metadata, server status). This approach worked but had limitations:
+- No relational queries or joins
+- No referential integrity constraints
+- No transactions (atomicity issues)
+- Character data stored as monolithic blobs (profile + zone stats + walkthrough progress in one file)
+- Manual index management with orphan detection/cleanup logic
+
+Since the app hasn't shipped yet, now was the ideal time to migrate to SQLite before the data model calcified around JSON limitations.
+
+**Decision:**
+Migrated all backend data persistence from JSON files to SQLite using sqlx 0.8:
+
+**Migrated Domains:**
+1. **Configuration** (`app_config` table) - Single-row configuration with CHECK(id=1) constraint
+2. **Server Monitoring** (`server_status` table) - Single-row status tracking
+3. **Zone Configuration** (`zone_metadata` table) - Integer surrogate keys, JSON TEXT columns for lists
+4. **Character Domain** (normalized into 3 tables):
+   - `characters` - Profile + timestamps + current_location reference
+   - `zone_stats` - Zone tracking data (references `zone_metadata` by ID)
+   - `walkthrough_progress` - Campaign progress
+
+**NOT Migrated:**
+- **Economy cache** - Remains as JSON files (TTL cache, not relational data)
+- **Walkthrough guide** - Remains as bundled read-only JSON (`config/walkthrough_guide.json`)
+- **Game monitoring** - Runtime state only, no persistence
+- **Log analysis** - Reads game log file, no own persistence
+
+**Schema Design Patterns:**
+- **Integer surrogate keys** for `zone_metadata` (better join performance than zone_name)
+- **Foreign keys** with appropriate cascade behaviors (DELETE CASCADE, RESTRICT, SET NULL)
+- **Single-row tables** use `CHECK(id=1)` + `INSERT OR REPLACE` pattern
+- **JSON TEXT columns** for Vec<String> fields in zone_metadata (bosses, monsters, npcs, etc.)
+- **TrackingSummary** computed on demand from `zone_stats` (not stored)
+- **Partial unique indexes** for business constraints (e.g., at-most-one active character)
+
+**Database Configuration:**
+- WAL journal mode (concurrent reads + writes)
+- `synchronous = Normal`
+- `foreign_keys = ON`
+- `max_connections = 5`
+- `busy_timeout = 5s`
+- DB file: `AppPaths::data_dir().join("poe2-overlord.db")`
+
+**Shared Helpers:**
+Created `infrastructure/database/helpers.rs` with zone ID lookup functions:
+- `get_or_create_zone_id()` - Generic executor (read-only)
+- `get_or_create_zone_id_tx()` - Transaction-aware (creates stub zones)
+- `get_or_create_zone_id_pool()` - Pool-aware (creates stubs)
+
+Pattern: When a character enters an unknown zone, auto-create a stub `zone_metadata` row with just zone_name + timestamps. WikiScrapingService fills in metadata later.
+
+**Transaction Boundaries:**
+All multi-step operations wrapped in SQLite transactions:
+- Character creation: INSERT character + INSERT walkthrough_progress (atomic)
+- Character data save: UPDATE character + UPSERT zone_stats + UPSERT walkthrough_progress
+- Set active character: UPDATE all is_active=0 + UPDATE target is_active=1
+- Zone configuration save: DELETE all + INSERT all (replaces entire config atomically)
+
+**Repository Pattern:**
+Each SQLite repository implements the existing trait, maintaining the abstraction boundary:
+- `CharacterSqliteRepository` implements `CharacterRepository`
+- `ConfigurationSqliteRepository` implements `ConfigurationRepository`
+- `ZoneConfigurationSqliteRepository` implements `ZoneConfigurationRepository`
+- `ServerStatusSqliteRepository` implements `ServerStatusRepository`
+
+Services use dependency injection (no changes to service layer needed).
+
+**Error Handling:**
+Added `From<sqlx::Error>` impl to `AppError` with SQLite error code mapping:
+- Code 2067/1555 (UNIQUE constraint) → `AppError::Validation`
+- Code 787 (Foreign key constraint) → `AppError::Validation`
+- All other database errors → `AppError::Internal`
+
+Also added `From<chrono::ParseError>` for RFC3339 timestamp parsing.
+
+**Consequences:**
+
+**Benefits:**
+- **Relational queries**: Can JOIN zone_stats with zone_metadata for enriched data
+- **Referential integrity**: Foreign keys prevent orphaned zone_stats
+- **Transactions**: Atomic multi-step operations (no manual rollback logic needed)
+- **Simplified services**: Eliminated manual index management, orphan cleanup, and reconciliation logic
+- **Better performance**: Batch queries avoid N+1, indexes optimize lookups
+- **Future opportunities**: Can add pagination, filtering, server-side sorting pushed to SQL
+
+**Trade-offs:**
+- SQLite dependency (acceptable for desktop app, already using Tauri)
+- Migration script needed for existing dev data (Phase 6)
+- Slightly more complex repository implementations (but simpler service layer)
+
+**Migration Strategy:**
+Phase 6 will create a standalone migration script (`scripts/migrate-json-to-sqlite/`) to port existing JSON data. The script runs in one transaction for atomicity and is idempotent (checks if data exists before migrating). After use, the script can be deleted.
+
+**Related Files:**
+- `infrastructure/database/` - Pool, migrations, helpers
+- `domain/*/sqlite_repository.rs` - SQLite implementations
+- `infrastructure/database/migrations/001_initial_schema.sql` - Complete schema
+- `.ai/tasks/prd-sqlite-migration.md` - Implementation PRD
+- `.ai/memory/patterns.md` - sqlx repository pattern
+
+---
+
 ## ADR-006: React Portals for Fixed-Position Dropdowns
 
 **Date:** 2026-02-16

@@ -1,5 +1,6 @@
 //! Infrastructure layer for concrete implementations
 
+pub mod database;
 pub mod events;
 pub mod file_management;
 pub mod parsing;

@@ -35,21 +35,6 @@ impl CharacterServiceImpl {
     }
 }
 
-impl CharacterServiceImpl {
-    pub async fn with_default_repository(
-        event_bus: Arc<EventBus>,
-        zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
-    ) -> Result<Self, AppError> {
-        let data_dir = crate::infrastructure::file_management::AppPaths::ensure_data_dir().await?;
-        let repository = Arc::new(super::repository::CharacterRepositoryImpl::new(
-            data_dir.clone(),
-        ));
-
-        let zone_tracking = Arc::new(crate::domain::zone_tracking::ZoneTrackingServiceImpl::new());
-
-        Ok(Self::new(repository, event_bus, zone_tracking, zone_config))
-    }
-}
 
 #[async_trait]
 impl CharacterService for CharacterServiceImpl {

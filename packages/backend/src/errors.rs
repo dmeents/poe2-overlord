@@ -63,6 +63,47 @@ impl From<notify::Error> for AppError {
     }
 }
 
+impl From<sqlx::Error> for AppError {
+    fn from(err: sqlx::Error) -> Self {
+        match err {
+            sqlx::Error::RowNotFound => AppError::Validation {
+                message: "Record not found".to_string(),
+            },
+            sqlx::Error::Database(db_err) => {
+                // Check for constraint violations
+                if let Some(code) = db_err.code() {
+                    if code == "2067" || code == "1555" {
+                        // UNIQUE constraint failed
+                        return AppError::Validation {
+                            message: db_err.message().to_string(),
+                        };
+                    }
+                    if code == "787" {
+                        // Foreign key constraint failed
+                        return AppError::Validation {
+                            message: "Referenced record does not exist".to_string(),
+                        };
+                    }
+                }
+                AppError::Internal {
+                    message: format!("Database error: {}", db_err.message()),
+                }
+            }
+            _ => AppError::Internal {
+                message: format!("Database error: {}", err),
+            },
+        }
+    }
+}
+
+impl From<chrono::ParseError> for AppError {
+    fn from(err: chrono::ParseError) -> Self {
+        AppError::Serialization {
+            message: format!("Date/time parse error: {}", err),
+        }
+    }
+}
+
 impl AppError {
     /// Convenience constructor for file system errors
     pub fn file_system_error(operation: &str, message: &str) -> Self {

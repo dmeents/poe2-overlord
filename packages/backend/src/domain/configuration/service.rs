@@ -1,5 +1,4 @@
 use crate::domain::configuration::models::{AppConfig, ConfigurationChangedEvent};
-use crate::domain::configuration::repository::ConfigurationRepositoryImpl;
 use crate::domain::configuration::traits::{ConfigurationRepository, ConfigurationService};
 use crate::errors::{AppError, AppResult};
 use crate::infrastructure::events::{AppEvent, EventBus};
@@ -24,33 +23,6 @@ impl ConfigurationServiceImpl {
         }
     }
 
-    /// Create a new configuration service with the default repository implementation
-    /// This is a convenience factory for typical usage
-    pub async fn with_default_repository(event_bus: Arc<EventBus>) -> AppResult<Self> {
-        let repository = Arc::new(ConfigurationRepositoryImpl::new().await?)
-            as Arc<dyn ConfigurationRepository + Send + Sync>;
-
-        let service = Self::new(repository, event_bus);
-
-        if let Err(e) = service.load_config().await {
-            warn!("Failed to load config, using defaults: {}", e);
-
-            // Get the default config that was set
-            let default_config = service.get_config().await.unwrap_or_default();
-
-            // Publish event so frontend knows config was initialized to defaults
-            // This allows UI to react to the fallback (e.g., show notification)
-            service
-                .publish_config_change(default_config.clone(), AppConfig::default())
-                .await;
-
-            if let Err(save_err) = service.save_config().await {
-                warn!("Failed to save default config: {}", save_err);
-            }
-        }
-
-        Ok(service)
-    }
 
     /// Load configuration from repository (internal use)
     async fn load_config(&self) -> AppResult<()> {

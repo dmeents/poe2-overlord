@@ -9,7 +9,7 @@ use log::{debug, info};
 use sqlx::SqlitePool;
 use std::collections::HashMap;
 
-/// SQLite-based zone configuration repository.
+/// Zone configuration repository implementation using SQLite.
 ///
 /// Stores zone metadata in the `zone_metadata` table with integer surrogate keys.
 /// The shared helper `get_or_create_zone_id` (in infrastructure/database/helpers.rs)
@@ -18,18 +18,18 @@ use std::collections::HashMap;
 ///
 /// Vec<String> fields (bosses, monsters, npcs, etc.) are stored as JSON TEXT
 /// columns for simplicity since they're never queried individually.
-pub struct ZoneConfigurationSqliteRepository {
+pub struct ZoneConfigurationRepositoryImpl {
     pool: SqlitePool,
 }
 
-impl ZoneConfigurationSqliteRepository {
+impl ZoneConfigurationRepositoryImpl {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl ZoneConfigurationRepository for ZoneConfigurationSqliteRepository {
+impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
     async fn load_configuration(&self) -> AppResult<ZoneConfiguration> {
         debug!("Loading zone configuration from SQLite");
 

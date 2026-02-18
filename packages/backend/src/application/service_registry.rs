@@ -1,6 +1,6 @@
 use crate::domain::character::traits::CharacterService;
 use crate::domain::configuration::{
-    service::ConfigurationServiceImpl, sqlite_repository::ConfigurationSqliteRepository,
+    repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
     traits::ConfigurationService,
 };
 use crate::domain::economy::EconomyService;
@@ -11,7 +11,7 @@ use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
 use crate::domain::server_monitoring::{
-    ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatusSqliteRepository,
+    ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatusRepositoryImpl,
     SystemPingProvider,
 };
 use crate::domain::walkthrough::{
@@ -19,7 +19,7 @@ use crate::domain::walkthrough::{
     traits::WalkthroughService,
 };
 use crate::domain::zone_configuration::{
-    service::ZoneConfigurationServiceImpl, sqlite_repository::ZoneConfigurationSqliteRepository,
+    repository::ZoneConfigurationRepositoryImpl, service::ZoneConfigurationServiceImpl,
 };
 use crate::infrastructure::database::DatabasePool;
 use crate::infrastructure::events::{EventBus, TauriEventBridge};
@@ -54,7 +54,7 @@ impl ServiceInitializer {
 
         // Create configuration repository (SQLite-based)
         let config_repository =
-            Arc::new(ConfigurationSqliteRepository::new(pool.clone()))
+            Arc::new(ConfigurationRepositoryImpl::new(pool.clone()))
                 as Arc<dyn crate::domain::configuration::traits::ConfigurationRepository + Send + Sync>;
 
         // Create configuration service with DI
@@ -89,7 +89,7 @@ impl ServiceInitializer {
         })?;
         app.manage(economy_service);
 
-        let zone_config_repo = Arc::new(ZoneConfigurationSqliteRepository::new(pool.clone()));
+        let zone_config_repo = Arc::new(ZoneConfigurationRepositoryImpl::new(pool.clone()));
         let zone_config_service = Arc::new(ZoneConfigurationServiceImpl::new(zone_config_repo));
         app.manage(zone_config_service.clone());
 
@@ -97,7 +97,7 @@ impl ServiceInitializer {
             Arc::new(crate::domain::wiki_scraping::service::WikiScrapingServiceImpl::new()?);
         app.manage(wiki_service.clone());
 
-        let character_repo = Arc::new(crate::domain::character::CharacterSqliteRepository::new(
+        let character_repo = Arc::new(crate::domain::character::CharacterRepositoryImpl::new(
             pool.clone(),
         )) as Arc<dyn crate::domain::character::traits::CharacterRepository + Send + Sync>;
 
@@ -124,7 +124,7 @@ impl ServiceInitializer {
         app.manage(walkthrough_service.clone());
 
         let ping_provider = Arc::new(SystemPingProvider::new());
-        let server_status_repository = ServerStatusSqliteRepository::new(pool.clone());
+        let server_status_repository = ServerStatusRepositoryImpl::new(pool.clone());
         let server_monitoring_service =
             tauri::async_runtime::block_on(ServerMonitoringServiceImpl::new(
                 event_bus.clone(),

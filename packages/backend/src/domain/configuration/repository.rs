@@ -9,7 +9,7 @@ use sqlx::SqlitePool;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// SQLite-based configuration repository.
+/// Configuration repository implementation using SQLite.
 ///
 /// Stores configuration in a single-row `app_config` table. Unlike the JSON-based
 /// implementation, this eliminates the debounce mechanism since SQLite writes are
@@ -17,13 +17,13 @@ use tokio::sync::RwLock;
 ///
 /// The in-memory cache is kept for fast reads without database queries.
 #[derive(Clone)]
-pub struct ConfigurationSqliteRepository {
+pub struct ConfigurationRepositoryImpl {
     pool: SqlitePool,
     /// In-memory cache for fast reads
     config: Arc<RwLock<AppConfig>>,
 }
 
-impl ConfigurationSqliteRepository {
+impl ConfigurationRepositoryImpl {
     pub fn new(pool: SqlitePool) -> Self {
         Self {
             pool,
@@ -33,7 +33,7 @@ impl ConfigurationSqliteRepository {
 }
 
 #[async_trait]
-impl ConfigurationRepository for ConfigurationSqliteRepository {
+impl ConfigurationRepository for ConfigurationRepositoryImpl {
     async fn save(&self, config: &AppConfig) -> AppResult<()> {
         debug!("Saving configuration to SQLite");
 

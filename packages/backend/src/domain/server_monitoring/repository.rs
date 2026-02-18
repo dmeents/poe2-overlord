@@ -5,22 +5,22 @@ use async_trait::async_trait;
 use log::debug;
 use sqlx::SqlitePool;
 
-/// SQLite-based server status repository.
+/// Server status repository implementation using SQLite.
 ///
 /// Stores server status in a single-row `server_status` table.
 /// Much simpler than the JSON implementation - no file path management needed.
-pub struct ServerStatusSqliteRepository {
+pub struct ServerStatusRepositoryImpl {
     pool: SqlitePool,
 }
 
-impl ServerStatusSqliteRepository {
+impl ServerStatusRepositoryImpl {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl ServerStatusRepositoryTrait for ServerStatusSqliteRepository {
+impl ServerStatusRepositoryTrait for ServerStatusRepositoryImpl {
     async fn save(&self, status: &ServerStatus) -> AppResult<()> {
         debug!("Saving server status to SQLite");
 

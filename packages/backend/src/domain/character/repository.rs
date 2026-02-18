@@ -14,7 +14,7 @@ use super::models::{
 };
 use super::traits::CharacterRepository;
 
-/// SQLite-based character repository.
+/// Character repository implementation using SQLite.
 ///
 /// Normalizes CharacterData into 3 tables:
 /// - `characters`: profile + timestamps + current_location
@@ -22,18 +22,18 @@ use super::traits::CharacterRepository;
 /// - `walkthrough_progress`: campaign progress
 ///
 /// TrackingSummary is computed on demand from zone_stats using TrackingSummary::from_zones().
-pub struct CharacterSqliteRepository {
+pub struct CharacterRepositoryImpl {
     pool: SqlitePool,
 }
 
-impl CharacterSqliteRepository {
+impl CharacterRepositoryImpl {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl CharacterRepository for CharacterSqliteRepository {
+impl CharacterRepository for CharacterRepositoryImpl {
 
     async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData> {
         debug!("Loading character data for {}", character_id);

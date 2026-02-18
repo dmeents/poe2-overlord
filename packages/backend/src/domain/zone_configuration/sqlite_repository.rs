@@ -8,7 +8,6 @@ use chrono::Utc;
 use log::{debug, info};
 use sqlx::SqlitePool;
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 /// SQLite-based zone configuration repository.
 ///
@@ -128,16 +127,11 @@ impl ZoneConfigurationRepository for ZoneConfigurationSqliteRepository {
     async fn save_configuration(&self, config: &ZoneConfiguration) -> AppResult<()> {
         debug!("Saving zone configuration to SQLite");
 
-        // Use a transaction for atomic DELETE + INSERT
+        // Use a transaction to UPSERT all zones atomically
+        // Zone metadata only grows (zones are discovered, never removed)
         let mut tx = self.pool.begin().await?;
 
-        // Delete all existing zones
-        sqlx::query("DELETE FROM zone_metadata")
-            .execute(&mut *tx)
-            .await?;
-
-        // Insert all zones from the configuration
-        for (zone_name, metadata) in &config.zones {
+        for (_zone_name, metadata) in &config.zones {
             // Serialize Vec<String> to JSON for TEXT columns
             let bosses_json = serde_json::to_string(&metadata.bosses)?;
             let monsters_json = serde_json::to_string(&metadata.monsters)?;
@@ -150,9 +144,24 @@ impl ZoneConfigurationRepository for ZoneConfigurationSqliteRepository {
                  (zone_name, area_id, act, area_level, is_town, has_waypoint,
                   bosses, monsters, npcs, connected_zones, description,
                   points_of_interest, image_url, wiki_url, first_discovered, last_updated)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ON CONFLICT(zone_name) DO UPDATE SET
+                     area_id = excluded.area_id,
+                     act = excluded.act,
+                     area_level = excluded.area_level,
+                     is_town = excluded.is_town,
+                     has_waypoint = excluded.has_waypoint,
+                     bosses = excluded.bosses,
+                     monsters = excluded.monsters,
+                     npcs = excluded.npcs,
+                     connected_zones = excluded.connected_zones,
+                     description = excluded.description,
+                     points_of_interest = excluded.points_of_interest,
+                     image_url = excluded.image_url,
+                     wiki_url = excluded.wiki_url,
+                     last_updated = excluded.last_updated"
             )
-            .bind(zone_name)
+            .bind(&metadata.zone_name)
             .bind(&metadata.area_id)
             .bind(metadata.act as i64)
             .bind(metadata.area_level.map(|v| v as i64))
@@ -179,9 +188,56 @@ impl ZoneConfigurationRepository for ZoneConfigurationSqliteRepository {
         Ok(())
     }
 
-    async fn get_configuration_path(&self) -> PathBuf {
-        // Return a placeholder path since we're using SQLite now
-        // This method is deprecated but kept for trait compatibility
-        PathBuf::from("<sqlite:zone_metadata>")
+    async fn upsert_zone(&self, metadata: &ZoneMetadata) -> AppResult<()> {
+        // Serialize Vec<String> to JSON for TEXT columns
+        let bosses_json = serde_json::to_string(&metadata.bosses)?;
+        let monsters_json = serde_json::to_string(&metadata.monsters)?;
+        let npcs_json = serde_json::to_string(&metadata.npcs)?;
+        let connected_zones_json = serde_json::to_string(&metadata.connected_zones)?;
+        let points_of_interest_json = serde_json::to_string(&metadata.points_of_interest)?;
+
+        sqlx::query(
+            "INSERT INTO zone_metadata
+             (zone_name, area_id, act, area_level, is_town, has_waypoint,
+              bosses, monsters, npcs, connected_zones, description,
+              points_of_interest, image_url, wiki_url, first_discovered, last_updated)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(zone_name) DO UPDATE SET
+                 area_id = excluded.area_id,
+                 act = excluded.act,
+                 area_level = excluded.area_level,
+                 is_town = excluded.is_town,
+                 has_waypoint = excluded.has_waypoint,
+                 bosses = excluded.bosses,
+                 monsters = excluded.monsters,
+                 npcs = excluded.npcs,
+                 connected_zones = excluded.connected_zones,
+                 description = excluded.description,
+                 points_of_interest = excluded.points_of_interest,
+                 image_url = excluded.image_url,
+                 wiki_url = excluded.wiki_url,
+                 last_updated = excluded.last_updated"
+        )
+        .bind(&metadata.zone_name)
+        .bind(&metadata.area_id)
+        .bind(metadata.act as i64)
+        .bind(metadata.area_level.map(|v| v as i64))
+        .bind(if metadata.is_town { 1 } else { 0 })
+        .bind(if metadata.has_waypoint { 1 } else { 0 })
+        .bind(&bosses_json)
+        .bind(&monsters_json)
+        .bind(&npcs_json)
+        .bind(&connected_zones_json)
+        .bind(&metadata.description)
+        .bind(&points_of_interest_json)
+        .bind(&metadata.image_url)
+        .bind(&metadata.wiki_url)
+        .bind(&metadata.first_discovered.to_rfc3339())
+        .bind(&metadata.last_updated.to_rfc3339())
+        .execute(&self.pool)
+        .await?;
+
+        debug!("Upserted zone: {}", metadata.zone_name);
+        Ok(())
     }
 }

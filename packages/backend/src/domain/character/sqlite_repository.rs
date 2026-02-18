@@ -10,7 +10,7 @@ use crate::errors::AppResult;
 use crate::infrastructure::database::get_or_create_zone_id_tx;
 
 use super::models::{
-    CharacterData, CharacterProfile, CharacterTimestamps, CharactersIndex, LocationState,
+    CharacterData, CharacterProfile, CharacterTimestamps, LocationState,
 };
 use super::traits::CharacterRepository;
 
@@ -34,50 +34,6 @@ impl CharacterSqliteRepository {
 
 #[async_trait]
 impl CharacterRepository for CharacterSqliteRepository {
-    async fn load_characters_index(&self) -> AppResult<CharactersIndex> {
-        debug!("Loading characters index from SQLite");
-
-        // Get all character IDs
-        let character_ids: Vec<String> =
-            sqlx::query_scalar("SELECT id FROM characters ORDER BY last_played DESC NULLS LAST")
-                .fetch_all(&self.pool)
-                .await?;
-
-        // Get active character ID (using partial unique index)
-        let active_character_id: Option<String> =
-            sqlx::query_scalar("SELECT id FROM characters WHERE is_active = 1")
-                .fetch_optional(&self.pool)
-                .await?;
-
-        Ok(CharactersIndex {
-            character_ids,
-            active_character_id,
-        })
-    }
-
-    async fn save_characters_index(&self, index: &CharactersIndex) -> AppResult<()> {
-        debug!("Saving characters index to SQLite");
-
-        // Use transaction to ensure atomicity
-        let mut tx = self.pool.begin().await?;
-
-        // Reset all is_active flags
-        sqlx::query("UPDATE characters SET is_active = 0")
-            .execute(&mut *tx)
-            .await?;
-
-        // Set active character if specified
-        if let Some(active_id) = &index.active_character_id {
-            sqlx::query("UPDATE characters SET is_active = 1 WHERE id = ?")
-                .bind(active_id)
-                .execute(&mut *tx)
-                .await?;
-        }
-
-        tx.commit().await?;
-        debug!("Characters index saved successfully");
-        Ok(())
-    }
 
     async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData> {
         debug!("Loading character data for {}", character_id);
@@ -412,7 +368,7 @@ impl CharacterRepository for CharacterSqliteRepository {
         debug!("Loading all characters from SQLite");
 
         // Batch load to avoid N+1 queries
-        // Query 1: All characters
+        // Query 1: All characters with LEFT JOIN for current_zone_name
         let character_rows: Vec<(
             String, // id
             String, // name
@@ -425,13 +381,15 @@ impl CharacterRepository for CharacterSqliteRepository {
             String, // created_at
             Option<String>, // last_played
             String, // last_updated
-            Option<i64>, // current_zone_id
             Option<String>, // current_zone_updated_at
+            Option<String>, // current_zone_name (from zone_metadata)
         )> = sqlx::query_as(
-            "SELECT id, name, class, ascendency, league, hardcore, solo_self_found, level,
-                    created_at, last_played, last_updated, current_zone_id, current_zone_updated_at
-             FROM characters
-             ORDER BY last_played DESC NULLS LAST"
+            "SELECT c.id, c.name, c.class, c.ascendency, c.league, c.hardcore, c.solo_self_found, c.level,
+                    c.created_at, c.last_played, c.last_updated, c.current_zone_updated_at,
+                    zm.zone_name as current_zone_name
+             FROM characters c
+             LEFT JOIN zone_metadata zm ON c.current_zone_id = zm.id
+             ORDER BY c.last_played DESC NULLS LAST"
         )
         .fetch_all(&self.pool)
         .await?;
@@ -549,8 +507,8 @@ impl CharacterRepository for CharacterSqliteRepository {
             created_at_str,
             last_played_str,
             last_updated_str,
-            current_zone_id,
             current_zone_updated_at_str,
+            current_zone_name,
         ) in character_rows
         {
             let class = serde_json::from_str(&format!("\"{}\"", class_str))
@@ -585,34 +543,19 @@ impl CharacterRepository for CharacterSqliteRepository {
                     .unwrap_or_else(Utc::now),
             };
 
-            // Load current_location
-            let current_location: Option<LocationState> = if let Some(zone_id) = current_zone_id {
-                let zone_name: Option<String> =
-                    sqlx::query_scalar("SELECT zone_name FROM zone_metadata WHERE id = ?")
-                        .bind(zone_id)
-                        .fetch_optional(&self.pool)
-                        .await?;
+            // Build current_location from joined zone_name
+            let current_location: Option<LocationState> = current_zone_name.map(|zone_name| {
+                let last_updated = current_zone_updated_at_str
+                    .as_ref()
+                    .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .unwrap_or_else(Utc::now);
 
-                if let Some(zone_name) = zone_name {
-                    let last_updated = if let Some(timestamp_str) = current_zone_updated_at_str {
-                        chrono::DateTime::parse_from_rfc3339(&timestamp_str)
-                            .ok()
-                            .map(|dt| dt.with_timezone(&Utc))
-                            .unwrap_or_else(Utc::now)
-                    } else {
-                        Utc::now()
-                    };
-
-                    Some(LocationState {
-                        zone_name,
-                        last_updated,
-                    })
-                } else {
-                    None
+                LocationState {
+                    zone_name,
+                    last_updated,
                 }
-            } else {
-                None
-            };
+            });
 
             let zones = zones_by_character.remove(&id).unwrap_or_default();
             let summary = TrackingSummary::from_zones(&id, &zones);
@@ -643,11 +586,66 @@ impl CharacterRepository for CharacterSqliteRepository {
         Ok(exists.is_some())
     }
 
-    async fn list_character_data_files(&self) -> AppResult<Vec<String>> {
-        // Compatibility shim - return all character IDs
-        let character_ids: Vec<String> = sqlx::query_scalar("SELECT id FROM characters")
-            .fetch_all(&self.pool)
+    async fn set_active_character(&self, character_id: Option<&str>) -> AppResult<()> {
+        debug!("Setting active character to {:?}", character_id);
+
+        let mut tx = self.pool.begin().await?;
+
+        // Reset all is_active flags
+        sqlx::query("UPDATE characters SET is_active = 0")
+            .execute(&mut *tx)
             .await?;
+
+        // Set active character if specified
+        if let Some(id) = character_id {
+            let rows_affected = sqlx::query("UPDATE characters SET is_active = 1 WHERE id = ?")
+                .bind(id)
+                .execute(&mut *tx)
+                .await?
+                .rows_affected();
+
+            if rows_affected == 0 {
+                return Err(crate::errors::AppError::validation_error(
+                    "set_active_character",
+                    &format!("Character with ID '{}' not found", id),
+                ));
+            }
+        }
+
+        tx.commit().await?;
+        debug!("Active character set successfully");
+        Ok(())
+    }
+
+    async fn get_active_character_id(&self) -> AppResult<Option<String>> {
+        let active_id: Option<String> =
+            sqlx::query_scalar("SELECT id FROM characters WHERE is_active = 1")
+                .fetch_optional(&self.pool)
+                .await?;
+        Ok(active_id)
+    }
+
+    async fn is_name_taken(&self, name: &str, exclude_id: Option<&str>) -> AppResult<bool> {
+        let exists: Option<i64> = if let Some(exclude) = exclude_id {
+            sqlx::query_scalar("SELECT 1 FROM characters WHERE name = ? AND id != ? LIMIT 1")
+                .bind(name)
+                .bind(exclude)
+                .fetch_optional(&self.pool)
+                .await?
+        } else {
+            sqlx::query_scalar("SELECT 1 FROM characters WHERE name = ? LIMIT 1")
+                .bind(name)
+                .fetch_optional(&self.pool)
+                .await?
+        };
+        Ok(exists.is_some())
+    }
+
+    async fn get_character_ids(&self) -> AppResult<Vec<String>> {
+        let character_ids: Vec<String> =
+            sqlx::query_scalar("SELECT id FROM characters ORDER BY last_played DESC NULLS LAST")
+                .fetch_all(&self.pool)
+                .await?;
         Ok(character_ids)
     }
 }

@@ -28,9 +28,8 @@ pub fn extract_content_between_delimiters<'a>(
 
             if validate_content(trimmed_content) {
                 return Ok(Cow::Borrowed(trimmed_content));
-            } else {
-                return Err(ParseError::invalid_content(trimmed_content));
             }
+            return Err(ParseError::invalid_content(trimmed_content));
         }
     }
 

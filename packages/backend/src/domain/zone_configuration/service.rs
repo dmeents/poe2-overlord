@@ -167,9 +167,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
     /// Adds or updates a zone
     async fn add_zone(&self, metadata: ZoneMetadata) -> AppResult<()> {
         let zone_name = metadata.zone_name.clone();
-        let mut config = self.repository.load_configuration().await?;
-        config.add_zone(metadata);
-        self.repository.save_configuration(&config).await?;
+        self.repository.upsert_zone(&metadata).await?;
         self.update_lookup_cache().await?;
         info!("Added zone: {}", zone_name);
         Ok(())
@@ -178,9 +176,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
     /// Updates an existing zone
     async fn update_zone(&self, metadata: ZoneMetadata) -> AppResult<()> {
         let zone_name = metadata.zone_name.clone();
-        let mut config = self.repository.load_configuration().await?;
-        config.add_zone(metadata); // add_zone handles both add and update
-        self.repository.save_configuration(&config).await?;
+        self.repository.upsert_zone(&metadata).await?;
         self.update_lookup_cache().await?;
         info!("Updated zone: {}", zone_name);
         Ok(())

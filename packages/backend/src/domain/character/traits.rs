@@ -4,15 +4,11 @@ use crate::errors::AppResult;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, CleanupStrategy, League, LocationState, OrphanCleanupReport,
+    CharactersIndex, League, LocationState,
 };
 
 #[async_trait]
 pub trait CharacterRepository {
-    async fn load_characters_index(&self) -> AppResult<CharactersIndex>;
-
-    async fn save_characters_index(&self, index: &CharactersIndex) -> AppResult<()>;
-
     async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData>;
 
     async fn save_character_data(&self, character_data: &CharacterData) -> AppResult<()>;
@@ -23,9 +19,18 @@ pub trait CharacterRepository {
 
     async fn character_exists(&self, character_id: &str) -> AppResult<bool>;
 
-    /// Lists all character data files in the data directory.
-    /// Returns character IDs extracted from filenames (character_data_{id}.json pattern).
-    async fn list_character_data_files(&self) -> AppResult<Vec<String>>;
+    /// Sets the active character by ID. Pass None to deactivate all characters.
+    /// Returns an error if the character doesn't exist.
+    async fn set_active_character(&self, character_id: Option<&str>) -> AppResult<()>;
+
+    /// Gets the currently active character ID, if any.
+    async fn get_active_character_id(&self) -> AppResult<Option<String>>;
+
+    /// Checks if a character name is already taken, optionally excluding a specific character ID.
+    async fn is_name_taken(&self, name: &str, exclude_id: Option<&str>) -> AppResult<bool>;
+
+    /// Gets all character IDs, ordered by last_played DESC.
+    async fn get_character_ids(&self) -> AppResult<Vec<String>>;
 }
 
 #[async_trait]
@@ -88,13 +93,4 @@ pub trait CharacterService: Send + Sync {
 
     /// Syncs zone metadata (act, is_town) for all zones in a character's data with current zone configuration
     async fn sync_zone_metadata(&self, character_id: &str) -> AppResult<()>;
-
-    /// Reconciles character storage by detecting and cleaning up orphaned files.
-    ///
-    /// - Conservative: Adds orphaned files back to index (preserve data)
-    /// - Aggressive: Deletes orphaned files from disk (clean state)
-    async fn reconcile_character_storage(
-        &self,
-        strategy: CleanupStrategy,
-    ) -> AppResult<OrphanCleanupReport>;
 }

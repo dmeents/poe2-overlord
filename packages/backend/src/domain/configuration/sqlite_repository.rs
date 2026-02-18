@@ -65,12 +65,6 @@ impl ConfigurationRepository for ConfigurationSqliteRepository {
         Ok(())
     }
 
-    async fn flush(&self) -> AppResult<()> {
-        // No-op since writes are immediate with SQLite
-        // The debounce mechanism from the JSON implementation is not needed
-        Ok(())
-    }
-
     async fn load(&self) -> AppResult<AppConfig> {
         debug!("Loading configuration from SQLite");
 

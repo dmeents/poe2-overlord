@@ -537,27 +537,3 @@ impl fmt::Display for CharacterClass {
     }
 }
 
-// ============= Orphan Cleanup Types =============
-
-/// Strategy for handling orphaned character files
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
-pub enum CleanupStrategy {
-    /// Add orphaned files back to index (preserve data)
-    #[default]
-    Conservative,
-    /// Delete orphaned files from disk (clean state)
-    Aggressive,
-}
-
-/// Report of orphan cleanup operation
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct OrphanCleanupReport {
-    /// Files found on disk but not in index (added or deleted based on strategy)
-    pub orphaned_files: Vec<String>,
-    /// IDs in index but missing files (removed from index)
-    pub missing_files: Vec<String>,
-    /// Total characters after cleanup
-    pub total_characters: usize,
-    /// Cleanup strategy used
-    pub strategy: CleanupStrategy,
-}

@@ -6,8 +6,7 @@ use crate::infrastructure::events::EventBus;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, CleanupStrategy, EnrichedLocationState, EnrichedZoneStats, League,
-    LocationState, OrphanCleanupReport,
+    CharactersIndex, EnrichedLocationState, EnrichedZoneStats, League, LocationState,
 };
 use super::traits::{CharacterRepository, CharacterService};
 use crate::domain::zone_tracking::{is_hideout_zone, ZoneStats, HIDEOUT_ACT};
@@ -57,7 +56,7 @@ impl CharacterService for CharacterServiceImpl {
             ));
         }
 
-        if !self.is_name_unique(&name, None).await? {
+        if self.repository.is_name_taken(&name, None).await? {
             return Err(AppError::validation_error(
                 "validate_unique_name",
                 &format!("Character name '{}' is already taken", name),
@@ -66,7 +65,7 @@ impl CharacterService for CharacterServiceImpl {
 
         let character_id = uuid::Uuid::new_v4().to_string();
         let character_data = CharacterData::new(
-            character_id,
+            character_id.clone(),
             name.clone(),
             class,
             ascendency,
@@ -75,66 +74,19 @@ impl CharacterService for CharacterServiceImpl {
             solo_self_found,
         );
 
-        // TRANSACTION SAFETY: Write index FIRST, then character file
-        // This prevents orphaned files - if index write fails, no file is created
-        // If file write fails, we roll back the index entry
+        // Check if this is the first character
+        let is_first_character = self.repository.get_character_ids().await?.is_empty();
 
-        // Step 1: Update index with new character ID
-        let mut index = self.repository.load_characters_index().await?;
-        let is_first_character = index.character_ids.is_empty();
-        index.add_character(character_data.id.clone());
+        // Insert character
+        self.repository.save_character_data(&character_data).await?;
 
+        // Set as active if first character
         if is_first_character {
-            index.set_active_character(Some(character_data.id.clone()));
+            self.repository.set_active_character(Some(&character_id)).await?;
         }
 
-        // Step 2: Save index (if this fails, no character file exists - clean state)
-        self.repository.save_characters_index(&index).await?;
-        log::debug!("Index updated with new character ID: {}", character_data.id);
-
-        // Step 3: Write character file (if this fails, rollback index)
-        match self.repository.save_character_data(&character_data).await {
-            Ok(_) => {
-                log::info!("Created new character: {}", name);
-                Ok(self.enrich_character_data(character_data).await)
-            }
-            Err(e) => {
-                // ROLLBACK: Character file write failed, remove from index
-                log::error!(
-                    "Failed to write character file for {}, rolling back index: {}",
-                    character_data.id,
-                    e
-                );
-
-                // Re-load index to ensure we have latest state (handles concurrent modifications)
-                let mut rollback_index = self.repository.load_characters_index().await?;
-                rollback_index.remove_character(&character_data.id);
-
-                // Clear active character if it was the one we're rolling back
-                if rollback_index.active_character_id.as_ref() == Some(&character_data.id) {
-                    rollback_index.set_active_character(None);
-                }
-
-                // Save cleaned index
-                if let Err(rollback_err) =
-                    self.repository.save_characters_index(&rollback_index).await
-                {
-                    log::error!(
-                        "CRITICAL: Rollback failed for character {}: {}. Manual cleanup may be required.",
-                        character_data.id,
-                        rollback_err
-                    );
-                } else {
-                    log::info!(
-                        "Successfully rolled back index for failed character creation: {}",
-                        character_data.id
-                    );
-                }
-
-                // Return original error
-                Err(e)
-            }
-        }
+        log::info!("Created new character: {}", name);
+        Ok(self.enrich_character_data(character_data).await)
     }
 
     async fn load_character_data(&self, character_id: &str) -> Result<CharacterData, AppError> {
@@ -214,13 +166,8 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     async fn delete_character(&self, character_id: &str) -> Result<(), AppError> {
-        // Delete file first - if this fails, index remains consistent
+        // DELETE CASCADE handles zone_stats and walkthrough_progress cleanup
         self.repository.delete_character_data(character_id).await?;
-
-        // Then update index
-        let mut index = self.repository.load_characters_index().await?;
-        index.remove_character(character_id);
-        self.repository.save_characters_index(&index).await?;
 
         // Publish character deleted event for frontend reactivity
         let event =
@@ -237,24 +184,8 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     async fn set_active_character(&self, character_id: Option<&str>) -> Result<(), AppError> {
-        // Load characters index
-        let mut index = self.repository.load_characters_index().await?;
-
-        // Validate character exists (if not None)
-        if let Some(id) = character_id {
-            if !index.has_character(id) {
-                return Err(AppError::validation_error(
-                    "set_active_character",
-                    &format!("Character with ID '{}' not found", id),
-                ));
-            }
-        }
-
-        // Update active character ID
-        index.set_active_character(character_id.map(|s| s.to_string()));
-
-        // Save updated index
-        self.repository.save_characters_index(&index).await?;
+        // Validation (character exists) is handled by repository
+        self.repository.set_active_character(character_id).await?;
 
         if let Some(id) = character_id {
             log::info!("Set active character: {}", id);
@@ -265,63 +196,29 @@ impl CharacterService for CharacterServiceImpl {
     }
 
     async fn get_active_character(&self) -> Result<Option<CharacterDataResponse>, AppError> {
-        // Load characters index
-        let index = self.repository.load_characters_index().await?;
+        let active_id = self.repository.get_active_character_id().await?;
 
-        // Get active character ID
-        if let Some(active_id) = &index.active_character_id {
-            let active_id_owned = active_id.clone();
-            // Load active character data
-            match self.repository.load_character_data(&active_id_owned).await {
-                Ok(character) => {
-                    let enriched = self.enrich_character_data(character).await;
-                    Ok(Some(enriched))
-                }
-                Err(_) => {
-                    // Character file might be missing, reload index and clear only if same character is still active
-                    let mut fresh_index = self.repository.load_characters_index().await?;
-                    if fresh_index.active_character_id.as_ref() == Some(&active_id_owned) {
-                        fresh_index.set_active_character(None);
-                        self.repository.save_characters_index(&fresh_index).await?;
-                        log::warn!(
-                            "Cleared missing active character from index: {}",
-                            active_id_owned
-                        );
-                    }
-                    Ok(None)
-                }
-            }
+        if let Some(id) = active_id {
+            let character = self.repository.load_character_data(&id).await?;
+            let enriched = self.enrich_character_data(character).await;
+            Ok(Some(enriched))
         } else {
             Ok(None)
         }
     }
 
     async fn get_characters_index(&self) -> Result<CharactersIndex, AppError> {
-        self.repository.load_characters_index().await
+        let character_ids = self.repository.get_character_ids().await?;
+        let active_character_id = self.repository.get_active_character_id().await?;
+        Ok(CharactersIndex {
+            character_ids,
+            active_character_id,
+        })
     }
 
-    /// Validates that a character name is unique
-    /// Optimized: Uses index to load characters individually and stops early on match
     async fn is_name_unique(&self, name: &str, exclude_id: Option<&str>) -> Result<bool, AppError> {
-        // Load index first (lightweight - just IDs)
-        let index = self.repository.load_characters_index().await?;
-
-        // Check each character individually, stopping early if match found
-        for character_id in &index.character_ids {
-            // Skip the excluded character (e.g., when updating an existing character)
-            if exclude_id == Some(character_id.as_str()) {
-                continue;
-            }
-
-            // Load only this character's data
-            if let Ok(character) = self.repository.load_character_data(character_id).await {
-                if character.profile.name == name {
-                    return Ok(false); // Name already exists
-                }
-            }
-        }
-
-        Ok(true) // Name is unique
+        let is_taken = self.repository.is_name_taken(name, exclude_id).await?;
+        Ok(!is_taken)
     }
 
     async fn update_character_level(
@@ -575,101 +472,6 @@ impl CharacterService for CharacterServiceImpl {
         self.event_bus.publish(event).await?;
 
         Ok(())
-    }
-
-    async fn reconcile_character_storage(
-        &self,
-        strategy: CleanupStrategy,
-    ) -> Result<OrphanCleanupReport, AppError> {
-        log::info!(
-            "Starting character storage reconciliation with {:?} strategy",
-            strategy
-        );
-
-        // Load current index and filesystem state
-        let mut index = self.repository.load_characters_index().await?;
-        let files_on_disk = self.repository.list_character_data_files().await?;
-
-        let mut orphaned_files = Vec::new();
-        let mut missing_files = Vec::new();
-
-        // Find files on disk not in index (orphans)
-        for file_id in &files_on_disk {
-            if !index.has_character(file_id) {
-                orphaned_files.push(file_id.clone());
-            }
-        }
-
-        // Find IDs in index with no file (reverse orphans)
-        for index_id in &index.character_ids {
-            if !files_on_disk.contains(index_id) {
-                missing_files.push(index_id.clone());
-            }
-        }
-
-        log::info!(
-            "Found {} orphaned files and {} missing files",
-            orphaned_files.len(),
-            missing_files.len()
-        );
-
-        // Handle orphaned files based on strategy
-        for orphan_id in &orphaned_files {
-            match strategy {
-                CleanupStrategy::Conservative => {
-                    // Try to load the file and add to index if valid
-                    match self.repository.load_character_data(orphan_id).await {
-                        Ok(character_data) => {
-                            index.add_character(orphan_id.clone());
-                            log::info!(
-                                "Added orphaned character '{}' ({}) back to index",
-                                character_data.profile.name,
-                                orphan_id
-                            );
-                        }
-                        Err(e) => {
-                            log::warn!(
-                                "Failed to load orphaned file {}, deleting: {}",
-                                orphan_id,
-                                e
-                            );
-                            self.repository.delete_character_data(orphan_id).await?;
-                        }
-                    }
-                }
-                CleanupStrategy::Aggressive => {
-                    // Delete orphaned file
-                    self.repository.delete_character_data(orphan_id).await?;
-                    log::info!("Deleted orphaned character file: {}", orphan_id);
-                }
-            }
-        }
-
-        // Always remove missing files from index (they don't exist)
-        for missing_id in &missing_files {
-            index.remove_character(missing_id);
-            log::info!("Removed missing character {} from index", missing_id);
-        }
-
-        // Save reconciled index if there were any changes
-        if !orphaned_files.is_empty() || !missing_files.is_empty() {
-            self.repository.save_characters_index(&index).await?;
-            log::info!("Saved reconciled character index");
-        }
-
-        let report = OrphanCleanupReport {
-            orphaned_files,
-            missing_files,
-            total_characters: index.character_ids.len(),
-            strategy,
-        };
-
-        log::info!(
-            "Character storage reconciliation complete: {} total characters",
-            report.total_characters
-        );
-
-        Ok(report)
     }
 }
 

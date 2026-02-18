@@ -55,10 +55,10 @@ impl Clone for ServerMonitoringServiceImpl {
 }
 
 impl ServerMonitoringServiceImpl {
-    async fn load_from_file(&self) -> AppResult<()> {
+    async fn load_status(&self) -> AppResult<()> {
         if let Some(status) = self.repository.load().await? {
             info!(
-                "Loaded server status from file: {}:{}",
+                "Loaded server status from database: {}:{}",
                 status.ip_address, status.port
             );
 
@@ -69,7 +69,7 @@ impl ServerMonitoringServiceImpl {
                 error!("Failed to publish initial server status event: {}", e);
             }
         } else {
-            debug!("No existing server status file found");
+            debug!("No existing server status found in database");
         }
         Ok(())
     }
@@ -152,8 +152,8 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
 
         *is_active = true;
 
-        // Load from file while holding lock
-        self.load_from_file().await?;
+        // Load from database while holding lock
+        self.load_status().await?;
 
         let service = Arc::new(self.clone());
         let task_handle = tokio::spawn(async move {

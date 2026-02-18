@@ -268,13 +268,6 @@ impl ServiceInstances {
             log::info!("Character tracking data finalized successfully");
         }
 
-        // Flush configuration
-        if let Err(e) = self.config_service.flush().await {
-            log::error!("Failed to flush configuration: {}", e);
-        } else {
-            log::info!("Configuration flushed successfully");
-        }
-
         // Emit system shutdown event
         if let Err(e) = self
             .event_bus

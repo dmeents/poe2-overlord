@@ -43,6 +43,7 @@ pub trait ZoneConfigurationRepository: Send + Sync {
     /// Saves zone configuration to persistent storage
     async fn save_configuration(&self, config: &ZoneConfiguration) -> AppResult<()>;
 
-    /// Gets the path to the configuration file
-    async fn get_configuration_path(&self) -> std::path::PathBuf;
+    /// Inserts or updates a single zone (UPSERT operation)
+    /// Preserves first_discovered on conflict, updates all other fields
+    async fn upsert_zone(&self, metadata: &ZoneMetadata) -> AppResult<()>;
 }

@@ -211,14 +211,13 @@ impl EconomyService {
                 // Clean up the semaphore since we're done
                 self.cleanup_semaphore(&key).await;
                 return Ok(cached.data.clone());
-            } else {
-                log::info!(
-                    "Cache exists but is stale for league: {}, type: {} (cached {} seconds ago)",
-                    league,
-                    economy_type,
-                    Self::seconds_since(&cached.cached_at)
-                );
             }
+            log::info!(
+                "Cache exists but is stale for league: {}, type: {} (cached {} seconds ago)",
+                league,
+                economy_type,
+                Self::seconds_since(&cached.cached_at)
+            );
         } else {
             log::info!(
                 "No cache found for league: {}, type: {}",

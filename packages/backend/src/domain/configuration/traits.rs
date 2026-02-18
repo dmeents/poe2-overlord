@@ -8,10 +8,6 @@ pub trait ConfigurationService: Send + Sync {
 
     async fn update_config(&self, new_config: AppConfig) -> AppResult<()>;
 
-    /// Force immediate flush of pending configuration writes to disk.
-    /// Call this on app shutdown to ensure all changes are persisted.
-    async fn flush(&self) -> AppResult<()>;
-
     async fn reset_to_defaults(&self) -> AppResult<()>;
 
     async fn get_zone_refresh_interval(
@@ -27,10 +23,6 @@ pub trait ConfigurationService: Send + Sync {
 #[async_trait]
 pub trait ConfigurationRepository: Send + Sync {
     async fn save(&self, config: &AppConfig) -> AppResult<()>;
-
-    /// Force immediate flush of pending writes to disk, bypassing debounce.
-    /// Call this on app shutdown or when immediate persistence is required.
-    async fn flush(&self) -> AppResult<()>;
 
     async fn load(&self) -> AppResult<AppConfig>;
 

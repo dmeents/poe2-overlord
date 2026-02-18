@@ -13,7 +13,8 @@ impl DatabasePool {
             .create_if_missing(true)
             .journal_mode(SqliteJournalMode::Wal)
             .synchronous(SqliteSynchronous::Normal)
-            .busy_timeout(std::time::Duration::from_secs(5));
+            .busy_timeout(std::time::Duration::from_secs(5))
+            .pragma("foreign_keys", "ON"); // Enable FK enforcement on all connections
 
         let pool = SqlitePoolOptions::new()
             .max_connections(5) // Desktop app, not a web server
@@ -31,15 +32,6 @@ impl DatabasePool {
             .map_err(|e| crate::errors::AppError::internal_error(
                 "database_migrate",
                 &format!("Failed to run migrations: {}", e),
-            ))?;
-
-        // Enable foreign keys (SQLite has them off by default)
-        sqlx::query("PRAGMA foreign_keys = ON")
-            .execute(&pool)
-            .await
-            .map_err(|e| crate::errors::AppError::internal_error(
-                "database_pragma",
-                &format!("Failed to enable foreign keys: {}", e),
             ))?;
 
         Ok(Self { pool })

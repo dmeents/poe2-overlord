@@ -99,15 +99,3 @@ pub async fn get_active_character(
 ) -> CommandResult<Option<CharacterDataResponse>> {
     to_command_result(character_service.get_active_character().await)
 }
-
-#[tauri::command]
-pub async fn reconcile_character_storage(
-    strategy: crate::domain::character::models::CleanupStrategy,
-    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
-) -> CommandResult<crate::domain::character::models::OrphanCleanupReport> {
-    to_command_result(
-        character_service
-            .reconcile_character_storage(strategy)
-            .await,
-    )
-}

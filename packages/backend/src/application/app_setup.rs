@@ -6,7 +6,6 @@ use crate::application::service_orchestrator::{
     start_game_process_monitoring, start_log_monitoring, start_ping_event_emission,
 };
 use crate::application::service_registry::ServiceInitializer;
-use crate::domain::character::models::CleanupStrategy;
 use crate::infrastructure::events::TauriEventBridge;
 
 pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -20,8 +19,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         config_service
             .get_config()
             .await
-            .map(|config| config.log_level)
-            .unwrap_or_else(|_| "info".to_string())
+            .map_or_else(|_| "info".to_string(), |config| config.log_level)
     })
     .to_lowercase();
 
@@ -32,7 +30,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         "warn" | "warning" => log::LevelFilter::Warn,
         "error" => log::LevelFilter::Error,
         _ => {
-            eprintln!("Invalid log level '{}', defaulting to Info", log_level);
+            eprintln!("Invalid log level '{log_level}', defaulting to Info");
             log::LevelFilter::Info
         }
     };
@@ -60,28 +58,6 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     if let Some(main_window) = app.get_webview_window("main") {
         info!("Starting background services");
-
-        // Reconcile character storage on startup (non-blocking, runs in background)
-        let character_service_clone = services.character_service.clone();
-        tauri::async_runtime::spawn(async move {
-            match character_service_clone
-                .reconcile_character_storage(CleanupStrategy::Conservative)
-                .await
-            {
-                Ok(report) => {
-                    if !report.orphaned_files.is_empty() || !report.missing_files.is_empty() {
-                        log::info!(
-                            "Startup cleanup: reconciled {} orphaned files and {} missing files",
-                            report.orphaned_files.len(),
-                            report.missing_files.len()
-                        );
-                    }
-                }
-                Err(e) => {
-                    log::warn!("Failed to reconcile character storage on startup: {}", e);
-                }
-            }
-        });
 
         let event_bridge = Arc::new(TauriEventBridge::new(
             services.event_bus.clone(),

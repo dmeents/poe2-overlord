@@ -23,20 +23,6 @@ impl ConfigurationServiceImpl {
         }
     }
 
-
-    /// Load configuration from repository (internal use)
-    async fn load_config(&self) -> AppResult<()> {
-        self.repository.load().await?;
-        info!("Configuration loaded successfully");
-        Ok(())
-    }
-
-    /// Save current configuration to repository (internal use)
-    async fn save_config(&self) -> AppResult<()> {
-        let config = self.repository.get_in_memory_config().await?;
-        self.repository.save(&config).await
-    }
-
     async fn publish_config_change(&self, new_config: AppConfig, previous_config: AppConfig) {
         let event = AppEvent::ConfigurationChanged(ConfigurationChangedEvent::new(
             new_config,
@@ -85,10 +71,6 @@ impl ConfigurationService for ConfigurationServiceImpl {
     async fn reset_to_defaults(&self) -> AppResult<()> {
         let default_config = AppConfig::default();
         self.update_config(default_config).await
-    }
-
-    async fn flush(&self) -> AppResult<()> {
-        self.repository.flush().await
     }
 
     async fn get_zone_refresh_interval(

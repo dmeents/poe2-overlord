@@ -7,7 +7,7 @@ mod tests {
 
     use crate::domain::character::models::{
         Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-        CharactersIndex, CleanupStrategy, League, LocationState, OrphanCleanupReport,
+        CharactersIndex, League, LocationState,
     };
     use crate::domain::character::traits::CharacterService;
     use crate::domain::walkthrough::models::{
@@ -227,13 +227,6 @@ mod tests {
 
         async fn sync_zone_metadata(&self, _character_id: &str) -> Result<(), AppError> {
             panic!("sync_zone_metadata should not be called in walkthrough tests")
-        }
-
-        async fn reconcile_character_storage(
-            &self,
-            _strategy: CleanupStrategy,
-        ) -> Result<OrphanCleanupReport, AppError> {
-            panic!("reconcile_character_storage should not be called in walkthrough tests")
         }
     }
 

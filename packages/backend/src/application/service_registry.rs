@@ -41,8 +41,8 @@ impl ServiceInitializer {
         let db_path = AppPaths::data_dir().join("poe2-overlord.db");
         tauri::async_runtime::block_on(AppPaths::ensure_data_dir())?;
 
-        let database_pool = tauri::async_runtime::block_on(DatabasePool::new(&db_path))
-            .map_err(|e| {
+        let database_pool =
+            tauri::async_runtime::block_on(DatabasePool::new(&db_path)).map_err(|e| {
                 error!("Failed to initialize database pool: {}", e);
                 e
             })?;
@@ -53,9 +53,8 @@ impl ServiceInitializer {
         app.manage(event_bus.clone());
 
         // Create configuration repository (SQLite-based)
-        let config_repository =
-            Arc::new(ConfigurationRepositoryImpl::new(pool.clone()))
-                as Arc<dyn crate::domain::configuration::traits::ConfigurationRepository + Send + Sync>;
+        let config_repository = Arc::new(ConfigurationRepositoryImpl::new(pool.clone()))
+            as Arc<dyn crate::domain::configuration::traits::ConfigurationRepository + Send + Sync>;
 
         // Create configuration service with DI
         let config_service_impl = tauri::async_runtime::block_on(async {
@@ -101,7 +100,8 @@ impl ServiceInitializer {
 
         let character_repo = Arc::new(crate::domain::character::CharacterRepositoryImpl::new(
             pool.clone(),
-        )) as Arc<dyn crate::domain::character::traits::CharacterRepository + Send + Sync>;
+        ))
+            as Arc<dyn crate::domain::character::traits::CharacterRepository + Send + Sync>;
 
         let zone_tracking = Arc::new(crate::domain::zone_tracking::ZoneTrackingServiceImpl::new());
 

@@ -99,10 +99,7 @@ export function SortSelect({
         className={formSortSelectStyles.dropdown}>
         <div className={formSortSelectStyles.header}>
           <h4 className={formSortSelectStyles.headerTitle}>Sort Options</h4>
-          <button
-            type="button"
-            onClick={handleReset}
-            className={formSortSelectStyles.resetButton}>
+          <button type="button" onClick={handleReset} className={formSortSelectStyles.resetButton}>
             Reset
           </button>
         </div>

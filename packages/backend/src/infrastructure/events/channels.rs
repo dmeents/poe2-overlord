@@ -70,7 +70,6 @@ impl ChannelManager {
         channels.get(&event_type).cloned()
     }
 
-
     async fn get_or_create_config(&self, event_type: EventType) -> ChannelConfig {
         {
             let configs = self.configs.read().await;

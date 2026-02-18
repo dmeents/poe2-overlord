@@ -536,4 +536,3 @@ impl fmt::Display for CharacterClass {
         }
     }
 }
-

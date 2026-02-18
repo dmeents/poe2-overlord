@@ -1,4 +1,6 @@
-use crate::domain::configuration::models::{AppConfig, ConfigurationValidationResult, ZoneRefreshInterval};
+use crate::domain::configuration::models::{
+    AppConfig, ConfigurationValidationResult, ZoneRefreshInterval,
+};
 use crate::domain::configuration::traits::ConfigurationRepository;
 use crate::errors::AppResult;
 use crate::infrastructure::PathValidator;
@@ -51,7 +53,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         sqlx::query(
             "INSERT OR REPLACE INTO app_config
              (id, config_version, poe_client_log_path, log_level, zone_refresh_interval, updated_at)
-             VALUES (1, ?, ?, ?, ?, ?)"
+             VALUES (1, ?, ?, ?, ?, ?)",
         )
         .bind(config.config_version as i64)
         .bind(&config.poe_client_log_path)
@@ -72,12 +74,18 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         let row: Option<(i64, String, String, String)> = sqlx::query_as(
             "SELECT config_version, poe_client_log_path, log_level, zone_refresh_interval
              FROM app_config
-             WHERE id = 1"
+             WHERE id = 1",
         )
         .fetch_optional(&self.pool)
         .await?;
 
-        let config = if let Some((config_version, poe_client_log_path, log_level, zone_refresh_interval_str)) = row {
+        let config = if let Some((
+            config_version,
+            poe_client_log_path,
+            log_level,
+            zone_refresh_interval_str,
+        )) = row
+        {
             // Parse enum from TEXT
             let zone_refresh_interval = match zone_refresh_interval_str.as_str() {
                 "FiveMinutes" => ZoneRefreshInterval::FiveMinutes,
@@ -87,7 +95,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 "ThreeDays" => ZoneRefreshInterval::ThreeDays,
                 "SevenDays" => ZoneRefreshInterval::SevenDays,
                 _ => {
-                    log::warn!("Unknown zone_refresh_interval value: {}, defaulting to SevenDays", zone_refresh_interval_str);
+                    log::warn!(
+                        "Unknown zone_refresh_interval value: {}, defaulting to SevenDays",
+                        zone_refresh_interval_str
+                    );
                     ZoneRefreshInterval::SevenDays
                 }
             };
@@ -121,7 +132,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         Ok(config)
     }
 
-    async fn validate_config(&self, config: &AppConfig) -> AppResult<ConfigurationValidationResult> {
+    async fn validate_config(
+        &self,
+        config: &AppConfig,
+    ) -> AppResult<ConfigurationValidationResult> {
         let mut errors = Vec::new();
 
         // Validate POE client log path

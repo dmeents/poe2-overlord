@@ -247,7 +247,10 @@ impl EconomyRepository for EconomyRepositoryImpl {
         data: &CurrencyExchangeData,
     ) -> AppResult<()> {
         let mut tx = self.pool.begin().await.map_err(|e| {
-            AppError::internal_error("save_exchange_data", &format!("Failed to begin transaction: {}", e))
+            AppError::internal_error(
+                "save_exchange_data",
+                &format!("Failed to begin transaction: {}", e),
+            )
         })?;
 
         let now = Utc::now().to_rfc3339();
@@ -320,8 +323,8 @@ impl EconomyRepository for EconomyRepositoryImpl {
 
         // Upsert each currency item
         for currency in &data.currencies {
-            let price_history_json = serde_json::to_string(&currency.price_history)
-                .unwrap_or_else(|_| "[]".to_string());
+            let price_history_json =
+                serde_json::to_string(&currency.price_history).unwrap_or_else(|_| "[]".to_string());
 
             let display_tier = match currency.display_value.tier {
                 CurrencyTier::Primary => "Primary",

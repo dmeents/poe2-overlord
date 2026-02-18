@@ -1,5 +1,5 @@
-use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 use crate::errors::AppResult;
+use crate::infrastructure::events::{AppEvent, EventBus, EventType};
 use log::{debug, error, info};
 use std::sync::Arc;
 use tauri::{Emitter, WebviewWindow};

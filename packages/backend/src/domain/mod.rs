@@ -12,9 +12,9 @@ pub mod zone_configuration;
 pub mod zone_tracking;
 
 pub use character::{
-    Ascendency, CharacterClass, CharacterData, CharacterService,
-    CharacterServiceImpl, CharacterUpdateParams, CharactersIndex, EnrichedLocationState, League,
-    LocationState, LocationType,
+    Ascendency, CharacterClass, CharacterData, CharacterService, CharacterServiceImpl,
+    CharacterUpdateParams, CharactersIndex, EnrichedLocationState, League, LocationState,
+    LocationType,
 };
 
 pub use configuration::{

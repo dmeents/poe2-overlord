@@ -65,16 +65,9 @@ pub trait CharacterService: Send + Sync {
 
     async fn is_name_unique(&self, name: &str, exclude_id: Option<&str>) -> AppResult<bool>;
 
-    async fn update_character_level(
-        &self,
-        character_id: &str,
-        new_level: u32,
-    ) -> AppResult<()>;
+    async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()>;
 
-    async fn get_current_location(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Option<LocationState>>;
+    async fn get_current_location(&self, character_id: &str) -> AppResult<Option<LocationState>>;
 
     /// Loads raw character data for internal mutations (not enriched)
     async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData>;

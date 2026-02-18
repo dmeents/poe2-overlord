@@ -34,7 +34,6 @@ impl CharacterServiceImpl {
     }
 }
 
-
 #[async_trait]
 impl CharacterService for CharacterServiceImpl {
     async fn create_character(
@@ -82,7 +81,9 @@ impl CharacterService for CharacterServiceImpl {
 
         // Set as active if first character
         if is_first_character {
-            self.repository.set_active_character(Some(&character_id)).await?;
+            self.repository
+                .set_active_character(Some(&character_id))
+                .await?;
         }
 
         log::info!("Created new character: {}", name);

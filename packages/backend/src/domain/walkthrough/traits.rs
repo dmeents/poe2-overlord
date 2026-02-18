@@ -23,9 +23,5 @@ pub trait WalkthroughService: Send + Sync {
         progress: WalkthroughProgress,
     ) -> AppResult<()>;
 
-    async fn handle_scene_change(
-        &self,
-        character_id: &str,
-        scene_content: &str,
-    ) -> AppResult<()>;
+    async fn handle_scene_change(&self, character_id: &str, scene_content: &str) -> AppResult<()>;
 }

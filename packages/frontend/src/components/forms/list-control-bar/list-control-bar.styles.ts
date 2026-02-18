@@ -22,7 +22,8 @@ export const countBadgeClasses = 'text-xs text-stone-500 whitespace-nowrap';
 export const filterPopoverClasses =
   'fixed z-20 mt-2 bg-stone-800 border border-stone-700 card-shadow max-h-[70vh] overflow-y-auto w-80 min-w-max';
 
-export const filterPopoverHeader = 'flex items-center justify-between px-4 pt-4 pb-3 mb-3 border-b border-stone-700';
+export const filterPopoverHeader =
+  'flex items-center justify-between px-4 pt-4 pb-3 mb-3 border-b border-stone-700';
 
 export const filterPopoverTitle = 'text-sm font-medium text-stone-300';
 

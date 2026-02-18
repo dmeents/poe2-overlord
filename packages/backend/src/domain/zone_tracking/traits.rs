@@ -15,11 +15,7 @@ pub trait ZoneTrackingService: Send + Sync {
     ) -> AppResult<()>;
 
     /// Leaves a zone for a character (modifies character_data in place)
-    fn leave_zone(
-        &self,
-        character_data: &mut CharacterData,
-        zone_name: &str,
-    ) -> AppResult<()>;
+    fn leave_zone(&self, character_data: &mut CharacterData, zone_name: &str) -> AppResult<()>;
 
     /// Records a death in the current active zone (modifies character_data in place)
     fn record_death(&self, character_data: &mut CharacterData) -> AppResult<()>;

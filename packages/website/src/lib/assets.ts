@@ -26,4 +26,5 @@ export const ASSETS = {
   },
 } as const;
 
-export type AssetPath = (typeof ASSETS)[keyof typeof ASSETS][keyof (typeof ASSETS)[keyof typeof ASSETS]];
+export type AssetPath =
+  (typeof ASSETS)[keyof typeof ASSETS][keyof (typeof ASSETS)[keyof typeof ASSETS]];

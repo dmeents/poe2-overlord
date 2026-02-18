@@ -9,9 +9,7 @@ use crate::domain::zone_tracking::{TrackingSummary, ZoneStats};
 use crate::errors::AppResult;
 use crate::infrastructure::database::get_or_create_zone_id_tx;
 
-use super::models::{
-    CharacterData, CharacterProfile, CharacterTimestamps, LocationState,
-};
+use super::models::{CharacterData, CharacterProfile, CharacterTimestamps, LocationState};
 use super::traits::CharacterRepository;
 
 /// Character repository implementation using SQLite.
@@ -34,30 +32,29 @@ impl CharacterRepositoryImpl {
 
 #[async_trait]
 impl CharacterRepository for CharacterRepositoryImpl {
-
     async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData> {
         debug!("Loading character data for {}", character_id);
 
         // Load character profile + timestamps
         let character_row: Option<(
-            String, // id
-            String, // name
-            String, // class
-            String, // ascendency
-            String, // league
-            i64,    // hardcore
-            i64,    // solo_self_found
-            i64,    // level
-            String, // created_at
+            String,         // id
+            String,         // name
+            String,         // class
+            String,         // ascendency
+            String,         // league
+            i64,            // hardcore
+            i64,            // solo_self_found
+            i64,            // level
+            String,         // created_at
             Option<String>, // last_played
-            String, // last_updated
-            Option<i64>, // current_zone_id
+            String,         // last_updated
+            Option<i64>,    // current_zone_id
             Option<String>, // current_zone_updated_at
         )> = sqlx::query_as(
             "SELECT id, name, class, ascendency, league, hardcore, solo_self_found, level,
                     created_at, last_played, last_updated, current_zone_id, current_zone_updated_at
              FROM characters
-             WHERE id = ?"
+             WHERE id = ?",
         )
         .bind(character_id)
         .fetch_optional(&self.pool)
@@ -100,8 +97,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         };
 
         let timestamps = CharacterTimestamps {
-            created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)?
-                .with_timezone(&Utc),
+            created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)?.with_timezone(&Utc),
             last_played: last_played_str
                 .as_ref()
                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
@@ -142,16 +138,16 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         // Load zone_stats with JOIN to zone_metadata
         let zone_rows: Vec<(
-            i64,    // duration
-            i64,    // deaths
-            i64,    // visits
-            String, // first_visited
-            String, // last_visited
-            i64,    // is_active
+            i64,            // duration
+            i64,            // deaths
+            i64,            // visits
+            String,         // first_visited
+            String,         // last_visited
+            i64,            // is_active
             Option<String>, // entry_timestamp
-            String, // zone_name (from zone_metadata)
-            i64,    // act (from zone_metadata)
-            i64,    // is_town (from zone_metadata)
+            String,         // zone_name (from zone_metadata)
+            i64,            // act (from zone_metadata)
+            i64,            // is_town (from zone_metadata)
         )> = sqlx::query_as(
             "SELECT zs.duration, zs.deaths, zs.visits, zs.first_visited, zs.last_visited,
                     zs.is_active, zs.entry_timestamp,
@@ -159,7 +155,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
              WHERE zs.character_id = ?
-             ORDER BY zs.last_visited DESC"
+             ORDER BY zs.last_visited DESC",
         )
         .bind(character_id)
         .fetch_all(&self.pool)
@@ -179,10 +175,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
             is_town,
         ) in zone_rows
         {
-            let first_visited = chrono::DateTime::parse_from_rfc3339(&first_visited_str)?
-                .with_timezone(&Utc);
-            let last_visited = chrono::DateTime::parse_from_rfc3339(&last_visited_str)?
-                .with_timezone(&Utc);
+            let first_visited =
+                chrono::DateTime::parse_from_rfc3339(&first_visited_str)?.with_timezone(&Utc);
+            let last_visited =
+                chrono::DateTime::parse_from_rfc3339(&last_visited_str)?.with_timezone(&Utc);
             let entry_timestamp = entry_timestamp_str
                 .as_ref()
                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
@@ -206,25 +202,24 @@ impl CharacterRepository for CharacterRepositoryImpl {
         let progress_row: Option<(Option<String>, i64, String)> = sqlx::query_as(
             "SELECT current_step_id, is_completed, last_updated
              FROM walkthrough_progress
-             WHERE character_id = ?"
+             WHERE character_id = ?",
         )
         .bind(character_id)
         .fetch_optional(&self.pool)
         .await?;
 
-        let walkthrough_progress = if let Some((current_step_id, is_completed, last_updated_str)) =
-            progress_row
-        {
-            let last_updated = chrono::DateTime::parse_from_rfc3339(&last_updated_str)?
-                .with_timezone(&Utc);
-            WalkthroughProgress {
-                current_step_id,
-                is_completed: is_completed != 0,
-                last_updated,
-            }
-        } else {
-            WalkthroughProgress::new()
-        };
+        let walkthrough_progress =
+            if let Some((current_step_id, is_completed, last_updated_str)) = progress_row {
+                let last_updated =
+                    chrono::DateTime::parse_from_rfc3339(&last_updated_str)?.with_timezone(&Utc);
+                WalkthroughProgress {
+                    current_step_id,
+                    is_completed: is_completed != 0,
+                    last_updated,
+                }
+            } else {
+                WalkthroughProgress::new()
+            };
 
         // Compute TrackingSummary on demand
         let summary = TrackingSummary::from_zones(&id, &zones);
@@ -309,7 +304,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
                    visits = excluded.visits,
                    last_visited = excluded.last_visited,
                    is_active = excluded.is_active,
-                   entry_timestamp = excluded.entry_timestamp"
+                   entry_timestamp = excluded.entry_timestamp",
             )
             .bind(&character_data.id)
             .bind(zone_id)
@@ -332,12 +327,21 @@ impl CharacterRepository for CharacterRepositoryImpl {
              ON CONFLICT(character_id) DO UPDATE SET
                current_step_id = excluded.current_step_id,
                is_completed = excluded.is_completed,
-               last_updated = excluded.last_updated"
+               last_updated = excluded.last_updated",
         )
         .bind(&character_data.id)
         .bind(&character_data.walkthrough_progress.current_step_id)
-        .bind(if character_data.walkthrough_progress.is_completed { 1 } else { 0 })
-        .bind(character_data.walkthrough_progress.last_updated.to_rfc3339())
+        .bind(if character_data.walkthrough_progress.is_completed {
+            1
+        } else {
+            0
+        })
+        .bind(
+            character_data
+                .walkthrough_progress
+                .last_updated
+                .to_rfc3339(),
+        )
         .execute(&mut *tx)
         .await?;
 
@@ -400,24 +404,24 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         // Query 2: All zone_stats with metadata joined
         let zone_rows: Vec<(
-            String, // character_id
-            i64,    // duration
-            i64,    // deaths
-            i64,    // visits
-            String, // first_visited
-            String, // last_visited
-            i64,    // is_active
+            String,         // character_id
+            i64,            // duration
+            i64,            // deaths
+            i64,            // visits
+            String,         // first_visited
+            String,         // last_visited
+            i64,            // is_active
             Option<String>, // entry_timestamp
-            String, // zone_name
-            i64,    // act
-            i64,    // is_town
+            String,         // zone_name
+            i64,            // act
+            i64,            // is_town
         )> = sqlx::query_as(
             "SELECT zs.character_id, zs.duration, zs.deaths, zs.visits,
                     zs.first_visited, zs.last_visited, zs.is_active, zs.entry_timestamp,
                     zm.zone_name, zm.act, zm.is_town
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
-             ORDER BY zs.character_id, zs.last_visited DESC"
+             ORDER BY zs.character_id, zs.last_visited DESC",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -425,7 +429,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         // Query 3: All walkthrough progress
         let progress_rows: Vec<(String, Option<String>, i64, String)> = sqlx::query_as(
             "SELECT character_id, current_step_id, is_completed, last_updated
-             FROM walkthrough_progress"
+             FROM walkthrough_progress",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -511,12 +515,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
             current_zone_name,
         ) in character_rows
         {
-            let class = serde_json::from_str(&format!("\"{}\"", class_str))
-                .unwrap_or_default();
-            let ascendency = serde_json::from_str(&format!("\"{}\"", ascendency_str))
-                .unwrap_or_default();
-            let league = serde_json::from_str(&format!("\"{}\"", league_str))
-                .unwrap_or_default();
+            let class = serde_json::from_str(&format!("\"{}\"", class_str)).unwrap_or_default();
+            let ascendency =
+                serde_json::from_str(&format!("\"{}\"", ascendency_str)).unwrap_or_default();
+            let league = serde_json::from_str(&format!("\"{}\"", league_str)).unwrap_or_default();
 
             let profile = CharacterProfile {
                 name,
@@ -559,9 +561,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
             let zones = zones_by_character.remove(&id).unwrap_or_default();
             let summary = TrackingSummary::from_zones(&id, &zones);
-            let walkthrough_progress = progress_by_character
-                .remove(&id)
-                .unwrap_or_else(WalkthroughProgress::new);
+            let walkthrough_progress = progress_by_character.remove(&id).unwrap_or_default();
 
             characters.push(CharacterData {
                 id,
@@ -579,10 +579,11 @@ impl CharacterRepository for CharacterRepositoryImpl {
     }
 
     async fn character_exists(&self, character_id: &str) -> AppResult<bool> {
-        let exists: Option<i64> = sqlx::query_scalar("SELECT 1 FROM characters WHERE id = ? LIMIT 1")
-            .bind(character_id)
-            .fetch_optional(&self.pool)
-            .await?;
+        let exists: Option<i64> =
+            sqlx::query_scalar("SELECT 1 FROM characters WHERE id = ? LIMIT 1")
+                .bind(character_id)
+                .fetch_optional(&self.pool)
+                .await?;
         Ok(exists.is_some())
     }
 

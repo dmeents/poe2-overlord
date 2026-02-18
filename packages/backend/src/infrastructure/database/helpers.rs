@@ -15,12 +15,11 @@ where
     E: Executor<'a, Database = Sqlite>,
 {
     // Try to get existing
-    let existing: Option<i64> = sqlx::query_scalar(
-        "SELECT id FROM zone_metadata WHERE zone_name = ?"
-    )
-    .bind(zone_name)
-    .fetch_optional(executor)
-    .await?;
+    let existing: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM zone_metadata WHERE zone_name = ?")
+            .bind(zone_name)
+            .fetch_optional(executor)
+            .await?;
 
     if let Some(id) = existing {
         return Ok(id);
@@ -42,12 +41,11 @@ pub async fn get_or_create_zone_id_tx<'a>(
     zone_name: &str,
 ) -> AppResult<i64> {
     // Try to get existing
-    let existing: Option<i64> = sqlx::query_scalar(
-        "SELECT id FROM zone_metadata WHERE zone_name = ?"
-    )
-    .bind(zone_name)
-    .fetch_optional(&mut **tx)
-    .await?;
+    let existing: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM zone_metadata WHERE zone_name = ?")
+            .bind(zone_name)
+            .fetch_optional(&mut **tx)
+            .await?;
 
     if let Some(id) = existing {
         return Ok(id);
@@ -57,7 +55,7 @@ pub async fn get_or_create_zone_id_tx<'a>(
     let now = Utc::now().to_rfc3339();
     let result = sqlx::query(
         "INSERT INTO zone_metadata (zone_name, first_discovered, last_updated)
-         VALUES (?, ?, ?)"
+         VALUES (?, ?, ?)",
     )
     .bind(zone_name)
     .bind(&now)
@@ -73,12 +71,11 @@ pub async fn get_or_create_zone_id_tx<'a>(
 /// This version works with pools and will create stub zones if they don't exist.
 pub async fn get_or_create_zone_id_pool(pool: &SqlitePool, zone_name: &str) -> AppResult<i64> {
     // Try to get existing
-    let existing: Option<i64> = sqlx::query_scalar(
-        "SELECT id FROM zone_metadata WHERE zone_name = ?"
-    )
-    .bind(zone_name)
-    .fetch_optional(pool)
-    .await?;
+    let existing: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM zone_metadata WHERE zone_name = ?")
+            .bind(zone_name)
+            .fetch_optional(pool)
+            .await?;
 
     if let Some(id) = existing {
         return Ok(id);
@@ -88,7 +85,7 @@ pub async fn get_or_create_zone_id_pool(pool: &SqlitePool, zone_name: &str) -> A
     let now = Utc::now().to_rfc3339();
     let result = sqlx::query(
         "INSERT INTO zone_metadata (zone_name, first_discovered, last_updated)
-         VALUES (?, ?, ?)"
+         VALUES (?, ?, ?)",
     )
     .bind(zone_name)
     .bind(&now)

@@ -367,7 +367,10 @@ impl EconomyService {
 
         // All retries exhausted
         Err(last_error.unwrap_or_else(|| {
-            AppError::network_error("fetch_from_poe_ninja", "All retry attempts failed with no error captured")
+            AppError::network_error(
+                "fetch_from_poe_ninja",
+                "All retry attempts failed with no error captured",
+            )
         }))
     }
 
@@ -425,7 +428,10 @@ impl EconomyService {
         league: &str,
         is_hardcore: bool,
     ) -> AppResult<Vec<TopCurrencyItem>> {
-        let items = self.repository.load_top_currencies(league, is_hardcore, 10).await?;
+        let items = self
+            .repository
+            .load_top_currencies(league, is_hardcore, 10)
+            .await?;
 
         log::info!(
             "Loaded {} aggregated top currencies for league: {}",
@@ -443,7 +449,10 @@ impl EconomyService {
         is_hardcore: bool,
         query: &str,
     ) -> AppResult<Vec<CurrencySearchResult>> {
-        let results = self.repository.search_currencies(league, is_hardcore, query).await?;
+        let results = self
+            .repository
+            .search_currencies(league, is_hardcore, query)
+            .await?;
 
         log::info!(
             "Found {} matching currencies for query '{}' in league: {}",
@@ -454,6 +463,4 @@ impl EconomyService {
 
         Ok(results)
     }
-
 }
-

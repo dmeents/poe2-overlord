@@ -72,17 +72,15 @@ fn create_test_guide_for_navigation() -> WalkthroughGuide {
             },
             WalkthroughAct {
                 act_name: "Act 2".to_string(),
-                steps: vec![
-                    WalkthroughStep {
-                        id: "act_2_step_1".to_string(),
-                        title: "Step 3".to_string(),
-                        description: "Third step".to_string(),
-                        objectives: vec![],
-                        current_zone: "Zone 3".to_string(),
-                        completion_zone: "Zone 4".to_string(),
-                        links: vec![],
-                    },
-                ],
+                steps: vec![WalkthroughStep {
+                    id: "act_2_step_1".to_string(),
+                    title: "Step 3".to_string(),
+                    description: "Third step".to_string(),
+                    objectives: vec![],
+                    current_zone: "Zone 3".to_string(),
+                    completion_zone: "Zone 4".to_string(),
+                    links: vec![],
+                }],
             },
         ],
     }

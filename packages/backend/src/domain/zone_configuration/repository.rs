@@ -35,28 +35,28 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
 
         // Query all zone metadata rows
         let rows: Vec<(
-            String,       // zone_name
+            String,         // zone_name
             Option<String>, // area_id
-            i64,          // act
-            Option<i64>,  // area_level
-            i64,          // is_town
-            i64,          // has_waypoint
-            String,       // bosses (JSON)
-            String,       // monsters (JSON)
-            String,       // npcs (JSON)
-            String,       // connected_zones (JSON)
+            i64,            // act
+            Option<i64>,    // area_level
+            i64,            // is_town
+            i64,            // has_waypoint
+            String,         // bosses (JSON)
+            String,         // monsters (JSON)
+            String,         // npcs (JSON)
+            String,         // connected_zones (JSON)
             Option<String>, // description
-            String,       // points_of_interest (JSON)
+            String,         // points_of_interest (JSON)
             Option<String>, // image_url
             Option<String>, // wiki_url
-            String,       // first_discovered
-            String,       // last_updated
+            String,         // first_discovered
+            String,         // last_updated
         )> = sqlx::query_as(
             "SELECT zone_name, area_id, act, area_level, is_town, has_waypoint,
                     bosses, monsters, npcs, connected_zones, description,
                     points_of_interest, image_url, wiki_url, first_discovered, last_updated
              FROM zone_metadata
-             ORDER BY zone_name"
+             ORDER BY zone_name",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -108,11 +108,11 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                 wiki_url,
                 first_discovered: chrono::DateTime::parse_from_rfc3339(&first_discovered)
                     .ok()
-                    .and_then(|dt| Some(dt.with_timezone(&Utc)))
+                    .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(Utc::now),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated)
                     .ok()
-                    .and_then(|dt| Some(dt.with_timezone(&Utc)))
+                    .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(Utc::now),
             };
 
@@ -131,7 +131,7 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
         // Zone metadata only grows (zones are discovered, never removed)
         let mut tx = self.pool.begin().await?;
 
-        for (_zone_name, metadata) in &config.zones {
+        for metadata in config.zones.values() {
             // Serialize Vec<String> to JSON for TEXT columns
             let bosses_json = serde_json::to_string(&metadata.bosses)?;
             let monsters_json = serde_json::to_string(&metadata.monsters)?;
@@ -159,7 +159,7 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                      points_of_interest = excluded.points_of_interest,
                      image_url = excluded.image_url,
                      wiki_url = excluded.wiki_url,
-                     last_updated = excluded.last_updated"
+                     last_updated = excluded.last_updated",
             )
             .bind(&metadata.zone_name)
             .bind(&metadata.area_id)
@@ -175,8 +175,8 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
             .bind(&points_of_interest_json)
             .bind(&metadata.image_url)
             .bind(&metadata.wiki_url)
-            .bind(&metadata.first_discovered.to_rfc3339())
-            .bind(&metadata.last_updated.to_rfc3339())
+            .bind(metadata.first_discovered.to_rfc3339())
+            .bind(metadata.last_updated.to_rfc3339())
             .execute(&mut *tx)
             .await?;
         }
@@ -216,7 +216,7 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                  points_of_interest = excluded.points_of_interest,
                  image_url = excluded.image_url,
                  wiki_url = excluded.wiki_url,
-                 last_updated = excluded.last_updated"
+                 last_updated = excluded.last_updated",
         )
         .bind(&metadata.zone_name)
         .bind(&metadata.area_id)
@@ -232,8 +232,8 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
         .bind(&points_of_interest_json)
         .bind(&metadata.image_url)
         .bind(&metadata.wiki_url)
-        .bind(&metadata.first_discovered.to_rfc3339())
-        .bind(&metadata.last_updated.to_rfc3339())
+        .bind(metadata.first_discovered.to_rfc3339())
+        .bind(metadata.last_updated.to_rfc3339())
         .execute(&self.pool)
         .await?;
 

@@ -17,7 +17,10 @@ pub async fn create_character(
 ) -> CommandResult<CharacterDataResponse> {
     log::info!(
         "create_character command called: name={}, class={:?}, ascendency={:?}, league={:?}",
-        name, class, ascendency, league
+        name,
+        class,
+        ascendency,
+        league
     );
     let result = character_service
         .create_character(
@@ -51,10 +54,7 @@ pub async fn get_all_characters(
     log::info!("get_all_characters command called");
     let result = character_service.get_all_characters().await;
     match &result {
-        Ok(chars) => log::info!(
-            "get_all_characters returning {} characters",
-            chars.len()
-        ),
+        Ok(chars) => log::info!("get_all_characters returning {} characters", chars.len()),
         Err(e) => log::error!("get_all_characters error: {:?}", e),
     }
     to_command_result(result)

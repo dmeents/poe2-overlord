@@ -28,7 +28,7 @@ impl ServerStatusRepositoryTrait for ServerStatusRepositoryImpl {
         sqlx::query(
             "INSERT OR REPLACE INTO server_status
              (id, ip_address, port, is_online, latency_ms, timestamp)
-             VALUES (1, ?, ?, ?, ?, ?)"
+             VALUES (1, ?, ?, ?, ?, ?)",
         )
         .bind(&status.ip_address)
         .bind(status.port as i64)
@@ -48,20 +48,20 @@ impl ServerStatusRepositoryTrait for ServerStatusRepositoryImpl {
         let row: Option<(String, i64, i64, Option<i64>, String)> = sqlx::query_as(
             "SELECT ip_address, port, is_online, latency_ms, timestamp
              FROM server_status
-             WHERE id = 1"
+             WHERE id = 1",
         )
         .fetch_optional(&self.pool)
         .await?;
 
-        let status = row.map(|(ip_address, port, is_online, latency_ms, timestamp)| {
-            ServerStatus {
+        let status = row.map(
+            |(ip_address, port, is_online, latency_ms, timestamp)| ServerStatus {
                 ip_address,
                 port: port as u16,
                 is_online: is_online != 0,
                 latency_ms: latency_ms.map(|v| v as u64),
                 timestamp,
-            }
-        });
+            },
+        );
 
         if status.is_some() {
             debug!("Server status loaded from SQLite");

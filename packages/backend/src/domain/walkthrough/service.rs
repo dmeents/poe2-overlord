@@ -108,10 +108,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
         let (next_step_id, previous_step_id) = if let Some(step_id) = &progress.current_step_id {
             // Load guide and use array-based navigation
             let guide = self.repository.load_guide().await?;
-            (
-                guide.next_step_id(step_id),
-                guide.previous_step_id(step_id),
-            )
+            (guide.next_step_id(step_id), guide.previous_step_id(step_id))
         } else {
             (None, None)
         };

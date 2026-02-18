@@ -58,7 +58,10 @@ mod tests {
             if *self.should_succeed.read().await {
                 Ok(*self.latency.read().await)
             } else {
-                Err(crate::errors::AppError::network_error("mock_ping", "Mock ping failure"))
+                Err(crate::errors::AppError::network_error(
+                    "mock_ping",
+                    "Mock ping failure",
+                ))
             }
         }
     }

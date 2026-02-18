@@ -253,4 +253,3 @@ impl Default for ChannelConfig {
         Self { capacity: 100 }
     }
 }
-

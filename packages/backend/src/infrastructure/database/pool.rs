@@ -1,5 +1,7 @@
 use crate::errors::AppResult;
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqlitePoolOptions, SqliteSynchronous};
+use sqlx::sqlite::{
+    SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqlitePoolOptions, SqliteSynchronous,
+};
 use std::path::Path;
 
 pub struct DatabasePool {
@@ -29,10 +31,12 @@ impl DatabasePool {
         sqlx::migrate!("src/infrastructure/database/migrations")
             .run(&pool)
             .await
-            .map_err(|e| crate::errors::AppError::internal_error(
-                "database_migrate",
-                &format!("Failed to run migrations: {}", e),
-            ))?;
+            .map_err(|e| {
+                crate::errors::AppError::internal_error(
+                    "database_migrate",
+                    &format!("Failed to run migrations: {}", e),
+                )
+            })?;
 
         Ok(Self { pool })
     }

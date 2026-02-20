@@ -111,6 +111,10 @@ mod tests {
             &Ascendency::Chronomancer,
             &CharacterClass::Sorceress
         ));
+        assert!(is_valid_ascendency_for_class(
+            &Ascendency::DiscipleOfVarashta,
+            &CharacterClass::Sorceress
+        ));
         // Invalid for sorceress
         assert!(!is_valid_ascendency_for_class(
             &Ascendency::Titan,

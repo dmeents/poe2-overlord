@@ -10,6 +10,7 @@ import acolyteImage from '../assets/ascendencies/acolyte.jpeg';
 import amazonImage from '../assets/ascendencies/amazon.webp';
 import bloodMageImage from '../assets/ascendencies/blood_mage.jpeg';
 import chronomancerImage from '../assets/ascendencies/chronomancer.jpeg';
+import discipleOfVarashtaImage from '../assets/ascendencies/disciple_of_varashta.webp';
 import deadeyeImage from '../assets/ascendencies/deadeye.jpeg';
 import gemlingImage from '../assets/ascendencies/gemling.jpeg';
 import infernalistImage from '../assets/ascendencies/infernalist.jpeg';
@@ -33,6 +34,7 @@ const ASCENDENCY_IMAGES: Record<Ascendency, string | null> = {
   'Smith of Katava': smithOfKatavaImage,
   Stormweaver: stormweaverImage,
   Chronomancer: chronomancerImage,
+  'Disciple of Varashta': discipleOfVarashtaImage,
   Deadeye: deadeyeImage,
   Pathfinder: pathfinderImage,
   Ritualist: ritualistImage,

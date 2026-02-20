@@ -9,7 +9,7 @@ export const formSortSelectStyles = {
   // Trigger button
   triggerContainer: 'relative',
   trigger:
-    'flex items-center justify-between w-full px-4 py-2 bg-stone-700/50 hover:bg-stone-700 border border-stone-600 text-stone-300 hover:text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
+    'flex items-center justify-between w-full px-4 py-2 bg-stone-800/60 hover:bg-stone-700 border border-stone-700/60 text-stone-300 hover:text-white transition-colors h-10 focus:outline-none focus:ring-1 focus:ring-ember-500/50 focus:border-ember-500/50 disabled:opacity-50 disabled:cursor-not-allowed',
   triggerText: 'text-sm font-medium',
   triggerIcons: 'flex items-center space-x-2',
   directionIcon: 'text-xs text-stone-400',
@@ -33,7 +33,7 @@ export const formSortSelectStyles = {
   // Direction toggle
   directionToggle: 'mt-4 pt-4 border-t border-stone-700 px-4 pb-4',
   directionButton:
-    'w-full flex items-center justify-center space-x-2 px-3 py-2 bg-stone-700/50 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors',
+    'w-full flex items-center justify-center space-x-2 px-3 py-2 bg-stone-800/60 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors',
   directionText: 'text-sm',
   directionIconLarge: 'text-lg',
 } as const;

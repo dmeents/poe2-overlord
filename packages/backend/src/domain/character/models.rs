@@ -206,6 +206,8 @@ pub enum Ascendency {
     Stormweaver,
     #[serde(rename = "Chronomancer")]
     Chronomancer,
+    #[serde(rename = "Disciple of Varashta")]
+    DiscipleOfVarashta,
     #[serde(rename = "Deadeye")]
     Deadeye,
     #[serde(rename = "Pathfinder")]
@@ -494,7 +496,7 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
         ),
         CharacterClass::Sorceress => matches!(
             ascendency,
-            Ascendency::Stormweaver | Ascendency::Chronomancer
+            Ascendency::Stormweaver | Ascendency::Chronomancer | Ascendency::DiscipleOfVarashta
         ),
         CharacterClass::Ranger => {
             matches!(ascendency, Ascendency::Deadeye | Ascendency::Pathfinder)

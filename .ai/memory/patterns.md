@@ -1,5 +1,7 @@
 # Code Patterns
 
+> **See also:** `game-data.md` — checklists for adding new classes and ascendencies.
+
 ## Theming & Styling
 
 ### Design Tokens (Shared Theme Package)

@@ -19,6 +19,7 @@ const ALL_ASCENDENCIES = [
   'Smith of Katava',
   'Stormweaver',
   'Chronomancer',
+  'Disciple of Varashta',
   'Deadeye',
   'Pathfinder',
   'Ritualist',
@@ -41,7 +42,7 @@ export type Ascendency = (typeof ALL_ASCENDENCIES)[number];
 
 const ASCENDENCIES_BY_CLASS: Record<CharacterClass, readonly Ascendency[]> = {
   Warrior: ['Titan', 'Warbringer', 'Smith of Katava'],
-  Sorceress: ['Stormweaver', 'Chronomancer'],
+  Sorceress: ['Stormweaver', 'Chronomancer', 'Disciple of Varashta'],
   Ranger: ['Deadeye', 'Pathfinder'],
   Huntress: ['Ritualist', 'Amazon'],
   Monk: ['Invoker', 'Acolyte of Chayula'],

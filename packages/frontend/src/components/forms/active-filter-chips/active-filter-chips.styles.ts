@@ -6,4 +6,4 @@ export const chipClasses =
 export const chipRemoveButtonClasses = 'text-ember-300 hover:text-ember-200 transition-colors ml-1';
 
 export const clearAllButtonClasses =
-  'ml-auto px-3 py-1 text-xs font-medium text-stone-400 hover:text-white bg-stone-700/50 hover:bg-stone-700 border border-stone-600 transition-colors';
+  'ml-auto px-3 py-1 text-xs font-medium text-stone-400 hover:text-white bg-stone-800/60 hover:bg-stone-700 border border-stone-700/60 transition-colors';

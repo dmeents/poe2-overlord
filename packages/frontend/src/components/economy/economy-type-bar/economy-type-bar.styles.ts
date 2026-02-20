@@ -1,5 +1,5 @@
 export const typeBarContainerClasses =
-  'flex flex-wrap gap-1.5 px-3 py-2 bg-stone-800/20 border-b border-stone-700/50';
+  'flex flex-wrap gap-1.5 px-3 py-2 border-b border-stone-700/50';
 
 export const typeButtonClasses =
   'flex items-center h-7 px-2 text-xs font-medium transition-colors border';

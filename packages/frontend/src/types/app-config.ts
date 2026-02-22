@@ -19,6 +19,10 @@ export interface AppConfig {
   poe_client_log_path: string;
   log_level: string;
   zone_refresh_interval: ZoneRefreshInterval;
+  hide_optional_objectives: boolean;
+  hide_league_start_objectives: boolean;
+  hide_flavor_text: boolean;
+  hide_objective_descriptions: boolean;
 }
 
 /** Event emitted when configuration changes (from backend). */

@@ -1,4 +1,5 @@
 import { GiftIcon, StarIcon } from '@heroicons/react/24/outline';
+import { useMemo } from 'react';
 import type { Objective, StepLink } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
 
@@ -6,6 +7,9 @@ interface StepObjectiveListProps {
   objectives: Objective[];
   links: StepLink[];
   onLinkClick: (link: StepLink) => void;
+  hideOptionalObjectives?: boolean;
+  hideLeagueStartObjectives?: boolean;
+  hideObjectiveDescriptions?: boolean;
 }
 
 /**
@@ -15,14 +19,30 @@ export function StepObjectiveList({
   objectives,
   links,
   onLinkClick,
+  hideOptionalObjectives,
+  hideLeagueStartObjectives,
+  hideObjectiveDescriptions,
 }: StepObjectiveListProps): React.JSX.Element | null {
+  const filteredObjectives = useMemo(() => {
+    return objectives.filter(obj => {
+      if (hideOptionalObjectives && !obj.required && !obj.leagueStart) return false;
+      if (hideLeagueStartObjectives && obj.leagueStart) return false;
+      return true;
+    });
+  }, [objectives, hideOptionalObjectives, hideLeagueStartObjectives]);
+
   if (objectives.length === 0) return null;
+
+  const isFiltered = filteredObjectives.length !== objectives.length;
+  const countLabel = isFiltered
+    ? `Objectives (${filteredObjectives.length}/${objectives.length}):`
+    : `Objectives (${objectives.length}):`;
 
   return (
     <div className="space-y-3 px-4">
-      <h5 className="text-sm font-semibold text-stone-200">Objectives ({objectives.length}):</h5>
+      <h5 className="text-sm font-semibold text-stone-200">{countLabel}</h5>
       <ul className="space-y-4">
-        {objectives.map((objective, objectiveIndex) => (
+        {filteredObjectives.map((objective, objectiveIndex) => (
           <li
             key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`}
             className="text-sm">
@@ -54,9 +74,10 @@ export function StepObjectiveList({
                 </div>
 
                 {/* Details and rewards */}
-                {(objective.details || (objective.rewards && objective.rewards.length > 0)) && (
+                {(!hideObjectiveDescriptions ||
+                  (objective.rewards && objective.rewards.length > 0)) && (
                   <div className="border-l-2 border-ember-500/30 pl-3 space-y-1.5">
-                    {objective.details && (
+                    {!hideObjectiveDescriptions && objective.details && (
                       <div className="text-xs text-stone-400 whitespace-pre-wrap">
                         <ParsedText
                           text={objective.details}

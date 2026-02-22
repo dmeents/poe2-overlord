@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { CharacterProvider } from './contexts/CharacterContext';
+import { ConfigurationProvider } from './contexts/ConfigurationContext';
 import { EconomyProvider } from './contexts/EconomyContext';
 import { GameProcessProvider } from './contexts/GameProcessContext';
 import { ServerStatusProvider } from './contexts/ServerStatusContext';
@@ -19,12 +20,13 @@ interface ProvidersProps {
  *
  * Dependency Graph:
  * ```
- * GameProcessProvider (independent)
- *   └─ ServerStatusProvider (independent)
- *       └─ CharacterProvider (root of character tree)
- *           ├─ ZoneProvider (depends on Character)
- *           ├─ EconomyProvider (depends on Character)
- *           └─ WalkthroughProvider (depends on Character)
+ * ConfigurationProvider (independent)
+ *   └─ GameProcessProvider (independent)
+ *       └─ ServerStatusProvider (independent)
+ *           └─ CharacterProvider (root of character tree)
+ *               ├─ ZoneProvider (depends on Character)
+ *               ├─ EconomyProvider (depends on Character)
+ *               └─ WalkthroughProvider (depends on Character)
  * ```
  *
  * Dependencies:
@@ -49,16 +51,18 @@ interface ProvidersProps {
  */
 export function Providers({ children }: ProvidersProps): React.JSX.Element {
   return (
-    <GameProcessProvider>
-      <ServerStatusProvider>
-        <CharacterProvider>
-          <ZoneProvider>
-            <EconomyProvider>
-              <WalkthroughProvider>{children}</WalkthroughProvider>
-            </EconomyProvider>
-          </ZoneProvider>
-        </CharacterProvider>
-      </ServerStatusProvider>
-    </GameProcessProvider>
+    <ConfigurationProvider>
+      <GameProcessProvider>
+        <ServerStatusProvider>
+          <CharacterProvider>
+            <ZoneProvider>
+              <EconomyProvider>
+                <WalkthroughProvider>{children}</WalkthroughProvider>
+              </EconomyProvider>
+            </ZoneProvider>
+          </CharacterProvider>
+        </ServerStatusProvider>
+      </GameProcessProvider>
+    </ConfigurationProvider>
   );
 }

@@ -72,6 +72,14 @@ pub struct AppConfig {
     pub poe_client_log_path: String,
     pub log_level: String,
     pub zone_refresh_interval: ZoneRefreshInterval,
+    #[serde(default)]
+    pub hide_optional_objectives: bool,
+    #[serde(default)]
+    pub hide_league_start_objectives: bool,
+    #[serde(default)]
+    pub hide_flavor_text: bool,
+    #[serde(default)]
+    pub hide_objective_descriptions: bool,
 }
 
 impl AppConfig {
@@ -93,6 +101,10 @@ impl AppConfig {
             poe_client_log_path,
             log_level,
             zone_refresh_interval: ZoneRefreshInterval::default(),
+            hide_optional_objectives: false,
+            hide_league_start_objectives: false,
+            hide_flavor_text: false,
+            hide_objective_descriptions: false,
         }
     }
 
@@ -203,6 +215,10 @@ impl Default for AppConfig {
             poe_client_log_path: Self::get_default_poe_client_log_path(),
             log_level: "info".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::default(),
+            hide_optional_objectives: false,
+            hide_league_start_objectives: false,
+            hide_flavor_text: false,
+            hide_objective_descriptions: false,
         }
     }
 }

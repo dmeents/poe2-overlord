@@ -13,7 +13,7 @@ export const walkthroughStepCardStyles = {
   activeCard: 'border-ember-700/50 bg-ember-500/10',
 
   // Zone flow (Current → Completion)
-  zoneFlow: 'flex items-center justify-end gap-2 px-4 text-sm',
+  zoneFlow: 'flex items-center justify-end gap-2 px-4 text-sm pt-2',
   zoneFlowCurrent:
     '!text-stone-300 hover:!text-stone-200 underline decoration-stone-500/50 hover:decoration-stone-400 font-medium',
   zoneFlowArrow: 'w-4 h-4 text-ember-400 flex-shrink-0',

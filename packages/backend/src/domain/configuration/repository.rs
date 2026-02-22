@@ -52,14 +52,19 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         // INSERT OR REPLACE into single-row table
         sqlx::query(
             "INSERT OR REPLACE INTO app_config
-             (id, config_version, poe_client_log_path, log_level, zone_refresh_interval, updated_at)
-             VALUES (1, ?, ?, ?, ?, ?)",
+             (id, config_version, poe_client_log_path, log_level, zone_refresh_interval, updated_at,
+              hide_optional_objectives, hide_league_start_objectives, hide_flavor_text, hide_objective_descriptions)
+             VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(config.config_version as i64)
         .bind(&config.poe_client_log_path)
         .bind(&config.log_level)
         .bind(&zone_refresh_interval)
         .bind(&updated_at)
+        .bind(if config.hide_optional_objectives { 1i64 } else { 0i64 })
+        .bind(if config.hide_league_start_objectives { 1i64 } else { 0i64 })
+        .bind(if config.hide_flavor_text { 1i64 } else { 0i64 })
+        .bind(if config.hide_objective_descriptions { 1i64 } else { 0i64 })
         .execute(&self.pool)
         .await?;
 
@@ -71,8 +76,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         debug!("Loading configuration from SQLite");
 
         // Query the single-row config table
-        let row: Option<(i64, String, String, String)> = sqlx::query_as(
-            "SELECT config_version, poe_client_log_path, log_level, zone_refresh_interval
+        let row: Option<(i64, String, String, String, i64, i64, i64, i64)> = sqlx::query_as(
+            "SELECT config_version, poe_client_log_path, log_level, zone_refresh_interval,
+                    hide_optional_objectives, hide_league_start_objectives,
+                    hide_flavor_text, hide_objective_descriptions
              FROM app_config
              WHERE id = 1",
         )
@@ -84,6 +91,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             poe_client_log_path,
             log_level,
             zone_refresh_interval_str,
+            hide_optional_objectives,
+            hide_league_start_objectives,
+            hide_flavor_text,
+            hide_objective_descriptions,
         )) = row
         {
             // Parse enum from TEXT
@@ -108,6 +119,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 poe_client_log_path,
                 log_level,
                 zone_refresh_interval,
+                hide_optional_objectives: hide_optional_objectives != 0,
+                hide_league_start_objectives: hide_league_start_objectives != 0,
+                hide_flavor_text: hide_flavor_text != 0,
+                hide_objective_descriptions: hide_objective_descriptions != 0,
             }
         } else {
             // No config exists, return default and save it

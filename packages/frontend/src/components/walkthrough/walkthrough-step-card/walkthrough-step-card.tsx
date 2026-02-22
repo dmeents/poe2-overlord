@@ -7,6 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
 import { useCharacter } from '../../../contexts/CharacterContext';
+import { useConfiguration } from '../../../contexts/ConfigurationContext';
 import { useWalkthrough } from '../../../contexts/WalkthroughContext';
 import { useZone } from '../../../contexts/ZoneContext';
 import { useStepNavigation } from '../../../hooks/useStepNavigation';
@@ -49,6 +50,7 @@ export function WalkthroughStepCard({
   className = '',
 }: WalkthroughStepCardProps): React.JSX.Element | null {
   const { openZone } = useZone();
+  const { config: appConfig } = useConfiguration();
 
   // Always call hooks unconditionally (Rules of Hooks compliance)
   const walkthroughContext = useWalkthrough();
@@ -177,19 +179,24 @@ export function WalkthroughStepCard({
         </div>
 
         {/* Description (provides context) */}
-        <p className={styles.descriptionText}>
-          <ParsedText
-            text={stepData.description}
-            links={filteredLinks}
-            onLinkClick={handleLinkClick}
-          />
-        </p>
+        {!appConfig?.hide_flavor_text && (
+          <p className={styles.descriptionText}>
+            <ParsedText
+              text={stepData.description}
+              links={filteredLinks}
+              onLinkClick={handleLinkClick}
+            />
+          </p>
+        )}
 
         {/* Objectives */}
         <StepObjectiveList
           objectives={stepData.objectives}
           links={filteredLinks}
           onLinkClick={handleLinkClick}
+          hideOptionalObjectives={appConfig?.hide_optional_objectives}
+          hideLeagueStartObjectives={appConfig?.hide_league_start_objectives}
+          hideObjectiveDescriptions={appConfig?.hide_objective_descriptions}
         />
       </div>
 

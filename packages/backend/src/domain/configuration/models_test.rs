@@ -230,6 +230,10 @@ mod tests {
             poe_client_log_path: "/test/path".to_string(),
             log_level: "debug".to_string(),
             zone_refresh_interval: ZoneRefreshInterval::OneHour,
+            hide_optional_objectives: false,
+            hide_league_start_objectives: false,
+            hide_flavor_text: false,
+            hide_objective_descriptions: false,
         };
 
         let json = serde_json::to_string(&config).unwrap();

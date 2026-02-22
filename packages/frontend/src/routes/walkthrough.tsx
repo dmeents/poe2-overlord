@@ -11,6 +11,7 @@ import { LoadingSpinner } from '../components/ui/loading-spinner/loading-spinner
 import { SectionHeader } from '../components/ui/section-header/section-header';
 import { CampaignCompleteCard } from '../components/walkthrough/campaign-complete-card/campaign-complete-card';
 import { WalkthroughGuide } from '../components/walkthrough/walkthrough-guide/walkthrough-guide';
+import { WalkthroughSettingsPanel } from '../components/walkthrough/walkthrough-settings-panel/walkthrough-settings-panel';
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
@@ -78,6 +79,9 @@ function WalkthroughPage() {
 
   const rightColumn = (
     <>
+      <Card title="Display Settings" className="mb-6">
+        <WalkthroughSettingsPanel variant="inline" />
+      </Card>
       {!isLoading && !activeCharacter && (
         <Card title="Campaign Progress">
           <EmptyState

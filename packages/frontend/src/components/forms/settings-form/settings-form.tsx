@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
-import { useAppEventListener } from '@/hooks/useAppEventListener';
+import { useConfiguration } from '@/contexts/ConfigurationContext';
 import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
-import {
-  type ConfigurationChangedEvent,
-  EVENT_KEYS,
-  type ExtractPayload,
-} from '@/utils/events/registry';
 import { tauriUtils } from '@/utils/tauri';
 import { Button } from '../../ui/button/button';
 import { AlertMessage } from '../form-alert-message/form-alert-message';
@@ -58,22 +53,37 @@ function formatConfigError(
   return `Failed to ${operation} configuration: ${message}`;
 }
 
+const DEFAULT_FORM_STATE: AppConfig = {
+  config_version: 1,
+  poe_client_log_path: '',
+  log_level: 'info',
+  zone_refresh_interval: 'SevenDays',
+  hide_optional_objectives: false,
+  hide_league_start_objectives: false,
+  hide_flavor_text: false,
+  hide_objective_descriptions: false,
+};
+
 interface SettingsFormProps {
   onConfigUpdate?: (config: AppConfig) => void;
 }
 
 export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
-  const [config, setConfig] = useState<AppConfig>({
-    config_version: 1,
-    poe_client_log_path: '',
-    log_level: 'info',
-    zone_refresh_interval: 'SevenDays',
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const { config: contextConfig, isLoading } = useConfiguration();
+
+  // Local draft state — what the user is currently editing
+  const [localConfig, setLocalConfig] = useState<AppConfig>(DEFAULT_FORM_STATE);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [zoneRefreshOptions, setZoneRefreshOptions] = useState<ZoneRefreshIntervalOption[]>([]);
+
+  // Sync draft when context config changes (initial load + external changes)
+  useEffect(() => {
+    if (contextConfig) {
+      setLocalConfig(contextConfig);
+    }
+  }, [contextConfig]);
 
   // Track timeout refs for cleanup to prevent memory leaks
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,36 +109,6 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     };
   }, []);
 
-  // Listen for configuration changes from backend to keep UI in sync
-  useAppEventListener(
-    [
-      {
-        eventType: EVENT_KEYS.ConfigurationChanged,
-        handler: (payload: unknown) => {
-          const { new_config } = payload as ExtractPayload<ConfigurationChangedEvent>;
-          // Update local state with the new config from the event
-          setConfig(new_config);
-          // Notify parent component if callback provided
-          onConfigUpdate?.(new_config);
-        },
-      },
-    ],
-    [], // No dependencies - using functional updates
-  );
-
-  const loadConfig = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const loadedConfig = await tauriUtils.getConfig();
-      setConfig(loadedConfig);
-    } catch (err) {
-      setError(formatConfigError(err, 'load'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   const loadZoneRefreshOptions = useCallback(async () => {
     try {
       const options = await tauriUtils.getZoneRefreshIntervalOptions();
@@ -142,23 +122,21 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     }
   }, []);
 
-  // Load configuration and options on component mount
   useEffect(() => {
-    loadConfig();
     loadZoneRefreshOptions();
-  }, [loadConfig, loadZoneRefreshOptions]);
+  }, [loadZoneRefreshOptions]);
 
   const handleSave = async () => {
     // Pre-validate before backend call
-    const pathValid = validatePoeClientLogPath(config.poe_client_log_path);
+    const pathValid = validatePoeClientLogPath(localConfig.poe_client_log_path);
     if (!pathValid) {
       setError('Please enter a valid POE client log path before saving');
       return;
     }
 
-    if (!VALID_LOG_LEVELS.includes(config.log_level.toLowerCase())) {
+    if (!VALID_LOG_LEVELS.includes(localConfig.log_level.toLowerCase())) {
       setError(
-        `Invalid log level: ${config.log_level}. Valid levels: ${VALID_LOG_LEVELS.join(', ')}`,
+        `Invalid log level: ${localConfig.log_level}. Valid levels: ${VALID_LOG_LEVELS.join(', ')}`,
       );
       return;
     }
@@ -168,13 +146,13 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       setError(null);
       setSuccess(null);
 
-      await tauriUtils.updateConfig(config);
+      await tauriUtils.updateConfig(localConfig);
       setSuccess('Configuration saved successfully!');
-      onConfigUpdate?.(config);
+      onConfigUpdate?.(localConfig);
 
       clearSuccessAfterDelay();
     } catch (err) {
-      setError(formatConfigError(err, 'save', { logLevel: config.log_level }));
+      setError(formatConfigError(err, 'save', { logLevel: localConfig.log_level }));
     } finally {
       setIsSaving(false);
     }
@@ -187,8 +165,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       setSuccess(null);
 
       await tauriUtils.resetConfigToDefaults();
-      // State will be updated by ConfigurationChanged event listener
-      // which also handles onConfigUpdate callback
+      // Context will update via ConfigurationChanged event, which syncs localConfig
       setSuccess('Configuration reset to defaults!');
 
       clearSuccessAfterDelay();
@@ -199,8 +176,15 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     }
   };
 
+  // Discard unsaved edits and revert to last committed config
+  const handleReload = () => {
+    if (contextConfig) {
+      setLocalConfig(contextConfig);
+    }
+  };
+
   const handleInputChange = (field: keyof AppConfig, value: string | boolean) => {
-    setConfig(prev => ({
+    setLocalConfig(prev => ({
       ...prev,
       [field]: value,
     }));
@@ -232,7 +216,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     return <LoadingSpinner message="Loading configuration..." />;
   }
 
-  const isPoePathValid = validatePoeClientLogPath(config.poe_client_log_path);
+  const isPoePathValid = validatePoeClientLogPath(localConfig.poe_client_log_path);
 
   const logLevelOptions = [
     { value: 'trace', label: 'Trace' },
@@ -289,7 +273,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         htmlFor="poe-client-log-path">
         <Input
           id="poe-client-log-path"
-          value={config.poe_client_log_path}
+          value={localConfig.poe_client_log_path}
           onChange={value => handleInputChange('poe_client_log_path', value)}
           type="text"
           placeholder="Enter path to client.txt file (e.g., C:\Games\Path of Exile\logs\client.txt)"
@@ -337,7 +321,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         htmlFor="log-level">
         <Select
           id="log-level"
-          value={config.log_level}
+          value={localConfig.log_level}
           onChange={value => handleInputChange('log_level', value)}
           options={logLevelOptions}
           variant="dropdown"
@@ -387,7 +371,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         className="last-form-item">
         <Select
           id="zone-refresh-interval"
-          value={config.zone_refresh_interval}
+          value={localConfig.zone_refresh_interval}
           onChange={value => handleInputChange('zone_refresh_interval', value)}
           options={zoneRefreshOptions.map(opt => ({
             value: opt.value,
@@ -407,7 +391,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
           Reset to Defaults
         </Button>
 
-        <Button onClick={loadConfig} disabled={isSaving} variant="outline" size="md">
+        <Button onClick={handleReload} disabled={isSaving} variant="outline" size="md">
           Reload
         </Button>
       </div>

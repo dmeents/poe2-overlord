@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { CHARACTER_FORM_VALIDATION } from '../../../config/form-config';
 import { useCharacterConfig } from '../../../hooks/useCharacterConfig';
-import type { Ascendency, CharacterClass, CharacterData, League } from '../../../types/character';
+import type {
+  Ascendency,
+  CharacterClass,
+  CharacterSummaryData,
+  League,
+} from '../../../types/character';
 import { generateFantasyName } from '../../../utils/name-generator/name-generator';
 import { CheckboxInput } from '../../forms/form-checkbox-input/form-checkbox-input';
 import { FormField } from '../../forms/form-field/form-field';
@@ -15,7 +20,7 @@ import { getFormActionsClasses, getFormFieldClasses } from './character-form-mod
 
 interface CharacterFormModalProps {
   isOpen: boolean;
-  character?: CharacterData;
+  character?: CharacterSummaryData;
   onSubmit: (data: CharacterFormData) => void;
   onClose: () => void;
   isLoading?: boolean;

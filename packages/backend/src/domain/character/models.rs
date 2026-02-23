@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::str::FromStr;
 
 use crate::domain::walkthrough::models::WalkthroughProgress;
 use crate::domain::zone_tracking::{TrackingSummary, ZoneStats};
@@ -41,12 +42,6 @@ pub struct CharacterData {
     pub walkthrough_progress: WalkthroughProgress,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct CharactersIndex {
-    pub character_ids: Vec<String>,
-    pub active_character_id: Option<String>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CharacterUpdateParams {
     pub name: String,
@@ -56,34 +51,6 @@ pub struct CharacterUpdateParams {
     pub hardcore: bool,
     pub solo_self_found: bool,
     pub level: u32,
-}
-
-impl Default for CharacterData {
-    fn default() -> Self {
-        let now = Utc::now();
-        let id = uuid::Uuid::new_v4().to_string();
-        Self {
-            id: id.clone(),
-            profile: CharacterProfile {
-                name: String::new(),
-                class: CharacterClass::Warrior,
-                ascendency: Ascendency::Titan,
-                league: League::Standard,
-                hardcore: false,
-                solo_self_found: false,
-                level: 1,
-            },
-            timestamps: CharacterTimestamps {
-                created_at: now,
-                last_played: None,
-                last_updated: now,
-            },
-            current_location: None,
-            summary: TrackingSummary::new(id),
-            zones: Vec::new(),
-            walkthrough_progress: WalkthroughProgress::new(),
-        }
-    }
 }
 
 impl CharacterData {
@@ -123,54 +90,7 @@ impl CharacterData {
     pub fn touch(&mut self) {
         self.timestamps.last_updated = Utc::now();
     }
-
-    pub fn update_walkthrough_progress(&mut self, progress: WalkthroughProgress) {
-        self.walkthrough_progress = progress;
-        self.touch();
-    }
-
-    pub fn get_walkthrough_progress(&self) -> &WalkthroughProgress {
-        &self.walkthrough_progress
-    }
 }
-
-impl CharactersIndex {
-    /// Creates a new empty characters index
-    pub fn new() -> Self {
-        Self {
-            character_ids: Vec::new(),
-            active_character_id: None,
-        }
-    }
-
-    /// Adds a character ID to the index
-    pub fn add_character(&mut self, character_id: String) {
-        if !self.character_ids.contains(&character_id) {
-            self.character_ids.push(character_id);
-        }
-    }
-
-    /// Removes a character ID from the index
-    pub fn remove_character(&mut self, character_id: &str) {
-        self.character_ids.retain(|id| id != character_id);
-        if self.active_character_id.as_ref() == Some(&character_id.to_string()) {
-            self.active_character_id = None;
-        }
-    }
-
-    /// Sets the active character ID
-    pub fn set_active_character(&mut self, character_id: Option<String>) {
-        self.active_character_id = character_id;
-    }
-
-    /// Checks if a character ID exists in the index
-    pub fn has_character(&self, character_id: &str) -> bool {
-        self.character_ids.contains(&character_id.to_string())
-    }
-}
-
-// Re-export all the enums and types from the old character domain
-// These will be moved here in a future step, but for now we'll import them
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum CharacterClass {
@@ -270,21 +190,6 @@ impl LocationState {
         }
     }
 
-    /// Updates the current zone and returns true if it actually changed
-    /// Returns false if the zone is the same as the current one
-    pub fn update_zone(&mut self, new_zone_name: String) -> bool {
-        if self.zone_name != new_zone_name {
-            self.zone_name = new_zone_name;
-            self.last_updated = Utc::now();
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn get_zone_name(&self) -> &String {
-        &self.zone_name
-    }
 }
 
 /// Enriched location state with zone metadata for API responses
@@ -435,6 +340,33 @@ pub struct EnrichedZoneStats {
 }
 
 impl EnrichedZoneStats {
+    pub fn from_stats_minimal(stats: &ZoneStats) -> Self {
+        Self {
+            zone_name: stats.zone_name.clone(),
+            duration: stats.duration,
+            deaths: stats.deaths,
+            visits: stats.visits,
+            first_visited: stats.first_visited,
+            last_visited: stats.last_visited,
+            is_active: stats.is_active,
+            entry_timestamp: stats.entry_timestamp,
+            area_id: None,
+            act: stats.act,
+            area_level: None,
+            is_town: stats.is_town,
+            has_waypoint: false,
+            bosses: Vec::new(),
+            monsters: Vec::new(),
+            npcs: Vec::new(),
+            connected_zones: Vec::new(),
+            description: None,
+            points_of_interest: Vec::new(),
+            image_url: None,
+            wiki_url: None,
+            last_updated: None,
+        }
+    }
+
     pub fn from_stats_and_metadata(
         stats: &ZoneStats,
         metadata: &crate::domain::zone_configuration::models::ZoneMetadata,
@@ -471,18 +403,12 @@ pub enum LocationType {
     /// A playable game zone/area
     #[default]
     Zone,
-    /// A major story act
-    Act,
-    /// Player's personal hideout
-    Hideout,
 }
 
 impl fmt::Display for LocationType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LocationType::Zone => write!(f, "Zone"),
-            LocationType::Act => write!(f, "Act"),
-            LocationType::Hideout => write!(f, "Hideout"),
         }
     }
 }
@@ -520,6 +446,26 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
     }
 }
 
+/// Lean character response for list views — no zones array, SQL-aggregated summary.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CharacterSummaryResponse {
+    pub id: String,
+    pub name: String,
+    pub class: CharacterClass,
+    pub ascendency: Ascendency,
+    pub league: League,
+    pub hardcore: bool,
+    pub solo_self_found: bool,
+    pub level: u32,
+    pub created_at: DateTime<Utc>,
+    pub last_played: Option<DateTime<Utc>>,
+    pub last_updated: DateTime<Utc>,
+    pub current_location: Option<EnrichedLocationState>,
+    pub summary: TrackingSummary,
+    pub walkthrough_progress: WalkthroughProgress,
+    pub is_active: bool,
+}
+
 fn default_level() -> u32 {
     1
 }
@@ -535,6 +481,101 @@ impl fmt::Display for CharacterClass {
             CharacterClass::Mercenary => write!(f, "Mercenary"),
             CharacterClass::Witch => write!(f, "Witch"),
             CharacterClass::Druid => write!(f, "Druid"),
+        }
+    }
+}
+
+impl FromStr for CharacterClass {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Warrior" => Ok(Self::Warrior),
+            "Sorceress" => Ok(Self::Sorceress),
+            "Ranger" => Ok(Self::Ranger),
+            "Huntress" => Ok(Self::Huntress),
+            "Monk" => Ok(Self::Monk),
+            "Mercenary" => Ok(Self::Mercenary),
+            "Witch" => Ok(Self::Witch),
+            "Druid" => Ok(Self::Druid),
+            _ => Err(format!("Unknown CharacterClass: '{}'", s)),
+        }
+    }
+}
+
+impl fmt::Display for Ascendency {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Ascendency::Titan => write!(f, "Titan"),
+            Ascendency::Warbringer => write!(f, "Warbringer"),
+            Ascendency::SmithOfKatava => write!(f, "Smith of Katava"),
+            Ascendency::Stormweaver => write!(f, "Stormweaver"),
+            Ascendency::Chronomancer => write!(f, "Chronomancer"),
+            Ascendency::DiscipleOfVarashta => write!(f, "Disciple of Varashta"),
+            Ascendency::Deadeye => write!(f, "Deadeye"),
+            Ascendency::Pathfinder => write!(f, "Pathfinder"),
+            Ascendency::Ritualist => write!(f, "Ritualist"),
+            Ascendency::Amazon => write!(f, "Amazon"),
+            Ascendency::Invoker => write!(f, "Invoker"),
+            Ascendency::AcolyteOfChayula => write!(f, "Acolyte of Chayula"),
+            Ascendency::GemlingLegionnaire => write!(f, "Gemling Legionnaire"),
+            Ascendency::Tactitian => write!(f, "Tactitian"),
+            Ascendency::Witchhunter => write!(f, "Witchhunter"),
+            Ascendency::BloodMage => write!(f, "Blood Mage"),
+            Ascendency::Infernalist => write!(f, "Infernalist"),
+            Ascendency::Lich => write!(f, "Lich"),
+            Ascendency::Shaman => write!(f, "Shaman"),
+            Ascendency::Oracle => write!(f, "Oracle"),
+        }
+    }
+}
+
+impl FromStr for Ascendency {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Titan" => Ok(Self::Titan),
+            "Warbringer" => Ok(Self::Warbringer),
+            "Smith of Katava" => Ok(Self::SmithOfKatava),
+            "Stormweaver" => Ok(Self::Stormweaver),
+            "Chronomancer" => Ok(Self::Chronomancer),
+            "Disciple of Varashta" => Ok(Self::DiscipleOfVarashta),
+            "Deadeye" => Ok(Self::Deadeye),
+            "Pathfinder" => Ok(Self::Pathfinder),
+            "Ritualist" => Ok(Self::Ritualist),
+            "Amazon" => Ok(Self::Amazon),
+            "Invoker" => Ok(Self::Invoker),
+            "Acolyte of Chayula" => Ok(Self::AcolyteOfChayula),
+            "Gemling Legionnaire" => Ok(Self::GemlingLegionnaire),
+            "Tactitian" => Ok(Self::Tactitian),
+            "Witchhunter" => Ok(Self::Witchhunter),
+            "Blood Mage" => Ok(Self::BloodMage),
+            "Infernalist" => Ok(Self::Infernalist),
+            "Lich" => Ok(Self::Lich),
+            "Shaman" => Ok(Self::Shaman),
+            "Oracle" => Ok(Self::Oracle),
+            _ => Err(format!("Unknown Ascendency: '{}'", s)),
+        }
+    }
+}
+
+impl fmt::Display for League {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            League::Standard => write!(f, "Standard"),
+            League::RiseOfTheAbyssal => write!(f, "Rise of the Abyssal"),
+            League::TheFateOfTheVaal => write!(f, "The Fate of the Vaal"),
+        }
+    }
+}
+
+impl FromStr for League {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Standard" => Ok(Self::Standard),
+            "Rise of the Abyssal" => Ok(Self::RiseOfTheAbyssal),
+            "The Fate of the Vaal" => Ok(Self::TheFateOfTheVaal),
+            _ => Err(format!("Unknown League: '{}'", s)),
         }
     }
 }

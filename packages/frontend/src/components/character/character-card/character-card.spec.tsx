@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CharacterData } from '../../../types/character';
+import type { CharacterSummaryData } from '../../../types/character';
 import { CharacterCard } from './character-card';
 
-const mockCharacter: CharacterData = {
+const mockCharacter: CharacterSummaryData = {
   id: 'test-id',
   name: 'TestCharacter',
   class: 'Warrior',
@@ -41,7 +41,7 @@ const mockCharacter: CharacterData = {
     play_time_interlude: 0,
     play_time_endgame: 0,
   },
-  zones: [],
+  is_active: false,
   walkthrough_progress: {
     current_step_id: null,
     is_completed: false,

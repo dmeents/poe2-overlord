@@ -103,12 +103,9 @@ impl ServiceInitializer {
         ))
             as Arc<dyn crate::domain::character::traits::CharacterRepository + Send + Sync>;
 
-        let zone_tracking = Arc::new(crate::domain::zone_tracking::ZoneTrackingServiceImpl::new());
-
         let character_service = crate::domain::character::service::CharacterServiceImpl::new(
             character_repo,
             event_bus.clone(),
-            zone_tracking,
             zone_config_service.clone(),
         );
 

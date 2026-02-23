@@ -1,4 +1,4 @@
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use std::sync::Arc;
 
 use crate::domain::character::traits::CharacterService;
@@ -43,43 +43,20 @@ impl WalkthroughServiceImpl {
         &self,
         character_id: &str,
     ) -> Result<WalkthroughProgress, AppError> {
-        let character_data = self
-            .character_service
-            .load_character_data(character_id)
-            .await?;
-        Ok(character_data.get_walkthrough_progress().clone())
+        let character_data = self.character_service.get_character(character_id).await?;
+        Ok(character_data.walkthrough_progress)
     }
 
-    /// Updates a character's walkthrough progress and publishes events
+    /// Updates a character's walkthrough progress.
+    /// Delegates to character service which handles DB upsert and CharacterUpdated event publishing.
     async fn update_character_walkthrough_progress(
         &self,
         character_id: &str,
         progress: WalkthroughProgress,
     ) -> Result<(), AppError> {
-        let mut character_data = self
-            .character_service
-            .load_character_data(character_id)
-            .await?;
-        character_data.update_walkthrough_progress(progress);
-        character_data.touch();
-
-        // Save character data
         self.character_service
-            .save_character_data(&character_data)
+            .update_walkthrough_progress(character_id, &progress)
             .await?;
-
-        // Get enriched character data for event
-        let enriched_data = self.character_service.get_character(character_id).await?;
-
-        // Emit character updated event (includes walkthrough progress)
-        let event = AppEvent::character_updated(character_id.to_string(), enriched_data);
-        if let Err(e) = self.event_bus.publish(event).await {
-            error!(
-                "Failed to publish character updated event for {}: {}",
-                character_id, e
-            );
-        }
-
         debug!("Updated character {} walkthrough progress", character_id);
         Ok(())
     }

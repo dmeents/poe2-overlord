@@ -6,8 +6,8 @@ mod tests {
     use tokio::sync::RwLock;
 
     use crate::domain::character::models::{
-        Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-        CharactersIndex, League, LocationState,
+        Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterSummaryResponse,
+        CharacterUpdateParams, League, LocationState,
     };
     use crate::domain::character::traits::CharacterService;
     use crate::domain::walkthrough::models::{
@@ -58,7 +58,7 @@ mod tests {
     struct MockCharacterService {
         characters: Arc<RwLock<HashMap<String, CharacterData>>>,
         should_fail_load: bool,
-        should_fail_save: bool,
+        should_fail_update_walkthrough: bool,
     }
 
     impl MockCharacterService {
@@ -66,7 +66,7 @@ mod tests {
             Self {
                 characters: Arc::new(RwLock::new(HashMap::new())),
                 should_fail_load: false,
-                should_fail_save: false,
+                should_fail_update_walkthrough: false,
             }
         }
 
@@ -76,7 +76,7 @@ mod tests {
             Self {
                 characters: Arc::new(RwLock::new(characters)),
                 should_fail_load: false,
-                should_fail_save: false,
+                should_fail_update_walkthrough: false,
             }
         }
 
@@ -84,56 +84,32 @@ mod tests {
             Self {
                 characters: Arc::new(RwLock::new(HashMap::new())),
                 should_fail_load: true,
-                should_fail_save: false,
+                should_fail_update_walkthrough: false,
             }
         }
 
-        fn with_save_failure(character: CharacterData) -> Self {
+        fn with_update_walkthrough_failure(character: CharacterData) -> Self {
             let mut characters = HashMap::new();
             characters.insert(character.id.clone(), character);
             Self {
                 characters: Arc::new(RwLock::new(characters)),
                 should_fail_load: false,
-                should_fail_save: true,
+                should_fail_update_walkthrough: true,
             }
         }
     }
 
     #[async_trait]
     impl CharacterService for MockCharacterService {
-        async fn load_character_data(&self, character_id: &str) -> Result<CharacterData, AppError> {
+        async fn get_character(
+            &self,
+            character_id: &str,
+        ) -> Result<CharacterDataResponse, AppError> {
             if self.should_fail_load {
                 return Err(AppError::Validation {
                     message: format!("Character {} not found", character_id),
                 });
             }
-            let characters = self.characters.read().await;
-            characters
-                .get(character_id)
-                .cloned()
-                .ok_or_else(|| AppError::Validation {
-                    message: format!("Character {} not found", character_id),
-                })
-        }
-
-        async fn save_character_data(
-            &self,
-            character_data: &CharacterData,
-        ) -> Result<(), AppError> {
-            if self.should_fail_save {
-                return Err(AppError::FileSystem {
-                    message: "Failed to save character".to_string(),
-                });
-            }
-            let mut characters = self.characters.write().await;
-            characters.insert(character_data.id.clone(), character_data.clone());
-            Ok(())
-        }
-
-        async fn get_character(
-            &self,
-            character_id: &str,
-        ) -> Result<CharacterDataResponse, AppError> {
             let characters = self.characters.read().await;
             let character =
                 characters
@@ -143,6 +119,28 @@ mod tests {
                         message: format!("Character {} not found", character_id),
                     })?;
             Ok(CharacterDataResponse::from(character))
+        }
+
+        async fn update_walkthrough_progress(
+            &self,
+            character_id: &str,
+            progress: &crate::domain::walkthrough::models::WalkthroughProgress,
+        ) -> Result<CharacterDataResponse, AppError> {
+            if self.should_fail_update_walkthrough {
+                return Err(AppError::FileSystem {
+                    message: "Failed to update walkthrough progress".to_string(),
+                });
+            }
+            let mut characters = self.characters.write().await;
+            match characters.get_mut(character_id) {
+                Some(char_data) => {
+                    char_data.walkthrough_progress = progress.clone();
+                    Ok(CharacterDataResponse::from(char_data.clone()))
+                }
+                None => Err(AppError::Validation {
+                    message: format!("Character {} not found", character_id),
+                }),
+            }
         }
 
         // Unused methods - panic if called unexpectedly
@@ -160,6 +158,12 @@ mod tests {
 
         async fn get_all_characters(&self) -> Result<Vec<CharacterDataResponse>, AppError> {
             panic!("get_all_characters should not be called in walkthrough tests")
+        }
+
+        async fn get_all_characters_summary(
+            &self,
+        ) -> Result<Vec<CharacterSummaryResponse>, AppError> {
+            panic!("get_all_characters_summary should not be called in walkthrough tests")
         }
 
         async fn update_character(
@@ -180,10 +184,6 @@ mod tests {
 
         async fn get_active_character(&self) -> Result<Option<CharacterDataResponse>, AppError> {
             panic!("get_active_character should not be called in walkthrough tests")
-        }
-
-        async fn get_characters_index(&self) -> Result<CharactersIndex, AppError> {
-            panic!("get_characters_index should not be called in walkthrough tests")
         }
 
         async fn is_name_unique(
@@ -211,10 +211,6 @@ mod tests {
 
         async fn enter_zone(&self, _character_id: &str, _zone_name: &str) -> Result<(), AppError> {
             panic!("enter_zone should not be called in walkthrough tests")
-        }
-
-        async fn leave_zone(&self, _character_id: &str, _zone_name: &str) -> Result<(), AppError> {
-            panic!("leave_zone should not be called in walkthrough tests")
         }
 
         async fn record_death(&self, _character_id: &str) -> Result<(), AppError> {
@@ -527,11 +523,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_update_character_progress_save_failure() {
+    async fn test_update_character_progress_update_failure() {
         let guide = create_test_guide();
         let character = create_test_character("char-1");
         let repository = Arc::new(MockWalkthroughRepository::new(guide));
-        let character_service = Arc::new(MockCharacterService::with_save_failure(character));
+        let character_service =
+            Arc::new(MockCharacterService::with_update_walkthrough_failure(character));
         let service = create_test_service(repository, character_service);
 
         let new_progress = WalkthroughProgress::new();

@@ -1,6 +1,6 @@
 import { UsersIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
 import { CharacterFormModal } from '../components/character/character-form-modal/character-form-modal';
 import { CharacterList } from '../components/character/character-list/character-list';
@@ -25,7 +25,7 @@ import {
   useSetActiveCharacter,
   useUpdateCharacter,
 } from '../queries/characters';
-import type { CharacterData } from '../types/character';
+import type { CharacterSummaryData } from '../types/character';
 
 export const Route = createFileRoute('/characters')({
   component: CharactersPage,
@@ -38,8 +38,8 @@ function CharactersPage() {
   const deleteCharacterMutation = useDeleteCharacter();
   const setActiveCharacterMutation = useSetActiveCharacter();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<CharacterData | null>(null);
-  const [deletingCharacter, setDeletingCharacter] = useState<CharacterData | null>(null);
+  const [editingCharacter, setEditingCharacter] = useState<CharacterSummaryData | null>(null);
+  const [deletingCharacter, setDeletingCharacter] = useState<CharacterSummaryData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -57,7 +57,7 @@ function CharactersPage() {
     filteredCount,
     totalCount,
   } = useListControls(characters, characterListConfig) as ReturnType<
-    typeof useListControls<CharacterData, CharacterFilters, CharacterSortField>
+    typeof useListControls<CharacterSummaryData, CharacterFilters, CharacterSortField>
   > & {
     filters: CharacterFilters;
     updateFilter: <K extends keyof CharacterFilters>(key: K, value: CharacterFilters[K]) => void;
@@ -93,7 +93,7 @@ function CharactersPage() {
     }
   };
 
-  const handleEditCharacter = (character: CharacterData) => {
+  const handleEditCharacter = (character: CharacterSummaryData) => {
     setEditingCharacter(character);
   };
 
@@ -162,22 +162,28 @@ function CharactersPage() {
     </Card>
   );
 
-  // Compute class distribution
-  const classDistribution = characters.reduce(
-    (acc, c) => {
-      acc[c.class] = (acc[c.class] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
+  const classDistribution = useMemo(
+    () =>
+      characters.reduce(
+        (acc, c) => {
+          acc[c.class] = (acc[c.class] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    [characters],
   );
 
-  // Compute league distribution
-  const leagueDistribution = characters.reduce(
-    (acc, c) => {
-      acc[c.league] = (acc[c.league] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
+  const leagueDistribution = useMemo(
+    () =>
+      characters.reduce(
+        (acc, c) => {
+          acc[c.league] = (acc[c.league] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    [characters],
   );
 
   const rightColumn = (

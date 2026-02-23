@@ -3,22 +3,19 @@ import { invoke } from '@tauri-apps/api/core';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { parseError } from '@/utils/error-handling';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
-import type { CharacterData } from '../types/character';
+import type { CharacterData, CharacterSummaryData } from '../types/character';
 
-const characterQueryKeys = {
+export const characterQueryKeys = {
   all: ['characters'] as const,
   lists: () => [...characterQueryKeys.all, 'list'] as const,
-  list: (filters: string) => [...characterQueryKeys.lists(), { filters }] as const,
-  details: () => [...characterQueryKeys.all, 'detail'] as const,
-  detail: (id: string) => [...characterQueryKeys.details(), id] as const,
   active: () => [...characterQueryKeys.all, 'active'] as const,
 };
 
 export function useCharacters() {
   return useQuery({
     queryKey: characterQueryKeys.lists(),
-    queryFn: async (): Promise<CharacterData[]> => {
-      return await invoke<CharacterData[]>('get_all_characters');
+    queryFn: async (): Promise<CharacterSummaryData[]> => {
+      return await invoke<CharacterSummaryData[]>('get_all_characters_summary');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -86,12 +83,8 @@ export function useUpdateCharacter() {
         },
       });
     },
-    onSuccess: updatedCharacter => {
-      // Update the specific character in cache
-      queryClient.setQueryData(characterQueryKeys.detail(updatedCharacter.id), updatedCharacter);
-      // Invalidate lists to ensure consistency
-      queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: characterQueryKeys.all });
     },
     onError: err => {
       const error = parseError(err);
@@ -109,13 +102,13 @@ export function useDeleteCharacter() {
       return await invoke('delete_character', { characterId });
     },
     onSuccess: (_, characterId) => {
-      // Remove the character from cache
       queryClient.removeQueries({
-        queryKey: characterQueryKeys.detail(characterId),
+        queryKey: characterQueryKeys.active(),
       });
-      // Invalidate lists and active character
-      queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
+      queryClient.setQueryData(
+        characterQueryKeys.lists(),
+        (prev: CharacterSummaryData[] | undefined) => prev?.filter(c => c.id !== characterId),
+      );
     },
     onError: err => {
       const error = parseError(err);
@@ -133,8 +126,9 @@ export function useSetActiveCharacter() {
       return await invoke('set_active_character', { characterId });
     },
     onSuccess: () => {
-      // Invalidate active character query to refetch
+      // Refetch both active character and list (is_active flags in list need updating)
       queryClient.invalidateQueries({ queryKey: characterQueryKeys.active() });
+      queryClient.invalidateQueries({ queryKey: characterQueryKeys.lists() });
     },
     onError: err => {
       const error = parseError(err);

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CharacterFilters, CharacterSortField } from '@/hooks/configs/character-list.config';
-import type { CharacterData } from '@/types/character';
+import type { CharacterSummaryData } from '@/types/character';
 import { CharacterList } from './character-list';
 
 // Mock child components to simplify testing
@@ -38,7 +38,9 @@ vi.mock('../character-filter-content/character-filter-content', () => ({
   CharacterFilterContent: vi.fn(() => <div data-testid="character-filter-content" />),
 }));
 
-const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData => ({
+const createMockCharacter = (
+  overrides: Partial<CharacterSummaryData> = {},
+): CharacterSummaryData => ({
   id: 'char-1',
   name: 'TestCharacter',
   class: 'Warrior',
@@ -74,7 +76,7 @@ const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterD
     play_time_interlude: 0,
     play_time_endgame: 0,
   },
-  zones: [],
+  is_active: false,
   walkthrough_progress: {
     current_step_id: null,
     is_completed: false,

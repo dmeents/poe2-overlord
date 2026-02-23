@@ -1007,3 +1007,163 @@ INSERT ... ON CONFLICT(exchange_rate_id, currency_id) DO UPDATE ...
 - **ADR-007** in `decisions.md` - Full SQLite migration decision
 - **PRD** in `.ai/tasks/prd-sqlite-migration.md` - Implementation plan
 - **Schema** in `infrastructure/database/migrations/001_initial_schema.sql`
+
+---
+
+## Granular SQL Mutation Pattern (Character Domain)
+
+> See ADR-008 in `decisions.md` for the architectural decision.
+
+### Rule: Never load-mutate-save for single-field changes
+
+When a service method changes one or two fields on an entity, do NOT:
+1. Load the full aggregate from the DB
+2. Mutate it in memory
+3. Write all fields back
+
+Instead, add a targeted repository method that issues a single SQL UPDATE or
+a small atomic transaction.
+
+### Pattern: Targeted repository method
+
+```rust
+// In CharacterRepository trait (traits.rs):
+async fn record_death_in_active_zone(&self, character_id: &str) -> AppResult<Option<String>>;
+async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()>;
+
+// In SQLite repository (repository.rs):
+async fn record_death_in_active_zone(&self, character_id: &str) -> AppResult<Option<String>> {
+    let now = Utc::now().to_rfc3339();
+    sqlx::query(
+        "UPDATE zone_stats SET deaths = deaths + 1, last_visited = ?
+         WHERE character_id = ? AND is_active = 1"
+    )
+    .bind(&now)
+    .bind(character_id)
+    .execute(&self.pool)
+    .await?;
+    // Return zone name for logging (optional extra SELECT)
+    Ok(None)
+}
+
+// In service (service.rs):
+async fn record_death(&self, character_id: &str) -> AppResult<CharacterDataResponse> {
+    // 1. Targeted mutation
+    self.repository.record_death_in_active_zone(character_id).await?;
+    // 2. Load full data only for event publishing
+    let character = self.repository.get_character(character_id).await?;
+    let enriched = self.enrich_character_data(character).await?;
+    // 3. Publish event + return
+    self.event_bus.publish(AppEvent::character_updated(character_id, &enriched)).await?;
+    Ok(enriched.into())
+}
+```
+
+### Pattern: `transition_zone` — atomic zone transition
+
+The highest-impact pattern. Handles leave + enter in one transaction:
+
+```rust
+async fn transition_zone(&self, character_id: &str, zone_name: &str, act: Option<u32>, is_town: bool) -> AppResult<()> {
+    let mut tx = self.pool.begin().await?;
+    let now = Utc::now();
+    let now_str = now.to_rfc3339();
+
+    // 1. Deactivate current zone, recording elapsed time
+    let active: Option<(i64, Option<String>)> = sqlx::query_as(
+        "SELECT zone_id, entry_timestamp FROM zone_stats WHERE character_id = ? AND is_active = 1"
+    ).bind(character_id).fetch_optional(&mut *tx).await?;
+
+    if let Some((_, Some(entry_ts))) = active {
+        let elapsed = (now - DateTime::parse_from_rfc3339(&entry_ts)?.with_timezone(&Utc))
+            .num_seconds().max(0);
+        sqlx::query(
+            "UPDATE zone_stats SET is_active=0, duration=duration+?, entry_timestamp=NULL, last_visited=?
+             WHERE character_id=? AND is_active=1"
+        ).bind(elapsed).bind(&now_str).bind(character_id).execute(&mut *tx).await?;
+    }
+
+    // 2. Get/create zone_id (single lookup)
+    let zone_id = get_or_create_zone_id_tx(&mut tx, zone_name).await?;
+
+    // 3. Upsert new zone entry
+    sqlx::query(
+        "INSERT INTO zone_stats (character_id, zone_id, visits, is_active, entry_timestamp, last_visited, act, is_town)
+         VALUES (?, ?, 1, 1, ?, ?, ?, ?)
+         ON CONFLICT(character_id, zone_id) DO UPDATE SET
+             visits = zone_stats.visits + 1,
+             is_active = 1,
+             entry_timestamp = excluded.entry_timestamp,
+             last_visited = excluded.last_visited,
+             act = excluded.act,
+             is_town = excluded.is_town"
+    ).bind(character_id).bind(zone_id).bind(&now_str).bind(&now_str)
+     .bind(act.map(|a| a as i64)).bind(is_town as i64)
+     .execute(&mut *tx).await?;
+
+    // 4. Update character location + timestamps
+    sqlx::query(
+        "UPDATE characters SET current_zone_id=?, last_played=?, last_updated=? WHERE id=?"
+    ).bind(zone_id).bind(&now_str).bind(&now_str).bind(character_id)
+     .execute(&mut *tx).await?;
+
+    tx.commit().await?;
+    Ok(())
+}
+```
+
+### Pattern: CharacterSummaryData vs CharacterData
+
+Two distinct frontend types for the character domain:
+
+| Type | Used for | Has zones? | Has is_active? |
+|------|----------|-----------|----------------|
+| `CharacterData` | Detail views, active character, event payloads | ✅ `zones: ZoneStats[]` | ❌ |
+| `CharacterSummaryData` | List views, character cards | ❌ | ✅ `is_active: boolean` |
+
+`CharacterStatusCard` passes the active character to `CharacterCard` with a spread:
+```tsx
+<CharacterCard character={{ ...activeCharacter, is_active: true }} isActive={true} />
+```
+
+### Pattern: Event-driven React Query cache (no useState mirrors)
+
+When backend events arrive, update React Query cache directly — no `useState`:
+
+```tsx
+// CharacterContext.tsx
+useAppEventListener([{
+    eventType: EVENT_KEYS.CharacterUpdated,
+    handler: (payload: unknown) => {
+        const { character_id, data: characterData } =
+            payload as ExtractPayload<CharacterUpdatedEvent>;
+
+        // Update active char cache
+        queryClient.setQueryData(
+            characterQueryKeys.active(),
+            (prev: CharacterData | null | undefined) =>
+                prev?.id === character_id ? characterData : prev,
+        );
+
+        // Update list cache — preserve is_active from existing entry
+        queryClient.setQueryData(
+            characterQueryKeys.lists(),
+            (prev: CharacterSummaryData[] | undefined) =>
+                prev?.map(c =>
+                    c.id === character_id ? toSummary(characterData, c.is_active) : c,
+                ),
+        );
+    },
+}], [queryClient]);
+```
+
+The `toSummary(data, is_active)` helper converts `CharacterData` to `CharacterSummaryData`:
+```ts
+function toSummary(data: CharacterData, is_active: boolean): CharacterSummaryData {
+    const { zones: _zones, ...rest } = data; // strip zones array
+    return { ...rest, is_active };
+}
+```
+
+**Key rule:** Preserve `is_active` from the existing list entry — the
+`CharacterUpdated` event doesn't change which character is active.

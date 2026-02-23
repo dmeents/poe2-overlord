@@ -2,7 +2,7 @@ use crate::domain::character::models::CharacterDataResponse;
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
 use crate::domain::server_monitoring::models::ServerStatus;
-use crate::domain::walkthrough::models::{WalkthroughProgress, WalkthroughStepResult};
+use crate::domain::walkthrough::models::WalkthroughStepResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,11 +30,6 @@ pub enum AppEvent {
         timestamp: String,
     },
 
-    WalkthroughProgressUpdated {
-        character_id: String,
-        progress: WalkthroughProgress,
-        timestamp: String,
-    },
     WalkthroughStepCompleted {
         character_id: String,
         step: WalkthroughStepResult,
@@ -77,7 +72,6 @@ impl AppEvent {
             AppEvent::ConfigurationChanged(_) => EventType::Configuration,
             AppEvent::CharacterUpdated { .. }
             | AppEvent::CharacterDeleted { .. }
-            | AppEvent::WalkthroughProgressUpdated { .. }
             | AppEvent::WalkthroughStepCompleted { .. }
             | AppEvent::WalkthroughStepAdvanced { .. }
             | AppEvent::WalkthroughCampaignCompleted { .. } => EventType::CharacterTracking,
@@ -93,7 +87,6 @@ impl AppEvent {
             AppEvent::ConfigurationChanged(event) => event.timestamp.clone(),
             AppEvent::CharacterUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::CharacterDeleted { timestamp, .. } => timestamp.clone(),
-            AppEvent::WalkthroughProgressUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughStepCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughStepAdvanced { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughCampaignCompleted { timestamp, .. } => timestamp.clone(),
@@ -160,17 +153,6 @@ impl AppEvent {
 
     pub fn system_shutdown() -> Self {
         Self::SystemShutdown {
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn walkthrough_progress_updated(
-        character_id: String,
-        progress: WalkthroughProgress,
-    ) -> Self {
-        Self::WalkthroughProgressUpdated {
-            character_id,
-            progress,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }

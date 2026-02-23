@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tauri::State;
 
-use crate::domain::character::models::CharacterDataResponse;
+use crate::domain::character::models::{CharacterDataResponse, CharacterSummaryResponse};
 use crate::domain::character::traits::CharacterService;
 use crate::{to_command_result, CommandResult};
 
@@ -98,4 +98,11 @@ pub async fn get_active_character(
     character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<Option<CharacterDataResponse>> {
     to_command_result(character_service.get_active_character().await)
+}
+
+#[tauri::command]
+pub async fn get_all_characters_summary(
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Vec<CharacterSummaryResponse>> {
+    to_command_result(character_service.get_all_characters_summary().await)
 }

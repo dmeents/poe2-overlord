@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::domain::character::models::*;
-    use crate::domain::walkthrough::models::WalkthroughProgress;
 
     // ============= CharacterClass Tests =============
 
@@ -21,6 +20,19 @@ mod tests {
     fn test_character_class_default() {
         let class: CharacterClass = Default::default();
         assert_eq!(class, CharacterClass::Warrior);
+    }
+
+    #[test]
+    fn test_character_class_from_str() {
+        assert_eq!("Warrior".parse::<CharacterClass>().unwrap(), CharacterClass::Warrior);
+        assert_eq!("Sorceress".parse::<CharacterClass>().unwrap(), CharacterClass::Sorceress);
+        assert_eq!("Ranger".parse::<CharacterClass>().unwrap(), CharacterClass::Ranger);
+        assert_eq!("Huntress".parse::<CharacterClass>().unwrap(), CharacterClass::Huntress);
+        assert_eq!("Monk".parse::<CharacterClass>().unwrap(), CharacterClass::Monk);
+        assert_eq!("Mercenary".parse::<CharacterClass>().unwrap(), CharacterClass::Mercenary);
+        assert_eq!("Witch".parse::<CharacterClass>().unwrap(), CharacterClass::Witch);
+        assert_eq!("Druid".parse::<CharacterClass>().unwrap(), CharacterClass::Druid);
+        assert!("Unknown".parse::<CharacterClass>().is_err());
     }
 
     #[test]
@@ -45,6 +57,27 @@ mod tests {
     }
 
     #[test]
+    fn test_ascendency_display() {
+        assert_eq!(Ascendency::Titan.to_string(), "Titan");
+        assert_eq!(Ascendency::SmithOfKatava.to_string(), "Smith of Katava");
+        assert_eq!(Ascendency::DiscipleOfVarashta.to_string(), "Disciple of Varashta");
+        assert_eq!(Ascendency::AcolyteOfChayula.to_string(), "Acolyte of Chayula");
+        assert_eq!(Ascendency::GemlingLegionnaire.to_string(), "Gemling Legionnaire");
+        assert_eq!(Ascendency::BloodMage.to_string(), "Blood Mage");
+    }
+
+    #[test]
+    fn test_ascendency_from_str() {
+        assert_eq!("Titan".parse::<Ascendency>().unwrap(), Ascendency::Titan);
+        assert_eq!("Smith of Katava".parse::<Ascendency>().unwrap(), Ascendency::SmithOfKatava);
+        assert_eq!("Disciple of Varashta".parse::<Ascendency>().unwrap(), Ascendency::DiscipleOfVarashta);
+        assert_eq!("Acolyte of Chayula".parse::<Ascendency>().unwrap(), Ascendency::AcolyteOfChayula);
+        assert_eq!("Gemling Legionnaire".parse::<Ascendency>().unwrap(), Ascendency::GemlingLegionnaire);
+        assert_eq!("Blood Mage".parse::<Ascendency>().unwrap(), Ascendency::BloodMage);
+        assert!("Unknown".parse::<Ascendency>().is_err());
+    }
+
+    #[test]
     fn test_ascendency_serialization() {
         let ascendency = Ascendency::SmithOfKatava;
         let json = serde_json::to_string(&ascendency).unwrap();
@@ -63,6 +96,21 @@ mod tests {
     fn test_league_default() {
         let league: League = Default::default();
         assert_eq!(league, League::Standard);
+    }
+
+    #[test]
+    fn test_league_display() {
+        assert_eq!(League::Standard.to_string(), "Standard");
+        assert_eq!(League::RiseOfTheAbyssal.to_string(), "Rise of the Abyssal");
+        assert_eq!(League::TheFateOfTheVaal.to_string(), "The Fate of the Vaal");
+    }
+
+    #[test]
+    fn test_league_from_str() {
+        assert_eq!("Standard".parse::<League>().unwrap(), League::Standard);
+        assert_eq!("Rise of the Abyssal".parse::<League>().unwrap(), League::RiseOfTheAbyssal);
+        assert_eq!("The Fate of the Vaal".parse::<League>().unwrap(), League::TheFateOfTheVaal);
+        assert!("Unknown".parse::<League>().is_err());
     }
 
     #[test]
@@ -234,118 +282,17 @@ mod tests {
         assert_eq!(location.zone_name, "The Coast");
     }
 
-    #[test]
-    fn test_location_state_update_zone_changes() {
-        let mut location = LocationState::new("The Coast".to_string());
-        let original_time = location.last_updated;
-
-        std::thread::sleep(std::time::Duration::from_millis(1));
-        let changed = location.update_zone("Clearfell".to_string());
-
-        assert!(changed);
-        assert_eq!(location.zone_name, "Clearfell");
-        assert!(location.last_updated > original_time);
-    }
-
-    #[test]
-    fn test_location_state_update_zone_no_change() {
-        let mut location = LocationState::new("The Coast".to_string());
-        let original_time = location.last_updated;
-
-        let changed = location.update_zone("The Coast".to_string());
-
-        assert!(!changed);
-        assert_eq!(location.zone_name, "The Coast");
-        assert_eq!(location.last_updated, original_time);
-    }
-
-    #[test]
-    fn test_location_state_get_zone_name() {
-        let location = LocationState::new("Clearfell".to_string());
-        assert_eq!(location.get_zone_name(), "Clearfell");
-    }
-
     // ============= LocationType Tests =============
 
     #[test]
     fn test_location_type_display() {
         assert_eq!(LocationType::Zone.to_string(), "Zone");
-        assert_eq!(LocationType::Act.to_string(), "Act");
-        assert_eq!(LocationType::Hideout.to_string(), "Hideout");
     }
 
     #[test]
     fn test_location_type_default() {
         let location_type: LocationType = Default::default();
         assert_eq!(location_type, LocationType::Zone);
-    }
-
-    // ============= CharactersIndex Tests =============
-
-    #[test]
-    fn test_characters_index_new() {
-        let index = CharactersIndex::new();
-        assert!(index.character_ids.is_empty());
-        assert!(index.active_character_id.is_none());
-    }
-
-    #[test]
-    fn test_characters_index_add_character() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        assert!(index.has_character("char1"));
-        assert_eq!(index.character_ids.len(), 1);
-    }
-
-    #[test]
-    fn test_characters_index_add_duplicate_character() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        index.add_character("char1".to_string());
-        // Should not add duplicates
-        assert_eq!(index.character_ids.len(), 1);
-    }
-
-    #[test]
-    fn test_characters_index_remove_character() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        index.add_character("char2".to_string());
-        index.remove_character("char1");
-
-        assert!(!index.has_character("char1"));
-        assert!(index.has_character("char2"));
-        assert_eq!(index.character_ids.len(), 1);
-    }
-
-    #[test]
-    fn test_characters_index_remove_active_character() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        index.set_active_character(Some("char1".to_string()));
-        index.remove_character("char1");
-
-        assert!(!index.has_character("char1"));
-        assert!(index.active_character_id.is_none());
-    }
-
-    #[test]
-    fn test_characters_index_set_active_character() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        index.set_active_character(Some("char1".to_string()));
-
-        assert_eq!(index.active_character_id, Some("char1".to_string()));
-    }
-
-    #[test]
-    fn test_characters_index_clear_active_character() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        index.set_active_character(Some("char1".to_string()));
-        index.set_active_character(None);
-
-        assert!(index.active_character_id.is_none());
     }
 
     // ============= CharacterData Tests =============
@@ -376,19 +323,6 @@ mod tests {
     }
 
     #[test]
-    fn test_character_data_default() {
-        let character: CharacterData = Default::default();
-        // Default now generates a UUID to prevent empty ID issues
-        assert!(!character.id.is_empty());
-        assert!(uuid::Uuid::parse_str(&character.id).is_ok()); // Valid UUID format
-        assert!(character.profile.name.is_empty());
-        assert_eq!(character.profile.class, CharacterClass::Warrior);
-        assert_eq!(character.profile.level, 1);
-        // TrackingSummary should use the same ID
-        assert_eq!(character.summary.character_id, character.id);
-    }
-
-    #[test]
     fn test_character_data_touch() {
         let mut character = CharacterData::new(
             "test-id".to_string(),
@@ -405,45 +339,6 @@ mod tests {
         character.touch();
 
         assert!(character.timestamps.last_updated > original_time);
-    }
-
-    #[test]
-    fn test_character_data_update_walkthrough_progress() {
-        let mut character = CharacterData::new(
-            "test-id".to_string(),
-            "TestChar".to_string(),
-            CharacterClass::Warrior,
-            Ascendency::Titan,
-            League::Standard,
-            false,
-            false,
-        );
-
-        let mut progress = WalkthroughProgress::new();
-        progress.set_current_step("act_2_step_1".to_string());
-        character.update_walkthrough_progress(progress);
-
-        assert_eq!(
-            character.walkthrough_progress.current_step_id,
-            Some("act_2_step_1".to_string())
-        );
-    }
-
-    #[test]
-    fn test_character_data_get_walkthrough_progress() {
-        let character = CharacterData::new(
-            "test-id".to_string(),
-            "TestChar".to_string(),
-            CharacterClass::Warrior,
-            Ascendency::Titan,
-            League::Standard,
-            false,
-            false,
-        );
-
-        let progress = character.get_walkthrough_progress();
-        assert_eq!(progress.current_step_id, Some("act_1_step_1".to_string()));
-        assert!(!progress.is_completed);
     }
 
     #[test]
@@ -531,19 +426,5 @@ mod tests {
         );
         assert_eq!(deserialized.profile.league, character.profile.league);
         assert_eq!(deserialized.profile.hardcore, character.profile.hardcore);
-    }
-
-    #[test]
-    fn test_characters_index_serialization_roundtrip() {
-        let mut index = CharactersIndex::new();
-        index.add_character("char1".to_string());
-        index.add_character("char2".to_string());
-        index.set_active_character(Some("char1".to_string()));
-
-        let json = serde_json::to_string(&index).unwrap();
-        let deserialized: CharactersIndex = serde_json::from_str(&json).unwrap();
-
-        assert_eq!(deserialized.character_ids.len(), 2);
-        assert_eq!(deserialized.active_character_id, Some("char1".to_string()));
     }
 }

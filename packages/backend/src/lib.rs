@@ -39,7 +39,7 @@ pub use domain::log_analysis::models::{
 
 // Character domain models and data structures
 pub use domain::character::{
-    Ascendency, CharacterClass, CharacterData, CharacterUpdateParams, CharactersIndex,
+    Ascendency, CharacterClass, CharacterData, CharacterSummaryResponse, CharacterUpdateParams,
     EnrichedLocationState, League, LocationState, LocationType,
 };
 
@@ -115,6 +115,7 @@ pub fn run() {
             create_character,
             get_character,
             get_all_characters,
+            get_all_characters_summary,
             update_character,
             delete_character,
             set_active_character,

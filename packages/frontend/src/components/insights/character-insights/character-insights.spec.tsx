@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { CharacterData, CharacterSummary } from '@/types/character';
+import type { CharacterSummary, CharacterSummaryData } from '@/types/character';
 import { CharacterInsights } from './character-insights';
 
 const createMockSummary = (overrides: Partial<CharacterSummary> = {}): CharacterSummary => ({
@@ -20,23 +20,28 @@ const createMockSummary = (overrides: Partial<CharacterSummary> = {}): Character
   ...overrides,
 });
 
-const createMockCharacter = (overrides: Partial<CharacterData> = {}): CharacterData =>
-  ({
-    id: 'char-1',
-    name: 'TestChar',
-    class: 'Witch',
-    ascendency: 'Infernalist',
-    league: 'Standard',
-    hardcore: false,
-    solo_self_found: false,
-    level: 50,
-    created_at: '2024-01-01T00:00:00Z',
+const createMockCharacter = (
+  overrides: Partial<CharacterSummaryData> = {},
+): CharacterSummaryData => ({
+  id: 'char-1',
+  name: 'TestChar',
+  class: 'Witch',
+  ascendency: 'Infernalist',
+  league: 'Standard',
+  hardcore: false,
+  solo_self_found: false,
+  level: 50,
+  created_at: '2024-01-01T00:00:00Z',
+  last_updated: '2024-01-10T00:00:00Z',
+  is_active: false,
+  summary: createMockSummary(),
+  walkthrough_progress: {
+    current_step_id: null,
+    is_completed: false,
     last_updated: '2024-01-10T00:00:00Z',
-    summary: createMockSummary(),
-    zones: [],
-    walkthrough_progress: { current_step_id: null, completed_step_ids: [] },
-    ...overrides,
-  }) as CharacterData;
+  },
+  ...overrides,
+});
 
 describe('CharacterInsights', () => {
   describe('Empty State', () => {

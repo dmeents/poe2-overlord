@@ -117,6 +117,29 @@ export interface CharacterSummary {
   play_time_endgame: number;
 }
 
+/**
+ * Lean character type for list views — no zone stats array.
+ * Returned by the `get_all_characters_summary` backend command.
+ */
+export interface CharacterSummaryData {
+  id: string;
+  name: string;
+  class: CharacterClass;
+  ascendency: Ascendency;
+  league: League;
+  hardcore: boolean;
+  solo_self_found: boolean;
+  level: number;
+  created_at: string;
+  last_played?: string;
+  last_updated: string;
+  current_location?: EnrichedLocationState;
+  summary: CharacterSummary;
+  walkthrough_progress: WalkthroughProgress;
+  is_active: boolean;
+}
+
+/** Full character type including enriched zone stats. Used for detail/active views. */
 export interface CharacterData {
   id: string;
   name: string;

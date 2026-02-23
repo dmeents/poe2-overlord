@@ -1,5 +1,90 @@
 # Architecture Decisions
 
+## ADR-008: Character Domain SQL-First Mutations
+
+**Date:** 2026-02-22
+
+**Status:** Accepted
+
+**Context:**
+After the SQLite migration (ADR-007), the character domain still followed the
+old "load-everything, mutate-in-memory, save-everything" pattern. Every
+mutation loaded the full character aggregate (profile + ALL zone_stats rows +
+walkthrough progress), changed 1-2 fields, then wrote everything back. A
+single zone change for a character with 100 zones triggered 102+ SQL
+statements. `ZoneTrackingService` was a pure in-memory service whose entire
+purpose was to mutate `&mut CharacterData` — every operation it performed
+mapped directly to a targeted SQL statement.
+
+**Decision:**
+1. **Granular repository methods** replace `ZoneTrackingService`. Each method
+   is a single SQL operation (UPDATE/UPSERT) or a small atomic transaction.
+   Mutations never load the full character aggregate.
+
+2. **Full loads only for event publishing.** After a targeted mutation, we do
+   one `get_character()` call to get the updated data for the `CharacterUpdated`
+   event payload. This keeps events rich without loading-on-write.
+
+3. **`ZoneTrackingService` deleted.** `zone_tracking/service.rs` and
+   `zone_tracking/traits.rs` are gone. `zone_tracking/models.rs` is kept
+   (ZoneStats, TrackingSummary, is_hideout_zone — referenced by repo/enrichment).
+
+4. **`CharacterSummaryResponse` / `CharacterSummaryData`** — new lean DTO for
+   list views. No zones array. Has `is_active: bool`. Backend returns it from
+   `get_all_characters_summary`. Frontend list views use `CharacterSummaryData`
+   instead of the full `CharacterData`.
+
+5. **Frontend event-driven cache.** `CharacterContext` no longer uses `useState`
+   mirrors synced with `useEffect`. Events call `queryClient.setQueryData()`
+   directly on both the active-character cache and the list cache.
+
+**Key pattern — `transition_zone` (highest impact):**
+```rust
+async fn transition_zone(&self, character_id, zone_name, act, is_town) {
+    let mut tx = self.pool.begin().await?;
+    let now = Utc::now();
+    // 1. Compute elapsed for active zone, deactivate it (UPDATE zone_stats)
+    // 2. get_or_create_zone_id_tx (single lookup)
+    // 3. Upsert new zone: visits++, is_active=1, entry_timestamp=now
+    // 4. UPDATE characters SET current_zone_id, last_played, last_updated
+    tx.commit().await?;
+}
+```
+Before: 6 SELECTs + 102+ UPSERTs. After: 1 transaction (4 statements).
+
+**process_scene_change fix:**
+Was publishing `CharacterUpdated` 3 times per scene change (leave_zone,
+enter_zone, manual re-publish). Now just calls `character_service.enter_zone()`
+which runs `transition_zone` atomically + loads once + publishes once.
+
+**Consequences:**
+
+Benefits:
+- Zone change: 100x fewer SQL statements
+- Death/level-up: from 100+ to 2 statements
+- Scene change: from 3 events + 5 DB round trips to 1 event + 1 transaction
+- Frontend list views no longer receive zones arrays (significant payload reduction)
+- No more race conditions from concurrent full UPSERTs
+
+Trade-offs:
+- `CharacterData` and `CharacterSummaryData` are separate types; components
+  must use the right one. `CharacterStatusCard` spreads `is_active: true` when
+  passing `activeCharacter` (full type) to `CharacterCard` (summary type).
+- Service layer still does one `get_character()` SELECT after mutations for
+  event publishing — unavoidable for rich event payloads.
+
+**Related Files:**
+- `domain/character/traits.rs` — new granular methods
+- `domain/character/repository.rs` — SQL implementations
+- `domain/character/service.rs` — uses granular methods, no ZoneTrackingService
+- `domain/log_analysis/service.rs` — process_scene_change simplified
+- `frontend/src/types/character.ts` — CharacterSummaryData
+- `frontend/src/contexts/CharacterContext.tsx` — event-driven cache
+- `.ai/archive/completed-prds/2026-02-22-prd-character-sql-first-refactoring.md`
+- `.ai/sessions/2026-02-22-character-sql-first-refactoring.md`
+
+---
+
 ## ADR-007: SQLite Migration for Data Persistence
 
 **Date:** 2026-02-17

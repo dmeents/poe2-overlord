@@ -1,4 +1,9 @@
-import type { Ascendency, CharacterClass, CharacterData, League } from '../../types/character';
+import type {
+  Ascendency,
+  CharacterClass,
+  CharacterSummaryData,
+  League,
+} from '../../types/character';
 
 export interface CharacterFilters {
   league: League | 'All';
@@ -26,7 +31,7 @@ export const characterListConfig = {
     direction: 'desc' as const,
   },
 
-  filterFn: (character: CharacterData, filters: CharacterFilters): boolean => {
+  filterFn: (character: CharacterSummaryData, filters: CharacterFilters): boolean => {
     // League filter
     if (filters.league !== 'All' && character.league !== filters.league) {
       return false;
@@ -64,8 +69,8 @@ export const characterListConfig = {
   },
 
   sortFn: (
-    a: CharacterData,
-    b: CharacterData,
+    a: CharacterSummaryData,
+    b: CharacterSummaryData,
     sort: { field: CharacterSortField; direction: 'asc' | 'desc' },
   ): number => {
     let comparison = 0;

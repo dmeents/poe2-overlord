@@ -5,7 +5,7 @@ import type {
   CharacterSortField,
 } from '../../../hooks/configs/character-list.config';
 import type { ActiveChip } from '../../../hooks/useListControls';
-import type { CharacterData } from '../../../types/character';
+import type { CharacterSummaryData } from '../../../types/character';
 import { ListControlBar } from '../../forms/list-control-bar/list-control-bar';
 import { Button } from '../../ui/button/button';
 import { EmptyState } from '../../ui/empty-state/empty-state';
@@ -23,10 +23,10 @@ const SORT_OPTIONS = [
 ];
 
 interface CharacterListProps {
-  characters: CharacterData[];
+  characters: CharacterSummaryData[];
   activeCharacterId?: string;
   onSelectCharacter: (characterId: string) => void;
-  onEditCharacter: (character: CharacterData) => void;
+  onEditCharacter: (character: CharacterSummaryData) => void;
   onDeleteCharacter: (characterId: string) => void;
   onCreateCharacter: () => void;
   filters: CharacterFilters;

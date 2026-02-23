@@ -7,7 +7,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { memo, useCallback, useMemo } from 'react';
-import type { CharacterData } from '@/types/character';
+import type { CharacterSummaryData } from '@/types/character';
 import { getAscendencyImage } from '@/utils/ascendency-assets';
 import { formatDuration } from '@/utils/format-duration';
 import { getDisplayAct } from '@/utils/zone-utils';
@@ -38,7 +38,7 @@ function formatCharacterAge(createdAt: string): string {
 }
 
 export interface CharacterCardProps {
-  character: CharacterData;
+  character: CharacterSummaryData;
   isActive: boolean;
   onSelect?: () => void;
   onEdit?: () => void;

@@ -13,7 +13,7 @@ pub mod zone_tracking;
 
 pub use character::{
     Ascendency, CharacterClass, CharacterData, CharacterService, CharacterServiceImpl,
-    CharacterUpdateParams, CharactersIndex, EnrichedLocationState, League, LocationState,
+    CharacterSummaryResponse, CharacterUpdateParams, EnrichedLocationState, League, LocationState,
     LocationType,
 };
 
@@ -51,4 +51,4 @@ pub use zone_configuration::{
     ZoneConfiguration, ZoneConfigurationService, ZoneConfigurationServiceImpl,
 };
 
-pub use zone_tracking::{TrackingSummary, ZoneStats, ZoneTrackingService, ZoneTrackingServiceImpl};
+pub use zone_tracking::{TrackingSummary, ZoneStats};

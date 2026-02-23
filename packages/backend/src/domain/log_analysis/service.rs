@@ -467,7 +467,6 @@ impl LogAnalysisServiceImpl {
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
-        event_bus: &Arc<crate::infrastructure::events::EventBus>,
         content: &str,
         character_id: &str,
         _zone_level: Option<u32>,
@@ -520,53 +519,10 @@ impl LogAnalysisServiceImpl {
             Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
         }
 
-        // Leave current active zone before entering new zone (if any)
-        // This ensures proper duration tracking with explicit leave/enter semantics
-        if let Ok(character_data) = character_service.load_character_data(character_id).await {
-            if let Some(active_zone) = character_data.zones.iter().find(|z| z.is_active) {
-                let previous_zone_name = active_zone.zone_name.clone();
-                if previous_zone_name != zone_name {
-                    debug!(
-                        "Leaving previous zone '{}' before entering '{}'",
-                        previous_zone_name, zone_name
-                    );
-                    if let Err(e) = character_service
-                        .leave_zone(character_id, &previous_zone_name)
-                        .await
-                    {
-                        // Log warning but don't fail - defensive programming
-                        // enter_zone has fallback deactivation code
-                        warn!(
-                            "Failed to leave previous zone '{}': {}",
-                            previous_zone_name, e
-                        );
-                    }
-                }
-            }
-        }
-
+        // Atomically transition zone: deactivates old zone timer, activates new zone,
+        // updates last_played, and publishes CharacterUpdated event — all in one call.
         if let Err(e) = character_service.enter_zone(character_id, zone_name).await {
             error!("Failed to enter zone '{}': {}", zone_name, e);
-            return Err(e);
-        }
-
-        let character_data = match character_service.load_character_data(character_id).await {
-            Ok(data) => data,
-            Err(e) => {
-                error!("Failed to load character data: {}", e);
-                return Err(e);
-            }
-        };
-
-        let mut updated_character_data = character_data.clone();
-        updated_character_data.timestamps.last_played = Some(chrono::Utc::now());
-        updated_character_data.touch();
-
-        if let Err(e) = character_service
-            .save_character_data(&updated_character_data)
-            .await
-        {
-            error!("Failed to save character data: {}", e);
             return Err(e);
         }
 
@@ -576,26 +532,6 @@ impl LogAnalysisServiceImpl {
                 timestamp: chrono::Utc::now().to_rfc3339(),
             },
         );
-
-        // Get enriched character data for the event
-        let enriched_data = match character_service.get_character(character_id).await {
-            Ok(data) => data,
-            Err(e) => {
-                warn!("SCENE CHANGE: Failed to get enriched character data: {}", e);
-                return Ok(Some(scene_change_event));
-            }
-        };
-
-        let event = crate::infrastructure::events::AppEvent::character_updated(
-            character_id.to_string(),
-            enriched_data,
-        );
-        if let Err(e) = event_bus.publish(event).await {
-            warn!(
-                "SCENE CHANGE: Failed to publish character updated event: {}",
-                e
-            );
-        }
 
         let zone_metadata = zone_config.get_zone_metadata(zone_name).await;
         let act_info = zone_metadata
@@ -619,7 +555,7 @@ impl LogAnalysisServiceImpl {
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
-        event_bus: &Arc<crate::infrastructure::events::EventBus>,
+        _event_bus: &Arc<crate::infrastructure::events::EventBus>,
         content: &str,
         character_id: &str,
         zone_level: Option<u32>,
@@ -629,7 +565,6 @@ impl LogAnalysisServiceImpl {
             zone_config,
             wiki_service,
             config_service,
-            event_bus,
             content,
             character_id,
             zone_level,

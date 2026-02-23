@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
-import { useActiveCharacter, useCharacters } from '@/queries/characters';
-import type { CharacterData } from '@/types/character';
+import { characterQueryKeys, useActiveCharacter, useCharacters } from '@/queries/characters';
+import type { CharacterData, CharacterSummaryData } from '@/types/character';
 import type { AppError } from '@/types/error';
 import { parseError } from '@/utils/error-handling';
 import {
@@ -14,7 +15,7 @@ import {
 } from '@/utils/events/registry';
 
 interface CharacterContextValue {
-  characters: CharacterData[];
+  characters: CharacterSummaryData[];
   activeCharacter: CharacterData | null;
   isLoading: boolean;
   error: AppError | null;
@@ -22,7 +23,29 @@ interface CharacterContextValue {
 
 const CharacterContext = createContext<CharacterContextValue | undefined>(undefined);
 
+function toSummary(data: CharacterData, is_active: boolean): CharacterSummaryData {
+  return {
+    id: data.id,
+    name: data.name,
+    class: data.class,
+    ascendency: data.ascendency,
+    league: data.league,
+    hardcore: data.hardcore,
+    solo_self_found: data.solo_self_found,
+    level: data.level,
+    created_at: data.created_at,
+    last_played: data.last_played,
+    last_updated: data.last_updated,
+    current_location: data.current_location,
+    summary: data.summary,
+    walkthrough_progress: data.walkthrough_progress,
+    is_active,
+  };
+}
+
 export function CharacterProvider({ children }: React.PropsWithChildren) {
+  const queryClient = useQueryClient();
+
   const {
     data: characters = [],
     isLoading: charactersLoading,
@@ -35,18 +58,6 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
     error: activeCharacterError,
   } = useActiveCharacter();
 
-  const [charactersWithUpdates, setCharactersWithUpdates] = useState<CharacterData[]>([]);
-  const [activeCharacterWithUpdates, setActiveCharacterWithUpdates] =
-    useState<CharacterData | null>(null);
-
-  useEffect(() => {
-    setCharactersWithUpdates(characters);
-  }, [characters]);
-
-  useEffect(() => {
-    setActiveCharacterWithUpdates(activeCharacter);
-  }, [activeCharacter]);
-
   useAppEventListener(
     [
       {
@@ -55,28 +66,39 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
           const { character_id, data: characterData } =
             payload as ExtractPayload<CharacterUpdatedEvent>;
 
-          setCharactersWithUpdates(prev =>
-            prev.map(char => (char.id === character_id ? characterData : char)),
+          // Update active character cache if this is the active character
+          queryClient.setQueryData(
+            characterQueryKeys.active(),
+            (prev: CharacterData | null | undefined) =>
+              prev?.id === character_id ? characterData : prev,
           );
 
-          setActiveCharacterWithUpdates(prev => (prev?.id === character_id ? characterData : prev));
+          // Update character list cache — preserve is_active from existing entry
+          queryClient.setQueryData(
+            characterQueryKeys.lists(),
+            (prev: CharacterSummaryData[] | undefined) =>
+              prev?.map(c => (c.id === character_id ? toSummary(characterData, c.is_active) : c)),
+          );
         },
       },
       {
-        // NOTE: Requires backend Issue #14 to publish CharacterDeleted events
         eventType: EVENT_KEYS.CharacterDeleted,
         handler: (payload: unknown) => {
           const { character_id } = payload as ExtractPayload<CharacterDeletedEvent>;
 
-          // Remove character from list
-          setCharactersWithUpdates(prev => prev.filter(char => char.id !== character_id));
+          queryClient.setQueryData(
+            characterQueryKeys.lists(),
+            (prev: CharacterSummaryData[] | undefined) => prev?.filter(c => c.id !== character_id),
+          );
 
-          // Clear active character if it was deleted
-          setActiveCharacterWithUpdates(prev => (prev?.id === character_id ? null : prev));
+          queryClient.setQueryData(
+            characterQueryKeys.active(),
+            (prev: CharacterData | null | undefined) => (prev?.id === character_id ? null : prev),
+          );
         },
       },
     ],
-    [], // Dependencies removed - using functional updates avoids stale closures
+    [],
   );
 
   const isLoading = charactersLoading || activeCharacterLoading;
@@ -89,8 +111,8 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
   return (
     <CharacterContext.Provider
       value={{
-        characters: charactersWithUpdates,
-        activeCharacter: activeCharacterWithUpdates,
+        characters,
+        activeCharacter,
         isLoading,
         error,
       }}>

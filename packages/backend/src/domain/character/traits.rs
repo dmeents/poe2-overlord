@@ -3,9 +3,10 @@ use async_trait::async_trait;
 use crate::errors::AppResult;
 
 use super::models::{
-    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterUpdateParams,
-    CharactersIndex, League, LocationState,
+    Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterProfile,
+    CharacterSummaryResponse, CharacterUpdateParams, League, LocationState,
 };
+use crate::domain::walkthrough::models::WalkthroughProgress;
 
 #[async_trait]
 pub trait CharacterRepository {
@@ -16,8 +17,6 @@ pub trait CharacterRepository {
     async fn delete_character_data(&self, character_id: &str) -> AppResult<()>;
 
     async fn load_all_characters(&self) -> AppResult<Vec<CharacterData>>;
-
-    async fn character_exists(&self, character_id: &str) -> AppResult<bool>;
 
     /// Sets the active character by ID. Pass None to deactivate all characters.
     /// Returns an error if the character doesn't exist.
@@ -31,6 +30,41 @@ pub trait CharacterRepository {
 
     /// Gets all character IDs, ordered by last_played DESC.
     async fn get_character_ids(&self) -> AppResult<Vec<String>>;
+
+    // --- Granular targeted mutations ---
+
+    /// Records a death in the currently active zone (single SQL UPDATE).
+    async fn record_death_in_active_zone(&self, character_id: &str) -> AppResult<()>;
+
+    /// Updates only the character level and last_updated timestamp (single SQL UPDATE).
+    async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()>;
+
+    /// Updates only the character profile fields (name, class, ascendency, league, flags, level).
+    async fn update_character_profile(
+        &self,
+        character_id: &str,
+        profile: &CharacterProfile,
+    ) -> AppResult<()>;
+
+    /// Atomically leaves the current active zone and enters the new zone.
+    /// Computes elapsed time for the active zone, deactivates it, then activates the new zone.
+    async fn transition_zone(&self, character_id: &str, zone_name: &str) -> AppResult<()>;
+
+    /// Upserts walkthrough progress for a character (single SQL UPSERT).
+    async fn update_walkthrough_progress(
+        &self,
+        character_id: &str,
+        progress: &WalkthroughProgress,
+    ) -> AppResult<()>;
+
+    /// Stops timers for all active zones for a character and clears current_zone_id.
+    async fn finalize_character_active_zones(&self, character_id: &str) -> AppResult<()>;
+
+    /// Loads all characters without zone stats — profile + SQL-aggregated summary.
+    async fn load_all_characters_summary(&self) -> AppResult<Vec<CharacterData>>;
+
+    /// Gets the name of the currently active zone for a character, if any.
+    async fn get_active_zone_name(&self, character_id: &str) -> AppResult<Option<String>>;
 }
 
 #[async_trait]
@@ -49,6 +83,9 @@ pub trait CharacterService: Send + Sync {
 
     async fn get_all_characters(&self) -> AppResult<Vec<CharacterDataResponse>>;
 
+    /// Returns lean character summaries without zones for list views.
+    async fn get_all_characters_summary(&self) -> AppResult<Vec<CharacterSummaryResponse>>;
+
     async fn update_character(
         &self,
         character_id: &str,
@@ -61,29 +98,28 @@ pub trait CharacterService: Send + Sync {
 
     async fn get_active_character(&self) -> AppResult<Option<CharacterDataResponse>>;
 
-    async fn get_characters_index(&self) -> AppResult<CharactersIndex>;
-
     async fn is_name_unique(&self, name: &str, exclude_id: Option<&str>) -> AppResult<bool>;
 
     async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()>;
 
-    async fn get_current_location(&self, character_id: &str) -> AppResult<Option<LocationState>>;
-
-    /// Loads raw character data for internal mutations (not enriched)
-    async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData>;
-
-    async fn save_character_data(&self, character_data: &CharacterData) -> AppResult<()>;
+    async fn get_current_location(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<LocationState>>;
 
     async fn enter_zone(&self, character_id: &str, zone_name: &str) -> AppResult<()>;
-
-    /// Leaves a zone, stopping its timer and recording duration.
-    /// Should be called before entering a new zone for explicit leave/enter semantics.
-    async fn leave_zone(&self, character_id: &str, zone_name: &str) -> AppResult<()>;
 
     async fn record_death(&self, character_id: &str) -> AppResult<()>;
 
     async fn finalize_all_active_zones(&self) -> AppResult<()>;
 
-    /// Syncs zone metadata (act, is_town) for all zones in a character's data with current zone configuration
+    /// Reloads and re-publishes enriched character data (zone metadata sync).
     async fn sync_zone_metadata(&self, character_id: &str) -> AppResult<()>;
+
+    /// Updates walkthrough progress for a character. Returns the enriched character data.
+    async fn update_walkthrough_progress(
+        &self,
+        character_id: &str,
+        progress: &WalkthroughProgress,
+    ) -> AppResult<CharacterDataResponse>;
 }

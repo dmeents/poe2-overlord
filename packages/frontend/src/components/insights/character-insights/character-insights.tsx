@@ -1,13 +1,13 @@
 import { ChartBarIcon, InboxIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import type { CharacterData } from '../../../types/character';
+import type { CharacterSummaryData } from '../../../types/character';
 import { formatDurationMinutes } from '../../../utils/format-duration';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 import { EmptyState } from '../../ui/empty-state/empty-state';
 
 interface CharacterInsightsProps {
-  characters: CharacterData[];
+  characters: CharacterSummaryData[];
 }
 
 export function CharacterInsights({ characters }: CharacterInsightsProps) {

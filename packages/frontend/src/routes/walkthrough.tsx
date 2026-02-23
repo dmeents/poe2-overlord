@@ -48,6 +48,9 @@ function WalkthroughPage() {
       <CharacterStatusCard />
       {activeCharacter && (
         <>
+          <Card title="Display Settings" className="mb-6">
+            <WalkthroughSettingsPanel variant="inline" />
+          </Card>
           <SectionHeader title="Progress" icon={<ChartBarIcon className="w-4 h-4" />} />
           {progress?.is_completed ? (
             <CampaignCompleteCard
@@ -79,9 +82,6 @@ function WalkthroughPage() {
 
   const rightColumn = (
     <>
-      <Card title="Display Settings" className="mb-6">
-        <WalkthroughSettingsPanel variant="inline" />
-      </Card>
       {!isLoading && !activeCharacter && (
         <Card title="Campaign Progress">
           <EmptyState

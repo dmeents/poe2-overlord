@@ -25,7 +25,7 @@ export const walkthroughStepCardStyles = {
 
   // Footer (extends to card edges)
   footer:
-    'flex justify-between items-center py-2 px-4 border-t border-stone-700/30 -mx-4 -mb-4 mt-4',
+    'flex justify-between items-center py-2 px-4 border-t border-stone-700/30 mt-4',
   footerTimestamp: 'flex items-center gap-2 text-xs text-stone-500',
   footerTimestampIcon: 'w-3 h-3',
   footerActions: 'flex gap-2',

@@ -1,7 +1,5 @@
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import type { ReactNode } from 'react';
-import type { AppError } from '@/types/error';
-import { formatErrorMessage, parseError } from '@/utils/error-handling';
 import { errorStateStyles } from './error-state.styles';
 
 interface ErrorStateProps {
@@ -14,12 +12,24 @@ interface ErrorStateProps {
 }
 
 /**
- * Safely extracts an error message from an unknown error type.
- * Parses the error into an AppError and formats it for display.
+ * Safely extracts a user-friendly message from any unknown error type.
  */
 function getErrorMessage(error: unknown): string {
-  const appError: AppError = parseError(error);
-  return formatErrorMessage(appError);
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string'
+  ) {
+    return (error as { message: string }).message;
+  }
+  return 'An unknown error occurred';
 }
 
 export function ErrorState({

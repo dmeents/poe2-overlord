@@ -26,6 +26,14 @@ vi.mock('@/contexts/CharacterContext', () => ({
   }),
 }));
 
+vi.mock('@/contexts/ConfigurationContext', () => ({
+  useConfiguration: () => ({
+    config: null,
+    isLoading: false,
+    updateConfig: vi.fn(),
+  }),
+}));
+
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }));

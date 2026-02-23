@@ -47,6 +47,14 @@ vi.mock('@/contexts/CharacterContext', () => ({
   useCharacter: mockUseCharacter,
 }));
 
+vi.mock('@/contexts/ConfigurationContext', () => ({
+  useConfiguration: () => ({
+    config: null,
+    isLoading: false,
+    updateConfig: vi.fn(),
+  }),
+}));
+
 const createMockStep = (overrides: Partial<WalkthroughStep> = {}): WalkthroughStep => ({
   id: 'step-1',
   title: 'First Step',

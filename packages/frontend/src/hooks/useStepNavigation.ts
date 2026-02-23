@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/core';
-import { parseError } from '@/utils/error-handling';
 import type { WalkthroughProgress } from '../types/walkthrough';
 
 interface UseStepNavigationOptions {
@@ -42,8 +41,7 @@ export function useStepNavigation({
         progress: newProgress,
       });
     } catch (err) {
-      const error = parseError(err);
-      console.error('Failed to advance step:', error.message);
+      console.error('Failed to advance step:', err);
     }
   };
 
@@ -63,8 +61,7 @@ export function useStepNavigation({
         progress: newProgress,
       });
     } catch (err) {
-      const error = parseError(err);
-      console.error('Failed to go to previous step:', error.message);
+      console.error('Failed to go to previous step:', err);
     }
   };
 
@@ -83,8 +80,7 @@ export function useStepNavigation({
         progress: newProgress,
       });
     } catch (err) {
-      const error = parseError(err);
-      console.error('Failed to skip to step:', error.message);
+      console.error('Failed to skip to step:', err);
     }
   };
 

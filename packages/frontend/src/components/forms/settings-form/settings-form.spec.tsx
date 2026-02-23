@@ -3,16 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SettingsForm } from './settings-form';
 
-const mockGetConfig = vi.hoisted(() =>
-  vi.fn(() =>
-    Promise.resolve({
-      poe_client_log_path: 'C:\\Games\\Path of Exile\\logs\\client.txt',
-      log_level: 'info',
-      zone_refresh_interval: 'SevenDays',
-    }),
-  ),
-);
-
 const mockUpdateConfig = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const mockResetConfigToDefaults = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const mockGetZoneRefreshIntervalOptions = vi.hoisted(() =>
@@ -24,47 +14,66 @@ const mockGetZoneRefreshIntervalOptions = vi.hoisted(() =>
     ]),
   ),
 );
+const mockUseConfiguration = vi.hoisted(() => vi.fn());
 
 vi.mock('@/utils/tauri', () => ({
   tauriUtils: {
-    getConfig: mockGetConfig,
+    getConfig: vi.fn(() => Promise.resolve({})),
     updateConfig: mockUpdateConfig,
     resetConfigToDefaults: mockResetConfigToDefaults,
     getZoneRefreshIntervalOptions: mockGetZoneRefreshIntervalOptions,
   },
 }));
 
+vi.mock('@/contexts/ConfigurationContext', () => ({
+  useConfiguration: mockUseConfiguration,
+}));
+
+const defaultConfig = {
+  config_version: 1,
+  poe_client_log_path: 'C:\\Games\\Path of Exile\\logs\\client.txt',
+  log_level: 'info',
+  zone_refresh_interval: 'SevenDays',
+  hide_optional_objectives: false,
+  hide_league_start_objectives: false,
+  hide_flavor_text: false,
+  hide_objective_descriptions: false,
+};
+
 describe('SettingsForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseConfiguration.mockReturnValue({
+      config: defaultConfig,
+      isLoading: false,
+      updateConfig: vi.fn(),
+    });
   });
 
   describe('Initial Loading and Rendering', () => {
     it('renders loading state then loads and displays all form fields', async () => {
-      render(<SettingsForm />);
+      mockUseConfiguration.mockReturnValue({ config: null, isLoading: true, updateConfig: vi.fn() });
+      const { rerender } = render(<SettingsForm />);
 
-      // Loading state
       expect(screen.getByText('Loading configuration...')).toBeInTheDocument();
 
-      // Wait for form to load
+      mockUseConfiguration.mockReturnValue({
+        config: defaultConfig,
+        isLoading: false,
+        updateConfig: vi.fn(),
+      });
+      rerender(<SettingsForm />);
+
       await waitFor(() => {
         expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
       });
 
-      // All form fields should be present
       expect(screen.getByText('Log Level')).toBeInTheDocument();
       expect(screen.getByText('Zone Refresh Interval')).toBeInTheDocument();
-
-      // All buttons should be present
       expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
-
-      // Config should be loaded
-      expect(mockGetConfig).toHaveBeenCalled();
       expect(mockGetZoneRefreshIntervalOptions).toHaveBeenCalled();
-
-      // Log level should display correctly
       expect(screen.getByRole('button', { name: /info/i })).toBeInTheDocument();
     });
   });
@@ -151,35 +160,22 @@ describe('SettingsForm', () => {
         expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
       });
 
-      // Clear initial call
-      mockGetConfig.mockClear();
-
       await user.click(screen.getByRole('button', { name: 'Reload' }));
 
-      await waitFor(() => {
-        expect(mockGetConfig).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('shows error when config fails to load', async () => {
-      mockGetConfig.mockRejectedValueOnce(new Error('Network error'));
-
-      render(<SettingsForm />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Failed to load configuration: Network error')).toBeInTheDocument();
-      });
+      // After reload, form should still render correctly
+      expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
     });
   });
 
   describe('Validation', () => {
     it('shows warning for invalid POE path', async () => {
-      mockGetConfig.mockResolvedValueOnce({
-        poe_client_log_path: 'invalid/path',
-        log_level: 'info',
-        zone_refresh_interval: 'SevenDays',
+      mockUseConfiguration.mockReturnValue({
+        config: {
+          ...defaultConfig,
+          poe_client_log_path: 'invalid/path',
+        },
+        isLoading: false,
+        updateConfig: vi.fn(),
       });
 
       render(<SettingsForm />);

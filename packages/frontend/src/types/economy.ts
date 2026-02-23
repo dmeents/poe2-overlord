@@ -129,3 +129,22 @@ export interface CurrencySearchResult {
   change_percent: number | null;
   display_value: DisplayValue;
 }
+
+/**
+ * Convert a search result to a CurrencyExchangeRate for use in EconomyRow.
+ * Centralizes the mapping so TypeScript catches any CurrencyExchangeRate field changes.
+ */
+export function searchResultToExchangeRate(result: CurrencySearchResult): CurrencyExchangeRate {
+  return {
+    id: result.id,
+    name: result.name,
+    image_url: result.image_url,
+    display_value: result.display_value,
+    primary_value: result.primary_value,
+    secondary_value: result.secondary_value,
+    tertiary_value: result.tertiary_value,
+    volume: result.volume,
+    change_percent: result.change_percent,
+    price_history: [],
+  };
+}

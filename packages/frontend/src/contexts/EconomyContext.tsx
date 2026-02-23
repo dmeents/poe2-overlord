@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   economyQueryKeys,
   useAggregatedTopCurrencies,
@@ -9,6 +9,7 @@ import {
 } from '@/queries/economy';
 import type { CurrencyExchangeData, EconomyType, TopCurrencyItem } from '@/types/economy';
 import type { AppError } from '@/types/error';
+import { DEFAULT_LEAGUE } from '@/types/character';
 import { parseError } from '@/utils/error-handling';
 import { useCharacter } from './CharacterContext';
 
@@ -34,7 +35,7 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
 
   const [selectedEconomyType, setSelectedEconomyType] = useState<EconomyType>('Currency');
 
-  const league = activeCharacter?.league || 'Rise of the Abyssal';
+  const league = activeCharacter?.league || DEFAULT_LEAGUE;
   const isHardcore = activeCharacter?.hardcore || false;
   const isSoloSelfFound = activeCharacter?.solo_self_found || false;
 
@@ -48,8 +49,10 @@ export function EconomyProvider({ children }: React.PropsWithChildren) {
   const { data: aggregatedTopCurrencies = [], isLoading: isLoadingAggregated } =
     useAggregatedTopCurrencies(league, isHardcore);
 
+  const lastFetchedAtRef = useRef<string | null>(null);
   useEffect(() => {
-    if (currencyData) {
+    if (currencyData && currencyData.fetched_at !== lastFetchedAtRef.current) {
+      lastFetchedAtRef.current = currencyData.fetched_at;
       queryClient.invalidateQueries({
         queryKey: economyQueryKeys.aggregatedTop(league, isHardcore),
       });

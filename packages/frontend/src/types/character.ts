@@ -40,6 +40,8 @@ export type CharacterClass = (typeof CHARACTER_CLASSES)[number];
 export type League = (typeof LEAGUES)[number];
 export type Ascendency = (typeof ALL_ASCENDENCIES)[number];
 
+export const DEFAULT_LEAGUE: League = 'Rise of the Abyssal';
+
 const ASCENDENCIES_BY_CLASS: Record<CharacterClass, readonly Ascendency[]> = {
   Warrior: ['Titan', 'Warbringer', 'Smith of Katava'],
   Sorceress: ['Stormweaver', 'Chronomancer', 'Disciple of Varashta'],

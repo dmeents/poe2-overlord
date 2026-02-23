@@ -14,6 +14,7 @@ import { useEconomy } from '@/contexts/EconomyContext';
 import { type CurrencySortField, currencyListConfig } from '@/hooks/configs/currency-list.config';
 import { useListControls } from '@/hooks/useListControls';
 import { useSearchCurrencies } from '@/queries/economy';
+import { searchResultToExchangeRate } from '@/types/economy';
 import { ECONOMY_TYPE_ICONS, ECONOMY_TYPE_LABELS, ECONOMY_TYPES } from '@/utils/economy-icons';
 import { formatTimeAgo } from '@/utils/format-time-ago';
 import { hideOnError } from '@/utils/image-utils';
@@ -145,20 +146,7 @@ function EconomyPage() {
             <div>
               {searchResults.map((result, index) => (
                 <div key={result.id} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
-                  <EconomyRow
-                    currency={{
-                      id: result.id,
-                      name: result.name,
-                      image_url: result.image_url,
-                      display_value: result.display_value,
-                      primary_value: result.primary_value,
-                      secondary_value: result.secondary_value,
-                      tertiary_value: result.tertiary_value,
-                      volume: result.volume,
-                      change_percent: result.change_percent,
-                      price_history: [],
-                    }}
-                  />
+                  <EconomyRow currency={searchResultToExchangeRate(result)} />
                 </div>
               ))}
             </div>

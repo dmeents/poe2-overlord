@@ -1,5 +1,6 @@
 //! Economy domain models for currency exchange data from poe.ninja API
 
+use crate::errors::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -10,6 +11,35 @@ pub enum CurrencyTier {
     Primary,
     Secondary,
     Tertiary,
+}
+
+impl CurrencyTier {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CurrencyTier::Primary => "Primary",
+            CurrencyTier::Secondary => "Secondary",
+            CurrencyTier::Tertiary => "Tertiary",
+        }
+    }
+}
+
+impl fmt::Display for CurrencyTier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl FromStr for CurrencyTier {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Primary" => Ok(CurrencyTier::Primary),
+            "Secondary" => Ok(CurrencyTier::Secondary),
+            "Tertiary" => Ok(CurrencyTier::Tertiary),
+            _ => Err(format!("Unknown currency tier: {}", s)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -330,17 +360,26 @@ impl CurrencyExchangeRate {
 }
 
 impl CurrencyExchangeApiResponse {
-    pub fn into_frontend_data(self) -> Result<CurrencyExchangeData, String> {
+    pub fn into_frontend_data(self) -> AppResult<CurrencyExchangeData> {
         // Check if items array is empty first
         if self.items.is_empty() && self.core.items.is_empty() {
-            return Err("No currency data available for this economy type".to_string());
+            return Err(AppError::validation_error(
+                "into_frontend_data",
+                "No currency data available for this economy type",
+            ));
         }
 
         if self.core.primary.is_empty() {
-            return Err("API response missing primary currency".to_string());
+            return Err(AppError::validation_error(
+                "into_frontend_data",
+                "API response missing primary currency",
+            ));
         }
         if self.core.secondary.is_empty() {
-            return Err("API response missing secondary currency".to_string());
+            return Err(AppError::validation_error(
+                "into_frontend_data",
+                "API response missing secondary currency",
+            ));
         }
 
         let primary_currency = self
@@ -349,9 +388,12 @@ impl CurrencyExchangeApiResponse {
             .iter()
             .find(|item| item.id == self.core.primary)
             .ok_or_else(|| {
-                format!(
-                    "No currency data available - '{}' currency not found",
-                    self.core.primary
+                AppError::validation_error(
+                    "into_frontend_data",
+                    &format!(
+                        "No currency data available - '{}' currency not found",
+                        self.core.primary
+                    ),
                 )
             })
             .map(|item| CurrencyInfo {
@@ -366,9 +408,12 @@ impl CurrencyExchangeApiResponse {
             .iter()
             .find(|item| item.id == self.core.secondary)
             .ok_or_else(|| {
-                format!(
-                    "No currency data available - '{}' currency not found",
-                    self.core.secondary
+                AppError::validation_error(
+                    "into_frontend_data",
+                    &format!(
+                        "No currency data available - '{}' currency not found",
+                        self.core.secondary
+                    ),
                 )
             })
             .map(|item| CurrencyInfo {
@@ -392,9 +437,12 @@ impl CurrencyExchangeApiResponse {
             .get(&self.core.secondary)
             .copied()
             .ok_or_else(|| {
-                format!(
-                    "Missing exchange rate for secondary currency: {}",
-                    self.core.secondary
+                AppError::serialization_error(
+                    "into_frontend_data",
+                    &format!(
+                        "Missing exchange rate for secondary currency: {}",
+                        self.core.secondary
+                    ),
                 )
             })?;
 
@@ -404,11 +452,15 @@ impl CurrencyExchangeApiResponse {
 
         let config = TierConfig::default();
 
+        // Build a lookup map for O(1) item lookups by id
+        let items_by_id: HashMap<&str, &CurrencyItem> =
+            self.items.iter().map(|item| (item.id.as_str(), item)).collect();
+
         let currencies: Vec<CurrencyExchangeRate> = self
             .lines
             .into_iter()
             .filter_map(|line| {
-                let item = self.items.iter().find(|item| item.id == line.id)?;
+                let item = items_by_id.get(line.id.as_str())?;
                 let primary_value = line.primary_value?;
 
                 let secondary_value = primary_value * secondary_rate;

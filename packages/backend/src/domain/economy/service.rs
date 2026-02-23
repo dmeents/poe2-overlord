@@ -132,6 +132,25 @@ impl EconomyService {
         })
     }
 
+    /// Format a league name for the poe.ninja API.
+    ///
+    /// Rules:
+    /// - Standard + hardcore → "Hardcore"
+    /// - Other leagues + hardcore → "HC {league}" (with "The " prefix stripped)
+    /// - Non-hardcore leagues → league name with "The " prefix stripped
+    pub(crate) fn format_league_for_api(league: &str, is_hardcore: bool) -> String {
+        let base = league.strip_prefix("The ").unwrap_or(league);
+        if is_hardcore {
+            if league.eq_ignore_ascii_case("Standard") {
+                "Hardcore".to_string()
+            } else {
+                format!("HC {}", base)
+            }
+        } else {
+            base.to_string()
+        }
+    }
+
     /// Build the poe.ninja API URL for a given league and economy type.
     pub(crate) fn build_poe_ninja_url(league_name: &str, economy_type: EconomyType) -> String {
         format!(
@@ -235,23 +254,7 @@ impl EconomyService {
         );
 
         // Still stale - proceed with fetch from poe.ninja
-        // Handle league name for hardcore economies
-        // Special case: Standard + hardcore = "Hardcore"
-        // Special case: Remove "The " prefix from league names for poe.ninja API
-        let mut league_name = league.to_string();
-        if league_name.starts_with("The ") {
-            league_name = league_name.strip_prefix("The ").unwrap().to_string();
-        }
-
-        let league_name = if is_hardcore {
-            if league.eq_ignore_ascii_case("Standard") {
-                "Hardcore".to_string()
-            } else {
-                format!("HC {}", league_name)
-            }
-        } else {
-            league_name
-        };
+        let league_name = Self::format_league_for_api(league, is_hardcore);
 
         let url = Self::build_poe_ninja_url(&league_name, economy_type);
 
@@ -413,12 +416,7 @@ impl EconomyService {
                 url,
                 e
             );
-
-            if e.contains("No currency data available") {
-                AppError::validation_error("convert_api_response", &e)
-            } else {
-                AppError::serialization_error("process_currency_data", &e)
-            }
+            e
         })
     }
 
@@ -451,7 +449,7 @@ impl EconomyService {
     ) -> AppResult<Vec<CurrencySearchResult>> {
         let results = self
             .repository
-            .search_currencies(league, is_hardcore, query)
+            .search_currencies(league, is_hardcore, query, 50)
             .await?;
 
         log::info!(

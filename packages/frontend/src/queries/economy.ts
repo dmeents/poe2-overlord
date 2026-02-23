@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
+import { DEFAULT_LEAGUE } from '@/types/character';
 import type {
   CurrencyExchangeData,
   CurrencySearchResult,
@@ -18,7 +19,7 @@ export const economyQueryKeys = {
 };
 
 export function useCurrencyExchange(
-  league: string = 'Rise of the Abyssal',
+  league: string = DEFAULT_LEAGUE,
   isHardcore: boolean = false,
   economyType: EconomyType = 'Currency',
 ) {
@@ -39,7 +40,7 @@ export function useCurrencyExchange(
 }
 
 export function useSearchCurrencies(
-  league: string = 'Rise of the Abyssal',
+  league: string = DEFAULT_LEAGUE,
   isHardcore: boolean = false,
   query: string = '',
   enabled: boolean = true,
@@ -62,7 +63,7 @@ export function useSearchCurrencies(
 }
 
 export function useAggregatedTopCurrencies(
-  league: string = 'Rise of the Abyssal',
+  league: string = DEFAULT_LEAGUE,
   isHardcore: boolean = false,
 ) {
   return useQuery({

@@ -47,11 +47,12 @@ pub trait EconomyRepository: Send + Sync {
     ) -> AppResult<Vec<TopCurrencyItem>>;
 
     /// Search currencies by name across ALL economy types.
-    /// JOIN on FK, LIKE with COLLATE NOCASE, WHERE is_active=1.
+    /// JOIN on FK, LIKE with COLLATE NOCASE, WHERE is_active=1, LIMIT limit.
     async fn search_currencies(
         &self,
         league: &str,
         is_hardcore: bool,
         query: &str,
+        limit: u32,
     ) -> AppResult<Vec<CurrencySearchResult>>;
 }

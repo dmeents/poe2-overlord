@@ -59,6 +59,7 @@ mod tests {
             _league: &str,
             _is_hardcore: bool,
             _query: &str,
+            _limit: u32,
         ) -> AppResult<Vec<CurrencySearchResult>> {
             Ok(Vec::new())
         }
@@ -294,81 +295,53 @@ mod tests {
     #[test]
     fn test_league_name_construction_normal() {
         // Normal leagues should remain unchanged
-        let league = "Rise of the Abyssal";
-        let is_hardcore = false;
-
-        let league_name = if is_hardcore {
-            if league.eq_ignore_ascii_case("Standard") {
-                "Hardcore".to_string()
-            } else {
-                format!("HC {}", league)
-            }
-        } else {
-            league.to_string()
-        };
-
-        assert_eq!(league_name, "Rise of the Abyssal");
+        assert_eq!(
+            EconomyService::format_league_for_api("Rise of the Abyssal", false),
+            "Rise of the Abyssal"
+        );
     }
 
     #[test]
     fn test_league_name_construction_hardcore() {
         // Non-standard hardcore leagues should have "HC " prefix
-        let league = "Rise of the Abyssal";
-        let is_hardcore = true;
-
-        let league_name = if is_hardcore {
-            if league.eq_ignore_ascii_case("Standard") {
-                "Hardcore".to_string()
-            } else {
-                format!("HC {}", league)
-            }
-        } else {
-            league.to_string()
-        };
-
-        assert_eq!(league_name, "HC Rise of the Abyssal");
+        assert_eq!(
+            EconomyService::format_league_for_api("Rise of the Abyssal", true),
+            "HC Rise of the Abyssal"
+        );
     }
 
     #[test]
     fn test_league_name_construction_standard_hardcore() {
         // Standard + hardcore should be "Hardcore" not "HC Standard"
-        let league = "Standard";
-        let is_hardcore = true;
-
-        let league_name = if is_hardcore {
-            if league.eq_ignore_ascii_case("Standard") {
-                "Hardcore".to_string()
-            } else {
-                format!("HC {}", league)
-            }
-        } else {
-            league.to_string()
-        };
-
-        assert_eq!(league_name, "Hardcore");
+        assert_eq!(
+            EconomyService::format_league_for_api("Standard", true),
+            "Hardcore"
+        );
     }
 
     #[test]
     fn test_league_name_construction_standard_case_insensitive() {
         // Should handle "STANDARD", "standard", "Standard" all the same
         for standard_variant in &["Standard", "STANDARD", "standard", "StAnDaRd"] {
-            let is_hardcore = true;
-
-            let league_name = if is_hardcore {
-                if standard_variant.eq_ignore_ascii_case("Standard") {
-                    "Hardcore".to_string()
-                } else {
-                    format!("HC {}", standard_variant)
-                }
-            } else {
-                standard_variant.to_string()
-            };
-
             assert_eq!(
-                league_name, "Hardcore",
+                EconomyService::format_league_for_api(standard_variant, true),
+                "Hardcore",
                 "Failed for variant: {}",
                 standard_variant
             );
         }
+    }
+
+    #[test]
+    fn test_league_name_construction_the_prefix_stripped() {
+        // "The " prefix should be stripped before passing to poe.ninja
+        assert_eq!(
+            EconomyService::format_league_for_api("The Fate of the Vaal", false),
+            "Fate of the Vaal"
+        );
+        assert_eq!(
+            EconomyService::format_league_for_api("The Fate of the Vaal", true),
+            "HC Fate of the Vaal"
+        );
     }
 }

@@ -35,26 +35,60 @@ impl EconomyRepositoryImpl {
             .unwrap_or(false)
     }
 
-    /// Build CurrencyExchangeData from exchange rate row and currency items
-    async fn build_exchange_data(
+    /// Core load logic: queries by composite key, optionally enforces TTL.
+    /// Returns None if no row exists or if TTL check fails (when ttl_seconds is Some).
+    async fn load_exchange_data_internal(
         &self,
-        exchange_rate_id: i64,
         league: &str,
         is_hardcore: bool,
         economy_type: EconomyType,
-    ) -> AppResult<CurrencyExchangeData> {
-        // Load exchange rate metadata
+        ttl_seconds: Option<u64>,
+    ) -> AppResult<Option<CurrencyExchangeData>> {
+        let rate_result = sqlx::query(
+            "SELECT id, last_updated FROM economy_exchange_rates
+             WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
+        )
+        .bind(league)
+        .bind(is_hardcore as i32)
+        .bind(economy_type.as_str())
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| {
+            AppError::internal_error(
+                "load_exchange_data_internal",
+                &format!("Failed to query exchange rates: {}", e),
+            )
+        })?;
+
+        let Some(row) = rate_result else {
+            return Ok(None);
+        };
+
+        let exchange_rate_id: i64 = row.get("id");
+
+        if let Some(ttl) = ttl_seconds {
+            let last_updated: String = row.get("last_updated");
+            if !Self::is_fresh(&last_updated, ttl) {
+                return Ok(None);
+            }
+        }
+
+        let data = self.build_exchange_data(exchange_rate_id).await?;
+        Ok(Some(data))
+    }
+
+    /// Build CurrencyExchangeData from exchange rate row and currency items
+    async fn build_exchange_data(&self, exchange_rate_id: i64) -> AppResult<CurrencyExchangeData> {
+        // Load exchange rate metadata by PK
         let rate_row = sqlx::query(
             "SELECT primary_currency_id, primary_currency_name, primary_currency_image,
                     secondary_currency_id, secondary_currency_name, secondary_currency_image,
                     tertiary_currency_id, tertiary_currency_name, tertiary_currency_image,
                     secondary_rate, tertiary_rate, fetched_at
              FROM economy_exchange_rates
-             WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
+             WHERE id = ?",
         )
-        .bind(league)
-        .bind(is_hardcore as i32)
-        .bind(economy_type.as_str())
+        .bind(exchange_rate_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| {
@@ -110,12 +144,7 @@ impl EconomyRepositoryImpl {
             .into_iter()
             .map(|row| {
                 let tier_str: String = row.get("display_tier");
-                let tier = match tier_str.as_str() {
-                    "Primary" => CurrencyTier::Primary,
-                    "Secondary" => CurrencyTier::Secondary,
-                    "Tertiary" => CurrencyTier::Tertiary,
-                    _ => CurrencyTier::Primary,
-                };
+                let tier = CurrencyTier::from_str(&tier_str).unwrap_or(CurrencyTier::Primary);
 
                 let price_history_json: String = row.get("price_history");
                 let price_history: Vec<Option<f64>> =
@@ -165,41 +194,8 @@ impl EconomyRepository for EconomyRepositoryImpl {
         economy_type: EconomyType,
         ttl_seconds: u64,
     ) -> AppResult<Option<CurrencyExchangeData>> {
-        // Query exchange rate row
-        let rate_result = sqlx::query(
-            "SELECT id, last_updated FROM economy_exchange_rates
-             WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
-        )
-        .bind(league)
-        .bind(is_hardcore as i32)
-        .bind(economy_type.as_str())
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| {
-            AppError::internal_error(
-                "load_fresh_exchange_data",
-                &format!("Failed to query exchange rates: {}", e),
-            )
-        })?;
-
-        // No row found
-        let Some(row) = rate_result else {
-            return Ok(None);
-        };
-
-        let exchange_rate_id: i64 = row.get("id");
-        let last_updated: String = row.get("last_updated");
-
-        // Check TTL
-        if !Self::is_fresh(&last_updated, ttl_seconds) {
-            return Ok(None);
-        }
-
-        // Build and return data
-        let data = self
-            .build_exchange_data(exchange_rate_id, league, is_hardcore, economy_type)
-            .await?;
-        Ok(Some(data))
+        self.load_exchange_data_internal(league, is_hardcore, economy_type, Some(ttl_seconds))
+            .await
     }
 
     async fn load_exchange_data(
@@ -208,35 +204,8 @@ impl EconomyRepository for EconomyRepositoryImpl {
         is_hardcore: bool,
         economy_type: EconomyType,
     ) -> AppResult<Option<CurrencyExchangeData>> {
-        // Query exchange rate row (no TTL check)
-        let rate_result = sqlx::query(
-            "SELECT id FROM economy_exchange_rates
-             WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
-        )
-        .bind(league)
-        .bind(is_hardcore as i32)
-        .bind(economy_type.as_str())
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| {
-            AppError::internal_error(
-                "load_exchange_data",
-                &format!("Failed to query exchange rates: {}", e),
-            )
-        })?;
-
-        // No row found
-        let Some(row) = rate_result else {
-            return Ok(None);
-        };
-
-        let exchange_rate_id: i64 = row.get("id");
-
-        // Build and return data
-        let data = self
-            .build_exchange_data(exchange_rate_id, league, is_hardcore, economy_type)
-            .await?;
-        Ok(Some(data))
+        self.load_exchange_data_internal(league, is_hardcore, economy_type, None)
+            .await
     }
 
     async fn save_exchange_data(
@@ -255,8 +224,8 @@ impl EconomyRepository for EconomyRepositoryImpl {
 
         let now = Utc::now().to_rfc3339();
 
-        // Upsert exchange rate row
-        sqlx::query(
+        // Upsert exchange rate row and return its id in a single round trip
+        let exchange_rate_id: i64 = sqlx::query_scalar(
             "INSERT INTO economy_exchange_rates (
                 league, is_hardcore, economy_type,
                 primary_currency_id, primary_currency_name, primary_currency_image,
@@ -277,7 +246,8 @@ impl EconomyRepository for EconomyRepositoryImpl {
                 secondary_rate = excluded.secondary_rate,
                 tertiary_rate = excluded.tertiary_rate,
                 fetched_at = excluded.fetched_at,
-                last_updated = excluded.last_updated",
+                last_updated = excluded.last_updated
+             RETURNING id",
         )
         .bind(league)
         .bind(is_hardcore as i32)
@@ -295,7 +265,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         .bind(data.tertiary_rate)
         .bind(&data.fetched_at)
         .bind(&now)
-        .execute(&mut *tx)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
             AppError::internal_error(
@@ -304,33 +274,12 @@ impl EconomyRepository for EconomyRepositoryImpl {
             )
         })?;
 
-        // Get the exchange_rate_id
-        let exchange_rate_id: i64 = sqlx::query_scalar(
-            "SELECT id FROM economy_exchange_rates
-             WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
-        )
-        .bind(league)
-        .bind(is_hardcore as i32)
-        .bind(economy_type.as_str())
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| {
-            AppError::internal_error(
-                "save_exchange_data",
-                &format!("Failed to retrieve exchange_rate_id: {}", e),
-            )
-        })?;
-
         // Upsert each currency item
         for currency in &data.currencies {
             let price_history_json =
                 serde_json::to_string(&currency.price_history).unwrap_or_else(|_| "[]".to_string());
 
-            let display_tier = match currency.display_value.tier {
-                CurrencyTier::Primary => "Primary",
-                CurrencyTier::Secondary => "Secondary",
-                CurrencyTier::Tertiary => "Tertiary",
-            };
+            let display_tier = currency.display_value.tier.as_str();
 
             sqlx::query(
                 "INSERT INTO currency_items (
@@ -453,6 +402,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         league: &str,
         is_hardcore: bool,
         query: &str,
+        limit: u32,
     ) -> AppResult<Vec<CurrencySearchResult>> {
         let search_pattern = format!("%{}%", query);
 
@@ -466,11 +416,13 @@ impl EconomyRepository for EconomyRepositoryImpl {
              JOIN economy_exchange_rates er ON ci.exchange_rate_id = er.id
              WHERE er.league = ? AND er.is_hardcore = ? AND ci.is_active = 1
                AND ci.name LIKE ? COLLATE NOCASE
-             ORDER BY ci.primary_value DESC",
+             ORDER BY ci.primary_value DESC
+             LIMIT ?",
         )
         .bind(league)
         .bind(is_hardcore as i32)
         .bind(&search_pattern)
+        .bind(limit)
         .fetch_all(&self.pool)
         .await
         .map_err(|e| {
@@ -487,12 +439,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
                 let economy_type = EconomyType::from_str(&economy_type_str).ok()?;
 
                 let tier_str: String = row.get("display_tier");
-                let tier = match tier_str.as_str() {
-                    "Primary" => CurrencyTier::Primary,
-                    "Secondary" => CurrencyTier::Secondary,
-                    "Tertiary" => CurrencyTier::Tertiary,
-                    _ => CurrencyTier::Primary,
-                };
+                let tier = CurrencyTier::from_str(&tier_str).unwrap_or(CurrencyTier::Primary);
 
                 Some(CurrencySearchResult {
                     id: row.get("currency_id"),

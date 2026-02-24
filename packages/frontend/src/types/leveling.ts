@@ -31,4 +31,8 @@ export interface LevelingStats {
   xp_to_next_level: number;
   /** Last 5 level events, most recent first. */
   recent_events: LevelEventResponse[];
+  /** Accumulated active grinding seconds at the current level (persisted + live segment). */
+  active_seconds_at_level: number;
+  /** True when the player is in a non-town, non-hideout zone (timer should tick live). */
+  is_actively_grinding: boolean;
 }

@@ -1,13 +1,14 @@
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use log::error;
 use std::sync::Arc;
 
+use crate::domain::zone_tracking::is_hideout_zone;
 use crate::errors::AppResult;
 use crate::infrastructure::events::{AppEvent, EventBus};
 
 use super::experience;
-use super::models::{LevelEvent, LevelEventResponse, LevelingStats};
+use super::models::{ActiveZoneInfo, LevelEvent, LevelEventResponse, LevelingStats};
 use super::traits::{LevelingRepository, LevelingService};
 
 pub struct LevelingServiceImpl {
@@ -21,6 +22,58 @@ impl LevelingServiceImpl {
         event_bus: Arc<EventBus>,
     ) -> Self {
         Self { repository, event_bus }
+    }
+
+    /// Accumulates the time spent in the current active grinding zone into the DB counter.
+    /// Skips towns and hideouts. No-ops if there is no active zone.
+    async fn accumulate_active_zone_time(&self, character_id: &str) -> AppResult<()> {
+        let Some(zone_info) = self.repository.get_active_zone_info(character_id).await? else {
+            return Ok(());
+        };
+
+        if zone_info.is_town || is_hideout_zone(&zone_info.zone_name) {
+            return Ok(());
+        }
+
+        let last_level_reached_at =
+            self.repository.get_last_level_reached_at(character_id).await?;
+
+        let elapsed = Self::grinding_elapsed_secs(&zone_info, last_level_reached_at);
+        if elapsed > 0 {
+            self.repository
+                .increment_active_seconds_at_level(character_id, elapsed)
+                .await?;
+        }
+
+        Ok(())
+    }
+
+    /// Computes the live grinding seconds for `zone_info` without writing to the DB.
+    /// Uses `max(entry_timestamp, last_level_reached_at)` as the effective start to
+    /// avoid counting pre-level-up time toward the new level.
+    fn compute_dynamic_zone_seconds(
+        zone_info: &ActiveZoneInfo,
+        last_level_reached_at: Option<DateTime<Utc>>,
+    ) -> u64 {
+        if zone_info.is_town || is_hideout_zone(&zone_info.zone_name) {
+            return 0;
+        }
+        Self::grinding_elapsed_secs(zone_info, last_level_reached_at)
+    }
+
+    /// Shared elapsed-seconds calculation used by both helpers above.
+    fn grinding_elapsed_secs(
+        zone_info: &ActiveZoneInfo,
+        last_level_reached_at: Option<DateTime<Utc>>,
+    ) -> u64 {
+        let effective_start = match last_level_reached_at {
+            Some(level_ts) => level_ts.max(zone_info.entry_timestamp),
+            None => zone_info.entry_timestamp,
+        };
+        Utc::now()
+            .signed_duration_since(effective_start)
+            .num_seconds()
+            .max(0) as u64
     }
 
     async fn compute_stats(&self, character_id: &str) -> AppResult<LevelingStats> {
@@ -40,9 +93,23 @@ impl LevelingServiceImpl {
 
         let (xp_per_hour, last_level_reached_at) = compute_xp_per_hour(&recent_events_raw);
 
+        // Persisted counter + live contribution from the current active zone
+        let stored_active_seconds =
+            self.repository.get_active_seconds_at_level(character_id).await?;
+        let zone_info = self.repository.get_active_zone_info(character_id).await?;
+        let is_actively_grinding = zone_info
+            .as_ref()
+            .map(|z| !z.is_town && !is_hideout_zone(&z.zone_name))
+            .unwrap_or(false);
+        let dynamic_zone_seconds = zone_info
+            .as_ref()
+            .map(|z| Self::compute_dynamic_zone_seconds(z, last_level_reached_at))
+            .unwrap_or(0);
+        let active_seconds_at_level = stored_active_seconds + dynamic_zone_seconds;
+
         let estimated_seconds_to_next_level = estimated_seconds(
             xp_per_hour,
-            last_level_reached_at,
+            active_seconds_at_level,
             xp_to_next_level,
             current_level,
         );
@@ -59,6 +126,8 @@ impl LevelingServiceImpl {
             deaths_at_current_level,
             xp_to_next_level,
             recent_events,
+            active_seconds_at_level,
+            is_actively_grinding,
         })
     }
 }
@@ -71,6 +140,14 @@ impl LevelingService for LevelingServiceImpl {
         _old_level: u32,
         new_level: u32,
     ) -> AppResult<()> {
+        // Capture active zone time before resetting (final time in old-level zone)
+        if let Err(e) = self.accumulate_active_zone_time(character_id).await {
+            error!(
+                "LEVELING: Failed to accumulate active zone time before level-up: {}",
+                e
+            );
+        }
+
         // Capture death counter before reset
         let deaths = self.repository.get_deaths_at_current_level(character_id).await?;
 
@@ -79,6 +156,7 @@ impl LevelingService for LevelingServiceImpl {
             .await?;
 
         self.repository.reset_deaths_at_current_level(character_id).await?;
+        self.repository.reset_active_seconds_at_level(character_id).await?;
 
         let stats = self.compute_stats(character_id).await?;
         if let Err(e) = self
@@ -115,6 +193,38 @@ impl LevelingService for LevelingServiceImpl {
 
     async fn get_leveling_stats(&self, character_id: &str) -> AppResult<LevelingStats> {
         self.compute_stats(character_id).await
+    }
+
+    async fn record_active_zone_exit(&self, character_id: &str) -> AppResult<()> {
+        self.accumulate_active_zone_time(character_id).await
+    }
+
+    async fn finalize_active_zone_times(&self) -> AppResult<()> {
+        let character_ids = self.repository.get_all_active_zone_character_ids().await?;
+        for character_id in character_ids {
+            if let Err(e) = self.accumulate_active_zone_time(&character_id).await {
+                error!(
+                    "LEVELING: Failed to accumulate active zone time for {}: {}",
+                    character_id, e
+                );
+            }
+        }
+        Ok(())
+    }
+
+    async fn emit_stats_update(&self, character_id: &str) -> AppResult<()> {
+        let stats = self.compute_stats(character_id).await?;
+        if let Err(e) = self
+            .event_bus
+            .publish(AppEvent::leveling_stats_updated(
+                character_id.to_string(),
+                stats,
+            ))
+            .await
+        {
+            error!("LEVELING: Failed to publish stats update after zone transition: {}", e);
+        }
+        Ok(())
     }
 }
 
@@ -159,10 +269,11 @@ fn compute_xp_per_hour(
     (Some(xp_per_hour), last_reached)
 }
 
-/// Computes estimated seconds until next level-up, given current XP/hr and level timing.
+/// Computes estimated seconds until next level-up using active grinding time instead of
+/// wall-clock time. This avoids over-estimating progress earned in towns/hideouts.
 fn estimated_seconds(
     xp_per_hour: Option<f64>,
-    last_level_reached_at: Option<chrono::DateTime<Utc>>,
+    active_seconds_at_level: u64,
     xp_to_next_level: u64,
     current_level: u32,
 ) -> Option<u64> {
@@ -170,18 +281,13 @@ fn estimated_seconds(
         return None;
     }
     let xp_hr = xp_per_hour?;
-    let last_reached = last_level_reached_at?;
 
     if xp_hr <= 0.0 {
         return None;
     }
 
-    let time_at_level_secs = Utc::now()
-        .signed_duration_since(last_reached)
-        .num_seconds()
-        .max(0) as f64;
-    let time_at_level_hours = time_at_level_secs / 3600.0;
-    let estimated_xp_earned = time_at_level_hours * xp_hr;
+    let active_hours = active_seconds_at_level as f64 / 3600.0;
+    let estimated_xp_earned = active_hours * xp_hr;
     let remaining_xp = (xp_to_next_level as f64 - estimated_xp_earned).max(0.0);
     let seconds_remaining = (remaining_xp / xp_hr * 3600.0) as u64;
 
@@ -281,29 +387,33 @@ mod tests {
 
     #[test]
     fn estimated_seconds_returns_none_without_xp_rate() {
-        let result = estimated_seconds(None, Some(Utc::now()), 1_000_000, 50);
+        let result = estimated_seconds(None, 3600, 1_000_000, 50);
         assert!(result.is_none());
     }
 
     #[test]
     fn estimated_seconds_at_level_100_returns_none() {
-        let result = estimated_seconds(Some(1_000_000.0), Some(Utc::now()), 0, 100);
+        let result = estimated_seconds(Some(1_000_000.0), 0, 0, 100);
         assert!(result.is_none());
     }
 
     #[test]
     fn estimated_seconds_is_positive() {
-        // 1M XP/hr rate, 1M XP needed, just leveled up (0 time elapsed)
-        let result = estimated_seconds(
-            Some(1_000_000.0),
-            Some(Utc::now()),
-            1_000_000,
-            50,
-        );
+        // 1M XP/hr rate, 1M XP needed, 0 active seconds elapsed → full hour remaining
+        let result = estimated_seconds(Some(1_000_000.0), 0, 1_000_000, 50);
         assert!(result.is_some());
         // Should be approximately 3600 seconds (1 hour)
         let secs = result.unwrap();
         assert!(secs > 3500 && secs <= 3600);
+    }
+
+    #[test]
+    fn estimated_seconds_decreases_with_active_time() {
+        // 1M XP/hr, 1M XP needed, 30 min (1800s) of active grinding → ~30 min remaining
+        let result = estimated_seconds(Some(1_000_000.0), 1800, 1_000_000, 50);
+        assert!(result.is_some());
+        let secs = result.unwrap();
+        assert!(secs > 1700 && secs <= 1800);
     }
 
     #[test]

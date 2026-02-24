@@ -1,6 +1,14 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+/// Active zone data queried for grinding-time accumulation.
+#[derive(Debug, Clone)]
+pub struct ActiveZoneInfo {
+    pub zone_name: String,
+    pub entry_timestamp: DateTime<Utc>,
+    pub is_town: bool,
+}
+
 /// Raw database row for a level-up event.
 #[derive(Debug, Clone)]
 pub struct LevelEvent {
@@ -45,4 +53,8 @@ pub struct LevelingStats {
     pub xp_to_next_level: u64,
     /// Last 5 level events, most recent first.
     pub recent_events: Vec<LevelEventResponse>,
+    /// Accumulated active grinding seconds at the current level (persisted + live segment).
+    pub active_seconds_at_level: u64,
+    /// True when the player is currently in a non-town, non-hideout zone (timer should tick).
+    pub is_actively_grinding: bool,
 }

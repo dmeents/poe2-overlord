@@ -2,7 +2,7 @@ import { ChartBarIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
 import { Card } from '@/components/ui/card/card';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { useElapsedTime } from '@/hooks/useElapsedTime';
+import { useActiveLevelTime } from '@/hooks/useActiveLevelTime';
 import { useLevelingStats } from '@/queries/leveling';
 import { formatDuration } from '@/utils/format-duration';
 import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
@@ -12,11 +12,13 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
   const { activeCharacter } = useCharacter();
   const { data: stats } = useLevelingStats(activeCharacter?.id);
 
-  // Live "time at current level" counter
-  const timeAtLevelSeconds = useElapsedTime({
-    entryTimestamp: stats?.last_level_reached_at ?? undefined,
-    baseDuration: 0,
-    isActive: !!stats?.last_level_reached_at,
+  // Backend computes is_actively_grinding from zone state — no need to re-derive it here
+  const isTimerActive = !!stats?.is_actively_grinding && !!stats?.last_level_reached_at;
+
+  const timeAtLevelSeconds = useActiveLevelTime({
+    lastLevelTimestamp: stats?.last_level_reached_at ?? undefined,
+    isActive: isTimerActive,
+    activeSecondsAtLevel: stats?.active_seconds_at_level ?? 0,
   });
 
   if (!activeCharacter) {
@@ -41,30 +43,35 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
   return (
     <Card title="Leveling" icon={<ChartBarIcon />} accentColor="ember">
       <div className={styles.container}>
-        {/* XP/hr — primary metric */}
-        <div className={styles.xpRateSection}>
-          <div className={styles.xpRateLabel}>XP / hr</div>
-          {hasXpRate ? (
-            <div className={styles.xpRateValue}>{formatXpRate(stats.xp_per_hour!)}</div>
+        {/* Est. next level — primary metric */}
+        <div className={styles.primarySection}>
+          <div className={styles.primaryLabel}>
+            Est. next level
+          </div>
+          {stats.estimated_seconds_to_next_level !== null ? (
+            <div className={styles.primaryValue}>
+              {formatDuration(stats.estimated_seconds_to_next_level)}
+            </div>
           ) : (
-            <div className={styles.xpRateEmpty}>{hasHistory ? '—' : 'Need 2+ level-ups'}</div>
+            <div className={styles.primaryEmpty}>{hasHistory ? '—' : 'Need 2+ level-ups'}</div>
           )}
         </div>
 
         {/* Stats grid */}
         <div className={styles.statsGrid}>
-          <div className={styles.statBox}>
-            <div className={styles.statLabel}>Time at level</div>
+          <div className={isTimerActive ? styles.statBox : styles.statBoxPaused}>
+            <div className={styles.statLabel}>
+              Time at level
+              {!isTimerActive && <span className={styles.pausedTag}> (paused)</span>}
+            </div>
             <div className={styles.statValue}>
               {stats.last_level_reached_at ? formatDuration(timeAtLevelSeconds) : '—'}
             </div>
           </div>
           <div className={styles.statBox}>
-            <div className={styles.statLabel}>Est. next level</div>
+            <div className={styles.statLabel}>XP / hr</div>
             <div className={styles.statValue}>
-              {stats.estimated_seconds_to_next_level !== null
-                ? formatDuration(stats.estimated_seconds_to_next_level)
-                : '—'}
+              {hasXpRate ? formatXpRate(stats.xp_per_hour!) : hasHistory ? '—' : 'Need 2+ level-ups'}
             </div>
           </div>
           <div className={styles.statBox}>

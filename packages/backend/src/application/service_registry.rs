@@ -204,6 +204,7 @@ impl ServiceInitializer {
             event_bus.clone(),
             process_detector.clone(),
             character_arc.clone(),
+            leveling_service.clone(),
         )) as Arc<dyn GameMonitoringService>;
 
         app.manage(game_monitoring_service.clone());
@@ -214,6 +215,7 @@ impl ServiceInitializer {
             config_service,
             event_bus,
             character_service: character_arc,
+            leveling_service,
             walkthrough_service,
             log_analysis_service: log_analysis_arc,
             server_monitoring_service: server_monitoring_arc,
@@ -228,6 +230,7 @@ pub struct ServiceInstances {
     pub config_service: Arc<dyn ConfigurationService + Send + Sync>,
     pub event_bus: Arc<EventBus>,
     pub character_service: Arc<dyn CharacterService + Send + Sync>,
+    pub leveling_service: Arc<dyn LevelingService + Send + Sync>,
     pub walkthrough_service: Arc<dyn WalkthroughService + Send + Sync>,
     pub log_analysis_service: Arc<dyn LogAnalysisService>,
     pub server_monitoring_service: Arc<dyn ServerMonitoringService>,
@@ -269,6 +272,13 @@ impl ServiceInstances {
             log::error!("Failed to stop server monitoring: {}", e);
         } else {
             log::info!("Server monitoring stopped successfully");
+        }
+
+        // Finalize active zone times before character zone finalization
+        if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
+            log::error!("Failed to finalize active zone times on shutdown: {}", e);
+        } else {
+            log::info!("Active zone times finalized successfully");
         }
 
         // Finalize character data

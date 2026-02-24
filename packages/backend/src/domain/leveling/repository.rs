@@ -4,7 +4,7 @@ use sqlx::SqlitePool;
 
 use crate::errors::AppResult;
 
-use super::models::LevelEvent;
+use super::models::{ActiveZoneInfo, LevelEvent};
 use super::traits::LevelingRepository;
 
 pub struct LevelingRepositoryImpl {
@@ -141,5 +141,98 @@ impl LevelingRepository for LevelingRepositoryImpl {
         .await?;
 
         Ok(row.0 as u32)
+    }
+
+    async fn get_active_seconds_at_level(&self, character_id: &str) -> AppResult<u64> {
+        let row: Option<(i64,)> = sqlx::query_as(
+            "SELECT active_seconds_at_level FROM characters WHERE id = ?",
+        )
+        .bind(character_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.map(|(v,)| v as u64).unwrap_or(0))
+    }
+
+    async fn increment_active_seconds_at_level(
+        &self,
+        character_id: &str,
+        seconds: u64,
+    ) -> AppResult<()> {
+        sqlx::query(
+            "UPDATE characters SET active_seconds_at_level = active_seconds_at_level + ? WHERE id = ?",
+        )
+        .bind(seconds as i64)
+        .bind(character_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn reset_active_seconds_at_level(&self, character_id: &str) -> AppResult<()> {
+        sqlx::query(
+            "UPDATE characters SET active_seconds_at_level = 0 WHERE id = ?",
+        )
+        .bind(character_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn get_active_zone_info(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<ActiveZoneInfo>> {
+        let row: Option<(String, String, i64)> = sqlx::query_as(
+            "SELECT zm.zone_name, zs.entry_timestamp, zm.is_town
+             FROM zone_stats zs
+             JOIN zone_metadata zm ON zs.zone_id = zm.id
+             WHERE zs.character_id = ? AND zs.is_active = 1 AND zs.entry_timestamp IS NOT NULL",
+        )
+        .bind(character_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.map(|(zone_name, entry_ts_str, is_town_i64)| {
+            let entry_timestamp = chrono::DateTime::parse_from_rfc3339(&entry_ts_str)
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(|_| Utc::now());
+            ActiveZoneInfo {
+                zone_name,
+                entry_timestamp,
+                is_town: is_town_i64 != 0,
+            }
+        }))
+    }
+
+    async fn get_last_level_reached_at(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<DateTime<Utc>>> {
+        let row: Option<(String,)> = sqlx::query_as(
+            "SELECT reached_at FROM level_events WHERE character_id = ? ORDER BY level DESC LIMIT 1",
+        )
+        .bind(character_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.and_then(|(ts_str,)| {
+            chrono::DateTime::parse_from_rfc3339(&ts_str)
+                .ok()
+                .map(|dt| dt.with_timezone(&Utc))
+        }))
+    }
+
+    async fn get_all_active_zone_character_ids(&self) -> AppResult<Vec<String>> {
+        let rows: Vec<(String,)> = sqlx::query_as(
+            "SELECT DISTINCT character_id FROM zone_stats
+             WHERE is_active = 1 AND entry_timestamp IS NOT NULL",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows.into_iter().map(|(id,)| id).collect())
     }
 }

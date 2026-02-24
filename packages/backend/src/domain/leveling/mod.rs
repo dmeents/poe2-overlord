@@ -5,7 +5,7 @@ pub mod repository;
 pub mod service;
 pub mod traits;
 
-pub use models::{LevelEventResponse, LevelingStats};
+pub use models::{ActiveZoneInfo, LevelEventResponse, LevelingStats};
 pub use repository::LevelingRepositoryImpl;
 pub use service::LevelingServiceImpl;
 pub use traits::{LevelingRepository, LevelingService};

@@ -3,6 +3,7 @@ use crate::domain::game_monitoring::{
     models::GameProcessStatus,
     traits::{GameMonitoringService, ProcessDetector},
 };
+use crate::domain::leveling::traits::LevelingService;
 use crate::errors::AppResult;
 use crate::infrastructure::events::{AppEvent, EventBus};
 use async_trait::async_trait;
@@ -18,6 +19,7 @@ pub struct GameMonitoringServiceImpl {
     process_detector: Arc<dyn ProcessDetector>,
     /// Includes time tracking through zone finalization
     character_service: Arc<dyn CharacterService>,
+    leveling_service: Arc<dyn LevelingService>,
     is_monitoring: Arc<RwLock<bool>>,
     current_status: Arc<RwLock<Option<GameProcessStatus>>>,
     monitoring_task: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
@@ -28,11 +30,13 @@ impl GameMonitoringServiceImpl {
         event_bus: Arc<EventBus>,
         process_detector: Arc<dyn ProcessDetector>,
         character_service: Arc<dyn CharacterService>,
+        leveling_service: Arc<dyn LevelingService>,
     ) -> Self {
         Self {
             event_bus,
             process_detector,
             character_service,
+            leveling_service,
             is_monitoring: Arc::new(RwLock::new(false)),
             current_status: Arc::new(RwLock::new(None)),
             monitoring_task: Arc::new(RwLock::new(None)),
@@ -58,6 +62,10 @@ impl GameMonitoringServiceImpl {
                 );
             } else {
                 info!("POE2 process stopped");
+
+                if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
+                    error!("Failed to finalize active zone times when game stopped: {}", e);
+                }
 
                 if let Err(e) = self.character_service.finalize_all_active_zones().await {
                     let error_msg = format!(

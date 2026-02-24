@@ -288,6 +288,13 @@ impl LogAnalysisServiceImpl {
                             gap_minutes
                         );
 
+                        if let Err(e) = leveling_service.finalize_active_zone_times().await {
+                            error!(
+                                "Failed to finalize active zone times after session gap: {}",
+                                e
+                            );
+                        }
+
                         if let Err(e) = character_service.finalize_all_active_zones().await {
                             error!("Failed to finalize stale zones after session gap: {}", e);
                         } else {
@@ -683,6 +690,18 @@ impl LogAnalysisServiceImpl {
                             "LOG ANALYSIS: Processing scene change for active character: {}",
                             active_character.id
                         );
+
+                        // Record active zone time before the zone transition deactivates the old zone
+                        if let Err(e) = leveling_service
+                            .record_active_zone_exit(&active_character.id)
+                            .await
+                        {
+                            error!(
+                                "LEVELING: Failed to record active zone exit time: {}",
+                                e
+                            );
+                        }
+
                         let cached_level = {
                             let cache = zone_level_cache.read().await;
                             *cache
@@ -711,6 +730,16 @@ impl LogAnalysisServiceImpl {
                             zone_level,
                         )
                         .await;
+
+                        // Emit fresh stats so the frontend gets updated is_actively_grinding
+                        if let Err(e) =
+                            leveling_service.emit_stats_update(&active_character.id).await
+                        {
+                            error!(
+                                "LEVELING: Failed to emit stats update after zone transition: {}",
+                                e
+                            );
+                        }
                     } else {
                         warn!("LOG ANALYSIS: No active character found for scene change");
                     }

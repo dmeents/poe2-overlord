@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 
 use crate::errors::AppResult;
 
-use super::models::{LevelEvent, LevelingStats};
+use super::models::{ActiveZoneInfo, LevelEvent, LevelingStats};
 
 #[async_trait]
 pub trait LevelingRepository: Send + Sync {
@@ -41,6 +41,34 @@ pub trait LevelingRepository: Send + Sync {
         character_id: &str,
         minutes: u32,
     ) -> AppResult<u32>;
+
+    /// Returns the accumulated active grinding seconds for the current level.
+    async fn get_active_seconds_at_level(&self, character_id: &str) -> AppResult<u64>;
+
+    /// Adds `seconds` to the persisted active grinding counter.
+    async fn increment_active_seconds_at_level(
+        &self,
+        character_id: &str,
+        seconds: u64,
+    ) -> AppResult<()>;
+
+    /// Resets the active grinding counter to 0 (called on level-up).
+    async fn reset_active_seconds_at_level(&self, character_id: &str) -> AppResult<()>;
+
+    /// Returns the currently active (non-finalized) zone for a character.
+    async fn get_active_zone_info(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<ActiveZoneInfo>>;
+
+    /// Returns the timestamp of the most recent level-up event.
+    async fn get_last_level_reached_at(
+        &self,
+        character_id: &str,
+    ) -> AppResult<Option<DateTime<Utc>>>;
+
+    /// Returns all character IDs that currently have an active zone (for bulk finalization).
+    async fn get_all_active_zone_character_ids(&self) -> AppResult<Vec<String>>;
 }
 
 #[async_trait]
@@ -58,4 +86,16 @@ pub trait LevelingService: Send + Sync {
 
     /// Computes and returns all leveling statistics for a character.
     async fn get_leveling_stats(&self, character_id: &str) -> AppResult<LevelingStats>;
+
+    /// Accumulates the time spent in the current active grinding zone into the DB.
+    /// Called before a zone transition so the departing zone's time is captured.
+    async fn record_active_zone_exit(&self, character_id: &str) -> AppResult<()>;
+
+    /// Accumulates active zone time for ALL characters with active zones.
+    /// Called on game stop, app shutdown, and session gaps.
+    async fn finalize_active_zone_times(&self) -> AppResult<()>;
+
+    /// Computes and publishes a `LevelingStatsUpdated` event for the given character.
+    /// Called after zone transitions so the frontend gets fresh `is_actively_grinding`.
+    async fn emit_stats_update(&self, character_id: &str) -> AppResult<()>;
 }

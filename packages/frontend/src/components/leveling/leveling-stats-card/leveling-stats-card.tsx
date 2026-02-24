@@ -6,6 +6,7 @@ import { useActiveLevelTime } from '@/hooks/useActiveLevelTime';
 import { useLevelingStats } from '@/queries/leveling';
 import { formatDuration } from '@/utils/format-duration';
 import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
+import { LevelingChart } from '../leveling-chart/leveling-chart';
 import { levelingStatsCardStyles as styles } from './leveling-stats-card.styles';
 
 export const LevelingStatsCard = memo(function LevelingStatsCard() {
@@ -95,6 +96,15 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
             <div className={styles.statLabel}>XP to next level</div>
             <div className={styles.statValue}>{formatXpAmount(stats.xp_to_next_level)}</div>
           </div>
+        )}
+
+        {/* Leveling chart */}
+        {stats.chart_events.length >= 2 && (
+          <>
+            <div className={styles.divider} />
+            <div className={styles.historyTitle}>XP / hr history</div>
+            <LevelingChart data={stats.chart_events} />
+          </>
         )}
 
         {/* Recent level history */}

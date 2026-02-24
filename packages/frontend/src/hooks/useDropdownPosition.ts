@@ -62,7 +62,10 @@ export function useDropdownPosition({
     if (!enabled || !isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if ((target as Element).closest?.('[data-dropdown-portal]')) return;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         onClose();
       }
     };

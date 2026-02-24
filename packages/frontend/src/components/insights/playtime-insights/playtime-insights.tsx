@@ -39,7 +39,8 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
   // Calculate additional insights
   const totalPlayTime = summary.total_play_time || 0;
   const totalHideoutTime = summary.total_hideout_time || 0;
-  const activePlayTime = totalPlayTime - totalHideoutTime;
+  const totalTownTime = summary.total_town_time || 0;
+  const activePlayTime = totalPlayTime - totalHideoutTime - totalTownTime;
   const totalDeaths = summary.total_deaths || 0;
 
   // Filter out towns and hideouts for average time per zone calculation
@@ -66,7 +67,8 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
 
   // Calculate efficiency metrics
   const hideoutPercentage = totalPlayTime > 0 ? (totalHideoutTime / totalPlayTime) * 100 : 0;
-  const activePlayPercentage = 100 - hideoutPercentage;
+  const townPercentage = totalPlayTime > 0 ? (totalTownTime / totalPlayTime) * 100 : 0;
+  const activePlayPercentage = 100 - hideoutPercentage - townPercentage;
 
   return (
     <Card title="Insights" icon={<ClockIcon />} className="py-0">
@@ -80,6 +82,11 @@ export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
         label="Hideout Time"
         value={formatDurationMinutes(totalHideoutTime)}
         subValue={`${hideoutPercentage.toFixed(1)}%`}
+      />
+      <DataItem
+        label="Town Time"
+        value={formatDurationMinutes(totalTownTime)}
+        subValue={`${townPercentage.toFixed(1)}%`}
       />
       <DataItem label="Deaths" value={totalDeaths} subValue={`${deathRate.toFixed(2)}/hr`} />
       <DataItem

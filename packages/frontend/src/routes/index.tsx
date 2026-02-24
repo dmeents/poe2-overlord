@@ -3,8 +3,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
-import { LevelingStatsCard } from '../components/leveling/leveling-stats-card/leveling-stats-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
+import { LevelingStatsCard } from '../components/leveling/leveling-stats-card/leveling-stats-card';
 import { Card } from '../components/ui/card/card';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
@@ -47,7 +47,6 @@ function Index() {
   const rightColumn = (
     <>
       <ExchangeRatesCard />
-      <LevelingStatsCard />
       {activeZone ? (
         <CurrentZoneCard zone={activeZone} />
       ) : (
@@ -63,6 +62,7 @@ function Index() {
           />
         </Card>
       )}
+      <LevelingStatsCard />
     </>
   );
 

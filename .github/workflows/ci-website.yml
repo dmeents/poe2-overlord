@@ -1,0 +1,62 @@
+name: CI Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/website/**'
+      - 'packages/theme/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'biome.json'
+      - '.github/workflows/ci-website.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/website/**'
+      - 'packages/theme/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'biome.json'
+      - '.github/workflows/ci-website.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @poe2-overlord/website lint
+
+      - run: pnpm --filter @poe2-overlord/website typecheck
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @poe2-overlord/website build

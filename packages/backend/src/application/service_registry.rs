@@ -7,6 +7,9 @@ use crate::domain::economy::{EconomyRepository, EconomyRepositoryImpl, EconomySe
 use crate::domain::game_monitoring::{
     traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
 };
+use crate::domain::leveling::{
+    LevelingRepositoryImpl, LevelingService, LevelingServiceImpl,
+};
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
@@ -112,6 +115,13 @@ impl ServiceInitializer {
         let character_arc = Arc::new(character_service) as Arc<dyn CharacterService + Send + Sync>;
         app.manage(character_arc.clone());
 
+        // Leveling service — depends on pool and event_bus, must come after character service
+        let leveling_repo = Arc::new(LevelingRepositoryImpl::new(pool.clone()))
+            as Arc<dyn crate::domain::leveling::traits::LevelingRepository + Send + Sync>;
+        let leveling_service = Arc::new(LevelingServiceImpl::new(leveling_repo, event_bus.clone()))
+            as Arc<dyn LevelingService + Send + Sync>;
+        app.manage(leveling_service.clone());
+
         let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(std::path::PathBuf::from(
             "config/walkthrough_guide.json",
         )));
@@ -154,6 +164,7 @@ impl ServiceInitializer {
             zone_config_service.clone(),
             wiki_service.clone(),
             config_service.clone(),
+            leveling_service.clone(),
             event_bus.clone(),
         )
         .map_err(|e| {

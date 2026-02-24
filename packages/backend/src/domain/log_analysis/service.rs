@@ -1,4 +1,5 @@
 use crate::domain::character::traits::CharacterService;
+use crate::domain::leveling::traits::LevelingService;
 use crate::domain::log_analysis::models::LogAnalysisConfig;
 use crate::domain::log_analysis::repository::LogFileRepositoryImpl;
 use crate::domain::log_analysis::traits::{LogAnalysisService, LogFileRepository};
@@ -25,6 +26,7 @@ pub struct LogAnalysisServiceImpl {
     zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
     wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
     config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+    leveling_service: Arc<dyn LevelingService>,
     event_bus: Arc<crate::infrastructure::events::EventBus>,
     parser_manager: LogParserManager,
     is_running: Arc<RwLock<bool>>,
@@ -44,6 +46,7 @@ impl LogAnalysisServiceImpl {
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        leveling_service: Arc<dyn LevelingService>,
         event_bus: Arc<crate::infrastructure::events::EventBus>,
     ) -> AppResult<Self> {
         let config = Arc::new(RwLock::new(config));
@@ -58,6 +61,7 @@ impl LogAnalysisServiceImpl {
             zone_config,
             wiki_service,
             config_service,
+            leveling_service,
             event_bus,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
@@ -78,6 +82,7 @@ impl LogAnalysisServiceImpl {
         zone_config: Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         config_service: Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        leveling_service: Arc<dyn LevelingService>,
         event_bus: Arc<crate::infrastructure::events::EventBus>,
     ) -> Self {
         let config = Arc::new(RwLock::new(config));
@@ -91,6 +96,7 @@ impl LogAnalysisServiceImpl {
             zone_config,
             wiki_service,
             config_service,
+            leveling_service,
             event_bus,
             parser_manager,
             is_running: Arc::new(RwLock::new(false)),
@@ -161,6 +167,7 @@ impl LogAnalysisServiceImpl {
         let zone_config = Arc::clone(&self.zone_config);
         let wiki_service = Arc::clone(&self.wiki_service);
         let config_service = Arc::clone(&self.config_service);
+        let leveling_service = Arc::clone(&self.leveling_service);
         let event_bus = Arc::clone(&self.event_bus);
         let is_running = Arc::clone(&self.is_running);
         let last_position = Arc::clone(&self.last_position);
@@ -199,6 +206,7 @@ impl LogAnalysisServiceImpl {
                                 &zone_config,
                                 &wiki_service,
                                 &config_service,
+                                &leveling_service,
                                 &event_bus,
                                 &last_position,
                                 &zone_level_cache,
@@ -240,6 +248,7 @@ impl LogAnalysisServiceImpl {
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        leveling_service: &Arc<dyn LevelingService>,
         event_bus: &Arc<crate::infrastructure::events::EventBus>,
         last_position: &Arc<RwLock<u64>>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
@@ -303,6 +312,7 @@ impl LogAnalysisServiceImpl {
                 zone_config,
                 wiki_service,
                 config_service,
+                leveling_service,
                 event_bus,
                 zone_level_cache,
             )
@@ -589,6 +599,7 @@ impl LogAnalysisServiceImpl {
 
     async fn process_character_death_with_error_handling(
         character_service: &Arc<dyn CharacterService>,
+        leveling_service: &Arc<dyn LevelingService>,
         character_name: &str,
         character_id: &str,
     ) {
@@ -612,6 +623,10 @@ impl LogAnalysisServiceImpl {
                 );
             }
         }
+
+        if let Err(e) = leveling_service.record_death(character_id).await {
+            error!("LEVELING: Failed to record death for leveling stats: {}", e);
+        }
     }
 
     #[allow(clippy::too_many_arguments, clippy::type_complexity)]
@@ -624,6 +639,7 @@ impl LogAnalysisServiceImpl {
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         config_service: &Arc<dyn crate::domain::configuration::traits::ConfigurationService>,
+        leveling_service: &Arc<dyn LevelingService>,
         event_bus: &Arc<crate::infrastructure::events::EventBus>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     ) -> AppResult<()> {
@@ -712,6 +728,16 @@ impl LogAnalysisServiceImpl {
                         character_service.get_active_character().await
                     {
                         if active_character.name == character_name {
+                            let old_level = active_character.level;
+
+                            // Record level-up in leveling domain before updating character level
+                            if let Err(e) = leveling_service
+                                .record_level_up(&active_character.id, old_level, new_level)
+                                .await
+                            {
+                                error!("LEVELING: Failed to record level-up event: {}", e);
+                            }
+
                             character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
@@ -727,6 +753,7 @@ impl LogAnalysisServiceImpl {
                         if active_character.name == character_name {
                             Self::process_character_death_with_error_handling(
                                 character_service,
+                                leveling_service,
                                 &character_name,
                                 &active_character.id,
                             )

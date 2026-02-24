@@ -1,6 +1,7 @@
 use crate::domain::character::models::CharacterDataResponse;
 use crate::domain::configuration::models::ConfigurationChangedEvent;
 use crate::domain::game_monitoring::models::GameProcessStatus;
+use crate::domain::leveling::models::LevelingStats;
 use crate::domain::server_monitoring::models::ServerStatus;
 use crate::domain::walkthrough::models::WalkthroughStepResult;
 use serde::{Deserialize, Serialize};
@@ -10,11 +11,6 @@ pub enum AppEvent {
     ServerStatusChanged {
         old_status: Option<ServerStatus>,
         new_status: ServerStatus,
-        timestamp: String,
-    },
-    ServerPingCompleted {
-        server_status: ServerStatus,
-        latency_ms: Option<u64>,
         timestamp: String,
     },
 
@@ -53,6 +49,12 @@ pub enum AppEvent {
         timestamp: String,
     },
 
+    LevelingStatsUpdated {
+        character_id: String,
+        stats: LevelingStats,
+        timestamp: String,
+    },
+
     SystemError {
         error_message: String,
         error_type: String,
@@ -66,15 +68,14 @@ pub enum AppEvent {
 impl AppEvent {
     pub fn event_type(&self) -> EventType {
         match self {
-            AppEvent::ServerStatusChanged { .. } | AppEvent::ServerPingCompleted { .. } => {
-                EventType::ServerMonitoring
-            }
+            AppEvent::ServerStatusChanged { .. } => EventType::ServerMonitoring,
             AppEvent::ConfigurationChanged(_) => EventType::Configuration,
             AppEvent::CharacterUpdated { .. }
             | AppEvent::CharacterDeleted { .. }
             | AppEvent::WalkthroughStepCompleted { .. }
             | AppEvent::WalkthroughStepAdvanced { .. }
-            | AppEvent::WalkthroughCampaignCompleted { .. } => EventType::CharacterTracking,
+            | AppEvent::WalkthroughCampaignCompleted { .. }
+            | AppEvent::LevelingStatsUpdated { .. } => EventType::CharacterTracking,
             AppEvent::GameProcessStatusChanged { .. } => EventType::GameMonitoring,
             AppEvent::SystemError { .. } | AppEvent::SystemShutdown { .. } => EventType::System,
         }
@@ -83,7 +84,6 @@ impl AppEvent {
     pub fn timestamp(&self) -> String {
         match self {
             AppEvent::ServerStatusChanged { timestamp, .. } => timestamp.clone(),
-            AppEvent::ServerPingCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::ConfigurationChanged(event) => event.timestamp.clone(),
             AppEvent::CharacterUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::CharacterDeleted { timestamp, .. } => timestamp.clone(),
@@ -91,6 +91,7 @@ impl AppEvent {
             AppEvent::WalkthroughStepAdvanced { timestamp, .. } => timestamp.clone(),
             AppEvent::WalkthroughCampaignCompleted { timestamp, .. } => timestamp.clone(),
             AppEvent::GameProcessStatusChanged { timestamp, .. } => timestamp.clone(),
+            AppEvent::LevelingStatsUpdated { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemError { timestamp, .. } => timestamp.clone(),
             AppEvent::SystemShutdown { timestamp, .. } => timestamp.clone(),
         }
@@ -103,14 +104,6 @@ impl AppEvent {
         Self::ServerStatusChanged {
             old_status,
             new_status,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
-    }
-
-    pub fn server_ping_completed(server_status: ServerStatus, latency_ms: Option<u64>) -> Self {
-        Self::ServerPingCompleted {
-            server_status,
-            latency_ms,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
@@ -139,6 +132,14 @@ impl AppEvent {
             old_status,
             new_status,
             is_state_change,
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    pub fn leveling_stats_updated(character_id: String, stats: LevelingStats) -> Self {
+        Self::LevelingStatsUpdated {
+            character_id,
+            stats,
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }

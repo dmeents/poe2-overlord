@@ -20,4 +20,5 @@ pub trait ServerMonitoringService: Send + Sync {
     async fn ping_current_server(&self) -> AppResult<()>;
     async fn start_ping_monitoring(&self) -> AppResult<()>;
     async fn stop_ping_monitoring(&self) -> AppResult<()>;
+    async fn get_current_status(&self) -> Option<ServerStatus>;
 }

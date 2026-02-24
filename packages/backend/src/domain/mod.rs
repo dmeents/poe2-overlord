@@ -4,6 +4,7 @@ pub mod character;
 pub mod configuration;
 pub mod economy;
 pub mod game_monitoring;
+pub mod leveling;
 pub mod log_analysis;
 pub mod server_monitoring;
 pub mod walkthrough;
@@ -49,6 +50,10 @@ pub use walkthrough::{
 
 pub use zone_configuration::{
     ZoneConfiguration, ZoneConfigurationService, ZoneConfigurationServiceImpl,
+};
+
+pub use leveling::{
+    LevelEventResponse, LevelingRepositoryImpl, LevelingService, LevelingServiceImpl, LevelingStats,
 };
 
 pub use zone_tracking::{TrackingSummary, ZoneStats};

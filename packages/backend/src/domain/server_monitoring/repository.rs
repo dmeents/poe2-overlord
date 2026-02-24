@@ -8,7 +8,6 @@ use sqlx::SqlitePool;
 /// Server status repository implementation using SQLite.
 ///
 /// Stores server status in a single-row `server_status` table.
-/// Much simpler than the JSON implementation - no file path management needed.
 pub struct ServerStatusRepositoryImpl {
     pool: SqlitePool,
 }

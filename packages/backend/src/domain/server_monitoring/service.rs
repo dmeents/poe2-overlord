@@ -15,6 +15,7 @@ use tokio::time;
 
 const MONITORING_INTERVAL_SECS: u64 = 30;
 
+#[derive(Clone)]
 pub struct ServerMonitoringServiceImpl {
     repository: Arc<dyn ServerStatusRepository>,
     event_bus: Arc<EventBus>,
@@ -38,19 +39,6 @@ impl ServerMonitoringServiceImpl {
             monitoring_active: Arc::new(RwLock::new(false)),
             monitoring_task: Arc::new(RwLock::new(None)),
         })
-    }
-}
-
-impl Clone for ServerMonitoringServiceImpl {
-    fn clone(&self) -> Self {
-        Self {
-            repository: Arc::clone(&self.repository),
-            event_bus: Arc::clone(&self.event_bus),
-            ping_provider: Arc::clone(&self.ping_provider),
-            cached_status: Arc::clone(&self.cached_status),
-            monitoring_active: Arc::clone(&self.monitoring_active),
-            monitoring_task: Arc::clone(&self.monitoring_task),
-        }
     }
 }
 
@@ -186,6 +174,15 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
 
         drop(is_active);
         Ok(())
+    }
+
+    async fn get_current_status(&self) -> Option<ServerStatus> {
+        // Try cached status first
+        if let Some(status) = self.cached_status.read().await.clone() {
+            return Some(status);
+        }
+        // Fallback: load from repository
+        self.repository.load().await.ok().flatten()
     }
 
     async fn stop_ping_monitoring(&self) -> AppResult<()> {

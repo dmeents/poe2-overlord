@@ -115,7 +115,6 @@ impl TauriEventBridge {
     fn get_event_name(event: &AppEvent) -> String {
         match event {
             AppEvent::ServerStatusChanged { .. } => "server-status-changed".to_string(),
-            AppEvent::ServerPingCompleted { .. } => "server-ping-completed".to_string(),
             AppEvent::ConfigurationChanged(_) => "configuration-changed".to_string(),
             AppEvent::CharacterUpdated { .. } => "character-updated".to_string(),
             AppEvent::CharacterDeleted { .. } => "character-deleted".to_string(),
@@ -125,6 +124,7 @@ impl TauriEventBridge {
                 "walkthrough-campaign-completed".to_string()
             }
             AppEvent::GameProcessStatusChanged { .. } => "game-process-status-changed".to_string(),
+            AppEvent::LevelingStatsUpdated { .. } => "leveling-stats-updated".to_string(),
             AppEvent::SystemError { .. } => "system-error".to_string(),
             AppEvent::SystemShutdown { .. } => "system-shutdown".to_string(),
         }

@@ -1,3 +1,4 @@
+pub mod commands;
 pub mod models;
 pub mod ping_provider;
 pub mod repository;

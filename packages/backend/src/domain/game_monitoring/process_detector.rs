@@ -6,16 +6,19 @@ use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::debug;
 use std::ffi::OsString;
-use sysinfo::System;
+use sysinfo::{ProcessesToUpdate, System};
+use tokio::sync::Mutex;
 
 pub struct ProcessDetectorImpl {
     config: GameMonitoringConfig,
+    system: Mutex<System>,
 }
 
 impl ProcessDetectorImpl {
     pub fn new() -> Self {
         Self {
             config: GameMonitoringConfig::default(),
+            system: Mutex::new(System::new()),
         }
     }
 }
@@ -95,8 +98,8 @@ impl ProcessDetectorImpl {
 #[async_trait]
 impl ProcessDetector for ProcessDetectorImpl {
     async fn check_game_process(&self) -> AppResult<GameProcessStatus> {
-        let mut system = System::new_all();
-        system.refresh_all();
+        let mut system = self.system.lock().await;
+        system.refresh_processes(ProcessesToUpdate::All, false);
 
         for (pid, process) in system.processes() {
             let process_name = process.name().to_string_lossy().to_lowercase();

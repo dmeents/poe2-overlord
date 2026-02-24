@@ -17,6 +17,8 @@ pub use domain::character::commands::*; // Character CRUD operations and trackin
 pub use domain::configuration::commands::*; // Configuration management
 pub use domain::economy::commands::*; // Economy and currency exchange data
 pub use domain::game_monitoring::commands::*; // Game process monitoring
+pub use domain::leveling::commands::*; // Leveling stats and XP tracking
+pub use domain::server_monitoring::commands::*; // Server status monitoring
 pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
 
 // Core error handling
@@ -28,9 +30,6 @@ pub type CommandResult<T> = Result<T, SerializableError>;
 pub fn to_command_result<T>(result: AppResult<T>) -> CommandResult<T> {
     result.map_err(SerializableError::from)
 }
-
-// Game monitoring models and state
-pub use domain::game_monitoring::models::{OverlayState, ProcessInfo};
 
 // Log analysis event models for tracking game state changes
 pub use domain::log_analysis::models::{
@@ -128,6 +127,12 @@ pub fn run() {
 
             // Game process monitoring commands
             get_game_process_status,
+
+            // Server monitoring commands
+            get_server_status,
+
+            // Leveling stats commands
+            get_leveling_stats,
 
             // Walkthrough guide commands
             get_walkthrough_guide,

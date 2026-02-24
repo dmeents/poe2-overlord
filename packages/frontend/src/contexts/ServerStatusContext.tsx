@@ -1,8 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import type { ServerStatus, ServerStatusChangedEvent } from '@/types/server';
+import { parseError } from '@/utils/error-handling';
 import { EVENT_KEYS, type ExtractPayload } from '@/utils/events/registry';
 
 interface ServerStatusContextValue {
@@ -13,6 +15,23 @@ const ServerStatusContext = createContext<ServerStatusContextValue | undefined>(
 
 export function ServerStatusProvider({ children }: React.PropsWithChildren) {
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
+
+  // Fetch initial server status on mount to avoid waiting for the first ping cycle
+  useEffect(() => {
+    const fetchInitialStatus = async () => {
+      try {
+        const status = await invoke<ServerStatus | null>('get_server_status');
+        if (status) {
+          setServerStatus(status);
+        }
+      } catch (err) {
+        const error = parseError(err);
+        console.error('Failed to fetch initial server status:', error.message);
+      }
+    };
+
+    fetchInitialStatus();
+  }, []);
 
   useAppEventListener([
     {

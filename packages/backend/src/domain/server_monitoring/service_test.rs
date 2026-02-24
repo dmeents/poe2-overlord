@@ -101,14 +101,6 @@ mod tests {
             .expect("Failed to create test service")
     }
 
-    async fn ensure_test_data_dir() {
-        use tokio::fs;
-        if let Some(data_dir) = dirs::data_local_dir() {
-            let app_data_dir = data_dir.join("poe2-overlord");
-            let _ = fs::create_dir_all(app_data_dir).await;
-        }
-    }
-
     #[tokio::test]
     async fn test_service_creation() {
         let ping_provider = Arc::new(MockPingProvider::new_success(50));
@@ -118,8 +110,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_server_from_log() {
-        ensure_test_data_dir().await;
-
         let event_bus = Arc::new(EventBus::new());
         let ping_provider = Arc::new(MockPingProvider::new_success(50));
         let repository = Arc::new(MockServerStatusRepository::new());
@@ -164,8 +154,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_ping_current_server_success() {
-        ensure_test_data_dir().await;
-
         let event_bus = Arc::new(EventBus::new());
         let ping_provider = Arc::new(MockPingProvider::new_success(42));
         let repository = Arc::new(MockServerStatusRepository::new());
@@ -213,8 +201,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_ping_current_server_failure() {
-        ensure_test_data_dir().await;
-
         let event_bus = Arc::new(EventBus::new());
         let ping_provider = Arc::new(MockPingProvider::new_failure());
         let repository = Arc::new(MockServerStatusRepository::new());

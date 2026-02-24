@@ -3,7 +3,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useGameProcess } from '@/contexts/GameProcessContext';
 import { useServerStatus } from '@/contexts/ServerStatusContext';
-import type { ServerStatus } from '@/types/server';
 import { getDisplayAct } from '@/utils/zone-utils';
 import { Button } from '../../ui/button/button';
 import { StatusIndicator } from '../status-indicator/status-indicator';
@@ -36,13 +35,12 @@ export const StatusBar = () => {
       return 'Attempting to connect to POE2 server...';
     }
 
-    const status = serverStatus as ServerStatus;
-    if (status.is_online) {
-      const pingText = status.latency_ms ? ` (${status.latency_ms}ms)` : '';
+    if (serverStatus.is_online) {
+      const pingText = serverStatus.latency_ms ? ` (${serverStatus.latency_ms}ms)` : '';
 
-      return `POE2 server is online${pingText}\nServer: ${status.ip_address}`;
+      return `POE2 server is online${pingText}\nServer: ${serverStatus.ip_address}`;
     } else {
-      return `POE2 server is offline\nLast known server: ${status.ip_address}`;
+      return `POE2 server is offline\nLast known server: ${serverStatus.ip_address}`;
     }
   };
 
@@ -58,13 +56,7 @@ export const StatusBar = () => {
         </div>
         <div title={getServerStatusTooltip()}>
           <StatusIndicator
-            status={
-              !serverStatus
-                ? 'info'
-                : (serverStatus as ServerStatus).is_online
-                  ? 'success'
-                  : 'error'
-            }
+            status={!serverStatus ? 'info' : serverStatus.is_online ? 'success' : 'error'}
             icon={<ChartBarIcon />}
             size="sm"
           />

@@ -14,14 +14,6 @@ interface GameProcessContextValue {
 
 const GameProcessContext = createContext<GameProcessContextValue | undefined>(undefined);
 
-// Type for the ProcessInfo returned by get_game_process_status command
-// (differs slightly from GameProcessStatus - no detected_at field)
-interface ProcessInfo {
-  name: string;
-  pid: number;
-  running: boolean;
-}
-
 export function GameProcessProvider({ children }: React.PropsWithChildren) {
   const [processInfo, setProcessInfo] = useState<GameProcessStatus | null>(null);
 
@@ -29,12 +21,8 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
   useEffect(() => {
     const fetchInitialStatus = async () => {
       try {
-        const status = await invoke<ProcessInfo>('get_game_process_status');
-        // Convert ProcessInfo to GameProcessStatus format
-        setProcessInfo({
-          ...status,
-          detected_at: new Date().toISOString(),
-        });
+        const status = await invoke<GameProcessStatus>('get_game_process_status');
+        setProcessInfo(status);
       } catch (err) {
         const error = parseError(err);
         console.error('Failed to fetch initial game process status:', error.message);

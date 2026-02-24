@@ -1,0 +1,22 @@
+export const levelingStatsCardStyles = {
+  container: 'p-4',
+  xpRateSection: 'mb-4',
+  xpRateLabel: 'text-xs text-stone-500 mb-1',
+  xpRateValue: 'text-2xl font-bold text-ember-400',
+  xpRateEmpty: 'text-2xl font-bold text-stone-600',
+  statsGrid: 'grid grid-cols-2 gap-3 mb-4',
+  statBox: 'bg-stone-800/50 rounded px-3 py-2',
+  statLabel: 'text-xs text-stone-500 mb-0.5',
+  statValue: 'text-sm font-mono text-stone-200',
+  statValueHighlight: 'text-sm font-mono text-blood-400',
+  divider: 'border-t border-stone-800 mb-3',
+  historyTitle: 'text-xs text-stone-500 uppercase tracking-wider mb-2',
+  historyList: 'space-y-1.5',
+  historyRow:
+    'flex items-center justify-between text-xs bg-stone-800/30 rounded px-2.5 py-1.5',
+  historyLevel: 'text-molten-400 font-semibold w-12',
+  historyTime: 'text-stone-400 flex-1 text-center',
+  historyXphr: 'text-stone-300 text-right w-20',
+  historyDeaths: 'text-blood-400 ml-2',
+  emptyState: 'text-stone-600 text-sm text-center py-4',
+} as const;

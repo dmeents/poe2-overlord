@@ -1,5 +1,6 @@
 import type { ConfigurationChangedEvent as ConfigurationChangedEventData } from '@/types/app-config';
 import type { CharacterData } from '@/types/character';
+import type { LevelingStats } from '@/types/leveling';
 import type { GameProcessStatusChangedEvent } from '@/types/process';
 import type { ServerStatusChangedEvent } from '@/types/server';
 import type { WalkthroughStepResult } from '@/types/walkthrough';
@@ -14,7 +15,7 @@ export const APP_EVENTS = {
   CharacterUpdated: 'character-updated',
   CharacterDeleted: 'character-deleted',
   ConfigurationChanged: 'configuration-changed',
-  ServerPingCompleted: 'server-ping-completed',
+  LevelingStatsUpdated: 'leveling-stats-updated',
 
   WalkthroughStepCompleted: 'walkthrough-step-completed',
   WalkthroughStepAdvanced: 'walkthrough-step-advanced',
@@ -34,7 +35,7 @@ export const EVENT_KEYS = {
   CharacterUpdated: 'CharacterUpdated',
   CharacterDeleted: 'CharacterDeleted',
   ConfigurationChanged: 'ConfigurationChanged',
-  ServerPingCompleted: 'ServerPingCompleted',
+  LevelingStatsUpdated: 'LevelingStatsUpdated',
   WalkthroughStepCompleted: 'WalkthroughStepCompleted',
   WalkthroughStepAdvanced: 'WalkthroughStepAdvanced',
   WalkthroughCampaignCompleted: 'WalkthroughCampaignCompleted',
@@ -67,6 +68,15 @@ export type CharacterDeletedEvent = {
 /** Event type for configuration changes */
 export type ConfigurationChangedEvent = {
   ConfigurationChanged: ConfigurationChangedEventData;
+};
+
+/** Event type for leveling stats updates */
+export type LevelingStatsUpdatedEvent = {
+  LevelingStatsUpdated: {
+    character_id: string;
+    stats: LevelingStats;
+    timestamp: string;
+  };
 };
 
 /** Event type for walkthrough step completed */
@@ -103,6 +113,7 @@ export type AppEventRegistry = {
   CharacterUpdated: CharacterUpdatedEvent;
   CharacterDeleted: CharacterDeletedEvent;
   ConfigurationChanged: ConfigurationChangedEvent;
+  LevelingStatsUpdated: LevelingStatsUpdatedEvent;
 
   WalkthroughStepCompleted: WalkthroughStepCompletedEvent;
   WalkthroughStepAdvanced: WalkthroughStepAdvancedEvent;

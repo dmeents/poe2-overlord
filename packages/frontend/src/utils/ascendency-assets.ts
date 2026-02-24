@@ -42,7 +42,7 @@ const ASCENDENCY_IMAGES: Record<Ascendency, string | null> = {
   Invoker: invokerImage,
   'Acolyte of Chayula': acolyteImage,
   'Gemling Legionnaire': gemlingImage,
-  Tactitian: tacticianImage,
+  Tactician: tacticianImage,
   Witchhunter: witchHunterImage,
   'Blood Mage': bloodMageImage,
   Infernalist: infernalistImage,

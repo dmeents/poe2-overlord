@@ -225,7 +225,7 @@ mod tests {
             &CharacterClass::Mercenary
         ));
         assert!(is_valid_ascendency_for_class(
-            &Ascendency::Tactitian,
+            &Ascendency::Tactician,
             &CharacterClass::Mercenary
         ));
         assert!(is_valid_ascendency_for_class(

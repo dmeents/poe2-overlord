@@ -142,8 +142,8 @@ pub enum Ascendency {
     AcolyteOfChayula,
     #[serde(rename = "Gemling Legionnaire")]
     GemlingLegionnaire,
-    #[serde(rename = "Tactitian")]
-    Tactitian,
+    #[serde(rename = "Tactician")]
+    Tactician,
     #[serde(rename = "Witchhunter")]
     Witchhunter,
     #[serde(rename = "Blood Mage")]
@@ -436,7 +436,7 @@ pub fn is_valid_ascendency_for_class(ascendency: &Ascendency, class: &CharacterC
         ),
         CharacterClass::Mercenary => matches!(
             ascendency,
-            Ascendency::GemlingLegionnaire | Ascendency::Tactitian | Ascendency::Witchhunter
+            Ascendency::GemlingLegionnaire | Ascendency::Tactician | Ascendency::Witchhunter
         ),
         CharacterClass::Witch => matches!(
             ascendency,
@@ -518,7 +518,7 @@ impl fmt::Display for Ascendency {
             Ascendency::Invoker => write!(f, "Invoker"),
             Ascendency::AcolyteOfChayula => write!(f, "Acolyte of Chayula"),
             Ascendency::GemlingLegionnaire => write!(f, "Gemling Legionnaire"),
-            Ascendency::Tactitian => write!(f, "Tactitian"),
+            Ascendency::Tactician => write!(f, "Tactician"),
             Ascendency::Witchhunter => write!(f, "Witchhunter"),
             Ascendency::BloodMage => write!(f, "Blood Mage"),
             Ascendency::Infernalist => write!(f, "Infernalist"),
@@ -546,7 +546,7 @@ impl FromStr for Ascendency {
             "Invoker" => Ok(Self::Invoker),
             "Acolyte of Chayula" => Ok(Self::AcolyteOfChayula),
             "Gemling Legionnaire" => Ok(Self::GemlingLegionnaire),
-            "Tactitian" => Ok(Self::Tactitian),
+            "Tactician" => Ok(Self::Tactician),
             "Witchhunter" => Ok(Self::Witchhunter),
             "Blood Mage" => Ok(Self::BloodMage),
             "Infernalist" => Ok(Self::Infernalist),

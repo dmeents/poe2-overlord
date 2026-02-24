@@ -148,7 +148,7 @@ pnpm typecheck      # Record<CharacterClass,...> and Record<Ascendency,...> enfo
 | Ranger     | Deadeye, Pathfinder                                       | `verdant`   |
 | Huntress   | Ritualist, Amazon                                         | `molten`    |
 | Monk       | Invoker, Acolyte of Chayula                               | `spirit`    |
-| Mercenary  | Gemling Legionnaire, Tactitian, Witchhunter               | `ember`     |
+| Mercenary  | Gemling Legionnaire, Tactician, Witchhunter               | `ember`     |
 | Witch      | Blood Mage, Infernalist, Lich                             | `hex`       |
 | Druid      | Shaman, Oracle                                            | `primal`    |
 

@@ -27,7 +27,7 @@ const ALL_ASCENDENCIES = [
   'Invoker',
   'Acolyte of Chayula',
   'Gemling Legionnaire',
-  'Tactitian',
+  'Tactician',
   'Witchhunter',
   'Blood Mage',
   'Infernalist',
@@ -48,7 +48,7 @@ const ASCENDENCIES_BY_CLASS: Record<CharacterClass, readonly Ascendency[]> = {
   Ranger: ['Deadeye', 'Pathfinder'],
   Huntress: ['Ritualist', 'Amazon'],
   Monk: ['Invoker', 'Acolyte of Chayula'],
-  Mercenary: ['Gemling Legionnaire', 'Tactitian', 'Witchhunter'],
+  Mercenary: ['Gemling Legionnaire', 'Tactician', 'Witchhunter'],
   Witch: ['Blood Mage', 'Infernalist', 'Lich'],
   Druid: ['Shaman', 'Oracle'],
 };

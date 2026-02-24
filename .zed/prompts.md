@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-POE2 Overlord is a desktop overlay application for Path of Exile 2, providing real-time game information and character management.
+POE2 Overlord is a desktop companion application for Path of Exile 2, providing real-time game information and character management.
 
 **Tech Stack:**
 - **Frontend**: React 19 + Tanstack Router/Query + Tailwind CSS v4

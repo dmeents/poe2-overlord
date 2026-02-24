@@ -82,7 +82,6 @@ Investigate Rust backend, review existing tests, improve/fix them, and create co
   - State change detection (started, stopped, same state)
   - GameMonitoringConfig (default, default process names)
   - ProcessInfo serialization
-  - OverlayState serialization/deserialization
 
 #### 8. Log Analysis Module Tests (NEW)
 - **File**: `domain/log_analysis/models_test.rs`

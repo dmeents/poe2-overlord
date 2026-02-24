@@ -1,7 +1,7 @@
 {
   "name": "POE2 Overlord",
   "short_name": "POE2 Overlord",
-  "description": "Game overlay for Path of Exile 2 - Track characters, zone statistics, campaign progress, and more",
+  "description": "Companion app for Path of Exile 2 - Track characters, zone statistics, campaign progress, and more",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1c1917",

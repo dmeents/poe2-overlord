@@ -76,7 +76,7 @@ The domain layer contains eight distinct bounded contexts, each representing a s
 **Purpose**: Process detection and game state monitoring.
 
 **Key Components**:
-- **Models**: `GameProcessStatus`, `OverlayState`, `ProcessInfo`
+- **Models**: `GameProcessStatus`, `GameMonitoringConfig`
 - **Service**: Process detection and state coordination
 - **Events**: Game state change notifications
 

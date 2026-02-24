@@ -1,6 +1,6 @@
 # POE2 Overlord Frontend
 
-A modern, modular React 19 frontend for the POE2 Overlord overlay application built with Tauri 2, featuring a comprehensive routing system, component library, and real-time game monitoring capabilities.
+A modern, modular React 19 frontend for the POE2 Overlord companion application built with Tauri 2, featuring a comprehensive routing system, component library, and real-time game monitoring capabilities.
 
 ## Architecture
 
@@ -112,7 +112,7 @@ All components follow these principles:
 - **Button**: Versatile button component with multiple variants and sizes
 - **Loading Spinner**: Loading state component for async operations
 - **Tooltip**: Contextual help and information display
-- **Window Title**: Window title management for overlay behavior
+- **Window Title**: Window title management
 
 ### Form Components
 

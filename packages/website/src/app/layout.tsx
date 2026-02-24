@@ -19,7 +19,7 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-  title: 'POE2 Overlord - Game Overlay for Path of Exile 2',
+  title: 'POE2 Overlord - Companion App for Path of Exile 2',
   description: 'Track characters, zone statistics, campaign progress, and more.',
   icons: {
     icon: [

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-POE2 Overlord is a game overlay for Path of Exile 2 built with Tauri, with a marketing website. It's a monorepo with:
+POE2 Overlord is a companion app for Path of Exile 2 built with Tauri, with a marketing website. It's a monorepo with:
 - **packages/theme**: Shared Tailwind v4 design tokens + utilities (consumed by frontend & website)
 - **packages/frontend**: React 19 + TypeScript + Vite (desktop app UI)
 - **packages/backend**: Rust + Tauri 2.8 (desktop app backend)

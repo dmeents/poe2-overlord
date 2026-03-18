@@ -155,7 +155,6 @@ export interface CharacterData {
   last_played?: string;
   current_location?: EnrichedLocationState;
   summary: CharacterSummary;
-  zones: ZoneStats[];
   walkthrough_progress: WalkthroughProgress;
   last_updated: string;
 }

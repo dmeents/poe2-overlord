@@ -412,6 +412,40 @@ impl CharacterService for CharacterServiceImpl {
 
         Ok(enriched)
     }
+
+    async fn get_character_zones(
+        &self,
+        character_id: &str,
+    ) -> Result<Vec<EnrichedZoneStats>, AppError> {
+        let zone_stats = self.repository.get_character_zones(character_id).await?;
+        let zone_config = self.zone_config.load_configuration().await.ok();
+
+        let enriched = zone_stats
+            .iter()
+            .map(|stats| {
+                let metadata = zone_config
+                    .as_ref()
+                    .and_then(|c| c.get_zone_by_name(&stats.zone_name).cloned());
+                if let Some(meta) = metadata {
+                    EnrichedZoneStats::from_stats_and_metadata(stats, &meta)
+                } else {
+                    EnrichedZoneStats::from_stats_minimal(stats)
+                }
+            })
+            .collect();
+
+        Ok(enriched)
+    }
+
+    async fn has_character_visited_zone(
+        &self,
+        character_id: &str,
+        zone_name: &str,
+    ) -> Result<bool, AppError> {
+        self.repository
+            .has_character_visited_zone(character_id, zone_name)
+            .await
+    }
 }
 
 impl CharacterServiceImpl {
@@ -433,23 +467,6 @@ impl CharacterServiceImpl {
             }
         });
 
-        // Enrich zones directly from ZoneStats + zone config
-        let enriched_zones = character_data
-            .zones
-            .iter()
-            .map(|zone_stats| {
-                let zone_metadata = zone_config
-                    .as_ref()
-                    .and_then(|c| c.get_zone_by_name(&zone_stats.zone_name).cloned());
-
-                if let Some(metadata) = zone_metadata {
-                    EnrichedZoneStats::from_stats_and_metadata(zone_stats, &metadata)
-                } else {
-                    EnrichedZoneStats::from_stats_minimal(zone_stats)
-                }
-            })
-            .collect();
-
         CharacterDataResponse {
             id: character_data.id,
             name: character_data.profile.name,
@@ -464,7 +481,6 @@ impl CharacterServiceImpl {
             last_updated: character_data.timestamps.last_updated,
             current_location,
             summary: character_data.summary,
-            zones: enriched_zones,
             walkthrough_progress: character_data.walkthrough_progress,
         }
     }

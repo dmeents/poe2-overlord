@@ -62,7 +62,6 @@ const createMockCharacter = (summaryOverrides: Partial<CharacterSummary> = {}): 
   created_at: '2024-01-01T00:00:00Z',
   last_updated: '2024-01-10T00:00:00Z',
   summary: createMockSummary(summaryOverrides),
-  zones: [],
   walkthrough_progress: {
     current_step_id: null,
     is_completed: false,

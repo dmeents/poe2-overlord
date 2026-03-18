@@ -2,6 +2,7 @@ import { ChartBarIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
 import { Card } from '@/components/ui/card/card';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { useGameProcess } from '@/contexts/GameProcessContext';
 import { useActiveLevelTime } from '@/hooks/useActiveLevelTime';
 import { useLevelingStats } from '@/queries/leveling';
 import { formatDuration } from '@/utils/format-duration';
@@ -11,10 +12,12 @@ import { levelingStatsCardStyles as styles } from './leveling-stats-card.styles'
 
 export const LevelingStatsCard = memo(function LevelingStatsCard() {
   const { activeCharacter } = useCharacter();
+  const { gameRunning } = useGameProcess();
   const { data: stats } = useLevelingStats(activeCharacter?.id);
 
-  // Backend computes is_actively_grinding from zone state — no need to re-derive it here
-  const isTimerActive = !!stats?.is_actively_grinding && !!stats?.last_level_reached_at;
+  // Backend computes is_actively_grinding from zone state — no need to re-derive it here.
+  // gameRunning guards against stale cache keeping the timer alive after the process stops.
+  const isTimerActive = !!stats?.is_actively_grinding && !!stats?.last_level_reached_at && gameRunning;
 
   const timeAtLevelSeconds = useActiveLevelTime({
     lastLevelTimestamp: stats?.last_level_reached_at ?? undefined,

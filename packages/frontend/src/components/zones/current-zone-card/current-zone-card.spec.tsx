@@ -12,6 +12,12 @@ vi.mock('@/contexts/ZoneContext', () => ({
   }),
 }));
 
+vi.mock('@/contexts/GameProcessContext', () => ({
+  useGameProcess: () => ({
+    gameRunning: true,
+  }),
+}));
+
 const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
   zone_name: 'The Coast',
   act: 1,

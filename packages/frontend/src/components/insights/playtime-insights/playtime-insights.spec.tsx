@@ -44,16 +44,12 @@ const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
   ...overrides,
 });
 
-const createMockCharacter = (
-  summaryOverrides: Partial<CharacterSummary> = {},
-  zones: ZoneStats[] = [],
-): CharacterData =>
+const createMockCharacter = (summaryOverrides: Partial<CharacterSummary> = {}): CharacterData =>
   ({
     id: 'char-1',
     name: 'TestChar',
     class: 'Witch',
     summary: createMockSummary(summaryOverrides),
-    zones,
   }) as CharacterData;
 
 describe('PlaytimeInsights', () => {
@@ -180,11 +176,11 @@ describe('PlaytimeInsights', () => {
       ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({}, zones),
+        activeCharacter: createMockCharacter(),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={zones} />);
 
       expect(screen.getByText('Avg Time per Zone')).toBeInTheDocument();
       expect(screen.getByText('2 zones')).toBeInTheDocument();
@@ -197,11 +193,11 @@ describe('PlaytimeInsights', () => {
       ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({}, zones),
+        activeCharacter: createMockCharacter(),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={zones} />);
 
       expect(screen.getByText('1 zones')).toBeInTheDocument();
     });
@@ -217,11 +213,11 @@ describe('PlaytimeInsights', () => {
       ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({}, zones),
+        activeCharacter: createMockCharacter(),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={zones} />);
 
       expect(screen.getByText('1 zones')).toBeInTheDocument();
     });
@@ -238,11 +234,11 @@ describe('PlaytimeInsights', () => {
       ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({ total_deaths: 0 }, zones),
+        activeCharacter: createMockCharacter({ total_deaths: 0 }),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={zones} />);
 
       expect(screen.getByText('Most Time Spent')).toBeInTheDocument();
       expect(screen.getByText('Longest Zone')).toBeInTheDocument();
@@ -256,11 +252,11 @@ describe('PlaytimeInsights', () => {
       ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({}, zones),
+        activeCharacter: createMockCharacter(),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={zones} />);
 
       expect(screen.getByText('Most Deaths')).toBeInTheDocument();
       expect(screen.getByText('Hard Zone')).toBeInTheDocument();
@@ -274,27 +270,22 @@ describe('PlaytimeInsights', () => {
       ];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({ total_deaths: 0 }, zones),
+        activeCharacter: createMockCharacter({ total_deaths: 0 }),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={zones} />);
 
       expect(screen.queryByText('Most Deaths')).not.toBeInTheDocument();
     });
   });
 
   describe('Props Override', () => {
-    it('uses zones prop when provided instead of context zones', () => {
-      const contextZones = [
-        createMockZone({ zone_name: 'Context Zone', duration: 100, deaths: 0 }),
-      ];
+    it('uses zones prop when provided', () => {
       const propZones = [createMockZone({ zone_name: 'Prop Zone', duration: 500, deaths: 0 })];
 
       mockUseCharacter.mockReturnValue({
-        activeCharacter: {
-          ...createMockCharacter({ total_deaths: 0 }, contextZones),
-        },
+        activeCharacter: createMockCharacter({ total_deaths: 0 }),
         isLoading: false,
       });
 
@@ -302,7 +293,6 @@ describe('PlaytimeInsights', () => {
 
       // Zone name appears in "Most Time Spent" row
       expect(screen.getByText('Prop Zone')).toBeInTheDocument();
-      expect(screen.queryByText('Context Zone')).not.toBeInTheDocument();
     });
   });
 
@@ -326,11 +316,11 @@ describe('PlaytimeInsights', () => {
 
     it('handles empty zones array', () => {
       mockUseCharacter.mockReturnValue({
-        activeCharacter: createMockCharacter({}, []),
+        activeCharacter: createMockCharacter(),
         isLoading: false,
       });
 
-      render(<PlaytimeInsights />);
+      render(<PlaytimeInsights zones={[]} />);
 
       expect(screen.getByText('Avg Time per Zone')).toBeInTheDocument();
       expect(screen.getByText('0 zones')).toBeInTheDocument();

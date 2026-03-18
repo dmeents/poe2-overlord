@@ -63,6 +63,16 @@ impl GameMonitoringServiceImpl {
             } else {
                 info!("POE2 process stopped");
 
+                // Capture active character IDs before finalization clears the active zones
+                let active_character_ids =
+                    match self.leveling_service.get_active_zone_character_ids().await {
+                        Ok(ids) => ids,
+                        Err(e) => {
+                            error!("Failed to get active zone character IDs on game stop: {}", e);
+                            vec![]
+                        }
+                    };
+
                 if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
                     error!("Failed to finalize active zone times when game stopped: {}", e);
                 }
@@ -85,6 +95,16 @@ impl GameMonitoringServiceImpl {
                     }
                 } else {
                     info!("Character tracking finalized after game process stopped");
+                }
+
+                // Emit updated leveling stats so frontend sees is_actively_grinding: false
+                for character_id in &active_character_ids {
+                    if let Err(e) = self.leveling_service.emit_stats_update(character_id).await {
+                        error!(
+                            "Failed to emit leveling stats update for {} after game stop: {}",
+                            character_id, e
+                        );
+                    }
                 }
             }
         }

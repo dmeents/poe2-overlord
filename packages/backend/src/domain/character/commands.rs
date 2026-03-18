@@ -1,7 +1,9 @@
 use std::sync::Arc;
 use tauri::State;
 
-use crate::domain::character::models::{CharacterDataResponse, CharacterSummaryResponse};
+use crate::domain::character::models::{
+    CharacterDataResponse, CharacterSummaryResponse, EnrichedZoneStats,
+};
 use crate::domain::character::traits::CharacterService;
 use crate::{to_command_result, CommandResult};
 
@@ -105,4 +107,12 @@ pub async fn get_all_characters_summary(
     character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<Vec<CharacterSummaryResponse>> {
     to_command_result(character_service.get_all_characters_summary().await)
+}
+
+#[tauri::command]
+pub async fn get_character_zones(
+    character_id: String,
+    character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
+) -> CommandResult<Vec<EnrichedZoneStats>> {
+    to_command_result(character_service.get_character_zones(&character_id).await)
 }

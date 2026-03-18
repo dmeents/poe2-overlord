@@ -33,7 +33,6 @@ export function createMockCharacter(overrides?: Partial<CharacterData>): Charact
     last_played: '2024-01-10T00:00:00Z',
     current_location: createMockLocation(),
     summary: createMockSummary(),
-    zones: [],
     walkthrough_progress: createMockWalkthroughProgress(),
   };
 

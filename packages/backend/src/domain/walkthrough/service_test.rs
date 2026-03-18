@@ -224,6 +224,21 @@ mod tests {
         async fn sync_zone_metadata(&self, _character_id: &str) -> Result<(), AppError> {
             panic!("sync_zone_metadata should not be called in walkthrough tests")
         }
+
+        async fn get_character_zones(
+            &self,
+            _character_id: &str,
+        ) -> Result<Vec<crate::domain::character::models::EnrichedZoneStats>, AppError> {
+            panic!("get_character_zones should not be called in walkthrough tests")
+        }
+
+        async fn has_character_visited_zone(
+            &self,
+            _character_id: &str,
+            _zone_name: &str,
+        ) -> Result<bool, AppError> {
+            panic!("has_character_visited_zone should not be called in walkthrough tests")
+        }
     }
 
     // ============= Test Data Factories =============

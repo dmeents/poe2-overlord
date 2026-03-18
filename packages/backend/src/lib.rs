@@ -115,6 +115,7 @@ pub fn run() {
             get_character,
             get_all_characters,
             get_all_characters_summary,
+            get_character_zones,
             update_character,
             delete_character,
             set_active_character,

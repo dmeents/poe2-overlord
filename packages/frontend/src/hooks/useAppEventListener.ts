@@ -13,18 +13,25 @@ export function useAppEventListener(
   const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const unlistenFns: UnlistenFn[] = [];
 
     const setup = async () => {
       try {
-        const promises = listeners.map(({ eventType, handler }) =>
-          listenToAppEvent(
-            eventType as keyof AppEventRegistry,
-            handler as (payload: AppEventPayload<keyof AppEventRegistry>) => void,
+        const results = await Promise.all(
+          listeners.map(({ eventType, handler }) =>
+            listenToAppEvent(
+              eventType as keyof AppEventRegistry,
+              handler as (payload: AppEventPayload<keyof AppEventRegistry>) => void,
+            ),
           ),
         );
 
-        const results = await Promise.all(promises);
+        if (cancelled) {
+          results.forEach(fn => fn());
+          return;
+        }
+
         unlistenFns.push(...results);
         setIsListening(true);
       } catch (error) {
@@ -36,6 +43,7 @@ export function useAppEventListener(
     setup();
 
     return () => {
+      cancelled = true;
       unlistenFns.forEach(unlisten => {
         try {
           unlisten();
@@ -46,7 +54,7 @@ export function useAppEventListener(
       setIsListening(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, listeners]);
+  }, deps);
 
   return { isListening };
 }

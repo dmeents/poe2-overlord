@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { ZoneList } from '@/components/zones/zone-list/zone-list';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { useZone } from '@/contexts/ZoneContext';
 import {
   type ZoneFilters,
   type ZoneSortField,
@@ -20,7 +21,7 @@ export const Route = createFileRoute('/playtime')({
 
 function PlaytimePage() {
   const { activeCharacter, isLoading } = useCharacter();
-  const zones = activeCharacter?.zones || [];
+  const { allZones: zones } = useZone();
 
   const {
     filters,

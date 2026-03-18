@@ -11,6 +11,7 @@ use crate::infrastructure::expand_tilde;
 use crate::infrastructure::parsing::LogParserManager;
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -34,6 +35,7 @@ pub struct LogAnalysisServiceImpl {
     zone_level_cache: Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
     last_log_timestamp: Arc<RwLock<Option<chrono::DateTime<chrono::Utc>>>>,
     monitoring_task_handle: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
+    in_flight_wiki_fetches: Arc<RwLock<HashSet<String>>>,
 }
 
 impl LogAnalysisServiceImpl {
@@ -69,6 +71,7 @@ impl LogAnalysisServiceImpl {
             zone_level_cache: Arc::new(RwLock::new(None)),
             last_log_timestamp: Arc::new(RwLock::new(None)),
             monitoring_task_handle: Arc::new(RwLock::new(None)),
+            in_flight_wiki_fetches: Arc::new(RwLock::new(HashSet::new())),
         })
     }
 
@@ -104,6 +107,7 @@ impl LogAnalysisServiceImpl {
             zone_level_cache: Arc::new(RwLock::new(None)),
             last_log_timestamp: Arc::new(RwLock::new(None)),
             monitoring_task_handle: Arc::new(RwLock::new(None)),
+            in_flight_wiki_fetches: Arc::new(RwLock::new(HashSet::new())),
         }
     }
 
@@ -176,6 +180,7 @@ impl LogAnalysisServiceImpl {
         let log_analysis_config = Arc::clone(&self.config);
         let parser_manager = self.parser_manager.clone();
         let monitoring_task_handle = Arc::clone(&self.monitoring_task_handle);
+        let in_flight_wiki_fetches = Arc::clone(&self.in_flight_wiki_fetches);
 
         let handle = tokio::spawn(async move {
             let mut interval = time::interval(Duration::from_millis(interval_ms));
@@ -213,6 +218,7 @@ impl LogAnalysisServiceImpl {
                                 &last_log_timestamp,
                                 &log_analysis_config,
                                 last_pos,
+                                &in_flight_wiki_fetches,
                             )
                             .await
                             {
@@ -255,6 +261,7 @@ impl LogAnalysisServiceImpl {
         last_log_timestamp: &Arc<RwLock<Option<chrono::DateTime<chrono::Utc>>>>,
         log_analysis_config: &Arc<RwLock<LogAnalysisConfig>>,
         start_position: u64,
+        in_flight_wiki_fetches: &Arc<RwLock<HashSet<String>>>,
     ) -> AppResult<()> {
         let new_lines = log_file_repository
             .read_from_position(log_path, start_position)
@@ -322,6 +329,7 @@ impl LogAnalysisServiceImpl {
                 leveling_service,
                 event_bus,
                 zone_level_cache,
+                in_flight_wiki_fetches,
             )
             .await
             {
@@ -343,12 +351,23 @@ impl LogAnalysisServiceImpl {
         wiki_service: &Arc<dyn crate::domain::wiki_scraping::traits::WikiScrapingService>,
         zone_config: &Arc<dyn crate::domain::zone_configuration::traits::ZoneConfigurationService>,
         character_service: &Arc<dyn CharacterService>,
+        in_flight: &Arc<RwLock<HashSet<String>>>,
     ) {
+        {
+            let mut set = in_flight.write().await;
+            if set.contains(zone_name) {
+                debug!("Wiki fetch already in-flight for zone '{}', skipping", zone_name);
+                return;
+            }
+            set.insert(zone_name.to_string());
+        }
+
         info!("Triggering wiki fetch for zone: {}", zone_name);
         let wiki_service = wiki_service.clone();
         let zone_config = zone_config.clone();
         let character_service = character_service.clone();
         let zone_name = zone_name.to_string();
+        let in_flight = Arc::clone(in_flight);
 
         tokio::spawn(async move {
             info!("Starting wiki fetch for zone: {}", zone_name);
@@ -402,21 +421,29 @@ impl LogAnalysisServiceImpl {
                             info!("Successfully updated zone metadata for '{}'", zone_name);
 
                             // Sync zone metadata for all characters that have visited this zone
-                            match character_service.get_all_characters().await {
+                            match character_service.get_all_characters_summary().await {
                                 Ok(characters) => {
                                     for character in characters {
-                                        // Check if character has visited this zone
-                                        if character.zones.iter().any(|z| z.zone_name == zone_name)
+                                        // Check if character has visited this zone via targeted SQL query
+                                        match character_service
+                                            .has_character_visited_zone(&character.id, &zone_name)
+                                            .await
                                         {
-                                            info!(
-                                                "Syncing zone metadata for character {}",
-                                                character.id
-                                            );
-                                            if let Err(e) = character_service
-                                                .sync_zone_metadata(&character.id)
-                                                .await
-                                            {
-                                                error!("Failed to sync zone metadata for character {}: {}", character.id, e);
+                                            Ok(true) => {
+                                                info!(
+                                                    "Syncing zone metadata for character {}",
+                                                    character.id
+                                                );
+                                                if let Err(e) = character_service
+                                                    .sync_zone_metadata(&character.id)
+                                                    .await
+                                                {
+                                                    error!("Failed to sync zone metadata for character {}: {}", character.id, e);
+                                                }
+                                            }
+                                            Ok(false) => {}
+                                            Err(e) => {
+                                                error!("Failed to check zone visit for character {}: {}", character.id, e);
                                             }
                                         }
                                     }
@@ -437,6 +464,7 @@ impl LogAnalysisServiceImpl {
                     error!("Failed to fetch wiki data for zone '{}': {}", zone_name, e);
                 }
             }
+            in_flight.write().await.remove(&zone_name);
         });
     }
 
@@ -487,6 +515,7 @@ impl LogAnalysisServiceImpl {
         content: &str,
         character_id: &str,
         _zone_level: Option<u32>,
+        in_flight_wiki_fetches: &Arc<RwLock<HashSet<String>>>,
     ) -> Result<Option<crate::domain::log_analysis::models::SceneChangeEvent>, AppError> {
         let zone_name = content.trim();
 
@@ -521,7 +550,7 @@ impl LogAnalysisServiceImpl {
                 debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
             }
 
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
+            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service, in_flight_wiki_fetches).await;
 
             placeholder
         };
@@ -533,7 +562,7 @@ impl LogAnalysisServiceImpl {
             .to_seconds();
 
         if zone_metadata.needs_refresh(refresh_interval) {
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service).await;
+            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service, in_flight_wiki_fetches).await;
         }
 
         // Atomically transition zone: deactivates old zone timer, activates new zone,
@@ -576,6 +605,7 @@ impl LogAnalysisServiceImpl {
         content: &str,
         character_id: &str,
         zone_level: Option<u32>,
+        in_flight_wiki_fetches: &Arc<RwLock<HashSet<String>>>,
     ) {
         let result = Self::process_scene_change(
             character_service,
@@ -585,6 +615,7 @@ impl LogAnalysisServiceImpl {
             content,
             character_id,
             zone_level,
+            in_flight_wiki_fetches,
         )
         .await;
 
@@ -649,6 +680,7 @@ impl LogAnalysisServiceImpl {
         leveling_service: &Arc<dyn LevelingService>,
         event_bus: &Arc<crate::infrastructure::events::EventBus>,
         zone_level_cache: &Arc<RwLock<Option<(u32, chrono::DateTime<chrono::Utc>)>>>,
+        in_flight_wiki_fetches: &Arc<RwLock<HashSet<String>>>,
     ) -> AppResult<()> {
         if line.contains("[SCENE]") {
             info!("LOG ANALYSIS: Processing line with [SCENE]: {}", line);
@@ -728,18 +760,10 @@ impl LogAnalysisServiceImpl {
                             &content,
                             &active_character.id,
                             zone_level,
+                            in_flight_wiki_fetches,
                         )
                         .await;
 
-                        // Emit fresh stats so the frontend gets updated is_actively_grinding
-                        if let Err(e) =
-                            leveling_service.emit_stats_update(&active_character.id).await
-                        {
-                            error!(
-                                "LEVELING: Failed to emit stats update after zone transition: {}",
-                                e
-                            );
-                        }
                     } else {
                         warn!("LOG ANALYSIS: No active character found for scene change");
                     }

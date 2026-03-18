@@ -143,67 +143,63 @@ impl CharacterRepository for CharacterRepositoryImpl {
             None
         };
 
-        // Load zone_stats with JOIN to zone_metadata
-        let zone_rows: Vec<(
-            i64,            // duration
-            i64,            // deaths
-            i64,            // visits
-            String,         // first_visited
-            String,         // last_visited
-            i64,            // is_active
-            Option<String>, // entry_timestamp
-            String,         // zone_name (from zone_metadata)
-            i64,            // act (from zone_metadata)
-            i64,            // is_town (from zone_metadata)
-        )> = sqlx::query_as(
-            "SELECT zs.duration, zs.deaths, zs.visits, zs.first_visited, zs.last_visited,
-                    zs.is_active, zs.entry_timestamp,
-                    zm.zone_name, zm.act, zm.is_town
-             FROM zone_stats zs
-             JOIN zone_metadata zm ON zs.zone_id = zm.id
-             WHERE zs.character_id = ?
-             ORDER BY zs.last_visited DESC",
-        )
-        .bind(character_id)
-        .fetch_all(&self.pool)
-        .await?;
+        // Compute TrackingSummary via SQL aggregation
+        let summary_row: Option<(i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64)> =
+            sqlx::query_as(
+                "SELECT
+                    COALESCE(SUM(zs.duration), 0),
+                    COALESCE(SUM(CASE WHEN LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(COUNT(DISTINCT zs.zone_id), 0),
+                    COALESCE(SUM(zs.deaths), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 1 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 2 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 3 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 4 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 5 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 6 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 10 THEN zs.duration ELSE 0 END), 0)
+                 FROM zone_stats zs
+                 JOIN zone_metadata zm ON zs.zone_id = zm.id
+                 WHERE zs.character_id = ?",
+            )
+            .bind(character_id)
+            .fetch_optional(&self.pool)
+            .await?;
 
-        let mut zones = Vec::new();
-        for (
-            duration,
-            deaths,
-            visits,
-            first_visited_str,
-            last_visited_str,
-            is_active,
-            entry_timestamp_str,
-            zone_name,
-            act,
-            is_town,
-        ) in zone_rows
+        let summary = if let Some((
+            total_play_time,
+            total_hideout_time,
+            total_town_time,
+            total_zones_visited,
+            total_deaths,
+            play_time_act1,
+            play_time_act2,
+            play_time_act3,
+            play_time_act4,
+            play_time_act5,
+            play_time_interlude,
+            play_time_endgame,
+        )) = summary_row
         {
-            let first_visited =
-                chrono::DateTime::parse_from_rfc3339(&first_visited_str)?.with_timezone(&Utc);
-            let last_visited =
-                chrono::DateTime::parse_from_rfc3339(&last_visited_str)?.with_timezone(&Utc);
-            let entry_timestamp = entry_timestamp_str
-                .as_ref()
-                .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-                .map(|dt| dt.with_timezone(&Utc));
-
-            zones.push(ZoneStats {
-                zone_name,
-                duration: duration as u64,
-                deaths: deaths as u32,
-                visits: visits as u32,
-                first_visited,
-                last_visited,
-                is_active: is_active != 0,
-                entry_timestamp,
-                act: Some(act as u32),
-                is_town: is_town != 0,
-            });
-        }
+            TrackingSummary {
+                character_id: id.clone(),
+                total_play_time: total_play_time as u64,
+                total_hideout_time: total_hideout_time as u64,
+                total_town_time: total_town_time as u64,
+                total_zones_visited: total_zones_visited as u32,
+                total_deaths: total_deaths as u32,
+                play_time_act1: play_time_act1 as u64,
+                play_time_act2: play_time_act2 as u64,
+                play_time_act3: play_time_act3 as u64,
+                play_time_act4: play_time_act4 as u64,
+                play_time_act5: play_time_act5 as u64,
+                play_time_interlude: play_time_interlude as u64,
+                play_time_endgame: play_time_endgame as u64,
+            }
+        } else {
+            TrackingSummary::new(id.clone())
+        };
 
         // Load walkthrough_progress
         let progress_row: Option<(Option<String>, i64, String)> = sqlx::query_as(
@@ -228,16 +224,12 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 WalkthroughProgress::new()
             };
 
-        // Compute TrackingSummary on demand
-        let summary = TrackingSummary::from_zones(&id, &zones);
-
         Ok(CharacterData {
             id,
             profile,
             timestamps,
             current_location,
             summary,
-            zones,
             walkthrough_progress,
         })
     }
@@ -293,36 +285,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
         .bind(current_zone_updated_at)
         .execute(&mut *tx)
         .await?;
-
-        // UPSERT zone_stats
-        for zone in &character_data.zones {
-            let zone_id = get_or_create_zone_id_tx(&mut tx, &zone.zone_name).await?;
-
-            sqlx::query(
-                "INSERT INTO zone_stats
-                 (character_id, zone_id, duration, deaths, visits, first_visited, last_visited,
-                  is_active, entry_timestamp)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                 ON CONFLICT(character_id, zone_id) DO UPDATE SET
-                   duration = excluded.duration,
-                   deaths = excluded.deaths,
-                   visits = excluded.visits,
-                   last_visited = excluded.last_visited,
-                   is_active = excluded.is_active,
-                   entry_timestamp = excluded.entry_timestamp",
-            )
-            .bind(&character_data.id)
-            .bind(zone_id)
-            .bind(zone.duration as i64)
-            .bind(zone.deaths as i64)
-            .bind(zone.visits as i64)
-            .bind(zone.first_visited.to_rfc3339())
-            .bind(zone.last_visited.to_rfc3339())
-            .bind(if zone.is_active { 1 } else { 0 })
-            .bind(zone.entry_timestamp.as_ref().map(|dt| dt.to_rfc3339()))
-            .execute(&mut *tx)
-            .await?;
-        }
 
         // UPSERT walkthrough_progress
         sqlx::query(
@@ -395,25 +357,38 @@ impl CharacterRepository for CharacterRepositoryImpl {
             return Ok(Vec::new());
         }
 
-        let zone_rows: Vec<(
-            String,         // character_id
-            i64,            // duration
-            i64,            // deaths
-            i64,            // visits
-            String,         // first_visited
-            String,         // last_visited
-            i64,            // is_active
-            Option<String>, // entry_timestamp
-            String,         // zone_name
-            i64,            // act
-            i64,            // is_town
+        // SQL aggregation for TrackingSummary (no zone loading needed)
+        let summary_rows: Vec<(
+            String, // character_id
+            i64,    // total_play_time
+            i64,    // total_hideout_time
+            i64,    // total_town_time
+            i64,    // total_zones_visited
+            i64,    // total_deaths
+            i64,    // play_time_act1
+            i64,    // play_time_act2
+            i64,    // play_time_act3
+            i64,    // play_time_act4
+            i64,    // play_time_act5
+            i64,    // play_time_interlude
+            i64,    // play_time_endgame
         )> = sqlx::query_as(
-            "SELECT zs.character_id, zs.duration, zs.deaths, zs.visits,
-                    zs.first_visited, zs.last_visited, zs.is_active, zs.entry_timestamp,
-                    zm.zone_name, zm.act, zm.is_town
+            "SELECT zs.character_id,
+                    COALESCE(SUM(zs.duration), 0),
+                    COALESCE(SUM(CASE WHEN LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(COUNT(DISTINCT zs.zone_id), 0),
+                    COALESCE(SUM(zs.deaths), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 1 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 2 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 3 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 4 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 5 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 6 THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 10 THEN zs.duration ELSE 0 END), 0)
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
-             ORDER BY zs.character_id, zs.last_visited DESC",
+             GROUP BY zs.character_id",
         )
         .fetch_all(&self.pool)
         .await?;
@@ -425,49 +400,41 @@ impl CharacterRepository for CharacterRepositoryImpl {
         .fetch_all(&self.pool)
         .await?;
 
-        let mut zones_by_character: HashMap<String, Vec<ZoneStats>> = HashMap::new();
+        let mut summary_by_character: HashMap<String, TrackingSummary> = HashMap::new();
         for (
             character_id,
-            duration,
-            deaths,
-            visits,
-            first_visited_str,
-            last_visited_str,
-            is_active,
-            entry_timestamp_str,
-            zone_name,
-            act,
-            is_town,
-        ) in zone_rows
+            total_play_time,
+            total_hideout_time,
+            total_town_time,
+            total_zones_visited,
+            total_deaths,
+            play_time_act1,
+            play_time_act2,
+            play_time_act3,
+            play_time_act4,
+            play_time_act5,
+            play_time_interlude,
+            play_time_endgame,
+        ) in summary_rows
         {
-            let first_visited = chrono::DateTime::parse_from_rfc3339(&first_visited_str)
-                .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now);
-            let last_visited = chrono::DateTime::parse_from_rfc3339(&last_visited_str)
-                .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now);
-            let entry_timestamp = entry_timestamp_str
-                .as_ref()
-                .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-                .map(|dt| dt.with_timezone(&Utc));
-
-            zones_by_character
-                .entry(character_id)
-                .or_default()
-                .push(ZoneStats {
-                    zone_name,
-                    duration: duration as u64,
-                    deaths: deaths as u32,
-                    visits: visits as u32,
-                    first_visited,
-                    last_visited,
-                    is_active: is_active != 0,
-                    entry_timestamp,
-                    act: Some(act as u32),
-                    is_town: is_town != 0,
-                });
+            summary_by_character.insert(
+                character_id.clone(),
+                TrackingSummary {
+                    character_id,
+                    total_play_time: total_play_time as u64,
+                    total_hideout_time: total_hideout_time as u64,
+                    total_town_time: total_town_time as u64,
+                    total_zones_visited: total_zones_visited as u32,
+                    total_deaths: total_deaths as u32,
+                    play_time_act1: play_time_act1 as u64,
+                    play_time_act2: play_time_act2 as u64,
+                    play_time_act3: play_time_act3 as u64,
+                    play_time_act4: play_time_act4 as u64,
+                    play_time_act5: play_time_act5 as u64,
+                    play_time_interlude: play_time_interlude as u64,
+                    play_time_endgame: play_time_endgame as u64,
+                },
+            );
         }
 
         let mut progress_by_character: HashMap<String, WalkthroughProgress> = HashMap::new();
@@ -545,8 +512,9 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 }
             });
 
-            let zones = zones_by_character.remove(&id).unwrap_or_default();
-            let summary = TrackingSummary::from_zones(&id, &zones);
+            let summary = summary_by_character
+                .remove(&id)
+                .unwrap_or_else(|| TrackingSummary::new(id.clone()));
             let walkthrough_progress = progress_by_character.remove(&id).unwrap_or_default();
 
             characters.push(CharacterData {
@@ -555,7 +523,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 timestamps,
                 current_location,
                 summary,
-                zones,
                 walkthrough_progress,
             });
         }
@@ -1052,7 +1019,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 timestamps,
                 current_location,
                 summary,
-                zones: Vec::new(), // Summary only — no zone details
                 walkthrough_progress,
             });
         }
@@ -1072,5 +1038,92 @@ impl CharacterRepository for CharacterRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
         Ok(zone_name)
+    }
+
+    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<ZoneStats>> {
+        let zone_rows: Vec<(
+            i64,            // duration
+            i64,            // deaths
+            i64,            // visits
+            String,         // first_visited
+            String,         // last_visited
+            i64,            // is_active
+            Option<String>, // entry_timestamp
+            String,         // zone_name
+            i64,            // act
+            i64,            // is_town
+        )> = sqlx::query_as(
+            "SELECT zs.duration, zs.deaths, zs.visits, zs.first_visited, zs.last_visited,
+                    zs.is_active, zs.entry_timestamp,
+                    zm.zone_name, zm.act, zm.is_town
+             FROM zone_stats zs
+             JOIN zone_metadata zm ON zs.zone_id = zm.id
+             WHERE zs.character_id = ?
+             ORDER BY zs.last_visited DESC",
+        )
+        .bind(character_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut zones = Vec::new();
+        for (
+            duration,
+            deaths,
+            visits,
+            first_visited_str,
+            last_visited_str,
+            is_active,
+            entry_timestamp_str,
+            zone_name,
+            act,
+            is_town,
+        ) in zone_rows
+        {
+            let first_visited = chrono::DateTime::parse_from_rfc3339(&first_visited_str)
+                .ok()
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(Utc::now);
+            let last_visited = chrono::DateTime::parse_from_rfc3339(&last_visited_str)
+                .ok()
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(Utc::now);
+            let entry_timestamp = entry_timestamp_str
+                .as_ref()
+                .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                .map(|dt| dt.with_timezone(&Utc));
+
+            zones.push(ZoneStats {
+                zone_name,
+                duration: duration as u64,
+                deaths: deaths as u32,
+                visits: visits as u32,
+                first_visited,
+                last_visited,
+                is_active: is_active != 0,
+                entry_timestamp,
+                act: Some(act as u32),
+                is_town: is_town != 0,
+            });
+        }
+
+        Ok(zones)
+    }
+
+    async fn has_character_visited_zone(
+        &self,
+        character_id: &str,
+        zone_name: &str,
+    ) -> AppResult<bool> {
+        let exists: Option<i64> = sqlx::query_scalar(
+            "SELECT 1 FROM zone_stats zs
+             JOIN zone_metadata zm ON zs.zone_id = zm.id
+             WHERE zs.character_id = ? AND zm.zone_name = ?
+             LIMIT 1",
+        )
+        .bind(character_id)
+        .bind(zone_name)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(exists.is_some())
     }
 }

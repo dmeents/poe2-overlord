@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import type { AppConfig } from '@/types/app-config';
 import {
@@ -53,11 +53,12 @@ export function ConfigurationProvider({ children }: React.PropsWithChildren) {
     [config],
   );
 
-  return (
-    <ConfigurationContext.Provider value={{ config, isLoading, updateConfig }}>
-      {children}
-    </ConfigurationContext.Provider>
+  const value = useMemo(
+    () => ({ config, isLoading, updateConfig }),
+    [config, isLoading, updateConfig],
   );
+
+  return <ConfigurationContext.Provider value={value}>{children}</ConfigurationContext.Provider>;
 }
 
 export function useConfiguration() {

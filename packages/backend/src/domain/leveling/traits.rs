@@ -98,4 +98,8 @@ pub trait LevelingService: Send + Sync {
     /// Computes and publishes a `LevelingStatsUpdated` event for the given character.
     /// Called after zone transitions so the frontend gets fresh `is_actively_grinding`.
     async fn emit_stats_update(&self, character_id: &str) -> AppResult<()>;
+
+    /// Returns character IDs that currently have an active zone.
+    /// Used to emit stats updates after bulk finalization on game stop.
+    async fn get_active_zone_character_ids(&self) -> AppResult<Vec<String>>;
 }

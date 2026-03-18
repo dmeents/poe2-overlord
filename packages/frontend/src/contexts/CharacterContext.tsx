@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import { characterQueryKeys, useActiveCharacter, useCharacters } from '@/queries/characters';
 import type { CharacterData, CharacterSummaryData } from '@/types/character';
@@ -79,6 +79,9 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
             (prev: CharacterSummaryData[] | undefined) =>
               prev?.map(c => (c.id === character_id ? toSummary(characterData, c.is_active) : c)),
           );
+
+          // Invalidate zones so zone-consuming components fetch fresh data
+          queryClient.invalidateQueries({ queryKey: characterQueryKeys.zones(character_id) });
         },
       },
       {
@@ -108,17 +111,12 @@ export function CharacterProvider({ children }: React.PropsWithChildren) {
       ? parseError(activeCharacterError)
       : null;
 
-  return (
-    <CharacterContext.Provider
-      value={{
-        characters,
-        activeCharacter,
-        isLoading,
-        error,
-      }}>
-      {children}
-    </CharacterContext.Provider>
+  const value = useMemo(
+    () => ({ characters, activeCharacter, isLoading, error }),
+    [characters, activeCharacter, isLoading, error],
   );
+
+  return <CharacterContext.Provider value={value}>{children}</CharacterContext.Provider>;
 }
 
 export function useCharacter() {

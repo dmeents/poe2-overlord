@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCharacterZones } from '@/queries/characters';
 import type { ZoneStats } from '@/types/character';
 import { createPlaceholderZone } from '@/utils/zone-utils';
 import { useCharacter } from './CharacterContext';
@@ -21,7 +22,7 @@ export function ZoneProvider({ children }: React.PropsWithChildren) {
   const [selectedZone, setSelectedZone] = useState<ZoneStats | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const allZones = useMemo(() => activeCharacter?.zones || [], [activeCharacter?.zones]);
+  const { data: allZones = [] } = useCharacterZones(activeCharacter?.id);
 
   const openZone = useCallback(
     (zoneName: string) => {

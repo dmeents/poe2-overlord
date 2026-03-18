@@ -1,5 +1,6 @@
 import { BuildingStorefrontIcon, HomeIcon, MapIcon } from '@heroicons/react/24/outline';
 import { memo } from 'react';
+import { useGameProcess } from '@/contexts/GameProcessContext';
 import { useZone } from '@/contexts/ZoneContext';
 import { useElapsedTime } from '@/hooks/useElapsedTime';
 import type { ZoneStats } from '@/types/character';
@@ -13,13 +14,14 @@ interface CurrentZoneCardProps {
 
 export const CurrentZoneCard = memo(function CurrentZoneCard({ zone }: CurrentZoneCardProps) {
   const { openZone } = useZone();
+  const { gameRunning } = useGameProcess();
   const handleViewDetails = () => openZone(zone.zone_name);
 
-  // Calculate live elapsed time for active zones
+  // Calculate live elapsed time for active zones; stop ticking when game process ends
   const elapsedSeconds = useElapsedTime({
     entryTimestamp: zone.entry_timestamp,
     baseDuration: zone.duration,
-    isActive: zone.is_active,
+    isActive: zone.is_active && gameRunning,
   });
 
   return (

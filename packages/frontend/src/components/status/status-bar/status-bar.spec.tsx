@@ -85,7 +85,6 @@ const createMockCharacter = (
     play_time_interlude: 0,
     play_time_endgame: 0,
   },
-  zones: [],
   walkthrough_progress: {
     current_step_id: null,
     is_completed: false,

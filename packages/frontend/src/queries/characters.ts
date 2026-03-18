@@ -3,12 +3,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { parseError } from '@/utils/error-handling';
 import type { CharacterFormData } from '../components/character/character-form-modal/character-form-modal';
-import type { CharacterData, CharacterSummaryData } from '../types/character';
+import type { CharacterData, CharacterSummaryData, ZoneStats } from '../types/character';
 
 export const characterQueryKeys = {
   all: ['characters'] as const,
   lists: () => [...characterQueryKeys.all, 'list'] as const,
   active: () => [...characterQueryKeys.all, 'active'] as const,
+  zones: (id: string) => [...characterQueryKeys.all, 'zones', id] as const,
 };
 
 export function useCharacters() {
@@ -18,6 +19,18 @@ export function useCharacters() {
       return await invoke<CharacterSummaryData[]>('get_all_characters_summary');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useCharacterZones(characterId: string | undefined) {
+  return useQuery({
+    queryKey: characterId ? characterQueryKeys.zones(characterId) : ['characters', 'zones', null],
+    queryFn: async (): Promise<ZoneStats[]> => {
+      if (!characterId) return [];
+      return await invoke<ZoneStats[]>('get_character_zones', { characterId });
+    },
+    enabled: !!characterId,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 

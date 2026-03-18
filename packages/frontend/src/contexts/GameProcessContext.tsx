@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { invoke } from '@tauri-apps/api/core';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
 import type { GameProcessStatus, GameProcessStatusChangedEvent } from '@/types/process';
 import { parseError } from '@/utils/error-handling';
@@ -42,15 +42,12 @@ export function GameProcessProvider({ children }: React.PropsWithChildren) {
     },
   ]);
 
-  return (
-    <GameProcessContext.Provider
-      value={{
-        processInfo,
-        gameRunning: processInfo?.running || false,
-      }}>
-      {children}
-    </GameProcessContext.Provider>
+  const value = useMemo(
+    () => ({ processInfo, gameRunning: processInfo?.running || false }),
+    [processInfo],
   );
+
+  return <GameProcessContext.Provider value={value}>{children}</GameProcessContext.Provider>;
 }
 
 export function useGameProcess() {

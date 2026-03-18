@@ -319,7 +319,6 @@ mod tests {
         assert_eq!(character.profile.level, 1);
         assert!(character.timestamps.last_played.is_none());
         assert!(character.current_location.is_none());
-        assert!(character.zones.is_empty());
     }
 
     #[test]
@@ -381,7 +380,6 @@ mod tests {
         assert!(!response.hardcore);
         assert!(response.solo_self_found);
         assert!(response.current_location.is_none());
-        assert!(response.zones.is_empty());
     }
 
     // ============= EnrichedLocationState Tests =============

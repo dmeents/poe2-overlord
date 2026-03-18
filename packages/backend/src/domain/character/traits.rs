@@ -4,9 +4,10 @@ use crate::errors::AppResult;
 
 use super::models::{
     Ascendency, CharacterClass, CharacterData, CharacterDataResponse, CharacterProfile,
-    CharacterSummaryResponse, CharacterUpdateParams, League, LocationState,
+    CharacterSummaryResponse, CharacterUpdateParams, EnrichedZoneStats, League, LocationState,
 };
 use crate::domain::walkthrough::models::WalkthroughProgress;
+use crate::domain::zone_tracking::ZoneStats;
 
 #[async_trait]
 pub trait CharacterRepository {
@@ -65,6 +66,16 @@ pub trait CharacterRepository {
 
     /// Gets the name of the currently active zone for a character, if any.
     async fn get_active_zone_name(&self, character_id: &str) -> AppResult<Option<String>>;
+
+    /// Loads all zone stats for a character (raw, unenriched).
+    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<ZoneStats>>;
+
+    /// Returns true if the character has visited the given zone at least once.
+    async fn has_character_visited_zone(
+        &self,
+        character_id: &str,
+        zone_name: &str,
+    ) -> AppResult<bool>;
 }
 
 #[async_trait]
@@ -122,4 +133,14 @@ pub trait CharacterService: Send + Sync {
         character_id: &str,
         progress: &WalkthroughProgress,
     ) -> AppResult<CharacterDataResponse>;
+
+    /// Returns enriched zone stats for a character (loaded + enriched with zone config).
+    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<EnrichedZoneStats>>;
+
+    /// Returns true if the character has visited the given zone at least once.
+    async fn has_character_visited_zone(
+        &self,
+        character_id: &str,
+        zone_name: &str,
+    ) -> AppResult<bool>;
 }

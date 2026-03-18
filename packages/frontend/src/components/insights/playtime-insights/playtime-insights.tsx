@@ -14,7 +14,7 @@ interface PlaytimeInsightsProps {
 export function PlaytimeInsights({ zones: propZones }: PlaytimeInsightsProps) {
   const { activeCharacter, isLoading } = useCharacter();
   const summary = activeCharacter?.summary;
-  const zones = propZones || activeCharacter?.zones || [];
+  const zones = propZones || [];
 
   if (isLoading) {
     return (

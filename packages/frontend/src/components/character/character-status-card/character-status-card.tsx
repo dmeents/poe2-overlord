@@ -44,12 +44,10 @@ export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps
     );
   }
 
-  const { zones: _zones, ...summary } = activeCharacter;
-
   return (
     <div className={className}>
       <CharacterCard
-        character={{ ...summary, is_active: true }}
+        character={{ ...activeCharacter, is_active: true }}
         isActive={true}
         interactive={false}
       />

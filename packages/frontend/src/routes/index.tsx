@@ -10,6 +10,7 @@ import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useZone } from '../contexts/ZoneContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
 import type { StepLink } from '../types/walkthrough';
 
@@ -20,7 +21,8 @@ export const Route = createFileRoute('/')({
 function Index() {
   const { activeCharacter } = useCharacter();
   const { progress } = useWalkthrough();
-  const activeZone = activeCharacter?.zones?.find(zone => zone.is_active);
+  const { allZones } = useZone();
+  const activeZone = allZones.find(zone => zone.is_active);
 
   const handleLinkClick = async (link: StepLink) => {
     try {

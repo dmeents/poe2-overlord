@@ -214,6 +214,10 @@ impl LevelingService for LevelingServiceImpl {
         Ok(())
     }
 
+    async fn get_active_zone_character_ids(&self) -> AppResult<Vec<String>> {
+        self.repository.get_all_active_zone_character_ids().await
+    }
+
     async fn emit_stats_update(&self, character_id: &str) -> AppResult<()> {
         let stats = self.compute_stats(character_id).await?;
         if let Err(e) = self

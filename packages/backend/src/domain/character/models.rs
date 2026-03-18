@@ -37,7 +37,6 @@ pub struct CharacterData {
     pub timestamps: CharacterTimestamps,
     pub current_location: Option<LocationState>,
     pub summary: TrackingSummary,
-    pub zones: Vec<ZoneStats>,
     #[serde(default)]
     pub walkthrough_progress: WalkthroughProgress,
 }
@@ -82,7 +81,6 @@ impl CharacterData {
             },
             current_location: None,
             summary: TrackingSummary::new(id),
-            zones: Vec::new(),
             walkthrough_progress: WalkthroughProgress::new(),
         }
     }
@@ -258,7 +256,6 @@ pub struct CharacterDataResponse {
     pub last_played: Option<DateTime<Utc>>,
     pub current_location: Option<EnrichedLocationState>,
     pub summary: TrackingSummary,
-    pub zones: Vec<EnrichedZoneStats>,
     pub walkthrough_progress: WalkthroughProgress,
     pub last_updated: DateTime<Utc>,
 }
@@ -278,34 +275,6 @@ impl From<CharacterData> for CharacterDataResponse {
             last_played: character.timestamps.last_played,
             current_location: None,
             summary: character.summary,
-            zones: character
-                .zones
-                .into_iter()
-                .map(|zone| EnrichedZoneStats {
-                    zone_name: zone.zone_name,
-                    duration: zone.duration,
-                    deaths: zone.deaths,
-                    visits: zone.visits,
-                    first_visited: zone.first_visited,
-                    last_visited: zone.last_visited,
-                    is_active: zone.is_active,
-                    entry_timestamp: zone.entry_timestamp,
-                    area_id: None,
-                    act: None,
-                    area_level: None,
-                    is_town: false,
-                    has_waypoint: false,
-                    bosses: Vec::new(),
-                    monsters: Vec::new(),
-                    npcs: Vec::new(),
-                    connected_zones: Vec::new(),
-                    description: None,
-                    points_of_interest: Vec::new(),
-                    image_url: None,
-                    wiki_url: None,
-                    last_updated: None,
-                })
-                .collect(),
             walkthrough_progress: character.walkthrough_progress,
             last_updated: character.timestamps.last_updated,
         }

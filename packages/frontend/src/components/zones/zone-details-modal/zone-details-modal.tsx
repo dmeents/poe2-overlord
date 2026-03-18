@@ -9,13 +9,13 @@ import {
 import { open } from '@tauri-apps/plugin-shell';
 import { useZone } from '@/contexts/ZoneContext';
 import { hideOnError } from '@/utils/image-utils';
-import { createPlaceholderZone, getDisplayAct } from '@/utils/zone-utils';
+import { getDisplayAct } from '@/utils/zone-utils';
 import { Modal } from '../../ui/modal/modal';
 import { TimeDisplay } from '../../ui/time-display/time-display';
 import { zoneDetailsModalStyles as styles } from './zone-details-modal.styles';
 
 export function ZoneDetailsModal() {
-  const { selectedZone: zone, isModalOpen, closeModal, navigateToZone, allZones } = useZone();
+  const { selectedZone: zone, isModalOpen, closeModal, openZone } = useZone();
 
   const handleWikiClick = async () => {
     if (!zone || !zone.wiki_url) return;
@@ -24,19 +24,6 @@ export function ZoneDetailsModal() {
       await open(zone.wiki_url);
     } catch (error) {
       console.error('Failed to open wiki link:', error);
-    }
-  };
-
-  const handleConnectedZoneClick = (zoneName: string) => {
-    // Find the zone in the player's data
-    const foundZone = allZones.find(z => z.zone_name === zoneName);
-
-    if (foundZone) {
-      // If zone found, navigate to it
-      navigateToZone(foundZone);
-    } else {
-      // If zone not found, create a placeholder unvisited zone
-      navigateToZone(createPlaceholderZone(zoneName));
     }
   };
 
@@ -86,14 +73,14 @@ export function ZoneDetailsModal() {
           </div>
         )}
         {/* Zone Image */}
-        {!isUnvisitedZone && zone.image_url && (
+        {zone.image_url && (
           <div className={styles.imageContainer}>
             <img src={zone.image_url} alt="" className={styles.image} onError={hideOnError} />
           </div>
         )}
 
         {/* Description */}
-        {!isUnvisitedZone && zone.description && (
+        {zone.description && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>
               <SparklesIcon className="w-4 h-4" />
@@ -270,7 +257,7 @@ export function ZoneDetailsModal() {
                 <button
                   type="button"
                   key={connectedZone}
-                  onClick={() => handleConnectedZoneClick(connectedZone)}
+                  onClick={() => openZone(connectedZone)}
                   className={styles.tagConnected}
                   title="Click to view zone details">
                   {connectedZone}

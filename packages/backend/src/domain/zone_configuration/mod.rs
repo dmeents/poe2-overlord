@@ -1,5 +1,6 @@
 //! Zone configuration for act and town mapping
 
+pub mod commands;
 pub mod models;
 #[cfg(test)]
 mod models_test;

@@ -20,6 +20,7 @@ pub use domain::game_monitoring::commands::*; // Game process monitoring
 pub use domain::leveling::commands::*; // Leveling stats and XP tracking
 pub use domain::server_monitoring::commands::*; // Server status monitoring
 pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
+pub use domain::zone_configuration::commands::*; // Zone metadata lookup
 
 // Core error handling
 pub use errors::*;
@@ -139,6 +140,9 @@ pub fn run() {
             get_walkthrough_guide,
             get_character_walkthrough_progress,
             update_character_walkthrough_progress,
+
+            // Zone configuration commands
+            get_zone_metadata_by_name,
         ])
         // Initialize application services and start background tasks
         .setup(|app| setup_app(app))

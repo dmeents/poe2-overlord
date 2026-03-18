@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ZoneMetadata } from '../queries/zones';
 import { createMockLocation, createMockZone } from '../test/mock-data';
 import { createPlaceholderZone, getDisplayAct } from './zone-utils';
 
@@ -93,5 +94,48 @@ describe('createPlaceholderZone', () => {
     expect(zone.image_url).toBeUndefined();
     expect(zone.wiki_url).toBeUndefined();
     expect(zone.last_updated).toBeUndefined();
+  });
+
+  it('merges wiki metadata when provided', () => {
+    const metadata: ZoneMetadata = {
+      zone_name: 'Test Zone',
+      area_id: 'G1_2',
+      act: 1,
+      area_level: 5,
+      is_town: false,
+      has_waypoint: true,
+      bosses: ['Boss A'],
+      monsters: ['Monster B'],
+      npcs: ['NPC C'],
+      connected_zones: ['Other Zone'],
+      description: 'A test zone description.',
+      points_of_interest: ['POI 1'],
+      image_url: 'https://example.com/zone.jpg',
+      first_discovered: '2024-01-10T12:00:00Z',
+      last_updated: '2024-01-10T12:00:00Z',
+      wiki_url: 'https://wiki.example.com/zone',
+    };
+
+    const zone = createPlaceholderZone('Test Zone', metadata);
+
+    // Player stats stay at zero
+    expect(zone.visits).toBe(0);
+    expect(zone.duration).toBe(0);
+    expect(zone.deaths).toBe(0);
+
+    // Wiki fields populated from metadata
+    expect(zone.area_id).toBe('G1_2');
+    expect(zone.act).toBe(1);
+    expect(zone.area_level).toBe(5);
+    expect(zone.has_waypoint).toBe(true);
+    expect(zone.bosses).toEqual(['Boss A']);
+    expect(zone.monsters).toEqual(['Monster B']);
+    expect(zone.npcs).toEqual(['NPC C']);
+    expect(zone.connected_zones).toEqual(['Other Zone']);
+    expect(zone.description).toBe('A test zone description.');
+    expect(zone.points_of_interest).toEqual(['POI 1']);
+    expect(zone.image_url).toBe('https://example.com/zone.jpg');
+    expect(zone.wiki_url).toBe('https://wiki.example.com/zone');
+    expect(zone.last_updated).toBe('2024-01-10T12:00:00Z');
   });
 });

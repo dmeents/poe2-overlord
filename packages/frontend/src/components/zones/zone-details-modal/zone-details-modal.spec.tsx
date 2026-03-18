@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZoneDetailsModal } from './zone-details-modal';
 
 const mockCloseModal = vi.hoisted(() => vi.fn());
-const mockNavigateToZone = vi.hoisted(() => vi.fn());
+const mockOpenZone = vi.hoisted(() => vi.fn());
 const mockOpen = vi.hoisted(() => vi.fn());
 
 const createMockZone = (overrides = {}) => ({
@@ -43,8 +43,7 @@ describe('ZoneDetailsModal', () => {
       selectedZone: createMockZone(),
       isModalOpen: true,
       closeModal: mockCloseModal,
-      navigateToZone: mockNavigateToZone,
-      allZones: [],
+      openZone: mockOpenZone,
     });
   });
 
@@ -71,8 +70,7 @@ describe('ZoneDetailsModal', () => {
         selectedZone: createMockZone({ is_town: true }),
         isModalOpen: true,
         closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [],
+        openZone: mockOpenZone,
       });
 
       render(<ZoneDetailsModal />);
@@ -85,8 +83,7 @@ describe('ZoneDetailsModal', () => {
         selectedZone: null,
         isModalOpen: true,
         closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [],
+        openZone: mockOpenZone,
       });
 
       const { container } = render(<ZoneDetailsModal />);
@@ -111,8 +108,7 @@ describe('ZoneDetailsModal', () => {
         selectedZone: createMockZone({ is_town: true }),
         isModalOpen: true,
         closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [],
+        openZone: mockOpenZone,
       });
 
       render(<ZoneDetailsModal />);
@@ -127,8 +123,7 @@ describe('ZoneDetailsModal', () => {
         selectedZone: createMockZone({ visits: 0 }),
         isModalOpen: true,
         closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [],
+        openZone: mockOpenZone,
       });
 
       render(<ZoneDetailsModal />);
@@ -167,8 +162,7 @@ describe('ZoneDetailsModal', () => {
         selectedZone: createMockZone({ bosses: [] }),
         isModalOpen: true,
         closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [],
+        openZone: mockOpenZone,
       });
 
       render(<ZoneDetailsModal />);
@@ -178,21 +172,14 @@ describe('ZoneDetailsModal', () => {
   });
 
   describe('Connected Zones Navigation', () => {
-    it('navigates to connected zone when clicked', async () => {
+    it('calls openZone when a connected zone is clicked', async () => {
       const user = userEvent.setup();
-      mockUseZone.mockReturnValue({
-        selectedZone: createMockZone(),
-        isModalOpen: true,
-        closeModal: mockCloseModal,
-        navigateToZone: mockNavigateToZone,
-        allZones: [createMockZone({ zone_name: 'The Mud Flats' })],
-      });
 
       render(<ZoneDetailsModal />);
 
       await user.click(screen.getByText('The Mud Flats'));
 
-      expect(mockNavigateToZone).toHaveBeenCalled();
+      expect(mockOpenZone).toHaveBeenCalledWith('The Mud Flats');
     });
   });
 

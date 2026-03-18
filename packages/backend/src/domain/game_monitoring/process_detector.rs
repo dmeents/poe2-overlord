@@ -6,7 +6,7 @@ use crate::errors::AppResult;
 use async_trait::async_trait;
 use log::debug;
 use std::ffi::OsString;
-use sysinfo::{ProcessesToUpdate, System};
+use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
 use tokio::sync::Mutex;
 
 pub struct ProcessDetectorImpl {
@@ -44,6 +44,19 @@ impl ProcessDetectorImpl {
             // Match with .exe extension if target doesn't have it
             if !target_lower.ends_with(".exe") && process_name == format!("{}.exe", target_lower) {
                 return true;
+            }
+        }
+
+        // Linux truncates /proc/pid/comm to 15 chars.
+        // If the process name is at the limit, check if it's a prefix of any target.
+        if process_name.len() >= 15 {
+            let truncated = &process_name[..15];
+            for target in &self.config.process_names {
+                let target_lower = target.to_lowercase();
+                let with_exe = format!("{}.exe", target_lower);
+                if target_lower.starts_with(truncated) || with_exe.starts_with(truncated) {
+                    return true;
+                }
             }
         }
 
@@ -99,7 +112,13 @@ impl ProcessDetectorImpl {
 impl ProcessDetector for ProcessDetectorImpl {
     async fn check_game_process(&self) -> AppResult<GameProcessStatus> {
         let mut system = self.system.lock().await;
-        system.refresh_processes(ProcessesToUpdate::All, false);
+        system.refresh_processes_specifics(
+            ProcessesToUpdate::All,
+            true,
+            ProcessRefreshKind::new()
+                .with_cmd(UpdateKind::OnlyIfNotSet)
+                .with_exe(UpdateKind::OnlyIfNotSet),
+        );
 
         for (pid, process) in system.processes() {
             let process_name = process.name().to_string_lossy().to_lowercase();

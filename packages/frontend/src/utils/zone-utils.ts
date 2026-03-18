@@ -1,3 +1,4 @@
+import type { ZoneMetadata } from '../queries/zones';
 import type { EnrichedLocationState, ZoneStats } from '../types/character';
 
 /**
@@ -38,9 +39,10 @@ export function getDisplayAct(zone: ZoneStats | EnrichedLocationState): string |
  * before the player has actually entered the zone.
  *
  * @param zoneName - The name of the zone to create a placeholder for
- * @returns A ZoneStats object with default/empty values
+ * @param metadata - Optional global zone metadata to populate wiki fields
+ * @returns A ZoneStats object with zero player stats and optional wiki data
  */
-export function createPlaceholderZone(zoneName: string): ZoneStats {
+export function createPlaceholderZone(zoneName: string, metadata?: ZoneMetadata): ZoneStats {
   const now = new Date().toISOString();
 
   return {
@@ -52,19 +54,19 @@ export function createPlaceholderZone(zoneName: string): ZoneStats {
     last_visited: now,
     is_active: false,
     entry_timestamp: undefined,
-    area_id: undefined,
-    act: undefined,
-    area_level: undefined,
-    is_town: false,
-    has_waypoint: false,
-    bosses: [],
-    monsters: [],
-    npcs: [],
-    connected_zones: [],
-    description: undefined,
-    points_of_interest: [],
-    image_url: undefined,
-    wiki_url: undefined,
-    last_updated: undefined,
+    area_id: metadata?.area_id,
+    act: metadata ? metadata.act || undefined : undefined,
+    area_level: metadata?.area_level,
+    is_town: metadata?.is_town ?? false,
+    has_waypoint: metadata?.has_waypoint ?? false,
+    bosses: metadata?.bosses ?? [],
+    monsters: metadata?.monsters ?? [],
+    npcs: metadata?.npcs ?? [],
+    connected_zones: metadata?.connected_zones ?? [],
+    description: metadata?.description,
+    points_of_interest: metadata?.points_of_interest ?? [],
+    image_url: metadata?.image_url,
+    wiki_url: metadata?.wiki_url,
+    last_updated: metadata?.last_updated,
   };
 }

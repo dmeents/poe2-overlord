@@ -8,7 +8,7 @@ use crate::errors::AppResult;
 use crate::infrastructure::events::{AppEvent, EventBus};
 
 use super::experience;
-use super::models::{ActiveZoneInfo, LevelEvent, LevelEventResponse, LevelingStats};
+use super::models::{ActiveZoneInfo, LevelChartEvent, LevelEvent, LevelEventResponse, LevelingStats};
 use super::traits::{LevelingRepository, LevelingService};
 
 pub struct LevelingServiceImpl {
@@ -81,7 +81,7 @@ impl LevelingServiceImpl {
         let deaths_at_current_level =
             self.repository.get_deaths_at_current_level(character_id).await?;
         let recent_events_raw =
-            self.repository.get_recent_level_events(character_id, 10).await?;
+            self.repository.get_recent_level_events(character_id, 200).await?;
         let levels_gained_last_hour =
             self.repository.count_levels_in_last_minutes(character_id, 60).await?;
 
@@ -115,6 +115,7 @@ impl LevelingServiceImpl {
         );
 
         let recent_events = build_event_responses(&recent_events_raw);
+        let chart_events = build_chart_events(&recent_events_raw);
 
         Ok(LevelingStats {
             character_id: character_id.to_string(),
@@ -128,6 +129,7 @@ impl LevelingServiceImpl {
             recent_events,
             active_seconds_at_level,
             is_actively_grinding,
+            chart_events,
         })
     }
 }
@@ -326,6 +328,47 @@ fn build_event_responses(events: &[LevelEvent]) -> Vec<LevelEventResponse> {
                 time_from_previous_level_seconds,
                 effective_xp_earned: effective_xp,
                 xp_per_hour,
+            }
+        })
+        .collect()
+}
+
+/// Builds chart data points for every recorded level transition, sorted ascending by level.
+/// Events from the DB arrive DESC (most recent first), so we iterate in reverse.
+fn build_chart_events(events: &[LevelEvent]) -> Vec<LevelChartEvent> {
+    // events[0] = highest level (most recent), events[last] = lowest level (oldest)
+    // Iterate in reverse to go from lowest → highest level.
+    events
+        .iter()
+        .rev()
+        .enumerate()
+        .map(|(i, event)| {
+            // The "older" event is the one that came just before this one in ascending order,
+            // which is events[events.len() - 1 - i - 1] = events[events.len() - 2 - i].
+            // In the reversed iteration, `i` is the index within the reversed slice, so
+            // the "previous" (lower-level) event is at reversed index i+1.
+            let asc_index = events.len() - 1 - i;
+            let xp_per_hour = if asc_index + 1 < events.len() {
+                let older = &events[asc_index + 1];
+                let time_diff = event
+                    .reached_at
+                    .signed_duration_since(older.reached_at)
+                    .num_seconds();
+                if time_diff > 0 {
+                    let eff_xp =
+                        experience::effective_xp_earned(older.level, event.deaths_at_level);
+                    Some(eff_xp as f64 / (time_diff as f64 / 3600.0))
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+            LevelChartEvent {
+                level: event.level,
+                xp_per_hour,
+                deaths_at_level: event.deaths_at_level,
             }
         })
         .collect()

@@ -121,12 +121,12 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
                       ? formatDuration(event.time_from_previous_level_seconds)
                       : '—'}
                   </span>
-                  <span className={styles.historyXphr}>
-                    {event.xp_per_hour !== null ? formatXpRate(event.xp_per_hour) : '—'}
-                  </span>
                   {event.deaths_at_level > 0 && (
                     <span className={styles.historyDeaths}>☠ {event.deaths_at_level}</span>
                   )}
+                  <span className={styles.historyXphr}>
+                    {event.xp_per_hour !== null ? formatXpRate(event.xp_per_hour) : '—'}
+                  </span>
                 </div>
               ))}
             </div>

@@ -15,9 +15,9 @@ export const levelingStatsCardStyles = {
   historyTitle: 'text-xs text-stone-500 uppercase tracking-wider mb-2',
   historyList: 'space-y-1.5',
   historyRow:
-    'flex items-center justify-between text-xs bg-stone-800/30 rounded px-2.5 py-1.5',
-  historyLevel: 'text-molten-400 font-semibold w-12',
-  historyTime: 'text-stone-400 flex-1 text-center',
+    'flex items-center text-xs bg-stone-800/30 rounded px-2.5 py-1.5',
+  historyLevel: 'text-molten-400 font-semibold w-8 mr-12',
+  historyTime: 'text-stone-400 flex-1 w-8',
   historyXphr: 'text-stone-300 text-right w-20',
   historyDeaths: 'text-blood-400 ml-2',
   emptyState: 'text-stone-600 text-sm text-center py-4',

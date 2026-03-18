@@ -34,6 +34,14 @@ pub struct LevelEventResponse {
     pub xp_per_hour: Option<f64>,
 }
 
+/// A single data point for the leveling progress chart.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LevelChartEvent {
+    pub level: u32,
+    pub xp_per_hour: Option<f64>,
+    pub deaths_at_level: u32,
+}
+
 /// Computed leveling statistics returned to the frontend.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LevelingStats {
@@ -57,4 +65,6 @@ pub struct LevelingStats {
     pub active_seconds_at_level: u64,
     /// True when the player is currently in a non-town, non-hideout zone (timer should tick).
     pub is_actively_grinding: bool,
+    /// All level-up events for chart rendering, sorted ascending by level.
+    pub chart_events: Vec<LevelChartEvent>,
 }

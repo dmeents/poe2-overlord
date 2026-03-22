@@ -39,7 +39,7 @@ impl ZoneStats {
             zone_name,
             duration: 0,
             deaths: 0,
-            visits: 0, // Initialize to 0; activate() will set it to 1
+            visits: 0,
             first_visited: now,
             last_visited: now,
             is_active: false,
@@ -51,46 +51,6 @@ impl ZoneStats {
 
     pub fn is_hideout(&self) -> bool {
         is_hideout_zone(&self.zone_name)
-    }
-
-    pub fn add_time(&mut self, seconds: u64) {
-        self.duration += seconds;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn record_death(&mut self) {
-        self.deaths += 1;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn record_visit(&mut self) {
-        self.visits += 1;
-        self.last_visited = Utc::now();
-    }
-
-    pub fn activate(&mut self) {
-        self.is_active = true;
-        self.record_visit();
-    }
-
-    pub fn deactivate(&mut self) {
-        self.is_active = false;
-    }
-
-    pub fn start_timer(&mut self) {
-        self.entry_timestamp = Some(Utc::now());
-    }
-
-    pub fn stop_timer_and_add_time(&mut self) -> u64 {
-        if let Some(entry_time) = self.entry_timestamp {
-            let now = Utc::now();
-            let elapsed = (now - entry_time).num_seconds().max(0) as u64;
-            self.add_time(elapsed);
-            self.entry_timestamp = None;
-            elapsed
-        } else {
-            0
-        }
     }
 
     pub fn get_current_time_spent(&self) -> u64 {
@@ -142,6 +102,7 @@ impl TrackingSummary {
         }
     }
 
+    #[cfg(test)]
     pub fn from_zones(character_id: &str, zones: &[ZoneStats]) -> Self {
         let mut summary = Self::new(character_id.to_string());
 

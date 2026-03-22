@@ -143,7 +143,7 @@ mod tests {
         config.add_zone(zone);
 
         assert_eq!(config.zones.len(), 1);
-        assert!(config.has_zone("The Coast"));
+        assert!(config.zones.contains_key("The Coast"));
     }
 
     #[test]
@@ -177,28 +177,6 @@ mod tests {
         let config = ZoneConfiguration::new();
         let retrieved = config.get_zone("Unknown Zone");
         assert!(retrieved.is_none());
-    }
-
-    #[test]
-    fn test_zone_configuration_get_zone_mut() {
-        let mut config = ZoneConfiguration::new();
-        let zone = create_zone_metadata("The Coast", 1, false);
-        config.add_zone(zone);
-
-        let zone_mut = config.get_zone_mut("The Coast").unwrap();
-        zone_mut.has_waypoint = true;
-
-        assert!(config.get_zone("The Coast").unwrap().has_waypoint);
-    }
-
-    #[test]
-    fn test_zone_configuration_has_zone() {
-        let mut config = ZoneConfiguration::new();
-        let zone = create_zone_metadata("Clearfell", 1, false);
-        config.add_zone(zone);
-
-        assert!(config.has_zone("Clearfell"));
-        assert!(!config.has_zone("Unknown Zone"));
     }
 
     #[test]
@@ -246,15 +224,6 @@ mod tests {
     }
 
     #[test]
-    fn test_zone_configuration_get_act_for_zone_by_name() {
-        let mut config = ZoneConfiguration::new();
-        config.add_zone(create_zone_metadata("Clearfell", 1, false));
-
-        assert_eq!(config.get_act_for_zone_by_name("Clearfell"), Some(1));
-        assert_eq!(config.get_act_for_zone_by_name("Unknown"), None);
-    }
-
-    #[test]
     fn test_zone_configuration_is_town_zone() {
         let mut config = ZoneConfiguration::new();
         config.add_zone(create_zone_metadata("Ogham Village", 1, true));
@@ -263,59 +232,6 @@ mod tests {
         assert!(config.is_town_zone("Ogham Village"));
         assert!(!config.is_town_zone("The Coast"));
         assert!(!config.is_town_zone("Unknown Zone"));
-    }
-
-    #[test]
-    fn test_zone_configuration_is_town_zone_by_name() {
-        let mut config = ZoneConfiguration::new();
-        config.add_zone(create_zone_metadata("Ogham Village", 1, true));
-
-        assert!(config.is_town_zone_by_name("Ogham Village"));
-        assert!(!config.is_town_zone_by_name("Unknown"));
-    }
-
-    #[test]
-    fn test_zone_configuration_get_all_zone_names() {
-        let mut config = ZoneConfiguration::new();
-        config.add_zone(create_zone_metadata("Zone A", 1, false));
-        config.add_zone(create_zone_metadata("Zone B", 2, false));
-        config.add_zone(create_zone_metadata("Zone C", 3, false));
-
-        let names = config.get_all_zone_names();
-        assert_eq!(names.len(), 3);
-        assert!(names.contains(&"Zone A".to_string()));
-        assert!(names.contains(&"Zone B".to_string()));
-        assert!(names.contains(&"Zone C".to_string()));
-    }
-
-    #[test]
-    fn test_zone_configuration_get_all_zone_names_as_keys() {
-        let mut config = ZoneConfiguration::new();
-        config.add_zone(create_zone_metadata("Zone A", 1, false));
-        config.add_zone(create_zone_metadata("Zone B", 2, false));
-
-        let keys = config.get_all_zone_names_as_keys();
-        assert_eq!(keys.len(), 2);
-        assert!(keys.contains(&"Zone A".to_string()));
-        assert!(keys.contains(&"Zone B".to_string()));
-    }
-
-    #[test]
-    fn test_zone_configuration_get_zones_needing_refresh() {
-        let mut config = ZoneConfiguration::new();
-
-        // Fresh zone (just created)
-        config.add_zone(create_zone_metadata("Fresh Zone", 1, false));
-
-        // Stale zone (2 weeks old)
-        let mut stale_zone = create_zone_metadata("Stale Zone", 1, false);
-        stale_zone.last_updated = Utc::now() - Duration::weeks(2);
-        config.add_zone(stale_zone);
-
-        let needing_refresh = config.get_zones_needing_refresh();
-        assert_eq!(needing_refresh.len(), 1);
-        assert!(needing_refresh.contains(&"Stale Zone".to_string()));
-        assert!(!needing_refresh.contains(&"Fresh Zone".to_string()));
     }
 
     #[test]
@@ -328,7 +244,7 @@ mod tests {
         let deserialized: ZoneConfiguration = serde_json::from_str(&json).unwrap();
 
         assert_eq!(deserialized.zones.len(), 2);
-        assert!(deserialized.has_zone("Clearfell"));
-        assert!(deserialized.has_zone("Ogham Village"));
+        assert!(deserialized.zones.contains_key("Clearfell"));
+        assert!(deserialized.zones.contains_key("Ogham Village"));
     }
 }

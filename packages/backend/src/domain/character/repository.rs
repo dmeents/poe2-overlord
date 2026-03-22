@@ -5,12 +5,12 @@ use sqlx::SqlitePool;
 use std::collections::HashMap;
 
 use crate::domain::walkthrough::models::WalkthroughProgress;
-use crate::domain::zone_tracking::{TrackingSummary, ZoneStats};
+use crate::domain::zone_tracking::TrackingSummary;
 use crate::errors::AppResult;
 use crate::infrastructure::database::get_or_create_zone_id_tx;
 
 use super::models::{
-    CharacterData, CharacterProfile, CharacterTimestamps, LocationState,
+    CharacterData, CharacterProfile, CharacterTimestamps, EnrichedZoneStats, LocationState,
 };
 use super::traits::CharacterRepository;
 
@@ -21,7 +21,7 @@ use super::traits::CharacterRepository;
 /// - `zone_stats`: zone tracking data (references zone_metadata by ID)
 /// - `walkthrough_progress`: campaign progress
 ///
-/// TrackingSummary is computed on demand from zone_stats using TrackingSummary::from_zones().
+/// TrackingSummary is computed on demand via SQL aggregation in load_character_data / load_all_characters_summary.
 pub struct CharacterRepositoryImpl {
     pool: SqlitePool,
 }
@@ -1040,22 +1040,15 @@ impl CharacterRepository for CharacterRepositoryImpl {
         Ok(zone_name)
     }
 
-    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<ZoneStats>> {
-        let zone_rows: Vec<(
-            i64,            // duration
-            i64,            // deaths
-            i64,            // visits
-            String,         // first_visited
-            String,         // last_visited
-            i64,            // is_active
-            Option<String>, // entry_timestamp
-            String,         // zone_name
-            i64,            // act
-            i64,            // is_town
-        )> = sqlx::query_as(
+    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<EnrichedZoneStats>> {
+        use sqlx::Row;
+
+        let rows = sqlx::query(
             "SELECT zs.duration, zs.deaths, zs.visits, zs.first_visited, zs.last_visited,
                     zs.is_active, zs.entry_timestamp,
-                    zm.zone_name, zm.act, zm.is_town
+                    zm.zone_name, zm.area_id, zm.act, zm.area_level, zm.is_town, zm.has_waypoint,
+                    zm.bosses, zm.monsters, zm.npcs, zm.connected_zones, zm.description,
+                    zm.points_of_interest, zm.image_url, zm.wiki_url, zm.last_updated
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
              WHERE zs.character_id = ?
@@ -1066,19 +1059,17 @@ impl CharacterRepository for CharacterRepositoryImpl {
         .await?;
 
         let mut zones = Vec::new();
-        for (
-            duration,
-            deaths,
-            visits,
-            first_visited_str,
-            last_visited_str,
-            is_active,
-            entry_timestamp_str,
-            zone_name,
-            act,
-            is_town,
-        ) in zone_rows
-        {
+        for row in rows {
+            let first_visited_str: String = row.get("first_visited");
+            let last_visited_str: String = row.get("last_visited");
+            let entry_timestamp_str: Option<String> = row.get("entry_timestamp");
+            let zm_last_updated_str: String = row.get("last_updated");
+            let bosses_json: String = row.get("bosses");
+            let monsters_json: String = row.get("monsters");
+            let npcs_json: String = row.get("npcs");
+            let connected_zones_json: String = row.get("connected_zones");
+            let points_of_interest_json: String = row.get("points_of_interest");
+
             let first_visited = chrono::DateTime::parse_from_rfc3339(&first_visited_str)
                 .ok()
                 .map(|dt| dt.with_timezone(&Utc))
@@ -1091,9 +1082,21 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 .as_ref()
                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
                 .map(|dt| dt.with_timezone(&Utc));
+            let zm_last_updated = chrono::DateTime::parse_from_rfc3339(&zm_last_updated_str)
+                .ok()
+                .map(|dt| dt.with_timezone(&Utc));
 
-            zones.push(ZoneStats {
-                zone_name,
+            let duration: i64 = row.get("duration");
+            let deaths: i64 = row.get("deaths");
+            let visits: i64 = row.get("visits");
+            let is_active: i64 = row.get("is_active");
+            let act: i64 = row.get("act");
+            let area_level: Option<i64> = row.get("area_level");
+            let is_town: i64 = row.get("is_town");
+            let has_waypoint: i64 = row.get("has_waypoint");
+
+            zones.push(EnrichedZoneStats {
+                zone_name: row.get("zone_name"),
                 duration: duration as u64,
                 deaths: deaths as u32,
                 visits: visits as u32,
@@ -1101,8 +1104,21 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 last_visited,
                 is_active: is_active != 0,
                 entry_timestamp,
+                area_id: row.get("area_id"),
                 act: Some(act as u32),
+                area_level: area_level.map(|v| v as u32),
                 is_town: is_town != 0,
+                has_waypoint: has_waypoint != 0,
+                bosses: serde_json::from_str(&bosses_json).unwrap_or_default(),
+                monsters: serde_json::from_str(&monsters_json).unwrap_or_default(),
+                npcs: serde_json::from_str(&npcs_json).unwrap_or_default(),
+                connected_zones: serde_json::from_str(&connected_zones_json).unwrap_or_default(),
+                description: row.get("description"),
+                points_of_interest: serde_json::from_str(&points_of_interest_json)
+                    .unwrap_or_default(),
+                image_url: row.get("image_url"),
+                wiki_url: row.get("wiki_url"),
+                last_updated: zm_last_updated,
             });
         }
 

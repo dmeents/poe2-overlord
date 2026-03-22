@@ -40,10 +40,16 @@ pub trait ZoneConfigurationRepository: Send + Sync {
     /// Loads zone configuration from the persistent storage
     async fn load_configuration(&self) -> AppResult<ZoneConfiguration>;
 
-    /// Saves zone configuration to persistent storage
-    async fn save_configuration(&self, config: &ZoneConfiguration) -> AppResult<()>;
-
     /// Inserts or updates a single zone (UPSERT operation)
     /// Preserves first_discovered on conflict, updates all other fields
     async fn upsert_zone(&self, metadata: &ZoneMetadata) -> AppResult<()>;
+
+    /// Returns zone metadata for a specific zone by name (O(1) indexed lookup).
+    async fn get_zone_by_name(&self, zone_name: &str) -> AppResult<Option<ZoneMetadata>>;
+
+    /// Returns the (act, is_town) tuple for a zone by name (fast indexed lookup).
+    async fn get_act_and_town(&self, zone_name: &str) -> AppResult<Option<(u32, bool)>>;
+
+    /// Returns all zones for a specific act number.
+    async fn get_zones_by_act(&self, act: u32) -> AppResult<Vec<ZoneMetadata>>;
 }

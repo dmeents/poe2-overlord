@@ -11,7 +11,7 @@ mod tests {
         assert_eq!(zone.zone_name, "The Coast");
         assert_eq!(zone.duration, 0);
         assert_eq!(zone.deaths, 0);
-        assert_eq!(zone.visits, 0); // Initialized to 0; activate() increments to 1
+        assert_eq!(zone.visits, 0);
         assert!(!zone.is_active);
         assert!(zone.entry_timestamp.is_none());
         assert_eq!(zone.act, Some(1));
@@ -53,102 +53,19 @@ mod tests {
     }
 
     #[test]
-    fn test_zone_stats_add_time() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        zone.add_time(100);
-
-        assert_eq!(zone.duration, 100);
-
-        zone.add_time(50);
-        assert_eq!(zone.duration, 150);
-    }
-
-    #[test]
-    fn test_zone_stats_record_death() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        assert_eq!(zone.deaths, 0);
-
-        zone.record_death();
-        assert_eq!(zone.deaths, 1);
-
-        zone.record_death();
-        zone.record_death();
-        assert_eq!(zone.deaths, 3);
-    }
-
-    #[test]
-    fn test_zone_stats_record_visit() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        assert_eq!(zone.visits, 0); // Now starts at 0
-
-        zone.record_visit();
-        assert_eq!(zone.visits, 1);
-
-        zone.record_visit();
-        assert_eq!(zone.visits, 2);
-    }
-
-    #[test]
-    fn test_zone_stats_activate() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        assert!(!zone.is_active);
-        assert_eq!(zone.visits, 0); // Starts at 0
-
-        zone.activate();
-
-        assert!(zone.is_active);
-        // Activate records first visit, setting it to 1
-        assert_eq!(zone.visits, 1);
-    }
-
-    #[test]
-    fn test_zone_stats_deactivate() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        zone.activate();
-        assert!(zone.is_active);
-
-        zone.deactivate();
-        assert!(!zone.is_active);
-    }
-
-    #[test]
-    fn test_zone_stats_start_timer() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        assert!(zone.entry_timestamp.is_none());
-
-        zone.start_timer();
-        assert!(zone.entry_timestamp.is_some());
-    }
-
-    #[test]
-    fn test_zone_stats_stop_timer_and_add_time_no_timer() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        let elapsed = zone.stop_timer_and_add_time();
-
-        assert_eq!(elapsed, 0);
-        assert_eq!(zone.duration, 0);
-    }
-
-    #[test]
-    fn test_zone_stats_stop_timer_and_add_time_with_timer() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        zone.start_timer();
-
-        // Small sleep to ensure some time passes
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
-        let elapsed = zone.stop_timer_and_add_time();
-
-        // Verify timer was stopped (elapsed is always >= 0 for u64)
-        assert!(zone.entry_timestamp.is_none());
-        // Verify some elapsed time was recorded
-        assert!(zone.duration == elapsed);
-    }
-
-    #[test]
     fn test_zone_stats_get_current_time_spent_no_timer() {
-        let mut zone = ZoneStats::new("The Coast".to_string(), Some(1), false);
-        zone.add_time(100);
+        let zone = ZoneStats {
+            zone_name: "The Coast".to_string(),
+            duration: 100,
+            deaths: 0,
+            visits: 1,
+            first_visited: chrono::Utc::now(),
+            last_visited: chrono::Utc::now(),
+            is_active: false,
+            entry_timestamp: None,
+            act: Some(1),
+            is_town: false,
+        };
 
         let current = zone.get_current_time_spent();
         assert_eq!(current, 100);
@@ -162,7 +79,7 @@ mod tests {
         assert!(json.contains("\"zone_name\":\"Clearfell\""));
         assert!(json.contains("\"duration\":0"));
         assert!(json.contains("\"deaths\":0"));
-        assert!(json.contains("\"visits\":0")); // Now starts at 0
+        assert!(json.contains("\"visits\":0"));
     }
 
     // ============= TrackingSummary Tests =============
@@ -195,21 +112,44 @@ mod tests {
 
     #[test]
     fn test_tracking_summary_from_zones_with_data() {
-        let mut zones = vec![
-            ZoneStats::new("Zone A".to_string(), Some(1), false),
-            ZoneStats::new("Zone B".to_string(), Some(2), false),
-            ZoneStats::new("Town".to_string(), Some(1), true),
+        let zones = vec![
+            ZoneStats {
+                zone_name: "Zone A".to_string(),
+                duration: 100,
+                deaths: 1,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(1),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Zone B".to_string(),
+                duration: 200,
+                deaths: 2,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(2),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Town".to_string(),
+                duration: 50,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(1),
+                is_town: true,
+            },
         ];
-
-        // Add some duration
-        zones[0].add_time(100);
-        zones[1].add_time(200);
-        zones[2].add_time(50);
-
-        // Add some deaths
-        zones[0].record_death();
-        zones[1].record_death();
-        zones[1].record_death();
 
         let summary = TrackingSummary::from_zones("char-123", &zones);
 
@@ -223,8 +163,18 @@ mod tests {
 
     #[test]
     fn test_tracking_summary_from_zones_hideout() {
-        let mut zones = vec![ZoneStats::new("My Hideout".to_string(), None, false)];
-        zones[0].add_time(300);
+        let zones = vec![ZoneStats {
+            zone_name: "My Hideout".to_string(),
+            duration: 300,
+            deaths: 0,
+            visits: 1,
+            first_visited: chrono::Utc::now(),
+            last_visited: chrono::Utc::now(),
+            is_active: false,
+            entry_timestamp: None,
+            act: None,
+            is_town: false,
+        }];
 
         let summary = TrackingSummary::from_zones("char-123", &zones);
 
@@ -234,21 +184,80 @@ mod tests {
 
     #[test]
     fn test_tracking_summary_from_zones_all_acts() {
-        let mut zones = vec![
-            ZoneStats::new("Act1 Zone".to_string(), Some(1), false),
-            ZoneStats::new("Act2 Zone".to_string(), Some(2), false),
-            ZoneStats::new("Act3 Zone".to_string(), Some(3), false),
-            ZoneStats::new("Act4 Zone".to_string(), Some(4), false),
-            ZoneStats::new("Interlude Zone".to_string(), Some(6), false),
-            ZoneStats::new("Endgame Zone".to_string(), Some(10), false),
+        let zones = vec![
+            ZoneStats {
+                zone_name: "Act1 Zone".to_string(),
+                duration: 100,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(1),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Act2 Zone".to_string(),
+                duration: 200,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(2),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Act3 Zone".to_string(),
+                duration: 300,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(3),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Act4 Zone".to_string(),
+                duration: 400,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(4),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Interlude Zone".to_string(),
+                duration: 150,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(6),
+                is_town: false,
+            },
+            ZoneStats {
+                zone_name: "Endgame Zone".to_string(),
+                duration: 500,
+                deaths: 0,
+                visits: 1,
+                first_visited: chrono::Utc::now(),
+                last_visited: chrono::Utc::now(),
+                is_active: false,
+                entry_timestamp: None,
+                act: Some(10),
+                is_town: false,
+            },
         ];
-
-        zones[0].add_time(100);
-        zones[1].add_time(200);
-        zones[2].add_time(300);
-        zones[3].add_time(400);
-        zones[4].add_time(150);
-        zones[5].add_time(500);
 
         let summary = TrackingSummary::from_zones("char-123", &zones);
 

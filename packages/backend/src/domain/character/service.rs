@@ -107,23 +107,22 @@ impl CharacterService for CharacterServiceImpl {
         // Get active character ID once for all characters
         let active_id = self.repository.get_active_character_id().await?;
 
-        let zone_config = self.zone_config.load_configuration().await.ok();
-
         let mut summaries = Vec::new();
         for character_data in character_data_list {
             let is_active = active_id.as_deref() == Some(&character_data.id);
 
-            let current_location =
-                character_data.current_location.as_ref().map(|location| {
-                    let zone_metadata = zone_config
-                        .as_ref()
-                        .and_then(|c| c.get_zone_by_name(&location.zone_name).cloned());
-                    if let Some(metadata) = zone_metadata {
+            let current_location = match character_data.current_location.as_ref() {
+                None => None,
+                Some(location) => {
+                    let zone_metadata =
+                        self.zone_config.get_zone_metadata(&location.zone_name).await;
+                    Some(if let Some(metadata) = zone_metadata {
                         EnrichedLocationState::from_location_and_metadata(location, &metadata)
                     } else {
                         EnrichedLocationState::from_location_minimal(location)
-                    }
-                });
+                    })
+                }
+            };
 
             summaries.push(CharacterSummaryResponse {
                 id: character_data.id,
@@ -417,24 +416,7 @@ impl CharacterService for CharacterServiceImpl {
         &self,
         character_id: &str,
     ) -> Result<Vec<EnrichedZoneStats>, AppError> {
-        let zone_stats = self.repository.get_character_zones(character_id).await?;
-        let zone_config = self.zone_config.load_configuration().await.ok();
-
-        let enriched = zone_stats
-            .iter()
-            .map(|stats| {
-                let metadata = zone_config
-                    .as_ref()
-                    .and_then(|c| c.get_zone_by_name(&stats.zone_name).cloned());
-                if let Some(meta) = metadata {
-                    EnrichedZoneStats::from_stats_and_metadata(stats, &meta)
-                } else {
-                    EnrichedZoneStats::from_stats_minimal(stats)
-                }
-            })
-            .collect();
-
-        Ok(enriched)
+        self.repository.get_character_zones(character_id).await
     }
 
     async fn has_character_visited_zone(
@@ -450,22 +432,20 @@ impl CharacterService for CharacterServiceImpl {
 
 impl CharacterServiceImpl {
     /// Enriches character data with zone metadata for API responses.
-    /// Builds EnrichedZoneStats directly from ZoneStats + zone config (no intermediate conversion).
     async fn enrich_character_data(&self, character_data: CharacterData) -> CharacterDataResponse {
-        let zone_config = self.zone_config.load_configuration().await.ok();
-
-        // Enrich current location
-        let current_location = character_data.current_location.as_ref().map(|location| {
-            let zone_metadata = zone_config
-                .as_ref()
-                .and_then(|c| c.get_zone_by_name(&location.zone_name).cloned());
-
-            if let Some(metadata) = zone_metadata {
-                EnrichedLocationState::from_location_and_metadata(location, &metadata)
-            } else {
-                EnrichedLocationState::from_location_minimal(location)
+        // Targeted lookup for current location only — no full config load
+        let current_location = match character_data.current_location.as_ref() {
+            None => None,
+            Some(location) => {
+                let zone_metadata =
+                    self.zone_config.get_zone_metadata(&location.zone_name).await;
+                Some(if let Some(metadata) = zone_metadata {
+                    EnrichedLocationState::from_location_and_metadata(location, &metadata)
+                } else {
+                    EnrichedLocationState::from_location_minimal(location)
+                })
             }
-        });
+        };
 
         CharacterDataResponse {
             id: character_data.id,

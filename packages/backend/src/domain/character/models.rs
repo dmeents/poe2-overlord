@@ -4,7 +4,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::domain::walkthrough::models::WalkthroughProgress;
-use crate::domain::zone_tracking::{TrackingSummary, ZoneStats};
+use crate::domain::zone_tracking::TrackingSummary;
 
 /// Character profile information
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -308,64 +308,6 @@ pub struct EnrichedZoneStats {
     pub last_updated: Option<DateTime<Utc>>,
 }
 
-impl EnrichedZoneStats {
-    pub fn from_stats_minimal(stats: &ZoneStats) -> Self {
-        Self {
-            zone_name: stats.zone_name.clone(),
-            duration: stats.duration,
-            deaths: stats.deaths,
-            visits: stats.visits,
-            first_visited: stats.first_visited,
-            last_visited: stats.last_visited,
-            is_active: stats.is_active,
-            entry_timestamp: stats.entry_timestamp,
-            area_id: None,
-            act: stats.act,
-            area_level: None,
-            is_town: stats.is_town,
-            has_waypoint: false,
-            bosses: Vec::new(),
-            monsters: Vec::new(),
-            npcs: Vec::new(),
-            connected_zones: Vec::new(),
-            description: None,
-            points_of_interest: Vec::new(),
-            image_url: None,
-            wiki_url: None,
-            last_updated: None,
-        }
-    }
-
-    pub fn from_stats_and_metadata(
-        stats: &ZoneStats,
-        metadata: &crate::domain::zone_configuration::models::ZoneMetadata,
-    ) -> Self {
-        Self {
-            zone_name: stats.zone_name.clone(),
-            duration: stats.duration,
-            deaths: stats.deaths,
-            visits: stats.visits,
-            first_visited: stats.first_visited,
-            last_visited: stats.last_visited,
-            is_active: stats.is_active,
-            entry_timestamp: stats.entry_timestamp,
-            area_id: metadata.area_id.clone(),
-            act: Some(metadata.act),
-            area_level: metadata.area_level,
-            is_town: metadata.is_town,
-            has_waypoint: metadata.has_waypoint,
-            bosses: metadata.bosses.clone(),
-            monsters: metadata.monsters.clone(),
-            npcs: metadata.npcs.clone(),
-            connected_zones: metadata.connected_zones.clone(),
-            description: metadata.description.clone(),
-            points_of_interest: metadata.points_of_interest.clone(),
-            image_url: metadata.image_url.clone(),
-            wiki_url: metadata.wiki_url.clone(),
-            last_updated: Some(metadata.last_updated),
-        }
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum LocationType {

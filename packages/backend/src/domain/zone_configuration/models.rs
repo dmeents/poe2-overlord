@@ -66,17 +66,7 @@ impl ZoneConfiguration {
         self.zones.get(zone_name)
     }
 
-    /// Gets zone metadata by zone name (mutable)
-    pub fn get_zone_mut(&mut self, zone_name: &str) -> Option<&mut ZoneMetadata> {
-        self.zones.get_mut(zone_name)
-    }
-
-    /// Checks if a zone exists by zone name
-    pub fn has_zone(&self, zone_name: &str) -> bool {
-        self.zones.contains_key(zone_name)
-    }
-
-    /// Gets zone metadata by zone name (alias for get_zone)
+    /// Gets zone metadata by zone name
     pub fn get_zone_by_name(&self, zone_name: &str) -> Option<&ZoneMetadata> {
         self.get_zone(zone_name)
     }
@@ -91,47 +81,12 @@ impl ZoneConfiguration {
         self.zones.get(zone_name).map(|zone| zone.act)
     }
 
-    /// Gets the act for a specific zone by zone name
-    pub fn get_act_for_zone_by_name(&self, zone_name: &str) -> Option<u32> {
-        self.get_zone_by_name(zone_name).map(|zone| zone.act)
-    }
-
     /// Checks if a zone is a town by zone name
     pub fn is_town_zone(&self, zone_name: &str) -> bool {
         self.zones
             .get(zone_name)
             .map(|zone| zone.is_town)
             .unwrap_or(false)
-    }
-
-    /// Checks if a zone is a town by zone name
-    pub fn is_town_zone_by_name(&self, zone_name: &str) -> bool {
-        self.get_zone_by_name(zone_name)
-            .map(|zone| zone.is_town)
-            .unwrap_or(false)
-    }
-
-    /// Gets all zone names
-    pub fn get_all_zone_names_as_keys(&self) -> Vec<String> {
-        self.zones.keys().cloned().collect()
-    }
-
-    /// Gets all zone names
-    pub fn get_all_zone_names(&self) -> Vec<String> {
-        self.zones
-            .values()
-            .map(|zone| zone.zone_name.clone())
-            .collect()
-    }
-
-    /// Gets zones that need refresh (older than 1 week)
-    pub fn get_zones_needing_refresh(&self) -> Vec<String> {
-        let week_ago = Utc::now() - chrono::Duration::weeks(1);
-        self.zones
-            .iter()
-            .filter(|(_, zone)| zone.last_updated < week_ago)
-            .map(|(zone_name, _)| zone_name.clone())
-            .collect()
     }
 }
 

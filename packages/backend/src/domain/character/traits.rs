@@ -7,7 +7,6 @@ use super::models::{
     CharacterSummaryResponse, CharacterUpdateParams, EnrichedZoneStats, League, LocationState,
 };
 use crate::domain::walkthrough::models::WalkthroughProgress;
-use crate::domain::zone_tracking::ZoneStats;
 
 #[async_trait]
 pub trait CharacterRepository {
@@ -67,8 +66,8 @@ pub trait CharacterRepository {
     /// Gets the name of the currently active zone for a character, if any.
     async fn get_active_zone_name(&self, character_id: &str) -> AppResult<Option<String>>;
 
-    /// Loads all zone stats for a character (raw, unenriched).
-    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<ZoneStats>>;
+    /// Loads all zone stats for a character, enriched with zone metadata via SQL JOIN.
+    async fn get_character_zones(&self, character_id: &str) -> AppResult<Vec<EnrichedZoneStats>>;
 
     /// Returns true if the character has visited the given zone at least once.
     async fn has_character_visited_zone(

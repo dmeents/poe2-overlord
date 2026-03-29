@@ -1,16 +1,17 @@
 import { ChartBarIcon } from '@heroicons/react/24/outline';
-import type { LevelEventResponse } from '@/types/leveling';
-import { formatDurationMinutes } from '@/utils/format-duration';
-import { formatXpRate } from '@/utils/format-xp';
+import type { LevelEventResponse, LevelingStats } from '@/types/leveling';
+import { formatDuration, formatDurationMinutes } from '@/utils/format-duration';
+import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
 
 interface LevelingInsightsProps {
   events: LevelEventResponse[];
   currentLevel: number;
+  liveStats?: LevelingStats;
 }
 
-export function LevelingInsights({ events, currentLevel }: LevelingInsightsProps) {
+export function LevelingInsights({ events, currentLevel, liveStats }: LevelingInsightsProps) {
   if (events.length === 0) {
     return (
       <Card title="Leveling Insights" icon={<ChartBarIcon />}>
@@ -27,18 +28,14 @@ export function LevelingInsights({ events, currentLevel }: LevelingInsightsProps
   const fastestLevel =
     eventsWithTime.length > 0
       ? eventsWithTime.reduce((min, e) =>
-          e.time_from_previous_level_seconds! < min.time_from_previous_level_seconds!
-            ? e
-            : min,
+          e.time_from_previous_level_seconds! < min.time_from_previous_level_seconds! ? e : min,
         )
       : null;
 
   const slowestLevel =
     eventsWithTime.length > 0
       ? eventsWithTime.reduce((max, e) =>
-          e.time_from_previous_level_seconds! > max.time_from_previous_level_seconds!
-            ? e
-            : max,
+          e.time_from_previous_level_seconds! > max.time_from_previous_level_seconds! ? e : max,
         )
       : null;
 
@@ -59,6 +56,21 @@ export function LevelingInsights({ events, currentLevel }: LevelingInsightsProps
 
   return (
     <Card title="Leveling Insights" icon={<ChartBarIcon />} className="py-0">
+      {liveStats && (
+        <>
+          {liveStats.estimated_seconds_to_next_level !== null && (
+            <DataItem
+              label="Est. next level"
+              value={formatDuration(liveStats.estimated_seconds_to_next_level)}
+              color="ember"
+            />
+          )}
+          {liveStats.current_level < 100 && (
+            <DataItem label="XP to next level" value={formatXpAmount(liveStats.xp_to_next_level)} />
+          )}
+          <div className="border-t border-stone-800 my-1" />
+        </>
+      )}
       <DataItem label="Current Level" value={currentLevel} />
       <DataItem label="Levels Tracked" value={events.length} />
       <DataItem label="Total Deaths" value={totalDeaths} subValue="across all levels" />

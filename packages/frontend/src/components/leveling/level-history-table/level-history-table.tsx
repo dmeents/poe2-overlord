@@ -1,11 +1,13 @@
 import { memo } from 'react';
-import type { LevelEventResponse } from '@/types/leveling';
+import type { LevelEventResponse, LevelingStats } from '@/types/leveling';
 import { formatDuration } from '@/utils/format-duration';
 import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
 import { levelHistoryTableStyles as styles } from './level-history-table.styles';
 
 interface LevelHistoryTableProps {
   events: LevelEventResponse[];
+  liveStats?: LevelingStats;
+  currentTimeSeconds?: number;
 }
 
 function formatTimestamp(iso: string): string {
@@ -18,7 +20,11 @@ function formatTimestamp(iso: string): string {
   });
 }
 
-export const LevelHistoryTable = memo(function LevelHistoryTable({ events }: LevelHistoryTableProps) {
+export const LevelHistoryTable = memo(function LevelHistoryTable({
+  events,
+  liveStats,
+  currentTimeSeconds,
+}: LevelHistoryTableProps) {
   return (
     <div className={styles.wrapper}>
       <table className={styles.table}>
@@ -33,6 +39,43 @@ export const LevelHistoryTable = memo(function LevelHistoryTable({ events }: Lev
           </tr>
         </thead>
         <tbody className={styles.tbody}>
+          {/* Current (in-progress) level row */}
+          {liveStats && (
+            <tr className={styles.currentRow}>
+              <td className={styles.td}>
+                <span className={styles.currentLevelBadge}>{liveStats.current_level}</span>
+                <span className={styles.currentLiveDot} />
+              </td>
+              <td className={styles.td}>
+                {liveStats.last_level_reached_at
+                  ? formatTimestamp(liveStats.last_level_reached_at)
+                  : '—'}
+              </td>
+              <td className={styles.tdRight}>
+                {currentTimeSeconds !== undefined && currentTimeSeconds > 0
+                  ? formatDuration(currentTimeSeconds)
+                  : '—'}
+              </td>
+              <td className={styles.tdRight}>
+                {liveStats.deaths_at_current_level > 0 ? (
+                  <span className={styles.deathsValue}>☠ {liveStats.deaths_at_current_level}</span>
+                ) : (
+                  <span className="text-stone-600">0</span>
+                )}
+              </td>
+              <td className={styles.tdRight}>
+                <span className={styles.currentInProgress}>In Progress</span>
+              </td>
+              <td className={styles.tdRight}>
+                {liveStats.xp_per_hour !== null ? (
+                  <span className={styles.xphrValue}>{formatXpRate(liveStats.xp_per_hour)}</span>
+                ) : (
+                  '—'
+                )}
+              </td>
+            </tr>
+          )}
+
           {events.length === 0 ? (
             <tr>
               <td colSpan={6} className={styles.emptyRow}>

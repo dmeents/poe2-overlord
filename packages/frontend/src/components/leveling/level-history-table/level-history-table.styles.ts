@@ -12,4 +12,10 @@ export const levelHistoryTableStyles = {
   deathsValue: 'text-blood-400',
   xphrValue: 'text-ember-400',
   emptyRow: 'py-8 text-center text-stone-500',
+  // Current (in-progress) level row
+  currentRow: 'border-b border-ember-900/40 bg-ember-950/20 hover:bg-ember-950/30 transition-colors',
+  currentLevelBadge: 'inline-block font-semibold text-ember-300',
+  currentLiveDot: 'inline-block w-1.5 h-1.5 rounded-full bg-ember-400 animate-pulse ml-1.5 align-middle',
+  currentInProgress: 'text-stone-500 italic',
+  currentEstNext: 'text-molten-400',
 } as const;

@@ -6,6 +6,7 @@ import {
   DocumentTextIcon,
   HomeIcon,
   UserGroupIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
 import { Link, useLocation } from '@tanstack/react-router';
 import logoNoText from '@/assets/logo-no-text-square.png';
@@ -25,6 +26,7 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
   // Navigation items for easier mapping
   const primaryNavItems = [
     { path: '/', title: 'Dashboard', icon: HomeIcon },
+    { path: '/character', title: 'Character', icon: UserIcon },
     { path: '/walkthrough', title: 'Walkthrough', icon: BookOpenIcon },
     { path: '/playtime', title: 'Playtime', icon: ClockIcon },
     { path: '/economy', title: 'Economy', icon: BanknotesIcon },

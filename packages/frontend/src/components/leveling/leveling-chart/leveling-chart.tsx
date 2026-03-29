@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Bar, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { LevelEventResponse } from '@/types/leveling';
-import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
+import { formatXpAmount } from '@/utils/format-xp';
 import { levelingChartStyles as styles } from './leveling-chart.styles';
 
 interface LevelingChartProps {
@@ -29,12 +29,10 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     <div className="bg-stone-800 border border-stone-700 rounded-lg p-2.5 card-shadow z-20">
       <p className="text-molten-400 font-semibold text-xs mb-1">Level {label}</p>
       {xpItem?.value != null && (
-        <p className="text-ember-400 text-xs">{formatXpRate(xpItem.value)}</p>
+        <p className="text-ember-400 text-xs">XP/hr: {formatXpAmount(xpItem.value)}</p>
       )}
-      {deathsItem?.value != null && deathsItem.value > 0 && (
-        <p className="text-blood-400 text-xs">
-          ☠ {deathsItem.value} death{deathsItem.value !== 1 ? 's' : ''}
-        </p>
+      {deathsItem?.value != null && (
+        <p className="text-blood-400 text-xs">Deaths: {deathsItem.value}</p>
       )}
     </div>
   );
@@ -43,13 +41,14 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 export const LevelingChart = memo(function LevelingChart({ data }: LevelingChartProps) {
   if (data.length < 2) return null;
 
-  const hasDeaths = data.some(d => d.deaths_at_level > 0);
+  const recent = data.slice(-20);
+  const hasDeaths = recent.some(d => d.deaths_at_level > 0);
 
   return (
     <div className={styles.container}>
       <ResponsiveContainer width="100%" height={120}>
         <ComposedChart
-          data={data}
+          data={recent}
           margin={{ top: 4, right: hasDeaths ? 28 : 0, bottom: 0, left: 0 }}>
           <XAxis
             dataKey="level"

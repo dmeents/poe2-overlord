@@ -18,6 +18,9 @@ pub struct LevelEvent {
     pub reached_at: DateTime<Utc>,
     /// Deaths that occurred while grinding FROM the previous level TO this level.
     pub deaths_at_level: u32,
+    /// Active grinding seconds accumulated while reaching this level (towns/hideouts excluded).
+    /// 0 for historical events recorded before migration 006.
+    pub active_seconds: u64,
 }
 
 /// Per-event metadata computed for frontend display.

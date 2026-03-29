@@ -14,6 +14,7 @@ pub trait LevelingRepository: Send + Sync {
         level: u32,
         reached_at: DateTime<Utc>,
         deaths_at_level: u32,
+        active_seconds: u64,
     ) -> AppResult<()>;
 
     /// Returns recent level events for a character, ordered by level DESC (newest first).

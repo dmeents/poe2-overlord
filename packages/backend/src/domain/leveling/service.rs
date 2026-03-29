@@ -150,11 +150,12 @@ impl LevelingService for LevelingServiceImpl {
             );
         }
 
-        // Capture death counter before reset
+        // Capture death counter and active grinding seconds before reset
         let deaths = self.repository.get_deaths_at_current_level(character_id).await?;
+        let active_seconds = self.repository.get_active_seconds_at_level(character_id).await?;
 
         self.repository
-            .insert_level_event(character_id, new_level, Utc::now(), deaths)
+            .insert_level_event(character_id, new_level, Utc::now(), deaths, active_seconds)
             .await?;
 
         self.repository.reset_deaths_at_current_level(character_id).await?;
@@ -253,10 +254,13 @@ fn compute_xp_per_hour(
         let newer = &events[i];
         let older = &events[i + 1];
 
-        let time_diff = newer
-            .reached_at
-            .signed_duration_since(older.reached_at)
-            .num_seconds();
+        // Prefer active grinding seconds (excludes towns/hideouts/AFK).
+        // Fall back to wall-clock diff for historical events recorded before migration 006.
+        let time_diff = if newer.active_seconds > 0 {
+            newer.active_seconds as i64
+        } else {
+            newer.reached_at.signed_duration_since(older.reached_at).num_seconds()
+        };
 
         if time_diff <= 0 {
             continue;
@@ -309,10 +313,11 @@ fn build_event_responses(events: &[LevelEvent]) -> Vec<LevelEventResponse> {
         .map(|(i, event)| {
             let (time_from_previous_level_seconds, effective_xp, xp_per_hour) =
                 if let Some(older) = events.get(i + 1) {
-                    let time_diff = event
-                        .reached_at
-                        .signed_duration_since(older.reached_at)
-                        .num_seconds();
+                    let time_diff = if event.active_seconds > 0 {
+                        event.active_seconds as i64
+                    } else {
+                        event.reached_at.signed_duration_since(older.reached_at).num_seconds()
+                    };
                     if time_diff > 0 {
                         let eff_xp =
                             experience::effective_xp_earned(older.level, event.deaths_at_level);
@@ -354,10 +359,11 @@ fn build_chart_events(events: &[LevelEvent]) -> Vec<LevelChartEvent> {
             let asc_index = events.len() - 1 - i;
             let xp_per_hour = if asc_index + 1 < events.len() {
                 let older = &events[asc_index + 1];
-                let time_diff = event
-                    .reached_at
-                    .signed_duration_since(older.reached_at)
-                    .num_seconds();
+                let time_diff = if event.active_seconds > 0 {
+                    event.active_seconds as i64
+                } else {
+                    event.reached_at.signed_duration_since(older.reached_at).num_seconds()
+                };
                 if time_diff > 0 {
                     let eff_xp =
                         experience::effective_xp_earned(older.level, event.deaths_at_level);
@@ -381,15 +387,23 @@ fn build_chart_events(events: &[LevelEvent]) -> Vec<LevelChartEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
-
     fn make_event(level: u32, minutes_ago: i64, deaths: u32) -> LevelEvent {
+        make_event_with_active(level, minutes_ago, deaths, 0)
+    }
+
+    fn make_event_with_active(
+        level: u32,
+        minutes_ago: i64,
+        deaths: u32,
+        active_seconds: u64,
+    ) -> LevelEvent {
         LevelEvent {
             id: level as i64,
             character_id: "test".to_string(),
             level,
             reached_at: Utc::now() - chrono::Duration::minutes(minutes_ago),
             deaths_at_level: deaths,
+            active_seconds,
         }
     }
 
@@ -461,6 +475,24 @@ mod tests {
         assert!(result.is_some());
         let secs = result.unwrap();
         assert!(secs > 1700 && secs <= 1800);
+    }
+
+    #[test]
+    fn xp_per_hour_uses_active_seconds_not_wall_clock() {
+        // Level 9 -> 10: 60 min wall-clock but only 30 min active grinding.
+        // XP/hr should be based on 30 min (active), not 60 min (wall-clock).
+        let events = vec![
+            make_event_with_active(10, 0, 0, 1800), // 30 min active seconds
+            make_event(9, 60, 0),
+        ];
+        let (xp_hr_active, _) = compute_xp_per_hour(&events);
+
+        // Wall-clock only (active_seconds == 0, falls back to 60 min diff)
+        let events_fallback = vec![make_event(10, 0, 0), make_event(9, 60, 0)];
+        let (xp_hr_wallclock, _) = compute_xp_per_hour(&events_fallback);
+
+        // Active-based rate should be ~2x higher (30 min vs 60 min for same XP)
+        assert!(xp_hr_active.unwrap() > xp_hr_wallclock.unwrap());
     }
 
     #[test]

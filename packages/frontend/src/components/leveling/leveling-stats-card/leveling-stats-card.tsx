@@ -102,11 +102,11 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
         )}
 
         {/* Leveling chart */}
-        {stats.chart_events.length >= 2 && (
+        {stats.all_events.length >= 2 && (
           <>
             <div className={styles.divider} />
             <div className={styles.historyTitle}>XP / hr history</div>
-            <LevelingChart data={stats.chart_events} />
+            <LevelingChart data={stats.all_events} />
           </>
         )}
 

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ConfigurationProvider } from './contexts/ConfigurationContext';
@@ -7,6 +8,21 @@ import { GameProcessProvider } from './contexts/GameProcessContext';
 import { ServerStatusProvider } from './contexts/ServerStatusContext';
 import { WalkthroughProvider } from './contexts/WalkthroughContext';
 import { ZoneProvider } from './contexts/ZoneContext';
+import { useConfiguration } from './contexts/ConfigurationContext';
+import { applyZoom } from './utils/zoom';
+
+function ZoomSync() {
+  const { config } = useConfiguration();
+  const zoomLevel = config?.ui_zoom_level;
+
+  useEffect(() => {
+    if (zoomLevel !== undefined) {
+      applyZoom(zoomLevel).catch(err => console.error('Failed to apply zoom:', err));
+    }
+  }, [zoomLevel]);
+
+  return null;
+}
 
 interface ProvidersProps {
   children: ReactNode;
@@ -52,6 +68,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps): React.JSX.Element {
   return (
     <ConfigurationProvider>
+      <ZoomSync />
       <GameProcessProvider>
         <ServerStatusProvider>
           <CharacterProvider>

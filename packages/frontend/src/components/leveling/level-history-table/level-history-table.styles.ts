@@ -1,0 +1,15 @@
+export const levelHistoryTableStyles = {
+  wrapper: 'overflow-x-auto',
+  table: 'w-full text-xs',
+  thead: 'sticky top-0 bg-stone-900 z-10',
+  th: 'text-left text-stone-500 font-medium py-2 px-3 whitespace-nowrap border-b border-stone-800',
+  thRight: 'text-right text-stone-500 font-medium py-2 px-3 whitespace-nowrap border-b border-stone-800',
+  tbody: '',
+  tr: 'border-b border-stone-800/50 hover:bg-stone-800/30 transition-colors',
+  td: 'py-2 px-3 text-stone-300 whitespace-nowrap',
+  tdRight: 'py-2 px-3 text-stone-300 whitespace-nowrap text-right',
+  levelBadge: 'inline-block font-semibold text-molten-300',
+  deathsValue: 'text-blood-400',
+  xphrValue: 'text-ember-400',
+  emptyRow: 'py-8 text-center text-stone-500',
+} as const;

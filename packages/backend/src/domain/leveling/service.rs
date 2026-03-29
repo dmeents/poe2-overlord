@@ -8,7 +8,7 @@ use crate::errors::AppResult;
 use crate::infrastructure::events::{AppEvent, EventBus};
 
 use super::experience;
-use super::models::{ActiveZoneInfo, LevelChartEvent, LevelEvent, LevelEventResponse, LevelingStats};
+use super::models::{ActiveZoneInfo, LevelEvent, LevelEventResponse, LevelingStats};
 use super::traits::{LevelingRepository, LevelingService};
 
 pub struct LevelingServiceImpl {
@@ -114,8 +114,8 @@ impl LevelingServiceImpl {
             current_level,
         );
 
-        let recent_events = build_event_responses(&recent_events_raw);
-        let chart_events = build_chart_events(&recent_events_raw);
+        let recent_events = build_event_responses(&recent_events_raw, Some(5));
+        let all_events = build_event_responses_ascending(&recent_events_raw);
 
         Ok(LevelingStats {
             character_id: character_id.to_string(),
@@ -129,7 +129,7 @@ impl LevelingServiceImpl {
             recent_events,
             active_seconds_at_level,
             is_actively_grinding,
-            chart_events,
+            all_events,
         })
     }
 }
@@ -304,13 +304,14 @@ fn estimated_seconds(
     Some(seconds_remaining)
 }
 
-/// Builds the last 5 level event responses with per-transition stats.
-fn build_event_responses(events: &[LevelEvent]) -> Vec<LevelEventResponse> {
-    events
-        .iter()
-        .take(5)
-        .enumerate()
-        .map(|(i, event)| {
+/// Builds level event responses with per-transition stats, most recent first (DESC order).
+/// `limit` caps the number of events returned; `None` returns all.
+fn build_event_responses(events: &[LevelEvent], limit: Option<usize>) -> Vec<LevelEventResponse> {
+    let iter: Box<dyn Iterator<Item = (usize, &LevelEvent)>> = match limit {
+        Some(n) => Box::new(events.iter().take(n).enumerate()),
+        None => Box::new(events.iter().enumerate()),
+    };
+    iter.map(|(i, event)| {
             let (time_from_previous_level_seconds, effective_xp, xp_per_hour) =
                 if let Some(older) = events.get(i + 1) {
                     let time_diff = if event.active_seconds > 0 {
@@ -342,46 +343,14 @@ fn build_event_responses(events: &[LevelEvent]) -> Vec<LevelEventResponse> {
         .collect()
 }
 
-/// Builds chart data points for every recorded level transition, sorted ascending by level.
-/// Events from the DB arrive DESC (most recent first), so we iterate in reverse.
-fn build_chart_events(events: &[LevelEvent]) -> Vec<LevelChartEvent> {
-    // events[0] = highest level (most recent), events[last] = lowest level (oldest)
-    // Iterate in reverse to go from lowest → highest level.
-    events
-        .iter()
-        .rev()
-        .enumerate()
-        .map(|(i, event)| {
-            // The "older" event is the one that came just before this one in ascending order,
-            // which is events[events.len() - 1 - i - 1] = events[events.len() - 2 - i].
-            // In the reversed iteration, `i` is the index within the reversed slice, so
-            // the "previous" (lower-level) event is at reversed index i+1.
-            let asc_index = events.len() - 1 - i;
-            let xp_per_hour = if asc_index + 1 < events.len() {
-                let older = &events[asc_index + 1];
-                let time_diff = if event.active_seconds > 0 {
-                    event.active_seconds as i64
-                } else {
-                    event.reached_at.signed_duration_since(older.reached_at).num_seconds()
-                };
-                if time_diff > 0 {
-                    let eff_xp =
-                        experience::effective_xp_earned(older.level, event.deaths_at_level);
-                    Some(eff_xp as f64 / (time_diff as f64 / 3600.0))
-                } else {
-                    None
-                }
-            } else {
-                None
-            };
-
-            LevelChartEvent {
-                level: event.level,
-                xp_per_hour,
-                deaths_at_level: event.deaths_at_level,
-            }
-        })
-        .collect()
+/// Builds all level event responses sorted ascending by level (lowest first).
+/// Events from the DB arrive DESC (most recent first), so computed fields reference
+/// the correct "older" neighbour after reversing.
+fn build_event_responses_ascending(events: &[LevelEvent]) -> Vec<LevelEventResponse> {
+    // Build DESC responses for all events (so neighbour indexing is correct), then reverse.
+    let mut responses = build_event_responses(events, None);
+    responses.reverse();
+    responses
 }
 
 #[cfg(test)]

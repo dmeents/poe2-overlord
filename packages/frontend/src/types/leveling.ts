@@ -1,12 +1,3 @@
-/** Per-level data point for the leveling history chart. */
-export interface LevelChartEvent {
-  level: number;
-  /** XP/hr for this level transition. Null for the first tracked event. */
-  xp_per_hour: number | null;
-  /** Deaths that occurred while grinding to this level. */
-  deaths_at_level: number;
-}
-
 /** Per-level-up event data for display in the history list. */
 export interface LevelEventResponse {
   level: number;
@@ -44,6 +35,6 @@ export interface LevelingStats {
   active_seconds_at_level: number;
   /** True when the player is in a non-town, non-hideout zone (timer should tick live). */
   is_actively_grinding: boolean;
-  /** All level events sorted ascending by level, for the chart. */
-  chart_events: LevelChartEvent[];
+  /** All level-up events with full computed fields, sorted ascending by level. */
+  all_events: LevelEventResponse[];
 }

@@ -3,6 +3,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner'
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useConfiguration } from '@/contexts/ConfigurationContext';
 import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
+import { applyZoom, ZOOM_OPTIONS } from '@/utils/zoom';
 import { tauriUtils } from '@/utils/tauri';
 import { Button } from '../../ui/button/button';
 import { AlertMessage } from '../form-alert-message/form-alert-message';
@@ -62,6 +63,7 @@ const DEFAULT_FORM_STATE: AppConfig = {
   hide_league_start_objectives: false,
   hide_flavor_text: false,
   hide_objective_descriptions: false,
+  ui_zoom_level: 0,
 };
 
 interface SettingsFormProps {
@@ -190,6 +192,12 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     }));
   };
 
+  const handleZoomChange = (value: string) => {
+    const level = parseFloat(value);
+    setLocalConfig(prev => ({ ...prev, ui_zoom_level: level }));
+    applyZoom(level).catch(err => console.error('Failed to preview zoom:', err));
+  };
+
   const validatePoeClientLogPath = (path: string): boolean => {
     // Basic validation - check if it's not empty
     if (!path.trim()) return false;
@@ -233,6 +241,35 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         <AlertMessage type="error" message={error || ''} />
         <AlertMessage type="success" message={success || ''} />
       </div>
+
+      {/* UI Zoom Level */}
+      <FormField
+        label={
+          <Tooltip
+            content={
+              <div>
+                <p className="mb-2">
+                  <strong>UI Zoom Level:</strong> Scales the entire interface to improve readability
+                  on high-DPI or ultrawide monitors.
+                </p>
+                <p className="text-stone-300">
+                  <strong>Auto</strong> detects your display resolution and applies an appropriate
+                  zoom. Override this if the auto-detected level isn&apos;t right for your setup.
+                </p>
+              </div>
+            }>
+            UI Zoom Level
+          </Tooltip>
+        }
+        htmlFor="ui-zoom-level">
+        <Select
+          id="ui-zoom-level"
+          value={String(localConfig.ui_zoom_level)}
+          onChange={handleZoomChange}
+          options={ZOOM_OPTIONS.map(opt => ({ value: String(opt.value), label: opt.label }))}
+          variant="dropdown"
+        />
+      </FormField>
 
       {/* POE Client Log Path */}
       <FormField

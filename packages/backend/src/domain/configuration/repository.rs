@@ -53,8 +53,9 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         sqlx::query(
             "INSERT OR REPLACE INTO app_config
              (id, config_version, poe_client_log_path, log_level, zone_refresh_interval, updated_at,
-              hide_optional_objectives, hide_league_start_objectives, hide_flavor_text, hide_objective_descriptions)
-             VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              hide_optional_objectives, hide_league_start_objectives, hide_flavor_text,
+              hide_objective_descriptions, ui_zoom_level)
+             VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(config.config_version as i64)
         .bind(&config.poe_client_log_path)
@@ -65,6 +66,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         .bind(if config.hide_league_start_objectives { 1i64 } else { 0i64 })
         .bind(if config.hide_flavor_text { 1i64 } else { 0i64 })
         .bind(if config.hide_objective_descriptions { 1i64 } else { 0i64 })
+        .bind(config.ui_zoom_level)
         .execute(&self.pool)
         .await?;
 
@@ -76,10 +78,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         debug!("Loading configuration from SQLite");
 
         // Query the single-row config table
-        let row: Option<(i64, String, String, String, i64, i64, i64, i64)> = sqlx::query_as(
+        let row: Option<(i64, String, String, String, i64, i64, i64, i64, f64)> = sqlx::query_as(
             "SELECT config_version, poe_client_log_path, log_level, zone_refresh_interval,
                     hide_optional_objectives, hide_league_start_objectives,
-                    hide_flavor_text, hide_objective_descriptions
+                    hide_flavor_text, hide_objective_descriptions, ui_zoom_level
              FROM app_config
              WHERE id = 1",
         )
@@ -95,6 +97,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             hide_league_start_objectives,
             hide_flavor_text,
             hide_objective_descriptions,
+            ui_zoom_level,
         )) = row
         {
             // Parse enum from TEXT
@@ -123,6 +126,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 hide_league_start_objectives: hide_league_start_objectives != 0,
                 hide_flavor_text: hide_flavor_text != 0,
                 hide_objective_descriptions: hide_objective_descriptions != 0,
+                ui_zoom_level,
             }
         } else {
             // No config exists, return default and save it

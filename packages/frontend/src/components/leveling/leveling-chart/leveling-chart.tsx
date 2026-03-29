@@ -1,11 +1,11 @@
 import { memo } from 'react';
 import { Bar, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import type { LevelChartEvent } from '@/types/leveling';
+import type { LevelEventResponse } from '@/types/leveling';
 import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
 import { levelingChartStyles as styles } from './leveling-chart.styles';
 
 interface LevelingChartProps {
-  data: LevelChartEvent[];
+  data: LevelEventResponse[];
 }
 
 interface TooltipPayloadItem {

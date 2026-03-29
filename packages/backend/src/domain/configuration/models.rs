@@ -80,6 +80,8 @@ pub struct AppConfig {
     pub hide_flavor_text: bool,
     #[serde(default)]
     pub hide_objective_descriptions: bool,
+    #[serde(default)]
+    pub ui_zoom_level: f64,
 }
 
 impl AppConfig {
@@ -105,6 +107,7 @@ impl AppConfig {
             hide_league_start_objectives: false,
             hide_flavor_text: false,
             hide_objective_descriptions: false,
+            ui_zoom_level: 0.0,
         }
     }
 
@@ -219,6 +222,7 @@ impl Default for AppConfig {
             hide_league_start_objectives: false,
             hide_flavor_text: false,
             hide_objective_descriptions: false,
+            ui_zoom_level: 0.0,
         }
     }
 }

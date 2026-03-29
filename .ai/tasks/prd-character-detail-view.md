@@ -21,12 +21,15 @@ New `/character` route that consolidates all per-character metric components int
 ### Left Column (2/3 width)
 1. `CharacterStatusCard` -- Character identity and key stats
 2. `CurrentZoneCard` -- Active zone with live timer (empty state if no active zone)
-3. `ZoneList` -- Filterable/sortable zone history with `useListControls`
+3. `LevelHistoryChart` -- **NEW** Expanded XP/hr chart (280px) with time/level toggle
+4. `LevelHistoryTable` -- **NEW** Full table of all level-up events
+5. `ZoneList` -- Filterable/sortable zone history with `useListControls`
 
 ### Right Column (1/3 width)
-1. `LevelingStatsCard` -- XP/hr, est. next level, deaths, recent levels, XP chart
-2. `PlaytimeInsights` -- Time breakdown (active/hideout/town %), deaths/hr, top zones
-3. `ActDistributionChart` -- Pie chart of time per act
+1. `LevelingStatsCard` -- Live leveling metrics (est. next level, XP/hr, deaths, recent levels)
+2. `LevelingInsights` -- **NEW** Aggregate leveling stats (peak/avg XP/hr, fastest/slowest level)
+3. `PlaytimeInsights` -- Time breakdown (active/hideout/town %), deaths/hr, top zones
+4. `ActDistributionChart` -- Pie chart of time per act
 
 ## Implementation
 

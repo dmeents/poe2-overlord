@@ -1,0 +1,98 @@
+import { ChartBarIcon } from '@heroicons/react/24/outline';
+import type { LevelEventResponse } from '@/types/leveling';
+import { formatDurationMinutes } from '@/utils/format-duration';
+import { formatXpRate } from '@/utils/format-xp';
+import { Card } from '../../ui/card/card';
+import { DataItem } from '../../ui/data-item/data-item';
+
+interface LevelingInsightsProps {
+  events: LevelEventResponse[];
+  currentLevel: number;
+}
+
+export function LevelingInsights({ events, currentLevel }: LevelingInsightsProps) {
+  if (events.length === 0) {
+    return (
+      <Card title="Leveling Insights" icon={<ChartBarIcon />}>
+        <div className="text-stone-500 text-sm py-4 text-center">No level history yet</div>
+      </Card>
+    );
+  }
+
+  const totalDeaths = events.reduce((sum, e) => sum + e.deaths_at_level, 0);
+
+  const eventsWithTime = events.filter(e => e.time_from_previous_level_seconds != null);
+  const eventsWithXp = events.filter(e => e.xp_per_hour != null);
+
+  const fastestLevel =
+    eventsWithTime.length > 0
+      ? eventsWithTime.reduce((min, e) =>
+          e.time_from_previous_level_seconds! < min.time_from_previous_level_seconds!
+            ? e
+            : min,
+        )
+      : null;
+
+  const slowestLevel =
+    eventsWithTime.length > 0
+      ? eventsWithTime.reduce((max, e) =>
+          e.time_from_previous_level_seconds! > max.time_from_previous_level_seconds!
+            ? e
+            : max,
+        )
+      : null;
+
+  const peakXpHr =
+    eventsWithXp.length > 0
+      ? eventsWithXp.reduce((max, e) => (e.xp_per_hour! > max.xp_per_hour! ? e : max))
+      : null;
+
+  const avgXpHr =
+    eventsWithXp.length > 0
+      ? eventsWithXp.reduce((sum, e) => sum + e.xp_per_hour!, 0) / eventsWithXp.length
+      : null;
+
+  const totalActiveSeconds = events.reduce(
+    (sum, e) => sum + (e.time_from_previous_level_seconds ?? 0),
+    0,
+  );
+
+  return (
+    <Card title="Leveling Insights" icon={<ChartBarIcon />} className="py-0">
+      <DataItem label="Current Level" value={currentLevel} />
+      <DataItem label="Levels Tracked" value={events.length} />
+      <DataItem label="Total Deaths" value={totalDeaths} subValue="across all levels" />
+      {totalActiveSeconds > 0 && (
+        <DataItem
+          label="Total Level Time"
+          value={formatDurationMinutes(totalActiveSeconds)}
+          subValue="active grinding only"
+        />
+      )}
+      {peakXpHr && (
+        <DataItem
+          label="Peak XP / hr"
+          value={formatXpRate(peakXpHr.xp_per_hour!)}
+          subValue={`at level ${peakXpHr.level}`}
+        />
+      )}
+      {avgXpHr != null && (
+        <DataItem label="Avg XP / hr" value={formatXpRate(avgXpHr)} subValue="all levels" />
+      )}
+      {fastestLevel && (
+        <DataItem
+          label="Fastest Level"
+          value={`Lv ${fastestLevel.level}`}
+          subValue={formatDurationMinutes(fastestLevel.time_from_previous_level_seconds!)}
+        />
+      )}
+      {slowestLevel && (
+        <DataItem
+          label="Slowest Level"
+          value={`Lv ${slowestLevel.level}`}
+          subValue={formatDurationMinutes(slowestLevel.time_from_previous_level_seconds!)}
+        />
+      )}
+    </Card>
+  );
+}

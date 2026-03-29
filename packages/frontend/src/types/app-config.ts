@@ -23,6 +23,7 @@ export interface AppConfig {
   hide_league_start_objectives: boolean;
   hide_flavor_text: boolean;
   hide_objective_descriptions: boolean;
+  ui_zoom_level: number;
 }
 
 /** Event emitted when configuration changes (from backend). */

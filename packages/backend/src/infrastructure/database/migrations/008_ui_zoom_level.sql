@@ -1,0 +1,1 @@
+ALTER TABLE app_config ADD COLUMN ui_zoom_level REAL NOT NULL DEFAULT 0.0;

@@ -378,17 +378,6 @@ impl LogAnalysisServiceImpl {
                         zone_name, wiki_data.act, wiki_data.area_level, wiki_data.is_town
                     );
 
-                    let _area_id = wiki_data.area_id.clone().unwrap_or_else(|| {
-                        zone_name
-                            .to_lowercase()
-                            .replace([' ', '-'], "_")
-                            .chars()
-                            .filter(|c| c.is_alphanumeric() || *c == '_')
-                            .collect::<String>()
-                            .trim_matches('_')
-                            .to_string()
-                    });
-
                     info!("Reloading zone configuration before lookup...");
                     if let Err(e) = zone_config.reload_configuration().await {
                         error!("Failed to reload zone configuration: {}", e);
@@ -401,16 +390,15 @@ impl LogAnalysisServiceImpl {
                             zone_name
                         );
                         info!(
-                            "BEFORE UPDATE: area_id={:?}, act={}, is_town={}",
-                            zone_metadata.area_id, zone_metadata.act, zone_metadata.is_town
+                            "BEFORE UPDATE: act={}, is_town={}",
+                            zone_metadata.act, zone_metadata.is_town
                         );
 
                         let mut updated_metadata = zone_metadata;
                         updated_metadata.update_from_wiki_data(&wiki_data);
 
                         info!(
-                            "AFTER UPDATE: area_id={:?}, act={}, is_town={}",
-                            updated_metadata.area_id,
+                            "AFTER UPDATE: act={}, is_town={}",
                             updated_metadata.act,
                             updated_metadata.is_town
                         );

@@ -72,7 +72,6 @@ describe('createPlaceholderZone', () => {
   it('creates a zone with empty arrays', () => {
     const zone = createPlaceholderZone('Test Zone');
     expect(zone.bosses).toEqual([]);
-    expect(zone.monsters).toEqual([]);
     expect(zone.npcs).toEqual([]);
     expect(zone.connected_zones).toEqual([]);
     expect(zone.points_of_interest).toEqual([]);
@@ -87,7 +86,6 @@ describe('createPlaceholderZone', () => {
   it('sets optional fields to undefined', () => {
     const zone = createPlaceholderZone('Test Zone');
     expect(zone.entry_timestamp).toBeUndefined();
-    expect(zone.area_id).toBeUndefined();
     expect(zone.act).toBeUndefined();
     expect(zone.area_level).toBeUndefined();
     expect(zone.description).toBeUndefined();
@@ -99,13 +97,11 @@ describe('createPlaceholderZone', () => {
   it('merges wiki metadata when provided', () => {
     const metadata: ZoneMetadata = {
       zone_name: 'Test Zone',
-      area_id: 'G1_2',
       act: 1,
       area_level: 5,
       is_town: false,
       has_waypoint: true,
       bosses: ['Boss A'],
-      monsters: ['Monster B'],
       npcs: ['NPC C'],
       connected_zones: ['Other Zone'],
       description: 'A test zone description.',
@@ -124,12 +120,10 @@ describe('createPlaceholderZone', () => {
     expect(zone.deaths).toBe(0);
 
     // Wiki fields populated from metadata
-    expect(zone.area_id).toBe('G1_2');
     expect(zone.act).toBe(1);
     expect(zone.area_level).toBe(5);
     expect(zone.has_waypoint).toBe(true);
     expect(zone.bosses).toEqual(['Boss A']);
-    expect(zone.monsters).toEqual(['Monster B']);
     expect(zone.npcs).toEqual(['NPC C']);
     expect(zone.connected_zones).toEqual(['Other Zone']);
     expect(zone.description).toBe('A test zone description.');

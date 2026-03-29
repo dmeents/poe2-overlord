@@ -47,7 +47,6 @@ const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
   last_visited: '2024-01-10T00:00:00Z',
   is_active: false,
   bosses: [],
-  monsters: [],
   npcs: [],
   connected_zones: [],
   points_of_interest: [],

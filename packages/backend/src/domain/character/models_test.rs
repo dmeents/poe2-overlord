@@ -393,7 +393,6 @@ mod tests {
         assert_eq!(enriched.act, 0);
         assert!(!enriched.is_town);
         assert_eq!(enriched.location_type, LocationType::Zone);
-        assert!(enriched.area_id.is_none());
         assert!(enriched.area_level.is_none());
         assert!(!enriched.has_waypoint);
     }

@@ -10,15 +10,56 @@ impl BaseParser {
         element.text().collect::<String>().trim().to_string()
     }
 
-    /// Checks if an element is a section heading matching the given name (case-insensitive)
+    /// Checks if an element is a section heading matching the given name (case-insensitive).
+    /// Uses `matches_heading_name` for synonym support and `[edit]` stripping.
     pub fn is_section_heading(element: &ElementRef, section_name: &str) -> bool {
-        let element_name = element.value().name();
-        if element_name == "h2" || element_name == "h3" {
-            let heading_text = Self::extract_text(element).to_lowercase();
-            heading_text.contains(&section_name.to_lowercase())
-        } else {
-            false
+        Self::matches_heading_name(element, section_name)
+    }
+
+    /// Matches a heading element against a section name, with synonym support and edit-link stripping.
+    ///
+    /// Handles:
+    /// - `[edit]` / `[edit section]` spans appended by MediaWiki
+    /// - Common aliases (e.g. "Boss Monsters" → bosses, "NPC List" → npcs)
+    /// - Fallback substring match
+    pub fn matches_heading_name(element: &ElementRef, section_name: &str) -> bool {
+        let tag = element.value().name();
+        if tag != "h2" && tag != "h3" {
+            return false;
         }
+
+        // Strip edit-link spans added by MediaWiki before comparing text
+        let raw = Self::extract_text(element).to_lowercase();
+        let clean = raw
+            .replace("[edit]", "")
+            .replace("[edit section]", "")
+            .trim()
+            .to_string();
+
+        let needle = section_name.to_lowercase();
+
+        // Exact or substring match on the primary name
+        if clean == needle || clean.contains(&needle) {
+            return true;
+        }
+
+        // Synonym map — normalized section names → accepted aliases
+        let synonyms: &[&str] = match needle.as_str() {
+            "boss" | "bosses" => &["boss monsters", "unique monsters"],
+            "npc" | "npcs" => &["npc list", "non-player characters", "characters"],
+            "points_of_interest" | "points of interest" => {
+                &["notable locations", "landmarks", "notable areas"]
+            }
+            _ => &[],
+        };
+
+        for synonym in synonyms {
+            if clean.contains(synonym) {
+                return true;
+            }
+        }
+
+        false
     }
 
     /// Extracts list items from a list element
@@ -78,31 +119,98 @@ impl BaseParser {
         text.trim().to_string()
     }
 
-    /// Extracts all list items from a specific section
+    /// Returns the HTML of the first `div.info-card` whose subheading is NOT "Tooltip".
+    /// On pages with multiple info-cards (hideouts, mechanic zones), this selects the
+    /// primary zone card and skips tooltip/auxillary cards.
+    pub fn find_primary_info_card_html(document: &Html) -> Option<String> {
+        let card_selector = Selector::parse("div.info-card").unwrap();
+        let subheading_selector = Selector::parse(".subheading").unwrap();
+
+        for card in document.select(&card_selector) {
+            let subheading_text = card
+                .select(&subheading_selector)
+                .next()
+                .map(|el| Self::extract_text(&el))
+                .unwrap_or_default();
+
+            if subheading_text != "Tooltip" {
+                return Some(card.html());
+            }
+        }
+        None
+    }
+
+    /// Collects all text items from a list element (ul, ol, or dl).
+    fn collect_from_list(list_el: &ElementRef) -> Vec<String> {
+        let tag = list_el.value().name();
+        let child_selector = if tag == "dl" {
+            Selector::parse("dt, dd").unwrap()
+        } else {
+            Selector::parse("li").unwrap()
+        };
+        list_el
+            .select(&child_selector)
+            .map(|item| Self::extract_text(&item))
+            .filter(|text| !text.is_empty())
+            .collect()
+    }
+
+    /// Extracts all list items from a specific named section of the document.
+    ///
+    /// Uses sibling-walking from the matched heading to correctly handle:
+    /// - Lists inside `div`/`section` wrappers (MediaWiki content divs)
+    /// - `ol` and `dl` in addition to `ul`
+    /// - `figure` elements (skipped)
+    /// - Multi-list sections (all lists collected until next heading)
+    /// - Same/higher-rank headings as stop markers
     pub fn extract_section_list_items(document: &Html, section_name: &str) -> Vec<String> {
-        let mut items = Vec::new();
-        let list_selector = Selector::parse("ul li").unwrap();
-        let mut in_section = false;
+        let heading_selector = Selector::parse("h2, h3").unwrap();
+        let list_selector = Selector::parse("ul, ol, dl").unwrap();
 
-        for element in document.select(&Selector::parse("h2, h3, ul").unwrap()) {
-            let element_name = element.value().name();
+        for heading in document.select(&heading_selector) {
+            if !Self::matches_heading_name(&heading, section_name) {
+                continue;
+            }
 
-            if element_name == "h2" || element_name == "h3" {
-                if Self::is_section_heading(&element, section_name) {
-                    in_section = true;
-                } else if in_section {
+            let heading_rank = heading.value().name(); // "h2" or "h3"
+            let mut items = Vec::new();
+
+            for sibling in heading.next_siblings() {
+                let el = match ElementRef::wrap(sibling) {
+                    Some(el) => el,
+                    None => continue, // skip text nodes
+                };
+
+                let tag = el.value().name();
+
+                // Stop at a same-or-higher-rank heading
+                if tag == "h2" || (tag == "h3" && heading_rank == "h3") {
                     break;
                 }
-            } else if element_name == "ul" && in_section {
-                for list_item in element.select(&list_selector) {
-                    let text = Self::extract_text(&list_item);
-                    if !text.is_empty() {
-                        items.push(text);
-                    }
+
+                // Direct list elements
+                if matches!(tag, "ul" | "ol" | "dl") {
+                    items.extend(Self::collect_from_list(&el));
+                    continue;
                 }
+
+                // Descend into div/section wrappers (MediaWiki wraps content in mw-parser-output divs)
+                if matches!(tag, "div" | "section") {
+                    for list_el in el.select(&list_selector) {
+                        items.extend(Self::collect_from_list(&list_el));
+                    }
+                    continue;
+                }
+
+                // Skip figures — they appear between headings and list content on wiki pages
+                // Skip tables and other non-list block elements
+            }
+
+            if !items.is_empty() {
+                return items;
             }
         }
 
-        items
+        vec![]
     }
 }

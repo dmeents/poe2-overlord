@@ -234,6 +234,7 @@ mod tests {
             hide_league_start_objectives: false,
             hide_flavor_text: false,
             hide_objective_descriptions: false,
+            ui_zoom_level: 0.0,
         };
 
         let json = serde_json::to_string(&config).unwrap();

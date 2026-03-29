@@ -3,13 +3,12 @@ import { invoke } from '@tauri-apps/api/core';
 
 export interface ZoneMetadata {
   zone_name: string;
-  area_id?: string;
   act: number;
   area_level?: number;
   is_town: boolean;
   has_waypoint: boolean;
+  zone_type: string;
   bosses: string[];
-  monsters: string[];
   npcs: string[];
   connected_zones: string[];
   description?: string;

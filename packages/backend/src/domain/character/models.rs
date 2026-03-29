@@ -201,8 +201,6 @@ pub struct EnrichedLocationState {
 
     pub location_type: LocationType,
 
-    pub area_id: Option<String>,
-
     pub area_level: Option<u32>,
 
     pub has_waypoint: bool,
@@ -220,7 +218,6 @@ impl EnrichedLocationState {
             act: metadata.act,
             is_town: metadata.is_town,
             location_type: LocationType::Zone, // All locations are zones (including towns)
-            area_id: metadata.area_id.clone(),
             area_level: metadata.area_level,
             has_waypoint: metadata.has_waypoint,
             last_updated: location.last_updated,
@@ -233,7 +230,6 @@ impl EnrichedLocationState {
             act: 0, // Unknown act
             is_town: false,
             location_type: LocationType::Zone,
-            area_id: None,
             area_level: None,
             has_waypoint: false,
             last_updated: location.last_updated,
@@ -292,13 +288,12 @@ pub struct EnrichedZoneStats {
     pub last_visited: DateTime<Utc>,
     pub is_active: bool,
     pub entry_timestamp: Option<DateTime<Utc>>,
-    pub area_id: Option<String>,
     pub act: Option<u32>,
     pub area_level: Option<u32>,
     pub is_town: bool,
     pub has_waypoint: bool,
+    pub zone_type: String,
     pub bosses: Vec<String>,
-    pub monsters: Vec<String>,
     pub npcs: Vec<String>,
     pub connected_zones: Vec<String>,
     pub description: Option<String>,

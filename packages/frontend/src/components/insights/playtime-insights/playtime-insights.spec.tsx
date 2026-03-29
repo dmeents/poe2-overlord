@@ -37,7 +37,6 @@ const createMockZone = (overrides: Partial<ZoneStats> = {}): ZoneStats => ({
   is_town: false,
   has_waypoint: true,
   bosses: [],
-  monsters: [],
   npcs: [],
   connected_zones: [],
   points_of_interest: [],

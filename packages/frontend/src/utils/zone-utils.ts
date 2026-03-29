@@ -14,6 +14,13 @@ import type { EnrichedLocationState, ZoneStats } from '../types/character';
  * getDisplayAct(act3Zone) // "Act 3"
  */
 export function getDisplayAct(zone: ZoneStats | EnrichedLocationState): string | undefined {
+  // Use zone_type when available (ZoneStats only)
+  if ('zone_type' in zone && zone.zone_type) {
+    if (zone.zone_type === 'Map') return 'Endgame';
+    if (zone.zone_type === 'Hideout') return 'Endgame';
+  }
+
+  // Fallback: name-based hideout detection
   if (zone.zone_name.toLowerCase().includes('hideout')) {
     return 'Endgame';
   }
@@ -54,13 +61,12 @@ export function createPlaceholderZone(zoneName: string, metadata?: ZoneMetadata)
     last_visited: now,
     is_active: false,
     entry_timestamp: undefined,
-    area_id: metadata?.area_id,
     act: metadata ? metadata.act || undefined : undefined,
+    zone_type: metadata?.zone_type ?? 'Unknown',
     area_level: metadata?.area_level,
     is_town: metadata?.is_town ?? false,
     has_waypoint: metadata?.has_waypoint ?? false,
     bosses: metadata?.bosses ?? [],
-    monsters: metadata?.monsters ?? [],
     npcs: metadata?.npcs ?? [],
     connected_zones: metadata?.connected_zones ?? [],
     description: metadata?.description,

@@ -42,19 +42,57 @@ impl ConnectedZonesParser {
     }
 
     fn parse_from_page_text(document: &Html) -> Vec<String> {
+        const PATTERNS: &[&str] = &[
+            "connected to",
+            "connects to",
+            "leads to",
+            "adjacent to",
+            "accessed from",
+        ];
+
         let text_selector = Selector::parse("p").unwrap();
+        let link_selector = Selector::parse("a").unwrap();
 
         for paragraph in document.select(&text_selector) {
+            // Use original text for extraction; lowercase only for pattern matching
             let text = paragraph.text().collect::<String>();
+            let text_lower = text.to_lowercase();
 
-            if text.contains("connected to") {
-                if let Some(connected_pos) = text.find("connected to") {
-                    let after_connected = &text[connected_pos + 12..].trim();
+            for &pattern in PATTERNS {
+                if let Some(pattern_pos) = text_lower.find(pattern) {
+                    // Prefer <a> links that appear after the pattern position
+                    // — links are more precise than comma-splitting raw text
+                    let links: Vec<String> = paragraph
+                        .select(&link_selector)
+                        .filter_map(|a| {
+                            let link_text = BaseParser::extract_text(&a);
+                            if !link_text.is_empty() {
+                                let link_lower = link_text.to_lowercase();
+                                if let Some(link_pos) = text_lower.find(&link_lower) {
+                                    if link_pos > pattern_pos {
+                                        return Some(link_text);
+                                    }
+                                }
+                            }
+                            None
+                        })
+                        .collect();
 
-                    let zone_text = if let Some(period_pos) = after_connected.find('.') {
-                        &after_connected[..period_pos]
+                    if !links.is_empty() {
+                        debug!(
+                            "Found {} connected zones via '{}' pattern (links)",
+                            links.len(),
+                            pattern
+                        );
+                        return links;
+                    }
+
+                    // Fallback: comma-split from ORIGINAL (case-preserved) text
+                    let after_pattern = text[pattern_pos + pattern.len()..].trim_start();
+                    let zone_text = if let Some(period_pos) = after_pattern.find('.') {
+                        &after_pattern[..period_pos]
                     } else {
-                        after_connected
+                        after_pattern
                     };
 
                     let zones: Vec<String> = zone_text
@@ -65,7 +103,11 @@ impl ConnectedZonesParser {
                         .collect();
 
                     if !zones.is_empty() {
-                        debug!("Found {} connected zones in page text", zones.len());
+                        debug!(
+                            "Found {} connected zones via '{}' pattern (text split)",
+                            zones.len(),
+                            pattern
+                        );
                         return zones;
                     }
                 }

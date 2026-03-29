@@ -64,7 +64,6 @@ export interface EnrichedLocationState {
   act: number;
   is_town: boolean;
   location_type: LocationType;
-  area_id?: string;
   area_level?: number;
   has_waypoint: boolean;
   last_updated: string;
@@ -89,11 +88,10 @@ export interface ZoneStats {
   is_town: boolean;
 
   // Enrichment data (from wiki metadata)
-  area_id?: string;
   area_level?: number;
   has_waypoint: boolean;
+  zone_type?: string;
   bosses: string[];
-  monsters: string[];
   npcs: string[];
   connected_zones: string[];
   description?: string;

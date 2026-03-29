@@ -59,6 +59,9 @@ export const LevelingChart = memo(function LevelingChart({ data }: LevelingChart
           <YAxis
             yAxisId="xp"
             orientation="left"
+            scale="sqrt"
+            domain={['auto', 'auto']}
+            tickCount={6}
             tick={{ fill: 'var(--color-stone-500)', fontSize: 10 }}
             tickLine={false}
             axisLine={false}

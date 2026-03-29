@@ -1,6 +1,45 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
+use std::str::FromStr;
+
+/// Classification of a zone's role, derived from the wiki info-card subheading.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
+pub enum ZoneType {
+    Campaign,
+    Town,
+    Map,
+    Hideout,
+    #[default]
+    Unknown,
+}
+
+impl fmt::Display for ZoneType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ZoneType::Campaign => write!(f, "Campaign"),
+            ZoneType::Town => write!(f, "Town"),
+            ZoneType::Map => write!(f, "Map"),
+            ZoneType::Hideout => write!(f, "Hideout"),
+            ZoneType::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
+impl FromStr for ZoneType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Campaign" => Ok(ZoneType::Campaign),
+            "Town" => Ok(ZoneType::Town),
+            "Map" => Ok(ZoneType::Map),
+            "Hideout" => Ok(ZoneType::Hideout),
+            _ => Ok(ZoneType::Unknown),
+        }
+    }
+}
 
 /// Main zone configuration containing all zone metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,8 +53,6 @@ pub struct ZoneConfiguration {
 pub struct ZoneMetadata {
     /// Name of the zone as it appears in the game
     pub zone_name: String,
-    /// Area ID from the wiki (e.g., "G1_2")
-    pub area_id: Option<String>,
     /// Act number
     pub act: u32,
     /// Area level
@@ -24,10 +61,10 @@ pub struct ZoneMetadata {
     pub is_town: bool,
     /// Whether this zone has a waypoint
     pub has_waypoint: bool,
+    /// Classification of the zone type (Campaign, Town, Map, Hideout, Unknown)
+    pub zone_type: ZoneType,
     /// List of bosses in this zone
     pub bosses: Vec<String>,
-    /// List of monsters in this zone
-    pub monsters: Vec<String>,
     /// List of NPCs in this zone
     #[serde(default)]
     pub npcs: Vec<String>,
@@ -91,19 +128,16 @@ impl ZoneConfiguration {
 }
 
 impl ZoneMetadata {
-    /// Creates a new zone metadata with minimal data
-    /// area_id will be None until populated from wiki data
     pub fn new(zone_name: String) -> Self {
         let now = Utc::now();
         Self {
             zone_name,
-            area_id: None,
             act: 0,
             area_level: None,
             is_town: false,
             has_waypoint: false,
+            zone_type: ZoneType::Unknown,
             bosses: Vec::new(),
-            monsters: Vec::new(),
             npcs: Vec::new(),
             connected_zones: Vec::new(),
             description: None,
@@ -125,13 +159,12 @@ impl ZoneMetadata {
         &mut self,
         wiki_data: &crate::domain::wiki_scraping::models::WikiZoneData,
     ) {
-        self.area_id = wiki_data.area_id.clone();
         self.act = wiki_data.act;
         self.area_level = wiki_data.area_level;
         self.is_town = wiki_data.is_town;
         self.has_waypoint = wiki_data.has_waypoint;
+        self.zone_type = wiki_data.zone_type.clone();
         self.bosses = wiki_data.bosses.clone();
-        self.monsters = wiki_data.monsters.clone();
         self.npcs = wiki_data.npcs.clone();
         self.connected_zones = wiki_data.connected_zones.clone();
         self.description = wiki_data.description.clone();

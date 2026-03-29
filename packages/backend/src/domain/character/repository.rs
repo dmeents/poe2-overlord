@@ -148,17 +148,17 @@ impl CharacterRepository for CharacterRepositoryImpl {
             sqlx::query_as(
                 "SELECT
                     COALESCE(SUM(zs.duration), 0),
-                    COALESCE(SUM(CASE WHEN LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.zone_type = 'Hideout' OR LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND zm.zone_type != 'Hideout' AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
                     COALESCE(COUNT(DISTINCT zs.zone_id), 0),
                     COALESCE(SUM(zs.deaths), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 1 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 2 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 3 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 4 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 5 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 6 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 10 THEN zs.duration ELSE 0 END), 0)
+                    COALESCE(SUM(CASE WHEN zm.act = 1 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 2 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 3 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 4 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 5 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 6 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.zone_type = 'Map' OR zm.act = 10 THEN zs.duration ELSE 0 END), 0)
                  FROM zone_stats zs
                  JOIN zone_metadata zm ON zs.zone_id = zm.id
                  WHERE zs.character_id = ?",
@@ -375,17 +375,17 @@ impl CharacterRepository for CharacterRepositoryImpl {
         )> = sqlx::query_as(
             "SELECT zs.character_id,
                     COALESCE(SUM(zs.duration), 0),
-                    COALESCE(SUM(CASE WHEN LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.zone_type = 'Hideout' OR LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND zm.zone_type != 'Hideout' AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
                     COALESCE(COUNT(DISTINCT zs.zone_id), 0),
                     COALESCE(SUM(zs.deaths), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 1 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 2 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 3 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 4 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 5 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 6 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 10 THEN zs.duration ELSE 0 END), 0)
+                    COALESCE(SUM(CASE WHEN zm.act = 1 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 2 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 3 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 4 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 5 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 6 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.zone_type = 'Map' OR zm.act = 10 THEN zs.duration ELSE 0 END), 0)
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
              GROUP BY zs.character_id",
@@ -871,17 +871,17 @@ impl CharacterRepository for CharacterRepositoryImpl {
         )> = sqlx::query_as(
             "SELECT zs.character_id,
                     COALESCE(SUM(zs.duration), 0),
-                    COALESCE(SUM(CASE WHEN LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.zone_type = 'Hideout' OR LOWER(zm.zone_name) LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.is_town = 1 AND zm.zone_type != 'Hideout' AND LOWER(zm.zone_name) NOT LIKE '%hideout%' THEN zs.duration ELSE 0 END), 0),
                     COALESCE(COUNT(DISTINCT zs.zone_id), 0),
                     COALESCE(SUM(zs.deaths), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 1 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 2 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 3 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 4 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 5 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 6 THEN zs.duration ELSE 0 END), 0),
-                    COALESCE(SUM(CASE WHEN zm.act = 10 THEN zs.duration ELSE 0 END), 0)
+                    COALESCE(SUM(CASE WHEN zm.act = 1 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 2 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 3 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 4 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 5 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.act = 6 AND zm.zone_type NOT IN ('Hideout', 'Map') THEN zs.duration ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN zm.zone_type = 'Map' OR zm.act = 10 THEN zs.duration ELSE 0 END), 0)
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
              GROUP BY zs.character_id",
@@ -1046,8 +1046,8 @@ impl CharacterRepository for CharacterRepositoryImpl {
         let rows = sqlx::query(
             "SELECT zs.duration, zs.deaths, zs.visits, zs.first_visited, zs.last_visited,
                     zs.is_active, zs.entry_timestamp,
-                    zm.zone_name, zm.area_id, zm.act, zm.area_level, zm.is_town, zm.has_waypoint,
-                    zm.bosses, zm.monsters, zm.npcs, zm.connected_zones, zm.description,
+                    zm.zone_name, zm.act, zm.area_level, zm.is_town, zm.has_waypoint,
+                    zm.zone_type, zm.bosses, zm.npcs, zm.connected_zones, zm.description,
                     zm.points_of_interest, zm.image_url, zm.wiki_url, zm.last_updated
              FROM zone_stats zs
              JOIN zone_metadata zm ON zs.zone_id = zm.id
@@ -1065,7 +1065,6 @@ impl CharacterRepository for CharacterRepositoryImpl {
             let entry_timestamp_str: Option<String> = row.get("entry_timestamp");
             let zm_last_updated_str: String = row.get("last_updated");
             let bosses_json: String = row.get("bosses");
-            let monsters_json: String = row.get("monsters");
             let npcs_json: String = row.get("npcs");
             let connected_zones_json: String = row.get("connected_zones");
             let points_of_interest_json: String = row.get("points_of_interest");
@@ -1104,13 +1103,12 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 last_visited,
                 is_active: is_active != 0,
                 entry_timestamp,
-                area_id: row.get("area_id"),
                 act: Some(act as u32),
                 area_level: area_level.map(|v| v as u32),
                 is_town: is_town != 0,
                 has_waypoint: has_waypoint != 0,
+                zone_type: row.get::<String, _>("zone_type"),
                 bosses: serde_json::from_str(&bosses_json).unwrap_or_default(),
-                monsters: serde_json::from_str(&monsters_json).unwrap_or_default(),
                 npcs: serde_json::from_str(&npcs_json).unwrap_or_default(),
                 connected_zones: serde_json::from_str(&connected_zones_json).unwrap_or_default(),
                 description: row.get("description"),

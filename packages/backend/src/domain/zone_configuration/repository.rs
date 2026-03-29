@@ -36,13 +36,12 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
         // Query all zone metadata rows
         let rows: Vec<(
             String,         // zone_name
-            Option<String>, // area_id
             i64,            // act
             Option<i64>,    // area_level
             i64,            // is_town
             i64,            // has_waypoint
+            String,         // zone_type
             String,         // bosses (JSON)
-            String,         // monsters (JSON)
             String,         // npcs (JSON)
             String,         // connected_zones (JSON)
             Option<String>, // description
@@ -52,8 +51,8 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
             String,         // first_discovered
             String,         // last_updated
         )> = sqlx::query_as(
-            "SELECT zone_name, area_id, act, area_level, is_town, has_waypoint,
-                    bosses, monsters, npcs, connected_zones, description,
+            "SELECT zone_name, act, area_level, is_town, has_waypoint, zone_type,
+                    bosses, npcs, connected_zones, description,
                     points_of_interest, image_url, wiki_url, first_discovered, last_updated
              FROM zone_metadata
              ORDER BY zone_name",
@@ -65,13 +64,12 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
 
         for (
             zone_name,
-            area_id,
             act,
             area_level,
             is_town,
             has_waypoint,
+            zone_type_str,
             bosses_json,
-            monsters_json,
             npcs_json,
             connected_zones_json,
             description,
@@ -84,7 +82,6 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
         {
             // Deserialize JSON TEXT columns
             let bosses: Vec<String> = serde_json::from_str(&bosses_json).unwrap_or_default();
-            let monsters: Vec<String> = serde_json::from_str(&monsters_json).unwrap_or_default();
             let npcs: Vec<String> = serde_json::from_str(&npcs_json).unwrap_or_default();
             let connected_zones: Vec<String> =
                 serde_json::from_str(&connected_zones_json).unwrap_or_default();
@@ -93,13 +90,12 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
 
             let metadata = ZoneMetadata {
                 zone_name: zone_name.clone(),
-                area_id,
                 act: act as u32,
                 area_level: area_level.map(|v| v as u32),
                 is_town: is_town != 0,
                 has_waypoint: has_waypoint != 0,
+                zone_type: zone_type_str.parse().unwrap_or_default(),
                 bosses,
-                monsters,
                 npcs,
                 connected_zones,
                 description,
@@ -127,25 +123,23 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
     async fn upsert_zone(&self, metadata: &ZoneMetadata) -> AppResult<()> {
         // Serialize Vec<String> to JSON for TEXT columns
         let bosses_json = serde_json::to_string(&metadata.bosses)?;
-        let monsters_json = serde_json::to_string(&metadata.monsters)?;
         let npcs_json = serde_json::to_string(&metadata.npcs)?;
         let connected_zones_json = serde_json::to_string(&metadata.connected_zones)?;
         let points_of_interest_json = serde_json::to_string(&metadata.points_of_interest)?;
 
         sqlx::query(
             "INSERT INTO zone_metadata
-             (zone_name, area_id, act, area_level, is_town, has_waypoint,
-              bosses, monsters, npcs, connected_zones, description,
+             (zone_name, act, area_level, is_town, has_waypoint, zone_type,
+              bosses, npcs, connected_zones, description,
               points_of_interest, image_url, wiki_url, first_discovered, last_updated)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(zone_name) DO UPDATE SET
-                 area_id = excluded.area_id,
                  act = excluded.act,
                  area_level = excluded.area_level,
                  is_town = excluded.is_town,
                  has_waypoint = excluded.has_waypoint,
+                 zone_type = excluded.zone_type,
                  bosses = excluded.bosses,
-                 monsters = excluded.monsters,
                  npcs = excluded.npcs,
                  connected_zones = excluded.connected_zones,
                  description = excluded.description,
@@ -155,13 +149,12 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                  last_updated = excluded.last_updated",
         )
         .bind(&metadata.zone_name)
-        .bind(&metadata.area_id)
         .bind(metadata.act as i64)
         .bind(metadata.area_level.map(|v| v as i64))
         .bind(if metadata.is_town { 1 } else { 0 })
         .bind(if metadata.has_waypoint { 1 } else { 0 })
+        .bind(metadata.zone_type.to_string())
         .bind(&bosses_json)
-        .bind(&monsters_json)
         .bind(&npcs_json)
         .bind(&connected_zones_json)
         .bind(&metadata.description)
@@ -180,13 +173,12 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
     async fn get_zone_by_name(&self, zone_name: &str) -> AppResult<Option<ZoneMetadata>> {
         let row: Option<(
             String,         // zone_name
-            Option<String>, // area_id
             i64,            // act
             Option<i64>,    // area_level
             i64,            // is_town
             i64,            // has_waypoint
+            String,         // zone_type
             String,         // bosses (JSON)
-            String,         // monsters (JSON)
             String,         // npcs (JSON)
             String,         // connected_zones (JSON)
             Option<String>, // description
@@ -196,8 +188,8 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
             String,         // first_discovered
             String,         // last_updated
         )> = sqlx::query_as(
-            "SELECT zone_name, area_id, act, area_level, is_town, has_waypoint,
-                    bosses, monsters, npcs, connected_zones, description,
+            "SELECT zone_name, act, area_level, is_town, has_waypoint, zone_type,
+                    bosses, npcs, connected_zones, description,
                     points_of_interest, image_url, wiki_url, first_discovered, last_updated
              FROM zone_metadata WHERE zone_name = ?",
         )
@@ -221,7 +213,6 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
     async fn get_zones_by_act(&self, act: u32) -> AppResult<Vec<ZoneMetadata>> {
         let rows: Vec<(
             String,
-            Option<String>,
             i64,
             Option<i64>,
             i64,
@@ -237,8 +228,8 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
             String,
             String,
         )> = sqlx::query_as(
-            "SELECT zone_name, area_id, act, area_level, is_town, has_waypoint,
-                    bosses, monsters, npcs, connected_zones, description,
+            "SELECT zone_name, act, area_level, is_town, has_waypoint, zone_type,
+                    bosses, npcs, connected_zones, description,
                     points_of_interest, image_url, wiki_url, first_discovered, last_updated
              FROM zone_metadata WHERE act = ? ORDER BY zone_name",
         )
@@ -254,7 +245,6 @@ impl ZoneConfigurationRepositoryImpl {
     fn row_to_metadata(
         row: (
             String,
-            Option<String>,
             i64,
             Option<i64>,
             i64,
@@ -273,13 +263,12 @@ impl ZoneConfigurationRepositoryImpl {
     ) -> ZoneMetadata {
         let (
             zone_name,
-            area_id,
             act,
             area_level,
             is_town,
             has_waypoint,
+            zone_type_str,
             bosses_json,
-            monsters_json,
             npcs_json,
             connected_zones_json,
             description,
@@ -292,13 +281,12 @@ impl ZoneConfigurationRepositoryImpl {
 
         ZoneMetadata {
             zone_name,
-            area_id,
             act: act as u32,
             area_level: area_level.map(|v| v as u32),
             is_town: is_town != 0,
             has_waypoint: has_waypoint != 0,
+            zone_type: zone_type_str.parse().unwrap_or_default(),
             bosses: serde_json::from_str(&bosses_json).unwrap_or_default(),
-            monsters: serde_json::from_str(&monsters_json).unwrap_or_default(),
             npcs: serde_json::from_str(&npcs_json).unwrap_or_default(),
             connected_zones: serde_json::from_str(&connected_zones_json).unwrap_or_default(),
             description,

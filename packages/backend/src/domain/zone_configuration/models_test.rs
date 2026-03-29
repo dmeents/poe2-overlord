@@ -18,13 +18,11 @@ mod tests {
         let zone = ZoneMetadata::new("The Coast".to_string());
 
         assert_eq!(zone.zone_name, "The Coast");
-        assert!(zone.area_id.is_none());
         assert_eq!(zone.act, 0);
         assert!(zone.area_level.is_none());
         assert!(!zone.is_town);
         assert!(!zone.has_waypoint);
         assert!(zone.bosses.is_empty());
-        assert!(zone.monsters.is_empty());
         assert!(zone.npcs.is_empty());
         assert!(zone.connected_zones.is_empty());
         assert!(zone.description.is_none());
@@ -88,13 +86,12 @@ mod tests {
     fn test_zone_metadata_deserialization() {
         let json = r#"{
             "zone_name": "Ogham Village",
-            "area_id": "G1_1",
             "act": 1,
             "area_level": 1,
             "is_town": true,
             "has_waypoint": true,
+            "zone_type": "Town",
             "bosses": [],
-            "monsters": [],
             "npcs": ["Tarkand"],
             "connected_zones": ["The Coast"],
             "description": "A village in Act 1",
@@ -108,7 +105,6 @@ mod tests {
         let zone: ZoneMetadata = serde_json::from_str(json).unwrap();
 
         assert_eq!(zone.zone_name, "Ogham Village");
-        assert_eq!(zone.area_id, Some("G1_1".to_string()));
         assert_eq!(zone.act, 1);
         assert_eq!(zone.area_level, Some(1));
         assert!(zone.is_town);

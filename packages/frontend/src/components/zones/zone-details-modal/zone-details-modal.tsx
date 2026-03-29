@@ -98,11 +98,14 @@ export function ZoneDetailsModal() {
             <div>
               <span className={styles.label}>Type:</span>
               <span className={styles.value}>
-                {zone.is_town
+                {zone.zone_type === 'Town' || zone.is_town
                   ? 'Town'
-                  : zone.zone_name.toLowerCase().includes('hideout')
+                  : zone.zone_type === 'Hideout' ||
+                      zone.zone_name.toLowerCase().includes('hideout')
                     ? 'Hideout'
-                    : 'Zone'}
+                    : zone.zone_type === 'Map'
+                      ? 'Map'
+                      : 'Zone'}
               </span>
             </div>
 
@@ -127,14 +130,6 @@ export function ZoneDetailsModal() {
               <span className={styles.label}>Waypoint:</span>
               <span className={styles.value}>{zone.has_waypoint ? 'Yes' : 'No'}</span>
             </div>
-
-            {/* Area ID */}
-            {zone.area_id && (
-              <div>
-                <span className={styles.label}>Area ID:</span>
-                <span className={styles.valueMonoSmall}>{zone.area_id}</span>
-              </div>
-            )}
 
             {/* Wiki Link */}
             {zone.wiki_url && (

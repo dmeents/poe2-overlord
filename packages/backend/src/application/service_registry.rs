@@ -1,4 +1,5 @@
 use crate::domain::character::traits::CharacterService;
+use crate::domain::notes::{NotesRepository, NotesRepositoryImpl, NotesService, NotesServiceImpl};
 use crate::domain::configuration::{
     repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
     traits::ConfigurationService,
@@ -197,6 +198,12 @@ impl ServiceInitializer {
         });
 
         app.manage(log_analysis_arc.clone());
+
+        let notes_repo = Arc::new(NotesRepositoryImpl::new(pool.clone()))
+            as Arc<dyn NotesRepository + Send + Sync>;
+        let notes_service =
+            Arc::new(NotesServiceImpl::new(notes_repo)) as Arc<dyn NotesService + Send + Sync>;
+        app.manage(notes_service);
 
         let process_detector = Arc::new(ProcessDetectorImpl::new());
 

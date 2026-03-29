@@ -5,6 +5,7 @@ import { CharacterStatusCard } from '../components/character/character-status-ca
 import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { LevelingStatsCard } from '../components/leveling/leveling-stats-card/leveling-stats-card';
+import { PinnedNotesCard } from '../components/notes/pinned-notes-card/pinned-notes-card';
 import { Card } from '../components/ui/card/card';
 import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
@@ -65,6 +66,7 @@ function Index() {
         </Card>
       )}
       <LevelingStatsCard />
+      <PinnedNotesCard />
     </>
   );
 

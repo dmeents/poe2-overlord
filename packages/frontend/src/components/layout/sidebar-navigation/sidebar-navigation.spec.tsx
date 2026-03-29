@@ -64,13 +64,17 @@ describe('SidebarNavigation', () => {
       expect(screen.getByTestId('link-/characters')).toBeInTheDocument();
       expect(screen.getByTitle('Characters')).toBeInTheDocument();
 
+      // Notes link
+      expect(screen.getByTestId('link-/notes')).toBeInTheDocument();
+      expect(screen.getByTitle('Notes')).toBeInTheDocument();
+
       // Settings link
       expect(screen.getByTestId('link-/settings')).toBeInTheDocument();
       expect(screen.getByTitle('Settings')).toBeInTheDocument();
 
       // All navigation icons
       const svgs = container.querySelectorAll('svg');
-      expect(svgs.length).toBe(6);
+      expect(svgs.length).toBe(7);
 
       // Active Dashboard link styling
       const dashboardNav = screen.getByTitle('Dashboard');
@@ -123,6 +127,7 @@ describe('SidebarNavigation', () => {
       expect(screen.getByTestId('link-/playtime')).toHaveAttribute('aria-label', 'Playtime');
       expect(screen.getByTestId('link-/economy')).toHaveAttribute('aria-label', 'Economy');
       expect(screen.getByTestId('link-/characters')).toHaveAttribute('aria-label', 'Characters');
+      expect(screen.getByTestId('link-/notes')).toHaveAttribute('aria-label', 'Notes');
       expect(screen.getByTestId('link-/settings')).toHaveAttribute('aria-label', 'Settings');
 
       // aria-label on navigation regions

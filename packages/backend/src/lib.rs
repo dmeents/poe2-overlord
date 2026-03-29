@@ -21,6 +21,7 @@ pub use domain::leveling::commands::*; // Leveling stats and XP tracking
 pub use domain::server_monitoring::commands::*; // Server status monitoring
 pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
 pub use domain::zone_configuration::commands::*; // Zone metadata lookup
+pub use domain::notes::commands::*; // Notes CRUD and pin management
 
 // Core error handling
 pub use errors::*;
@@ -143,6 +144,15 @@ pub fn run() {
 
             // Zone configuration commands
             get_zone_metadata_by_name,
+
+            // Notes commands
+            create_note,
+            get_note,
+            get_all_notes,
+            get_pinned_notes,
+            update_note,
+            delete_note,
+            toggle_note_pin,
         ])
         // Initialize application services and start background tasks
         .setup(|app| setup_app(app))

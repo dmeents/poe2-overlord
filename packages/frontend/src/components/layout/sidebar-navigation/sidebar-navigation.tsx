@@ -3,6 +3,7 @@ import {
   BookOpenIcon,
   ClockIcon,
   Cog6ToothIcon,
+  DocumentTextIcon,
   HomeIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -28,6 +29,7 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
     { path: '/playtime', title: 'Playtime', icon: ClockIcon },
     { path: '/economy', title: 'Economy', icon: BanknotesIcon },
     { path: '/characters', title: 'Characters', icon: UserGroupIcon },
+    { path: '/notes', title: 'Notes', icon: DocumentTextIcon },
   ];
 
   const secondaryNavItems = [{ path: '/settings', title: 'Settings', icon: Cog6ToothIcon }];

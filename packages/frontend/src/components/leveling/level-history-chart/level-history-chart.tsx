@@ -46,7 +46,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <p className="text-ember-400 text-xs">XP/hr: {formatXpAmount(xpItem.value)}</p>
       )}
       {timeItem?.value != null && (
-        <p className="text-molten-300 text-xs">TTL: {formatDurationMinutes(timeItem.value)}</p>
+        <p className="text-molten-300 text-xs">Time at level: {formatDurationMinutes(timeItem.value)}</p>
       )}
       {deathsItem?.value != null && (
         <p className="text-blood-400 text-xs">Deaths: {deathsItem.value}</p>

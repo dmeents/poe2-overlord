@@ -3,26 +3,18 @@ import { createFileRoute } from '@tanstack/react-router';
 import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
 import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
 import { LevelingInsights } from '@/components/insights/leveling-insights/leveling-insights';
-import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { LevelHistoryChart } from '@/components/leveling/level-history-chart/level-history-chart';
 import { LevelHistoryTable } from '@/components/leveling/level-history-table/level-history-table';
 import { Card } from '@/components/ui/card/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { CurrentZoneCard } from '@/components/zones/current-zone-card/current-zone-card';
-import { ZoneList } from '@/components/zones/zone-list/zone-list';
+import { ZoneOverviewCard } from '@/components/zones/zone-overview-card/zone-overview-card';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useGameProcess } from '@/contexts/GameProcessContext';
 import { useZone } from '@/contexts/ZoneContext';
-import {
-  type ZoneFilters,
-  type ZoneSortField,
-  zoneListConfig,
-} from '@/hooks/configs/zone-list.config';
 import { useActiveLevelTime } from '@/hooks/useActiveLevelTime';
-import { useListControls } from '@/hooks/useListControls';
 import { useLevelingStats } from '@/queries/leveling';
-import type { ZoneStats } from '@/types/character';
 
 export const Route = createFileRoute('/character')({
   component: CharacterDetailPage,
@@ -43,27 +35,6 @@ function CharacterDetailPage() {
     isActive: isTimerActive,
     activeSecondsAtLevel: stats?.active_seconds_at_level ?? 0,
   });
-
-  const {
-    filters,
-    sort,
-    updateFilter,
-    updateSort,
-    clearFilters,
-    resetSort,
-    resetAll,
-    hasActiveFilters,
-    activeFilterCount,
-    activeChips,
-    result: filteredZones,
-    filteredCount,
-    totalCount,
-  } = useListControls(zones, zoneListConfig) as ReturnType<
-    typeof useListControls<ZoneStats, ZoneFilters, ZoneSortField>
-  > & {
-    filters: ZoneFilters;
-    updateFilter: <K extends keyof ZoneFilters>(key: K, value: ZoneFilters[K]) => void;
-  };
 
   if (isLoading) {
     return (
@@ -92,23 +63,6 @@ function CharacterDetailPage() {
           />
         </Card>
       )}
-      {activeCharacter && (
-        <ZoneList
-          zones={filteredZones}
-          filters={filters}
-          onFilterChange={updateFilter}
-          onClearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
-          activeFilterCount={activeFilterCount}
-          activeChips={activeChips}
-          sort={sort}
-          onSortChange={updateSort}
-          onResetSort={resetSort}
-          onResetAll={resetAll}
-          filteredCount={filteredCount}
-          totalCount={totalCount}
-        />
-      )}
     </>
   );
 
@@ -117,7 +71,7 @@ function CharacterDetailPage() {
       {stats && (
         <LevelingInsights events={allEvents} currentLevel={stats.current_level} liveStats={stats} />
       )}
-      {activeCharacter && <PlaytimeInsights zones={zones} />}
+      {activeCharacter && <ZoneOverviewCard zones={zones} />}
       {activeCharacter && <ActDistributionChart character={activeCharacter} />}
     </>
   );

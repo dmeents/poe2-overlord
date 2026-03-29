@@ -25,6 +25,16 @@ export const LevelHistoryTable = memo(function LevelHistoryTable({
   liveStats,
   currentTimeSeconds,
 }: LevelHistoryTableProps) {
+  // Build a map of level → time spent AT that level.
+  // event[N].time_from_previous_level_seconds is the time spent at level N-1,
+  // so "time at level N" = event[N+1].time_from_previous_level_seconds.
+  const timeAtLevel = new Map<number, number | null>();
+  for (const event of events) {
+    if (event.time_from_previous_level_seconds != null) {
+      timeAtLevel.set(event.level - 1, event.time_from_previous_level_seconds);
+    }
+  }
+
   return (
     <div className={styles.wrapper}>
       <table className={styles.table}>
@@ -32,7 +42,7 @@ export const LevelHistoryTable = memo(function LevelHistoryTable({
           <tr>
             <th className={styles.th}>Level</th>
             <th className={styles.th}>Reached At</th>
-            <th className={styles.thRight}>Time to Level</th>
+            <th className={styles.thRight}>Time at Level</th>
             <th className={styles.thRight}>Deaths</th>
             <th className={styles.thRight}>Effective XP</th>
             <th className={styles.thRight}>XP / hr</th>
@@ -83,39 +93,43 @@ export const LevelHistoryTable = memo(function LevelHistoryTable({
               </td>
             </tr>
           ) : (
-            // Render descending (highest level first) so most recent is at the top
-            [...events].reverse().map(event => (
-              <tr key={event.level} className={styles.tr}>
-                <td className={styles.td}>
-                  <span className={styles.levelBadge}>{event.level}</span>
-                </td>
-                <td className={styles.td}>{formatTimestamp(event.reached_at)}</td>
-                <td className={styles.tdRight}>
-                  {event.time_from_previous_level_seconds != null
-                    ? formatDuration(event.time_from_previous_level_seconds)
-                    : '—'}
-                </td>
-                <td className={styles.tdRight}>
-                  {event.deaths_at_level > 0 ? (
-                    <span className={styles.deathsValue}>☠ {event.deaths_at_level}</span>
-                  ) : (
-                    <span className="text-stone-600">0</span>
-                  )}
-                </td>
-                <td className={styles.tdRight}>
-                  {event.effective_xp_earned != null
-                    ? formatXpAmount(event.effective_xp_earned)
-                    : '—'}
-                </td>
-                <td className={styles.tdRight}>
-                  {event.xp_per_hour != null ? (
-                    <span className={styles.xphrValue}>{formatXpRate(event.xp_per_hour)}</span>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-              </tr>
-            ))
+            // Render descending (highest level first) so most recent is at the top.
+            // Exclude the current level event when a live row is shown — it's already represented there.
+            [...events]
+              .filter(event => !liveStats || event.level !== liveStats.current_level)
+              .reverse()
+              .map(event => (
+                <tr key={event.level} className={styles.tr}>
+                  <td className={styles.td}>
+                    <span className={styles.levelBadge}>{event.level}</span>
+                  </td>
+                  <td className={styles.td}>{formatTimestamp(event.reached_at)}</td>
+                  <td className={styles.tdRight}>
+                    {timeAtLevel.get(event.level) != null
+                      ? formatDuration(timeAtLevel.get(event.level)!)
+                      : '—'}
+                  </td>
+                  <td className={styles.tdRight}>
+                    {event.deaths_at_level > 0 ? (
+                      <span className={styles.deathsValue}>☠ {event.deaths_at_level}</span>
+                    ) : (
+                      <span className="text-stone-600">0</span>
+                    )}
+                  </td>
+                  <td className={styles.tdRight}>
+                    {event.effective_xp_earned != null
+                      ? formatXpAmount(event.effective_xp_earned)
+                      : '—'}
+                  </td>
+                  <td className={styles.tdRight}>
+                    {event.xp_per_hour != null ? (
+                      <span className={styles.xphrValue}>{formatXpRate(event.xp_per_hour)}</span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                </tr>
+              ))
           )}
         </tbody>
       </table>

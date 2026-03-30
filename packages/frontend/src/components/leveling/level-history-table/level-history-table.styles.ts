@@ -13,7 +13,9 @@ export const levelHistoryTableStyles = {
   xphrValue: 'text-ember-400',
   emptyRow: 'py-8 text-center text-stone-500',
   // Current (in-progress) level row
-  currentRow: 'border-b border-ember-900/40 bg-ember-950/20 hover:bg-ember-950/30 transition-colors',
+  currentRow: 'border-b border-stone-800/50 bg-gradient-to-r from-ember-500/10 to-transparent hover:from-ember-500/15 transition-colors',
+  currentTd: 'py-2 px-3 text-ember-200/80 whitespace-nowrap',
+  currentTdRight: 'py-2 px-3 text-ember-200/80 whitespace-nowrap text-right',
   currentLevelBadge: 'inline-block font-semibold text-ember-300',
   currentLiveDot: 'inline-block w-1.5 h-1.5 rounded-full bg-ember-400 animate-pulse ml-1.5 align-middle',
   currentInProgress: 'text-stone-500 italic',

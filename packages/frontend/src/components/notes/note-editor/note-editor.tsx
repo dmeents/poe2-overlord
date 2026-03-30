@@ -33,8 +33,9 @@ export const NoteEditor = memo(function NoteEditor({
 
   // Reset form when note changes
   const noteId = note?.id;
-  const prevNoteId = useState(noteId)[0];
+  const [prevNoteId, setPrevNoteId] = useState(noteId);
   if (noteId !== prevNoteId) {
+    setPrevNoteId(noteId);
     setTitle(note?.title ?? '');
     setContent(note?.content ?? '');
     setCharacterId(note?.character_id ?? null);

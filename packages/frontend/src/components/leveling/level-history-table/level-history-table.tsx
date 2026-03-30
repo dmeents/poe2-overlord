@@ -52,31 +52,31 @@ export const LevelHistoryTable = memo(function LevelHistoryTable({
           {/* Current (in-progress) level row */}
           {liveStats && (
             <tr className={styles.currentRow}>
-              <td className={styles.td}>
+              <td className={styles.currentTd}>
                 <span className={styles.currentLevelBadge}>{liveStats.current_level}</span>
                 <span className={styles.currentLiveDot} />
               </td>
-              <td className={styles.td}>
+              <td className={styles.currentTd}>
                 {liveStats.last_level_reached_at
                   ? formatTimestamp(liveStats.last_level_reached_at)
                   : '—'}
               </td>
-              <td className={styles.tdRight}>
+              <td className={styles.currentTdRight}>
                 {currentTimeSeconds !== undefined && currentTimeSeconds > 0
                   ? formatDuration(currentTimeSeconds)
                   : '—'}
               </td>
-              <td className={styles.tdRight}>
+              <td className={styles.currentTdRight}>
                 {liveStats.deaths_at_current_level > 0 ? (
                   <span className={styles.deathsValue}>☠ {liveStats.deaths_at_current_level}</span>
                 ) : (
-                  <span className="text-stone-600">0</span>
+                  <span className="text-ember-900">0</span>
                 )}
               </td>
-              <td className={styles.tdRight}>
+              <td className={styles.currentTdRight}>
                 <span className={styles.currentInProgress}>In Progress</span>
               </td>
-              <td className={styles.tdRight}>
+              <td className={styles.currentTdRight}>
                 {liveStats.xp_per_hour !== null ? (
                   <span className={styles.xphrValue}>{formatXpRate(liveStats.xp_per_hour)}</span>
                 ) : (

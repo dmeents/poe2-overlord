@@ -27,14 +27,16 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
   const primaryNavItems = [
     { path: '/', title: 'Dashboard', icon: HomeIcon },
     { path: '/character', title: 'Character', icon: UserIcon },
-    { path: '/walkthrough', title: 'Walkthrough', icon: BookOpenIcon },
-    { path: '/playtime', title: 'Playtime', icon: ClockIcon },
     { path: '/economy', title: 'Economy', icon: BanknotesIcon },
-    { path: '/characters', title: 'Characters', icon: UserGroupIcon },
     { path: '/notes', title: 'Notes', icon: DocumentTextIcon },
+    { path: '/playtime', title: 'Playtime', icon: ClockIcon },
+    { path: '/walkthrough', title: 'Walkthrough', icon: BookOpenIcon },
   ];
 
-  const secondaryNavItems = [{ path: '/settings', title: 'Settings', icon: Cog6ToothIcon }];
+  const secondaryNavItems = [
+    { path: '/characters', title: 'Characters', icon: UserGroupIcon },
+    { path: '/settings', title: 'Settings', icon: Cog6ToothIcon },
+  ];
 
   const renderNavItem = ({
     path,

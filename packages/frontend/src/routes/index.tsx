@@ -44,6 +44,7 @@ function Index() {
           className="mt-6"
         />
       )}
+      <PinnedNotesCard />
     </>
   );
 
@@ -66,7 +67,6 @@ function Index() {
         </Card>
       )}
       <LevelingStatsCard />
-      <PinnedNotesCard />
     </>
   );
 

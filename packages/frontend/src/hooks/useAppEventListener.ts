@@ -28,6 +28,7 @@ export function useAppEventListener(
         );
 
         if (cancelled) {
+          // biome-ignore lint/suspicious/useIterableCallbackReturn: unlisten fns return void, forEach is correct here
           results.forEach(fn => fn());
           return;
         }

@@ -356,7 +356,10 @@ impl LogAnalysisServiceImpl {
         {
             let mut set = in_flight.write().await;
             if set.contains(zone_name) {
-                debug!("Wiki fetch already in-flight for zone '{}', skipping", zone_name);
+                debug!(
+                    "Wiki fetch already in-flight for zone '{}', skipping",
+                    zone_name
+                );
                 return;
             }
             set.insert(zone_name.to_string());
@@ -399,8 +402,7 @@ impl LogAnalysisServiceImpl {
 
                         info!(
                             "AFTER UPDATE: act={}, is_town={}",
-                            updated_metadata.act,
-                            updated_metadata.is_town
+                            updated_metadata.act, updated_metadata.is_town
                         );
 
                         if let Err(e) = zone_config.update_zone(updated_metadata).await {
@@ -538,7 +540,14 @@ impl LogAnalysisServiceImpl {
                 debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
             }
 
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service, in_flight_wiki_fetches).await;
+            Self::trigger_wiki_fetch(
+                zone_name,
+                wiki_service,
+                zone_config,
+                character_service,
+                in_flight_wiki_fetches,
+            )
+            .await;
 
             placeholder
         };
@@ -550,7 +559,14 @@ impl LogAnalysisServiceImpl {
             .to_seconds();
 
         if zone_metadata.needs_refresh(refresh_interval) {
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service, in_flight_wiki_fetches).await;
+            Self::trigger_wiki_fetch(
+                zone_name,
+                wiki_service,
+                zone_config,
+                character_service,
+                in_flight_wiki_fetches,
+            )
+            .await;
         }
 
         // Atomically transition zone: deactivates old zone timer, activates new zone,
@@ -716,10 +732,7 @@ impl LogAnalysisServiceImpl {
                             .record_active_zone_exit(&active_character.id)
                             .await
                         {
-                            error!(
-                                "LEVELING: Failed to record active zone exit time: {}",
-                                e
-                            );
+                            error!("LEVELING: Failed to record active zone exit time: {}", e);
                         }
 
                         let cached_level = {
@@ -751,7 +764,6 @@ impl LogAnalysisServiceImpl {
                             in_flight_wiki_fetches,
                         )
                         .await;
-
                     } else {
                         warn!("LOG ANALYSIS: No active character found for scene change");
                     }

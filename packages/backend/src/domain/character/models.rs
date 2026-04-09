@@ -187,7 +187,6 @@ impl LocationState {
             last_updated: Utc::now(),
         }
     }
-
 }
 
 /// Enriched location state with zone metadata for API responses
@@ -302,7 +301,6 @@ pub struct EnrichedZoneStats {
     pub wiki_url: Option<String>,
     pub last_updated: Option<DateTime<Utc>>,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum LocationType {

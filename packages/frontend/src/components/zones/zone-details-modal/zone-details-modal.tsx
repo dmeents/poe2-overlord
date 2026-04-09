@@ -100,8 +100,7 @@ export function ZoneDetailsModal() {
               <span className={styles.value}>
                 {zone.zone_type === 'Town' || zone.is_town
                   ? 'Town'
-                  : zone.zone_type === 'Hideout' ||
-                      zone.zone_name.toLowerCase().includes('hideout')
+                  : zone.zone_type === 'Hideout' || zone.zone_name.toLowerCase().includes('hideout')
                     ? 'Hideout'
                     : zone.zone_type === 'Map'
                       ? 'Map'

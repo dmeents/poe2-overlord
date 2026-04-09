@@ -542,8 +542,9 @@ mod tests {
         let guide = create_test_guide();
         let character = create_test_character("char-1");
         let repository = Arc::new(MockWalkthroughRepository::new(guide));
-        let character_service =
-            Arc::new(MockCharacterService::with_update_walkthrough_failure(character));
+        let character_service = Arc::new(MockCharacterService::with_update_walkthrough_failure(
+            character,
+        ));
         let service = create_test_service(repository, character_service);
 
         let new_progress = WalkthroughProgress::new();

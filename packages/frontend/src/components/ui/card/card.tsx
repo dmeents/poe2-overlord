@@ -11,8 +11,9 @@ interface CardProps {
   accentColor?: CardAccentColor;
   showStatusIndicator?: boolean;
   rightAction?: {
-    label: string;
+    label: ReactNode;
     onClick: () => void;
+    title?: string;
   };
 }
 
@@ -44,15 +45,20 @@ export function Card({
                 {title}
               </span>
             </div>
-            {subtitle && !rightAction && <span className={cardStyles.subtitle}>{subtitle}</span>}
-            {rightAction && (
-              <Button
-                onClick={rightAction.onClick}
-                variant="text"
-                size="xs"
-                className="text-stone-400 hover:text-stone-200 h-auto py-0">
-                {rightAction.label}
-              </Button>
+            {(subtitle || rightAction) && (
+              <div className="flex items-center gap-2">
+                {subtitle && <span className={cardStyles.subtitle}>{subtitle}</span>}
+                {rightAction && (
+                  <Button
+                    onClick={rightAction.onClick}
+                    variant="text"
+                    size="xs"
+                    title={rightAction.title}
+                    className="text-stone-400 hover:text-stone-200 h-auto py-0">
+                    {rightAction.label}
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>

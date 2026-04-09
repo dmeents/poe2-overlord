@@ -29,7 +29,6 @@
 
 use super::models::{
     CurrencyExchangeApiResponse, CurrencyExchangeData, CurrencySearchResult, EconomyType,
-    TopCurrencyItem,
 };
 use super::traits::EconomyRepository;
 use crate::errors::{AppError, AppResult};
@@ -420,23 +419,99 @@ impl EconomyService {
         })
     }
 
-    /// Load and aggregate top currencies across all economy types for a league
-    pub async fn load_aggregated_top_currencies(
+    /// Refresh all 13 economy types concurrently for a league (max 4 in-flight at once).
+    pub async fn refresh_all_economy_types(
         &self,
         league: &str,
         is_hardcore: bool,
-    ) -> AppResult<Vec<TopCurrencyItem>> {
-        let items = self
-            .repository
-            .load_top_currencies(league, is_hardcore, 10)
-            .await?;
+    ) -> AppResult<()> {
+        let economy_types = EconomyType::all();
+        let mut handles = tokio::task::JoinSet::new();
+        let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(4));
+
+        for economy_type in economy_types {
+            let service = self.clone();
+            let league = league.to_string();
+            let sem = semaphore.clone();
+            handles.spawn(async move {
+                let _permit = sem.acquire_owned().await;
+                match service
+                    .fetch_currency_exchange_data(&league, is_hardcore, economy_type)
+                    .await
+                {
+                    Ok(_) => log::info!("Refreshed economy type: {}", economy_type),
+                    Err(e) => log::warn!("Failed to refresh {}: {}", economy_type, e),
+                }
+            });
+        }
+
+        while let Some(result) = handles.join_next().await {
+            if let Err(e) = result {
+                log::warn!("Refresh task panicked: {}", e);
+            }
+        }
 
         log::info!(
-            "Loaded {} aggregated top currencies for league: {}",
+            "Completed refresh of all economy types for league: {}",
+            league
+        );
+        Ok(())
+    }
+
+    /// Load all currencies across all cached economy types for a league.
+    pub async fn load_all_currencies(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+    ) -> AppResult<Vec<CurrencySearchResult>> {
+        let items = self
+            .repository
+            .load_all_currencies(league, is_hardcore)
+            .await?;
+        log::info!(
+            "Loaded {} currencies across all types for league: {}",
             items.len(),
             league
         );
+        Ok(items)
+    }
 
+    /// Toggle the starred state for a currency item.
+    pub async fn toggle_currency_star(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+        economy_type: EconomyType,
+        currency_id: &str,
+    ) -> AppResult<bool> {
+        let new_state = self
+            .repository
+            .toggle_currency_star(league, is_hardcore, economy_type, currency_id)
+            .await?;
+        log::info!(
+            "Currency {} starred={} for league: {}",
+            currency_id,
+            new_state,
+            league
+        );
+        Ok(new_state)
+    }
+
+    /// Load all starred currencies across all economy types for a league.
+    pub async fn get_starred_currencies(
+        &self,
+        league: &str,
+        is_hardcore: bool,
+    ) -> AppResult<Vec<CurrencySearchResult>> {
+        let items = self
+            .repository
+            .load_starred_currencies(league, is_hardcore)
+            .await?;
+        log::info!(
+            "Loaded {} starred currencies for league: {}",
+            items.len(),
+            league
+        );
         Ok(items)
     }
 

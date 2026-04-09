@@ -112,10 +112,7 @@ pub trait CharacterService: Send + Sync {
 
     async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()>;
 
-    async fn get_current_location(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Option<LocationState>>;
+    async fn get_current_location(&self, character_id: &str) -> AppResult<Option<LocationState>>;
 
     async fn enter_zone(&self, character_id: &str, zone_name: &str) -> AppResult<()>;
 

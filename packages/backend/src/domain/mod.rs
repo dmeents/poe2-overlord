@@ -1,12 +1,12 @@
 //! Domain layer with core business logic
 
 pub mod character;
-pub mod notes;
 pub mod configuration;
 pub mod economy;
 pub mod game_monitoring;
 pub mod leveling;
 pub mod log_analysis;
+pub mod notes;
 pub mod server_monitoring;
 pub mod walkthrough;
 pub mod wiki_scraping;
@@ -59,4 +59,7 @@ pub use leveling::{
 
 pub use zone_tracking::{TrackingSummary, ZoneStats};
 
-pub use notes::{CreateNoteParams, NoteData, NotesRepository, NotesRepositoryImpl, NotesService, NotesServiceImpl, UpdateNoteParams};
+pub use notes::{
+    CreateNoteParams, NoteData, NotesRepository, NotesRepositoryImpl, NotesService,
+    NotesServiceImpl, UpdateNoteParams,
+};

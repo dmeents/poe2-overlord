@@ -75,12 +75,20 @@ impl NotesRepository for NotesRepositoryImpl {
             .fetch_optional(&self.pool)
             .await?;
 
-        let (id, title, content, is_pinned, character_id, created_at_str, updated_at_str) =
-            row.ok_or_else(|| {
+        let (id, title, content, is_pinned, character_id, created_at_str, updated_at_str) = row
+            .ok_or_else(|| {
                 AppError::validation_error("get_note", &format!("Note '{}' not found", id))
             })?;
 
-        parse_note_row(id, title, content, is_pinned, character_id, created_at_str, updated_at_str)
+        parse_note_row(
+            id,
+            title,
+            content,
+            is_pinned,
+            character_id,
+            created_at_str,
+            updated_at_str,
+        )
     }
 
     async fn get_all_notes(&self) -> AppResult<Vec<NoteData>> {
@@ -93,9 +101,19 @@ impl NotesRepository for NotesRepositoryImpl {
             .await?;
 
         rows.into_iter()
-            .map(|(id, title, content, is_pinned, character_id, created_at, updated_at)| {
-                parse_note_row(id, title, content, is_pinned, character_id, created_at, updated_at)
-            })
+            .map(
+                |(id, title, content, is_pinned, character_id, created_at, updated_at)| {
+                    parse_note_row(
+                        id,
+                        title,
+                        content,
+                        is_pinned,
+                        character_id,
+                        created_at,
+                        updated_at,
+                    )
+                },
+            )
             .collect()
     }
 
@@ -109,9 +127,19 @@ impl NotesRepository for NotesRepositoryImpl {
             .await?;
 
         rows.into_iter()
-            .map(|(id, title, content, is_pinned, character_id, created_at, updated_at)| {
-                parse_note_row(id, title, content, is_pinned, character_id, created_at, updated_at)
-            })
+            .map(
+                |(id, title, content, is_pinned, character_id, created_at, updated_at)| {
+                    parse_note_row(
+                        id,
+                        title,
+                        content,
+                        is_pinned,
+                        character_id,
+                        created_at,
+                        updated_at,
+                    )
+                },
+            )
             .collect()
     }
 
@@ -150,15 +178,14 @@ impl NotesRepository for NotesRepositoryImpl {
     }
 
     async fn set_pinned(&self, id: &str, is_pinned: bool) -> AppResult<()> {
-        let rows_affected = sqlx::query(
-            "UPDATE notes SET is_pinned = ?, updated_at = ? WHERE id = ?",
-        )
-        .bind(is_pinned as i64)
-        .bind(chrono::Utc::now().to_rfc3339())
-        .bind(id)
-        .execute(&self.pool)
-        .await?
-        .rows_affected();
+        let rows_affected =
+            sqlx::query("UPDATE notes SET is_pinned = ?, updated_at = ? WHERE id = ?")
+                .bind(is_pinned as i64)
+                .bind(chrono::Utc::now().to_rfc3339())
+                .bind(id)
+                .execute(&self.pool)
+                .await?
+                .rows_affected();
 
         if rows_affected == 0 {
             return Err(AppError::validation_error(

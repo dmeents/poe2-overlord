@@ -1,5 +1,4 @@
 use crate::domain::character::traits::CharacterService;
-use crate::domain::notes::{NotesRepository, NotesRepositoryImpl, NotesService, NotesServiceImpl};
 use crate::domain::configuration::{
     repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
     traits::ConfigurationService,
@@ -8,12 +7,11 @@ use crate::domain::economy::{EconomyRepository, EconomyRepositoryImpl, EconomySe
 use crate::domain::game_monitoring::{
     traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
 };
-use crate::domain::leveling::{
-    LevelingRepositoryImpl, LevelingService, LevelingServiceImpl,
-};
+use crate::domain::leveling::{LevelingRepositoryImpl, LevelingService, LevelingServiceImpl};
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
 };
+use crate::domain::notes::{NotesRepository, NotesRepositoryImpl, NotesService, NotesServiceImpl};
 use crate::domain::server_monitoring::{
     ServerMonitoringService, ServerMonitoringServiceImpl, ServerStatusRepositoryImpl,
     SystemPingProvider,

@@ -3,8 +3,8 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner'
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useConfiguration } from '@/contexts/ConfigurationContext';
 import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
-import { applyZoom, ZOOM_OPTIONS } from '@/utils/zoom';
 import { tauriUtils } from '@/utils/tauri';
+import { applyZoom, ZOOM_OPTIONS } from '@/utils/zoom';
 import { Button } from '../../ui/button/button';
 import { AlertMessage } from '../form-alert-message/form-alert-message';
 import { FormField } from '../form-field/form-field';

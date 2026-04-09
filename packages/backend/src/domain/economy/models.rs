@@ -252,21 +252,6 @@ pub struct CurrencyExchangeRate {
     pub price_history: Vec<Option<f64>>,
 }
 
-/// Lightweight item for top currencies aggregation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TopCurrencyItem {
-    pub id: String,
-    pub name: String,
-    pub image_url: String,
-    pub economy_type: EconomyType,
-    pub primary_value: f64,
-    pub primary_currency_name: String,
-    pub primary_currency_image_url: String,
-    pub volume: Option<f64>,
-    pub change_percent: Option<f64>,
-    pub cached_at: String,
-}
-
 /// Search result for cross-economy currency search
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrencySearchResult {
@@ -453,8 +438,11 @@ impl CurrencyExchangeApiResponse {
         let config = TierConfig::default();
 
         // Build a lookup map for O(1) item lookups by id
-        let items_by_id: HashMap<&str, &CurrencyItem> =
-            self.items.iter().map(|item| (item.id.as_str(), item)).collect();
+        let items_by_id: HashMap<&str, &CurrencyItem> = self
+            .items
+            .iter()
+            .map(|item| (item.id.as_str(), item))
+            .collect();
 
         let currencies: Vec<CurrencyExchangeRate> = self
             .lines

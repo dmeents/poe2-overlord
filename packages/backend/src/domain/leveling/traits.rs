@@ -57,10 +57,7 @@ pub trait LevelingRepository: Send + Sync {
     async fn reset_active_seconds_at_level(&self, character_id: &str) -> AppResult<()>;
 
     /// Returns the currently active (non-finalized) zone for a character.
-    async fn get_active_zone_info(
-        &self,
-        character_id: &str,
-    ) -> AppResult<Option<ActiveZoneInfo>>;
+    async fn get_active_zone_info(&self, character_id: &str) -> AppResult<Option<ActiveZoneInfo>>;
 
     /// Returns the timestamp of the most recent level-up event.
     async fn get_last_level_reached_at(

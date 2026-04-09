@@ -17,7 +17,8 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
 
   // Backend computes is_actively_grinding from zone state — no need to re-derive it here.
   // gameRunning guards against stale cache keeping the timer alive after the process stops.
-  const isTimerActive = !!stats?.is_actively_grinding && !!stats?.last_level_reached_at && gameRunning;
+  const isTimerActive =
+    !!stats?.is_actively_grinding && !!stats?.last_level_reached_at && gameRunning;
 
   const timeAtLevelSeconds = useActiveLevelTime({
     lastLevelTimestamp: stats?.last_level_reached_at ?? undefined,
@@ -49,9 +50,7 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
       <div className={styles.container}>
         {/* Est. next level — primary metric */}
         <div className={styles.primarySection}>
-          <div className={styles.primaryLabel}>
-            Est. next level
-          </div>
+          <div className={styles.primaryLabel}>Est. next level</div>
           {stats.estimated_seconds_to_next_level !== null ? (
             <div className={styles.primaryValue}>
               {formatDuration(stats.estimated_seconds_to_next_level)}
@@ -75,7 +74,11 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
           <div className={styles.statBox}>
             <div className={styles.statLabel}>XP / hr</div>
             <div className={styles.statValue}>
-              {hasXpRate ? formatXpRate(stats.xp_per_hour!) : hasHistory ? '—' : 'Need 2+ level-ups'}
+              {hasXpRate
+                ? formatXpRate(stats.xp_per_hour!)
+                : hasHistory
+                  ? '—'
+                  : 'Need 2+ level-ups'}
             </div>
           </div>
           <div className={styles.statBox}>

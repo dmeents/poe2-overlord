@@ -1,8 +1,4 @@
-import {
-  ClockIcon,
-  ExclamationTriangleIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline';
+import { ClockIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { memo, useCallback, useMemo } from 'react';
 import type { CharacterSummaryData } from '@/types/character';
 import { getAscendencyImage } from '@/utils/ascendency-assets';

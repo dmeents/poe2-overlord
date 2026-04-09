@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
 import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
+import { StarredCurrenciesCard } from '../components/economy/starred-currencies-card/starred-currencies-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { LevelingStatsCard } from '../components/leveling/leveling-stats-card/leveling-stats-card';
 import { PinnedNotesCard } from '../components/notes/pinned-notes-card/pinned-notes-card';
@@ -11,8 +12,8 @@ import { EmptyState } from '../components/ui/empty-state/empty-state';
 import { WalkthroughStepCard } from '../components/walkthrough/walkthrough-step-card/walkthrough-step-card';
 import { CurrentZoneCard } from '../components/zones/current-zone-card/current-zone-card';
 import { useCharacter } from '../contexts/CharacterContext';
-import { useZone } from '../contexts/ZoneContext';
 import { useWalkthrough } from '../contexts/WalkthroughContext';
+import { useZone } from '../contexts/ZoneContext';
 import type { StepLink } from '../types/walkthrough';
 
 export const Route = createFileRoute('/')({
@@ -51,6 +52,7 @@ function Index() {
   const rightColumn = (
     <>
       <ExchangeRatesCard />
+      <StarredCurrenciesCard />
       {activeZone ? (
         <CurrentZoneCard zone={activeZone} />
       ) : (

@@ -97,6 +97,7 @@ describe('createPlaceholderZone', () => {
   it('merges wiki metadata when provided', () => {
     const metadata: ZoneMetadata = {
       zone_name: 'Test Zone',
+      zone_type: 'area',
       act: 1,
       area_level: 5,
       is_town: false,

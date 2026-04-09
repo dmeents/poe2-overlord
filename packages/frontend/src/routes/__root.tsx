@@ -20,7 +20,9 @@ function RootComponent() {
     <div className="app-background">
       <WindowTitle />
       <SidebarNavigation />
-      <main ref={mainRef} className="relative h-[calc(100vh-52px)] mt-[28px] ml-12 overflow-auto font-sans">
+      <main
+        ref={mainRef}
+        className="relative h-[calc(100vh-52px)] mt-[28px] ml-12 overflow-auto font-sans">
         <ScrollToTop containerRef={mainRef} />
         <div className="mb-16">
           <Outlet />

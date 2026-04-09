@@ -5,7 +5,10 @@ export const economyRowStyles = {
   container:
     'flex items-center justify-between py-3 px-6 border-b border-stone-700/50 transition-colors',
   containerClickable: 'cursor-pointer hover:bg-stone-800/30',
-  leftSection: 'flex items-center gap-3 flex-1 min-w-0',
+  leftSection: 'flex items-center gap-2 flex-1 min-w-0',
+  starButton: 'flex-shrink-0 p-0.5 rounded transition-colors focus:outline-none',
+  starActive: 'text-amber-400 hover:text-amber-300',
+  starInactive: 'text-stone-600 hover:text-stone-400',
   image: 'w-8 h-8 flex-shrink-0',
   nameContainer: 'flex-1 min-w-0',
   name: 'text-white font-medium truncate',

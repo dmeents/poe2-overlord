@@ -68,13 +68,19 @@ impl GameMonitoringServiceImpl {
                     match self.leveling_service.get_active_zone_character_ids().await {
                         Ok(ids) => ids,
                         Err(e) => {
-                            error!("Failed to get active zone character IDs on game stop: {}", e);
+                            error!(
+                                "Failed to get active zone character IDs on game stop: {}",
+                                e
+                            );
                             vec![]
                         }
                     };
 
                 if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
-                    error!("Failed to finalize active zone times when game stopped: {}", e);
+                    error!(
+                        "Failed to finalize active zone times when game stopped: {}",
+                        e
+                    );
                 }
 
                 if let Err(e) = self.character_service.finalize_all_active_zones().await {

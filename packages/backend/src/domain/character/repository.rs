@@ -84,15 +84,15 @@ impl CharacterRepository for CharacterRepositoryImpl {
         })?;
 
         // Parse character profile using FromStr (replaces fragile serde_json hack)
-        let class = class_str.parse().map_err(|e: String| {
-            crate::errors::AppError::validation_error("parse_class", &e)
-        })?;
+        let class = class_str
+            .parse()
+            .map_err(|e: String| crate::errors::AppError::validation_error("parse_class", &e))?;
         let ascendency = ascendency_str.parse().map_err(|e: String| {
             crate::errors::AppError::validation_error("parse_ascendency", &e)
         })?;
-        let league = league_str.parse().map_err(|e: String| {
-            crate::errors::AppError::validation_error("parse_league", &e)
-        })?;
+        let league = league_str
+            .parse()
+            .map_err(|e: String| crate::errors::AppError::validation_error("parse_league", &e))?;
 
         let profile = CharacterProfile {
             name,
@@ -298,8 +298,17 @@ impl CharacterRepository for CharacterRepositoryImpl {
         )
         .bind(&character_data.id)
         .bind(&character_data.walkthrough_progress.current_step_id)
-        .bind(if character_data.walkthrough_progress.is_completed { 1 } else { 0 })
-        .bind(character_data.walkthrough_progress.last_updated.to_rfc3339())
+        .bind(if character_data.walkthrough_progress.is_completed {
+            1
+        } else {
+            0
+        })
+        .bind(
+            character_data
+                .walkthrough_progress
+                .last_updated
+                .to_rfc3339(),
+        )
         .execute(&mut *tx)
         .await?;
 
@@ -617,14 +626,12 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
     async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()> {
         let now = Utc::now().to_rfc3339();
-        sqlx::query(
-            "UPDATE characters SET level = ?, last_updated = ? WHERE id = ?",
-        )
-        .bind(new_level as i64)
-        .bind(&now)
-        .bind(character_id)
-        .execute(&self.pool)
-        .await?;
+        sqlx::query("UPDATE characters SET level = ?, last_updated = ? WHERE id = ?")
+            .bind(new_level as i64)
+            .bind(&now)
+            .bind(character_id)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
@@ -669,9 +676,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         if let Some((_, entry_ts_opt)) = active {
             if let Some(entry_ts_str) = entry_ts_opt {
                 let elapsed = chrono::DateTime::parse_from_rfc3339(&entry_ts_str)
-                    .map(|entry_dt| {
-                        (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0)
-                    })
+                    .map(|entry_dt| (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0))
                     .unwrap_or(0);
 
                 sqlx::query(
@@ -777,9 +782,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         for (zone_id, entry_ts_opt) in active_zones {
             if let Some(entry_ts_str) = entry_ts_opt {
                 let elapsed = chrono::DateTime::parse_from_rfc3339(&entry_ts_str)
-                    .map(|entry_dt| {
-                        (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0)
-                    })
+                    .map(|entry_dt| (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0))
                     .unwrap_or(0);
 
                 sqlx::query(
@@ -1005,7 +1008,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
                     .map(|dt| dt.with_timezone(&Utc))
                     .unwrap_or_else(Utc::now);
-                LocationState { zone_name, last_updated }
+                LocationState {
+                    zone_name,
+                    last_updated,
+                }
             });
 
             let summary = summary_by_character
@@ -1023,7 +1029,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
             });
         }
 
-        debug!("Loaded {} character summaries from SQLite", characters.len());
+        debug!(
+            "Loaded {} character summaries from SQLite",
+            characters.len()
+        );
         Ok(characters)
     }
 

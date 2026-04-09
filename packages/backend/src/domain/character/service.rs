@@ -99,9 +99,7 @@ impl CharacterService for CharacterServiceImpl {
         Ok(enriched_characters)
     }
 
-    async fn get_all_characters_summary(
-        &self,
-    ) -> Result<Vec<CharacterSummaryResponse>, AppError> {
+    async fn get_all_characters_summary(&self) -> Result<Vec<CharacterSummaryResponse>, AppError> {
         let character_data_list = self.repository.load_all_characters_summary().await?;
 
         // Get active character ID once for all characters
@@ -114,8 +112,10 @@ impl CharacterService for CharacterServiceImpl {
             let current_location = match character_data.current_location.as_ref() {
                 None => None,
                 Some(location) => {
-                    let zone_metadata =
-                        self.zone_config.get_zone_metadata(&location.zone_name).await;
+                    let zone_metadata = self
+                        .zone_config
+                        .get_zone_metadata(&location.zone_name)
+                        .await;
                     Some(if let Some(metadata) = zone_metadata {
                         EnrichedLocationState::from_location_and_metadata(location, &metadata)
                     } else {
@@ -305,7 +305,9 @@ impl CharacterService for CharacterServiceImpl {
 
     async fn enter_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError> {
         // Atomically transitions zone: stops old active zone timer, starts new zone timer
-        self.repository.transition_zone(character_id, zone_name).await?;
+        self.repository
+            .transition_zone(character_id, zone_name)
+            .await?;
 
         let character_data = self.repository.load_character_data(character_id).await?;
         let enriched = self.enrich_character_data(character_data).await;
@@ -437,8 +439,10 @@ impl CharacterServiceImpl {
         let current_location = match character_data.current_location.as_ref() {
             None => None,
             Some(location) => {
-                let zone_metadata =
-                    self.zone_config.get_zone_metadata(&location.zone_name).await;
+                let zone_metadata = self
+                    .zone_config
+                    .get_zone_metadata(&location.zone_name)
+                    .await;
                 Some(if let Some(metadata) = zone_metadata {
                     EnrichedLocationState::from_location_and_metadata(location, &metadata)
                 } else {

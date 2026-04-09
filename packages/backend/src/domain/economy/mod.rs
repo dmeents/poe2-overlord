@@ -12,7 +12,6 @@ mod service_test;
 pub use commands::*;
 pub use models::{
     CurrencyExchangeData, CurrencyExchangeRate, CurrencyInfo, CurrencySearchResult, EconomyType,
-    TopCurrencyItem,
 };
 pub use repository::EconomyRepositoryImpl;
 pub use service::EconomyService;

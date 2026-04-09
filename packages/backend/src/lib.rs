@@ -125,8 +125,11 @@ pub fn run() {
 
             // Economy commands
             get_currency_exchange_data,
-            get_aggregated_top_currencies,
+            refresh_all_economy_data,
+            get_all_currencies,
             search_currencies,
+            toggle_currency_star,
+            get_starred_currencies,
 
             // Game process monitoring commands
             get_game_process_status,

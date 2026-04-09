@@ -17,11 +17,11 @@ pub struct LevelingServiceImpl {
 }
 
 impl LevelingServiceImpl {
-    pub fn new(
-        repository: Arc<dyn LevelingRepository>,
-        event_bus: Arc<EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn LevelingRepository>, event_bus: Arc<EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     /// Accumulates the time spent in the current active grinding zone into the DB counter.
@@ -35,8 +35,10 @@ impl LevelingServiceImpl {
             return Ok(());
         }
 
-        let last_level_reached_at =
-            self.repository.get_last_level_reached_at(character_id).await?;
+        let last_level_reached_at = self
+            .repository
+            .get_last_level_reached_at(character_id)
+            .await?;
 
         let elapsed = Self::grinding_elapsed_secs(&zone_info, last_level_reached_at);
         if elapsed > 0 {
@@ -78,12 +80,18 @@ impl LevelingServiceImpl {
 
     async fn compute_stats(&self, character_id: &str) -> AppResult<LevelingStats> {
         let current_level = self.repository.get_character_level(character_id).await?;
-        let deaths_at_current_level =
-            self.repository.get_deaths_at_current_level(character_id).await?;
-        let recent_events_raw =
-            self.repository.get_recent_level_events(character_id, 200).await?;
-        let levels_gained_last_hour =
-            self.repository.count_levels_in_last_minutes(character_id, 60).await?;
+        let deaths_at_current_level = self
+            .repository
+            .get_deaths_at_current_level(character_id)
+            .await?;
+        let recent_events_raw = self
+            .repository
+            .get_recent_level_events(character_id, 200)
+            .await?;
+        let levels_gained_last_hour = self
+            .repository
+            .count_levels_in_last_minutes(character_id, 60)
+            .await?;
 
         let xp_to_next_level = if current_level < 100 {
             experience::xp_for_level(current_level)
@@ -94,8 +102,10 @@ impl LevelingServiceImpl {
         let (xp_per_hour, last_level_reached_at) = compute_xp_per_hour(&recent_events_raw);
 
         // Persisted counter + live contribution from the current active zone
-        let stored_active_seconds =
-            self.repository.get_active_seconds_at_level(character_id).await?;
+        let stored_active_seconds = self
+            .repository
+            .get_active_seconds_at_level(character_id)
+            .await?;
         let zone_info = self.repository.get_active_zone_info(character_id).await?;
         let is_actively_grinding = zone_info
             .as_ref()
@@ -151,15 +161,25 @@ impl LevelingService for LevelingServiceImpl {
         }
 
         // Capture death counter and active grinding seconds before reset
-        let deaths = self.repository.get_deaths_at_current_level(character_id).await?;
-        let active_seconds = self.repository.get_active_seconds_at_level(character_id).await?;
+        let deaths = self
+            .repository
+            .get_deaths_at_current_level(character_id)
+            .await?;
+        let active_seconds = self
+            .repository
+            .get_active_seconds_at_level(character_id)
+            .await?;
 
         self.repository
             .insert_level_event(character_id, new_level, Utc::now(), deaths, active_seconds)
             .await?;
 
-        self.repository.reset_deaths_at_current_level(character_id).await?;
-        self.repository.reset_active_seconds_at_level(character_id).await?;
+        self.repository
+            .reset_deaths_at_current_level(character_id)
+            .await?;
+        self.repository
+            .reset_active_seconds_at_level(character_id)
+            .await?;
 
         let stats = self.compute_stats(character_id).await?;
         if let Err(e) = self
@@ -177,7 +197,9 @@ impl LevelingService for LevelingServiceImpl {
     }
 
     async fn record_death(&self, character_id: &str) -> AppResult<()> {
-        self.repository.increment_deaths_at_current_level(character_id).await?;
+        self.repository
+            .increment_deaths_at_current_level(character_id)
+            .await?;
 
         let stats = self.compute_stats(character_id).await?;
         if let Err(e) = self
@@ -229,7 +251,10 @@ impl LevelingService for LevelingServiceImpl {
             ))
             .await
         {
-            error!("LEVELING: Failed to publish stats update after zone transition: {}", e);
+            error!(
+                "LEVELING: Failed to publish stats update after zone transition: {}",
+                e
+            );
         }
         Ok(())
     }
@@ -237,9 +262,7 @@ impl LevelingService for LevelingServiceImpl {
 
 /// Computes a rolling XP/hr using up to 5 consecutive level-event pairs.
 /// Returns (xp_per_hour, last_level_reached_at).
-fn compute_xp_per_hour(
-    events: &[LevelEvent],
-) -> (Option<f64>, Option<chrono::DateTime<Utc>>) {
+fn compute_xp_per_hour(events: &[LevelEvent]) -> (Option<f64>, Option<chrono::DateTime<Utc>>) {
     let last_reached = events.first().map(|e| e.reached_at);
 
     if events.len() < 2 {
@@ -259,7 +282,10 @@ fn compute_xp_per_hour(
         let time_diff = if newer.active_seconds > 0 {
             newer.active_seconds as i64
         } else {
-            newer.reached_at.signed_duration_since(older.reached_at).num_seconds()
+            newer
+                .reached_at
+                .signed_duration_since(older.reached_at)
+                .num_seconds()
         };
 
         if time_diff <= 0 {
@@ -312,35 +338,38 @@ fn build_event_responses(events: &[LevelEvent], limit: Option<usize>) -> Vec<Lev
         None => Box::new(events.iter().enumerate()),
     };
     iter.map(|(i, event)| {
-            let (time_from_previous_level_seconds, effective_xp, xp_per_hour) =
-                if let Some(older) = events.get(i + 1) {
-                    let time_diff = if event.active_seconds > 0 {
-                        event.active_seconds as i64
-                    } else {
-                        event.reached_at.signed_duration_since(older.reached_at).num_seconds()
-                    };
-                    if time_diff > 0 {
-                        let eff_xp =
-                            experience::effective_xp_earned(older.level, event.deaths_at_level);
-                        let xp_hr = eff_xp as f64 / (time_diff as f64 / 3600.0);
-                        (Some(time_diff as u64), Some(eff_xp), Some(xp_hr))
-                    } else {
-                        (None, None, None)
-                    }
-                } else {
-                    (None, None, None)
-                };
-
-            LevelEventResponse {
-                level: event.level,
-                reached_at: event.reached_at,
-                deaths_at_level: event.deaths_at_level,
-                time_from_previous_level_seconds,
-                effective_xp_earned: effective_xp,
-                xp_per_hour,
+        let (time_from_previous_level_seconds, effective_xp, xp_per_hour) = if let Some(older) =
+            events.get(i + 1)
+        {
+            let time_diff = if event.active_seconds > 0 {
+                event.active_seconds as i64
+            } else {
+                event
+                    .reached_at
+                    .signed_duration_since(older.reached_at)
+                    .num_seconds()
+            };
+            if time_diff > 0 {
+                let eff_xp = experience::effective_xp_earned(older.level, event.deaths_at_level);
+                let xp_hr = eff_xp as f64 / (time_diff as f64 / 3600.0);
+                (Some(time_diff as u64), Some(eff_xp), Some(xp_hr))
+            } else {
+                (None, None, None)
             }
-        })
-        .collect()
+        } else {
+            (None, None, None)
+        };
+
+        LevelEventResponse {
+            level: event.level,
+            reached_at: event.reached_at,
+            deaths_at_level: event.deaths_at_level,
+            time_from_previous_level_seconds,
+            effective_xp_earned: effective_xp,
+            xp_per_hour,
+        }
+    })
+    .collect()
 }
 
 /// Builds all level event responses sorted ascending by level (lowest first).

@@ -38,8 +38,7 @@ export function useActiveLevelTime({
 
   if (!lastLevelTimestamp) return 0;
 
-  const currentSegment =
-    segmentStart !== null ? Math.floor((Date.now() - segmentStart) / 1000) : 0;
+  const currentSegment = segmentStart !== null ? Math.floor((Date.now() - segmentStart) / 1000) : 0;
 
   return activeSecondsAtLevel + currentSegment;
 }

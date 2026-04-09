@@ -52,7 +52,11 @@ describe('SettingsForm', () => {
 
   describe('Initial Loading and Rendering', () => {
     it('renders loading state then loads and displays all form fields', async () => {
-      mockUseConfiguration.mockReturnValue({ config: null, isLoading: true, updateConfig: vi.fn() });
+      mockUseConfiguration.mockReturnValue({
+        config: null,
+        isLoading: true,
+        updateConfig: vi.fn(),
+      });
       const { rerender } = render(<SettingsForm />);
 
       expect(screen.getByText('Loading configuration...')).toBeInTheDocument();

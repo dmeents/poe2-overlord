@@ -12,7 +12,15 @@ pub async fn create_note(
     character_id: Option<String>,
     notes_service: State<'_, Arc<dyn NotesService + Send + Sync>>,
 ) -> CommandResult<NoteData> {
-    to_command_result(notes_service.create_note(CreateNoteParams { title, content, character_id }).await)
+    to_command_result(
+        notes_service
+            .create_note(CreateNoteParams {
+                title,
+                content,
+                character_id,
+            })
+            .await,
+    )
 }
 
 #[tauri::command]
@@ -47,7 +55,14 @@ pub async fn update_note(
 ) -> CommandResult<NoteData> {
     to_command_result(
         notes_service
-            .update_note(&note_id, UpdateNoteParams { title, content, character_id })
+            .update_note(
+                &note_id,
+                UpdateNoteParams {
+                    title,
+                    content,
+                    character_id,
+                },
+            )
             .await,
     )
 }

@@ -24,14 +24,38 @@ mod tests {
 
     #[test]
     fn test_character_class_from_str() {
-        assert_eq!("Warrior".parse::<CharacterClass>().unwrap(), CharacterClass::Warrior);
-        assert_eq!("Sorceress".parse::<CharacterClass>().unwrap(), CharacterClass::Sorceress);
-        assert_eq!("Ranger".parse::<CharacterClass>().unwrap(), CharacterClass::Ranger);
-        assert_eq!("Huntress".parse::<CharacterClass>().unwrap(), CharacterClass::Huntress);
-        assert_eq!("Monk".parse::<CharacterClass>().unwrap(), CharacterClass::Monk);
-        assert_eq!("Mercenary".parse::<CharacterClass>().unwrap(), CharacterClass::Mercenary);
-        assert_eq!("Witch".parse::<CharacterClass>().unwrap(), CharacterClass::Witch);
-        assert_eq!("Druid".parse::<CharacterClass>().unwrap(), CharacterClass::Druid);
+        assert_eq!(
+            "Warrior".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Warrior
+        );
+        assert_eq!(
+            "Sorceress".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Sorceress
+        );
+        assert_eq!(
+            "Ranger".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Ranger
+        );
+        assert_eq!(
+            "Huntress".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Huntress
+        );
+        assert_eq!(
+            "Monk".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Monk
+        );
+        assert_eq!(
+            "Mercenary".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Mercenary
+        );
+        assert_eq!(
+            "Witch".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Witch
+        );
+        assert_eq!(
+            "Druid".parse::<CharacterClass>().unwrap(),
+            CharacterClass::Druid
+        );
         assert!("Unknown".parse::<CharacterClass>().is_err());
     }
 
@@ -60,20 +84,44 @@ mod tests {
     fn test_ascendency_display() {
         assert_eq!(Ascendency::Titan.to_string(), "Titan");
         assert_eq!(Ascendency::SmithOfKatava.to_string(), "Smith of Katava");
-        assert_eq!(Ascendency::DiscipleOfVarashta.to_string(), "Disciple of Varashta");
-        assert_eq!(Ascendency::AcolyteOfChayula.to_string(), "Acolyte of Chayula");
-        assert_eq!(Ascendency::GemlingLegionnaire.to_string(), "Gemling Legionnaire");
+        assert_eq!(
+            Ascendency::DiscipleOfVarashta.to_string(),
+            "Disciple of Varashta"
+        );
+        assert_eq!(
+            Ascendency::AcolyteOfChayula.to_string(),
+            "Acolyte of Chayula"
+        );
+        assert_eq!(
+            Ascendency::GemlingLegionnaire.to_string(),
+            "Gemling Legionnaire"
+        );
         assert_eq!(Ascendency::BloodMage.to_string(), "Blood Mage");
     }
 
     #[test]
     fn test_ascendency_from_str() {
         assert_eq!("Titan".parse::<Ascendency>().unwrap(), Ascendency::Titan);
-        assert_eq!("Smith of Katava".parse::<Ascendency>().unwrap(), Ascendency::SmithOfKatava);
-        assert_eq!("Disciple of Varashta".parse::<Ascendency>().unwrap(), Ascendency::DiscipleOfVarashta);
-        assert_eq!("Acolyte of Chayula".parse::<Ascendency>().unwrap(), Ascendency::AcolyteOfChayula);
-        assert_eq!("Gemling Legionnaire".parse::<Ascendency>().unwrap(), Ascendency::GemlingLegionnaire);
-        assert_eq!("Blood Mage".parse::<Ascendency>().unwrap(), Ascendency::BloodMage);
+        assert_eq!(
+            "Smith of Katava".parse::<Ascendency>().unwrap(),
+            Ascendency::SmithOfKatava
+        );
+        assert_eq!(
+            "Disciple of Varashta".parse::<Ascendency>().unwrap(),
+            Ascendency::DiscipleOfVarashta
+        );
+        assert_eq!(
+            "Acolyte of Chayula".parse::<Ascendency>().unwrap(),
+            Ascendency::AcolyteOfChayula
+        );
+        assert_eq!(
+            "Gemling Legionnaire".parse::<Ascendency>().unwrap(),
+            Ascendency::GemlingLegionnaire
+        );
+        assert_eq!(
+            "Blood Mage".parse::<Ascendency>().unwrap(),
+            Ascendency::BloodMage
+        );
         assert!("Unknown".parse::<Ascendency>().is_err());
     }
 
@@ -108,8 +156,14 @@ mod tests {
     #[test]
     fn test_league_from_str() {
         assert_eq!("Standard".parse::<League>().unwrap(), League::Standard);
-        assert_eq!("Rise of the Abyssal".parse::<League>().unwrap(), League::RiseOfTheAbyssal);
-        assert_eq!("The Fate of the Vaal".parse::<League>().unwrap(), League::TheFateOfTheVaal);
+        assert_eq!(
+            "Rise of the Abyssal".parse::<League>().unwrap(),
+            League::RiseOfTheAbyssal
+        );
+        assert_eq!(
+            "The Fate of the Vaal".parse::<League>().unwrap(),
+            League::TheFateOfTheVaal
+        );
         assert!("Unknown".parse::<League>().is_err());
     }
 

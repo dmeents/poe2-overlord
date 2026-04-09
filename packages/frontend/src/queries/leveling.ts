@@ -1,10 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import type { LevelingStats } from '@/types/leveling';
 import { useAppEventListener } from '@/hooks/useAppEventListener';
+import type { LevelingStats } from '@/types/leveling';
+import type { ExtractPayload, LevelingStatsUpdatedEvent } from '@/utils/events/registry';
 import { EVENT_KEYS } from '@/utils/events/registry';
-import type { LevelingStatsUpdatedEvent } from '@/utils/events/registry';
-import type { ExtractPayload } from '@/utils/events/registry';
 
 export const levelingQueryKeys = {
   all: ['leveling'] as const,

@@ -31,9 +31,11 @@ export interface CurrencyInfo {
 }
 
 /**
- * Types of economy data available from poe.ninja API
+ * Types of economy data available from poe.ninja API.
+ * 'All' is a frontend-only view that aggregates all cached types.
  */
 export type EconomyType =
+  | 'All'
   | 'Currency'
   | 'Fragments'
   | 'Abyss'
@@ -47,6 +49,9 @@ export type EconomyType =
   | 'Expedition'
   | 'Delirium'
   | 'Breach';
+
+/** Backend economy types (excludes the frontend-only 'All' view) */
+export type BackendEconomyType = Exclude<EconomyType, 'All'>;
 
 /**
  * Enriched currency exchange rate with all relevant data
@@ -72,22 +77,8 @@ export interface CurrencyExchangeRate {
   change_percent: number | null;
   /** Historical price data points (can contain null for missing data) */
   price_history: (number | null)[];
-}
-
-/**
- * Lightweight item for top currencies aggregation across all economy types
- */
-export interface TopCurrencyItem {
-  id: string;
-  name: string;
-  image_url: string;
-  economy_type: EconomyType;
-  primary_value: number;
-  primary_currency_name: string;
-  primary_currency_image_url: string;
-  volume: number | null;
-  change_percent: number | null;
-  cached_at: string; // RFC3339 timestamp
+  /** Economy type this currency belongs to — populated when data comes from cross-type queries */
+  economy_type?: BackendEconomyType;
 }
 
 /**
@@ -119,7 +110,7 @@ export interface CurrencySearchResult {
   id: string;
   name: string;
   image_url: string;
-  economy_type: EconomyType;
+  economy_type: BackendEconomyType;
   primary_value: number;
   primary_currency_name: string;
   primary_currency_image_url: string;
@@ -146,5 +137,6 @@ export function searchResultToExchangeRate(result: CurrencySearchResult): Curren
     volume: result.volume,
     change_percent: result.change_percent,
     price_history: [],
+    economy_type: result.economy_type,
   };
 }

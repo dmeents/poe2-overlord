@@ -62,10 +62,22 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         .bind(&config.log_level)
         .bind(&zone_refresh_interval)
         .bind(&updated_at)
-        .bind(if config.hide_optional_objectives { 1i64 } else { 0i64 })
-        .bind(if config.hide_league_start_objectives { 1i64 } else { 0i64 })
+        .bind(if config.hide_optional_objectives {
+            1i64
+        } else {
+            0i64
+        })
+        .bind(if config.hide_league_start_objectives {
+            1i64
+        } else {
+            0i64
+        })
         .bind(if config.hide_flavor_text { 1i64 } else { 0i64 })
-        .bind(if config.hide_objective_descriptions { 1i64 } else { 0i64 })
+        .bind(if config.hide_objective_descriptions {
+            1i64
+        } else {
+            0i64
+        })
         .bind(config.ui_zoom_level)
         .execute(&self.pool)
         .await?;

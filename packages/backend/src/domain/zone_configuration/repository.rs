@@ -239,26 +239,26 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
     }
 }
 
+type ZoneMetadataRow = (
+    String,
+    i64,
+    Option<i64>,
+    i64,
+    i64,
+    String,
+    String,
+    String,
+    String,
+    Option<String>,
+    String,
+    Option<String>,
+    Option<String>,
+    String,
+    String,
+);
+
 impl ZoneConfigurationRepositoryImpl {
-    fn row_to_metadata(
-        row: (
-            String,
-            i64,
-            Option<i64>,
-            i64,
-            i64,
-            String,
-            String,
-            String,
-            String,
-            Option<String>,
-            String,
-            Option<String>,
-            Option<String>,
-            String,
-            String,
-        ),
-    ) -> ZoneMetadata {
+    fn row_to_metadata(row: ZoneMetadataRow) -> ZoneMetadata {
         let (
             zone_name,
             act,

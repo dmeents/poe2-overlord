@@ -45,11 +45,11 @@ impl ServiceInitializer {
 
         let database_pool =
             tauri::async_runtime::block_on(DatabasePool::new(&db_path)).map_err(|e| {
-                error!("Failed to initialize database pool: {}", e);
+                error!("Failed to initialize database pool: {e}");
                 e
             })?;
         let pool = database_pool.pool().clone();
-        info!("Database pool initialized at {:?}", db_path);
+        info!("Database pool initialized at {db_path:?}");
 
         let event_bus = Arc::new(EventBus::new());
         app.manage(event_bus.clone());
@@ -69,10 +69,10 @@ impl ServiceInitializer {
                     log::info!("Configuration loaded successfully");
                 }
                 Err(e) => {
-                    log::warn!("Failed to load config, using defaults: {}", e);
+                    log::warn!("Failed to load config, using defaults: {e}");
                     let default_config = crate::domain::configuration::models::AppConfig::default();
                     if let Err(save_err) = config_repository.save(&default_config).await {
-                        log::warn!("Failed to save default config: {}", save_err);
+                        log::warn!("Failed to save default config: {save_err}");
                     }
                 }
             }
@@ -87,7 +87,7 @@ impl ServiceInitializer {
         let economy_repo = Arc::new(EconomyRepositoryImpl::new(pool.clone()))
             as Arc<dyn EconomyRepository + Send + Sync>;
         let economy_service = EconomyService::new(economy_repo).map_err(|e| {
-            error!("Failed to initialize EconomyService: {}", e);
+            error!("Failed to initialize EconomyService: {e}");
             e
         })?;
         app.manage(economy_service);
@@ -121,9 +121,10 @@ impl ServiceInitializer {
             as Arc<dyn LevelingService + Send + Sync>;
         app.manage(leveling_service.clone());
 
-        let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(std::path::PathBuf::from(
-            "config/walkthrough_guide.json",
-        )));
+        let resource_dir = app.path().resource_dir()?;
+        let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(
+            resource_dir.join("config").join("walkthrough_guide.json"),
+        ));
         let walkthrough_service = Arc::new(WalkthroughServiceImpl::new(
             walkthrough_repo,
             character_arc.clone(),
@@ -140,7 +141,7 @@ impl ServiceInitializer {
                 Arc::new(server_status_repository),
             ))
             .map_err(|e| {
-                error!("Failed to initialize ServerMonitoringService: {}", e);
+                error!("Failed to initialize ServerMonitoringService: {e}");
                 e
             })?;
         let server_monitoring_arc =
@@ -167,7 +168,7 @@ impl ServiceInitializer {
             event_bus.clone(),
         )
         .map_err(|e| {
-            error!("Failed to initialize LogAnalysisService: {}", e);
+            error!("Failed to initialize LogAnalysisService: {e}");
             e
         })?;
 
@@ -179,18 +180,16 @@ impl ServiceInitializer {
             match config_service_clone.get_config().await {
                 Ok(config) => {
                     let log_path = config.poe_client_log_path;
-                    if !log_path.is_empty() {
-                        if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
-                            error!("Failed to update log path in LogAnalysisService: {}", e);
-                        } else {
-                            info!("Log analysis service configured with path: {}", log_path);
-                        }
-                    } else {
+                    if log_path.is_empty() {
                         info!("No POE client log path configured, log monitoring will use default");
+                    } else if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
+                        error!("Failed to update log path in LogAnalysisService: {e}");
+                    } else {
+                        info!("Log analysis service configured with path: {log_path}");
                     }
                 }
                 Err(e) => {
-                    error!("Failed to get config from configuration service: {}", e);
+                    error!("Failed to get config from configuration service: {e}");
                 }
             }
         });
@@ -254,7 +253,7 @@ impl ServiceInstances {
         // Stop event bridge forwarding
         if let Some(bridge) = &self.event_bridge {
             if let Err(e) = bridge.stop_forwarding().await {
-                log::error!("Failed to stop event bridge: {}", e);
+                log::error!("Failed to stop event bridge: {e}");
             } else {
                 log::info!("Event bridge stopped successfully");
             }
@@ -262,33 +261,33 @@ impl ServiceInstances {
 
         // Stop monitoring services
         if let Err(e) = self.game_monitoring_service.stop_monitoring().await {
-            log::error!("Failed to stop game monitoring: {}", e);
+            log::error!("Failed to stop game monitoring: {e}");
         } else {
             log::info!("Game monitoring stopped successfully");
         }
 
         if let Err(e) = self.log_analysis_service.stop_monitoring().await {
-            log::error!("Failed to stop log monitoring: {}", e);
+            log::error!("Failed to stop log monitoring: {e}");
         } else {
             log::info!("Log monitoring stopped successfully");
         }
 
         if let Err(e) = self.server_monitoring_service.stop_ping_monitoring().await {
-            log::error!("Failed to stop server monitoring: {}", e);
+            log::error!("Failed to stop server monitoring: {e}");
         } else {
             log::info!("Server monitoring stopped successfully");
         }
 
         // Finalize active zone times before character zone finalization
         if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
-            log::error!("Failed to finalize active zone times on shutdown: {}", e);
+            log::error!("Failed to finalize active zone times on shutdown: {e}");
         } else {
             log::info!("Active zone times finalized successfully");
         }
 
         // Finalize character data
         if let Err(e) = self.character_service.finalize_all_active_zones().await {
-            log::error!("Failed to finalize character tracking data: {}", e);
+            log::error!("Failed to finalize character tracking data: {e}");
         } else {
             log::info!("Character tracking data finalized successfully");
         }
@@ -299,7 +298,7 @@ impl ServiceInstances {
             .publish(crate::infrastructure::events::AppEvent::system_shutdown())
             .await
         {
-            log::error!("Failed to publish system shutdown event: {}", e);
+            log::error!("Failed to publish system shutdown event: {e}");
         }
 
         log::info!("Background services shutdown completed");

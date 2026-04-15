@@ -109,3 +109,7 @@ jobs:
       - name: Test
         working-directory: packages/backend
         run: cargo test
+
+      - name: Build check (release)
+        working-directory: packages/backend
+        run: cargo build --release --locked

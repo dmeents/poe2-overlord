@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { useCallback } from 'react';
 import type { WalkthroughProgress } from '../types/walkthrough';
 
 interface UseStepNavigationOptions {
@@ -20,7 +21,7 @@ export function useStepNavigation({
   characterId,
   progress,
 }: UseStepNavigationOptions): UseStepNavigationResult {
-  const advanceStep = async (nextStepId: string | null) => {
+  const advanceStep = useCallback(async (nextStepId: string | null) => {
     if (!characterId || !progress || !nextStepId) {
       if (!nextStepId) {
         console.warn('No next step available. Campaign may be completed.');
@@ -43,9 +44,9 @@ export function useStepNavigation({
     } catch (err) {
       console.error('Failed to advance step:', err);
     }
-  };
+  }, [characterId, progress]);
 
-  const goToPreviousStep = async (previousStepId: string) => {
+  const goToPreviousStep = useCallback(async (previousStepId: string) => {
     if (!characterId || !progress) return;
 
     try {
@@ -63,13 +64,14 @@ export function useStepNavigation({
     } catch (err) {
       console.error('Failed to go to previous step:', err);
     }
-  };
+  }, [characterId, progress]);
 
-  const skipToStep = async (stepId: string) => {
+  const skipToStep = useCallback(async (stepId: string) => {
     if (!characterId) return;
 
     try {
       const newProgress: WalkthroughProgress = {
+        ...progress,
         current_step_id: stepId,
         is_completed: false,
         last_updated: new Date().toISOString(),
@@ -82,7 +84,7 @@ export function useStepNavigation({
     } catch (err) {
       console.error('Failed to skip to step:', err);
     }
-  };
+  }, [characterId, progress]);
 
   return {
     advanceStep,

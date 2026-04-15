@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./tokens.css": "./src/css/tokens.css"
+    "./tokens.css": "./src/css/tokens.css",
+    "./base.css": "./src/css/base.css",
+    "./effects.css": "./src/css/effects.css"
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",

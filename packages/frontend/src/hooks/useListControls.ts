@@ -124,10 +124,10 @@ export function useListControls<TItem, TFilters, TSortField extends string>(
 
   const updateFilter = useCallback(
     <K extends keyof TFilters>(key: K, value: TFilters[K]) => {
-      if (!hasFilters(config) || !filters) return;
+      if (!hasFilters(config)) return;
       setFilters(prev => (prev ? { ...prev, [key]: value } : prev));
     },
-    [config, filters],
+    [config],
   );
 
   const updateSort = useCallback((field: TSortField, direction?: 'asc' | 'desc') => {
@@ -192,7 +192,7 @@ export function useListControls<TItem, TFilters, TSortField extends string>(
         activeFilterCount: activeCount,
         activeChips: chips,
       };
-    }, [items, config, filters, sort, updateFilter]);
+    }, [items, config, filters, sort]);
 
   // Return appropriate shape based on config type
   if (hasFilters(config) && filters) {

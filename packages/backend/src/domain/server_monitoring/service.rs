@@ -54,7 +54,7 @@ impl ServerMonitoringServiceImpl {
 
             let event = AppEvent::server_status_changed(None, status);
             if let Err(e) = self.event_bus.publish(event).await {
-                error!("Failed to publish initial server status event: {}", e);
+                error!("Failed to publish initial server status event: {e}");
             }
         } else {
             debug!("No existing server status found in database");
@@ -74,7 +74,7 @@ impl ServerMonitoringServiceImpl {
 
         let event = AppEvent::server_status_changed(old_status, status);
         if let Err(e) = self.event_bus.publish(event).await {
-            error!("Failed to publish server status event: {}", e);
+            error!("Failed to publish server status event: {e}");
         }
 
         Ok(())
@@ -89,8 +89,7 @@ impl ServerMonitoringServiceImpl {
 impl ServerMonitoringService for ServerMonitoringServiceImpl {
     async fn update_server_from_log(&self, ip_address: String, port: u16) -> AppResult<()> {
         info!(
-            "Server connection detected from logs: {}:{}",
-            ip_address, port
+            "Server connection detected from logs: {ip_address}:{port}"
         );
 
         let status = ServerStatus::new(ip_address, port);
@@ -100,12 +99,9 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     async fn ping_current_server(&self) -> AppResult<()> {
         let cached_status = self.cached_status.read().await;
 
-        let mut status = match cached_status.as_ref() {
-            Some(s) => s.clone(),
-            None => {
-                debug!("No server status available to ping");
-                return Ok(());
-            }
+        let mut status = if let Some(s) = cached_status.as_ref() { s.clone() } else {
+            debug!("No server status available to ping");
+            return Ok(());
         };
 
         if !status.is_valid() {
@@ -118,11 +114,11 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
 
         match self.ping_server(&ip).await {
             Ok(latency_ms) => {
-                debug!("Server ping successful: {}ms", latency_ms);
+                debug!("Server ping successful: {latency_ms}ms");
                 status.mark_as_online(latency_ms);
             }
             Err(e) => {
-                debug!("Server ping failed: {}", e);
+                debug!("Server ping failed: {e}");
                 status.mark_as_offline();
             }
         }
@@ -148,8 +144,7 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
             let mut interval = time::interval(Duration::from_secs(MONITORING_INTERVAL_SECS));
 
             info!(
-                "Started periodic server ping monitoring ({}s interval)",
-                MONITORING_INTERVAL_SECS
+                "Started periodic server ping monitoring ({MONITORING_INTERVAL_SECS}s interval)"
             );
 
             loop {
@@ -161,7 +156,7 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
                 }
 
                 if let Err(e) = service.ping_current_server().await {
-                    error!("Failed to ping server during monitoring: {}", e);
+                    error!("Failed to ping server during monitoring: {e}");
                 }
             }
         });
@@ -198,7 +193,7 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         // Wait for the monitoring task to complete
         if let Some(task_handle) = self.monitoring_task.write().await.take() {
             if let Err(e) = task_handle.await {
-                error!("Error waiting for monitoring task to complete: {}", e);
+                error!("Error waiting for monitoring task to complete: {e}");
             }
         }
 

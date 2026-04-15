@@ -42,7 +42,7 @@ impl ProcessDetectorImpl {
             }
 
             // Match with .exe extension if target doesn't have it
-            if !target_lower.ends_with(".exe") && process_name == format!("{}.exe", target_lower) {
+            if !target_lower.ends_with(".exe") && process_name == format!("{target_lower}.exe") {
                 return true;
             }
         }
@@ -53,7 +53,7 @@ impl ProcessDetectorImpl {
             let truncated = &process_name[..15];
             for target in &self.config.process_names {
                 let target_lower = target.to_lowercase();
-                let with_exe = format!("{}.exe", target_lower);
+                let with_exe = format!("{target_lower}.exe");
                 if target_lower.starts_with(truncated) || with_exe.starts_with(truncated) {
                     return true;
                 }
@@ -85,7 +85,7 @@ impl ProcessDetectorImpl {
             let target_lower = target.to_lowercase();
 
             // Exact match or match with .exe extension
-            if filename == target_lower || filename == format!("{}.exe", target_lower) {
+            if filename == target_lower || filename == format!("{target_lower}.exe") {
                 return true;
             }
         }
@@ -148,9 +148,7 @@ impl ProcessDetector for ProcessDetectorImpl {
                     );
 
                     let display_name = exe_path
-                        .file_name()
-                        .map(|n| n.to_string_lossy().to_string())
-                        .unwrap_or_else(|| process_name.clone());
+                        .file_name().map_or_else(|| process_name.clone(), |n| n.to_string_lossy().to_string());
 
                     return Ok(GameProcessStatus::new(display_name, pid.as_u32(), true));
                 }
@@ -171,7 +169,7 @@ impl ProcessDetector for ProcessDetectorImpl {
                     .iter()
                     .map(|arg| arg.to_string_lossy())
                     .find(|arg| self.path_contains_poe(arg))
-                    .and_then(|path| path.rsplit(['/', '\\']).next().map(|s| s.to_string()))
+                    .and_then(|path| path.rsplit(['/', '\\']).next().map(std::string::ToString::to_string))
                     .unwrap_or_else(|| "PathOfExile".to_string());
 
                 return Ok(GameProcessStatus::new(display_name, pid.as_u32(), true));

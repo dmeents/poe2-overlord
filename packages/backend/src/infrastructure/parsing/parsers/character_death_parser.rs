@@ -27,7 +27,7 @@ impl CharacterDeathParser {
             if captures.len() == 2 {
                 let character_name = captures.get(1).unwrap().as_str().trim().to_string();
 
-                debug!("Extracted character name: '{}'", character_name);
+                debug!("Extracted character name: '{character_name}'");
 
                 Ok(character_name)
             } else {

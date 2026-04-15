@@ -1,4 +1,4 @@
-//! Unit tests for ServerMonitoringService
+//! Unit tests for `ServerMonitoringService`
 
 #[cfg(test)]
 mod tests {
@@ -261,7 +261,7 @@ mod tests {
 
         // Set an invalid server (empty IP)
         service
-            .update_server_from_log("".to_string(), 6112)
+            .update_server_from_log(String::new(), 6112)
             .await
             .expect("Should set server");
 

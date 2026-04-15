@@ -23,7 +23,7 @@ impl ServerConnectionParser {
             let server_info = line[content_start..].trim();
 
             if !server_info.is_empty() {
-                debug!("Extracted server info: '{}'", server_info);
+                debug!("Extracted server info: '{server_info}'");
                 return self.parse_ip_port(server_info);
             }
         }
@@ -42,13 +42,12 @@ impl ServerConnectionParser {
             }
 
             let port = port_part.parse::<u16>().map_err(|_| {
-                ParseError::server_info_parse_failed(&format!("Invalid port: {}", port_part))
+                ParseError::server_info_parse_failed(&format!("Invalid port: {port_part}"))
             })?;
 
             if !ip_part.chars().all(|c| c.is_alphanumeric() || c == '.') {
                 return Err(ParseError::server_info_parse_failed(&format!(
-                    "Invalid IP format: {}",
-                    ip_part
+                    "Invalid IP format: {ip_part}"
                 )));
             }
 
@@ -87,7 +86,7 @@ impl LogParser for ServerConnectionParser {
             timestamp: chrono::Utc::now().to_rfc3339(),
         };
 
-        debug!("Successfully created server connection event: {:?}", event);
+        debug!("Successfully created server connection event: {event:?}");
         Ok(ParserResult::ServerConnection(event))
     }
 

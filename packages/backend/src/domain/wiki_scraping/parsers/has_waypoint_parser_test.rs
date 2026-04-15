@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn test_parse_no_info_card() {
-        let html = Html::parse_document(r#"<html><body><p>No info card</p></body></html>"#);
+        let html = Html::parse_document(r"<html><body><p>No info card</p></body></html>");
         assert!(!HasWaypointParser::parse(&html));
     }
 }

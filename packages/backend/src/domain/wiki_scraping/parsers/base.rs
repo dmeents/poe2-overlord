@@ -19,7 +19,7 @@ impl BaseParser {
     /// Matches a heading element against a section name, with synonym support and edit-link stripping.
     ///
     /// Handles:
-    /// - `[edit]` / `[edit section]` spans appended by MediaWiki
+    /// - `[edit]` / `[edit section]` spans appended by `MediaWiki`
     /// - Common aliases (e.g. "Boss Monsters" → bosses, "NPC List" → npcs)
     /// - Fallback substring match
     pub fn matches_heading_name(element: &ElementRef, section_name: &str) -> bool {
@@ -86,7 +86,7 @@ impl BaseParser {
 
                 if first_cell_lower == key_lower {
                     let value = Self::extract_text(&cells[1]);
-                    debug!("Found table value for '{}': '{}'", key, value);
+                    debug!("Found table value for '{key}': '{value}'");
                     if !value.is_empty() {
                         return Some(value);
                     }
@@ -158,7 +158,7 @@ impl BaseParser {
     /// Extracts all list items from a specific named section of the document.
     ///
     /// Uses sibling-walking from the matched heading to correctly handle:
-    /// - Lists inside `div`/`section` wrappers (MediaWiki content divs)
+    /// - Lists inside `div`/`section` wrappers (`MediaWiki` content divs)
     /// - `ol` and `dl` in addition to `ul`
     /// - `figure` elements (skipped)
     /// - Multi-list sections (all lists collected until next heading)

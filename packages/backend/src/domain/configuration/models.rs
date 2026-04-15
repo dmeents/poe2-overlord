@@ -187,15 +187,13 @@ impl AppConfig {
             "macos" => {
                 let home = env::var("HOME").unwrap_or_else(|_| "/Users/default".to_string());
                 format!(
-                    "{}/Library/Application Support/Path of Exile 2/logs/Client.txt",
-                    home
+                    "{home}/Library/Application Support/Path of Exile 2/logs/Client.txt"
                 )
             }
             "linux" => {
                 let home = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());
                 format!(
-                    "{}/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Path of Exile 2/logs/Client.txt",
-                    home
+                    "{home}/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Path of Exile 2/logs/Client.txt"
                 )
             }
             _ => "Client.txt".to_string(),

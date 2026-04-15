@@ -129,7 +129,7 @@ pub fn death_penalty_xp(level: u32) -> u64 {
 pub fn effective_xp_earned(level: u32, deaths: u32) -> u64 {
     let base_xp = xp_for_level(level);
     let penalty = death_penalty_xp(level);
-    base_xp + (deaths as u64) * penalty
+    base_xp + u64::from(deaths) * penalty
 }
 
 #[cfg(test)]
@@ -187,8 +187,7 @@ mod tests {
         for i in 1..100 {
             assert!(
                 EXPERIENCE_TABLE[i + 1] > EXPERIENCE_TABLE[i],
-                "XP table not monotonic at level {}",
-                i
+                "XP table not monotonic at level {i}"
             );
         }
     }

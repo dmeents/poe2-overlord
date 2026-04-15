@@ -28,7 +28,7 @@ pub trait CharacterRepository {
     /// Checks if a character name is already taken, optionally excluding a specific character ID.
     async fn is_name_taken(&self, name: &str, exclude_id: Option<&str>) -> AppResult<bool>;
 
-    /// Gets all character IDs, ordered by last_played DESC.
+    /// Gets all character IDs, ordered by `last_played` DESC.
     async fn get_character_ids(&self) -> AppResult<Vec<String>>;
 
     // --- Granular targeted mutations ---
@@ -36,7 +36,7 @@ pub trait CharacterRepository {
     /// Records a death in the currently active zone (single SQL UPDATE).
     async fn record_death_in_active_zone(&self, character_id: &str) -> AppResult<()>;
 
-    /// Updates only the character level and last_updated timestamp (single SQL UPDATE).
+    /// Updates only the character level and `last_updated` timestamp (single SQL UPDATE).
     async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()>;
 
     /// Updates only the character profile fields (name, class, ascendency, league, flags, level).
@@ -57,7 +57,7 @@ pub trait CharacterRepository {
         progress: &WalkthroughProgress,
     ) -> AppResult<()>;
 
-    /// Stops timers for all active zones for a character and clears current_zone_id.
+    /// Stops timers for all active zones for a character and clears `current_zone_id`.
     async fn finalize_character_active_zones(&self, character_id: &str) -> AppResult<()>;
 
     /// Loads all characters without zone stats — profile + SQL-aggregated summary.

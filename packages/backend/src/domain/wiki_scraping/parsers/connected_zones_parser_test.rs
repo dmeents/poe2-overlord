@@ -31,20 +31,20 @@ mod tests {
     #[test]
     fn test_parse_from_page_text_fallback() {
         let infobox = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Act</td><td>1</td></tr>
             </table>
-        "#,
+        ",
         );
         let doc = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <p>This area is connected to The Grim Tangle, Mausoleum, and Hunting Grounds.</p>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let connections = ConnectedZonesParser::parse(Some(&infobox), &doc);
@@ -57,11 +57,11 @@ mod tests {
     #[test]
     fn test_parse_no_connections() {
         let infobox = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Act</td><td>1</td></tr>
             </table>
-        "#,
+        ",
         );
         let doc = Html::parse_document("<html><body><p>No connections mentioned</p></body></html>");
 
@@ -72,13 +72,13 @@ mod tests {
     #[test]
     fn test_parse_no_infobox() {
         let doc = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <p>This zone is connected to Zone A, Zone B, and Zone C.</p>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let connections = ConnectedZonesParser::parse(None, &doc);

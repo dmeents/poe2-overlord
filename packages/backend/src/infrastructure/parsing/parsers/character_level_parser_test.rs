@@ -33,8 +33,8 @@ mod tests {
         ];
 
         for class in classes {
-            let line = format!("[INFO Client 1234] : TestChar ({}) is now level 10", class);
-            assert!(parser.should_parse(&line), "Should parse class: {}", class);
+            let line = format!("[INFO Client 1234] : TestChar ({class}) is now level 10");
+            assert!(parser.should_parse(&line), "Should parse class: {class}");
         }
     }
 

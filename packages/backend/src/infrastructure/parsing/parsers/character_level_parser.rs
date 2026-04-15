@@ -27,8 +27,7 @@ impl CharacterLevelParser {
 
                 let level = level_str.parse::<u32>().map_err(|_| {
                     ParseError::content_extraction_failed(&format!(
-                        "Failed to parse level '{}' as number",
-                        level_str
+                        "Failed to parse level '{level_str}' as number"
                     ))
                 })?;
 
@@ -62,8 +61,7 @@ impl LogParser for CharacterLevelParser {
 
         if !(1..=100).contains(&level) {
             return Err(ParseError::content_extraction_failed(&format!(
-                "Level {} is outside valid range (1-100)",
-                level
+                "Level {level} is outside valid range (1-100)"
             )));
         }
 

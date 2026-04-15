@@ -21,7 +21,7 @@ impl WikiParser {
         if InfoboxParser::is_redirect_page(&document) {
             return Err(AppError::internal_error(
                 "parse_zone_data",
-                &format!("Zone '{}' redirects to another page", zone_name),
+                &format!("Zone '{zone_name}' redirects to another page"),
             ));
         }
 
@@ -29,9 +29,9 @@ impl WikiParser {
         let infobox = InfoboxParser::extract(&document);
 
         if infobox.is_some() {
-            info!("Found infobox for zone '{}'", zone_name);
+            info!("Found infobox for zone '{zone_name}'");
         } else {
-            info!("No infobox found for zone '{}'", zone_name);
+            info!("No infobox found for zone '{zone_name}'");
         }
 
         zone_data.act = ActParser::parse(infobox.as_ref(), &document);
@@ -48,22 +48,22 @@ impl WikiParser {
 
         // Diagnostics: log which parsers returned nothing
         if zone_data.act == 0 {
-            debug!("'{}': ActParser returned 0", zone_name);
+            debug!("'{zone_name}': ActParser returned 0");
         }
         if zone_data.area_level.is_none() {
-            debug!("'{}': AreaLevelParser returned None", zone_name);
+            debug!("'{zone_name}': AreaLevelParser returned None");
         }
         if zone_data.connected_zones.is_empty() {
-            debug!("'{}': ConnectedZonesParser returned empty", zone_name);
+            debug!("'{zone_name}': ConnectedZonesParser returned empty");
         }
         if zone_data.bosses.is_empty() {
-            debug!("'{}': BossesParser returned empty", zone_name);
+            debug!("'{zone_name}': BossesParser returned empty");
         }
         if zone_data.npcs.is_empty() {
-            debug!("'{}': NpcsParser returned empty", zone_name);
+            debug!("'{zone_name}': NpcsParser returned empty");
         }
         if zone_data.description.is_none() {
-            debug!("'{}': DescriptionParser returned None", zone_name);
+            debug!("'{zone_name}': DescriptionParser returned None");
         }
 
         // Warn when infobox was found but most parsers came back empty
@@ -82,8 +82,7 @@ impl WikiParser {
 
             if empty_count >= 3 {
                 warn!(
-                    "'{}': infobox found but {}/6 parsers returned empty — wiki structure may have changed",
-                    zone_name, empty_count
+                    "'{zone_name}': infobox found but {empty_count}/6 parsers returned empty — wiki structure may have changed"
                 );
             }
         }
@@ -97,8 +96,7 @@ impl WikiParser {
         if !has_basic_data && infobox.is_some() {
             // We found an infobox but couldn't extract any basic data - warn but continue
             info!(
-                "Warning: Limited data extracted for '{}'. Wiki page structure may have changed.",
-                zone_name
+                "Warning: Limited data extracted for '{zone_name}'. Wiki page structure may have changed."
             );
         }
 

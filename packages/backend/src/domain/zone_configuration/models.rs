@@ -44,7 +44,7 @@ impl FromStr for ZoneType {
 /// Main zone configuration containing all zone metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZoneConfiguration {
-    /// Map of zone_name to their metadata
+    /// Map of `zone_name` to their metadata
     pub zones: HashMap<String, ZoneMetadata>,
 }
 
@@ -122,8 +122,7 @@ impl ZoneConfiguration {
     pub fn is_town_zone(&self, zone_name: &str) -> bool {
         self.zones
             .get(zone_name)
-            .map(|zone| zone.is_town)
-            .unwrap_or(false)
+            .is_some_and(|zone| zone.is_town)
     }
 }
 

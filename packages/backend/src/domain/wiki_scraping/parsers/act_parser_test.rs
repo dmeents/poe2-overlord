@@ -6,11 +6,11 @@ mod tests {
     #[test]
     fn test_parse_from_infobox() {
         let html = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Act</td><td>1</td></tr>
             </table>
-        "#,
+        ",
         );
         let doc = Html::parse_document("<html><body></body></html>");
 
@@ -20,11 +20,11 @@ mod tests {
     #[test]
     fn test_parse_from_infobox_with_extra_text() {
         let html = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Act</td><td>2 extra text</td></tr>
             </table>
-        "#,
+        ",
         );
         let doc = Html::parse_document("<html><body></body></html>");
 
@@ -34,13 +34,13 @@ mod tests {
     #[test]
     fn test_parse_from_page_text_fallback() {
         let doc = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <p>This is an area in Act 3 of the game.</p>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         assert_eq!(ActParser::parse(None, &doc), 3);
@@ -49,11 +49,11 @@ mod tests {
     #[test]
     fn test_parse_not_found_returns_zero() {
         let html = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Level</td><td>42</td></tr>
             </table>
-        "#,
+        ",
         );
         let doc = Html::parse_document("<html><body><p>No act information</p></body></html>");
 

@@ -113,10 +113,8 @@ mod tests {
         for (economy_type, expected_type_str) in economy_types {
             let url = EconomyService::build_poe_ninja_url("TestLeague", economy_type);
             assert!(
-                url.contains(&format!("type={}", expected_type_str)),
-                "URL should contain type={} for {:?}",
-                expected_type_str,
-                economy_type
+                url.contains(&format!("type={expected_type_str}")),
+                "URL should contain type={expected_type_str} for {economy_type:?}"
             );
         }
     }
@@ -341,8 +339,7 @@ mod tests {
             assert_eq!(
                 EconomyService::format_league_for_api(standard_variant, true),
                 "Hardcore",
-                "Failed for variant: {}",
-                standard_variant
+                "Failed for variant: {standard_variant}"
             );
         }
     }

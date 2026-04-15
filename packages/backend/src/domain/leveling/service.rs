@@ -109,12 +109,10 @@ impl LevelingServiceImpl {
         let zone_info = self.repository.get_active_zone_info(character_id).await?;
         let is_actively_grinding = zone_info
             .as_ref()
-            .map(|z| !z.is_town && !is_hideout_zone(&z.zone_name))
-            .unwrap_or(false);
+            .is_some_and(|z| !z.is_town && !is_hideout_zone(&z.zone_name));
         let dynamic_zone_seconds = zone_info
             .as_ref()
-            .map(|z| Self::compute_dynamic_zone_seconds(z, last_level_reached_at))
-            .unwrap_or(0);
+            .map_or(0, |z| Self::compute_dynamic_zone_seconds(z, last_level_reached_at));
         let active_seconds_at_level = stored_active_seconds + dynamic_zone_seconds;
 
         let estimated_seconds_to_next_level = estimated_seconds(
@@ -155,8 +153,7 @@ impl LevelingService for LevelingServiceImpl {
         // Capture active zone time before resetting (final time in old-level zone)
         if let Err(e) = self.accumulate_active_zone_time(character_id).await {
             error!(
-                "LEVELING: Failed to accumulate active zone time before level-up: {}",
-                e
+                "LEVELING: Failed to accumulate active zone time before level-up: {e}"
             );
         }
 
@@ -190,7 +187,7 @@ impl LevelingService for LevelingServiceImpl {
             ))
             .await
         {
-            error!("Failed to publish leveling stats event: {}", e);
+            error!("Failed to publish leveling stats event: {e}");
         }
 
         Ok(())
@@ -210,7 +207,7 @@ impl LevelingService for LevelingServiceImpl {
             ))
             .await
         {
-            error!("Failed to publish leveling stats event after death: {}", e);
+            error!("Failed to publish leveling stats event after death: {e}");
         }
 
         Ok(())
@@ -229,8 +226,7 @@ impl LevelingService for LevelingServiceImpl {
         for character_id in character_ids {
             if let Err(e) = self.accumulate_active_zone_time(&character_id).await {
                 error!(
-                    "LEVELING: Failed to accumulate active zone time for {}: {}",
-                    character_id, e
+                    "LEVELING: Failed to accumulate active zone time for {character_id}: {e}"
                 );
             }
         }
@@ -252,8 +248,7 @@ impl LevelingService for LevelingServiceImpl {
             .await
         {
             error!(
-                "LEVELING: Failed to publish stats update after zone transition: {}",
-                e
+                "LEVELING: Failed to publish stats update after zone transition: {e}"
             );
         }
         Ok(())
@@ -261,7 +256,7 @@ impl LevelingService for LevelingServiceImpl {
 }
 
 /// Computes a rolling XP/hr using up to 5 consecutive level-event pairs.
-/// Returns (xp_per_hour, last_level_reached_at).
+/// Returns (`xp_per_hour`, `last_level_reached_at`).
 fn compute_xp_per_hour(events: &[LevelEvent]) -> (Option<f64>, Option<chrono::DateTime<Utc>>) {
     let last_reached = events.first().map(|e| e.reached_at);
 
@@ -396,7 +391,7 @@ mod tests {
         active_seconds: u64,
     ) -> LevelEvent {
         LevelEvent {
-            id: level as i64,
+            id: i64::from(level),
             character_id: "test".to_string(),
             level,
             reached_at: Utc::now() - chrono::Duration::minutes(minutes_ago),
@@ -438,7 +433,7 @@ mod tests {
     fn xp_per_hour_uses_at_most_five_pairs() {
         // 10 events → 9 pairs available, should use 5
         let events: Vec<LevelEvent> = (0..10)
-            .map(|i| make_event(10 - i, (i as i64) * 30, 0))
+            .map(|i| make_event(10 - i, i64::from(i) * 30, 0))
             .collect();
         let (xp_hr, _) = compute_xp_per_hour(&events);
         assert!(xp_hr.is_some());

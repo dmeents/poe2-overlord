@@ -7,8 +7,8 @@ use async_trait::async_trait;
 use log::info;
 use std::sync::Arc;
 
-/// Implementation of ZoneConfigurationService.
-/// Delegates all operations directly to the repository (SQLite with indexes).
+/// Implementation of `ZoneConfigurationService`.
+/// Delegates all operations directly to the repository (`SQLite` with indexes).
 pub struct ZoneConfigurationServiceImpl {
     repository: Arc<dyn ZoneConfigurationRepository>,
 }
@@ -36,8 +36,7 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
             .await
             .ok()
             .flatten()
-            .map(|(_, is_town)| is_town)
-            .unwrap_or(false)
+            .is_some_and(|(_, is_town)| is_town)
     }
 
     async fn get_zone_metadata(&self, zone_name: &str) -> Option<ZoneMetadata> {
@@ -58,14 +57,14 @@ impl ZoneConfigurationService for ZoneConfigurationServiceImpl {
     async fn add_zone(&self, metadata: ZoneMetadata) -> AppResult<()> {
         let zone_name = metadata.zone_name.clone();
         self.repository.upsert_zone(&metadata).await?;
-        info!("Added zone: {}", zone_name);
+        info!("Added zone: {zone_name}");
         Ok(())
     }
 
     async fn update_zone(&self, metadata: ZoneMetadata) -> AppResult<()> {
         let zone_name = metadata.zone_name.clone();
         self.repository.upsert_zone(&metadata).await?;
-        info!("Updated zone: {}", zone_name);
+        info!("Updated zone: {zone_name}");
         Ok(())
     }
 

@@ -37,7 +37,7 @@ impl FromStr for CurrencyTier {
             "Primary" => Ok(CurrencyTier::Primary),
             "Secondary" => Ok(CurrencyTier::Secondary),
             "Tertiary" => Ok(CurrencyTier::Tertiary),
-            _ => Err(format!("Unknown currency tier: {}", s)),
+            _ => Err(format!("Unknown currency tier: {s}")),
         }
     }
 }
@@ -131,7 +131,7 @@ impl FromStr for EconomyType {
             "Expedition" => Ok(EconomyType::Expedition),
             "Delirium" => Ok(EconomyType::Delirium),
             "Breach" => Ok(EconomyType::Breach),
-            _ => Err(format!("Unknown economy type: {}", s)),
+            _ => Err(format!("Unknown economy type: {s}")),
         }
     }
 }
@@ -453,8 +453,7 @@ impl CurrencyExchangeApiResponse {
 
                 let secondary_value = primary_value * secondary_rate;
                 let tertiary_value = tertiary_rate
-                    .map(|rate| primary_value * rate)
-                    .unwrap_or(0.0);
+                    .map_or(0.0, |rate| primary_value * rate);
 
                 let tier = CurrencyExchangeRate::select_optimal_tier(
                     primary_value,

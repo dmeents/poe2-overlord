@@ -13,7 +13,7 @@ impl FileService {
         serde_json::from_str(&content).map_err(|e| {
             AppError::internal_error(
                 "json_deserialize",
-                &format!("Failed to deserialize JSON from {:?}: {}", path, e),
+                &format!("Failed to deserialize JSON from {path:?}: {e}"),
             )
         })
     }
@@ -27,7 +27,7 @@ impl FileService {
             };
             AppError::file_system_error(
                 operation,
-                &format!("Failed to read file {:?}: {}", path, e),
+                &format!("Failed to read file {path:?}: {e}"),
             )
         })
     }

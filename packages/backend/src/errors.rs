@@ -42,7 +42,7 @@ impl From<std::io::Error> for AppError {
 impl From<serde_json::Error> for AppError {
     fn from(err: serde_json::Error) -> Self {
         AppError::Serialization {
-            message: format!("JSON error: {}", err),
+            message: format!("JSON error: {err}"),
         }
     }
 }
@@ -58,7 +58,7 @@ impl From<Box<dyn std::error::Error>> for AppError {
 impl From<notify::Error> for AppError {
     fn from(err: notify::Error) -> Self {
         AppError::FileSystem {
-            message: format!("File notification error: {}", err),
+            message: format!("File notification error: {err}"),
         }
     }
 }
@@ -90,7 +90,7 @@ impl From<sqlx::Error> for AppError {
                 }
             }
             _ => AppError::Internal {
-                message: format!("Database error: {}", err),
+                message: format!("Database error: {err}"),
             },
         }
     }
@@ -99,7 +99,7 @@ impl From<sqlx::Error> for AppError {
 impl From<chrono::ParseError> for AppError {
     fn from(err: chrono::ParseError) -> Self {
         AppError::Serialization {
-            message: format!("Date/time parse error: {}", err),
+            message: format!("Date/time parse error: {err}"),
         }
     }
 }
@@ -108,47 +108,47 @@ impl AppError {
     /// Convenience constructor for file system errors
     pub fn file_system_error(operation: &str, message: &str) -> Self {
         Self::FileSystem {
-            message: format!("{}: {}", operation, message),
+            message: format!("{operation}: {message}"),
         }
     }
 
     /// Convenience constructor for validation errors
     pub fn validation_error(operation: &str, message: &str) -> Self {
         Self::Validation {
-            message: format!("{}: {}", operation, message),
+            message: format!("{operation}: {message}"),
         }
     }
 
     /// Convenience constructor for internal errors
     pub fn internal_error(operation: &str, message: &str) -> Self {
         Self::Internal {
-            message: format!("{}: {}", operation, message),
+            message: format!("{operation}: {message}"),
         }
     }
 
     /// Convenience constructor for network errors
     pub fn network_error(operation: &str, message: &str) -> Self {
         Self::Network {
-            message: format!("{}: {}", operation, message),
+            message: format!("{operation}: {message}"),
         }
     }
 
     /// Convenience constructor for serialization errors
     pub fn serialization_error(operation: &str, message: &str) -> Self {
         Self::Serialization {
-            message: format!("{}: {}", operation, message),
+            message: format!("{operation}: {message}"),
         }
     }
 
     /// Convenience constructor for security errors
     pub fn security_error(operation: &str, message: &str) -> Self {
         Self::Security {
-            message: format!("{}: {}", operation, message),
+            message: format!("{operation}: {message}"),
         }
     }
 }
 
-/// Type alias for results that use AppError as the error type
+/// Type alias for results that use `AppError` as the error type
 pub type AppResult<T> = Result<T, AppError>;
 
 /// Serializable error for IPC communication between backend and frontend.
@@ -279,6 +279,6 @@ mod tests {
             message: "Test error message".to_string(),
         };
 
-        assert_eq!(format!("{}", serializable), "Test error message");
+        assert_eq!(format!("{serializable}"), "Test error message");
     }
 }

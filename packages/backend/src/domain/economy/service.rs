@@ -19,7 +19,7 @@
 //! # Concurrency Safety
 //!
 //! This service is safe for concurrent use. Multiple simultaneous requests for the same
-//! league+economy_type will be coalesced into a single API fetch, with subsequent requests
+//! `league+economy_type` will be coalesced into a single API fetch, with subsequent requests
 //! waiting for the first to complete. This prevents:
 //! - Redundant API calls
 //! - Cache race conditions (last-write-wins)
@@ -87,11 +87,11 @@ const RETRY_BACKOFF_MULTIPLIER: u32 = 3;
 /// Economy service with concurrent request deduplication.
 ///
 /// Uses per-cache-key semaphores to ensure only one API fetch happens at a time
-/// for the same league+hardcore+economy_type combination.
+/// for the same `league+hardcore+economy_type` combination.
 pub struct EconomyService {
     pub(crate) client: reqwest::Client,
     /// Tracks in-flight API fetches per cache key to prevent race conditions.
-    /// Key format: "{league}:{is_hardcore}:{economy_type}"
+    /// Key format: "{`league}:{is_hardcore}:{economy_type`}"
     in_flight: Arc<RwLock<HashMap<String, Arc<Semaphore>>>>,
     repository: Arc<dyn EconomyRepository>,
 }
@@ -122,7 +122,7 @@ impl EconomyService {
             .timeout(Duration::from_secs(HTTP_TOTAL_TIMEOUT_SECS))
             .connect_timeout(Duration::from_secs(HTTP_CONNECT_TIMEOUT_SECS))
             .build()
-            .map_err(|e| AppError::internal_error("build_http_client", &format!("{}", e)))?;
+            .map_err(|e| AppError::internal_error("build_http_client", &format!("{e}")))?;
 
         Ok(Self {
             client,
@@ -143,7 +143,7 @@ impl EconomyService {
             if league.eq_ignore_ascii_case("Standard") {
                 "Hardcore".to_string()
             } else {
-                format!("HC {}", base)
+                format!("HC {base}")
             }
         } else {
             base.to_string()
@@ -166,7 +166,7 @@ impl EconomyService {
             Duration::from_millis(0)
         } else {
             let delay_ms =
-                INITIAL_RETRY_DELAY_MS * (RETRY_BACKOFF_MULTIPLIER.pow(attempt - 1) as u64);
+                INITIAL_RETRY_DELAY_MS * u64::from(RETRY_BACKOFF_MULTIPLIER.pow(attempt - 1));
             Duration::from_millis(delay_ms)
         }
     }
@@ -202,9 +202,7 @@ impl EconomyService {
             .await?
         {
             log::debug!(
-                "Fast path: Fresh cache for {}:{:?} (no lock needed)",
-                league,
-                economy_type
+                "Fast path: Fresh cache for {league}:{economy_type:?} (no lock needed)"
             );
             return Ok(data);
         }
@@ -224,11 +222,11 @@ impl EconomyService {
         let _permit = semaphore.acquire().await.map_err(|e| {
             AppError::internal_error(
                 "fetch_currency_exchange_data",
-                &format!("Failed to acquire fetch lock: {}", e),
+                &format!("Failed to acquire fetch lock: {e}"),
             )
         })?;
 
-        log::debug!("Acquired fetch lock for {}:{:?}", league, economy_type);
+        log::debug!("Acquired fetch lock for {league}:{economy_type:?}");
 
         // Re-check cache after acquiring lock (another request may have fetched)
         if let Some(data) = self
@@ -237,9 +235,7 @@ impl EconomyService {
             .await?
         {
             log::info!(
-                "Cache became fresh while waiting for lock (coalesced fetch) for {}:{:?}",
-                league,
-                economy_type
+                "Cache became fresh while waiting for lock (coalesced fetch) for {league}:{economy_type:?}"
             );
             // Clean up the semaphore since we're done
             self.cleanup_semaphore(&key).await;
@@ -247,9 +243,7 @@ impl EconomyService {
         }
 
         log::info!(
-            "Cache is stale or missing for league: {}, type: {}",
-            league,
-            economy_type
+            "Cache is stale or missing for league: {league}, type: {economy_type}"
         );
 
         // Still stale - proceed with fetch from poe.ninja
@@ -258,10 +252,7 @@ impl EconomyService {
         let url = Self::build_poe_ninja_url(&league_name, economy_type);
 
         log::info!(
-            "Fetching economy data from poe.ninja - league: {}, hardcore: {}, type: {}",
-            league_name,
-            is_hardcore,
-            economy_type
+            "Fetching economy data from poe.ninja - league: {league_name}, hardcore: {is_hardcore}, type: {economy_type}"
         );
 
         // Try to fetch from poe.ninja
@@ -280,13 +271,13 @@ impl EconomyService {
                     .save_exchange_data(league, is_hardcore, economy_type, &data)
                     .await
                 {
-                    log::warn!("Failed to save cache to database: {}", e);
+                    log::warn!("Failed to save cache to database: {e}");
                 }
 
                 Ok(data)
             }
             Err(e) => {
-                log::warn!("Failed to fetch from poe.ninja: {}", e);
+                log::warn!("Failed to fetch from poe.ninja: {e}");
 
                 // Graceful degradation - return stale cache if available
                 if let Some(mut stale_data) = self
@@ -295,9 +286,7 @@ impl EconomyService {
                     .await?
                 {
                     log::info!(
-                        "Returning stale cached data for league: {}, type: {}",
-                        league,
-                        economy_type
+                        "Returning stale cached data for league: {league}, type: {economy_type}"
                     );
                     stale_data.is_stale = Some(true);
                     Ok(stale_data)
@@ -318,12 +307,12 @@ impl EconomyService {
     async fn cleanup_semaphore(&self, key: &str) {
         let mut in_flight = self.in_flight.write().await;
         in_flight.remove(key);
-        log::trace!("Removed fetch lock for {}", key);
+        log::trace!("Removed fetch lock for {key}");
     }
 
     /// Fetch data from poe.ninja API with automatic retry on transient failures.
     ///
-    /// Retries up to MAX_RETRY_ATTEMPTS times with exponential backoff on network errors.
+    /// Retries up to `MAX_RETRY_ATTEMPTS` times with exponential backoff on network errors.
     /// Does NOT retry on 4xx errors (client errors) - only 5xx and network failures.
     async fn fetch_from_poe_ninja(&self, url: &str) -> AppResult<CurrencyExchangeData> {
         let mut last_error = None;
@@ -345,7 +334,7 @@ impl EconomyService {
             match self.try_fetch_from_poe_ninja(url).await {
                 Ok(data) => {
                     if attempt > 0 {
-                        log::info!("Successfully fetched data after {} retry attempts", attempt);
+                        log::info!("Successfully fetched data after {attempt} retry attempts");
                     }
                     return Ok(data);
                 }
@@ -360,7 +349,7 @@ impl EconomyService {
                         last_error = Some(e);
                     } else {
                         // Non-retryable error - fail immediately
-                        log::error!("Non-retryable error, not retrying: {}", e);
+                        log::error!("Non-retryable error, not retrying: {e}");
                         return Err(e);
                     }
                 }
@@ -379,24 +368,24 @@ impl EconomyService {
     /// Single attempt to fetch data from poe.ninja (no retries).
     async fn try_fetch_from_poe_ninja(&self, url: &str) -> AppResult<CurrencyExchangeData> {
         let response = self.client.get(url).send().await.map_err(|e| {
-            log::error!("Failed to fetch currency data: {}", e);
-            AppError::network_error("fetch_currency_data", &format!("{}", e))
+            log::error!("Failed to fetch currency data: {e}");
+            AppError::network_error("fetch_currency_data", &format!("{e}"))
         })?;
 
         if !response.status().is_success() {
             let status = response.status();
-            log::error!("poe.ninja API returned error status: {}", status);
+            log::error!("poe.ninja API returned error status: {status}");
 
             // Differentiate between 4xx (client error) and 5xx (server error)
             return if status.is_client_error() {
                 Err(AppError::validation_error(
                     "poe.ninja_api",
-                    &format!("API client error: {}", status),
+                    &format!("API client error: {status}"),
                 ))
             } else {
                 Err(AppError::network_error(
                     "poe.ninja_api",
-                    &format!("API server error: {}", status),
+                    &format!("API server error: {status}"),
                 ))
             };
         }
@@ -405,15 +394,13 @@ impl EconomyService {
             .json::<CurrencyExchangeApiResponse>()
             .await
             .map_err(|e| {
-                log::error!("Failed to parse currency data: {}", e);
-                AppError::serialization_error("parse_currency_data", &format!("{}", e))
+                log::error!("Failed to parse currency data: {e}");
+                AppError::serialization_error("parse_currency_data", &format!("{e}"))
             })?;
 
         api_response.into_frontend_data().map_err(|e| {
             log::warn!(
-                "Failed to convert API response to frontend data for {} economy type: {}",
-                url,
-                e
+                "Failed to convert API response to frontend data for {url} economy type: {e}"
             );
             e
         })
@@ -439,21 +426,20 @@ impl EconomyService {
                     .fetch_currency_exchange_data(&league, is_hardcore, economy_type)
                     .await
                 {
-                    Ok(_) => log::info!("Refreshed economy type: {}", economy_type),
-                    Err(e) => log::warn!("Failed to refresh {}: {}", economy_type, e),
+                    Ok(_) => log::info!("Refreshed economy type: {economy_type}"),
+                    Err(e) => log::warn!("Failed to refresh {economy_type}: {e}"),
                 }
             });
         }
 
         while let Some(result) = handles.join_next().await {
             if let Err(e) = result {
-                log::warn!("Refresh task panicked: {}", e);
+                log::warn!("Refresh task panicked: {e}");
             }
         }
 
         log::info!(
-            "Completed refresh of all economy types for league: {}",
-            league
+            "Completed refresh of all economy types for league: {league}"
         );
         Ok(())
     }
@@ -489,10 +475,7 @@ impl EconomyService {
             .toggle_currency_star(league, is_hardcore, economy_type, currency_id)
             .await?;
         log::info!(
-            "Currency {} starred={} for league: {}",
-            currency_id,
-            new_state,
-            league
+            "Currency {currency_id} starred={new_state} for league: {league}"
         );
         Ok(new_state)
     }

@@ -92,7 +92,7 @@ pub use infrastructure::time::{
 /// This function sets up the Tauri application with:
 /// - Required plugins for shell and process management
 /// - All command handlers exposed to the frontend
-/// - Application initialization via setup_app
+/// - Application initialization via `setup_app`
 /// - Error handling for application startup failures
 pub fn run() {
     tauri::Builder::default()

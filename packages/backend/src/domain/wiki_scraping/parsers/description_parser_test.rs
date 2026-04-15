@@ -41,9 +41,9 @@ mod tests {
     fn test_parse_description_fallback_italic() {
         // Fallback: no info-card, uses <i> in document body
         let html = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <p><i>This is a description of the zone that is longer than ten characters.</i></p>
-            </body></html>"#,
+            </body></html>",
         );
 
         let description = DescriptionParser::parse(&html);
@@ -54,9 +54,9 @@ mod tests {
     #[test]
     fn test_parse_description_fallback_em_tag() {
         let html = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <p><em>The bootprint of the Eternals upon the face of Ogham.</em></p>
-            </body></html>"#,
+            </body></html>",
         );
 
         let description = DescriptionParser::parse(&html);
@@ -70,9 +70,9 @@ mod tests {
     #[test]
     fn test_parse_description_too_short() {
         let html = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <p><i>Short</i></p>
-            </body></html>"#,
+            </body></html>",
         );
 
         let description = DescriptionParser::parse(&html);
@@ -82,9 +82,9 @@ mod tests {
     #[test]
     fn test_parse_no_description() {
         let html = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <p>Regular text without italic formatting.</p>
-            </body></html>"#,
+            </body></html>",
         );
 
         let description = DescriptionParser::parse(&html);
@@ -94,11 +94,11 @@ mod tests {
     #[test]
     fn test_parse_multiple_italics_returns_first_long_enough() {
         let html = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <p><i>Short</i></p>
                 <p><i>This is the description we want to extract here.</i></p>
                 <p><i>Another description text.</i></p>
-            </body></html>"#,
+            </body></html>",
         );
 
         let description = DescriptionParser::parse(&html);

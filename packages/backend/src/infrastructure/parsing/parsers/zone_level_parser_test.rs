@@ -31,8 +31,8 @@ mod tests {
         let levels = vec![1, 10, 50, 68, 75, 100];
 
         for level in levels {
-            let line = format!("Generating level {} area", level);
-            assert!(parser.should_parse(&line), "Should parse level: {}", level);
+            let line = format!("Generating level {level} area");
+            assert!(parser.should_parse(&line), "Should parse level: {level}");
         }
     }
 
@@ -185,7 +185,7 @@ mod tests {
 
         for (line, expected_level) in test_cases {
             let result = parser.parse_line(line);
-            assert!(result.is_ok(), "Should parse level: {}", expected_level);
+            assert!(result.is_ok(), "Should parse level: {expected_level}");
 
             match result.unwrap() {
                 ParserResult::ZoneLevel(level) => {

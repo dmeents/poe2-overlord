@@ -20,7 +20,7 @@ mod tests {
 
     // ============= Mock Implementations =============
 
-    /// Mock WalkthroughRepository that returns configurable guide data
+    /// Mock `WalkthroughRepository` that returns configurable guide data
     struct MockWalkthroughRepository {
         guide: WalkthroughGuide,
         should_fail: bool,
@@ -54,7 +54,7 @@ mod tests {
         }
     }
 
-    /// Mock CharacterService that stores character data in memory
+    /// Mock `CharacterService` that stores character data in memory
     struct MockCharacterService {
         characters: Arc<RwLock<HashMap<String, CharacterData>>>,
         should_fail_load: bool,
@@ -107,7 +107,7 @@ mod tests {
         ) -> Result<CharacterDataResponse, AppError> {
             if self.should_fail_load {
                 return Err(AppError::Validation {
-                    message: format!("Character {} not found", character_id),
+                    message: format!("Character {character_id} not found"),
                 });
             }
             let characters = self.characters.read().await;
@@ -116,7 +116,7 @@ mod tests {
                     .get(character_id)
                     .cloned()
                     .ok_or_else(|| AppError::Validation {
-                        message: format!("Character {} not found", character_id),
+                        message: format!("Character {character_id} not found"),
                     })?;
             Ok(CharacterDataResponse::from(character))
         }
@@ -138,7 +138,7 @@ mod tests {
                     Ok(CharacterDataResponse::from(char_data.clone()))
                 }
                 None => Err(AppError::Validation {
-                    message: format!("Character {} not found", character_id),
+                    message: format!("Character {character_id} not found"),
                 }),
             }
         }
@@ -292,7 +292,7 @@ mod tests {
         }
     }
 
-    /// Creates a character with default walkthrough progress (at act_1_step_1)
+    /// Creates a character with default walkthrough progress (at `act_1_step_1`)
     fn create_test_character(id: &str) -> CharacterData {
         let mut character = CharacterData::new(
             id.to_string(),
@@ -321,7 +321,7 @@ mod tests {
         character
     }
 
-    /// Creates a WalkthroughServiceImpl with test dependencies
+    /// Creates a `WalkthroughServiceImpl` with test dependencies
     fn create_test_service(
         repository: Arc<dyn WalkthroughRepository + Send + Sync>,
         character_service: Arc<dyn CharacterService + Send + Sync>,
@@ -580,7 +580,7 @@ mod tests {
                 assert!(message.contains("Invalid step ID"));
                 assert!(message.contains("nonexistent_step"));
             }
-            _ => panic!("Expected Validation error, got {:?}", error),
+            _ => panic!("Expected Validation error, got {error:?}"),
         }
     }
 

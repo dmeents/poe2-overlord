@@ -33,7 +33,7 @@ pub async fn get_game_process_status(
             Ok(game_status)
         }
         Err(e) => {
-            info!("Failed to check game process status: {}", e);
+            info!("Failed to check game process status: {e}");
             Ok(GameProcessStatus::not_running())
         }
     }

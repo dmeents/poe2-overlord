@@ -6,7 +6,7 @@ use std::path::Path;
 use tokio::fs;
 use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 
-/// Simple implementation of LogFileRepository for file system operations
+/// Simple implementation of `LogFileRepository` for file system operations
 #[derive(Default)]
 pub struct LogFileRepositoryImpl;
 
@@ -22,7 +22,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         let metadata = fs::metadata(path).await.map_err(|e| {
             AppError::file_system_error(
                 "get_file_info",
-                &format!("Failed to get file metadata for '{}': {}", path, e),
+                &format!("Failed to get file metadata for '{path}': {e}"),
             )
         })?;
 
@@ -34,7 +34,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
                 |e| {
                     AppError::file_system_error(
                         "get_file_info",
-                        &format!("Failed to get modified time for '{}': {}", path, e),
+                        &format!("Failed to get modified time for '{path}': {e}"),
                     )
                 },
             )?),
@@ -50,7 +50,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         let file = fs::File::open(path).await.map_err(|e| {
             AppError::file_system_error(
                 "read_lines",
-                &format!("Failed to open file '{}': {}", path, e),
+                &format!("Failed to open file '{path}': {e}"),
             )
         })?;
 
@@ -62,7 +62,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         while let Some(line) = lines.next_line().await.map_err(|e| {
             AppError::file_system_error(
                 "read_lines",
-                &format!("Failed to read line from '{}': {}", path, e),
+                &format!("Failed to read line from '{path}': {e}"),
             )
         })? {
             if current_line >= start_line && result.len() < count {
@@ -78,7 +78,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         let metadata = fs::metadata(path).await.map_err(|e| {
             AppError::file_system_error(
                 "get_file_size",
-                &format!("Failed to get file size for '{}': {}", path, e),
+                &format!("Failed to get file size for '{path}': {e}"),
             )
         })?;
         Ok(metadata.len())
@@ -92,7 +92,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         let file = fs::File::open(path).await.map_err(|e| {
             AppError::file_system_error(
                 "read_from_position",
-                &format!("Failed to open file '{}': {}", path, e),
+                &format!("Failed to open file '{path}': {e}"),
             )
         })?;
 
@@ -104,8 +104,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
                 AppError::file_system_error(
                     "read_from_position",
                     &format!(
-                        "Failed to seek to position {} in '{}': {}",
-                        position, path, e
+                        "Failed to seek to position {position} in '{path}': {e}"
                     ),
                 )
             })?;
@@ -115,7 +114,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         while reader.read_line(&mut line).await.map_err(|e| {
             AppError::file_system_error(
                 "read_from_position",
-                &format!("Failed to read line from '{}': {}", path, e),
+                &format!("Failed to read line from '{path}': {e}"),
             )
         })? > 0
         {
@@ -130,7 +129,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         let metadata = fs::metadata(path).await.map_err(|e| {
             AppError::file_system_error(
                 "get_file_modified_time",
-                &format!("Failed to get file metadata for '{}': {}", path, e),
+                &format!("Failed to get file metadata for '{path}': {e}"),
             )
         })?;
 
@@ -138,7 +137,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
             metadata.modified().map_err(|e| {
                 AppError::file_system_error(
                     "get_file_modified_time",
-                    &format!("Failed to get modified time for '{}': {}", path, e),
+                    &format!("Failed to get modified time for '{path}': {e}"),
                 )
             })?,
         ))

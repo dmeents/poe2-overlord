@@ -52,8 +52,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     info!("Starting application setup...");
 
     info!(
-        "Logging configured with level: {} ({:?})",
-        log_level, level_filter
+        "Logging configured with level: {log_level} ({level_filter:?})"
     );
 
     if let Some(main_window) = app.get_webview_window("main") {
@@ -65,7 +64,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
         ));
 
         if let Err(e) = tauri::async_runtime::block_on(event_bridge.start_forwarding()) {
-            error!("Failed to start Tauri event bridge: {}", e);
+            error!("Failed to start Tauri event bridge: {e}");
         } else {
             info!("Tauri event bridge started successfully");
         }
@@ -92,9 +91,9 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
                 tokio::task::block_in_place(|| {
                     tokio::runtime::Handle::current().block_on(async {
                         if let Err(e) = services_clone.shutdown_services().await {
-                            log::error!("Error during application shutdown: {}", e);
+                            log::error!("Error during application shutdown: {e}");
                         }
-                    })
+                    });
                 });
             }
         });

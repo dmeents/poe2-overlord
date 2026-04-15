@@ -7,24 +7,24 @@ const WIKI_PATH: &str = "/wiki";
 pub fn format_zone_name_for_url(zone_name: &str) -> String {
     zone_name
         .replace(' ', "_")
-        .replace("'", "%27")
-        .replace("-", "_")
+        .replace('\'', "%27")
+        .replace('-', "_")
 }
 
 /// Constructs the full wiki URL for a zone
 pub fn get_wiki_url(zone_name: &str) -> String {
     let formatted_name = format_zone_name_for_url(zone_name);
-    format!("{}{}/{}", BASE_URL, WIKI_PATH, formatted_name)
+    format!("{BASE_URL}{WIKI_PATH}/{formatted_name}")
 }
 
-/// Converts a relative URL to an absolute URL for the PoE2 wiki
+/// Converts a relative URL to an absolute URL for the `PoE2` wiki
 pub fn to_absolute_url(url: &str) -> String {
     if url.starts_with("http") {
         url.to_string()
     } else if url.starts_with("//") {
-        format!("https:{}", url)
+        format!("https:{url}")
     } else {
-        format!("{}{}", BASE_URL, url)
+        format!("{BASE_URL}{url}")
     }
 }
 
@@ -36,8 +36,7 @@ pub fn should_refresh(last_updated: chrono::DateTime<chrono::Utc>) -> bool {
 
     if should {
         debug!(
-            "Zone data last updated {} is older than one week, should refresh",
-            last_updated
+            "Zone data last updated {last_updated} is older than one week, should refresh"
         );
     }
 

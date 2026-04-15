@@ -401,7 +401,7 @@ impl FromStr for CharacterClass {
             "Mercenary" => Ok(Self::Mercenary),
             "Witch" => Ok(Self::Witch),
             "Druid" => Ok(Self::Druid),
-            _ => Err(format!("Unknown CharacterClass: '{}'", s)),
+            _ => Err(format!("Unknown CharacterClass: '{s}'")),
         }
     }
 }
@@ -457,7 +457,7 @@ impl FromStr for Ascendency {
             "Lich" => Ok(Self::Lich),
             "Shaman" => Ok(Self::Shaman),
             "Oracle" => Ok(Self::Oracle),
-            _ => Err(format!("Unknown Ascendency: '{}'", s)),
+            _ => Err(format!("Unknown Ascendency: '{s}'")),
         }
     }
 }
@@ -479,7 +479,7 @@ impl FromStr for League {
             "Standard" => Ok(Self::Standard),
             "Rise of the Abyssal" => Ok(Self::RiseOfTheAbyssal),
             "The Fate of the Vaal" => Ok(Self::TheFateOfTheVaal),
-            _ => Err(format!("Unknown League: '{}'", s)),
+            _ => Err(format!("Unknown League: '{s}'")),
         }
     }
 }

@@ -123,7 +123,7 @@ mod tests {
     fn test_create_note_params_with_character_id() {
         let params = CreateNoteParams {
             title: "Character Note".to_string(),
-            content: "".to_string(),
+            content: String::new(),
             character_id: Some("char-1".to_string()),
         };
 
@@ -155,7 +155,7 @@ mod tests {
     fn test_update_note_params_clear_character_id() {
         let params = UpdateNoteParams {
             title: "Note".to_string(),
-            content: "".to_string(),
+            content: String::new(),
             character_id: None,
         };
 

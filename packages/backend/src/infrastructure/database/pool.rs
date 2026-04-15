@@ -24,7 +24,7 @@ impl DatabasePool {
             .await
             .map_err(|e| crate::errors::AppError::internal_error(
                 "database_init",
-                &format!("Failed to connect to SQLite: {}", e),
+                &format!("Failed to connect to SQLite: {e}"),
             ))?;
 
         // Run migrations
@@ -34,7 +34,7 @@ impl DatabasePool {
             .map_err(|e| {
                 crate::errors::AppError::internal_error(
                     "database_migrate",
-                    &format!("Failed to run migrations: {}", e),
+                    &format!("Failed to run migrations: {e}"),
                 )
             })?;
 

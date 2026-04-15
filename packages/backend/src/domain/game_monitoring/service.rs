@@ -51,8 +51,7 @@ impl GameMonitoringServiceImpl {
     ) -> AppResult<()> {
         let is_state_change = previous_status
             .as_ref()
-            .map(|prev| current_status.is_state_change(prev))
-            .unwrap_or(true);
+            .is_none_or(|prev| current_status.is_state_change(prev));
 
         if is_state_change {
             if current_status.is_running() {
@@ -69,8 +68,7 @@ impl GameMonitoringServiceImpl {
                         Ok(ids) => ids,
                         Err(e) => {
                             error!(
-                                "Failed to get active zone character IDs on game stop: {}",
-                                e
+                                "Failed to get active zone character IDs on game stop: {e}"
                             );
                             vec![]
                         }
@@ -78,25 +76,22 @@ impl GameMonitoringServiceImpl {
 
                 if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
                     error!(
-                        "Failed to finalize active zone times when game stopped: {}",
-                        e
+                        "Failed to finalize active zone times when game stopped: {e}"
                     );
                 }
 
                 if let Err(e) = self.character_service.finalize_all_active_zones().await {
                     let error_msg = format!(
-                        "Failed to finalize character tracking when game stopped: {}",
-                        e
+                        "Failed to finalize character tracking when game stopped: {e}"
                     );
-                    error!("{}", error_msg);
+                    error!("{error_msg}");
 
                     // Publish error event so frontend can notify user
                     let error_event =
                         AppEvent::system_error(error_msg, "CharacterFinalizationError".to_string());
                     if let Err(publish_err) = self.event_bus.publish(error_event).await {
                         error!(
-                            "Failed to publish finalization error event: {}",
-                            publish_err
+                            "Failed to publish finalization error event: {publish_err}"
                         );
                     }
                 } else {
@@ -107,8 +102,7 @@ impl GameMonitoringServiceImpl {
                 for character_id in &active_character_ids {
                     if let Err(e) = self.leveling_service.emit_stats_update(character_id).await {
                         error!(
-                            "Failed to emit leveling stats update for {} after game stop: {}",
-                            character_id, e
+                            "Failed to emit leveling stats update for {character_id} after game stop: {e}"
                         );
                     }
                 }
@@ -122,7 +116,7 @@ impl GameMonitoringServiceImpl {
         );
 
         if let Err(e) = self.event_bus.publish(event).await {
-            error!("Failed to publish game process status change event: {}", e);
+            error!("Failed to publish game process status change event: {e}");
         }
 
         {
@@ -154,7 +148,7 @@ impl GameMonitoringServiceImpl {
                     .handle_process_state_change(initial_status.clone(), None)
                     .await
                 {
-                    error!("Failed to handle initial process status: {}", e);
+                    error!("Failed to handle initial process status: {e}");
                 }
 
                 let initial_interval = if initial_status.running {
@@ -173,7 +167,7 @@ impl GameMonitoringServiceImpl {
                 previous_status = Some(initial_status);
             }
             Err(e) => {
-                error!("Failed to get initial game process status: {}", e);
+                error!("Failed to get initial game process status: {e}");
             }
         }
 
@@ -188,8 +182,7 @@ impl GameMonitoringServiceImpl {
                 Ok(current_status_value) => {
                     let is_state_change = previous_status
                         .as_ref()
-                        .map(|prev| current_status_value.is_state_change(prev))
-                        .unwrap_or(true);
+                        .is_none_or(|prev| current_status_value.is_state_change(prev));
 
                     if is_state_change {
                         info!(
@@ -206,7 +199,7 @@ impl GameMonitoringServiceImpl {
                             )
                             .await
                         {
-                            error!("Failed to handle process status change: {}", e);
+                            error!("Failed to handle process status change: {e}");
                         }
 
                         let new_interval = if current_status_value.running {
@@ -229,7 +222,7 @@ impl GameMonitoringServiceImpl {
                     previous_status = Some(current_status_value);
                 }
                 Err(e) => {
-                    error!("Error checking game process: {}", e);
+                    error!("Error checking game process: {e}");
                 }
             }
         }
@@ -262,11 +255,11 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
         let service_clone = Arc::new(self.clone());
         let task_handle = tokio::spawn(async move {
             match service_clone.start_monitoring_loop().await {
-                Ok(_) => {
+                Ok(()) => {
                     info!("Game monitoring loop completed successfully");
                 }
                 Err(e) => {
-                    error!("Background monitoring loop failed: {}", e);
+                    error!("Background monitoring loop failed: {e}");
                 }
             }
         });
@@ -290,7 +283,7 @@ impl GameMonitoringService for GameMonitoringServiceImpl {
 
         if let Some(task_handle) = self.monitoring_task.write().await.take() {
             if let Err(e) = task_handle.await {
-                error!("Error waiting for monitoring task to complete: {}", e);
+                error!("Error waiting for monitoring task to complete: {e}");
             }
         }
 

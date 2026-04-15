@@ -34,14 +34,14 @@ impl TauriEventBridge {
             let window = self.window.clone();
             let cancellation_token = self.cancellation_token.clone();
 
-            debug!("Starting forwarding for event type: {:?}", event_type);
+            debug!("Starting forwarding for event type: {event_type:?}");
 
             let handle = tokio::spawn(async move {
                 if let Ok(mut receiver) = event_bus.get_receiver(event_type).await {
                     loop {
                         tokio::select! {
-                            _ = cancellation_token.cancelled() => {
-                                info!("Forwarding task for {:?} cancelled", event_type);
+                            () = cancellation_token.cancelled() => {
+                                info!("Forwarding task for {event_type:?} cancelled");
                                 break;
                             }
                             result = receiver.recv() => {
@@ -51,15 +51,13 @@ impl TauriEventBridge {
                                     }
                                     Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
                                         error!(
-                                            "Event bridge lagged by {} events for {:?}, continuing",
-                                            n, event_type
+                                            "Event bridge lagged by {n} events for {event_type:?}, continuing"
                                         );
                                         // Continue receiving - receiver is still valid
                                     }
                                     Err(tokio::sync::broadcast::error::RecvError::Closed) => {
                                         error!(
-                                            "Event channel closed for {:?}, exiting forwarding task",
-                                            event_type
+                                            "Event channel closed for {event_type:?}, exiting forwarding task"
                                         );
                                         break;
                                     }
@@ -68,7 +66,7 @@ impl TauriEventBridge {
                         }
                     }
                 } else {
-                    error!("Failed to get receiver for event type: {:?}", event_type);
+                    error!("Failed to get receiver for event type: {event_type:?}");
                 }
             });
 
@@ -91,7 +89,7 @@ impl TauriEventBridge {
         let mut handles = self.forwarding_tasks.write().await;
         for handle in handles.drain(..) {
             if let Err(e) = handle.await {
-                error!("Error waiting for forwarding task to complete: {}", e);
+                error!("Error waiting for forwarding task to complete: {e}");
             }
         }
 
@@ -103,11 +101,11 @@ impl TauriEventBridge {
         let event_name = Self::get_event_name(event);
 
         match window.emit(&event_name, event) {
-            Ok(_) => {
-                debug!("Forwarded event {} to frontend", event_name);
+            Ok(()) => {
+                debug!("Forwarded event {event_name} to frontend");
             }
             Err(e) => {
-                error!("Failed to forward event {} to frontend: {}", event_name, e);
+                error!("Failed to forward event {event_name} to frontend: {e}");
             }
         }
     }

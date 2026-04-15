@@ -24,7 +24,7 @@ impl WikiScrapingServiceImpl {
 impl WikiScrapingService for WikiScrapingServiceImpl {
     async fn fetch_zone_data(&self, zone_name: &str) -> AppResult<WikiZoneData> {
         let wiki_url = url_utils::get_wiki_url(zone_name);
-        info!("Fetching wiki data for '{}' from: {}", zone_name, wiki_url);
+        info!("Fetching wiki data for '{zone_name}' from: {wiki_url}");
 
         let html_content = match self.repository.fetch_page(zone_name).await {
             Ok(content) => {
@@ -36,18 +36,18 @@ impl WikiScrapingService for WikiScrapingServiceImpl {
                 content
             }
             Err(e) => {
-                error!("Failed to fetch HTML content for '{}': {}", zone_name, e);
+                error!("Failed to fetch HTML content for '{zone_name}': {e}");
                 return Err(e);
             }
         };
 
         match WikiParser::parse_zone_data(zone_name, &html_content, &wiki_url) {
             Ok(zone_data) => {
-                info!("Successfully parsed wiki data for '{}'", zone_name);
+                info!("Successfully parsed wiki data for '{zone_name}'");
                 Ok(zone_data)
             }
             Err(e) => {
-                error!("Failed to parse zone data for '{}': {}", zone_name, e);
+                error!("Failed to parse zone data for '{zone_name}': {e}");
                 Err(e)
             }
         }

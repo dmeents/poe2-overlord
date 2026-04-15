@@ -141,7 +141,7 @@ mod tests {
             ValidationResult::Error(msg) => {
                 assert!(msg.contains("Invalid timestamp order"));
             }
-            _ => panic!("Expected Error, got {:?}", result),
+            _ => panic!("Expected Error, got {result:?}"),
         }
     }
 
@@ -156,7 +156,7 @@ mod tests {
             ValidationResult::Warning(msg) => {
                 assert!(msg.contains("Unusually long session"));
             }
-            _ => panic!("Expected Warning, got {:?}", result),
+            _ => panic!("Expected Warning, got {result:?}"),
         }
     }
 
@@ -188,7 +188,7 @@ mod tests {
             ValidationResult::Error(msg) => {
                 assert!(msg.contains("cannot be zero"));
             }
-            _ => panic!("Expected Error, got {:?}", result),
+            _ => panic!("Expected Error, got {result:?}"),
         }
     }
 
@@ -200,7 +200,7 @@ mod tests {
             ValidationResult::Warning(msg) => {
                 assert!(msg.contains("Unusually long"));
             }
-            _ => panic!("Expected Warning, got {:?}", result),
+            _ => panic!("Expected Warning, got {result:?}"),
         }
     }
 
@@ -244,7 +244,7 @@ mod tests {
             ValidationResult::Error(msg) => {
                 assert!(msg.contains("overlap"));
             }
-            _ => panic!("Expected Error, got {:?}", result),
+            _ => panic!("Expected Error, got {result:?}"),
         }
     }
 
@@ -305,7 +305,7 @@ mod tests {
             ValidationResult::Error(msg) => {
                 assert!(msg.contains("Invalid timestamp order"));
             }
-            _ => panic!("Expected Error, got {:?}", result),
+            _ => panic!("Expected Error, got {result:?}"),
         }
     }
 
@@ -319,7 +319,7 @@ mod tests {
             ValidationResult::Error(msg) => {
                 assert!(msg.contains("cannot be zero"));
             }
-            _ => panic!("Expected Error, got {:?}", result),
+            _ => panic!("Expected Error, got {result:?}"),
         }
     }
 
@@ -335,7 +335,7 @@ mod tests {
             ValidationResult::Error(msg) => {
                 assert!(msg.contains("Duration mismatch"));
             }
-            _ => panic!("Expected Error, got {:?}", result),
+            _ => panic!("Expected Error, got {result:?}"),
         }
     }
 }

@@ -102,7 +102,7 @@ mod tests {
 
         for (line, expected_port) in test_cases {
             let result = parser.parse_line(line);
-            assert!(result.is_ok(), "Should parse port: {}", expected_port);
+            assert!(result.is_ok(), "Should parse port: {expected_port}");
 
             match result.unwrap() {
                 ParserResult::ServerConnection(event) => {

@@ -12,10 +12,7 @@ pub async fn get_currency_exchange_data(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<CurrencyExchangeData> {
     log::info!(
-        "Command: get_currency_exchange_data for league: {}, hardcore: {}, type: {}",
-        league,
-        is_hardcore,
-        economy_type
+        "Command: get_currency_exchange_data for league: {league}, hardcore: {is_hardcore}, type: {economy_type}"
     );
 
     let result = economy_service
@@ -32,9 +29,7 @@ pub async fn refresh_all_economy_data(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<()> {
     log::info!(
-        "Command: refresh_all_economy_data for league: {}, hardcore: {}",
-        league,
-        is_hardcore
+        "Command: refresh_all_economy_data for league: {league}, hardcore: {is_hardcore}"
     );
 
     let result = economy_service
@@ -51,9 +46,7 @@ pub async fn get_all_currencies(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<Vec<CurrencySearchResult>> {
     log::info!(
-        "Command: get_all_currencies for league: {}, hardcore: {}",
-        league,
-        is_hardcore
+        "Command: get_all_currencies for league: {league}, hardcore: {is_hardcore}"
     );
 
     let result = economy_service
@@ -71,10 +64,7 @@ pub async fn search_currencies(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<Vec<CurrencySearchResult>> {
     log::info!(
-        "Command: search_currencies for league: {}, hardcore: {}, query: '{}'",
-        league,
-        is_hardcore,
-        query
+        "Command: search_currencies for league: {league}, hardcore: {is_hardcore}, query: '{query}'"
     );
 
     let result = economy_service
@@ -93,10 +83,7 @@ pub async fn toggle_currency_star(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<bool> {
     log::info!(
-        "Command: toggle_currency_star for league: {}, type: {}, currency: {}",
-        league,
-        economy_type,
-        currency_id
+        "Command: toggle_currency_star for league: {league}, type: {economy_type}, currency: {currency_id}"
     );
 
     let result = economy_service
@@ -113,9 +100,7 @@ pub async fn get_starred_currencies(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<Vec<CurrencySearchResult>> {
     log::info!(
-        "Command: get_starred_currencies for league: {}, hardcore: {}",
-        league,
-        is_hardcore
+        "Command: get_starred_currencies for league: {league}, hardcore: {is_hardcore}"
     );
 
     let result = economy_service

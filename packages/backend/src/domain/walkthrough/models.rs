@@ -60,7 +60,7 @@ pub struct WalkthroughStep {
 ///
 /// Acts are major sections of the campaign that contain multiple walkthrough steps.
 /// Each act has a name and an ordered collection of steps. Act ordering is implicit
-/// in the array position within the WalkthroughGuide.
+/// in the array position within the `WalkthroughGuide`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughAct {
     /// Name of the act (e.g., "Act 4")
@@ -84,7 +84,7 @@ pub struct WalkthroughGuide {
 impl WalkthroughGuide {
     /// Finds a step by its ID across all acts.
     ///
-    /// Returns a tuple of (act_index, step_index) if found, None otherwise.
+    /// Returns a tuple of (`act_index`, `step_index`) if found, None otherwise.
     pub fn find_step(&self, step_id: &str) -> Option<(usize, usize)> {
         for (act_idx, act) in self.acts.iter().enumerate() {
             for (step_idx, step) in act.steps.iter().enumerate() {
@@ -161,7 +161,7 @@ impl WalkthroughGuide {
 /// Progress is stored as part of the character's data and updated as they advance.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WalkthroughProgress {
-    /// Current step ID the character is on (defaults to "act_1_step_1")
+    /// Current step ID the character is on (defaults to "`act_1_step_1`")
     pub current_step_id: Option<String>,
     /// Whether the character has completed the entire campaign
     pub is_completed: bool,
@@ -202,7 +202,7 @@ impl WalkthroughProgress {
         self.last_updated = Utc::now();
     }
 
-    /// Updates the last_updated timestamp to current time
+    /// Updates the `last_updated` timestamp to current time
     pub fn touch(&mut self) {
         self.last_updated = Utc::now();
     }

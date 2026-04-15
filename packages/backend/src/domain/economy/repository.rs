@@ -25,18 +25,17 @@ impl EconomyRepositoryImpl {
     fn is_fresh(last_updated: &str, ttl_seconds: u64) -> bool {
         chrono::DateTime::parse_from_rfc3339(last_updated)
             .ok()
-            .map(|time| {
+            .is_some_and(|time| {
                 let now = Utc::now();
                 let cached_time_utc = time.with_timezone(&Utc);
                 let elapsed = now.signed_duration_since(cached_time_utc);
                 let ttl_i64 = i64::try_from(ttl_seconds).unwrap_or(i64::MAX);
                 elapsed.num_seconds() < ttl_i64
             })
-            .unwrap_or(false)
     }
 
     /// Core load logic: queries by composite key, optionally enforces TTL.
-    /// Returns None if no row exists or if TTL check fails (when ttl_seconds is Some).
+    /// Returns None if no row exists or if TTL check fails (when `ttl_seconds` is Some).
     async fn load_exchange_data_internal(
         &self,
         league: &str,
@@ -49,14 +48,14 @@ impl EconomyRepositoryImpl {
              WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
         )
         .bind(league)
-        .bind(is_hardcore as i32)
+        .bind(i32::from(is_hardcore))
         .bind(economy_type.as_str())
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
             AppError::internal_error(
                 "load_exchange_data_internal",
-                &format!("Failed to query exchange rates: {}", e),
+                &format!("Failed to query exchange rates: {e}"),
             )
         })?;
 
@@ -77,7 +76,7 @@ impl EconomyRepositoryImpl {
         Ok(Some(data))
     }
 
-    /// Build CurrencyExchangeData from exchange rate row and currency items
+    /// Build `CurrencyExchangeData` from exchange rate row and currency items
     async fn build_exchange_data(&self, exchange_rate_id: i64) -> AppResult<CurrencyExchangeData> {
         // Load exchange rate metadata by PK
         let rate_row = sqlx::query(
@@ -94,7 +93,7 @@ impl EconomyRepositoryImpl {
         .map_err(|e| {
             AppError::internal_error(
                 "build_exchange_data",
-                &format!("Failed to load exchange rate metadata: {}", e),
+                &format!("Failed to load exchange rate metadata: {e}"),
             )
         })?;
 
@@ -136,7 +135,7 @@ impl EconomyRepositoryImpl {
         .map_err(|e| {
             AppError::internal_error(
                 "build_exchange_data",
-                &format!("Failed to load currency items: {}", e),
+                &format!("Failed to load currency items: {e}"),
             )
         })?;
 
@@ -218,7 +217,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         let mut tx = self.pool.begin().await.map_err(|e| {
             AppError::internal_error(
                 "save_exchange_data",
-                &format!("Failed to begin transaction: {}", e),
+                &format!("Failed to begin transaction: {e}"),
             )
         })?;
 
@@ -250,7 +249,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
              RETURNING id",
         )
         .bind(league)
-        .bind(is_hardcore as i32)
+        .bind(i32::from(is_hardcore))
         .bind(economy_type.as_str())
         .bind(&data.primary_currency.id)
         .bind(&data.primary_currency.name)
@@ -270,7 +269,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         .map_err(|e| {
             AppError::internal_error(
                 "save_exchange_data",
-                &format!("Failed to upsert exchange rate: {}", e),
+                &format!("Failed to upsert exchange rate: {e}"),
             )
         })?;
 
@@ -319,7 +318,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
             .bind(currency.change_percent)
             .bind(display_tier)
             .bind(currency.display_value.value)
-            .bind(currency.display_value.inverted as i32)
+            .bind(i32::from(currency.display_value.inverted))
             .bind(&currency.display_value.currency_id)
             .bind(&currency.display_value.currency_name)
             .bind(&currency.display_value.currency_image_url)
@@ -338,7 +337,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         tx.commit().await.map_err(|e| {
             AppError::internal_error(
                 "save_exchange_data",
-                &format!("Failed to commit transaction: {}", e),
+                &format!("Failed to commit transaction: {e}"),
             )
         })?;
 
@@ -362,13 +361,13 @@ impl EconomyRepository for EconomyRepositoryImpl {
              ORDER BY ci.primary_value DESC",
         )
         .bind(league)
-        .bind(is_hardcore as i32)
+        .bind(i32::from(is_hardcore))
         .fetch_all(&self.pool)
         .await
         .map_err(|e| {
             AppError::internal_error(
                 "load_all_currencies",
-                &format!("Failed to load all currencies: {}", e),
+                &format!("Failed to load all currencies: {e}"),
             )
         })?;
 
@@ -382,7 +381,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         query: &str,
         limit: u32,
     ) -> AppResult<Vec<CurrencySearchResult>> {
-        let search_pattern = format!("%{}%", query);
+        let search_pattern = format!("%{query}%");
 
         let rows = sqlx::query(
             "SELECT ci.currency_id, ci.name, ci.image_url, er.economy_type,
@@ -398,7 +397,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
              LIMIT ?",
         )
         .bind(league)
-        .bind(is_hardcore as i32)
+        .bind(i32::from(is_hardcore))
         .bind(&search_pattern)
         .bind(limit)
         .fetch_all(&self.pool)
@@ -406,7 +405,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         .map_err(|e| {
             AppError::internal_error(
                 "search_currencies",
-                &format!("Failed to search currencies: {}", e),
+                &format!("Failed to search currencies: {e}"),
             )
         })?;
 
@@ -425,21 +424,21 @@ impl EconomyRepository for EconomyRepositoryImpl {
              WHERE league = ? AND is_hardcore = ? AND economy_type = ?",
         )
         .bind(league)
-        .bind(is_hardcore as i32)
+        .bind(i32::from(is_hardcore))
         .bind(economy_type.as_str())
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
             AppError::internal_error(
                 "toggle_currency_star",
-                &format!("Failed to find exchange rate: {}", e),
+                &format!("Failed to find exchange rate: {e}"),
             )
         })?;
 
         let Some(rate_id) = exchange_rate_id else {
             return Err(AppError::validation_error(
                 "toggle_currency_star",
-                &format!("No data cached for economy type: {}", economy_type),
+                &format!("No data cached for economy type: {economy_type}"),
             ));
         };
 
@@ -455,7 +454,7 @@ impl EconomyRepository for EconomyRepositoryImpl {
         .map_err(|e| {
             AppError::internal_error(
                 "toggle_currency_star",
-                &format!("Failed to toggle star for currency {}: {}", currency_id, e),
+                &format!("Failed to toggle star for currency {currency_id}: {e}"),
             )
         })?;
 
@@ -479,13 +478,13 @@ impl EconomyRepository for EconomyRepositoryImpl {
              ORDER BY ci.primary_value DESC",
         )
         .bind(league)
-        .bind(is_hardcore as i32)
+        .bind(i32::from(is_hardcore))
         .fetch_all(&self.pool)
         .await
         .map_err(|e| {
             AppError::internal_error(
                 "load_starred_currencies",
-                &format!("Failed to load starred currencies: {}", e),
+                &format!("Failed to load starred currencies: {e}"),
             )
         })?;
 

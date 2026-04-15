@@ -61,7 +61,7 @@ impl PingProvider for SystemPingProvider {
                     Err(AppError::network_error("ping", "server unreachable"))
                 }
             }
-            Err(e) => Err(AppError::network_error("ping_command", &format!("{}", e))),
+            Err(e) => Err(AppError::network_error("ping_command", &format!("{e}"))),
         }
     }
 }

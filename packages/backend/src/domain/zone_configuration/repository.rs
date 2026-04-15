@@ -9,11 +9,11 @@ use log::{debug, info};
 use sqlx::SqlitePool;
 use std::collections::HashMap;
 
-/// Zone configuration repository implementation using SQLite.
+/// Zone configuration repository implementation using `SQLite`.
 ///
 /// Stores zone metadata in the `zone_metadata` table with integer surrogate keys.
 /// The shared helpers in `infrastructure/database/helpers.rs` (`get_or_create_zone_id_tx`,
-/// `get_or_create_zone_id_pool`) are used by CharacterRepository when it needs to
+/// `get_or_create_zone_id_pool`) are used by `CharacterRepository` when it needs to
 /// reference zones by ID and auto-create stubs for unknown zones.
 ///
 /// Vec<String> fields (bosses, monsters, npcs, etc.) are stored as JSON TEXT
@@ -103,13 +103,9 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                 image_url,
                 wiki_url,
                 first_discovered: chrono::DateTime::parse_from_rfc3339(&first_discovered)
-                    .ok()
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now),
+                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated)
-                    .ok()
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now),
+                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             };
 
             zones.insert(zone_name, metadata);
@@ -149,10 +145,10 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                  last_updated = excluded.last_updated",
         )
         .bind(&metadata.zone_name)
-        .bind(metadata.act as i64)
-        .bind(metadata.area_level.map(|v| v as i64))
-        .bind(if metadata.is_town { 1 } else { 0 })
-        .bind(if metadata.has_waypoint { 1 } else { 0 })
+        .bind(i64::from(metadata.act))
+        .bind(metadata.area_level.map(i64::from))
+        .bind(i32::from(metadata.is_town))
+        .bind(i32::from(metadata.has_waypoint))
         .bind(metadata.zone_type.to_string())
         .bind(&bosses_json)
         .bind(&npcs_json)
@@ -233,7 +229,7 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                     points_of_interest, image_url, wiki_url, first_discovered, last_updated
              FROM zone_metadata WHERE act = ? ORDER BY zone_name",
         )
-        .bind(act as i64)
+        .bind(i64::from(act))
         .fetch_all(&self.pool)
         .await?;
 
@@ -294,13 +290,9 @@ impl ZoneConfigurationRepositoryImpl {
             image_url,
             wiki_url,
             first_discovered: chrono::DateTime::parse_from_rfc3339(&first_discovered)
-                .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now),
+                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated)
-                .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now),
+                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
         }
     }
 }

@@ -18,10 +18,10 @@ pub use domain::configuration::commands::*; // Configuration management
 pub use domain::economy::commands::*; // Economy and currency exchange data
 pub use domain::game_monitoring::commands::*; // Game process monitoring
 pub use domain::leveling::commands::*; // Leveling stats and XP tracking
+pub use domain::notes::commands::*;
 pub use domain::server_monitoring::commands::*; // Server status monitoring
 pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
-pub use domain::zone_configuration::commands::*; // Zone metadata lookup
-pub use domain::notes::commands::*; // Notes CRUD and pin management
+pub use domain::zone_configuration::commands::*; // Zone metadata lookup // Notes CRUD and pin management
 
 // Core error handling
 pub use errors::*;

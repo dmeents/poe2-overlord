@@ -28,9 +28,7 @@ pub async fn refresh_all_economy_data(
     is_hardcore: bool,
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<()> {
-    log::info!(
-        "Command: refresh_all_economy_data for league: {league}, hardcore: {is_hardcore}"
-    );
+    log::info!("Command: refresh_all_economy_data for league: {league}, hardcore: {is_hardcore}");
 
     let result = economy_service
         .refresh_all_economy_types(&league, is_hardcore)
@@ -45,9 +43,7 @@ pub async fn get_all_currencies(
     is_hardcore: bool,
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<Vec<CurrencySearchResult>> {
-    log::info!(
-        "Command: get_all_currencies for league: {league}, hardcore: {is_hardcore}"
-    );
+    log::info!("Command: get_all_currencies for league: {league}, hardcore: {is_hardcore}");
 
     let result = economy_service
         .load_all_currencies(&league, is_hardcore)
@@ -99,9 +95,7 @@ pub async fn get_starred_currencies(
     is_hardcore: bool,
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<Vec<CurrencySearchResult>> {
-    log::info!(
-        "Command: get_starred_currencies for league: {league}, hardcore: {is_hardcore}"
-    );
+    log::info!("Command: get_starred_currencies for league: {league}, hardcore: {is_hardcore}");
 
     let result = economy_service
         .get_starred_currencies(&league, is_hardcore)

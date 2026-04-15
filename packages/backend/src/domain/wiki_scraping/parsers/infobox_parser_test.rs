@@ -149,9 +149,7 @@ mod tests {
 
     #[test]
     fn test_extract_no_info_card() {
-        let html = Html::parse_document(
-            r"<html><body><p>No info card here</p></body></html>",
-        );
+        let html = Html::parse_document(r"<html><body><p>No info card here</p></body></html>");
         let result = InfoboxParser::extract(&html);
         assert!(result.is_none());
     }

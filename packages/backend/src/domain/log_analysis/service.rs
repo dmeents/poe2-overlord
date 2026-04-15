@@ -147,9 +147,7 @@ impl LogAnalysisServiceImpl {
         }
 
         info!("Starting log file monitoring for: {log_path}");
-        info!(
-            "LOG ANALYSIS: Monitoring initialized - starting from position: {file_size}"
-        );
+        info!("LOG ANALYSIS: Monitoring initialized - starting from position: {file_size}");
 
         let monitoring_task = self.create_monitoring_task();
         monitoring_task.await?;
@@ -293,9 +291,7 @@ impl LogAnalysisServiceImpl {
                         );
 
                         if let Err(e) = leveling_service.finalize_active_zone_times().await {
-                            error!(
-                                "Failed to finalize active zone times after session gap: {e}"
-                            );
+                            error!("Failed to finalize active zone times after session gap: {e}");
                         }
 
                         if let Err(e) = character_service.finalize_all_active_zones().await {
@@ -352,9 +348,7 @@ impl LogAnalysisServiceImpl {
         {
             let mut set = in_flight.write().await;
             if set.contains(zone_name) {
-                debug!(
-                    "Wiki fetch already in-flight for zone '{zone_name}', skipping"
-                );
+                debug!("Wiki fetch already in-flight for zone '{zone_name}', skipping");
                 return;
             }
             set.insert(zone_name.to_string());
@@ -383,9 +377,7 @@ impl LogAnalysisServiceImpl {
 
                     info!("Looking up zone '{zone_name}' in configuration...");
                     if let Some(zone_metadata) = zone_config.get_zone_metadata(&zone_name).await {
-                        info!(
-                            "Found zone '{zone_name}' in configuration, updating with wiki data"
-                        );
+                        info!("Found zone '{zone_name}' in configuration, updating with wiki data");
                         info!(
                             "BEFORE UPDATE: act={}, is_town={}",
                             zone_metadata.act, zone_metadata.is_town
@@ -438,9 +430,7 @@ impl LogAnalysisServiceImpl {
                             }
                         }
                     } else {
-                        warn!(
-                            "Zone '{zone_name}' not found in configuration after reload"
-                        );
+                        warn!("Zone '{zone_name}' not found in configuration after reload");
                     }
                 }
                 Err(e) => {
@@ -507,9 +497,7 @@ impl LogAnalysisServiceImpl {
         }
 
         if Self::is_act_name(zone_name) {
-            debug!(
-                "SCENE FILTER: Filtering out act name '{zone_name}' - not tracking as zone"
-            );
+            debug!("SCENE FILTER: Filtering out act name '{zone_name}' - not tracking as zone");
             return Ok(None);
         }
 
@@ -577,7 +565,8 @@ impl LogAnalysisServiceImpl {
 
         let zone_metadata = zone_config.get_zone_metadata(zone_name).await;
         let act_info = zone_metadata
-            .as_ref().map_or_else(|| "Unknown".to_string(), |z| z.act.to_string());
+            .as_ref()
+            .map_or_else(|| "Unknown".to_string(), |z| z.act.to_string());
         let is_town_info = zone_metadata.is_some_and(|z| z.is_town);
 
         info!(
@@ -621,9 +610,7 @@ impl LogAnalysisServiceImpl {
             .handle_scene_change(character_id, content)
             .await
         {
-            error!(
-                "WALKTHROUGH: Failed to handle walkthrough scene change: {e}"
-            );
+            error!("WALKTHROUGH: Failed to handle walkthrough scene change: {e}");
         }
     }
 
@@ -684,25 +671,19 @@ impl LogAnalysisServiceImpl {
         let parse_result = parser_manager.parse_line(line);
         if let Err(e) = &parse_result {
             if line.contains("[SCENE]") {
-                warn!(
-                    "LOG ANALYSIS: Failed to parse SCENE line: {line} - Error: {e:?}"
-                );
+                warn!("LOG ANALYSIS: Failed to parse SCENE line: {line} - Error: {e:?}");
             }
         }
 
         if let Ok(Some(result)) = parse_result {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
-                    info!(
-                        "LOG ANALYSIS: Scene change detected - content: '{content}'"
-                    );
+                    info!("LOG ANALYSIS: Scene change detected - content: '{content}'");
 
                     let active_character_result = character_service.get_active_character().await;
 
                     if let Err(e) = &active_character_result {
-                        warn!(
-                            "LOG ANALYSIS: Failed to get active character for scene change: {e}"
-                        );
+                        warn!("LOG ANALYSIS: Failed to get active character for scene change: {e}");
                     }
 
                     if let Ok(Some(active_character)) = active_character_result {

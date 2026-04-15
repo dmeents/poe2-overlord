@@ -46,9 +46,7 @@ impl CharacterService for CharacterServiceImpl {
         if !super::models::is_valid_ascendency_for_class(&ascendency, &class) {
             return Err(AppError::validation_error(
                 "validate_ascendency",
-                &format!(
-                    "Ascendency '{ascendency:?}' is not valid for class '{class:?}'"
-                ),
+                &format!("Ascendency '{ascendency:?}' is not valid for class '{class:?}'"),
             ));
         }
 
@@ -218,9 +216,7 @@ impl CharacterService for CharacterServiceImpl {
         let event =
             crate::infrastructure::events::AppEvent::character_deleted(character_id.to_string());
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!(
-                "Failed to publish character deleted event: {e}. UI may show stale data."
-            );
+            log::warn!("Failed to publish character deleted event: {e}. UI may show stale data.");
         }
 
         log::info!("Deleted character: {character_id}");
@@ -263,9 +259,7 @@ impl CharacterService for CharacterServiceImpl {
         if !(1..=100).contains(&new_level) {
             return Err(AppError::validation_error(
                 "validate_level",
-                &format!(
-                    "Character level must be between 1 and 100, got {new_level}"
-                ),
+                &format!("Character level must be between 1 and 100, got {new_level}"),
             ));
         }
 

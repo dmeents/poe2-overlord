@@ -67,32 +67,25 @@ impl GameMonitoringServiceImpl {
                     match self.leveling_service.get_active_zone_character_ids().await {
                         Ok(ids) => ids,
                         Err(e) => {
-                            error!(
-                                "Failed to get active zone character IDs on game stop: {e}"
-                            );
+                            error!("Failed to get active zone character IDs on game stop: {e}");
                             vec![]
                         }
                     };
 
                 if let Err(e) = self.leveling_service.finalize_active_zone_times().await {
-                    error!(
-                        "Failed to finalize active zone times when game stopped: {e}"
-                    );
+                    error!("Failed to finalize active zone times when game stopped: {e}");
                 }
 
                 if let Err(e) = self.character_service.finalize_all_active_zones().await {
-                    let error_msg = format!(
-                        "Failed to finalize character tracking when game stopped: {e}"
-                    );
+                    let error_msg =
+                        format!("Failed to finalize character tracking when game stopped: {e}");
                     error!("{error_msg}");
 
                     // Publish error event so frontend can notify user
                     let error_event =
                         AppEvent::system_error(error_msg, "CharacterFinalizationError".to_string());
                     if let Err(publish_err) = self.event_bus.publish(error_event).await {
-                        error!(
-                            "Failed to publish finalization error event: {publish_err}"
-                        );
+                        error!("Failed to publish finalization error event: {publish_err}");
                     }
                 } else {
                     info!("Character tracking finalized after game process stopped");

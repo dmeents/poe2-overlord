@@ -452,8 +452,7 @@ impl CurrencyExchangeApiResponse {
                 let primary_value = line.primary_value?;
 
                 let secondary_value = primary_value * secondary_rate;
-                let tertiary_value = tertiary_rate
-                    .map_or(0.0, |rate| primary_value * rate);
+                let tertiary_value = tertiary_rate.map_or(0.0, |rate| primary_value * rate);
 
                 let tier = CurrencyExchangeRate::select_optimal_tier(
                     primary_value,

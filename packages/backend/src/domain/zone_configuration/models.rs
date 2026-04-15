@@ -120,9 +120,7 @@ impl ZoneConfiguration {
 
     /// Checks if a zone is a town by zone name
     pub fn is_town_zone(&self, zone_name: &str) -> bool {
-        self.zones
-            .get(zone_name)
-            .is_some_and(|zone| zone.is_town)
+        self.zones.get(zone_name).is_some_and(|zone| zone.is_town)
     }
 }
 

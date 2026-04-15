@@ -25,10 +25,7 @@ impl FileService {
             } else {
                 "read_file"
             };
-            AppError::file_system_error(
-                operation,
-                &format!("Failed to read file {path:?}: {e}"),
-            )
+            AppError::file_system_error(operation, &format!("Failed to read file {path:?}: {e}"))
         })
     }
 }

@@ -103,9 +103,11 @@ impl ZoneConfigurationRepository for ZoneConfigurationRepositoryImpl {
                 image_url,
                 wiki_url,
                 first_discovered: chrono::DateTime::parse_from_rfc3339(&first_discovered)
-                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                    .ok()
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated)
-                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                    .ok()
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             };
 
             zones.insert(zone_name, metadata);
@@ -290,9 +292,11 @@ impl ZoneConfigurationRepositoryImpl {
             image_url,
             wiki_url,
             first_discovered: chrono::DateTime::parse_from_rfc3339(&first_discovered)
-                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                .ok()
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated)
-                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                .ok()
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
         }
     }
 }

@@ -51,9 +51,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     info!("Starting application setup...");
 
-    info!(
-        "Logging configured with level: {log_level} ({level_filter:?})"
-    );
+    info!("Logging configured with level: {log_level} ({level_filter:?})");
 
     if let Some(main_window) = app.get_webview_window("main") {
         info!("Starting background services");

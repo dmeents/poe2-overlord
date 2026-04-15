@@ -48,10 +48,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
         count: usize,
     ) -> AppResult<Vec<String>> {
         let file = fs::File::open(path).await.map_err(|e| {
-            AppError::file_system_error(
-                "read_lines",
-                &format!("Failed to open file '{path}': {e}"),
-            )
+            AppError::file_system_error("read_lines", &format!("Failed to open file '{path}': {e}"))
         })?;
 
         let reader = BufReader::new(file);
@@ -103,9 +100,7 @@ impl LogFileRepository for LogFileRepositoryImpl {
             .map_err(|e| {
                 AppError::file_system_error(
                     "read_from_position",
-                    &format!(
-                        "Failed to seek to position {position} in '{path}': {e}"
-                    ),
+                    &format!("Failed to seek to position {position} in '{path}': {e}"),
                 )
             })?;
 

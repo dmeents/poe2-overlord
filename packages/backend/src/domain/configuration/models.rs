@@ -186,9 +186,7 @@ impl AppConfig {
             }
             "macos" => {
                 let home = env::var("HOME").unwrap_or_else(|_| "/Users/default".to_string());
-                format!(
-                    "{home}/Library/Application Support/Path of Exile 2/logs/Client.txt"
-                )
+                format!("{home}/Library/Application Support/Path of Exile 2/logs/Client.txt")
             }
             "linux" => {
                 let home = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());

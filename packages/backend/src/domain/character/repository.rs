@@ -125,7 +125,8 @@ impl CharacterRepository for CharacterRepositoryImpl {
             if let Some(zone_name) = zone_name {
                 let last_updated = if let Some(timestamp_str) = current_zone_updated_at_str {
                     chrono::DateTime::parse_from_rfc3339(&timestamp_str)
-                        .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc))
+                        .ok()
+                        .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc))
                 } else {
                     Utc::now()
                 };
@@ -443,7 +444,8 @@ impl CharacterRepository for CharacterRepositoryImpl {
         let mut progress_by_character: HashMap<String, WalkthroughProgress> = HashMap::new();
         for (character_id, current_step_id, is_completed, last_updated_str) in progress_rows {
             let last_updated = chrono::DateTime::parse_from_rfc3339(&last_updated_str)
-                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                .ok()
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             progress_by_character.insert(
                 character_id,
                 WalkthroughProgress {
@@ -487,19 +489,22 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
             let timestamps = CharacterTimestamps {
                 created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
-                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                    .ok()
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
                 last_played: last_played_str
                     .as_ref()
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated_str)
-                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                    .ok()
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             };
 
             let current_location: Option<LocationState> = current_zone_name.map(|zone_name| {
                 let last_updated = current_zone_updated_at_str
                     .as_ref()
-                    .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                    .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
 
                 LocationState {
                     zone_name,
@@ -927,7 +932,8 @@ impl CharacterRepository for CharacterRepositoryImpl {
         let mut progress_by_character: HashMap<String, WalkthroughProgress> = HashMap::new();
         for (character_id, current_step_id, is_completed, last_updated_str) in progress_rows {
             let last_updated = chrono::DateTime::parse_from_rfc3339(&last_updated_str)
-                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                .ok()
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             progress_by_character.insert(
                 character_id,
                 WalkthroughProgress {
@@ -972,19 +978,22 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
             let timestamps = CharacterTimestamps {
                 created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
-                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                    .ok()
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
                 last_played: last_played_str
                     .as_ref()
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated_str)
-                    .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
+                    .ok()
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             };
 
             let current_location: Option<LocationState> = current_zone_name.map(|zone_name| {
                 let last_updated = current_zone_updated_at_str
                     .as_ref()
-                    .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                    .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
                 LocationState {
                     zone_name,
                     last_updated,
@@ -1056,9 +1065,11 @@ impl CharacterRepository for CharacterRepositoryImpl {
             let points_of_interest_json: String = row.get("points_of_interest");
 
             let first_visited = chrono::DateTime::parse_from_rfc3339(&first_visited_str)
-                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                .ok()
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             let last_visited = chrono::DateTime::parse_from_rfc3339(&last_visited_str)
-                .ok().map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                .ok()
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             let entry_timestamp = entry_timestamp_str
                 .as_ref()
                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())

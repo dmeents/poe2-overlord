@@ -201,9 +201,7 @@ impl EconomyService {
             .load_fresh_exchange_data(league, is_hardcore, economy_type, CACHE_TTL_SECONDS)
             .await?
         {
-            log::debug!(
-                "Fast path: Fresh cache for {league}:{economy_type:?} (no lock needed)"
-            );
+            log::debug!("Fast path: Fresh cache for {league}:{economy_type:?} (no lock needed)");
             return Ok(data);
         }
 
@@ -242,9 +240,7 @@ impl EconomyService {
             return Ok(data);
         }
 
-        log::info!(
-            "Cache is stale or missing for league: {league}, type: {economy_type}"
-        );
+        log::info!("Cache is stale or missing for league: {league}, type: {economy_type}");
 
         // Still stale - proceed with fetch from poe.ninja
         let league_name = Self::format_league_for_api(league, is_hardcore);
@@ -438,9 +434,7 @@ impl EconomyService {
             }
         }
 
-        log::info!(
-            "Completed refresh of all economy types for league: {league}"
-        );
+        log::info!("Completed refresh of all economy types for league: {league}");
         Ok(())
     }
 
@@ -474,9 +468,7 @@ impl EconomyService {
             .repository
             .toggle_currency_star(league, is_hardcore, economy_type, currency_id)
             .await?;
-        log::info!(
-            "Currency {currency_id} starred={new_state} for league: {league}"
-        );
+        log::info!("Currency {currency_id} starred={new_state} for league: {league}");
         Ok(new_state)
     }
 

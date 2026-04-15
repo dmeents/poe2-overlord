@@ -182,7 +182,9 @@ impl ServiceInitializer {
                     let log_path = config.poe_client_log_path;
                     if log_path.is_empty() {
                         info!("No POE client log path configured, log monitoring will use default");
-                    } else if let Err(e) = log_analysis_clone.update_log_path(log_path.clone()).await {
+                    } else if let Err(e) =
+                        log_analysis_clone.update_log_path(log_path.clone()).await
+                    {
                         error!("Failed to update log path in LogAnalysisService: {e}");
                     } else {
                         info!("Log analysis service configured with path: {log_path}");

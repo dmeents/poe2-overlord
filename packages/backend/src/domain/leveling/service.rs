@@ -110,9 +110,9 @@ impl LevelingServiceImpl {
         let is_actively_grinding = zone_info
             .as_ref()
             .is_some_and(|z| !z.is_town && !is_hideout_zone(&z.zone_name));
-        let dynamic_zone_seconds = zone_info
-            .as_ref()
-            .map_or(0, |z| Self::compute_dynamic_zone_seconds(z, last_level_reached_at));
+        let dynamic_zone_seconds = zone_info.as_ref().map_or(0, |z| {
+            Self::compute_dynamic_zone_seconds(z, last_level_reached_at)
+        });
         let active_seconds_at_level = stored_active_seconds + dynamic_zone_seconds;
 
         let estimated_seconds_to_next_level = estimated_seconds(
@@ -152,9 +152,7 @@ impl LevelingService for LevelingServiceImpl {
     ) -> AppResult<()> {
         // Capture active zone time before resetting (final time in old-level zone)
         if let Err(e) = self.accumulate_active_zone_time(character_id).await {
-            error!(
-                "LEVELING: Failed to accumulate active zone time before level-up: {e}"
-            );
+            error!("LEVELING: Failed to accumulate active zone time before level-up: {e}");
         }
 
         // Capture death counter and active grinding seconds before reset
@@ -225,9 +223,7 @@ impl LevelingService for LevelingServiceImpl {
         let character_ids = self.repository.get_all_active_zone_character_ids().await?;
         for character_id in character_ids {
             if let Err(e) = self.accumulate_active_zone_time(&character_id).await {
-                error!(
-                    "LEVELING: Failed to accumulate active zone time for {character_id}: {e}"
-                );
+                error!("LEVELING: Failed to accumulate active zone time for {character_id}: {e}");
             }
         }
         Ok(())
@@ -247,9 +243,7 @@ impl LevelingService for LevelingServiceImpl {
             ))
             .await
         {
-            error!(
-                "LEVELING: Failed to publish stats update after zone transition: {e}"
-            );
+            error!("LEVELING: Failed to publish stats update after zone transition: {e}");
         }
         Ok(())
     }

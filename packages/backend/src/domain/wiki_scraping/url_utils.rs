@@ -35,9 +35,7 @@ pub fn should_refresh(last_updated: chrono::DateTime<chrono::Utc>) -> bool {
     let should = last_updated < week_ago;
 
     if should {
-        debug!(
-            "Zone data last updated {last_updated} is older than one week, should refresh"
-        );
+        debug!("Zone data last updated {last_updated} is older than one week, should refresh");
     }
 
     should

@@ -39,9 +39,7 @@ impl WikiRepository {
         }
 
         let content = response.text().await.map_err(|e| {
-            error!(
-                "Failed to read response body for zone '{zone_name}': {e}"
-            );
+            error!("Failed to read response body for zone '{zone_name}': {e}");
             AppError::network_error("read_response_body", &e.to_string())
         })?;
 

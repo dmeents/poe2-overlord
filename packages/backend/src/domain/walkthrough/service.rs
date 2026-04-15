@@ -115,9 +115,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
             if !guide.step_exists(step_id) {
                 return Err(AppError::validation_error(
                     "update_character_progress",
-                    &format!(
-                        "Invalid step ID '{step_id}' - does not exist in walkthrough guide"
-                    ),
+                    &format!("Invalid step ID '{step_id}' - does not exist in walkthrough guide"),
                 ));
             }
         }
@@ -151,9 +149,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
         let zone_name = scene_content.trim();
 
         if !zone_name.is_empty() {
-            debug!(
-                "Detected zone change to {zone_name} for character {character_id}"
-            );
+            debug!("Detected zone change to {zone_name} for character {character_id}");
 
             // Check if this zone matches the current step's completion_zone
             if let Some(step_id) = &progress.current_step_id {

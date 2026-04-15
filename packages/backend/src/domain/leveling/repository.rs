@@ -67,7 +67,8 @@ impl LevelingRepository for LevelingRepositoryImpl {
             .into_iter()
             .map(
                 |(id, char_id, level, reached_at_str, deaths, active_secs)| {
-                    let reached_at = chrono::DateTime::parse_from_rfc3339(&reached_at_str).map_or_else(|_| Utc::now(), |dt| dt.with_timezone(&Utc));
+                    let reached_at = chrono::DateTime::parse_from_rfc3339(&reached_at_str)
+                        .map_or_else(|_| Utc::now(), |dt| dt.with_timezone(&Utc));
                     LevelEvent {
                         id,
                         character_id: char_id,
@@ -188,7 +189,8 @@ impl LevelingRepository for LevelingRepositoryImpl {
         .await?;
 
         Ok(row.map(|(zone_name, entry_ts_str, is_town_i64)| {
-            let entry_timestamp = chrono::DateTime::parse_from_rfc3339(&entry_ts_str).map_or_else(|_| Utc::now(), |dt| dt.with_timezone(&Utc));
+            let entry_timestamp = chrono::DateTime::parse_from_rfc3339(&entry_ts_str)
+                .map_or_else(|_| Utc::now(), |dt| dt.with_timezone(&Utc));
             ActiveZoneInfo {
                 zone_name,
                 entry_timestamp,

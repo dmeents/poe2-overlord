@@ -88,9 +88,7 @@ impl ServerMonitoringServiceImpl {
 #[async_trait]
 impl ServerMonitoringService for ServerMonitoringServiceImpl {
     async fn update_server_from_log(&self, ip_address: String, port: u16) -> AppResult<()> {
-        info!(
-            "Server connection detected from logs: {ip_address}:{port}"
-        );
+        info!("Server connection detected from logs: {ip_address}:{port}");
 
         let status = ServerStatus::new(ip_address, port);
         self.update_and_persist(status).await
@@ -99,7 +97,9 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
     async fn ping_current_server(&self) -> AppResult<()> {
         let cached_status = self.cached_status.read().await;
 
-        let mut status = if let Some(s) = cached_status.as_ref() { s.clone() } else {
+        let mut status = if let Some(s) = cached_status.as_ref() {
+            s.clone()
+        } else {
             debug!("No server status available to ping");
             return Ok(());
         };
@@ -143,9 +143,7 @@ impl ServerMonitoringService for ServerMonitoringServiceImpl {
         let task_handle = tokio::spawn(async move {
             let mut interval = time::interval(Duration::from_secs(MONITORING_INTERVAL_SECS));
 
-            info!(
-                "Started periodic server ping monitoring ({MONITORING_INTERVAL_SECS}s interval)"
-            );
+            info!("Started periodic server ping monitoring ({MONITORING_INTERVAL_SECS}s interval)");
 
             loop {
                 interval.tick().await;

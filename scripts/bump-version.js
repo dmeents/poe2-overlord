@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Bumps the version in Cargo.toml and the root package.json atomically.
-// Tauri reads its version from Cargo.toml, so those two are the only sources of truth.
+// Bumps the version in Cargo.toml, the root package.json, and aur/PKGBUILD atomically.
+// Tauri reads its version from Cargo.toml, so that is the primary source of truth.
 //
 // Primary usage is via the Release workflow (Actions tab -> Release -> Run workflow).
 // Can also be run locally:
@@ -45,5 +45,18 @@ const prev = pkg.version;
 pkg.version = version;
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 console.log(`  package.json -> ${version}`);
+
+// Update aur/PKGBUILD
+const pkgbuildPath = resolve(root, 'aur/PKGBUILD');
+const pkgbuild = readFileSync(pkgbuildPath, 'utf8');
+const updatedPkgbuild = pkgbuild
+  .replace(/^pkgver=.*/m, `pkgver=${version}`)
+  .replace(/^pkgrel=.*/m, 'pkgrel=1');
+if (updatedPkgbuild === pkgbuild) {
+  console.error('Could not find pkgver field in aur/PKGBUILD');
+  process.exit(1);
+}
+writeFileSync(pkgbuildPath, updatedPkgbuild);
+console.log(`  aur/PKGBUILD -> ${version}`);
 
 console.log(`\nBumped ${prev} -> ${version}`);

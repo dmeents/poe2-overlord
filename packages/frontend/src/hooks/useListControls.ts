@@ -192,7 +192,7 @@ export function useListControls<TItem, TFilters, TSortField extends string>(
         activeFilterCount: activeCount,
         activeChips: chips,
       };
-    }, [items, config, filters, sort]);
+    }, [items, config, filters, sort, updateFilter]);
 
   // Return appropriate shape based on config type
   if (hasFilters(config) && filters) {

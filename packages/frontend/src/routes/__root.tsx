@@ -8,6 +8,7 @@ import '../globals.css';
 
 function ScrollToTop({ containerRef }: { containerRef: React.RefObject<HTMLElement | null> }) {
   const { pathname } = useLocation();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: containerRef.current is intentionally accessed inside the effect; containerRef itself is stable
   useEffect(() => {
     containerRef.current?.scrollTo(0, 0);
   }, [pathname, containerRef]);

@@ -31,7 +31,7 @@ export function useLevelingStats(characterId: string | undefined) {
     queryKey: levelingQueryKeys.stats(characterId ?? ''),
     queryFn: async (): Promise<LevelingStats> => {
       return await invoke<LevelingStats>('get_leveling_stats', {
-        characterId: characterId!,
+        characterId: characterId ?? '',
       });
     },
     enabled: !!characterId,

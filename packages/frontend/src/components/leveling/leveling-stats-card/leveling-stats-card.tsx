@@ -75,7 +75,7 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
             <div className={styles.statLabel}>XP / hr</div>
             <div className={styles.statValue}>
               {hasXpRate
-                ? formatXpRate(stats.xp_per_hour!)
+                ? formatXpRate(stats.xp_per_hour ?? 0)
                 : hasHistory
                   ? '—'
                   : 'Need 2+ level-ups'}
@@ -98,7 +98,7 @@ export const LevelingStatsCard = memo(function LevelingStatsCard() {
 
         {/* XP to next level */}
         {stats.current_level < 100 && (
-          <div className={styles.statBox + ' mb-4'}>
+          <div className={`${styles.statBox} mb-4`}>
             <div className={styles.statLabel}>XP to next level</div>
             <div className={styles.statValue}>{formatXpAmount(stats.xp_to_next_level)}</div>
           </div>

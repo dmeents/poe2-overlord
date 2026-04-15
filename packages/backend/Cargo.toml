@@ -1,10 +1,10 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "POE2 Overlord - A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+name = "poe2-overlord"
+version = "0.0.2"
+description = "A powerful companion app for Path of Exile 2"
+authors = ["David Meents <dmeents@pm.me>"]
+license = "MIT"
+repository = "https://github.com/dmeents/poe2-overlord"
 edition = "2021"
 rust-version = "1.89.0"
 

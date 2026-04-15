@@ -13,8 +13,7 @@ pub fn calculate_session_duration_seconds(
     let seconds = (milliseconds / 1000).max(MIN_SESSION_DURATION_SECONDS) as u64;
 
     debug!(
-        "Calculated session duration: {}ms -> {}s (entry: {}, exit: {})",
-        milliseconds, seconds, entry_timestamp, exit_timestamp
+        "Calculated session duration: {milliseconds}ms -> {seconds}s (entry: {entry_timestamp}, exit: {exit_timestamp})"
     );
 
     seconds
@@ -49,10 +48,9 @@ pub fn validate_timestamp_order(
     if let Some(exit) = exit_timestamp {
         if exit < entry_timestamp {
             let error_msg = format!(
-                "Invalid timestamp order: exit time {} is before entry time {}",
-                exit, entry_timestamp
+                "Invalid timestamp order: exit time {exit} is before entry time {entry_timestamp}"
             );
-            warn!("{}", error_msg);
+            warn!("{error_msg}");
             return ValidationResult::Error(error_msg);
         }
 
@@ -64,7 +62,7 @@ pub fn validate_timestamp_order(
                 entry_timestamp,
                 exit
             );
-            warn!("{}", warning_msg);
+            warn!("{warning_msg}");
             return ValidationResult::Warning(warning_msg);
         }
     }
@@ -79,13 +77,13 @@ pub fn validate_duration(duration_seconds: u64) -> ValidationResult {
             duration_seconds,
             duration_seconds / 3600
         );
-        warn!("{}", warning_msg);
+        warn!("{warning_msg}");
         return ValidationResult::Warning(warning_msg);
     }
 
     if duration_seconds == 0 {
         let error_msg = "Session duration cannot be zero".to_string();
-        warn!("{}", error_msg);
+        warn!("{error_msg}");
         return ValidationResult::Error(error_msg);
     }
 
@@ -105,10 +103,9 @@ pub fn validate_no_session_overlap(
 
         if new_entry < existing_exit && new_exit > *existing_entry {
             let error_msg = format!(
-                "Session overlap detected: new session ({}-{}) overlaps with existing session ({}-{})",
-                new_entry, new_exit, existing_entry, existing_exit
+                "Session overlap detected: new session ({new_entry}-{new_exit}) overlaps with existing session ({existing_entry}-{existing_exit})"
             );
-            warn!("{}", error_msg);
+            warn!("{error_msg}");
             return ValidationResult::Error(error_msg);
         }
     }
@@ -125,7 +122,7 @@ pub fn validate_session_data(
     match validate_timestamp_order(entry_timestamp, exit_timestamp) {
         ValidationResult::Error(msg) => return ValidationResult::Error(msg),
         ValidationResult::Warning(msg) => {
-            warn!("Timestamp validation warning: {}", msg);
+            warn!("Timestamp validation warning: {msg}");
         }
         ValidationResult::Valid => {}
     }
@@ -134,7 +131,7 @@ pub fn validate_session_data(
         match validate_duration(duration) {
             ValidationResult::Error(msg) => return ValidationResult::Error(msg),
             ValidationResult::Warning(msg) => {
-                warn!("Duration validation warning: {}", msg);
+                warn!("Duration validation warning: {msg}");
             }
             ValidationResult::Valid => {}
         }
@@ -143,10 +140,9 @@ pub fn validate_session_data(
             let calculated_duration = calculate_session_duration_seconds(entry_timestamp, exit);
             if calculated_duration != duration {
                 let error_msg = format!(
-                    "Duration mismatch: provided {}s, calculated {}s (entry: {}, exit: {})",
-                    duration, calculated_duration, entry_timestamp, exit
+                    "Duration mismatch: provided {duration}s, calculated {calculated_duration}s (entry: {entry_timestamp}, exit: {exit})"
                 );
-                warn!("{}", error_msg);
+                warn!("{error_msg}");
                 return ValidationResult::Error(error_msg);
             }
         }

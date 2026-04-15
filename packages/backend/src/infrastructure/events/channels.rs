@@ -61,7 +61,7 @@ impl ChannelManager {
             configs.insert(event_type, config);
         }
 
-        info!("Created new event channel for type: {:?}", event_type);
+        info!("Created new event channel for type: {event_type:?}");
         Ok(channel)
     }
 

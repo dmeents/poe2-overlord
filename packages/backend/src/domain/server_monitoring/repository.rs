@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use log::debug;
 use sqlx::SqlitePool;
 
-/// Server status repository implementation using SQLite.
+/// Server status repository implementation using `SQLite`.
 ///
 /// Stores server status in a single-row `server_status` table.
 pub struct ServerStatusRepositoryImpl {
@@ -30,8 +30,8 @@ impl ServerStatusRepositoryTrait for ServerStatusRepositoryImpl {
              VALUES (1, ?, ?, ?, ?, ?)",
         )
         .bind(&status.ip_address)
-        .bind(status.port as i64)
-        .bind(if status.is_online { 1 } else { 0 })
+        .bind(i64::from(status.port))
+        .bind(i32::from(status.is_online))
         .bind(status.latency_ms.map(|v| v as i64))
         .bind(&status.timestamp)
         .execute(&self.pool)

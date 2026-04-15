@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 /// Validates file paths for security vulnerabilities
 ///
-/// PathValidator ensures that file paths:
+/// `PathValidator` ensures that file paths:
 /// 1. Do not contain path traversal sequences (..)
 /// 2. Are within allowed root directories
 /// 3. Have valid file extensions for their use case
@@ -22,7 +22,7 @@ pub struct PathValidator {
 }
 
 impl PathValidator {
-    /// Create a new PathValidator for POE log files
+    /// Create a new `PathValidator` for POE log files
     ///
     /// This validator is configured with platform-specific allowed directories
     /// where POE2 is typically installed, and only allows .txt and .log extensions.
@@ -145,7 +145,7 @@ impl PathValidator {
             return path.canonicalize().map_err(|e| {
                 AppError::file_system_error(
                     "canonicalize_path",
-                    &format!("Failed to canonicalize path: {}", e),
+                    &format!("Failed to canonicalize path: {e}"),
                 )
             });
         }
@@ -176,7 +176,7 @@ impl PathValidator {
         let canonical_ancestor = existing_ancestor.canonicalize().map_err(|e| {
             AppError::file_system_error(
                 "canonicalize_path",
-                &format!("Failed to canonicalize existing path: {}", e),
+                &format!("Failed to canonicalize existing path: {e}"),
             )
         })?;
 
@@ -223,7 +223,7 @@ impl PathValidator {
         let extension = path
             .extension()
             .and_then(|e| e.to_str())
-            .map(|e| e.to_lowercase());
+            .map(str::to_lowercase);
 
         match extension {
             Some(ext) if self.allowed_extensions.contains(&ext) => Ok(()),
@@ -328,7 +328,7 @@ mod tests {
 
         // Should not fail due to tilde - might fail for other reasons
         if let Err(e) = &result {
-            assert!(!e.to_string().contains("~"));
+            assert!(!e.to_string().contains('~'));
         }
     }
 
@@ -362,7 +362,7 @@ mod tests {
 
         for pattern in patterns {
             let result = validator.validate_path(pattern);
-            assert!(result.is_err(), "Pattern '{}' should be rejected", pattern);
+            assert!(result.is_err(), "Pattern '{pattern}' should be rejected");
         }
     }
 }

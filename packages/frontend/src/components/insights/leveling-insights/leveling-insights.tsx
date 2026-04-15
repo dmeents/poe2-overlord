@@ -28,25 +28,29 @@ export function LevelingInsights({ events, currentLevel, liveStats }: LevelingIn
   const fastestLevel =
     eventsWithTime.length > 0
       ? eventsWithTime.reduce((min, e) =>
-          e.time_from_previous_level_seconds! < min.time_from_previous_level_seconds! ? e : min,
+          (e.time_from_previous_level_seconds ?? 0) < (min.time_from_previous_level_seconds ?? 0)
+            ? e
+            : min,
         )
       : null;
 
   const slowestLevel =
     eventsWithTime.length > 0
       ? eventsWithTime.reduce((max, e) =>
-          e.time_from_previous_level_seconds! > max.time_from_previous_level_seconds! ? e : max,
+          (e.time_from_previous_level_seconds ?? 0) > (max.time_from_previous_level_seconds ?? 0)
+            ? e
+            : max,
         )
       : null;
 
   const peakXpHr =
     eventsWithXp.length > 0
-      ? eventsWithXp.reduce((max, e) => (e.xp_per_hour! > max.xp_per_hour! ? e : max))
+      ? eventsWithXp.reduce((max, e) => ((e.xp_per_hour ?? 0) > (max.xp_per_hour ?? 0) ? e : max))
       : null;
 
   const avgXpHr =
     eventsWithXp.length > 0
-      ? eventsWithXp.reduce((sum, e) => sum + e.xp_per_hour!, 0) / eventsWithXp.length
+      ? eventsWithXp.reduce((sum, e) => sum + (e.xp_per_hour ?? 0), 0) / eventsWithXp.length
       : null;
 
   const totalActiveSeconds = events.reduce(
@@ -84,7 +88,7 @@ export function LevelingInsights({ events, currentLevel, liveStats }: LevelingIn
       {peakXpHr && (
         <DataItem
           label="Peak XP / hr"
-          value={formatXpRate(peakXpHr.xp_per_hour!)}
+          value={formatXpRate(peakXpHr.xp_per_hour ?? 0)}
           subValue={`at level ${peakXpHr.level}`}
         />
       )}
@@ -95,14 +99,14 @@ export function LevelingInsights({ events, currentLevel, liveStats }: LevelingIn
         <DataItem
           label="Fastest Level"
           value={`Lv ${fastestLevel.level}`}
-          subValue={formatDurationMinutes(fastestLevel.time_from_previous_level_seconds!)}
+          subValue={formatDurationMinutes(fastestLevel.time_from_previous_level_seconds ?? 0)}
         />
       )}
       {slowestLevel && (
         <DataItem
           label="Slowest Level"
           value={`Lv ${slowestLevel.level}`}
-          subValue={formatDurationMinutes(slowestLevel.time_from_previous_level_seconds!)}
+          subValue={formatDurationMinutes(slowestLevel.time_from_previous_level_seconds ?? 0)}
         />
       )}
     </Card>

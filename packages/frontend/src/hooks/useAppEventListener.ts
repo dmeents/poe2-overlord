@@ -28,6 +28,7 @@ export function useAppEventListener(
         );
 
         if (cancelled) {
+          // biome-ignore lint/suspicious/useIterableCallbackReturn: unlisten fns return void, forEach is correct here
           results.forEach(fn => fn());
           return;
         }
@@ -54,6 +55,7 @@ export function useAppEventListener(
       setIsListening(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional dynamic deps pattern — callers control the dependency array
   }, deps);
 
   return { isListening };

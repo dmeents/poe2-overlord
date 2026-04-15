@@ -63,6 +63,7 @@ export function WalkthroughGuide({
       <div className="space-y-4">
         {guide.acts.map((act, actIndex) => (
           <WalkthroughActAccordion
+            // biome-ignore lint/suspicious/noArrayIndexKey: acts have no natural unique key
             key={`act-${actIndex}`}
             act={act}
             actIndex={actIndex}

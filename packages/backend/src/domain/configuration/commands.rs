@@ -45,7 +45,7 @@ pub async fn set_zone_refresh_interval(
     config_service: State<'_, Arc<dyn ConfigurationService + Send + Sync>>,
     interval: ZoneRefreshInterval,
 ) -> CommandResult<()> {
-    info!("Zone refresh interval set to: {}", interval);
+    info!("Zone refresh interval set to: {interval}");
     to_command_result(config_service.set_zone_refresh_interval(interval).await)
 }
 
@@ -56,7 +56,7 @@ pub async fn get_zone_refresh_interval_options(
     let options = ZoneRefreshInterval::all_options()
         .into_iter()
         .map(|interval| ZoneRefreshIntervalOption {
-            value: format!("{:?}", interval),
+            value: format!("{interval:?}"),
             label: interval.label().to_string(),
             seconds: interval.to_seconds(),
         })

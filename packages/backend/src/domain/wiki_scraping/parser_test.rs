@@ -41,12 +41,12 @@ mod tests {
 
     #[test]
     fn test_parse_zone_data_redirect() {
-        let html = r#"
+        let html = r"
             <html>
                 <head><title>Redirect - Test</title></head>
                 <body></body>
             </html>
-        "#;
+        ";
 
         let result = WikiParser::parse_zone_data("Test Zone", html, "https://wiki.test");
         assert!(result.is_err());
@@ -54,14 +54,14 @@ mod tests {
 
     #[test]
     fn test_parse_zone_data_no_infobox() {
-        let html = r#"
+        let html = r"
             <html>
                 <head><title>Test Zone</title></head>
                 <body>
                     <p>Some content without an infobox</p>
                 </body>
             </html>
-        "#;
+        ";
 
         let result = WikiParser::parse_zone_data("Test Zone", html, "https://wiki.test");
         assert!(result.is_ok());

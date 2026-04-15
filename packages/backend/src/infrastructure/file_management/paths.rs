@@ -37,26 +37,26 @@ impl AppPaths {
 
         match fs::metadata(path).await {
             Ok(metadata) if metadata.is_dir() => {
-                debug!("Directory already exists: {:?}", path);
+                debug!("Directory already exists: {path:?}");
                 Ok(())
             }
             Ok(_) => Err(AppError::file_system_error(
                 "ensure_dir",
-                &format!("Path exists but is not a directory: {:?}", path),
+                &format!("Path exists but is not a directory: {path:?}"),
             )),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
                 fs::create_dir_all(path).await.map_err(|e| {
                     AppError::file_system_error(
                         "ensure_dir",
-                        &format!("Failed to create directory {:?}: {}", path, e),
+                        &format!("Failed to create directory {path:?}: {e}"),
                     )
                 })?;
-                debug!("Created directory: {:?}", path);
+                debug!("Created directory: {path:?}");
                 Ok(())
             }
             Err(e) => Err(AppError::file_system_error(
                 "ensure_dir",
-                &format!("Failed to check directory {:?}: {}", path, e),
+                &format!("Failed to check directory {path:?}: {e}"),
             )),
         }
     }
@@ -77,7 +77,7 @@ mod tests {
         let path = "~/test/file.txt";
         let expanded = expand_tilde(path);
 
-        assert!(!expanded.to_string_lossy().starts_with("~"));
+        assert!(!expanded.to_string_lossy().starts_with('~'));
         assert!(expanded.to_string_lossy().ends_with("test/file.txt"));
     }
 

@@ -1,10 +1,11 @@
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
 import { EconomyRow } from '@/components/economy/economy-row/economy-row';
 import { EconomyTypeBar } from '@/components/economy/economy-type-bar/economy-type-bar';
 import { ExchangeRatesCard } from '@/components/economy/exchange-rates-card/exchange-rates-card';
-import { TopItemsCard } from '@/components/economy/top-items-card/top-items-card';
+import { StarredCurrenciesCard } from '@/components/economy/starred-currencies-card/starred-currencies-card';
 import { ListControlBar } from '@/components/forms/list-control-bar/list-control-bar';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { Card } from '@/components/ui/card/card';
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/economy')({
 function EconomyPage() {
   const {
     currencyData,
+    allCurrencies,
     isLoading,
     isError,
     error,
@@ -34,7 +36,13 @@ function EconomyPage() {
     league,
     isHardcore,
     isSoloSelfFound,
+    starredCurrencyIds,
+    toggleStar,
+    refreshAll,
+    isRefreshing,
   } = useEconomy();
+
+  const isAllTab = selectedEconomyType === 'All';
 
   // Check if error is due to no data available for this economy type
   const isNoDataError =
@@ -56,11 +64,16 @@ function EconomyPage() {
     if (isSoloSelfFound) {
       return `${league} - Trading not available in SSF`;
     }
-    if (!currencyData) {
-      return `${isHardcore ? 'HC ' : ''}${league}`;
-    }
 
     const leaguePrefix = `${isHardcore ? 'HC ' : ''}${league}`;
+
+    if (isAllTab) {
+      return leaguePrefix;
+    }
+
+    if (!currencyData) {
+      return leaguePrefix;
+    }
 
     if (currencyData.is_stale) {
       return `${leaguePrefix} • Last known data from ${formatTimeAgo(currencyData.fetched_at)}`;
@@ -68,6 +81,9 @@ function EconomyPage() {
 
     return `${leaguePrefix} • Updated ${formatTimeAgo(currencyData.fetched_at)}`;
   };
+
+  // Source of truth for the displayed currency list
+  const displayedCurrencies = isAllTab ? allCurrencies : (currencyData?.currencies ?? []);
 
   // Use currency list hook for sorting (only when we have data)
   const {
@@ -77,7 +93,7 @@ function EconomyPage() {
     result: sortedCurrencies,
     filteredCount,
     totalCount,
-  } = useListControls(currencyData?.currencies || [], currencyListConfig);
+  } = useListControls(displayedCurrencies, currencyListConfig);
 
   const typeOptions = ECONOMY_TYPES.map(type => ({
     value: type,
@@ -91,6 +107,8 @@ function EconomyPage() {
       />
     ),
   }));
+
+  const cardTitle = isAllTab ? 'All Currencies' : ECONOMY_TYPE_LABELS[selectedEconomyType];
 
   // Render list content based on state
   const renderListContent = () => {
@@ -128,7 +146,7 @@ function EconomyPage() {
       return <ErrorState title="Error loading economy data" error={error} />;
     }
 
-    if (!currencyData) {
+    if (!isAllTab && !currencyData) {
       return <div className="text-stone-400 text-center py-8">No economy data available</div>;
     }
 
@@ -144,11 +162,19 @@ function EconomyPage() {
             </div>
           ) : (
             <div>
-              {searchResults.map((result, index) => (
-                <div key={result.id} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
-                  <EconomyRow currency={searchResultToExchangeRate(result)} />
-                </div>
-              ))}
+              {searchResults.map((result, index) => {
+                const starKey = `${result.economy_type}:${result.id}`;
+                return (
+                  <div key={starKey} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
+                    <EconomyRow
+                      currency={searchResultToExchangeRate(result)}
+                      economyType={result.economy_type}
+                      isStarred={starredCurrencyIds.has(starKey)}
+                      onToggleStar={toggleStar}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -159,13 +185,30 @@ function EconomyPage() {
     return (
       <div>
         {sortedCurrencies.length === 0 ? (
-          <div className="text-center py-8 text-stone-400">No currency data available</div>
+          <div className="text-center py-8 text-stone-400">
+            {isAllTab
+              ? 'No economy data cached yet. Refresh to load all currency types.'
+              : 'No currency data available'}
+          </div>
         ) : (
-          sortedCurrencies.map((currency, index) => (
-            <div key={currency.id} className={index === 0 ? 'border-t border-stone-700/50' : ''}>
-              <EconomyRow currency={currency} />
-            </div>
-          ))
+          sortedCurrencies.map((currency, index) => {
+            const rowEconomyType =
+              currency.economy_type ??
+              (selectedEconomyType !== 'All' ? selectedEconomyType : undefined);
+            const starKey = rowEconomyType ? `${rowEconomyType}:${currency.id}` : null;
+            return (
+              <div
+                key={`${rowEconomyType ?? ''}:${currency.id}`}
+                className={index === 0 ? 'border-t border-stone-700/50' : ''}>
+                <EconomyRow
+                  currency={currency}
+                  economyType={rowEconomyType}
+                  isStarred={starKey ? starredCurrencyIds.has(starKey) : false}
+                  onToggleStar={toggleStar}
+                />
+              </div>
+            );
+          })
         )}
       </div>
     );
@@ -175,8 +218,13 @@ function EconomyPage() {
     <>
       <CharacterStatusCard />
       <Card
-        title={ECONOMY_TYPE_LABELS[selectedEconomyType]}
+        title={cardTitle}
         subtitle={getSubtitle()}
+        rightAction={{
+          label: <ArrowPathIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />,
+          onClick: refreshAll,
+          title: 'Refresh all economy data',
+        }}
         className="mt-6">
         {/* Type selector bar */}
         <EconomyTypeBar
@@ -221,7 +269,7 @@ function EconomyPage() {
   const rightColumn = (
     <>
       <ExchangeRatesCard />
-      <TopItemsCard />
+      <StarredCurrenciesCard />
       <div className="text-xs text-stone-500 text-center">
         Economy data provided by{' '}
         <a

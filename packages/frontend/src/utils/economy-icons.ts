@@ -5,6 +5,7 @@ import type { EconomyType } from '@/types/economy';
  * TODO: Replace placeholder URLs with actual icon URLs
  */
 export const ECONOMY_TYPE_ICONS: Record<EconomyType, string> = {
+  All: 'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png',
   Currency:
     'https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MSwicmVhbG0iOiJwb2UyIn1d/2986e220b3/CurrencyModValues.png',
   Fragments:
@@ -37,6 +38,7 @@ export const ECONOMY_TYPE_ICONS: Record<EconomyType, string> = {
  * Display names for economy types (formatted for UI)
  */
 export const ECONOMY_TYPE_LABELS: Record<EconomyType, string> = {
+  All: 'All',
   Currency: 'Currency',
   Fragments: 'Fragments',
   Abyss: 'Abyss',
@@ -56,6 +58,7 @@ export const ECONOMY_TYPE_LABELS: Record<EconomyType, string> = {
  * All available economy types in display order
  */
 export const ECONOMY_TYPES: EconomyType[] = [
+  'All',
   'Currency',
   'Fragments',
   'Abyss',

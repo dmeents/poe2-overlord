@@ -11,10 +11,10 @@ use sqlx::SqlitePool;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Configuration repository implementation using SQLite.
+/// Configuration repository implementation using `SQLite`.
 ///
 /// Stores configuration in a single-row `app_config` table. Unlike the JSON-based
-/// implementation, this eliminates the debounce mechanism since SQLite writes are
+/// implementation, this eliminates the debounce mechanism since `SQLite` writes are
 /// fast enough (< 1ms for single-row updates).
 ///
 /// The in-memory cache is kept for fast reads without database queries.
@@ -57,15 +57,15 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
               hide_objective_descriptions, ui_zoom_level)
              VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
-        .bind(config.config_version as i64)
+        .bind(i64::from(config.config_version))
         .bind(&config.poe_client_log_path)
         .bind(&config.log_level)
         .bind(&zone_refresh_interval)
         .bind(&updated_at)
-        .bind(if config.hide_optional_objectives { 1i64 } else { 0i64 })
-        .bind(if config.hide_league_start_objectives { 1i64 } else { 0i64 })
-        .bind(if config.hide_flavor_text { 1i64 } else { 0i64 })
-        .bind(if config.hide_objective_descriptions { 1i64 } else { 0i64 })
+        .bind(i64::from(config.hide_optional_objectives))
+        .bind(i64::from(config.hide_league_start_objectives))
+        .bind(i64::from(config.hide_flavor_text))
+        .bind(i64::from(config.hide_objective_descriptions))
         .bind(config.ui_zoom_level)
         .execute(&self.pool)
         .await?;
@@ -110,8 +110,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 "SevenDays" => ZoneRefreshInterval::SevenDays,
                 _ => {
                     log::warn!(
-                        "Unknown zone_refresh_interval value: {}, defaulting to SevenDays",
-                        zone_refresh_interval_str
+                        "Unknown zone_refresh_interval value: {zone_refresh_interval_str}, defaulting to SevenDays"
                     );
                     ZoneRefreshInterval::SevenDays
                 }
@@ -162,7 +161,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         match validator.validate_path(&config.poe_client_log_path) {
             Ok(_) => {}
             Err(e) => {
-                errors.push(format!("Invalid POE client log path: {}", e));
+                errors.push(format!("Invalid POE client log path: {e}"));
             }
         }
 

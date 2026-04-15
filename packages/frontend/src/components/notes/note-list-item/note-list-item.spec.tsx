@@ -28,7 +28,7 @@ const mockCharacter: CharacterSummaryData = {
   created_at: '2024-01-01T00:00:00Z',
   last_updated: '2024-01-10T00:00:00Z',
   last_played: '2024-01-10T00:00:00Z',
-  current_location: null,
+  current_location: undefined,
   summary: {
     character_id: 'char-1',
     total_play_time: 3600,
@@ -98,9 +98,7 @@ describe('NoteListItem', () => {
 
   it('shows the character badge when a character is associated', () => {
     const noteWithChar = { ...mockNote, character_id: 'char-1' };
-    render(
-      <NoteListItem {...defaultProps} note={noteWithChar} characters={[mockCharacter]} />,
-    );
+    render(<NoteListItem {...defaultProps} note={noteWithChar} characters={[mockCharacter]} />);
 
     expect(screen.getByText('Blademaster')).toBeInTheDocument();
   });

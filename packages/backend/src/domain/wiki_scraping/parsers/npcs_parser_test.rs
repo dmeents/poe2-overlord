@@ -6,7 +6,7 @@ mod tests {
     #[test]
     fn test_parse_npcs() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>NPCs</h2>
@@ -17,7 +17,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let npcs = NpcsParser::parse(&html);
@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn test_parse_npc_with_dash() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>NPCs</h2>
@@ -39,7 +39,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let npcs = NpcsParser::parse(&html);
@@ -50,7 +50,7 @@ mod tests {
     #[test]
     fn test_parse_npc_with_parenthesis() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>NPCs</h2>
@@ -59,7 +59,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let npcs = NpcsParser::parse(&html);
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn test_parse_no_npcs() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Monsters</h2>
@@ -79,7 +79,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let npcs = NpcsParser::parse(&html);
@@ -89,14 +89,14 @@ mod tests {
     #[test]
     fn test_parse_no_npcs_section() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Other Section</h2>
                     <p>Some content</p>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let npcs = NpcsParser::parse(&html);

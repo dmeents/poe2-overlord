@@ -18,10 +18,10 @@ pub use domain::configuration::commands::*; // Configuration management
 pub use domain::economy::commands::*; // Economy and currency exchange data
 pub use domain::game_monitoring::commands::*; // Game process monitoring
 pub use domain::leveling::commands::*; // Leveling stats and XP tracking
+pub use domain::notes::commands::*;
 pub use domain::server_monitoring::commands::*; // Server status monitoring
 pub use domain::walkthrough::commands::*; // Walkthrough guide and progress tracking
-pub use domain::zone_configuration::commands::*; // Zone metadata lookup
-pub use domain::notes::commands::*; // Notes CRUD and pin management
+pub use domain::zone_configuration::commands::*; // Zone metadata lookup // Notes CRUD and pin management
 
 // Core error handling
 pub use errors::*;
@@ -92,7 +92,7 @@ pub use infrastructure::time::{
 /// This function sets up the Tauri application with:
 /// - Required plugins for shell and process management
 /// - All command handlers exposed to the frontend
-/// - Application initialization via setup_app
+/// - Application initialization via `setup_app`
 /// - Error handling for application startup failures
 pub fn run() {
     tauri::Builder::default()
@@ -125,8 +125,11 @@ pub fn run() {
 
             // Economy commands
             get_currency_exchange_data,
-            get_aggregated_top_currencies,
+            refresh_all_economy_data,
+            get_all_currencies,
             search_currencies,
+            toggle_currency_star,
+            get_starred_currencies,
 
             // Game process monitoring commands
             get_game_process_status,

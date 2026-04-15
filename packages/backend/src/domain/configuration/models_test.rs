@@ -158,8 +158,7 @@ mod tests {
             let config = AppConfig::with_values("/path".to_string(), level.to_string());
             assert!(
                 config.validate_basic().is_ok(),
-                "Expected log level '{}' to be valid",
-                level
+                "Expected log level '{level}' to be valid"
             );
         }
     }
@@ -185,7 +184,7 @@ mod tests {
 
     #[test]
     fn test_app_config_validate_empty_path() {
-        let config = AppConfig::with_values("".to_string(), "info".to_string());
+        let config = AppConfig::with_values(String::new(), "info".to_string());
         let result = config.validate();
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("cannot be empty"));
@@ -306,8 +305,7 @@ mod tests {
         let err = result.unwrap_err();
         assert!(
             err.contains("traversal") || err.contains("Security"),
-            "Error should mention traversal or security: {}",
-            err
+            "Error should mention traversal or security: {err}"
         );
     }
 

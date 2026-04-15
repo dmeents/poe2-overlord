@@ -27,17 +27,16 @@ impl EventBus {
             Ok(receiver_count) => {
                 if receiver_count > 0 {
                     debug!(
-                        "Published event of type {:?} to {} subscribers",
-                        event_type, receiver_count
+                        "Published event of type {event_type:?} to {receiver_count} subscribers"
                     );
                 } else {
-                    debug!("Published event of type {:?} (no subscribers)", event_type);
+                    debug!("Published event of type {event_type:?} (no subscribers)");
                 }
                 Ok(())
             }
             Err(broadcast::error::SendError(_event)) => {
                 // No receivers is normal (e.g., during startup) - not an error
-                debug!("Published event of type {:?} (no receivers)", event_type);
+                debug!("Published event of type {event_type:?} (no receivers)");
                 Ok(())
             }
         }

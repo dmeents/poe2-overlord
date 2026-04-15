@@ -8,6 +8,7 @@ import '../globals.css';
 
 function ScrollToTop({ containerRef }: { containerRef: React.RefObject<HTMLElement | null> }) {
   const { pathname } = useLocation();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: containerRef.current is intentionally accessed inside the effect; containerRef itself is stable
   useEffect(() => {
     containerRef.current?.scrollTo(0, 0);
   }, [pathname, containerRef]);
@@ -20,7 +21,9 @@ function RootComponent() {
     <div className="app-background">
       <WindowTitle />
       <SidebarNavigation />
-      <main ref={mainRef} className="relative h-[calc(100vh-52px)] mt-[28px] ml-12 overflow-auto font-sans">
+      <main
+        ref={mainRef}
+        className="relative h-[calc(100vh-52px)] mt-[28px] ml-12 overflow-auto font-sans">
         <ScrollToTop containerRef={mainRef} />
         <div className="mb-16">
           <Outlet />

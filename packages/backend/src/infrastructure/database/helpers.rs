@@ -2,7 +2,7 @@ use crate::errors::AppResult;
 use chrono::Utc;
 use sqlx::{Executor, Sqlite, SqlitePool};
 
-/// Look up a zone in zone_metadata by name, returning its integer ID.
+/// Look up a zone in `zone_metadata` by name, returning its integer ID.
 ///
 /// Returns an error if the zone doesn't exist. Use `get_or_create_zone_id_tx`
 /// or `get_or_create_zone_id_pool` when you need to auto-create stub zones.
@@ -17,11 +17,11 @@ where
             .await?;
 
     existing.ok_or_else(|| crate::errors::AppError::Validation {
-        message: format!("Zone '{}' not found in metadata", zone_name),
+        message: format!("Zone '{zone_name}' not found in metadata"),
     })
 }
 
-/// Get or create a zone in zone_metadata by name within a transaction.
+/// Get or create a zone in `zone_metadata` by name within a transaction.
 ///
 /// This version works with transactions and will create stub zones if they don't exist.
 pub async fn get_or_create_zone_id_tx<'a>(
@@ -54,7 +54,7 @@ pub async fn get_or_create_zone_id_tx<'a>(
     Ok(result.last_insert_rowid())
 }
 
-/// Get or create a zone in zone_metadata by name using a pool.
+/// Get or create a zone in `zone_metadata` by name using a pool.
 ///
 /// This version works with pools and will create stub zones if they don't exist.
 pub async fn get_or_create_zone_id_pool(pool: &SqlitePool, zone_name: &str) -> AppResult<i64> {

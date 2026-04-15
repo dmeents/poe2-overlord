@@ -118,7 +118,7 @@ impl LogAnalysisServiceImpl {
         let log_path = config.log_file_path.clone();
         drop(config);
 
-        info!("LOG ANALYSIS: Log path from config: '{}'", log_path);
+        info!("LOG ANALYSIS: Log path from config: '{log_path}'");
 
         if log_path.is_empty() {
             error!("LOG ANALYSIS: Log file path is empty!");
@@ -130,13 +130,13 @@ impl LogAnalysisServiceImpl {
 
         info!("LOG ANALYSIS: Checking if log file exists...");
         let file_exists = self.log_file_repository.file_exists(&log_path).await;
-        info!("LOG ANALYSIS: File exists check result: {}", file_exists);
+        info!("LOG ANALYSIS: File exists check result: {file_exists}");
 
         if !file_exists {
-            warn!("Log file does not exist at path: {}", log_path);
+            warn!("Log file does not exist at path: {log_path}");
             return Err(AppError::file_system_error(
                 "start_monitoring_loop",
-                &format!("Log file does not exist: {}", log_path),
+                &format!("Log file does not exist: {log_path}"),
             ));
         }
 
@@ -146,11 +146,8 @@ impl LogAnalysisServiceImpl {
             *last_pos = file_size;
         }
 
-        info!("Starting log file monitoring for: {}", log_path);
-        info!(
-            "LOG ANALYSIS: Monitoring initialized - starting from position: {}",
-            file_size
-        );
+        info!("Starting log file monitoring for: {log_path}");
+        info!("LOG ANALYSIS: Monitoring initialized - starting from position: {file_size}");
 
         let monitoring_task = self.create_monitoring_task();
         monitoring_task.await?;
@@ -198,8 +195,7 @@ impl LogAnalysisServiceImpl {
                         let last_pos = *last_position.read().await;
                         if current_size > last_pos {
                             info!(
-                                "LOG ANALYSIS: New content detected - file grew from {} to {} bytes",
-                                last_pos, current_size
+                                "LOG ANALYSIS: New content detected - file grew from {last_pos} to {current_size} bytes"
                             );
                             if let Err(e) = Self::process_new_lines(
                                 &log_path,
@@ -222,7 +218,7 @@ impl LogAnalysisServiceImpl {
                             )
                             .await
                             {
-                                error!("Failed to process new log lines: {}", e);
+                                error!("Failed to process new log lines: {e}");
                             }
                         } else if current_size < last_pos {
                             warn!("Log file was truncated, resetting position");
@@ -231,7 +227,7 @@ impl LogAnalysisServiceImpl {
                         }
                     }
                     Err(e) => {
-                        error!("Failed to get log file size: {}", e);
+                        error!("Failed to get log file size: {e}");
                     }
                 }
             }
@@ -291,19 +287,15 @@ impl LogAnalysisServiceImpl {
 
                     if gap_minutes > session_gap_threshold {
                         info!(
-                            "Session gap detected: {} minutes since last log entry. Finalizing stale zones...",
-                            gap_minutes
+                            "Session gap detected: {gap_minutes} minutes since last log entry. Finalizing stale zones..."
                         );
 
                         if let Err(e) = leveling_service.finalize_active_zone_times().await {
-                            error!(
-                                "Failed to finalize active zone times after session gap: {}",
-                                e
-                            );
+                            error!("Failed to finalize active zone times after session gap: {e}");
                         }
 
                         if let Err(e) = character_service.finalize_all_active_zones().await {
-                            error!("Failed to finalize stale zones after session gap: {}", e);
+                            error!("Failed to finalize stale zones after session gap: {e}");
                         } else {
                             info!("Successfully finalized stale zones after session gap");
                         }
@@ -333,7 +325,7 @@ impl LogAnalysisServiceImpl {
             )
             .await
             {
-                error!("Failed to process log line: {}", e);
+                error!("Failed to process log line: {e}");
             }
         }
 
@@ -356,13 +348,13 @@ impl LogAnalysisServiceImpl {
         {
             let mut set = in_flight.write().await;
             if set.contains(zone_name) {
-                debug!("Wiki fetch already in-flight for zone '{}', skipping", zone_name);
+                debug!("Wiki fetch already in-flight for zone '{zone_name}', skipping");
                 return;
             }
             set.insert(zone_name.to_string());
         }
 
-        info!("Triggering wiki fetch for zone: {}", zone_name);
+        info!("Triggering wiki fetch for zone: {zone_name}");
         let wiki_service = wiki_service.clone();
         let zone_config = zone_config.clone();
         let character_service = character_service.clone();
@@ -370,7 +362,7 @@ impl LogAnalysisServiceImpl {
         let in_flight = Arc::clone(in_flight);
 
         tokio::spawn(async move {
-            info!("Starting wiki fetch for zone: {}", zone_name);
+            info!("Starting wiki fetch for zone: {zone_name}");
             match wiki_service.fetch_zone_data(&zone_name).await {
                 Ok(wiki_data) => {
                     info!(
@@ -380,15 +372,12 @@ impl LogAnalysisServiceImpl {
 
                     info!("Reloading zone configuration before lookup...");
                     if let Err(e) = zone_config.reload_configuration().await {
-                        error!("Failed to reload zone configuration: {}", e);
+                        error!("Failed to reload zone configuration: {e}");
                     }
 
-                    info!("Looking up zone '{}' in configuration...", zone_name);
+                    info!("Looking up zone '{zone_name}' in configuration...");
                     if let Some(zone_metadata) = zone_config.get_zone_metadata(&zone_name).await {
-                        info!(
-                            "Found zone '{}' in configuration, updating with wiki data",
-                            zone_name
-                        );
+                        info!("Found zone '{zone_name}' in configuration, updating with wiki data");
                         info!(
                             "BEFORE UPDATE: act={}, is_town={}",
                             zone_metadata.act, zone_metadata.is_town
@@ -399,14 +388,13 @@ impl LogAnalysisServiceImpl {
 
                         info!(
                             "AFTER UPDATE: act={}, is_town={}",
-                            updated_metadata.act,
-                            updated_metadata.is_town
+                            updated_metadata.act, updated_metadata.is_town
                         );
 
                         if let Err(e) = zone_config.update_zone(updated_metadata).await {
-                            error!("Failed to update zone metadata: {}", e);
+                            error!("Failed to update zone metadata: {e}");
                         } else {
-                            info!("Successfully updated zone metadata for '{}'", zone_name);
+                            info!("Successfully updated zone metadata for '{zone_name}'");
 
                             // Sync zone metadata for all characters that have visited this zone
                             match character_service.get_all_characters_summary().await {
@@ -437,19 +425,16 @@ impl LogAnalysisServiceImpl {
                                     }
                                 }
                                 Err(e) => {
-                                    error!("Failed to get all characters for zone sync: {}", e);
+                                    error!("Failed to get all characters for zone sync: {e}");
                                 }
                             }
                         }
                     } else {
-                        warn!(
-                            "Zone '{}' not found in configuration after reload",
-                            zone_name
-                        );
+                        warn!("Zone '{zone_name}' not found in configuration after reload");
                     }
                 }
                 Err(e) => {
-                    error!("Failed to fetch wiki data for zone '{}': {}", zone_name, e);
+                    error!("Failed to fetch wiki data for zone '{zone_name}': {e}");
                 }
             }
             in_flight.write().await.remove(&zone_name);
@@ -482,7 +467,7 @@ impl LogAnalysisServiceImpl {
 
         let date_str = parts[0]; // "2025/12/24"
         let time_str = parts[1]; // "04:58:45"
-        let datetime_str = format!("{} {}", date_str, time_str);
+        let datetime_str = format!("{date_str} {time_str}");
 
         // Parse as naive datetime then convert to UTC
         match chrono::NaiveDateTime::parse_from_str(&datetime_str, "%Y/%m/%d %H:%M:%S") {
@@ -512,10 +497,7 @@ impl LogAnalysisServiceImpl {
         }
 
         if Self::is_act_name(zone_name) {
-            debug!(
-                "SCENE FILTER: Filtering out act name '{}' - not tracking as zone",
-                zone_name
-            );
+            debug!("SCENE FILTER: Filtering out act name '{zone_name}' - not tracking as zone");
             return Ok(None);
         }
 
@@ -535,10 +517,17 @@ impl LogAnalysisServiceImpl {
             };
 
             if let Err(e) = zone_config.add_zone(placeholder.clone()).await {
-                debug!("Failed to add placeholder zone '{}': {}", zone_name, e);
+                debug!("Failed to add placeholder zone '{zone_name}': {e}");
             }
 
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service, in_flight_wiki_fetches).await;
+            Self::trigger_wiki_fetch(
+                zone_name,
+                wiki_service,
+                zone_config,
+                character_service,
+                in_flight_wiki_fetches,
+            )
+            .await;
 
             placeholder
         };
@@ -550,13 +539,20 @@ impl LogAnalysisServiceImpl {
             .to_seconds();
 
         if zone_metadata.needs_refresh(refresh_interval) {
-            Self::trigger_wiki_fetch(zone_name, wiki_service, zone_config, character_service, in_flight_wiki_fetches).await;
+            Self::trigger_wiki_fetch(
+                zone_name,
+                wiki_service,
+                zone_config,
+                character_service,
+                in_flight_wiki_fetches,
+            )
+            .await;
         }
 
         // Atomically transition zone: deactivates old zone timer, activates new zone,
         // updates last_played, and publishes CharacterUpdated event — all in one call.
         if let Err(e) = character_service.enter_zone(character_id, zone_name).await {
-            error!("Failed to enter zone '{}': {}", zone_name, e);
+            error!("Failed to enter zone '{zone_name}': {e}");
             return Err(e);
         }
 
@@ -570,13 +566,11 @@ impl LogAnalysisServiceImpl {
         let zone_metadata = zone_config.get_zone_metadata(zone_name).await;
         let act_info = zone_metadata
             .as_ref()
-            .map(|z| z.act.to_string())
-            .unwrap_or_else(|| "Unknown".to_string());
-        let is_town_info = zone_metadata.map(|z| z.is_town).unwrap_or(false);
+            .map_or_else(|| "Unknown".to_string(), |z| z.act.to_string());
+        let is_town_info = zone_metadata.is_some_and(|z| z.is_town);
 
         info!(
-            "Scene change: character {} entered '{}' (Act: {}, Town: {})",
-            character_id, zone_name, act_info, is_town_info
+            "Scene change: character {character_id} entered '{zone_name}' (Act: {act_info}, Town: {is_town_info})"
         );
 
         Ok(Some(scene_change_event))
@@ -608,7 +602,7 @@ impl LogAnalysisServiceImpl {
         .await;
 
         if let Err(e) = result {
-            error!("SCENE CHANGE: Failed to process scene change: {}", e);
+            error!("SCENE CHANGE: Failed to process scene change: {e}");
             return;
         }
 
@@ -616,10 +610,7 @@ impl LogAnalysisServiceImpl {
             .handle_scene_change(character_id, content)
             .await
         {
-            error!(
-                "WALKTHROUGH: Failed to handle walkthrough scene change: {}",
-                e
-            );
+            error!("WALKTHROUGH: Failed to handle walkthrough scene change: {e}");
         }
     }
 
@@ -633,7 +624,7 @@ impl LogAnalysisServiceImpl {
             Ok(character_data) => {
                 if let Some(current_location) = &character_data.current_location {
                     if let Err(e) = character_service.record_death(character_id).await {
-                        error!("DEATH PROCESSING: Failed to record death in zone: {}", e);
+                        error!("DEATH PROCESSING: Failed to record death in zone: {e}");
                     } else {
                         info!(
                             "Character death: {} in zone '{}'",
@@ -644,14 +635,13 @@ impl LogAnalysisServiceImpl {
             }
             Err(e) => {
                 error!(
-                    "DEATH PROCESSING: Failed to load character data for death recording: '{}' - {}",
-                    character_name, e
+                    "DEATH PROCESSING: Failed to load character data for death recording: '{character_name}' - {e}"
                 );
             }
         }
 
         if let Err(e) = leveling_service.record_death(character_id).await {
-            error!("LEVELING: Failed to record death for leveling stats: {}", e);
+            error!("LEVELING: Failed to record death for leveling stats: {e}");
         }
     }
 
@@ -671,38 +661,29 @@ impl LogAnalysisServiceImpl {
         in_flight_wiki_fetches: &Arc<RwLock<HashSet<String>>>,
     ) -> AppResult<()> {
         if line.contains("[SCENE]") {
-            info!("LOG ANALYSIS: Processing line with [SCENE]: {}", line);
+            info!("LOG ANALYSIS: Processing line with [SCENE]: {line}");
         }
 
         if line.contains("[INFO") && line.contains("[SCENE]") {
-            info!("LOG ANALYSIS: Found [INFO] + [SCENE] line: {}", line);
+            info!("LOG ANALYSIS: Found [INFO] + [SCENE] line: {line}");
         }
 
         let parse_result = parser_manager.parse_line(line);
         if let Err(e) = &parse_result {
             if line.contains("[SCENE]") {
-                warn!(
-                    "LOG ANALYSIS: Failed to parse SCENE line: {} - Error: {:?}",
-                    line, e
-                );
+                warn!("LOG ANALYSIS: Failed to parse SCENE line: {line} - Error: {e:?}");
             }
         }
 
         if let Ok(Some(result)) = parse_result {
             match result {
                 crate::infrastructure::parsing::ParserResult::SceneChange(content) => {
-                    info!(
-                        "LOG ANALYSIS: Scene change detected - content: '{}'",
-                        content
-                    );
+                    info!("LOG ANALYSIS: Scene change detected - content: '{content}'");
 
                     let active_character_result = character_service.get_active_character().await;
 
                     if let Err(e) = &active_character_result {
-                        warn!(
-                            "LOG ANALYSIS: Failed to get active character for scene change: {}",
-                            e
-                        );
+                        warn!("LOG ANALYSIS: Failed to get active character for scene change: {e}");
                     }
 
                     if let Ok(Some(active_character)) = active_character_result {
@@ -716,10 +697,7 @@ impl LogAnalysisServiceImpl {
                             .record_active_zone_exit(&active_character.id)
                             .await
                         {
-                            error!(
-                                "LEVELING: Failed to record active zone exit time: {}",
-                                e
-                            );
+                            error!("LEVELING: Failed to record active zone exit time: {e}");
                         }
 
                         let cached_level = {
@@ -751,7 +729,6 @@ impl LogAnalysisServiceImpl {
                             in_flight_wiki_fetches,
                         )
                         .await;
-
                     } else {
                         warn!("LOG ANALYSIS: No active character found for scene change");
                     }
@@ -776,14 +753,14 @@ impl LogAnalysisServiceImpl {
                                 .record_level_up(&active_character.id, old_level, new_level)
                                 .await
                             {
-                                error!("LEVELING: Failed to record level-up event: {}", e);
+                                error!("LEVELING: Failed to record level-up event: {e}");
                             }
 
                             character_service
                                 .update_character_level(&active_character.id, new_level)
                                 .await?;
 
-                            info!("Character level up: {} -> {}", character_name, new_level);
+                            info!("Character level up: {character_name} -> {new_level}");
                         }
                     }
                 }
@@ -824,7 +801,7 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         let log_path = config.log_file_path.clone();
         drop(config);
 
-        info!("LOG ANALYSIS: Configured log path: '{}'", log_path);
+        info!("LOG ANALYSIS: Configured log path: '{log_path}'");
 
         let mut is_running = self.is_running.write().await;
         if *is_running {
@@ -839,7 +816,7 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         let result = self.start_monitoring_loop().await;
 
         if let Err(e) = &result {
-            error!("LOG ANALYSIS: start_monitoring_loop() failed: {}", e);
+            error!("LOG ANALYSIS: start_monitoring_loop() failed: {e}");
         } else {
             info!("LOG ANALYSIS: start_monitoring_loop() completed successfully");
         }
@@ -862,7 +839,7 @@ impl LogAnalysisService for LogAnalysisServiceImpl {
         let mut handle_guard = self.monitoring_task_handle.write().await;
         if let Some(handle) = handle_guard.take() {
             if let Err(e) = handle.await {
-                error!("Error waiting for log monitoring task to complete: {}", e);
+                error!("Error waiting for log monitoring task to complete: {e}");
             } else {
                 info!("Log monitoring task completed successfully");
             }

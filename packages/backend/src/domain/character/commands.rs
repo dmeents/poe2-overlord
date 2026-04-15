@@ -18,11 +18,7 @@ pub async fn create_character(
     character_service: State<'_, Arc<dyn CharacterService + Send + Sync>>,
 ) -> CommandResult<CharacterDataResponse> {
     log::info!(
-        "create_character command called: name={}, class={:?}, ascendency={:?}, league={:?}",
-        name,
-        class,
-        ascendency,
-        league
+        "create_character command called: name={name}, class={class:?}, ascendency={ascendency:?}, league={league:?}"
     );
     let result = character_service
         .create_character(
@@ -36,7 +32,7 @@ pub async fn create_character(
         .await;
     match &result {
         Ok(char) => log::info!("create_character success: id={}", char.id),
-        Err(e) => log::error!("create_character error: {:?}", e),
+        Err(e) => log::error!("create_character error: {e:?}"),
     }
     to_command_result(result)
 }
@@ -57,7 +53,7 @@ pub async fn get_all_characters(
     let result = character_service.get_all_characters().await;
     match &result {
         Ok(chars) => log::info!("get_all_characters returning {} characters", chars.len()),
-        Err(e) => log::error!("get_all_characters error: {:?}", e),
+        Err(e) => log::error!("get_all_characters error: {e:?}"),
     }
     to_command_result(result)
 }

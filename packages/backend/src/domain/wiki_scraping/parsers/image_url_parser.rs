@@ -91,8 +91,7 @@ impl ImageUrlParser {
                                 Self::extract_thumbnail_extension(thumbnail_name)
                             {
                                 return format!(
-                                    "{}/thumb/{}/{}px-{}",
-                                    before_thumb, file_path, width, extension_part
+                                    "{before_thumb}/thumb/{file_path}/{width}px-{extension_part}"
                                 );
                             }
                         }
@@ -115,7 +114,7 @@ impl ImageUrlParser {
                     || original_path.ends_with(".png")
                     || original_path.ends_with(".gif")
                 {
-                    return format!("{}/{}", base, original_path);
+                    return format!("{base}/{original_path}");
                 }
             }
         }

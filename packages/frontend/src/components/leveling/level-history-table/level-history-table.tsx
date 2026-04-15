@@ -106,7 +106,7 @@ export const LevelHistoryTable = memo(function LevelHistoryTable({
                   <td className={styles.td}>{formatTimestamp(event.reached_at)}</td>
                   <td className={styles.tdRight}>
                     {timeAtLevel.get(event.level) != null
-                      ? formatDuration(timeAtLevel.get(event.level)!)
+                      ? formatDuration(timeAtLevel.get(event.level) ?? 0)
                       : '—'}
                   </td>
                   <td className={styles.tdRight}>

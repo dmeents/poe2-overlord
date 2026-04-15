@@ -16,7 +16,7 @@ impl WikiRepository {
             .redirect(reqwest::redirect::Policy::limited(5))
             .build()
             .map_err(|e| {
-                error!("Failed to create HTTP client: {}", e);
+                error!("Failed to create HTTP client: {e}");
                 AppError::network_error("create_http_client", &e.to_string())
             })?;
 
@@ -27,7 +27,7 @@ impl WikiRepository {
         let url = url_utils::get_wiki_url(zone_name);
 
         let response = self.client.get(&url).send().await.map_err(|e| {
-            error!("Failed to fetch wiki page for zone '{}': {}", zone_name, e);
+            error!("Failed to fetch wiki page for zone '{zone_name}': {e}");
             AppError::network_error("fetch_wiki_page", &e.to_string())
         })?;
 
@@ -39,10 +39,7 @@ impl WikiRepository {
         }
 
         let content = response.text().await.map_err(|e| {
-            error!(
-                "Failed to read response body for zone '{}': {}",
-                zone_name, e
-            );
+            error!("Failed to read response body for zone '{zone_name}': {e}");
             AppError::network_error("read_response_body", &e.to_string())
         })?;
 

@@ -34,12 +34,12 @@ mod tests {
     #[test]
     fn test_is_redirect_page_via_title() {
         let redirect_html = Html::parse_document(
-            r#"<html><head><title>Redirect - Page</title></head><body></body></html>"#,
+            r"<html><head><title>Redirect - Page</title></head><body></body></html>",
         );
         assert!(InfoboxParser::is_redirect_page(&redirect_html));
 
         let normal_html = Html::parse_document(
-            r#"<html><head><title>Normal Page</title></head><body></body></html>"#,
+            r"<html><head><title>Normal Page</title></head><body></body></html>",
         );
         assert!(!InfoboxParser::is_redirect_page(&normal_html));
     }
@@ -149,9 +149,7 @@ mod tests {
 
     #[test]
     fn test_extract_no_info_card() {
-        let html = Html::parse_document(
-            r#"<html><body><p>No info card here</p></body></html>"#,
-        );
+        let html = Html::parse_document(r"<html><body><p>No info card here</p></body></html>");
         let result = InfoboxParser::extract(&html);
         assert!(result.is_none());
     }

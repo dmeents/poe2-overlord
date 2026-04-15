@@ -273,7 +273,7 @@ mod tests {
         let error = LogAnalysisError::FileNotFound {
             path: "/nonexistent/path".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("File not found"));
         assert!(message.contains("/nonexistent/path"));
     }
@@ -283,7 +283,7 @@ mod tests {
         let error = LogAnalysisError::FileAccessError {
             message: "Permission denied".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("Permission denied"));
     }
 
@@ -292,7 +292,7 @@ mod tests {
         let error = LogAnalysisError::ParsingError {
             message: "Invalid format".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("Parsing error"));
         assert!(message.contains("Invalid format"));
     }
@@ -302,7 +302,7 @@ mod tests {
         let error = LogAnalysisError::ConfigurationError {
             message: "Invalid config".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("Configuration error"));
     }
 
@@ -311,7 +311,7 @@ mod tests {
         let error = LogAnalysisError::MonitoringError {
             message: "Watcher failed".to_string(),
         };
-        let message = format!("{}", error);
+        let message = format!("{error}");
         assert!(message.contains("Monitoring error"));
     }
 }

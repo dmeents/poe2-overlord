@@ -6,7 +6,7 @@ mod tests {
     #[test]
     fn test_parse_points_of_interest() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Points of Interest</h2>
@@ -17,7 +17,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let pois = PointsOfInterestParser::parse(&html);
@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn test_parse_real_example() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Points of Interest</h2>
@@ -40,7 +40,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let pois = PointsOfInterestParser::parse(&html);
@@ -52,14 +52,14 @@ mod tests {
     #[test]
     fn test_parse_no_points_of_interest() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Other Section</h2>
                     <p>Some text</p>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let pois = PointsOfInterestParser::parse(&html);
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn test_parse_poi_without_colon() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Points of Interest</h2>
@@ -79,7 +79,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let pois = PointsOfInterestParser::parse(&html);
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn test_parse_ignores_items_without_brackets() {
         let html = Html::parse_document(
-            r#"
+            r"
             <html>
                 <body>
                     <h2>Points of Interest</h2>
@@ -101,7 +101,7 @@ mod tests {
                     </ul>
                 </body>
             </html>
-        "#,
+        ",
         );
 
         let pois = PointsOfInterestParser::parse(&html);

@@ -153,5 +153,4 @@ mod tests {
         assert_eq!(config.monitoring_interval_seconds, 30);
         assert_eq!(config.process_names, vec!["test.exe"]);
     }
-
 }

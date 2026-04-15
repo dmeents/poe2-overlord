@@ -24,8 +24,8 @@ mod tests {
         let names = vec!["SimpleChar", "Char123", "X", "MyAwesomeCharacterName"];
 
         for name in names {
-            let line = format!("[INFO Client 1234] : {} has been slain.", name);
-            assert!(parser.should_parse(&line), "Should parse name: {}", name);
+            let line = format!("[INFO Client 1234] : {name} has been slain.");
+            assert!(parser.should_parse(&line), "Should parse name: {name}");
         }
     }
 

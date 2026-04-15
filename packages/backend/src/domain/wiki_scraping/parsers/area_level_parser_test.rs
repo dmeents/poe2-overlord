@@ -6,11 +6,11 @@ mod tests {
     #[test]
     fn test_parse_area_level() {
         let html = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Area level</td><td>42</td></tr>
             </table>
-        "#,
+        ",
         );
 
         assert_eq!(AreaLevelParser::parse(Some(&html)), Some(42));
@@ -19,11 +19,11 @@ mod tests {
     #[test]
     fn test_parse_area_level_with_extra_text() {
         let html = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Area level</td><td>65 (normal)</td></tr>
             </table>
-        "#,
+        ",
         );
 
         assert_eq!(AreaLevelParser::parse(Some(&html)), Some(65));
@@ -32,11 +32,11 @@ mod tests {
     #[test]
     fn test_parse_area_level_not_found() {
         let html = Html::parse_fragment(
-            r#"
+            r"
             <table>
                 <tr><td>Act</td><td>1</td></tr>
             </table>
-        "#,
+        ",
         );
 
         assert_eq!(AreaLevelParser::parse(Some(&html)), None);

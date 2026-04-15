@@ -1,4 +1,4 @@
-use super::models::{CurrencyExchangeData, CurrencySearchResult, EconomyType, TopCurrencyItem};
+use super::models::{CurrencyExchangeData, CurrencySearchResult, EconomyType};
 use super::service::EconomyService;
 use crate::to_command_result;
 use crate::CommandResult;
@@ -12,10 +12,7 @@ pub async fn get_currency_exchange_data(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<CurrencyExchangeData> {
     log::info!(
-        "Command: get_currency_exchange_data for league: {}, hardcore: {}, type: {}",
-        league,
-        is_hardcore,
-        economy_type
+        "Command: get_currency_exchange_data for league: {league}, hardcore: {is_hardcore}, type: {economy_type}"
     );
 
     let result = economy_service
@@ -26,19 +23,30 @@ pub async fn get_currency_exchange_data(
 }
 
 #[tauri::command]
-pub async fn get_aggregated_top_currencies(
+pub async fn refresh_all_economy_data(
     league: String,
     is_hardcore: bool,
     economy_service: State<'_, EconomyService>,
-) -> CommandResult<Vec<TopCurrencyItem>> {
-    log::info!(
-        "Command: get_aggregated_top_currencies for league: {}, hardcore: {}",
-        league,
-        is_hardcore
-    );
+) -> CommandResult<()> {
+    log::info!("Command: refresh_all_economy_data for league: {league}, hardcore: {is_hardcore}");
 
     let result = economy_service
-        .load_aggregated_top_currencies(&league, is_hardcore)
+        .refresh_all_economy_types(&league, is_hardcore)
+        .await;
+
+    to_command_result(result)
+}
+
+#[tauri::command]
+pub async fn get_all_currencies(
+    league: String,
+    is_hardcore: bool,
+    economy_service: State<'_, EconomyService>,
+) -> CommandResult<Vec<CurrencySearchResult>> {
+    log::info!("Command: get_all_currencies for league: {league}, hardcore: {is_hardcore}");
+
+    let result = economy_service
+        .load_all_currencies(&league, is_hardcore)
         .await;
 
     to_command_result(result)
@@ -52,14 +60,45 @@ pub async fn search_currencies(
     economy_service: State<'_, EconomyService>,
 ) -> CommandResult<Vec<CurrencySearchResult>> {
     log::info!(
-        "Command: search_currencies for league: {}, hardcore: {}, query: '{}'",
-        league,
-        is_hardcore,
-        query
+        "Command: search_currencies for league: {league}, hardcore: {is_hardcore}, query: '{query}'"
     );
 
     let result = economy_service
         .search_currencies(&league, is_hardcore, &query)
+        .await;
+
+    to_command_result(result)
+}
+
+#[tauri::command]
+pub async fn toggle_currency_star(
+    league: String,
+    is_hardcore: bool,
+    economy_type: EconomyType,
+    currency_id: String,
+    economy_service: State<'_, EconomyService>,
+) -> CommandResult<bool> {
+    log::info!(
+        "Command: toggle_currency_star for league: {league}, type: {economy_type}, currency: {currency_id}"
+    );
+
+    let result = economy_service
+        .toggle_currency_star(&league, is_hardcore, economy_type, &currency_id)
+        .await;
+
+    to_command_result(result)
+}
+
+#[tauri::command]
+pub async fn get_starred_currencies(
+    league: String,
+    is_hardcore: bool,
+    economy_service: State<'_, EconomyService>,
+) -> CommandResult<Vec<CurrencySearchResult>> {
+    log::info!("Command: get_starred_currencies for league: {league}, hardcore: {is_hardcore}");
+
+    let result = economy_service
+        .get_starred_currencies(&league, is_hardcore)
         .await;
 
     to_command_result(result)

@@ -5,11 +5,11 @@ mod tests {
 
     fn make_infobox(bosses_cell: &str) -> Html {
         Html::parse_fragment(&format!(
-            r#"<table><tbody>
+            r"<table><tbody>
               <tr><th>Id</th><td>test_zone</td></tr>
               <tr><th>Act</th><td>1</td></tr>
               <tr><th>Bosses</th><td>{bosses_cell}</td></tr>
-            </tbody></table>"#,
+            </tbody></table>",
         ))
     }
 
@@ -39,13 +39,13 @@ mod tests {
     #[test]
     fn test_parse_bosses_from_section_when_no_infobox() {
         let doc = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <h2>Bosses</h2>
                 <ul>
                     <li>Lachlann of Endless Lament</li>
                     <li>Vargir the Feral Mutt</li>
                 </ul>
-            </body></html>"#,
+            </body></html>",
         );
         let bosses = BossesParser::parse(None, &doc);
         assert_eq!(bosses.len(), 2);
@@ -56,7 +56,7 @@ mod tests {
     fn test_parse_bosses_from_monsters_heuristic() {
         // No infobox, no dedicated boss section — falls back to heuristic filter on Monsters
         let doc = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <h2>Monsters</h2>
                 <ul>
                     <li>Regular Monster</li>
@@ -64,7 +64,7 @@ mod tests {
                     <li>Another Monster</li>
                     <li>Boss the Destroyer</li>
                 </ul>
-            </body></html>"#,
+            </body></html>",
         );
         let bosses = BossesParser::parse(None, &doc);
         assert_eq!(bosses.len(), 2);
@@ -75,13 +75,13 @@ mod tests {
     #[test]
     fn test_parse_no_bosses() {
         let doc = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <h2>Monsters</h2>
                 <ul>
                     <li>Regular Monster 1</li>
                     <li>Regular Monster 2</li>
                 </ul>
-            </body></html>"#,
+            </body></html>",
         );
         let bosses = BossesParser::parse(None, &doc);
         assert!(bosses.is_empty());
@@ -90,10 +90,10 @@ mod tests {
     #[test]
     fn test_parse_no_monsters_section() {
         let doc = Html::parse_document(
-            r#"<html><body>
+            r"<html><body>
                 <h2>Other Section</h2>
                 <p>Some content</p>
-            </body></html>"#,
+            </body></html>",
         );
         let bosses = BossesParser::parse(None, &doc);
         assert!(bosses.is_empty());

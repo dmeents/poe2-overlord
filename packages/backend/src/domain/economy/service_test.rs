@@ -1,8 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::domain::economy::models::{
-        CurrencyExchangeData, CurrencySearchResult, EconomyType, TopCurrencyItem,
-    };
+    use crate::domain::economy::models::{CurrencyExchangeData, CurrencySearchResult, EconomyType};
     use crate::domain::economy::service::EconomyService;
     use crate::domain::economy::traits::EconomyRepository;
     use crate::errors::{AppError, AppResult};
@@ -45,12 +43,11 @@ mod tests {
             Ok(())
         }
 
-        async fn load_top_currencies(
+        async fn load_all_currencies(
             &self,
             _league: &str,
             _is_hardcore: bool,
-            _limit: u32,
-        ) -> AppResult<Vec<TopCurrencyItem>> {
+        ) -> AppResult<Vec<CurrencySearchResult>> {
             Ok(Vec::new())
         }
 
@@ -60,6 +57,24 @@ mod tests {
             _is_hardcore: bool,
             _query: &str,
             _limit: u32,
+        ) -> AppResult<Vec<CurrencySearchResult>> {
+            Ok(Vec::new())
+        }
+
+        async fn toggle_currency_star(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
+            _economy_type: EconomyType,
+            _currency_id: &str,
+        ) -> AppResult<bool> {
+            Ok(false)
+        }
+
+        async fn load_starred_currencies(
+            &self,
+            _league: &str,
+            _is_hardcore: bool,
         ) -> AppResult<Vec<CurrencySearchResult>> {
             Ok(Vec::new())
         }
@@ -98,10 +113,8 @@ mod tests {
         for (economy_type, expected_type_str) in economy_types {
             let url = EconomyService::build_poe_ninja_url("TestLeague", economy_type);
             assert!(
-                url.contains(&format!("type={}", expected_type_str)),
-                "URL should contain type={} for {:?}",
-                expected_type_str,
-                economy_type
+                url.contains(&format!("type={expected_type_str}")),
+                "URL should contain type={expected_type_str} for {economy_type:?}"
             );
         }
     }
@@ -326,8 +339,7 @@ mod tests {
             assert_eq!(
                 EconomyService::format_league_for_api(standard_variant, true),
                 "Hardcore",
-                "Failed for variant: {}",
-                standard_variant
+                "Failed for variant: {standard_variant}"
             );
         }
     }

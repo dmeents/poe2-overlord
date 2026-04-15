@@ -37,7 +37,7 @@ impl FromStr for CurrencyTier {
             "Primary" => Ok(CurrencyTier::Primary),
             "Secondary" => Ok(CurrencyTier::Secondary),
             "Tertiary" => Ok(CurrencyTier::Tertiary),
-            _ => Err(format!("Unknown currency tier: {}", s)),
+            _ => Err(format!("Unknown currency tier: {s}")),
         }
     }
 }
@@ -131,7 +131,7 @@ impl FromStr for EconomyType {
             "Expedition" => Ok(EconomyType::Expedition),
             "Delirium" => Ok(EconomyType::Delirium),
             "Breach" => Ok(EconomyType::Breach),
-            _ => Err(format!("Unknown economy type: {}", s)),
+            _ => Err(format!("Unknown economy type: {s}")),
         }
     }
 }
@@ -250,21 +250,6 @@ pub struct CurrencyExchangeRate {
     pub volume: Option<f64>,
     pub change_percent: Option<f64>,
     pub price_history: Vec<Option<f64>>,
-}
-
-/// Lightweight item for top currencies aggregation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TopCurrencyItem {
-    pub id: String,
-    pub name: String,
-    pub image_url: String,
-    pub economy_type: EconomyType,
-    pub primary_value: f64,
-    pub primary_currency_name: String,
-    pub primary_currency_image_url: String,
-    pub volume: Option<f64>,
-    pub change_percent: Option<f64>,
-    pub cached_at: String,
 }
 
 /// Search result for cross-economy currency search
@@ -453,8 +438,11 @@ impl CurrencyExchangeApiResponse {
         let config = TierConfig::default();
 
         // Build a lookup map for O(1) item lookups by id
-        let items_by_id: HashMap<&str, &CurrencyItem> =
-            self.items.iter().map(|item| (item.id.as_str(), item)).collect();
+        let items_by_id: HashMap<&str, &CurrencyItem> = self
+            .items
+            .iter()
+            .map(|item| (item.id.as_str(), item))
+            .collect();
 
         let currencies: Vec<CurrencyExchangeRate> = self
             .lines
@@ -464,9 +452,7 @@ impl CurrencyExchangeApiResponse {
                 let primary_value = line.primary_value?;
 
                 let secondary_value = primary_value * secondary_rate;
-                let tertiary_value = tertiary_rate
-                    .map(|rate| primary_value * rate)
-                    .unwrap_or(0.0);
+                let tertiary_value = tertiary_rate.map_or(0.0, |rate| primary_value * rate);
 
                 let tier = CurrencyExchangeRate::select_optimal_tier(
                     primary_value,

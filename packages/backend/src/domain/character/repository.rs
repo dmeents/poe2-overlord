@@ -14,14 +14,14 @@ use super::models::{
 };
 use super::traits::CharacterRepository;
 
-/// Character repository implementation using SQLite.
+/// Character repository implementation using `SQLite`.
 ///
-/// Normalizes CharacterData into 3 tables:
-/// - `characters`: profile + timestamps + current_location
-/// - `zone_stats`: zone tracking data (references zone_metadata by ID)
+/// Normalizes `CharacterData` into 3 tables:
+/// - `characters`: profile + timestamps + `current_location`
+/// - `zone_stats`: zone tracking data (references `zone_metadata` by ID)
 /// - `walkthrough_progress`: campaign progress
 ///
-/// TrackingSummary is computed on demand via SQL aggregation in load_character_data / load_all_characters_summary.
+/// `TrackingSummary` is computed on demand via SQL aggregation in `load_character_data` / `load_all_characters_summary`.
 pub struct CharacterRepositoryImpl {
     pool: SqlitePool,
 }
@@ -35,7 +35,7 @@ impl CharacterRepositoryImpl {
 #[async_trait]
 impl CharacterRepository for CharacterRepositoryImpl {
     async fn load_character_data(&self, character_id: &str) -> AppResult<CharacterData> {
-        debug!("Loading character data for {}", character_id);
+        debug!("Loading character data for {character_id}");
 
         // Load character profile + timestamps
         let character_row: Option<(
@@ -79,20 +79,20 @@ impl CharacterRepository for CharacterRepositoryImpl {
         ) = character_row.ok_or_else(|| {
             crate::errors::AppError::validation_error(
                 "load_character_data",
-                &format!("Character with ID '{}' not found", character_id),
+                &format!("Character with ID '{character_id}' not found"),
             )
         })?;
 
         // Parse character profile using FromStr (replaces fragile serde_json hack)
-        let class = class_str.parse().map_err(|e: String| {
-            crate::errors::AppError::validation_error("parse_class", &e)
-        })?;
+        let class = class_str
+            .parse()
+            .map_err(|e: String| crate::errors::AppError::validation_error("parse_class", &e))?;
         let ascendency = ascendency_str.parse().map_err(|e: String| {
             crate::errors::AppError::validation_error("parse_ascendency", &e)
         })?;
-        let league = league_str.parse().map_err(|e: String| {
-            crate::errors::AppError::validation_error("parse_league", &e)
-        })?;
+        let league = league_str
+            .parse()
+            .map_err(|e: String| crate::errors::AppError::validation_error("parse_league", &e))?;
 
         let profile = CharacterProfile {
             name,
@@ -126,8 +126,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
                 let last_updated = if let Some(timestamp_str) = current_zone_updated_at_str {
                     chrono::DateTime::parse_from_rfc3339(&timestamp_str)
                         .ok()
-                        .map(|dt| dt.with_timezone(&Utc))
-                        .unwrap_or_else(Utc::now)
+                        .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc))
                 } else {
                     Utc::now()
                 };
@@ -275,11 +274,11 @@ impl CharacterRepository for CharacterRepositoryImpl {
         .bind(format!("{}", character_data.profile.class))
         .bind(format!("{}", character_data.profile.ascendency))
         .bind(format!("{}", character_data.profile.league))
-        .bind(if character_data.profile.hardcore { 1 } else { 0 })
-        .bind(if character_data.profile.solo_self_found { 1 } else { 0 })
-        .bind(character_data.profile.level as i64)
+        .bind(i32::from(character_data.profile.hardcore))
+        .bind(i32::from(character_data.profile.solo_self_found))
+        .bind(i64::from(character_data.profile.level))
         .bind(character_data.timestamps.created_at.to_rfc3339())
-        .bind(character_data.timestamps.last_played.as_ref().map(|dt| dt.to_rfc3339()))
+        .bind(character_data.timestamps.last_played.as_ref().map(chrono::DateTime::to_rfc3339))
         .bind(character_data.timestamps.last_updated.to_rfc3339())
         .bind(current_zone_id)
         .bind(current_zone_updated_at)
@@ -298,8 +297,13 @@ impl CharacterRepository for CharacterRepositoryImpl {
         )
         .bind(&character_data.id)
         .bind(&character_data.walkthrough_progress.current_step_id)
-        .bind(if character_data.walkthrough_progress.is_completed { 1 } else { 0 })
-        .bind(character_data.walkthrough_progress.last_updated.to_rfc3339())
+        .bind(i32::from(character_data.walkthrough_progress.is_completed))
+        .bind(
+            character_data
+                .walkthrough_progress
+                .last_updated
+                .to_rfc3339(),
+        )
         .execute(&mut *tx)
         .await?;
 
@@ -309,7 +313,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
     }
 
     async fn delete_character_data(&self, character_id: &str) -> AppResult<()> {
-        debug!("Deleting character data for {}", character_id);
+        debug!("Deleting character data for {character_id}");
 
         let result = sqlx::query("DELETE FROM characters WHERE id = ?")
             .bind(character_id)
@@ -317,7 +321,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
             .await?;
 
         if result.rows_affected() == 0 {
-            warn!("No character found with ID {}", character_id);
+            warn!("No character found with ID {character_id}");
         } else {
             debug!("Character deleted successfully (cascaded)");
         }
@@ -441,8 +445,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         for (character_id, current_step_id, is_completed, last_updated_str) in progress_rows {
             let last_updated = chrono::DateTime::parse_from_rfc3339(&last_updated_str)
                 .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now);
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             progress_by_character.insert(
                 character_id,
                 WalkthroughProgress {
@@ -487,24 +490,21 @@ impl CharacterRepository for CharacterRepositoryImpl {
             let timestamps = CharacterTimestamps {
                 created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
                     .ok()
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now),
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
                 last_played: last_played_str
                     .as_ref()
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated_str)
                     .ok()
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now),
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             };
 
             let current_location: Option<LocationState> = current_zone_name.map(|zone_name| {
                 let last_updated = current_zone_updated_at_str
                     .as_ref()
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now);
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
 
                 LocationState {
                     zone_name,
@@ -532,7 +532,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
     }
 
     async fn set_active_character(&self, character_id: Option<&str>) -> AppResult<()> {
-        debug!("Setting active character to {:?}", character_id);
+        debug!("Setting active character to {character_id:?}");
 
         let mut tx = self.pool.begin().await?;
 
@@ -550,7 +550,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
             if rows_affected == 0 {
                 return Err(crate::errors::AppError::validation_error(
                     "set_active_character",
-                    &format!("Character with ID '{}' not found", id),
+                    &format!("Character with ID '{id}' not found"),
                 ));
             }
         }
@@ -607,8 +607,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
         if result.rows_affected() == 0 {
             log::warn!(
-                "record_death_in_active_zone: no active zone found for character {}",
-                character_id
+                "record_death_in_active_zone: no active zone found for character {character_id}"
             );
         }
 
@@ -617,14 +616,12 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
     async fn update_character_level(&self, character_id: &str, new_level: u32) -> AppResult<()> {
         let now = Utc::now().to_rfc3339();
-        sqlx::query(
-            "UPDATE characters SET level = ?, last_updated = ? WHERE id = ?",
-        )
-        .bind(new_level as i64)
-        .bind(&now)
-        .bind(character_id)
-        .execute(&self.pool)
-        .await?;
+        sqlx::query("UPDATE characters SET level = ?, last_updated = ? WHERE id = ?")
+            .bind(i64::from(new_level))
+            .bind(&now)
+            .bind(character_id)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
@@ -643,9 +640,9 @@ impl CharacterRepository for CharacterRepositoryImpl {
         .bind(format!("{}", profile.class))
         .bind(format!("{}", profile.ascendency))
         .bind(format!("{}", profile.league))
-        .bind(if profile.hardcore { 1i64 } else { 0 })
-        .bind(if profile.solo_self_found { 1i64 } else { 0 })
-        .bind(profile.level as i64)
+        .bind(i64::from(profile.hardcore))
+        .bind(i64::from(profile.solo_self_found))
+        .bind(i64::from(profile.level))
         .bind(&now)
         .bind(character_id)
         .execute(&self.pool)
@@ -669,9 +666,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         if let Some((_, entry_ts_opt)) = active {
             if let Some(entry_ts_str) = entry_ts_opt {
                 let elapsed = chrono::DateTime::parse_from_rfc3339(&entry_ts_str)
-                    .map(|entry_dt| {
-                        (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0)
-                    })
+                    .map(|entry_dt| (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0))
                     .unwrap_or(0);
 
                 sqlx::query(
@@ -753,7 +748,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         )
         .bind(character_id)
         .bind(&progress.current_step_id)
-        .bind(if progress.is_completed { 1i64 } else { 0 })
+        .bind(i64::from(progress.is_completed))
         .bind(progress.last_updated.to_rfc3339())
         .execute(&self.pool)
         .await?;
@@ -777,9 +772,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         for (zone_id, entry_ts_opt) in active_zones {
             if let Some(entry_ts_str) = entry_ts_opt {
                 let elapsed = chrono::DateTime::parse_from_rfc3339(&entry_ts_str)
-                    .map(|entry_dt| {
-                        (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0)
-                    })
+                    .map(|entry_dt| (now - entry_dt.with_timezone(&Utc)).num_seconds().max(0))
                     .unwrap_or(0);
 
                 sqlx::query(
@@ -940,8 +933,7 @@ impl CharacterRepository for CharacterRepositoryImpl {
         for (character_id, current_step_id, is_completed, last_updated_str) in progress_rows {
             let last_updated = chrono::DateTime::parse_from_rfc3339(&last_updated_str)
                 .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now);
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             progress_by_character.insert(
                 character_id,
                 WalkthroughProgress {
@@ -987,25 +979,25 @@ impl CharacterRepository for CharacterRepositoryImpl {
             let timestamps = CharacterTimestamps {
                 created_at: chrono::DateTime::parse_from_rfc3339(&created_at_str)
                     .ok()
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now),
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
                 last_played: last_played_str
                     .as_ref()
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
                     .map(|dt| dt.with_timezone(&Utc)),
                 last_updated: chrono::DateTime::parse_from_rfc3339(&last_updated_str)
                     .ok()
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now),
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc)),
             };
 
             let current_location: Option<LocationState> = current_zone_name.map(|zone_name| {
                 let last_updated = current_zone_updated_at_str
                     .as_ref()
                     .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-                    .map(|dt| dt.with_timezone(&Utc))
-                    .unwrap_or_else(Utc::now);
-                LocationState { zone_name, last_updated }
+                    .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
+                LocationState {
+                    zone_name,
+                    last_updated,
+                }
             });
 
             let summary = summary_by_character
@@ -1023,7 +1015,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
             });
         }
 
-        debug!("Loaded {} character summaries from SQLite", characters.len());
+        debug!(
+            "Loaded {} character summaries from SQLite",
+            characters.len()
+        );
         Ok(characters)
     }
 
@@ -1071,12 +1066,10 @@ impl CharacterRepository for CharacterRepositoryImpl {
 
             let first_visited = chrono::DateTime::parse_from_rfc3339(&first_visited_str)
                 .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now);
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             let last_visited = chrono::DateTime::parse_from_rfc3339(&last_visited_str)
                 .ok()
-                .map(|dt| dt.with_timezone(&Utc))
-                .unwrap_or_else(Utc::now);
+                .map_or_else(Utc::now, |dt| dt.with_timezone(&Utc));
             let entry_timestamp = entry_timestamp_str
                 .as_ref()
                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())

@@ -1,7 +1,7 @@
 {
   "name": "poe2-overlord",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.2",
   "description": "A powerful companion app for Path of Exile 2 built with Tauri and React",
   "author": "David Meents",
   "license": "MIT",
@@ -28,7 +28,8 @@
     "test:backend:watch": "pnpm --filter @poe2-overlord/backend test:watch",
     "test:frontend": "pnpm --filter @poe2-overlord/frontend test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
-    "check:backend": "pnpm --filter @poe2-overlord/backend check"
+    "check:backend": "pnpm --filter @poe2-overlord/backend check",
+    "bump-version": "node scripts/bump-version.js"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",

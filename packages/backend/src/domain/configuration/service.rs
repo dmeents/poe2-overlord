@@ -29,7 +29,7 @@ impl ConfigurationServiceImpl {
             previous_config,
         ));
         if let Err(e) = self.event_bus.publish(event).await {
-            warn!("Failed to publish configuration change event: {}", e);
+            warn!("Failed to publish configuration change event: {e}");
         }
     }
 }
@@ -110,7 +110,7 @@ impl ConfigurationService for ConfigurationServiceImpl {
         self.publish_config_change(new_config, previous_config)
             .await;
 
-        debug!("Zone refresh interval updated to: {}", interval);
+        debug!("Zone refresh interval updated to: {interval}");
         Ok(())
     }
 }

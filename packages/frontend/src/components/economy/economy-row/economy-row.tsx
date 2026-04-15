@@ -1,19 +1,46 @@
-import { ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowsRightLeftIcon, StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useEconomy } from '@/contexts/EconomyContext';
-import type { CurrencyExchangeRate } from '@/types/economy';
+import type { BackendEconomyType, CurrencyExchangeRate, EconomyType } from '@/types/economy';
 import { calculateItemsSoldPerHour } from '@/utils/economy-utils';
 import { hideOnError } from '@/utils/image-utils';
 import { economyRowStyles } from './economy-row.styles';
 
 interface EconomyRowProps {
   currency: CurrencyExchangeRate;
+  economyType?: EconomyType;
+  isStarred?: boolean;
+  onToggleStar?: (currencyId: string, economyType: BackendEconomyType) => void;
   onClick?: (currency: CurrencyExchangeRate) => void;
 }
 
-export function EconomyRow({ currency, onClick }: EconomyRowProps) {
+export function EconomyRow({
+  currency,
+  economyType,
+  isStarred,
+  onToggleStar,
+  onClick,
+}: EconomyRowProps) {
   const { display_value } = currency;
   const { currencyData } = useEconomy();
+
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleStar && economyType && economyType !== 'All') {
+      onToggleStar(currency.id, economyType as BackendEconomyType);
+    }
+  };
+
+  const handleStarKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onToggleStar && economyType && economyType !== 'All') {
+        onToggleStar(currency.id, economyType as BackendEconomyType);
+      }
+    }
+  };
 
   const handleClick = () => {
     if (onClick) {
@@ -68,6 +95,21 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
       tabIndex={onClick ? 0 : undefined}
       className={`${economyRowStyles.container} ${onClick ? economyRowStyles.containerClickable : ''}`}>
       <div className={economyRowStyles.leftSection}>
+        {onToggleStar && economyType && economyType !== 'All' && (
+          <button
+            type="button"
+            tabIndex={0}
+            onClick={handleStarClick}
+            onKeyDown={handleStarKeyDown}
+            title={isStarred ? 'Unstar currency' : 'Star currency'}
+            className={`${economyRowStyles.starButton} ${isStarred ? economyRowStyles.starActive : economyRowStyles.starInactive}`}>
+            {isStarred ? (
+              <StarSolidIcon className="w-4 h-4" />
+            ) : (
+              <StarOutlineIcon className="w-4 h-4" />
+            )}
+          </button>
+        )}
         <img
           src={currency.image_url}
           alt={currency.name}
@@ -77,7 +119,7 @@ export function EconomyRow({ currency, onClick }: EconomyRowProps) {
         <div className={economyRowStyles.nameContainer}>
           <div className={economyRowStyles.name}>{currency.name}</div>
           <div className={economyRowStyles.statsRow}>
-            {currency.volume !== null && currencyData && (
+            {currency.volume !== null && (
               <span title="Number of items sold per hour">
                 {calculateItemsSoldPerHour(currency.volume, currency.primary_value)} / hr
               </span>

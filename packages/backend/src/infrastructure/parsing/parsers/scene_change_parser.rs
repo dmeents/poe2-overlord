@@ -26,7 +26,7 @@ impl SceneChangeParser {
         for pattern in &self.patterns {
             if line.contains(pattern) {
                 if let Ok(content) = extract_content_between_delimiters(line, pattern, '[', ']') {
-                    debug!("Extracted scene: {}", content);
+                    debug!("Extracted scene: {content}");
                     return Ok(content.into_owned());
                 }
             }
@@ -45,7 +45,7 @@ impl LogParser for SceneChangeParser {
     fn parse_line(&self, line: &str) -> Result<Self::Event, ParseError> {
         // Trust that should_parse() was already called by the manager
         let content = self.extract_scene_content(line)?;
-        debug!("Scene change: {}", content);
+        debug!("Scene change: {content}");
         Ok(ParserResult::SceneChange(content))
     }
 

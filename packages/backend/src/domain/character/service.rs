@@ -46,17 +46,14 @@ impl CharacterService for CharacterServiceImpl {
         if !super::models::is_valid_ascendency_for_class(&ascendency, &class) {
             return Err(AppError::validation_error(
                 "validate_ascendency",
-                &format!(
-                    "Ascendency '{:?}' is not valid for class '{:?}'",
-                    ascendency, class
-                ),
+                &format!("Ascendency '{ascendency:?}' is not valid for class '{class:?}'"),
             ));
         }
 
         if self.repository.is_name_taken(&name, None).await? {
             return Err(AppError::validation_error(
                 "validate_unique_name",
-                &format!("Character name '{}' is already taken", name),
+                &format!("Character name '{name}' is already taken"),
             ));
         }
 
@@ -81,7 +78,7 @@ impl CharacterService for CharacterServiceImpl {
                 .await?;
         }
 
-        log::info!("Created new character: {}", name);
+        log::info!("Created new character: {name}");
         Ok(self.enrich_character_data(character_data).await)
     }
 
@@ -99,9 +96,7 @@ impl CharacterService for CharacterServiceImpl {
         Ok(enriched_characters)
     }
 
-    async fn get_all_characters_summary(
-        &self,
-    ) -> Result<Vec<CharacterSummaryResponse>, AppError> {
+    async fn get_all_characters_summary(&self) -> Result<Vec<CharacterSummaryResponse>, AppError> {
         let character_data_list = self.repository.load_all_characters_summary().await?;
 
         // Get active character ID once for all characters
@@ -114,8 +109,10 @@ impl CharacterService for CharacterServiceImpl {
             let current_location = match character_data.current_location.as_ref() {
                 None => None,
                 Some(location) => {
-                    let zone_metadata =
-                        self.zone_config.get_zone_metadata(&location.zone_name).await;
+                    let zone_metadata = self
+                        .zone_config
+                        .get_zone_metadata(&location.zone_name)
+                        .await;
                     Some(if let Some(metadata) = zone_metadata {
                         EnrichedLocationState::from_location_and_metadata(location, &metadata)
                     } else {
@@ -206,7 +203,7 @@ impl CharacterService for CharacterServiceImpl {
             enriched.clone(),
         );
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!("Failed to publish character update event: {}", e);
+            log::warn!("Failed to publish character update event: {e}");
         }
 
         log::info!("Updated character: {}", update_params.name);
@@ -219,13 +216,10 @@ impl CharacterService for CharacterServiceImpl {
         let event =
             crate::infrastructure::events::AppEvent::character_deleted(character_id.to_string());
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!(
-                "Failed to publish character deleted event: {}. UI may show stale data.",
-                e
-            );
+            log::warn!("Failed to publish character deleted event: {e}. UI may show stale data.");
         }
 
-        log::info!("Deleted character: {}", character_id);
+        log::info!("Deleted character: {character_id}");
         Ok(())
     }
 
@@ -233,7 +227,7 @@ impl CharacterService for CharacterServiceImpl {
         self.repository.set_active_character(character_id).await?;
 
         if let Some(id) = character_id {
-            log::info!("Set active character: {}", id);
+            log::info!("Set active character: {id}");
         } else {
             log::info!("Cleared active character");
         }
@@ -265,10 +259,7 @@ impl CharacterService for CharacterServiceImpl {
         if !(1..=100).contains(&new_level) {
             return Err(AppError::validation_error(
                 "validate_level",
-                &format!(
-                    "Character level must be between 1 and 100, got {}",
-                    new_level
-                ),
+                &format!("Character level must be between 1 and 100, got {new_level}"),
             ));
         }
 
@@ -286,12 +277,11 @@ impl CharacterService for CharacterServiceImpl {
         );
         if let Err(e) = self.event_bus.publish(event).await {
             log::warn!(
-                "Failed to publish character level update event: {}. UI may show stale data.",
-                e
+                "Failed to publish character level update event: {e}. UI may show stale data."
             );
         }
 
-        log::info!("Updated character {} level to {}", character_id, new_level);
+        log::info!("Updated character {character_id} level to {new_level}");
         Ok(())
     }
 
@@ -305,7 +295,9 @@ impl CharacterService for CharacterServiceImpl {
 
     async fn enter_zone(&self, character_id: &str, zone_name: &str) -> Result<(), AppError> {
         // Atomically transitions zone: stops old active zone timer, starts new zone timer
-        self.repository.transition_zone(character_id, zone_name).await?;
+        self.repository
+            .transition_zone(character_id, zone_name)
+            .await?;
 
         let character_data = self.repository.load_character_data(character_id).await?;
         let enriched = self.enrich_character_data(character_data).await;
@@ -315,7 +307,7 @@ impl CharacterService for CharacterServiceImpl {
             enriched,
         );
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!("Failed to publish character event: {}", e);
+            log::warn!("Failed to publish character event: {e}");
         }
 
         Ok(())
@@ -335,7 +327,7 @@ impl CharacterService for CharacterServiceImpl {
             enriched,
         );
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!("Failed to publish character event: {}", e);
+            log::warn!("Failed to publish character event: {e}");
         }
 
         Ok(())
@@ -362,9 +354,9 @@ impl CharacterService for CharacterServiceImpl {
                 enriched,
             );
             if let Err(e) = self.event_bus.publish(event).await {
-                log::warn!("Failed to publish character event: {}", e);
+                log::warn!("Failed to publish character event: {e}");
             }
-            log::info!("Published character_updated event for {}", character_id);
+            log::info!("Published character_updated event for {character_id}");
         }
 
         log::info!("finalize_all_active_zones completed successfully");
@@ -382,7 +374,7 @@ impl CharacterService for CharacterServiceImpl {
             enriched,
         );
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!("Failed to publish character event: {}", e);
+            log::warn!("Failed to publish character event: {e}");
         }
 
         Ok(())
@@ -406,7 +398,7 @@ impl CharacterService for CharacterServiceImpl {
             enriched.clone(),
         );
         if let Err(e) = self.event_bus.publish(event).await {
-            log::warn!("Failed to publish character update event: {}", e);
+            log::warn!("Failed to publish character update event: {e}");
         }
 
         Ok(enriched)
@@ -437,8 +429,10 @@ impl CharacterServiceImpl {
         let current_location = match character_data.current_location.as_ref() {
             None => None,
             Some(location) => {
-                let zone_metadata =
-                    self.zone_config.get_zone_metadata(&location.zone_name).await;
+                let zone_metadata = self
+                    .zone_config
+                    .get_zone_metadata(&location.zone_name)
+                    .await;
                 Some(if let Some(metadata) = zone_metadata {
                     EnrichedLocationState::from_location_and_metadata(location, &metadata)
                 } else {

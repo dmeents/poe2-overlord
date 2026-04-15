@@ -9,7 +9,7 @@ use crate::domain::walkthrough::traits::{WalkthroughRepository, WalkthroughServi
 use crate::errors::AppError;
 use crate::infrastructure::events::{AppEvent, EventBus};
 
-/// Implementation of the WalkthroughService trait.
+/// Implementation of the `WalkthroughService` trait.
 ///
 /// This service provides business logic for walkthrough management including
 /// guide loading, progress tracking, and scene change processing. It coordinates
@@ -25,7 +25,7 @@ pub struct WalkthroughServiceImpl {
 }
 
 impl WalkthroughServiceImpl {
-    /// Creates a new WalkthroughServiceImpl instance with required dependencies
+    /// Creates a new `WalkthroughServiceImpl` instance with required dependencies
     pub fn new(
         repository: Arc<dyn WalkthroughRepository + Send + Sync>,
         character_service: Arc<dyn CharacterService + Send + Sync>,
@@ -48,7 +48,7 @@ impl WalkthroughServiceImpl {
     }
 
     /// Updates a character's walkthrough progress.
-    /// Delegates to character service which handles DB upsert and CharacterUpdated event publishing.
+    /// Delegates to character service which handles DB upsert and `CharacterUpdated` event publishing.
     async fn update_character_walkthrough_progress(
         &self,
         character_id: &str,
@@ -57,7 +57,7 @@ impl WalkthroughServiceImpl {
         self.character_service
             .update_walkthrough_progress(character_id, &progress)
             .await?;
-        debug!("Updated character {} walkthrough progress", character_id);
+        debug!("Updated character {character_id} walkthrough progress");
         Ok(())
     }
 }
@@ -115,10 +115,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
             if !guide.step_exists(step_id) {
                 return Err(AppError::validation_error(
                     "update_character_progress",
-                    &format!(
-                        "Invalid step ID '{}' - does not exist in walkthrough guide",
-                        step_id
-                    ),
+                    &format!("Invalid step ID '{step_id}' - does not exist in walkthrough guide"),
                 ));
             }
         }
@@ -126,7 +123,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
         self.update_character_walkthrough_progress(character_id, progress)
             .await?;
 
-        info!("Updated character {} walkthrough progress", character_id);
+        info!("Updated character {character_id} walkthrough progress");
         Ok(())
     }
 
@@ -143,8 +140,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
         // If character has completed campaign, skip processing
         if progress.is_completed {
             debug!(
-                "Character {} has completed campaign, skipping scene change processing",
-                character_id
+                "Character {character_id} has completed campaign, skipping scene change processing"
             );
             return Ok(());
         }
@@ -153,10 +149,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
         let zone_name = scene_content.trim();
 
         if !zone_name.is_empty() {
-            debug!(
-                "Detected zone change to {} for character {}",
-                zone_name, character_id
-            );
+            debug!("Detected zone change to {zone_name} for character {character_id}");
 
             // Check if this zone matches the current step's completion_zone
             if let Some(step_id) = &progress.current_step_id {
@@ -169,8 +162,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
 
                     if step.completion_zone == zone_name {
                         debug!(
-                            "Zone {} matches completion zone for step {}, advancing",
-                            zone_name, step_id
+                            "Zone {zone_name} matches completion zone for step {step_id}, advancing"
                         );
 
                         // Create step result for events
@@ -197,7 +189,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 Some(next_step_id.clone()),
                             );
                             if let Err(e) = self.event_bus.publish(event).await {
-                                warn!("Failed to publish walkthrough step advanced event: {}", e);
+                                warn!("Failed to publish walkthrough step advanced event: {e}");
                             }
 
                             // Publish step completed event
@@ -206,7 +198,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 step_result,
                             );
                             if let Err(e) = self.event_bus.publish(event).await {
-                                warn!("Failed to publish walkthrough step completed event: {}", e);
+                                warn!("Failed to publish walkthrough step completed event: {e}");
                             }
                         } else {
                             // No next step, mark campaign as completed
@@ -220,8 +212,7 @@ impl WalkthroughService for WalkthroughServiceImpl {
                                 AppEvent::walkthrough_campaign_completed(character_id.to_string());
                             if let Err(e) = self.event_bus.publish(event).await {
                                 warn!(
-                                    "Failed to publish walkthrough campaign completed event: {}",
-                                    e
+                                    "Failed to publish walkthrough campaign completed event: {e}"
                                 );
                             }
                         }

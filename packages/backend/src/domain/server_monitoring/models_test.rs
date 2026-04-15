@@ -1,4 +1,4 @@
-//! Unit tests for ServerStatus model
+//! Unit tests for `ServerStatus` model
 
 #[cfg(test)]
 mod tests {
@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn test_is_invalid_with_empty_ip() {
-        let status = ServerStatus::new("".to_string(), 6112);
+        let status = ServerStatus::new(String::new(), 6112);
         assert!(!status.is_valid());
     }
 

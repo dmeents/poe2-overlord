@@ -6,7 +6,9 @@ import type { NoteData } from '@/types/notes';
 import { NoteEditor } from './note-editor';
 
 vi.mock('react-markdown', () => ({
-  default: vi.fn(({ children }: { children: string }) => <div data-testid="markdown-preview">{children}</div>),
+  default: vi.fn(({ children }: { children: string }) => (
+    <div data-testid="markdown-preview">{children}</div>
+  )),
 }));
 
 const mockNote: NoteData = {
@@ -73,7 +75,10 @@ describe('NoteEditor', () => {
       render(<NoteEditor {...defaultProps} onSave={handleSave} />);
 
       await user.type(screen.getByPlaceholderText('Note title...'), 'My Note');
-      await user.type(screen.getByPlaceholderText('Write your note in markdown...'), 'Some content');
+      await user.type(
+        screen.getByPlaceholderText('Write your note in markdown...'),
+        'Some content',
+      );
       await user.click(screen.getByRole('button', { name: 'Create Note' }));
 
       expect(handleSave).toHaveBeenCalledWith({
@@ -162,7 +167,9 @@ describe('NoteEditor', () => {
       await user.click(screen.getByRole('button', { name: 'Preview' }));
 
       expect(screen.getByTestId('markdown-preview')).toBeInTheDocument();
-      expect(screen.queryByPlaceholderText('Write your note in markdown...')).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText('Write your note in markdown...'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows empty preview message when content is blank', async () => {

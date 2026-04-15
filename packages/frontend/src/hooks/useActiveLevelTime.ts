@@ -25,11 +25,13 @@ export function useActiveLevelTime({
   const [, setTick] = useState(0);
 
   // Reset live segment whenever the backend base, activity state, or level changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setSegmentStart is a stable setter; activeSecondsAtLevel is intentionally the reset trigger
   useEffect(() => {
     setSegmentStart(isActive && lastLevelTimestamp ? Date.now() : null);
   }, [activeSecondsAtLevel, isActive, lastLevelTimestamp]);
 
   // Live 1-second ticker — only runs while actively counting
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setTick is a stable setter; activeSecondsAtLevel resets the interval on backend updates
   useEffect(() => {
     if (!isActive || !lastLevelTimestamp) return;
     const id = setInterval(() => setTick(t => t + 1), 1000);
@@ -38,8 +40,7 @@ export function useActiveLevelTime({
 
   if (!lastLevelTimestamp) return 0;
 
-  const currentSegment =
-    segmentStart !== null ? Math.floor((Date.now() - segmentStart) / 1000) : 0;
+  const currentSegment = segmentStart !== null ? Math.floor((Date.now() - segmentStart) / 1000) : 0;
 
   return activeSecondsAtLevel + currentSegment;
 }

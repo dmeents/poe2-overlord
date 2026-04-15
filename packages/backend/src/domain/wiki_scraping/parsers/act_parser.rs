@@ -35,7 +35,7 @@ impl ActParser {
                         .collect::<String>()
                         .parse::<u32>()
                     {
-                        debug!("Found act {} in page text", num);
+                        debug!("Found act {num} in page text");
                         return Some(num);
                     }
                 }

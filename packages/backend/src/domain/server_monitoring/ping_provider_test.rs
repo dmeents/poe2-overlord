@@ -1,4 +1,4 @@
-//! Unit tests for PingProvider implementations
+//! Unit tests for `PingProvider` implementations
 
 #[cfg(test)]
 mod tests {
@@ -37,10 +37,10 @@ mod tests {
             Ok(latency) => {
                 // Latency should be reasonable - can be 0 on very fast local connections
                 assert!(latency < 10000, "Latency should be less than 10 seconds");
-                println!("Ping succeeded with latency: {}ms", latency);
+                println!("Ping succeeded with latency: {latency}ms");
             }
             Err(e) => {
-                println!("Ping failed (may be expected on some systems): {}", e);
+                println!("Ping failed (may be expected on some systems): {e}");
             }
         }
     }

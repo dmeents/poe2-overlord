@@ -12,11 +12,11 @@ pub fn start_game_process_monitoring(
     tauri::async_runtime::spawn(async move {
         info!("Starting game monitoring on application startup");
         match game_monitoring_service.start_monitoring().await {
-            Ok(_) => {
+            Ok(()) => {
                 info!("Game monitoring started successfully");
             }
             Err(e) => {
-                error!("Failed to start game monitoring: {}", e);
+                error!("Failed to start game monitoring: {e}");
             }
         }
     })
@@ -27,7 +27,7 @@ pub fn start_ping_event_emission(
 ) -> JoinHandle<()> {
     tauri::async_runtime::spawn(async move {
         if let Err(e) = server_monitoring_service.start_ping_monitoring().await {
-            error!("Failed to start server ping monitoring: {}", e);
+            error!("Failed to start server ping monitoring: {e}");
         }
     })
 }
@@ -36,11 +36,11 @@ pub fn start_log_monitoring(log_analysis_service: Arc<dyn LogAnalysisService>) -
     tauri::async_runtime::spawn(async move {
         info!("Starting log monitoring on application startup");
         match log_analysis_service.start_monitoring().await {
-            Ok(_) => {
+            Ok(()) => {
                 info!("Log monitoring started successfully");
             }
             Err(e) => {
-                error!("Failed to start log monitoring: {}", e);
+                error!("Failed to start log monitoring: {e}");
             }
         }
     })

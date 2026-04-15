@@ -8,6 +8,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 # Only one release build at a time; never cancel in-progress to avoid corrupt releases
 concurrency:
   group: release

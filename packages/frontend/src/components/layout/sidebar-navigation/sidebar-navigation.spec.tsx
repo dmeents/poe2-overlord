@@ -60,6 +60,10 @@ describe('SidebarNavigation', () => {
       expect(screen.getByTestId('link-/economy')).toBeInTheDocument();
       expect(screen.getByTitle('Economy')).toBeInTheDocument();
 
+      // Character link
+      expect(screen.getByTestId('link-/character')).toBeInTheDocument();
+      expect(screen.getByTitle('Character')).toBeInTheDocument();
+
       // Characters link
       expect(screen.getByTestId('link-/characters')).toBeInTheDocument();
       expect(screen.getByTitle('Characters')).toBeInTheDocument();
@@ -74,7 +78,7 @@ describe('SidebarNavigation', () => {
 
       // All navigation icons
       const svgs = container.querySelectorAll('svg');
-      expect(svgs.length).toBe(7);
+      expect(svgs.length).toBe(8);
 
       // Active Dashboard link styling
       const dashboardNav = screen.getByTitle('Dashboard');

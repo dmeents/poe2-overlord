@@ -47,7 +47,7 @@ export function Card({
             </div>
             {(subtitle || rightAction) && (
               <div className="flex items-center gap-2">
-                {subtitle && <span className={cardStyles.subtitle}>{subtitle}</span>}
+                {subtitle && !rightAction && <span className={cardStyles.subtitle}>{subtitle}</span>}
                 {rightAction && (
                   <Button
                     onClick={rightAction.onClick}

@@ -1,6 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { HoverCard } from './hover-card';
+
+// @floating-ui/react's useHover uses setTimeout(fn, 0) internally even for
+// zero-delay — flush pending state updates with `await act(async () => {})`.
 
 describe('HoverCard', () => {
   it('renders children correctly', () => {
@@ -13,40 +17,43 @@ describe('HoverCard', () => {
     expect(screen.getByText('Hover me')).toBeInTheDocument();
   });
 
-  it('shows card content on hover', () => {
+  it('shows card content on hover', async () => {
+    const user = userEvent.setup();
     render(
       <HoverCard content="Card text">
         <span>Hover me</span>
       </HoverCard>,
     );
 
-    fireEvent.mouseEnter(screen.getByText('Hover me'));
+    await user.hover(screen.getByText('Hover me'));
 
     expect(screen.getByText('Card text')).toBeInTheDocument();
   });
 
-  it('hides card content on mouse leave', () => {
+  it('hides card content on mouse leave', async () => {
+    const user = userEvent.setup();
     render(
       <HoverCard content="Card text">
         <span>Hover me</span>
       </HoverCard>,
     );
 
-    const trigger = screen.getByText('Hover me');
-    fireEvent.mouseEnter(trigger);
-    fireEvent.mouseLeave(trigger);
+    await user.hover(screen.getByText('Hover me'));
+    expect(screen.getByText('Card text')).toBeInTheDocument();
 
+    await user.unhover(screen.getByText('Hover me'));
     expect(screen.queryByText('Card text')).not.toBeInTheDocument();
   });
 
-  it('renders ReactNode content', () => {
+  it('renders ReactNode content', async () => {
+    const user = userEvent.setup();
     render(
       <HoverCard content={<span data-testid="custom-content">Custom</span>}>
         <span>Hover me</span>
       </HoverCard>,
     );
 
-    fireEvent.mouseEnter(screen.getByText('Hover me'));
+    await user.hover(screen.getByText('Hover me'));
 
     expect(screen.getByTestId('custom-content')).toBeInTheDocument();
   });
@@ -81,211 +88,182 @@ describe('HoverCard', () => {
     expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 
-  it('shows on focus and hides on blur (keyboard accessible)', () => {
+  it('shows on focus and hides on blur (keyboard accessible)', async () => {
     render(
       <HoverCard content="Card text">
         <span>Hover me</span>
       </HoverCard>,
     );
 
+    // useFocus handlers are attached to the reference div via getReferenceProps,
+    // not to the inner span. Fire events on the parent element.
+    // waitFor is required because useTransitionStyles advances state via
+    // requestAnimationFrame (polyfilled as setTimeout in jsdom), which act() alone
+    // does not reliably flush.
     const trigger = screen.getByText('Hover me');
-    fireEvent.focus(trigger);
-    expect(screen.getByText('Card text')).toBeInTheDocument();
+    const referenceEl = trigger.parentElement!;
 
-    fireEvent.blur(trigger);
-    expect(screen.queryByText('Card text')).not.toBeInTheDocument();
+    fireEvent.focus(referenceEl);
+    await waitFor(() => expect(screen.getByText('Card text')).toBeInTheDocument());
+
+    fireEvent.blur(referenceEl);
+    await waitFor(() => expect(screen.queryByText('Card text')).not.toBeInTheDocument());
   });
 
-  it('renders nothing but children when content is falsy', () => {
-    const { container } = render(
+  it('renders only children when content is falsy', () => {
+    render(
       <HoverCard content={null}>
         <span>Hover me</span>
       </HoverCard>,
     );
 
-    // Should not render the wrapper div with hover machinery
     expect(screen.getByText('Hover me')).toBeInTheDocument();
-    expect(container.querySelector('[onmouseenter]')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('renders card with tooltip role', async () => {
+    const user = userEvent.setup();
+    render(
+      <HoverCard content="Card text">
+        <span>Hover me</span>
+      </HoverCard>,
+    );
+
+    await user.hover(screen.getByText('Hover me'));
+
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+  });
+
+  it('renders card in a portal (outside component tree)', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <HoverCard content="Card text">
+        <span>Hover me</span>
+      </HoverCard>,
+    );
+
+    await user.hover(screen.getByText('Hover me'));
+
+    // The card should NOT be inside the component's own container
+    expect(container.querySelector('[role="tooltip"]')).not.toBeInTheDocument();
+    // But it should be findable in the document
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+  });
+
+  describe('custom width', () => {
+    it('applies default width class when not specified', async () => {
+      const user = userEvent.setup();
+      render(
+        <HoverCard content="Card text">
+          <span>Hover me</span>
+        </HoverCard>,
+      );
+
+      await user.hover(screen.getByText('Hover me'));
+
+      expect(screen.getByRole('tooltip')).toHaveClass('w-80');
+    });
+
+    it('applies custom width class when specified', async () => {
+      const user = userEvent.setup();
+      render(
+        <HoverCard content="Card text" width="w-72">
+          <span>Hover me</span>
+        </HoverCard>,
+      );
+
+      await user.hover(screen.getByText('Hover me'));
+
+      expect(screen.getByRole('tooltip')).toHaveClass('w-72');
+    });
   });
 
   describe('showDelay', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
+    // These tests use real timers. vi.useFakeTimers() replaces setTimeout globally,
+    // which breaks React's internal scheduler (also uses setTimeout for jsdom). The
+    // delay is kept small (50ms) so tests stay fast while still being meaningful.
 
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it('does not show content before delay elapses', () => {
+    it('does not show content before delay elapses', async () => {
+      // user.hover() fires pointerover (bubbling) which is required to reach
+      // @floating-ui/react's native event listener and start the delay timer.
+      // fireEvent.pointerEnter dispatches pointerenter (non-bubbling) which only
+      // hits React's synthetic layer — triggering our onOpenChange callback but
+      // not the library's internal hover timer.
+      const user = userEvent.setup();
       render(
         <HoverCard content="Card text" showDelay={200}>
           <span>Hover me</span>
         </HoverCard>,
       );
 
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
+      // Start hover — events are dispatched asynchronously by userEvent
+      const hoverPromise = user.hover(screen.getByText('Hover me'));
 
-      // Content should not be visible yet
+      // Before any events fire: card must not be shown
       expect(screen.queryByText('Card text')).not.toBeInTheDocument();
 
-      // Advance timer past delay
-      act(() => {
-        vi.advanceTimersByTime(200);
-      });
+      // Events fire and React settles — 200ms timer has started but not elapsed
+      await hoverPromise;
+      expect(screen.queryByText('Card text')).not.toBeInTheDocument();
 
-      expect(screen.getByText('Card text')).toBeInTheDocument();
+      // Card must appear after the 200ms delay elapses
+      await waitFor(() => expect(screen.getByText('Card text')).toBeInTheDocument(), {
+        timeout: 1000,
+      });
     });
 
-    it('cancels show when mouse leaves before delay elapses', () => {
+    it('cancels show when mouse leaves before delay elapses', async () => {
+      // 500ms delay gives a wide margin: hover+unhover finishes in <50ms so the
+      // timer is always cancelled before it fires.
+      const user = userEvent.setup();
       render(
-        <HoverCard content="Card text" showDelay={200}>
+        <HoverCard content="Card text" showDelay={500}>
           <span>Hover me</span>
         </HoverCard>,
       );
 
       const trigger = screen.getByText('Hover me');
-      fireEvent.mouseEnter(trigger);
-      fireEvent.mouseLeave(trigger);
-
-      act(() => {
-        vi.advanceTimersByTime(200);
-      });
+      await user.hover(trigger);
+      await user.unhover(trigger);
 
       expect(screen.queryByText('Card text')).not.toBeInTheDocument();
     });
 
     it('fires onOpenChange immediately on hover, before delay elapses', () => {
       const onOpenChange = vi.fn();
-
       render(
         <HoverCard content="Card text" showDelay={200} onOpenChange={onOpenChange}>
           <span>Hover me</span>
         </HoverCard>,
       );
 
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
+      const referenceEl = screen.getByText('Hover me').parentElement!;
 
-      // Should have fired immediately, before the 200ms delay
+      // onPointerEnter fires our handlePointerEnter synchronously — before any delay
+      fireEvent.pointerEnter(referenceEl);
+
       expect(onOpenChange).toHaveBeenCalledWith(true);
+      // Card must not appear yet (delay hasn't elapsed)
       expect(screen.queryByText('Card text')).not.toBeInTheDocument();
     });
 
-    it('fires onOpenChange(false) on mouse leave', () => {
+    it('fires onOpenChange(false) on mouse leave', async () => {
       const onOpenChange = vi.fn();
-
       render(
         <HoverCard content="Card text" showDelay={200} onOpenChange={onOpenChange}>
           <span>Hover me</span>
         </HoverCard>,
       );
 
-      const trigger = screen.getByText('Hover me');
-      fireEvent.mouseEnter(trigger);
-      fireEvent.mouseLeave(trigger);
+      const referenceEl = screen.getByText('Hover me').parentElement!;
+
+      fireEvent.pointerEnter(referenceEl);
+      await act(async () => {});
+
+      fireEvent.pointerLeave(referenceEl);
+      await act(async () => {});
 
       expect(onOpenChange).toHaveBeenCalledWith(false);
-    });
-  });
-
-  describe('Scroll Repositioning', () => {
-    it('registers scroll and resize listeners when card is visible', () => {
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-      render(
-        <HoverCard content="Card text">
-          <span>Hover me</span>
-        </HoverCard>,
-      );
-
-      const trigger = screen.getByText('Hover me');
-
-      fireEvent.mouseEnter(trigger);
-
-      expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), true);
-      expect(addEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
-
-      fireEvent.mouseLeave(trigger);
-
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), true);
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
-
-      addEventListenerSpy.mockRestore();
-      removeEventListenerSpy.mockRestore();
-    });
-
-    it('uses fixed positioning for the card', () => {
-      render(
-        <HoverCard content="Card text">
-          <span>Hover me</span>
-        </HoverCard>,
-      );
-
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
-
-      const card = screen.getByRole('tooltip');
-      expect(card).toHaveStyle({ position: 'fixed' });
-    });
-
-    it('renders card in portal to document.body', () => {
-      render(
-        <HoverCard content="Card text">
-          <span>Hover me</span>
-        </HoverCard>,
-      );
-
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
-
-      const card = screen.getByRole('tooltip');
-      expect(card.parentElement).toBe(document.body);
-    });
-
-    it('cleans up event listeners on unmount', () => {
-      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-      const { unmount } = render(
-        <HoverCard content="Card text">
-          <span>Hover me</span>
-        </HoverCard>,
-      );
-
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
-
-      unmount();
-
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), true);
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
-
-      removeEventListenerSpy.mockRestore();
-    });
-  });
-
-  describe('custom width', () => {
-    it('applies default width class when not specified', () => {
-      render(
-        <HoverCard content="Card text">
-          <span>Hover me</span>
-        </HoverCard>,
-      );
-
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
-
-      const card = screen.getByRole('tooltip');
-      expect(card).toHaveClass('w-80');
-    });
-
-    it('applies custom width class when specified', () => {
-      render(
-        <HoverCard content="Card text" width="w-56">
-          <span>Hover me</span>
-        </HoverCard>,
-      );
-
-      fireEvent.mouseEnter(screen.getByText('Hover me'));
-
-      const card = screen.getByRole('tooltip');
-      expect(card).toHaveClass('w-56');
     });
   });
 });

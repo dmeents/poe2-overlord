@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CurrencyExchangeRate } from '@/types/economy';
 import { EconomyRow } from './economy-row';
 
-// CurrencyItemPopup uses useItemByName which requires a QueryClient.
+// ItemTooltip uses useItemByName which requires a QueryClient.
 // Mock it here since EconomyRow tests aren't testing the item data query.
 vi.mock('@/queries/item-data', () => ({
   useItemByName: vi.fn(() => ({ data: null, isLoading: false })),

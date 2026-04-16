@@ -418,8 +418,13 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
     let explicit_json: String = r.try_get("explicit_mods").unwrap_or_default();
     let explicit_mods: Vec<ModDisplay> = serde_json::from_str(&explicit_json).unwrap_or_default();
 
+    // Use try_get::<Option<i64>, _>(...).ok().flatten() for NULL-indicator columns.
+    // try_get::<i64>() on a NULL SQLite column calls sqlite3_column_int64() which
+    // returns 0 — indistinguishable from a real zero value. Option<i64> decode
+    // instead returns Ok(None) for NULL, giving us a reliable NULL signal.
+
     let defences = {
-        let armour: Option<i64> = r.try_get("armour").ok();
+        let armour: Option<i64> = r.try_get::<Option<i64>, _>("armour").ok().flatten();
         armour.map(|a| DefenceValues {
             armour: a,
             evasion: r.try_get("evasion").unwrap_or(0),
@@ -429,7 +434,7 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
     };
 
     let weapon = {
-        let damage_min: Option<i64> = r.try_get("damage_min").ok();
+        let damage_min: Option<i64> = r.try_get::<Option<i64>, _>("damage_min").ok().flatten();
         damage_min.map(|dm| WeaponValues {
             damage_min: dm,
             damage_max: r.try_get("damage_max").unwrap_or(0),
@@ -440,7 +445,7 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
     };
 
     let shield = {
-        let block: Option<i64> = r.try_get("block").ok();
+        let block: Option<i64> = r.try_get::<Option<i64>, _>("block").ok().flatten();
         block.map(|b| ShieldValues { block: b })
     };
 
@@ -459,7 +464,7 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
     };
 
     let currency = {
-        let stack_size: Option<i64> = r.try_get("stack_size").ok();
+        let stack_size: Option<i64> = r.try_get::<Option<i64>, _>("stack_size").ok().flatten();
         stack_size.map(|s| CurrencyData {
             stack_size: s,
             description: r.try_get("currency_description").ok().flatten(),

@@ -1,20 +1,25 @@
+import {
+  arrow,
+  autoUpdate,
+  FloatingArrow,
+  FloatingPortal,
+  flip,
+  offset,
+  safePolygon,
+  shift,
+  useFloating,
+  useFocus,
+  useHover,
+  useInteractions,
+  useRole,
+  useTransitionStyles,
+} from '@floating-ui/react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { memo, useCallback, useRef, useState } from 'react';
 import { hoverCardStyles } from './hover-card.styles';
 
-/** Maps Tailwind width classes to pixel values for viewport edge clamping. */
-const TAILWIND_WIDTH_PX: Record<string, number> = {
-  'w-48': 192,
-  'w-56': 224,
-  'w-64': 256,
-  'w-72': 288,
-  'w-80': 320,
-  'w-96': 384,
-};
-
-/** Minimum gap (px) between the card edge and the viewport edge. */
-const VIEWPORT_MARGIN = 8;
+/** Pixel height of the arrow tip — keeps the gap consistent with the offset. */
+const ARROW_HEIGHT = 6;
 
 interface HoverCardProps {
   /** Content rendered inside the floating card */
@@ -23,7 +28,7 @@ interface HoverCardProps {
   children: React.ReactNode;
   /** Additional classes applied to the outer wrapper div */
   className?: string;
-  /** Tailwind width class for the floating card (default: 'w-80') */
+  /** Tailwind width class applied to the floating card (default: 'w-80') */
   width?: string;
   /** Milliseconds to wait before showing after hover begins (default: 0) */
   showDelay?: number;
@@ -31,23 +36,24 @@ interface HoverCardProps {
   showIcon?: boolean;
   /**
    * Fires immediately when hover intent begins (true) or ends (false),
-   * before showDelay elapses. Use this to kick off deferred data fetching
+   * BEFORE showDelay elapses. Use this to kick off deferred data fetching
    * while the user waits for the card to appear.
    */
   onOpenChange?: (open: boolean) => void;
 }
 
 /**
- * Unified hover card component for rich hover-triggered content.
+ * Unified hover card component powered by @floating-ui/react.
  *
  * Features:
+ * - Auto-flip: switches to bottom placement when there is no space above
+ * - Auto-shift: slides along the viewport edge to stay fully in view
+ * - autoUpdate: repositions on scroll, resize, and ResizeObserver — no manual listeners
+ * - safePolygon: cursor can move from trigger to card without it closing
+ * - Keyboard accessible: focus/blur open/close
  * - Configurable show delay (default 0ms)
- * - Automatically repositions on scroll/resize while visible
- * - Uses capture-phase scroll listening to catch scroll on any ancestor
- * - Renders in portal to avoid z-index and overflow issues
- * - Keyboard accessible (focus/blur)
- * - `onOpenChange` fires before the delay for deferred data loading
- * - When `content` is falsy, just renders children with no hover behavior
+ * - onOpenChange fires immediately on hover start (before showDelay) for deferred loading
+ * - When content is falsy, renders children as-is with no hover machinery attached
  *
  * @example
  * // Simple tooltip (zero delay)
@@ -56,11 +62,11 @@ interface HoverCardProps {
  * </HoverCard>
  *
  * @example
- * // Rich popover with delay and deferred loading
+ * // Rich card with delay and deferred data loading
  * <HoverCard
  *   content={<RichContent data={data} />}
  *   showDelay={200}
- *   width="w-56"
+ *   width="w-72"
  *   onOpenChange={(open) => { if (open) startFetching(); }}
  * >
  *   <img src={icon} alt="item" />
@@ -75,133 +81,90 @@ export const HoverCard = memo(function HoverCard({
   showIcon = false,
   onOpenChange,
 }: HoverCardProps) {
-  const [position, setPosition] = useState<{
-    top: number;
-    /** Clamped center-X used for `left` in fixed positioning. */
-    left: number;
-    /** How far the arrow needs to shift from card-center to point at the trigger. */
-    arrowOffset: number;
-  } | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const arrowRef = useRef<SVGSVGElement>(null);
 
-  const clearTimer = useCallback(() => {
-    if (showTimerRef.current) {
-      clearTimeout(showTimerRef.current);
-      showTimerRef.current = null;
-    }
-  }, []);
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'top',
+    strategy: 'fixed',
+    // transform: false — use left/top instead of translate() for positioning.
+    // The default transform:true produces floatingStyles.transform='translate(X,Y)'.
+    // Spreading transitionStyles on top overwrites that with scale(…), collapsing
+    // the position to (0,0). With transform:false, left/top carry the position and
+    // transitionStyles.transform is free to animate scale independently.
+    transform: false,
+    middleware: [
+      offset(ARROW_HEIGHT + 2),
+      flip({ padding: 8 }),
+      shift({ padding: 8 }),
+      arrow({ element: arrowRef, padding: 6 }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
 
-  const calculatePosition = useCallback(() => {
-    if (!triggerRef.current) return null;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const triggerCenterX = rect.left + rect.width / 2;
+  const hover = useHover(context, {
+    delay: { open: showDelay, close: 0 },
+    handleClose: safePolygon(),
+  });
+  const focus = useFocus(context, { visibleOnly: false });
+  const role = useRole(context, { role: 'tooltip' });
 
-    // Clamp the card's center-X so it stays within the viewport.
-    // Uses translate(-50%) semantics: left is the horizontal center of the card.
-    const cardWidth = TAILWIND_WIDTH_PX[width] ?? 320;
-    const halfCard = cardWidth / 2;
-    const clampedLeft = Math.max(
-      halfCard + VIEWPORT_MARGIN,
-      Math.min(window.innerWidth - halfCard - VIEWPORT_MARGIN, triggerCenterX),
-    );
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, role]);
 
-    // The arrow must point at the trigger's center, not the card's center.
-    // arrowOffset shifts the arrow horizontally relative to card-center.
-    const arrowOffset = triggerCenterX - clampedLeft;
+  // Fire consumer's onOpenChange immediately on pointer enter/leave — before
+  // showDelay elapses — so deferred data fetching can start right away.
+  // useHover uses pointer events, so we mirror that here.
+  const handlePointerEnter = useCallback(() => onOpenChange?.(true), [onOpenChange]);
+  const handlePointerLeave = useCallback(() => onOpenChange?.(false), [onOpenChange]);
 
-    return { top: rect.top, left: clampedLeft, arrowOffset };
-  }, [width]);
+  const { isMounted, styles: transitionStyles } = useTransitionStyles(context, {
+    initial: { opacity: 0, transform: 'scale(0.95)' },
+    open: { opacity: 1, transform: 'scale(1)' },
+    // Open has a subtle animation; close is immediate so the element unmounts
+    // right away (avoids keeping stale portal content in the DOM).
+    duration: { open: 120, close: 0 },
+  });
 
-  const showCard = useCallback(() => {
-    const pos = calculatePosition();
-    if (!pos) return;
-    // Set position immediately so content can start rendering / loading
-    setPosition(pos);
-    onOpenChange?.(true);
-
-    if (showDelay > 0) {
-      showTimerRef.current = setTimeout(() => setIsVisible(true), showDelay);
-    } else {
-      setIsVisible(true);
-    }
-  }, [calculatePosition, onOpenChange, showDelay]);
-
-  const hideCard = useCallback(() => {
-    clearTimer();
-    setIsVisible(false);
-    onOpenChange?.(false);
-  }, [clearTimer, onOpenChange]);
-
-  // Reposition on scroll/resize while visible
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const updatePosition = () => {
-      const pos = calculatePosition();
-      if (pos) setPosition(pos);
-    };
-
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, [isVisible, calculatePosition]);
-
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => clearTimer();
-  }, [clearTimer]);
-
-  // Don't attach any hover behaviour if there's nothing to show
+  // No hover machinery when there is nothing to show
   if (!content) {
     return <>{children}</>;
   }
-
-  const cardNode = isVisible && position && (
-    <div
-      role="tooltip"
-      className={`${hoverCardStyles.card} ${width}`}
-      style={{
-        position: 'fixed',
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        transform: 'translate(-50%, calc(-100% - 8px))',
-      }}>
-      <div className={hoverCardStyles.content}>
-        {content}
-        {/* Arrow points at the trigger center, shifted when the card is clamped. */}
-        <div
-          className={hoverCardStyles.arrow}
-          style={
-            position.arrowOffset !== 0
-              ? { marginLeft: `${position.arrowOffset}px` }
-              : undefined
-          }
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div className={`${hoverCardStyles.container} ${className}`}>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: HoverCard trigger uses mouse/focus events for hover interaction */}
       <div
-        ref={triggerRef}
+        ref={refs.setReference}
         className={hoverCardStyles.trigger}
-        onMouseEnter={showCard}
-        onMouseLeave={hideCard}
-        onFocus={showCard}
-        onBlur={hideCard}>
+        {...getReferenceProps({
+          onPointerEnter: handlePointerEnter,
+          onPointerLeave: handlePointerLeave,
+        })}>
         {children}
         {showIcon && <InformationCircleIcon className={hoverCardStyles.icon} aria-hidden="true" />}
       </div>
 
-      {typeof document !== 'undefined' && createPortal(cardNode, document.body)}
+      {isMounted && (
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            className={`${hoverCardStyles.card} ${width}`}
+            style={{ ...floatingStyles, ...transitionStyles }}
+            {...getFloatingProps()}>
+            {content}
+            <FloatingArrow
+              ref={arrowRef}
+              context={context}
+              className={hoverCardStyles.arrow}
+              height={ARROW_HEIGHT}
+              width={12}
+              tipRadius={1}
+            />
+          </div>
+        </FloatingPortal>
+      )}
     </div>
   );
 });

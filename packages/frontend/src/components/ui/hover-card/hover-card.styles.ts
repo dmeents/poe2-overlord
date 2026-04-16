@@ -1,15 +1,16 @@
 // HoverCard Styles
-// Centralized styling for the shared HoverCard component
-// Uses stone color palette from theme
+// Centralized styling for the shared HoverCard component.
+// Positioning is handled by @floating-ui/react — these classes cover appearance only.
+// Uses stone color palette from theme.
 
 export const hoverCardStyles = {
   container: 'relative inline-block',
   trigger: 'inline-flex items-center gap-1 cursor-pointer',
   icon: 'w-4 h-4 text-stone-400 hover:text-stone-300 transition-colors',
-  // z-40: Must exceed z-30 fixed chrome (sidebar, titlebar) so the card renders
-  //        above navigation. Width is applied dynamically via the `width` prop.
-  card: 'z-40 p-3 bg-stone-900 border border-stone-700 text-stone-200 text-sm card-shadow pointer-events-none rounded',
-  content: 'relative',
+  // z-40: Must exceed z-30 fixed chrome (sidebar, titlebar).
+  // Width is applied dynamically via the `width` prop.
+  card: 'z-40 p-3 bg-stone-900 border border-stone-700 text-stone-200 text-sm card-shadow rounded',
+  // FloatingArrow SVG — filled to match card background, stroked to match border.
   arrow:
-    'absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-stone-900',
+    'fill-stone-900 [&>path:first-of-type]:stroke-stone-700 [&>path:last-of-type]:stroke-stone-900',
 } as const;

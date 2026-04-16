@@ -1,4 +1,4 @@
-use crate::domain::configuration::models::{AppConfig, ZoneRefreshInterval};
+use crate::domain::configuration::models::{AppConfig, BackgroundImage, ZoneRefreshInterval};
 use crate::domain::configuration::traits::ConfigurationService;
 use crate::{to_command_result, CommandResult};
 use log::info;
@@ -59,6 +59,22 @@ pub async fn get_zone_refresh_interval_options(
             value: format!("{interval:?}"),
             label: interval.label().to_string(),
             seconds: interval.to_seconds(),
+        })
+        .collect();
+
+    Ok(options)
+}
+
+#[tauri::command]
+pub async fn get_background_image_options(
+) -> CommandResult<Vec<crate::domain::configuration::models::BackgroundImageOption>> {
+    use crate::domain::configuration::models::BackgroundImageOption;
+    let options = BackgroundImage::all_options()
+        .into_iter()
+        .map(|bg| BackgroundImageOption {
+            value: format!("{bg:?}"),
+            label: bg.label().to_string(),
+            filename: bg.filename().map(|s| s.to_string()),
         })
         .collect();
 

@@ -4,6 +4,8 @@ import { SidebarNavigation } from '@/components/layout/sidebar-navigation/sideba
 import { WindowTitle } from '@/components/layout/window-title/window-title';
 import { StatusBar } from '@/components/status/status-bar/status-bar';
 import { ZoneDetailsModal } from '@/components/zones/zone-details-modal/zone-details-modal';
+import { useConfiguration } from '@/contexts/ConfigurationContext';
+import { BACKGROUND_IMAGE_CSS } from '@/utils/background-images';
 import '../globals.css';
 
 function ScrollToTop({ containerRef }: { containerRef: React.RefObject<HTMLElement | null> }) {
@@ -17,8 +19,14 @@ function ScrollToTop({ containerRef }: { containerRef: React.RefObject<HTMLEleme
 
 function RootComponent() {
   const mainRef = useRef<HTMLElement>(null);
+  const { config } = useConfiguration();
+
+  const bgCss = config?.background_image
+    ? (BACKGROUND_IMAGE_CSS[config.background_image] ?? BACKGROUND_IMAGE_CSS.VolcanicRuins)
+    : BACKGROUND_IMAGE_CSS.VolcanicRuins;
+
   return (
-    <div className="app-background">
+    <div className="app-background" style={{ '--bg-image': bgCss } as React.CSSProperties}>
       <WindowTitle />
       <SidebarNavigation />
       <main

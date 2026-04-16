@@ -20,7 +20,7 @@ body {
       color-mix(in srgb, var(--color-stone-900) 85%, transparent) 50%,
       color-mix(in srgb, var(--color-stone-900) 95%, transparent) 100%
     ),
-    url("/background.png") center / cover no-repeat fixed;
+    var(--bg-image, url("/bg-volcanic-ruins.png")) center / cover no-repeat fixed;
 }
 
 /* Desktop app select styling */

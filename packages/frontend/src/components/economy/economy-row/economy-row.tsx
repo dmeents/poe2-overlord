@@ -1,7 +1,7 @@
 import { ArrowsRightLeftIcon, StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { CurrencyItemPopup } from '@/components/economy/currency-item-popup/currency-item-popup';
-import { Tooltip } from '@/components/ui/tooltip/tooltip';
+import { HoverCard } from '@/components/ui/hover-card/hover-card';
 import { useEconomy } from '@/contexts/EconomyContext';
 import type { BackendEconomyType, CurrencyExchangeRate, EconomyType } from '@/types/economy';
 import { calculateItemsSoldPerHour } from '@/utils/economy-utils';
@@ -131,7 +131,7 @@ export function EconomyRow({
         </div>
       </div>
 
-      <Tooltip content={tooltipContent}>
+      <HoverCard content={tooltipContent}>
         <div className={economyRowStyles.valueContainer}>
           <div className={economyRowStyles.valueRow}>
             {display_value.inverted ? (
@@ -198,7 +198,7 @@ export function EconomyRow({
             </div>
           )}
         </div>
-      </Tooltip>
+      </HoverCard>
     </div>
   );
 }

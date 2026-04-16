@@ -59,6 +59,46 @@ pub struct ZoneRefreshIntervalOption {
     pub seconds: i64,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum BackgroundImage {
+    None,
+    #[default]
+    VolcanicRuins,
+}
+
+impl BackgroundImage {
+    pub fn all_options() -> Vec<BackgroundImage> {
+        vec![BackgroundImage::None, BackgroundImage::VolcanicRuins]
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            BackgroundImage::None => "No Background",
+            BackgroundImage::VolcanicRuins => "Volcanic Ruins",
+        }
+    }
+
+    pub fn filename(&self) -> Option<&'static str> {
+        match self {
+            BackgroundImage::None => None,
+            BackgroundImage::VolcanicRuins => Some("bg-volcanic-ruins.png"),
+        }
+    }
+}
+
+impl std::fmt::Display for BackgroundImage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.label())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackgroundImageOption {
+    pub value: String,
+    pub label: String,
+    pub filename: Option<String>,
+}
+
 /// Default config version for new configs
 fn default_config_version() -> u32 {
     AppConfig::CURRENT_VERSION
@@ -82,6 +122,8 @@ pub struct AppConfig {
     pub hide_objective_descriptions: bool,
     #[serde(default)]
     pub ui_zoom_level: f64,
+    #[serde(default)]
+    pub background_image: BackgroundImage,
 }
 
 impl AppConfig {
@@ -108,6 +150,7 @@ impl AppConfig {
             hide_flavor_text: false,
             hide_objective_descriptions: false,
             ui_zoom_level: 0.0,
+            background_image: BackgroundImage::default(),
         }
     }
 
@@ -219,6 +262,7 @@ impl Default for AppConfig {
             hide_flavor_text: false,
             hide_objective_descriptions: false,
             ui_zoom_level: 0.0,
+            background_image: BackgroundImage::default(),
         }
     }
 }

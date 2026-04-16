@@ -120,6 +120,7 @@ pub fn run() {
             get_zone_refresh_interval,
             set_zone_refresh_interval,
             get_zone_refresh_interval_options,
+            get_background_image_options,
 
 
             // Character management commands

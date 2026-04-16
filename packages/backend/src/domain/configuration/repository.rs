@@ -1,5 +1,5 @@
 use crate::domain::configuration::models::{
-    AppConfig, ConfigurationValidationResult, ZoneRefreshInterval,
+    AppConfig, BackgroundImage, ConfigurationValidationResult, ZoneRefreshInterval,
 };
 use crate::domain::configuration::traits::ConfigurationRepository;
 use crate::errors::AppResult;
@@ -49,13 +49,16 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         let zone_refresh_interval = format!("{:?}", config.zone_refresh_interval);
         let updated_at = Utc::now().to_rfc3339();
 
+        // Convert background_image enum to TEXT for storage
+        let background_image = format!("{:?}", config.background_image);
+
         // INSERT OR REPLACE into single-row table
         sqlx::query(
             "INSERT OR REPLACE INTO app_config
              (id, config_version, poe_client_log_path, log_level, zone_refresh_interval, updated_at,
               hide_optional_objectives, hide_league_start_objectives, hide_flavor_text,
-              hide_objective_descriptions, ui_zoom_level)
-             VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              hide_objective_descriptions, ui_zoom_level, background_image)
+             VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(i64::from(config.config_version))
         .bind(&config.poe_client_log_path)
@@ -67,6 +70,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         .bind(i64::from(config.hide_flavor_text))
         .bind(i64::from(config.hide_objective_descriptions))
         .bind(config.ui_zoom_level)
+        .bind(&background_image)
         .execute(&self.pool)
         .await?;
 
@@ -78,15 +82,16 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
         debug!("Loading configuration from SQLite");
 
         // Query the single-row config table
-        let row: Option<(i64, String, String, String, i64, i64, i64, i64, f64)> = sqlx::query_as(
-            "SELECT config_version, poe_client_log_path, log_level, zone_refresh_interval,
+        let row: Option<(i64, String, String, String, i64, i64, i64, i64, f64, String)> =
+            sqlx::query_as(
+                "SELECT config_version, poe_client_log_path, log_level, zone_refresh_interval,
                     hide_optional_objectives, hide_league_start_objectives,
-                    hide_flavor_text, hide_objective_descriptions, ui_zoom_level
+                    hide_flavor_text, hide_objective_descriptions, ui_zoom_level, background_image
              FROM app_config
              WHERE id = 1",
-        )
-        .fetch_optional(&self.pool)
-        .await?;
+            )
+            .fetch_optional(&self.pool)
+            .await?;
 
         let config = if let Some((
             config_version,
@@ -98,6 +103,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             hide_flavor_text,
             hide_objective_descriptions,
             ui_zoom_level,
+            background_image_str,
         )) = row
         {
             // Parse enum from TEXT
@@ -116,6 +122,17 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 }
             };
 
+            let background_image = match background_image_str.as_str() {
+                "None" => BackgroundImage::None,
+                "VolcanicRuins" => BackgroundImage::VolcanicRuins,
+                _ => {
+                    log::warn!(
+                        "Unknown background_image value: {background_image_str}, defaulting to VolcanicRuins"
+                    );
+                    BackgroundImage::VolcanicRuins
+                }
+            };
+
             AppConfig {
                 config_version: config_version as u32,
                 poe_client_log_path,
@@ -126,6 +143,7 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
                 hide_flavor_text: hide_flavor_text != 0,
                 hide_objective_descriptions: hide_objective_descriptions != 0,
                 ui_zoom_level,
+                background_image,
             }
         } else {
             // No config exists, return default and save it

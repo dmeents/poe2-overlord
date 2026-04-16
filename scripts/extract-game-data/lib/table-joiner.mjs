@@ -73,6 +73,19 @@ function buildFKIndex(rows, fkColumn) {
   return map;
 }
 
+/** Build a map from a FK column value → array of rows (one-to-many). */
+function buildMultiFKIndex(rows, fkColumn) {
+  const map = new Map();
+  for (const row of (rows ?? [])) {
+    const fkVal = col(row, fkColumn);
+    if (fkVal != null) {
+      if (!map.has(fkVal)) map.set(fkVal, []);
+      map.get(fkVal).push(row);
+    }
+  }
+  return map;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -105,6 +118,15 @@ export function joinTables(tables, statDescriptions) {
 
   // Mods: keyed by _index (FK from BaseItemTypes.Implicit_Mods array)
   const modByIndex = buildIndexByCol(tables.Mods ?? [], '_index');
+
+  // Stats: keyed by _index (used for SoulCoreStats stat lookups)
+  const statByIndex = buildIndexByCol(tables.Stats ?? [], '_index');
+
+  // SoulCores: keyed by BaseItemType FK integer (→ base._index)
+  const soulCoresByBase = buildFKIndex(tables.SoulCores ?? [], 'BaseItemType');
+
+  // SoulCoreStats: one-to-many by SoulCore FK integer (→ soulCore._index)
+  const soulCoreStatsBySC = buildMultiFKIndex(tables.SoulCoreStats ?? [], 'SoulCore');
 
   // ------------------------------------------------------------------
   // 2. Build mod display text lookup
@@ -162,9 +184,19 @@ export function joinTables(tables, statDescriptions) {
 
     // Implicit mods — array of FK integers into Mods table
     const implicitModIndices = rowArray(base, 'Implicit_Mods');
-    const implicitMods = implicitModIndices
+    let implicitMods = implicitModIndices
       .map((idx) => (typeof idx === 'number' ? modDisplayByIndex.get(idx) : null))
       .filter(Boolean);
+
+    // For soul core items (runes, idols, etc.) that have no implicit mods from the Mods table,
+    // derive stat descriptions from SoulCoreStats instead.
+    if (implicitMods.length === 0 && baseIdx != null) {
+      const soulCore = soulCoresByBase.get(baseIdx);
+      if (soulCore != null) {
+        const scStatsRows = soulCoreStatsBySC.get(soulCore._index) ?? [];
+        implicitMods = buildSoulCoreMods(scStatsRows, statByIndex);
+      }
+    }
 
     // Sub-type data — all keyed by BaseItemTypes row index (base._index)
     const armour       = buildArmour(baseIdx != null ? armourByBase.get(baseIdx) : null);
@@ -304,6 +336,118 @@ function buildModText(mod, statDescriptions) {
   // If stat descriptions were loaded, try to format them; otherwise fall back to mod Name.
   const text = formatStatDisplay(statDescriptions, statIds, values, values);
   return text ?? strCol(mod, 'Name') ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// SoulCore stat description builder
+// Stat description txt files are not accessible via the bundle system in POE2,
+// so we derive approximate human-readable text directly from stat IDs + values.
+// ---------------------------------------------------------------------------
+
+/**
+ * Build implicit-mod-like entries from SoulCoreStats rows.
+ * Each row holds parallel Stats[] (FK int array) and StatsValues[] (int array).
+ */
+function buildSoulCoreMods(scStatsRows, statByIndex) {
+  const mods = [];
+
+  for (const row of scStatsRows) {
+    const statFks  = rowArray(row, 'Stats');
+    const values   = rowArray(row, 'StatsValues');
+
+    if (statFks.length === 0) continue;
+
+    // Resolve FK ints → stat ID strings
+    const statIds = statFks
+      .map((fk) => (typeof fk === 'number' ? strCol(statByIndex.get(fk), 'Id') : null))
+      .filter(Boolean);
+
+    if (statIds.length === 0) continue;
+
+    const text = formatSoulCoreStatLine(statIds, values);
+    if (text) {
+      mods.push({ id: statIds.join(','), text });
+    }
+  }
+
+  return mods;
+}
+
+/**
+ * Format one SoulCoreStats row (arrays of stat IDs + values) into display text.
+ * Handles min/max damage pairs specially; falls back to per-stat formatting.
+ */
+function formatSoulCoreStatLine(statIds, values) {
+  // Min/max damage pair detection (2-stat rows only).
+  // Handles: local_minimum_added_X_damage, thorns_minimum_base_X_damage,
+  //          attack_minimum_added_X_damage, allies_in_presence_attack_minimum_added_X_damage
+  if (statIds.length === 2) {
+    const m1 = statIds[0].match(/minimum(?:_added|_base)?_(\w+)_damage$/);
+    const m2 = statIds[1].match(/maximum(?:_added|_base)?_(\w+)_damage$/);
+    if (m1 && m2 && m1[1] === m2[1]) {
+      const dmgType = m1[1].charAt(0).toUpperCase() + m1[1].slice(1);
+      const verb    = statIds[0].startsWith('thorns_') ? 'Deals' : 'Adds';
+      const suffix  = statIds[0].startsWith('thorns_') ? ' to Attackers' : '';
+      return `${verb} ${values[0] ?? 0} to ${values[1] ?? 0} ${dmgType} Damage${suffix}`;
+    }
+  }
+
+  // Format each stat individually and join with newline
+  const parts = statIds
+    .map((id, i) => formatSingleSoulCoreStat(id, values[i] ?? 0))
+    .filter(Boolean);
+  return parts.join('\n') || null;
+}
+
+/**
+ * Convert a single stat ID + integer value to approximate display text.
+ *
+ * Examples:
+ *   additional_strength, 6                             → "+6 to Strength"
+ *   base_fire_damage_resistance_%, 12                  → "+12% Fire Damage Resistance"
+ *   attack_speed_+%, 15                                → "+15% Attack Speed"
+ *   base_maximum_life, 50                              → "+50 Maximum Life"
+ *   energy_generated_+%, 10                            → "+10% Energy Generated"
+ *   non_skill_base_all_damage_%_to_gain_as_fire, 8     → "+8% of Damage Gained as Fire"
+ */
+function formatSingleSoulCoreStat(id, value) {
+  const sign = value >= 0 ? '+' : '';
+
+  // "damage_%_to_gain_as_X" pattern (e.g. non_skill_base_all_damage_%_to_gain_as_fire)
+  const gainAs = id.match(/damage_%_to_gain_as_(\w+)$/);
+  if (gainAs) {
+    const element = gainAs[1].charAt(0).toUpperCase() + gainAs[1].slice(1);
+    return `${sign}${value}% of Damage Gained as ${element}`;
+  }
+
+  // "additional_X" → "+V to X"
+  if (id.startsWith('additional_')) {
+    const attr = humanizeStat(id.slice('additional_'.length));
+    return `${sign}${value} to ${attr}`;
+  }
+
+  // Detect percentage stat: id ends with %, _%,  _+%, or +%
+  const isPct = /[_%+]%$/.test(id) || id.endsWith('%');
+  const pctStr = isPct ? '%' : '';
+
+  // Strip common prefixes, trailing underscores, and percent/plus markers
+  const name = humanizeStat(
+    id
+      .replace(/^(non_skill_base_|base_|local_|global_)/, '')
+      .replace(/[_+]*%$/, '')   // remove trailing _+%  (handles energy_generated_+%)
+      .replace(/_+$/, '')       // remove any remaining trailing underscores
+  );
+
+  return `${sign}${value}${pctStr} ${name}`;
+}
+
+/** Convert snake_case to Title Case words, ignoring empty segments. */
+function humanizeStat(str) {
+  return str
+    .split('_')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
 }
 
 // ---------------------------------------------------------------------------

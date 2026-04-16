@@ -14,6 +14,14 @@ const mockGetZoneRefreshIntervalOptions = vi.hoisted(() =>
     ]),
   ),
 );
+const mockGetBackgroundImageOptions = vi.hoisted(() =>
+  vi.fn(() =>
+    Promise.resolve([
+      { value: 'None', label: 'No Background', filename: null },
+      { value: 'VolcanicRuins', label: 'Volcanic Ruins', filename: 'bg-volcanic-ruins.png' },
+    ]),
+  ),
+);
 const mockUseConfiguration = vi.hoisted(() => vi.fn());
 
 vi.mock('@/utils/tauri', () => ({
@@ -22,6 +30,7 @@ vi.mock('@/utils/tauri', () => ({
     updateConfig: mockUpdateConfig,
     resetConfigToDefaults: mockResetConfigToDefaults,
     getZoneRefreshIntervalOptions: mockGetZoneRefreshIntervalOptions,
+    getBackgroundImageOptions: mockGetBackgroundImageOptions,
   },
 }));
 
@@ -38,6 +47,8 @@ const defaultConfig = {
   hide_league_start_objectives: false,
   hide_flavor_text: false,
   hide_objective_descriptions: false,
+  ui_zoom_level: 0,
+  background_image: 'VolcanicRuins',
 };
 
 describe('SettingsForm', () => {
@@ -72,12 +83,14 @@ describe('SettingsForm', () => {
         expect(screen.getByText('POE Client Log Path')).toBeInTheDocument();
       });
 
+      expect(screen.getByText('Background Image')).toBeInTheDocument();
       expect(screen.getByText('Log Level')).toBeInTheDocument();
       expect(screen.getByText('Zone Refresh Interval')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Save Configuration' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
       expect(mockGetZoneRefreshIntervalOptions).toHaveBeenCalled();
+      expect(mockGetBackgroundImageOptions).toHaveBeenCalled();
       expect(screen.getByRole('button', { name: /info/i })).toBeInTheDocument();
     });
   });

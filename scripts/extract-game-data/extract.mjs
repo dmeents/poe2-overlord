@@ -96,6 +96,9 @@ const TABLES = [
   { name: 'SkillGems',                     columns: ['BaseItemType', 'Tier', 'GemType', 'GemColour'] },
   { name: 'CurrencyItems',                 columns: ['BaseItemType', 'StackSize', 'Description'] },
   { name: 'Flasks',                        columns: ['BaseItemType', 'LifePerUse', 'ManaPerUse', 'RecoveryTime'] },
+  // SoulCores (runes, soul cores, idols): stats come from SoulCoreStats, not BaseItemTypes.Implicit_Mods
+  { name: 'SoulCores',                     columns: ['BaseItemType', 'Type'] },
+  { name: 'SoulCoreStats',                 columns: ['SoulCore', 'Stats', 'StatsValues'] },
   // UniqueStashLayout has no BaseItemTypes FK in POE2 — unique linking skipped for now
   { name: 'UniqueStashLayout',             columns: ['WordsKey', 'ItemVisualIdentityKey'] },
   { name: 'Words',                         columns: ['Text'] },

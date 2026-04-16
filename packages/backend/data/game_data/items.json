@@ -19718,7 +19718,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_fire_damage,local_maximum_added_fire_damage",
+        "text": "Adds 7 to 11 Fire Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_fire",
+        "text": "+8% of Damage Gained as Fire"
+      },
+      {
+        "id": "base_fire_damage_resistance_%",
+        "text": "+12% Fire Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19751,7 +19764,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_cold_damage,local_maximum_added_cold_damage",
+        "text": "Adds 6 to 10 Cold Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+        "text": "+8% of Damage Gained as Cold"
+      },
+      {
+        "id": "base_cold_damage_resistance_%",
+        "text": "+12% Cold Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19784,7 +19810,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage",
+        "text": "Adds 1 to 20 Lightning Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_lightning",
+        "text": "+8% of Damage Gained as Lightning"
+      },
+      {
+        "id": "base_lightning_damage_resistance_%",
+        "text": "+12% Lightning Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19817,7 +19856,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_physical_damage_+%",
+        "text": "+16% Physical Damage"
+      },
+      {
+        "id": "spell_damage_+%",
+        "text": "+25% Spell Damage"
+      },
+      {
+        "id": "local_armour_and_evasion_and_energy_shield_+%",
+        "text": "+16% Armour And Evasion And Energy Shield"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19850,7 +19902,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_life_leech_from_physical_damage_permyriad",
+        "text": "+250 Life Leech From Physical Damage Permyriad"
+      },
+      {
+        "id": "base_maximum_energy_shield",
+        "text": "+30 Maximum Energy Shield"
+      },
+      {
+        "id": "base_maximum_life",
+        "text": "+30 Maximum Life"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19883,7 +19948,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_mana_leech_from_physical_damage_permyriad",
+        "text": "+200 Mana Leech From Physical Damage Permyriad"
+      },
+      {
+        "id": "base_maximum_mana",
+        "text": "+40 Maximum Mana"
+      },
+      {
+        "id": "base_maximum_mana",
+        "text": "+25 Maximum Mana"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19916,7 +19994,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_life_gained_on_enemy_death",
+        "text": "+20 Life Gained On Enemy Death"
+      },
+      {
+        "id": "energy_shield_recharge_rate_+%",
+        "text": "+15% Energy Shield Recharge Rate"
+      },
+      {
+        "id": "life_regeneration_rate_per_minute_%",
+        "text": "+18% Life Regeneration Rate Per Minute"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19949,7 +20040,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_mana_gained_on_enemy_death",
+        "text": "+16 Mana Gained On Enemy Death"
+      },
+      {
+        "id": "mana_regeneration_rate_+%",
+        "text": "+20% Mana Regeneration Rate"
+      },
+      {
+        "id": "mana_regeneration_rate_+%",
+        "text": "+15% Mana Regeneration Rate"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -19982,7 +20086,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_hit_damage_stun_multiplier_+%",
+        "text": "+25% Hit Damage Stun Multiplier"
+      },
+      {
+        "id": "stun_threshold_+_from_%_maximum_energy_shield",
+        "text": "+12 Stun Threshold + From % Maximum Energy Shield"
+      },
+      {
+        "id": "stun_threshold_+",
+        "text": "+60 Stun Threshold +"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20015,7 +20132,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_accuracy_rating",
+        "text": "+80 Accuracy Rating"
+      },
+      {
+        "id": "spell_critical_strike_chance_+%",
+        "text": "+20% Spell Critical Strike Chance"
+      },
+      {
+        "id": "flask_life_and_mana_to_recover_+%",
+        "text": "+10% Flask Life And Mana To Recover"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20048,7 +20178,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_fire_damage,local_maximum_added_fire_damage",
+        "text": "Adds 4 to 6 Fire Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_fire",
+        "text": "+6% of Damage Gained as Fire"
+      },
+      {
+        "id": "base_fire_damage_resistance_%",
+        "text": "+10% Fire Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20081,7 +20224,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_cold_damage,local_maximum_added_cold_damage",
+        "text": "Adds 3 to 5 Cold Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+        "text": "+6% of Damage Gained as Cold"
+      },
+      {
+        "id": "base_cold_damage_resistance_%",
+        "text": "+10% Cold Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20114,7 +20270,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage",
+        "text": "Adds 1 to 10 Lightning Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_lightning",
+        "text": "+6% of Damage Gained as Lightning"
+      },
+      {
+        "id": "base_lightning_damage_resistance_%",
+        "text": "+10% Lightning Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20147,7 +20316,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_physical_damage_+%",
+        "text": "+14% Physical Damage"
+      },
+      {
+        "id": "spell_damage_+%",
+        "text": "+20% Spell Damage"
+      },
+      {
+        "id": "local_armour_and_evasion_and_energy_shield_+%",
+        "text": "+14% Armour And Evasion And Energy Shield"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20180,7 +20362,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_life_leech_from_physical_damage_permyriad",
+        "text": "+200 Life Leech From Physical Damage Permyriad"
+      },
+      {
+        "id": "base_maximum_energy_shield",
+        "text": "+25 Maximum Energy Shield"
+      },
+      {
+        "id": "base_maximum_life",
+        "text": "+20 Maximum Life"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20213,7 +20408,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_mana_leech_from_physical_damage_permyriad",
+        "text": "+150 Mana Leech From Physical Damage Permyriad"
+      },
+      {
+        "id": "base_maximum_mana",
+        "text": "+30 Maximum Mana"
+      },
+      {
+        "id": "base_maximum_mana",
+        "text": "+15 Maximum Mana"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20246,7 +20454,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_life_gained_on_enemy_death",
+        "text": "+10 Life Gained On Enemy Death"
+      },
+      {
+        "id": "energy_shield_recharge_rate_+%",
+        "text": "+12% Energy Shield Recharge Rate"
+      },
+      {
+        "id": "life_regeneration_rate_per_minute_%",
+        "text": "+15% Life Regeneration Rate Per Minute"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20279,7 +20500,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_mana_gained_on_enemy_death",
+        "text": "+8 Mana Gained On Enemy Death"
+      },
+      {
+        "id": "mana_regeneration_rate_+%",
+        "text": "+16% Mana Regeneration Rate"
+      },
+      {
+        "id": "mana_regeneration_rate_+%",
+        "text": "+12% Mana Regeneration Rate"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20312,7 +20546,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_hit_damage_stun_multiplier_+%",
+        "text": "+20% Hit Damage Stun Multiplier"
+      },
+      {
+        "id": "stun_threshold_+_from_%_maximum_energy_shield",
+        "text": "+10 Stun Threshold + From % Maximum Energy Shield"
+      },
+      {
+        "id": "stun_threshold_+",
+        "text": "+40 Stun Threshold +"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20345,7 +20592,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_accuracy_rating",
+        "text": "+50 Accuracy Rating"
+      },
+      {
+        "id": "spell_critical_strike_chance_+%",
+        "text": "+16% Spell Critical Strike Chance"
+      },
+      {
+        "id": "flask_life_and_mana_to_recover_+%",
+        "text": "+8% Flask Life And Mana To Recover"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20378,7 +20638,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_fire_damage,local_maximum_added_fire_damage",
+        "text": "Adds 13 to 16 Fire Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_fire",
+        "text": "+10% of Damage Gained as Fire"
+      },
+      {
+        "id": "base_fire_damage_resistance_%",
+        "text": "+14% Fire Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20411,7 +20684,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_cold_damage,local_maximum_added_cold_damage",
+        "text": "Adds 9 to 15 Cold Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_cold",
+        "text": "+10% of Damage Gained as Cold"
+      },
+      {
+        "id": "base_cold_damage_resistance_%",
+        "text": "+14% Cold Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20444,7 +20730,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage",
+        "text": "Adds 1 to 30 Lightning Damage"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_lightning",
+        "text": "+10% of Damage Gained as Lightning"
+      },
+      {
+        "id": "base_lightning_damage_resistance_%",
+        "text": "+14% Lightning Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20477,7 +20776,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_physical_damage_+%",
+        "text": "+18% Physical Damage"
+      },
+      {
+        "id": "spell_damage_+%",
+        "text": "+30% Spell Damage"
+      },
+      {
+        "id": "local_armour_and_evasion_and_energy_shield_+%",
+        "text": "+18% Armour And Evasion And Energy Shield"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20510,7 +20822,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_life_leech_from_physical_damage_permyriad",
+        "text": "+300 Life Leech From Physical Damage Permyriad"
+      },
+      {
+        "id": "base_maximum_energy_shield",
+        "text": "+35 Maximum Energy Shield"
+      },
+      {
+        "id": "base_maximum_life",
+        "text": "+40 Maximum Life"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20543,7 +20868,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_mana_leech_from_physical_damage_permyriad",
+        "text": "+250 Mana Leech From Physical Damage Permyriad"
+      },
+      {
+        "id": "base_maximum_mana",
+        "text": "+50 Maximum Mana"
+      },
+      {
+        "id": "base_maximum_mana",
+        "text": "+35 Maximum Mana"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20576,7 +20914,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_life_gained_on_enemy_death",
+        "text": "+30 Life Gained On Enemy Death"
+      },
+      {
+        "id": "energy_shield_recharge_rate_+%",
+        "text": "+18% Energy Shield Recharge Rate"
+      },
+      {
+        "id": "life_regeneration_rate_per_minute_%",
+        "text": "+21% Life Regeneration Rate Per Minute"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20609,7 +20960,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_mana_gained_on_enemy_death",
+        "text": "+24 Mana Gained On Enemy Death"
+      },
+      {
+        "id": "mana_regeneration_rate_+%",
+        "text": "+24% Mana Regeneration Rate"
+      },
+      {
+        "id": "mana_regeneration_rate_+%",
+        "text": "+18% Mana Regeneration Rate"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20642,7 +21006,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_hit_damage_stun_multiplier_+%",
+        "text": "+30% Hit Damage Stun Multiplier"
+      },
+      {
+        "id": "stun_threshold_+_from_%_maximum_energy_shield",
+        "text": "+14 Stun Threshold + From % Maximum Energy Shield"
+      },
+      {
+        "id": "stun_threshold_+",
+        "text": "+80 Stun Threshold +"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20675,7 +21052,20 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_accuracy_rating",
+        "text": "+110 Accuracy Rating"
+      },
+      {
+        "id": "spell_critical_strike_chance_+%",
+        "text": "+24% Spell Critical Strike Chance"
+      },
+      {
+        "id": "flask_life_and_mana_to_recover_+%",
+        "text": "+12% Flask Life And Mana To Recover"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20708,7 +21098,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_strength",
+        "text": "+6 to Strength"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20741,7 +21136,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_strength",
+        "text": "+8 to Strength"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20774,7 +21174,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_strength",
+        "text": "+10 to Strength"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20807,7 +21212,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_dexterity",
+        "text": "+6 to Dexterity"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20840,7 +21250,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_dexterity",
+        "text": "+8 to Dexterity"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20873,7 +21288,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_dexterity",
+        "text": "+10 to Dexterity"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20906,7 +21326,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_intelligence",
+        "text": "+6 to Intelligence"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20939,7 +21364,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_intelligence",
+        "text": "+8 to Intelligence"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -20972,7 +21402,12 @@
       "description": "Place into an empty [Augment] Socket in any Equipment to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additional_intelligence",
+        "text": "+10 to Intelligence"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21005,7 +21440,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_physical_damage,local_maximum_added_physical_damage",
+        "text": "Adds 3 to 4 Physical Damage"
+      },
+      {
+        "id": "thorns_minimum_base_physical_damage,thorns_maximum_base_physical_damage",
+        "text": "Deals 6 to 9 Physical Damage to Attackers"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21038,7 +21482,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_physical_damage,local_maximum_added_physical_damage",
+        "text": "Adds 6 to 9 Physical Damage"
+      },
+      {
+        "id": "thorns_minimum_base_physical_damage,thorns_maximum_base_physical_damage",
+        "text": "Deals 14 to 21 Physical Damage to Attackers"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21071,7 +21524,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_physical_damage,local_maximum_added_physical_damage",
+        "text": "Adds 9 to 12 Physical Damage"
+      },
+      {
+        "id": "thorns_minimum_base_physical_damage,thorns_maximum_base_physical_damage",
+        "text": "Deals 31 to 52 Physical Damage to Attackers"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21104,7 +21566,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "minion_physical_damage_%_to_gain_as_lightning",
+        "text": "+10% of Damage Gained as Lightning"
+      },
+      {
+        "id": "minion_physical_hit_and_dot_damage_%_taken_as_lightning",
+        "text": "+10 Minion Physical Hit And Dot Damage % Taken As Lightning"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21137,7 +21608,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "energy_generated_+%",
+        "text": "+10% Energy Generated"
+      },
+      {
+        "id": "thorns_minimum_base_lightning_damage,thorns_maximum_base_lightning_damage",
+        "text": "Deals 1 to 100 Lightning Damage to Attackers"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21170,7 +21650,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "skill_speed_+%",
+        "text": "+8% Skill Speed"
+      },
+      {
+        "id": "debuff_time_passed_+%",
+        "text": "+8% Debuff Time Passed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21203,7 +21692,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_inflict_exposure_on_hit_%_chance",
+        "text": "+10 Inflict Exposure On Hit % Chance"
+      },
+      {
+        "id": "shocked_effect_on_self_+%",
+        "text": "-10% Shocked Effect On Self"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21236,7 +21734,12 @@
       "description": "Place into an empty [Augment] Socket in a Wand or a Staff to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "spell_skill_gem_level_+",
+        "text": "+1 Spell Skill Gem Level +"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21269,7 +21772,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_cold_fire_lightning",
+        "text": "+5% of Damage Gained as Cold_fire_lightning"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_cold_fire_lightning",
+        "text": "+5% of Damage Gained as Cold_fire_lightning"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21302,7 +21814,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_chaos",
+        "text": "+13% of Damage Gained as Chaos"
+      },
+      {
+        "id": "non_skill_base_all_damage_%_to_gain_as_chaos",
+        "text": "+13% of Damage Gained as Chaos"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21335,7 +21856,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "deflection_rating_+%_while_moving",
+        "text": "+8 Deflection Rating +% While Moving"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21368,7 +21894,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_movement_velocity_+%",
+        "text": "+5% Movement Velocity"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21401,7 +21932,12 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "curse_effect_on_self_+%",
+        "text": "-50% Curse Effect On Self"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21434,7 +21970,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "experience_gain_+%",
+        "text": "+2% Experience Gain"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21467,7 +22008,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "exposure_effect_+%",
+        "text": "+25% Exposure Effect"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21500,7 +22046,12 @@
       "description": "Place into an empty [Augment] Socket in a Martial Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "attack_damage_+%_vs_rare_or_unique_enemy",
+        "text": "+50 Attack Damage +% Vs Rare Or Unique Enemy"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21533,7 +22084,12 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "energy_shield_recharge_rate_+%",
+        "text": "+50% Energy Shield Recharge Rate"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21566,7 +22122,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_damaging_ailment_effect_+%",
+        "text": "+20% Damaging Ailment Effect"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21599,7 +22160,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "non_damaging_ailment_effect_+%",
+        "text": "+30% Non Damaging Ailment Effect"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21632,7 +22198,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_cast_speed_+%",
+        "text": "+8% Cast Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21665,7 +22236,12 @@
       "description": "Place into an empty [Augment] Socket in a Bow to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "number_of_additional_arrows",
+        "text": "+1 Number Of Additional Arrows"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21698,7 +22274,12 @@
       "description": "Place into an empty [Augment] Socket in a Wand or a Staff to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "spell_skills_fire_2_additional_projectiles_final_chance_%",
+        "text": "+25% Spell Skills Fire 2 Additional Projectiles Final Chance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21731,7 +22312,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "withered_magnitude_+%",
+        "text": "+20% Withered Magnitude"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21764,7 +22350,12 @@
       "description": "Place into an empty [Augment] Socket in a Martial Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_fire_damage,local_maximum_added_fire_damage",
+        "text": "Adds 23 to 34 Fire Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21797,7 +22388,12 @@
       "description": "Place into an empty [Augment] Socket in a Martial Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_cold_damage,local_maximum_added_cold_damage",
+        "text": "Adds 19 to 28 Cold Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21830,7 +22426,12 @@
       "description": "Place into an empty [Augment] Socket in a Martial Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage",
+        "text": "Adds 1 to 60 Lightning Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21863,7 +22464,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "attack_minimum_added_physical_damage,attack_maximum_added_physical_damage",
+        "text": "Adds 5 to 12 Physical Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21896,7 +22502,12 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_damage_removed_from_mana_before_life_%",
+        "text": "+15% Damage Removed From Mana Before Life"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21929,7 +22540,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "attack_speed_+%",
+        "text": "+8% Attack Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21962,7 +22578,12 @@
       "description": "Place into an empty [Augment] Socket in a Martial Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "number_of_additional_poison_stacks,base_poison_duration_+%",
+        "text": "+1 Number Of Additional Poison Stacks\n-25% Poison Duration"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -21995,7 +22616,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "warcry_monster_power_+%",
+        "text": "+20% Warcry Monster Power"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22028,7 +22654,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_skill_cost_efficiency_+%",
+        "text": "+12% Skill Cost Efficiency"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22061,7 +22692,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "enemies_damage_taken_+%_while_cursed",
+        "text": "+6 Enemies Damage Taken +% While Cursed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22094,7 +22730,12 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "num_charm_slots",
+        "text": "+1 Num Charm Slots"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22127,7 +22768,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "reservation_efficiency_+%_of_minion_skills",
+        "text": "+8 Reservation Efficiency +% Of Minion Skills"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22160,7 +22806,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet or Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_armour_%_applies_to_cold_damage",
+        "text": "+40 Armour % Applies To Cold Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22193,7 +22844,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_armour_%_applies_to_lightning_damage",
+        "text": "+40 Armour % Applies To Lightning Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22226,7 +22882,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_armour_%_applies_to_fire_damage",
+        "text": "+40 Armour % Applies To Fire Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22259,7 +22920,16 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour or a Focus to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "energy_shield_delay_-%",
+        "text": "+30% Energy Shield Delay -"
+      },
+      {
+        "id": "energy_shield_delay_-%",
+        "text": "+30% Energy Shield Delay -"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22292,7 +22962,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "skill_effect_duration_+%,base_cooldown_speed_+%",
+        "text": "+8% Skill Effect Duration\n+8% Cooldown Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22325,7 +23000,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "maximum_rage",
+        "text": "+4 Maximum Rage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22358,7 +23038,12 @@
       "description": "Place into an empty [Augment] Socket in a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_curse_duration_+%,base_poison_duration_+%",
+        "text": "+15% Curse Duration\n+15% Poison Duration"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22391,7 +23076,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "chance_to_gain_1_more_frenzy_charge_%",
+        "text": "+50% Chance To Gain 1 More Frenzy Charge"
+      },
+      {
+        "id": "chance_to_gain_1_more_frenzy_charge_%",
+        "text": "+50% Chance To Gain 1 More Frenzy Charge"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22424,7 +23118,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "chance_to_gain_1_more_endurance_charge_%",
+        "text": "+50% Chance To Gain 1 More Endurance Charge"
+      },
+      {
+        "id": "chance_to_gain_1_more_endurance_charge_%",
+        "text": "+50% Chance To Gain 1 More Endurance Charge"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22457,7 +23160,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "chance_to_gain_1_more_power_charge_%",
+        "text": "+50% Chance To Gain 1 More Power Charge"
+      },
+      {
+        "id": "chance_to_gain_1_more_power_charge_%",
+        "text": "+50% Chance To Gain 1 More Power Charge"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22490,7 +23202,16 @@
       "description": "Place into an empty [Augment] Socket in a pair of Boots or a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "recoup_speed_+%",
+        "text": "+12% Recoup Speed"
+      },
+      {
+        "id": "damage_taken_goes_to_life_over_4_seconds_%",
+        "text": "+8% Damage Taken Goes To Life Over 4 Seconds"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22523,7 +23244,12 @@
       "description": "Place into an empty [Augment] Socket in a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "enemies_chaos_resistance_%_while_cursed",
+        "text": "-5 Enemies Chaos Resistance % While Cursed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22556,7 +23282,12 @@
       "description": "Place into an empty [Augment] Socket in a Bow to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_projectile_speed_+%",
+        "text": "+20% Projectile Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22589,7 +23320,12 @@
       "description": "Place into an empty [Augment] Socket in a Martial Weapon to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_minimum_added_chaos_damage,local_maximum_added_chaos_damage",
+        "text": "Adds 19 to 29 Chaos Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22622,7 +23358,16 @@
       "description": "Place into an empty [Augment] Socket in a Wand, a Staff or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "minion_commanded_skill_damage_+%",
+        "text": "+40% Minion Commanded Skill Damage"
+      },
+      {
+        "id": "minion_commanded_skill_damage_+%",
+        "text": "+40% Minion Commanded Skill Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22655,7 +23400,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_poison_on_hit_%",
+        "text": "+15% Poison On Hit"
+      },
+      {
+        "id": "base_chaos_damage_resistance_%",
+        "text": "+11% Chaos Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22688,7 +23442,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_chance_to_bleed_on_hit_%",
+        "text": "+15% Chance To Bleed On Hit"
+      },
+      {
+        "id": "charm_charges_gained_+%",
+        "text": "+20% Charm Charges Gained"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22721,7 +23484,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a Body Armour to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "recover_%_maximum_life_on_kill",
+        "text": "+2 Recover % Maximum Life On Kill"
+      },
+      {
+        "id": "maximum_life_+%",
+        "text": "+3% Maximum Life"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22754,7 +23526,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "recover_%_maximum_mana_on_kill",
+        "text": "+2 Recover % Maximum Mana On Kill"
+      },
+      {
+        "id": "maximum_mana_+%",
+        "text": "+3% Maximum Mana"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22787,7 +23568,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "elemental_damage_with_attack_skills_+%",
+        "text": "+30% Elemental Damage With Attack Skills"
+      },
+      {
+        "id": "base_resist_all_elements_%",
+        "text": "+5% Resist All Elements"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22820,7 +23610,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "ignite_chance_+%",
+        "text": "+30% Ignite Chance"
+      },
+      {
+        "id": "base_maximum_fire_damage_resistance_%",
+        "text": "+1% Maximum Fire Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22853,7 +23652,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a Helmet to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "hit_damage_freeze_multiplier_+%",
+        "text": "+30% Hit Damage Freeze Multiplier"
+      },
+      {
+        "id": "base_maximum_cold_damage_resistance_%",
+        "text": "+1% Maximum Cold Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22886,7 +23694,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "shock_chance_+%",
+        "text": "+30% Shock Chance"
+      },
+      {
+        "id": "base_maximum_lightning_damage_resistance_%",
+        "text": "+1% Maximum Lightning Damage Resistance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22919,7 +23736,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a pair of Gloves to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_spirit_from_equipment",
+        "text": "+15 Spirit From Equipment"
+      },
+      {
+        "id": "gold_+%_from_enemies",
+        "text": "+10 Gold +% From Enemies"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22952,7 +23778,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_elemental_penetration_%",
+        "text": "+15% Elemental Penetration"
+      },
+      {
+        "id": "ailment_threshold_+%",
+        "text": "+25% Ailment Threshold"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -22985,7 +23820,16 @@
       "description": "Place into an empty [Augment] Socket in a Weapon or a pair of Boots to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_attack_speed_+%",
+        "text": "+5% Attack Speed"
+      },
+      {
+        "id": "base_slow_potency_+%",
+        "text": "-15% Slow Potency"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23018,7 +23862,20 @@
       "description": "Place into an empty [Augment] Socket in a Weapon, a Body Armour or a Shield to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_critical_strike_multiplier_+",
+        "text": "+5 Critical Strike Multiplier +"
+      },
+      {
+        "id": "base_self_critical_strike_multiplier_-%",
+        "text": "+20% Self Critical Strike Multiplier -"
+      },
+      {
+        "id": "base_self_critical_strike_multiplier_-%",
+        "text": "+20% Self Critical Strike Multiplier -"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23051,7 +23908,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_requirements_%_to_convert_to_strength",
+        "text": "+20 Requirements % To Convert To Strength"
+      },
+      {
+        "id": "local_requirements_%_to_convert_to_strength",
+        "text": "+20 Requirements % To Convert To Strength"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23084,7 +23950,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_requirements_%_to_convert_to_dexterity",
+        "text": "+20 Requirements % To Convert To Dexterity"
+      },
+      {
+        "id": "local_requirements_%_to_convert_to_dexterity",
+        "text": "+20 Requirements % To Convert To Dexterity"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23117,7 +23992,16 @@
       "description": ""
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_requirements_%_to_convert_to_intelligence",
+        "text": "+20 Requirements % To Convert To Intelligence"
+      },
+      {
+        "id": "local_requirements_%_to_convert_to_intelligence",
+        "text": "+20 Requirements % To Convert To Intelligence"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23150,7 +24034,16 @@
       "description": "Place into an empty [Augment] Socket in Gloves or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "curse_effect_+%",
+        "text": "+5% Curse Effect"
+      },
+      {
+        "id": "allies_in_presence_attack_speed_+%",
+        "text": "+8% Allies In Presence Attack Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23183,7 +24076,16 @@
       "description": "Place into an empty [Augment] Socket in a Helmet or Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "minion_maximum_life_+%",
+        "text": "+12% Minion Maximum Life"
+      },
+      {
+        "id": "allies_in_presence_damage_+%",
+        "text": "+30% Allies In Presence Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23216,7 +24118,16 @@
       "description": "Place into an empty [Augment] Socket in a Focus or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_cooldown_speed_+%",
+        "text": "+10% Cooldown Speed"
+      },
+      {
+        "id": "allies_in_presence_cast_speed_+%",
+        "text": "+8% Allies In Presence Cast Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23249,7 +24160,16 @@
       "description": "Place into an empty [Augment] Socket in Gloves or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "accuracy_rating_+%",
+        "text": "+15% Accuracy Rating"
+      },
+      {
+        "id": "allies_in_presence_critical_strike_chance_+%",
+        "text": "+14% Allies In Presence Critical Strike Chance"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23282,7 +24202,16 @@
       "description": "Place into an empty [Augment] Socket in Gloves or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_bleeding_effect_+%",
+        "text": "+10% Bleeding Effect"
+      },
+      {
+        "id": "allies_in_presence_critical_strike_multiplier_+",
+        "text": "+14 Allies In Presence Critical Strike Multiplier +"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23315,7 +24244,16 @@
       "description": "Place into an empty [Augment] Socket in a Helmet or Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "thorns_critical_strike_chance_+%",
+        "text": "+50% Thorns Critical Strike Chance"
+      },
+      {
+        "id": "allies_in_presence_attack_minimum_added_lightning_damage,allies_in_presence_attack_maximum_added_lightning_damage",
+        "text": "Adds 1 to 40 Lightning Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23348,7 +24286,16 @@
       "description": "Place into an empty [Augment] Socket in Gloves or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "gain_x_rage_on_melee_hit",
+        "text": "+1 Gain X Rage On Melee Hit"
+      },
+      {
+        "id": "allies_in_presence_life_regeneration_rate_per_minute",
+        "text": "+480 Allies In Presence Life Regeneration Rate Per Minute"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23381,7 +24328,16 @@
       "description": "Place into an empty [Augment] Socket in a Helmet or Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_skill_area_of_effect_+%",
+        "text": "+8% Skill Area Of Effect"
+      },
+      {
+        "id": "allies_in_presence_attack_minimum_added_physical_damage,allies_in_presence_attack_maximum_added_physical_damage",
+        "text": "Adds 12 to 18 Physical Damage"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23414,7 +24370,16 @@
       "description": "Place into an empty [Augment] Socket in a Shield or a Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "local_block_chance_+%",
+        "text": "+10% Block Chance"
+      },
+      {
+        "id": "allies_in_presence_resist_all_elements_%",
+        "text": "+8% Allies In Presence Resist All Elements"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23447,7 +24412,16 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour or Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "base_item_found_rarity_+%",
+        "text": "+5% Item Found Rarity"
+      },
+      {
+        "id": "local_spirit_+%",
+        "text": "+10% Spirit"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23480,7 +24454,16 @@
       "description": "Place into an empty [Augment] Socket in a Body Armour or Sceptre to apply its effect to that item. Once socketed it cannot be retrieved but can be replaced by other [Augment] items."
     },
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "all_skill_gem_quality_+",
+        "text": "+2 All Skill Gem Quality +"
+      },
+      {
+        "id": "presence_area_+%",
+        "text": "+30% Presence Area"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23510,7 +24493,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "remove_damaging_ailment_on_using_command_skill",
+        "text": "+1 Remove Damaging Ailment On Using Command Skill"
+      },
+      {
+        "id": "armour_+_per_1_spirit",
+        "text": "+2 Armour + Per 1 Spirit"
+      },
+      {
+        "id": "abyss_socketable_movement_speed_is_only_base_+%_per_15_spirit_up_to_+40%",
+        "text": "+1% Abyss Socketable Movement Speed Is Only Base +% Per 15 Spirit Up To +40"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23540,7 +24536,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "life_regeneration_rate_per_minute_%",
+        "text": "+90% Life Regeneration Rate Per Minute"
+      },
+      {
+        "id": "base_life_cost_efficiency_+%",
+        "text": "+25% Life Cost Efficiency"
+      },
+      {
+        "id": "movement_velocity_+%_when_on_low_life",
+        "text": "+10 Movement Velocity +% When On Low Life"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23570,7 +24579,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "additive_modifiers_to_life_regeneration_also_apply_to_mana_regeneration_rate",
+        "text": "+1 Additive Modifiers To Life Regeneration Also Apply To Mana Regeneration Rate"
+      },
+      {
+        "id": "arcane_surge_effect_on_self_+%",
+        "text": "+40% Arcane Surge Effect On Self"
+      },
+      {
+        "id": "mana_cost_efficiency_+%_if_not_dodge_rolled_recently",
+        "text": "+15 Mana Cost Efficiency +% If Not Dodge Rolled Recently"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23600,7 +24622,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "accuracy_rating_+_per_evasion_rating_on_helmet",
+        "text": "+1 Accuracy Rating + Per Evasion Rating On Helmet"
+      },
+      {
+        "id": "critical_chance_luck_against_parry_debuffed_enemies",
+        "text": "+1 Critical Chance Luck Against Parry Debuffed Enemies"
+      },
+      {
+        "id": "base_damage_%_deflected",
+        "text": "+3 Damage % Deflected"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23630,7 +24665,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "gain_armour_from_%_life_loss_from_hits_lasting_8_seconds",
+        "text": "+25 Gain Armour From % Life Loss From Hits Lasting 8 Seconds"
+      },
+      {
+        "id": "physical_damage_prevented_recouped_as_life_%",
+        "text": "+10% Physical Damage Prevented Recouped As Life"
+      },
+      {
+        "id": "life_loss_%_per_minute_while_sprinting,sprint_movement_speed_+%",
+        "text": "+300 Life Loss % Per Minute While Sprinting\n+25% Sprint Movement Speed"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23660,7 +24708,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "recoup_life_equal_to_%_of_hit_damage_dealt_to_your_offerings",
+        "text": "+50 Recoup Life Equal To % Of Hit Damage Dealt To Your Offerings"
+      },
+      {
+        "id": "revive_random_persistent_minion_on_offering_expiration",
+        "text": "+1 Revive Random Persistent Minion On Offering Expiration"
+      },
+      {
+        "id": "sacrifice_%_life_to_gain_as_guard_on_dodge_roll",
+        "text": "+10 Sacrifice % Life To Gain As Guard On Dodge Roll"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23690,7 +24751,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "gain_X_max_mana_per_2_es_on_equipped_helmet",
+        "text": "+1 Gain X Max Mana Per 2 Es On Equipped Helmet"
+      },
+      {
+        "id": "energy_shield_recharge_starts_after_spending_2000_mana_every_2_seconds",
+        "text": "+1 Energy Shield Recharge Starts After Spending 2000 Mana Every 2 Seconds"
+      },
+      {
+        "id": "increases_and_reductions_to_move_speed_apply_to_es_recharge_rate",
+        "text": "+1 Increases And Reductions To Move Speed Apply To Es Recharge Rate"
+      }
+    ],
     "explicit_mods": []
   },
   {
@@ -23720,7 +24794,20 @@
     "gem": null,
     "currency": null,
     "flask": null,
-    "implicit_mods": [],
+    "implicit_mods": [
+      {
+        "id": "mark_grants_%_max_glory_to_random_skill_on_activate",
+        "text": "+15 Mark Grants % Max Glory To Random Skill On Activate"
+      },
+      {
+        "id": "regenerate_%_of_curse_mana_cost_per_second_while_in_delay",
+        "text": "+10 Regenerate % Of Curse Mana Cost Per Second While In Delay"
+      },
+      {
+        "id": "armour_%_also_applies_to_chaos_damage_while_at_full_es",
+        "text": "+50 Armour % Also Applies To Chaos Damage While At Full Es"
+      }
+    ],
     "explicit_mods": []
   },
   {

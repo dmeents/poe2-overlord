@@ -55,3 +55,6 @@ coverage
 .next/
 out/
 .vercel
+
+# AI workspace (local only)
+.ai/

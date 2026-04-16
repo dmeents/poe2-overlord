@@ -64,17 +64,32 @@ pub enum BackgroundImage {
     None,
     #[default]
     VolcanicRuins,
+    ManaStormRuins,
+    NecroRuins,
+    OvergrownForest,
+    SpaceTime,
 }
 
 impl BackgroundImage {
     pub fn all_options() -> Vec<BackgroundImage> {
-        vec![BackgroundImage::None, BackgroundImage::VolcanicRuins]
+        vec![
+            BackgroundImage::None,
+            BackgroundImage::VolcanicRuins,
+            BackgroundImage::ManaStormRuins,
+            BackgroundImage::NecroRuins,
+            BackgroundImage::OvergrownForest,
+            BackgroundImage::SpaceTime,
+        ]
     }
 
     pub fn label(&self) -> &'static str {
         match self {
             BackgroundImage::None => "No Background",
             BackgroundImage::VolcanicRuins => "Volcanic Ruins",
+            BackgroundImage::ManaStormRuins => "Mana Storm Ruins",
+            BackgroundImage::NecroRuins => "Necro Ruins",
+            BackgroundImage::OvergrownForest => "Overgrown Forest",
+            BackgroundImage::SpaceTime => "Space Time",
         }
     }
 
@@ -82,6 +97,10 @@ impl BackgroundImage {
         match self {
             BackgroundImage::None => None,
             BackgroundImage::VolcanicRuins => Some("bg-volcanic-ruins.png"),
+            BackgroundImage::ManaStormRuins => Some("bg-mana-storm-ruins.png"),
+            BackgroundImage::NecroRuins => Some("bg-necro-ruins.png"),
+            BackgroundImage::OvergrownForest => Some("bg-overgrown-forest.png"),
+            BackgroundImage::SpaceTime => Some("bg-space-time.png"),
         }
     }
 }

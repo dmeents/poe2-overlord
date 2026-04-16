@@ -125,6 +125,10 @@ impl ConfigurationRepository for ConfigurationRepositoryImpl {
             let background_image = match background_image_str.as_str() {
                 "None" => BackgroundImage::None,
                 "VolcanicRuins" => BackgroundImage::VolcanicRuins,
+                "ManaStormRuins" => BackgroundImage::ManaStormRuins,
+                "NecroRuins" => BackgroundImage::NecroRuins,
+                "OvergrownForest" => BackgroundImage::OvergrownForest,
+                "SpaceTime" => BackgroundImage::SpaceTime,
                 _ => {
                     log::warn!(
                         "Unknown background_image value: {background_image_str}, defaulting to VolcanicRuins"

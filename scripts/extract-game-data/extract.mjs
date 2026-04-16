@@ -93,7 +93,8 @@ const TABLES = [
   { name: 'ComponentAttributeRequirements',columns: ['BaseItemTypesKey', 'ReqStr', 'ReqDex', 'ReqInt'] },
   { name: 'Mods',                          columns: ['Id', 'Name', 'GenerationType', 'Domain', 'Stat1', 'Stat2', 'Stat3', 'Stat4', 'Stat5', 'Stat6', 'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value', 'Stat5Value', 'Stat6Value'] },
   { name: 'Stats',                         columns: ['Id', 'IsLocal', 'IsWeaponLocal'] },
-  { name: 'SkillGems',                     columns: ['BaseItemType', 'Tier', 'GemType', 'GemColour'] },
+  { name: 'SkillGems',                     columns: ['BaseItemType', 'Tier', 'GemType', 'GemColour', 'GemEffects'] },
+  { name: 'GemEffects',                    columns: ['Id', 'SupportText', 'SupportName'] },
   { name: 'CurrencyItems',                 columns: ['BaseItemType', 'StackSize', 'Description'] },
   { name: 'Flasks',                        columns: ['BaseItemType', 'LifePerUse', 'ManaPerUse', 'RecoveryTime'] },
   // SoulCores (runes, soul cores, idols): stats come from SoulCoreStats, not BaseItemTypes.Implicit_Mods

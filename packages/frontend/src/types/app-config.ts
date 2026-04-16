@@ -1,4 +1,10 @@
-export type BackgroundImage = 'None' | 'VolcanicRuins';
+export type BackgroundImage =
+  | 'None'
+  | 'VolcanicRuins'
+  | 'ManaStormRuins'
+  | 'NecroRuins'
+  | 'OvergrownForest'
+  | 'SpaceTime';
 
 export interface BackgroundImageOption {
   value: string;

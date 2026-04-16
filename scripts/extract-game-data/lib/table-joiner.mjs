@@ -122,6 +122,9 @@ export function joinTables(tables, statDescriptions) {
   // Stats: keyed by _index (used for SoulCoreStats stat lookups)
   const statByIndex = buildIndexByCol(tables.Stats ?? [], '_index');
 
+  // GemEffects: keyed by _index (FK from SkillGems.GemEffects array)
+  const gemEffectByIndex = buildIndexByCol(tables.GemEffects ?? [], '_index');
+
   // SoulCores: keyed by BaseItemType FK integer (→ base._index)
   const soulCoresByBase = buildFKIndex(tables.SoulCores ?? [], 'BaseItemType');
 
@@ -195,6 +198,18 @@ export function joinTables(tables, statDescriptions) {
       if (soulCore != null) {
         const scStatsRows = soulCoreStatsBySC.get(soulCore._index) ?? [];
         implicitMods = buildSoulCoreMods(scStatsRows, statByIndex);
+      }
+    }
+
+    // For gem items with no implicit mods, resolve SupportText from GemEffects.
+    if (implicitMods.length === 0 && baseIdx != null) {
+      const gemRow = gemByBase.get(baseIdx);
+      if (gemRow) {
+        const gemEffectFks = rowArray(gemRow, 'GemEffects');
+        const gemDesc = buildGemDescription(gemEffectFks, gemEffectByIndex);
+        if (gemDesc) {
+          implicitMods = [{ id: 'gem_support_text', text: gemDesc }];
+        }
       }
     }
 
@@ -448,6 +463,38 @@ function humanizeStat(str) {
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// Gem description builder
+// Support gem descriptions live in GemEffects.SupportText (not in Mods or implicit_mods).
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve a SkillGems.GemEffects FK array → first non-empty SupportText, cleaned of markup.
+ */
+function buildGemDescription(gemEffectFks, gemEffectByIndex) {
+  for (const fk of gemEffectFks) {
+    if (typeof fk !== 'number') continue;
+    const ge = gemEffectByIndex.get(fk);
+    if (!ge) continue;
+    const text = strCol(ge, 'SupportText');
+    if (text) return cleanGemMarkup(text);
+  }
+  return null;
+}
+
+/**
+ * Strip POE2 rich-text markup from gem description strings.
+ *   [Attack|Attacks] → "Attacks"  (second value is the display form)
+ *   [Gain]           → "Gain"     (single-value tags just drop brackets)
+ */
+function cleanGemMarkup(text) {
+  return text
+    .replace(/\[([^|\]]+)\|([^\]]+)\]/g, '$2')
+    .replace(/\[([^\]]+)\]/g, '$1')
+    .replace(/^\s*DNT\s+/i, '')   // strip "DNT " dev prefix (Do Not Translate placeholder)
+    .trim();
 }
 
 // ---------------------------------------------------------------------------

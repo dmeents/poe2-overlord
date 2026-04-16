@@ -3,6 +3,19 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { hoverCardStyles } from './hover-card.styles';
 
+/** Maps Tailwind width classes to pixel values for viewport edge clamping. */
+const TAILWIND_WIDTH_PX: Record<string, number> = {
+  'w-48': 192,
+  'w-56': 224,
+  'w-64': 256,
+  'w-72': 288,
+  'w-80': 320,
+  'w-96': 384,
+};
+
+/** Minimum gap (px) between the card edge and the viewport edge. */
+const VIEWPORT_MARGIN = 8;
+
 interface HoverCardProps {
   /** Content rendered inside the floating card */
   content: React.ReactNode;
@@ -62,7 +75,13 @@ export const HoverCard = memo(function HoverCard({
   showIcon = false,
   onOpenChange,
 }: HoverCardProps) {
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [position, setPosition] = useState<{
+    top: number;
+    /** Clamped center-X used for `left` in fixed positioning. */
+    left: number;
+    /** How far the arrow needs to shift from card-center to point at the trigger. */
+    arrowOffset: number;
+  } | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,11 +96,23 @@ export const HoverCard = memo(function HoverCard({
   const calculatePosition = useCallback(() => {
     if (!triggerRef.current) return null;
     const rect = triggerRef.current.getBoundingClientRect();
-    return {
-      top: rect.top,
-      left: rect.left + rect.width / 2,
-    };
-  }, []);
+    const triggerCenterX = rect.left + rect.width / 2;
+
+    // Clamp the card's center-X so it stays within the viewport.
+    // Uses translate(-50%) semantics: left is the horizontal center of the card.
+    const cardWidth = TAILWIND_WIDTH_PX[width] ?? 320;
+    const halfCard = cardWidth / 2;
+    const clampedLeft = Math.max(
+      halfCard + VIEWPORT_MARGIN,
+      Math.min(window.innerWidth - halfCard - VIEWPORT_MARGIN, triggerCenterX),
+    );
+
+    // The arrow must point at the trigger's center, not the card's center.
+    // arrowOffset shifts the arrow horizontally relative to card-center.
+    const arrowOffset = triggerCenterX - clampedLeft;
+
+    return { top: rect.top, left: clampedLeft, arrowOffset };
+  }, [width]);
 
   const showCard = useCallback(() => {
     const pos = calculatePosition();
@@ -143,8 +174,15 @@ export const HoverCard = memo(function HoverCard({
       }}>
       <div className={hoverCardStyles.content}>
         {content}
-        {/* Arrow pointing down */}
-        <div className={hoverCardStyles.arrow} />
+        {/* Arrow points at the trigger center, shifted when the card is clamped. */}
+        <div
+          className={hoverCardStyles.arrow}
+          style={
+            position.arrowOffset !== 0
+              ? { marginLeft: `${position.arrowOffset}px` }
+              : undefined
+          }
+        />
       </div>
     </div>
   );

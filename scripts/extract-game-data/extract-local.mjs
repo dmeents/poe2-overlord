@@ -1,20 +1,25 @@
 #!/usr/bin/env node
 /**
- * extract.mjs — POE2 game data extraction script
+ * extract-local.mjs — Extract POE2 game data from a local Steam installation
  *
- * Downloads POE2 game bundles from GGG CDN via pathofexile-dat, extracts
- * the relevant .datc64 tables, joins them into denormalized item records, and
- * writes JSON output files to packages/backend/data/game_data/.
+ * Reads directly from your POE2 Bundles2/ directory — no CDN access needed.
+ * Use this for local development. For CI/CD, commit the output JSON files to
+ * the repo and the build uses whatever is committed.
  *
- * Usage (first time):
- *   cd scripts/extract-game-data && pnpm install
- *   node extract.mjs --patch-version 4.1.0.1
+ * Usage:
+ *   node extract-local.mjs --version 0.4.0i
  *
  * Or from repo root:
- *   pnpm extract:gamedata -- --patch-version 4.1.0.1
+ *   pnpm extract:gamedata:local -- --version 0.4.0i
  *
- * The script caches downloaded bundles in scripts/extract-game-data/.cache/
- * so subsequent runs for the same patch version are much faster.
+ * The --version flag is a label written to version.json for tracking purposes.
+ * Use the in-game display version (lower-left corner of the game screen).
+ *
+ * Default game directory (Linux/Steam):
+ *   ~/.local/share/Steam/steamapps/common/Path of Exile 2
+ *
+ * Override with --game-dir if your installation is elsewhere:
+ *   node extract-local.mjs --version 0.4.0i --game-dir "/path/to/Path of Exile 2"
  *
  * Output files (relative to repo root):
  *   packages/backend/data/game_data/version.json
@@ -25,6 +30,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 import minimist from 'minimist';
 
 import { parseStatDescriptions, mergeDescriptions } from './lib/stat-descriptions.mjs';
@@ -33,46 +39,42 @@ import { joinTables } from './lib/table-joiner.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
 const OUTPUT_DIR = resolve(ROOT, 'packages', 'backend', 'data', 'game_data');
-const CACHE_DIR = resolve(__dirname, '.cache');
+
+const DEFAULT_GAME_DIR = resolve(
+  homedir(),
+  '.local/share/Steam/steamapps/common/Path of Exile 2',
+);
 
 // ---------------------------------------------------------------------------
 // Argument parsing
 // ---------------------------------------------------------------------------
 
 const argv = minimist(process.argv.slice(2), {
-  string: ['patch-version'],
+  string: ['version', 'game-dir'],
   boolean: ['help', 'dry-run'],
-  alias: { h: 'help', v: 'patch-version', n: 'dry-run' },
+  alias: { h: 'help', v: 'version', g: 'game-dir', n: 'dry-run' },
 });
 
 if (argv.help) {
   console.log(`
 Usage:
-  node extract.mjs --patch-version 4.x.x.x
+  node extract-local.mjs --version 0.4.0i [--game-dir "/path/to/poe2"]
 
 Options:
-  --patch-version, -v   POE2 CDN patch version (e.g. 4.1.0.1). Must start with "4.".
-                        Find the current version with: node probe-version.mjs
-  --dry-run, -n         Extract and join data but do not write output files.
-  --help, -h            Show this help.
+  --version, -v     In-game display version label (e.g. 0.4.0i). Written to
+                    version.json for tracking. Find it in the bottom-left of
+                    the game screen.
+  --game-dir, -g    Path to your POE2 installation (the folder containing
+                    Bundles2/). Defaults to the standard Linux/Steam path:
+                    ~/.local/share/Steam/steamapps/common/Path of Exile 2
+  --dry-run, -n     Extract and join data but do not write output files.
+  --help, -h        Show this help.
 `);
   process.exit(0);
 }
 
-const patchVersion = argv['patch-version'];
-
-if (!patchVersion) {
-  console.error('Error: --patch-version is required (e.g. --patch-version 4.1.0.1).');
-  console.error('Run with --help for usage.');
-  process.exit(1);
-}
-
-if (!patchVersion.startsWith('4.')) {
-  console.error(`Error: patch version must start with "4." for POE2 (e.g. 4.1.0.1), got "${patchVersion}"`);
-  console.error('Tip: the in-game display version ("0.4.0i") is not the CDN version.');
-  console.error('Run node probe-version.mjs to discover the current CDN version string.');
-  process.exit(1);
-}
+const versionLabel = argv['version'] ?? 'local';
+const gameDir = argv['game-dir'] ?? DEFAULT_GAME_DIR;
 
 // ---------------------------------------------------------------------------
 // Tables and files to extract
@@ -114,18 +116,15 @@ const STAT_DESC_FILES = [
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log(`POE2 Game Data Extractor`);
-  console.log(`Mode: CDN download`);
-  console.log(`Patch version: ${patchVersion}`);
+  console.log('POE2 Game Data Extractor (local)');
+  console.log(`Game dir:  ${gameDir}`);
+  console.log(`Version:   ${versionLabel}`);
   console.log('');
 
   // ------------------------------------------------------------------
-  // 1. Import pathofexile-dat CLI internals
+  // 1. Import pathofexile-dat internals
   // ------------------------------------------------------------------
-  // These are internal module paths — not in the package's exports map,
-  // but stable within a major version.
-
-  const { CdnBundleLoader, FileLoader } = await import(
+  const { SteamBundleLoader, FileLoader } = await import(
     './node_modules/pathofexile-dat/dist/cli/bundle-loaders.js'
   );
   const { exportAllRows } = await import(
@@ -144,28 +143,24 @@ async function main() {
   // ------------------------------------------------------------------
   console.log(`Downloading dat-schema from ${SCHEMA_URL}...`);
   const schemaRes = await fetch(SCHEMA_URL);
-  if (!schemaRes.ok) {
-    throw new Error(`Failed to download schema: HTTP ${schemaRes.status}`);
-  }
+  if (!schemaRes.ok) throw new Error(`Failed to download schema: HTTP ${schemaRes.status}`);
   const schema = await schemaRes.json();
   if (schema.version !== SCHEMA_VERSION) {
-    console.warn(`Warning: schema version mismatch (expected ${SCHEMA_VERSION}, got ${schema.version}). Column access may fail.`);
+    console.warn(`Warning: schema version mismatch (expected ${SCHEMA_VERSION}, got ${schema.version}).`);
   }
   console.log(`Schema loaded (${schema.tables.length} tables, version ${schema.version})`);
 
   // ------------------------------------------------------------------
-  // 3. Create bundle loader (CDN with local cache)
+  // 3. Create bundle loader from local game files
   // ------------------------------------------------------------------
   console.log('');
-  console.log('Initialising bundle loader...');
-  await mkdir(CACHE_DIR, { recursive: true });
-  const bundleLoader = await CdnBundleLoader.create(CACHE_DIR, patchVersion);
-  console.log(`Downloading from CDN (patch ${patchVersion})`);
+  console.log(`Reading from local game files: ${gameDir}`);
+  const bundleLoader = new SteamBundleLoader(gameDir);
   const loader = await FileLoader.create(bundleLoader);
   console.log('Bundle index loaded.');
 
   // ------------------------------------------------------------------
-  // 4. Load schema headers helper
+  // 4. Schema headers helper
   // ------------------------------------------------------------------
   function getHeaders(tableName, datFile, columnFilter) {
     const foundByName = schema.tables.filter((s) => s.name === tableName);
@@ -241,7 +236,7 @@ async function main() {
   }
 
   // ------------------------------------------------------------------
-  // 6. Extract stat description text files
+  // 6. Extract stat descriptions
   // ------------------------------------------------------------------
   console.log('');
   console.log('Extracting stat descriptions...');
@@ -260,7 +255,6 @@ async function main() {
       descMaps.push(map);
       console.log(`${map.size} descriptions`);
     } catch (e) {
-      // Try UTF-8 fallback
       try {
         const contents = await loader.tryGetFileContents(filePath);
         const text = new TextDecoder('utf-8').decode(contents);
@@ -295,7 +289,7 @@ async function main() {
   // 8. Write output files
   // ------------------------------------------------------------------
   const now = new Date().toISOString();
-  const versionData = { patch_version: patchVersion, extracted_at: now };
+  const versionData = { patch_version: versionLabel, extracted_at: now };
 
   if (argv['dry-run']) {
     console.log('');
@@ -320,7 +314,7 @@ async function main() {
   }
 
   console.log('');
-  console.log(`Done! Game data for patch ${patchVersion} extracted successfully.`);
+  console.log(`Done! Game data for version ${versionLabel} extracted successfully.`);
   console.log('Run `pnpm dev` or `pnpm build` to bundle the updated data into the app.');
 }
 

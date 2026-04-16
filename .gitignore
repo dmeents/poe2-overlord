@@ -58,3 +58,6 @@ out/
 
 # AI workspace (local only)
 .ai/
+
+# Game data extraction cache (500MB+ of GGG CDN bundles — do not commit)
+scripts/extract-game-data/.cache/

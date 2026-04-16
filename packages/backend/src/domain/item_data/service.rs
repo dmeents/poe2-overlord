@@ -170,6 +170,10 @@ impl ItemDataService for ItemDataServiceImpl {
     async fn get_favorites(&self) -> AppResult<Vec<Item>> {
         self.repository.get_favorites().await
     }
+
+    async fn get_item_by_name(&self, name: &str) -> AppResult<Option<Item>> {
+        self.repository.get_item_by_name(name).await
+    }
 }
 
 // ---------------------------------------------------------------------------

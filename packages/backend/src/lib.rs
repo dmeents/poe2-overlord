@@ -105,6 +105,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // Item database commands
             get_item,
+            get_item_by_name,
             search_items,
             get_item_categories,
             get_game_data_version,

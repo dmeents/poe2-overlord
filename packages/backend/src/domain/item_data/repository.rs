@@ -385,6 +385,23 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
 
         Ok(rows.iter().map(row_to_item).collect())
     }
+
+    async fn get_item_by_name(&self, name: &str) -> AppResult<Option<Item>> {
+        let row = sqlx::query(
+            "SELECT * FROM items WHERE name = ? AND is_unique = 0 LIMIT 1",
+        )
+        .bind(name)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| {
+            AppError::internal_error(
+                "get_item_by_name",
+                &format!("Failed to query item by name '{name}': {e}"),
+            )
+        })?;
+
+        Ok(row.map(|r| row_to_item(&r)))
+    }
 }
 
 // ---------------------------------------------------------------------------

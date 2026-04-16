@@ -34,6 +34,10 @@ pub trait ItemDataRepository: Send + Sync {
 
     /// All favourited items (joined with items table).
     async fn get_favorites(&self) -> AppResult<Vec<Item>>;
+
+    /// Look up a base item (is_unique = 0) by exact name. Used to bridge economy ↔ item_data
+    /// domains without a foreign-key relationship (poe.ninja slugs ≠ game metadata paths).
+    async fn get_item_by_name(&self, name: &str) -> AppResult<Option<Item>>;
 }
 
 #[async_trait]
@@ -47,4 +51,5 @@ pub trait ItemDataService: Send + Sync {
     async fn get_version(&self) -> AppResult<Option<GameDataVersion>>;
     async fn toggle_favorite(&self, item_id: &str) -> AppResult<bool>;
     async fn get_favorites(&self) -> AppResult<Vec<Item>>;
+    async fn get_item_by_name(&self, name: &str) -> AppResult<Option<Item>>;
 }

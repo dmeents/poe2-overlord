@@ -1,1 +1,458 @@
-[]
+[
+  {
+    "id": "LifeFlask",
+    "name": "Life Flasks"
+  },
+  {
+    "id": "ManaFlask",
+    "name": "Mana Flasks"
+  },
+  {
+    "id": "DONOTUSE5",
+    "name": ""
+  },
+  {
+    "id": "Currency",
+    "name": "Currency"
+  },
+  {
+    "id": "Amulet",
+    "name": "Amulets"
+  },
+  {
+    "id": "Ring",
+    "name": "Rings"
+  },
+  {
+    "id": "Claw",
+    "name": "Claws"
+  },
+  {
+    "id": "Dagger",
+    "name": "Daggers"
+  },
+  {
+    "id": "Wand",
+    "name": "Wands"
+  },
+  {
+    "id": "One Hand Sword",
+    "name": "One Hand Swords"
+  },
+  {
+    "id": "DONOTUSE6",
+    "name": ""
+  },
+  {
+    "id": "One Hand Axe",
+    "name": "One Hand Axes"
+  },
+  {
+    "id": "One Hand Mace",
+    "name": "One Hand Maces"
+  },
+  {
+    "id": "Bow",
+    "name": "Bows"
+  },
+  {
+    "id": "Staff",
+    "name": "Staves"
+  },
+  {
+    "id": "Two Hand Sword",
+    "name": "Two Hand Swords"
+  },
+  {
+    "id": "Two Hand Axe",
+    "name": "Two Hand Axes"
+  },
+  {
+    "id": "Two Hand Mace",
+    "name": "Two Hand Maces"
+  },
+  {
+    "id": "Active Skill Gem",
+    "name": "Skill Gems"
+  },
+  {
+    "id": "Support Skill Gem",
+    "name": "Support Gems"
+  },
+  {
+    "id": "Quiver",
+    "name": "Quivers"
+  },
+  {
+    "id": "Belt",
+    "name": "Belts"
+  },
+  {
+    "id": "Gloves",
+    "name": "Gloves"
+  },
+  {
+    "id": "Boots",
+    "name": "Boots"
+  },
+  {
+    "id": "Body Armour",
+    "name": "Body Armours"
+  },
+  {
+    "id": "Helmet",
+    "name": "Helmets"
+  },
+  {
+    "id": "Shield",
+    "name": "Shields"
+  },
+  {
+    "id": "SmallRelic",
+    "name": "Small Relics"
+  },
+  {
+    "id": "MediumRelic",
+    "name": "Medium Relics"
+  },
+  {
+    "id": "LargeRelic",
+    "name": "Large Relics"
+  },
+  {
+    "id": "StackableCurrency",
+    "name": "Stackable Currency"
+  },
+  {
+    "id": "QuestItem",
+    "name": "Quest Items"
+  },
+  {
+    "id": "Sceptre",
+    "name": "Sceptres"
+  },
+  {
+    "id": "UtilityFlask",
+    "name": "Charms"
+  },
+  {
+    "id": "DONOTUSE7",
+    "name": ""
+  },
+  {
+    "id": "Map",
+    "name": "Waystones"
+  },
+  {
+    "id": "Unarmed",
+    "name": ""
+  },
+  {
+    "id": "FishingRod",
+    "name": "Fishing Rods"
+  },
+  {
+    "id": "MapFragment",
+    "name": "Map Fragments"
+  },
+  {
+    "id": "HideoutDoodad",
+    "name": "Hideout Doodads"
+  },
+  {
+    "id": "Microtransaction",
+    "name": "Microtransactions"
+  },
+  {
+    "id": "Jewel",
+    "name": "Jewels"
+  },
+  {
+    "id": "DivinationCard",
+    "name": "Divination Cards"
+  },
+  {
+    "id": "DONOTUSE8",
+    "name": ""
+  },
+  {
+    "id": "DONOTUSE9",
+    "name": ""
+  },
+  {
+    "id": "DONOTUSE10",
+    "name": ""
+  },
+  {
+    "id": "MiscMapItem",
+    "name": "Misc Map Items"
+  },
+  {
+    "id": "Leaguestone",
+    "name": "Leaguestones"
+  },
+  {
+    "id": "PantheonSoul",
+    "name": "Pantheon Souls"
+  },
+  {
+    "id": "UniqueFragment",
+    "name": "Pieces"
+  },
+  {
+    "id": "AbyssJewel",
+    "name": "Abyss Jewels"
+  },
+  {
+    "id": "IncursionItem",
+    "name": "Incursion Items"
+  },
+  {
+    "id": "DelveSocketableCurrency",
+    "name": "Delve Socketable Currency"
+  },
+  {
+    "id": "Incubator",
+    "name": "Incubators"
+  },
+  {
+    "id": "UniqueShard",
+    "name": "Shards"
+  },
+  {
+    "id": "UniqueShardBase",
+    "name": "Shard Hearts"
+  },
+  {
+    "id": "DONOTUSE11",
+    "name": ""
+  },
+  {
+    "id": "Warstaff",
+    "name": "Quarterstaves"
+  },
+  {
+    "id": "DelveStackableSocketableCurrency",
+    "name": "Delve Stackable Socketable Currency"
+  },
+  {
+    "id": "AtlasUpgradeItem",
+    "name": "Atlas Upgrade Items"
+  },
+  {
+    "id": "DONOTUSE4",
+    "name": ""
+  },
+  {
+    "id": "HiddenItem",
+    "name": "Hidden Items"
+  },
+  {
+    "id": "DONOTUSE1",
+    "name": ""
+  },
+  {
+    "id": "DONOTUSE2",
+    "name": ""
+  },
+  {
+    "id": "DONOTUSE3",
+    "name": ""
+  },
+  {
+    "id": "HeistContract",
+    "name": "Contracts"
+  },
+  {
+    "id": "HeistEquipmentWeapon",
+    "name": "Heist Gear"
+  },
+  {
+    "id": "HeistEquipmentTool",
+    "name": "Heist Tools"
+  },
+  {
+    "id": "HeistEquipmentUtility",
+    "name": "Heist Cloaks"
+  },
+  {
+    "id": "HeistEquipmentReward",
+    "name": "Heist Brooches"
+  },
+  {
+    "id": "HeistBlueprint",
+    "name": "Blueprints"
+  },
+  {
+    "id": "Trinket",
+    "name": "Trinkets"
+  },
+  {
+    "id": "HeistObjective",
+    "name": "Heist Targets"
+  },
+  {
+    "id": "ExpeditionLogbook",
+    "name": "Expedition Logbooks"
+  },
+  {
+    "id": "IncubatorStackable",
+    "name": "Incubators"
+  },
+  {
+    "id": "ArchnemesisMod",
+    "name": "Archnemesis Mods"
+  },
+  {
+    "id": "Meta Skill Gem",
+    "name": ""
+  },
+  {
+    "id": "Spear",
+    "name": "Spears"
+  },
+  {
+    "id": "Crossbow",
+    "name": "Crossbows"
+  },
+  {
+    "id": "Focus",
+    "name": "Foci"
+  },
+  {
+    "id": "InstanceLocalItem",
+    "name": "Instance Local Items"
+  },
+  {
+    "id": "SentinelDrone",
+    "name": "Sentinels"
+  },
+  {
+    "id": "MemoryLine",
+    "name": "Memories"
+  },
+  {
+    "id": "Flail",
+    "name": "Flails"
+  },
+  {
+    "id": "Relic",
+    "name": "Relics"
+  },
+  {
+    "id": "SanctumSpecialRelic",
+    "name": "Sanctified Relics"
+  },
+  {
+    "id": "Breachstone",
+    "name": "Breachstones"
+  },
+  {
+    "id": "GiftBox",
+    "name": ""
+  },
+  {
+    "id": "VaultKey",
+    "name": "Vault Keys"
+  },
+  {
+    "id": "ItemisedSanctum",
+    "name": "Trial Coins"
+  },
+  {
+    "id": "DONOTUSE12",
+    "name": ""
+  },
+  {
+    "id": "UncutSkillGem_OLD",
+    "name": ""
+  },
+  {
+    "id": "Buckler",
+    "name": "Bucklers"
+  },
+  {
+    "id": "Thrown One Hand Axe",
+    "name": ""
+  },
+  {
+    "id": "Thrown Two Hand Axe",
+    "name": ""
+  },
+  {
+    "id": "ConventionTreasure",
+    "name": ""
+  },
+  {
+    "id": "TrapTool",
+    "name": "Traps"
+  },
+  {
+    "id": "Crossbow Attachment REMOVE",
+    "name": ""
+  },
+  {
+    "id": "SkillGemToken",
+    "name": "Currency"
+  },
+  {
+    "id": "Nothing",
+    "name": ""
+  },
+  {
+    "id": "UltimatumKey",
+    "name": "Inscribed Ultimatum"
+  },
+  {
+    "id": "UncutSupportGem_OLD",
+    "name": ""
+  },
+  {
+    "id": "UncutReservationGem_OLD",
+    "name": ""
+  },
+  {
+    "id": "Thrown Shield",
+    "name": ""
+  },
+  {
+    "id": "SoulCore",
+    "name": "Augment"
+  },
+  {
+    "id": "TowerAugmentation",
+    "name": "Tablet"
+  },
+  {
+    "id": "Omen",
+    "name": "Omen"
+  },
+  {
+    "id": "PinnacleKey",
+    "name": "Pinnacle Keys"
+  },
+  {
+    "id": "Talisman",
+    "name": "Talismans"
+  },
+  {
+    "id": "UncutSkillGemStackable",
+    "name": "Uncut Skill Gems"
+  },
+  {
+    "id": "UncutSupportGemStackable",
+    "name": "Uncut Support Gems"
+  },
+  {
+    "id": "UncutReservationGemStackable",
+    "name": "Uncut Spirit Gems"
+  },
+  {
+    "id": "IncursionArm",
+    "name": "Transcendent Arm"
+  },
+  {
+    "id": "IncursionLeg",
+    "name": "Transcendent Leg"
+  }
+]

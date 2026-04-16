@@ -1,5 +1,6 @@
 import { ArrowsRightLeftIcon, StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
+import { CurrencyItemPopup } from '@/components/economy/currency-item-popup/currency-item-popup';
 import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useEconomy } from '@/contexts/EconomyContext';
 import type { BackendEconomyType, CurrencyExchangeRate, EconomyType } from '@/types/economy';
@@ -110,12 +111,14 @@ export function EconomyRow({
             )}
           </button>
         )}
-        <img
-          src={currency.image_url}
-          alt={currency.name}
-          className={economyRowStyles.image}
-          onError={hideOnError}
-        />
+        <CurrencyItemPopup currencyName={currency.name} fallbackImageUrl={currency.image_url}>
+          <img
+            src={currency.image_url}
+            alt={currency.name}
+            className={economyRowStyles.image}
+            onError={hideOnError}
+          />
+        </CurrencyItemPopup>
         <div className={economyRowStyles.nameContainer}>
           <div className={economyRowStyles.name}>{currency.name}</div>
           <div className={economyRowStyles.statsRow}>

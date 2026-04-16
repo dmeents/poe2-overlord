@@ -50,3 +50,11 @@ pub async fn get_favorite_items(
 ) -> CommandResult<Vec<Item>> {
     to_command_result(item_data_service.get_favorites().await)
 }
+
+#[tauri::command]
+pub async fn get_item_by_name(
+    name: String,
+    item_data_service: State<'_, Arc<dyn ItemDataService>>,
+) -> CommandResult<Option<Item>> {
+    to_command_result(item_data_service.get_item_by_name(&name).await)
+}

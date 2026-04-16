@@ -29,7 +29,9 @@
     "test:frontend": "pnpm --filter @poe2-overlord/frontend test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "check:backend": "pnpm --filter @poe2-overlord/backend check",
+    "probe:version": "node scripts/extract-game-data/probe-version.mjs",
     "extract:gamedata": "node scripts/extract-game-data/extract.mjs",
+    "extract:gamedata:local": "node scripts/extract-game-data/extract-local.mjs",
     "bump-version": "node scripts/bump-version.js"
   },
   "devDependencies": {

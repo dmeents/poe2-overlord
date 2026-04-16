@@ -46,7 +46,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["config/walkthrough_guide.json"]
+    "resources": [
+      "config/walkthrough_guide.json",
+      "data/game_data/version.json",
+      "data/game_data/items.json",
+      "data/game_data/item_categories.json"
+    ]
   },
   "plugins": {
     "shell": {

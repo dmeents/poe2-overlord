@@ -1,4 +1,7 @@
 use crate::domain::character::traits::CharacterService;
+use crate::domain::item_data::{
+    repository::ItemDataRepositoryImpl, service::ItemDataServiceImpl, traits::ItemDataService,
+};
 use crate::domain::configuration::{
     repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
     traits::ConfigurationService,
@@ -122,6 +125,22 @@ impl ServiceInitializer {
         app.manage(leveling_service.clone());
 
         let resource_dir = app.path().resource_dir()?;
+
+        // Item data service — checks bundled version on startup and imports to SQLite if new
+        let item_data_repo = Arc::new(ItemDataRepositoryImpl::new(pool.clone()))
+            as Arc<dyn crate::domain::item_data::traits::ItemDataRepository + Send + Sync>;
+        let item_data_service = Arc::new(ItemDataServiceImpl::new(
+            item_data_repo,
+            resource_dir.join("data").join("game_data"),
+        )) as Arc<dyn ItemDataService>;
+
+        tauri::async_runtime::block_on(async {
+            if let Err(e) = item_data_service.ensure_data_imported().await {
+                error!("Failed to import item data: {e}");
+            }
+        });
+        app.manage(item_data_service);
+
         let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(
             resource_dir.join("config").join("walkthrough_guide.json"),
         ));

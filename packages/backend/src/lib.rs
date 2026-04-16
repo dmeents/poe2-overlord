@@ -17,6 +17,7 @@ pub use domain::character::commands::*; // Character CRUD operations and trackin
 pub use domain::configuration::commands::*; // Configuration management
 pub use domain::economy::commands::*; // Economy and currency exchange data
 pub use domain::game_monitoring::commands::*; // Game process monitoring
+pub use domain::item_data::commands::*; // Item database queries
 pub use domain::leveling::commands::*; // Leveling stats and XP tracking
 pub use domain::notes::commands::*;
 pub use domain::server_monitoring::commands::*; // Server status monitoring
@@ -102,6 +103,14 @@ pub fn run() {
 
         // Register all command handlers that can be called from the frontend
         .invoke_handler(tauri::generate_handler![
+            // Item database commands
+            get_item,
+            search_items,
+            get_item_categories,
+            get_game_data_version,
+            toggle_item_favorite,
+            get_favorite_items,
+
             // Configuration management commands
             get_config,
             get_default_config,

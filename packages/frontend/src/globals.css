@@ -3,11 +3,12 @@
 
 @import "tailwindcss";
 @import "@poe2-overlord/theme/tokens.css";
+@import "@poe2-overlord/theme/base.css";
+@import "@poe2-overlord/theme/effects.css";
 
-html,
 body {
-  background-color: #0c0a09;
-  color: #fafaf9;
+  background-color: var(--color-stone-950);
+  color: var(--color-stone-50);
 }
 
 .app-background {
@@ -15,14 +16,14 @@ body {
   background:
     linear-gradient(
       to bottom,
-      rgba(28, 25, 23, 0.8) 0%,
-      rgba(28, 25, 23, 0.85) 50%,
-      rgba(28, 25, 23, 0.95) 100%
+      color-mix(in srgb, var(--color-stone-900) 80%, transparent) 0%,
+      color-mix(in srgb, var(--color-stone-900) 85%, transparent) 50%,
+      color-mix(in srgb, var(--color-stone-900) 95%, transparent) 100%
     ),
     url("/background.png") center / cover no-repeat fixed;
 }
 
-/* Select styling */
+/* Desktop app select styling */
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -37,125 +38,35 @@ select {
 select:focus {
   outline: none;
   box-shadow:
-    0 0 0 2px #ea580c,
-    0 0 0 1px #ea580c;
+    0 0 0 2px var(--color-ember-600),
+    0 0 0 1px var(--color-ember-600);
 }
 
 select option {
-  background-color: #1c1917;
-  color: #fafaf9;
+  background-color: var(--color-stone-900);
+  color: var(--color-stone-50);
   padding: 0.5rem;
 }
 
 select option:hover {
-  background-color: #292524;
+  background-color: var(--color-stone-800);
 }
 
-input:focus,
-textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #ea580c;
-  border-color: #ea580c;
-}
-
-/* Scrollbar - webkit */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1c1917;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #44403c;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #57534e;
-}
-
-/* Scrollbar - Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #44403c #1c1917;
-}
-
-/* Card shadow - uses drop-shadow filter + GPU layer promotion to avoid
- * WebKitGTK compositor bugs where shadows flicker during navigation.
- * See: .ai/sessions/2026-02-12-dom-compositing-layer-audit.md */
-.card-shadow {
-  filter: drop-shadow(var(--shadow-md));
-  will-change: filter;
-  transform: translateZ(0);
-}
-
-/* Chrome shadows - filter-based for WebKitGTK compatibility */
+/* Chrome shadows - filter-based for WebKitGTK compatibility (ADR-002) */
 .chrome-shadow-top {
-  filter: drop-shadow(0 -4px 6px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(var(--shadow-top));
   will-change: filter;
   transform: translateZ(0);
 }
 
 .chrome-shadow-right {
-  filter: drop-shadow(4px 0 6px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(var(--shadow-right));
   will-change: filter;
   transform: translateZ(0);
 }
 
 .chrome-shadow-bottom {
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(var(--shadow-bottom));
   will-change: filter;
   transform: translateZ(0);
-}
-
-/* Glow effects - filter-based for WebKitGTK compatibility */
-.glow-ember {
-  filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.15));
-  will-change: filter;
-  transform: translateZ(0);
-}
-
-.glow-ember:hover {
-  filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.25));
-}
-
-.glow-ember-strong {
-  filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.25));
-  will-change: filter;
-  transform: translateZ(0);
-}
-
-.glow-ember-strong:hover {
-  filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.35));
-}
-
-.glow-molten {
-  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.2));
-  will-change: filter;
-  transform: translateZ(0);
-}
-
-.glow-molten:hover {
-  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.3));
-}
-
-.glow-blood {
-  filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.15));
-  will-change: filter;
-  transform: translateZ(0);
-}
-
-.glow-blood:hover {
-  filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.25));
-}
-
-.text-glow-ember {
-  text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
-}
-
-.text-glow-molten {
-  text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }

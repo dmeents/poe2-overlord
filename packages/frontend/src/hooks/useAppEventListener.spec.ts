@@ -21,11 +21,10 @@ describe('useAppEventListener', () => {
     vi.clearAllMocks();
   });
 
-  it('sets isListening to false initially', async () => {
-    const { result } = renderHook(() => useAppEventListener([]));
-    // Wait for any async state updates to complete
+  it('does not register listeners for an empty array', async () => {
+    renderHook(() => useAppEventListener([]));
     await waitFor(() => {
-      expect(result.current.isListening).toBe(false);
+      expect(eventListener.listenToAppEvent).not.toHaveBeenCalled();
     });
   });
 
@@ -43,13 +42,17 @@ describe('useAppEventListener', () => {
     });
   });
 
-  it('sets isListening to true after successful setup', async () => {
+  it('registers a single listener on successful setup', async () => {
     const listeners = [{ eventType: 'CharacterUpdated' as const, handler: mockHandler }];
 
-    const { result } = renderHook(() => useAppEventListener(listeners));
+    renderHook(() => useAppEventListener(listeners));
 
     await waitFor(() => {
-      expect(result.current.isListening).toBe(true);
+      expect(eventListener.listenToAppEvent).toHaveBeenCalledTimes(1);
+      expect(eventListener.listenToAppEvent).toHaveBeenCalledWith(
+        'CharacterUpdated',
+        expect.any(Function),
+      );
     });
   });
 
@@ -74,11 +77,14 @@ describe('useAppEventListener', () => {
     });
   });
 
-  it('handles empty listeners array', async () => {
-    const { result } = renderHook(() => useAppEventListener([]));
+  it('handles empty listeners array without errors', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderHook(() => useAppEventListener([]));
     await waitFor(() => {
-      expect(result.current.isListening).toBe(false);
+      expect(eventListener.listenToAppEvent).not.toHaveBeenCalled();
     });
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
   });
 
   it('re-registers listeners when deps change', async () => {
@@ -108,13 +114,11 @@ describe('useAppEventListener', () => {
 
     const listeners = [{ eventType: 'CharacterUpdated' as const, handler: mockHandler }];
 
-    const { result } = renderHook(() => useAppEventListener(listeners));
+    renderHook(() => useAppEventListener(listeners));
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
-
-    expect(result.current.isListening).toBe(false);
 
     consoleErrorSpy.mockRestore();
   });

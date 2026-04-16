@@ -1,0 +1,38 @@
+/* Base HTML defaults — prevents white flash before Tailwind loads */
+html {
+  background-color: var(--color-stone-950);
+  color: var(--color-stone-50);
+}
+
+/* Scrollbar - webkit */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-stone-900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-stone-700);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-stone-600);
+}
+
+/* Scrollbar - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-stone-700) var(--color-stone-900);
+}
+
+/* Input/textarea focus */
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-ember-600);
+  border-color: var(--color-ember-600);
+}

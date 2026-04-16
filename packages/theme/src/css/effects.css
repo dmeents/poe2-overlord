@@ -1,0 +1,56 @@
+/* Text glow utilities */
+.text-glow-ember {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--color-ember-500) 50%, transparent);
+}
+
+.text-glow-molten {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--color-molten-400) 50%, transparent);
+}
+
+/* Filter-based glow utilities — GPU-promoted for WebKitGTK compat (ADR-002) */
+.glow-ember {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-ember-500) 15%, transparent));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-ember:hover {
+  filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-ember-500) 25%, transparent));
+}
+
+.glow-ember-strong {
+  filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-ember-500) 25%, transparent));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-ember-strong:hover {
+  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--color-ember-500) 35%, transparent));
+}
+
+.glow-molten {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-molten-400) 20%, transparent));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-molten:hover {
+  filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-molten-400) 30%, transparent));
+}
+
+.glow-blood {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-blood-500) 15%, transparent));
+  will-change: filter;
+  transform: translateZ(0);
+}
+
+.glow-blood:hover {
+  filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-blood-500) 25%, transparent));
+}
+
+/* Card shadow — GPU-promoted for WebKitGTK compat (ADR-002) */
+.card-shadow {
+  filter: drop-shadow(var(--shadow-md));
+  will-change: filter;
+  transform: translateZ(0);
+}

@@ -44,6 +44,8 @@ export function useDropdownPosition({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Calculate dropdown position when opened
   useLayoutEffect(() => {
@@ -66,7 +68,7 @@ export function useDropdownPosition({
       if (triggerRef.current?.contains(target)) return;
       if ((target as Element).closest?.('[data-dropdown-portal]')) return;
       if (dropdownRef.current && !dropdownRef.current.contains(target)) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -74,7 +76,7 @@ export function useDropdownPosition({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, enabled, onClose]);
+  }, [isOpen, enabled]);
 
   return {
     dropdownRef,

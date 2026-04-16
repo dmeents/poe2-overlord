@@ -17,6 +17,7 @@ export const currencyItemPopupStyles = {
 
   // Currency description text
   description: 'text-xs text-stone-300 leading-relaxed text-left w-full',
+  descriptionLink: 'text-molten-300 font-medium',
 
   // Metadata row (stack size, drop level, etc.)
   metaGrid: 'w-full grid grid-cols-2 gap-x-2 gap-y-0.5',

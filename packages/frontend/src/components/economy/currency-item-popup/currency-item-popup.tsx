@@ -50,13 +50,28 @@ export const CurrencyItemPopup = memo(function CurrencyItemPopup({
         src={itemData.image_url ?? fallbackImageUrl}
         alt={currencyName}
         className={styles.image}
-        onError={hideOnError}
+        onError={(e) => {
+          // If the game data CDN image fails, fall back to poe.ninja image.
+          // Only hide if the fallback also fails.
+          if (e.currentTarget.src !== fallbackImageUrl) {
+            e.currentTarget.src = fallbackImageUrl;
+          } else {
+            hideOnError(e);
+          }
+        }}
       />
       <div className={styles.name}>{currencyName}</div>
       <div className={styles.categoryBadge}>{itemData.category}</div>
 
       {itemData.currency?.description && (
-        <p className={styles.description}>{itemData.currency.description}</p>
+        <p className={styles.description}>
+          {itemData.currency.description.split(/(\[[^\]]+\])/g).map((segment, i) => {
+            const match = segment.match(/^\[(?:[^\]|]+\|)?([^\]]+)\]$/);
+            return match ? (
+              <span key={i} className={styles.descriptionLink}>{match[1]}</span>
+            ) : segment;
+          })}
+        </p>
       )}
 
       <div className={styles.metaGrid}>
@@ -103,7 +118,7 @@ export const CurrencyItemPopup = memo(function CurrencyItemPopup({
     <HoverCard
       content={popupContent}
       showDelay={200}
-      width="w-56"
+      width="w-72"
       className="flex-shrink-0"
       onOpenChange={handleOpenChange}>
       {children}

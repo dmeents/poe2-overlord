@@ -195,7 +195,9 @@ export function joinTables(tables, statDescriptions, options = {}) {
   for (const cls of (tables.ItemClasses ?? [])) {
     const id   = strCol(cls, 'Id') ?? '';
     const name = strCol(cls, 'Name') ?? id;
-    if (id) categories.push({ id, name });
+    // Skip DONOTUSE* entries: they have empty Name strings which would sort
+    // first in the UI category list and pollute any category filter dropdown.
+    if (id && name) categories.push({ id, name });
   }
 
   // ------------------------------------------------------------------
@@ -218,7 +220,6 @@ export function joinTables(tables, statDescriptions, options = {}) {
     const classIdx     = intCol(base, 'ItemClass');
     const itemClassRow = classIdx != null ? classById.get(classIdx) : null;
     const itemClassId  = strCol(itemClassRow, 'Id') ?? '';
-    const itemClassName = strCol(itemClassRow, 'Name') ?? itemClassId;
     const category     = deriveCategory(itemClassId);
 
     // Visual identity — FK integer into ItemVisualIdentity table
@@ -299,7 +300,6 @@ export function joinTables(tables, statDescriptions, options = {}) {
       unique_name: null,
       base_type: null,
       item_class_id: itemClassId,
-      item_class_name: itemClassName,
       category,
       rarity_frame: 0,
       width,

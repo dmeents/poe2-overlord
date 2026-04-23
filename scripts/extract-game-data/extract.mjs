@@ -29,7 +29,7 @@ import minimist from 'minimist';
 
 import { parseStatDescriptions, mergeDescriptions } from './lib/stat-descriptions.mjs';
 import { joinTables } from './lib/table-joiner.mjs';
-import { TABLES, STAT_DESC_FILES, buildEnumLookups } from './lib/tables.mjs';
+import { TABLES, STAT_DESC_FILES, buildEnumLookups, buildGetHeaders } from './lib/tables.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
@@ -136,44 +136,7 @@ async function main() {
   // ------------------------------------------------------------------
   // 4. Load schema headers helper
   // ------------------------------------------------------------------
-  function getHeaders(tableName, datFile, columnFilter) {
-    const foundByName = schema.tables.filter((s) => s.name === tableName);
-    const sch =
-      foundByName.find((s) => s.validFor & ValidFor.PoE2) ?? foundByName.at(0);
-    if (!sch) throw new Error(`No schema found for table "${tableName}"`);
-
-    let offset = 0;
-    const headers = [];
-    for (const column of sch.columns) {
-      const h = {
-        name: column.name ?? '',
-        offset,
-        type: {
-          array: column.array,
-          interval: column.interval,
-          integer:
-            column.type === 'u16' ? { unsigned: true,  size: 2 }
-            : column.type === 'u32' ? { unsigned: true,  size: 4 }
-            : column.type === 'i16' ? { unsigned: false, size: 2 }
-            : column.type === 'i32' ? { unsigned: false, size: 4 }
-            : column.type === 'enumrow' ? { unsigned: false, size: 4 }
-            : undefined,
-          decimal: column.type === 'f32' ? { size: 4 } : undefined,
-          string: column.type === 'string' ? {} : undefined,
-          boolean: column.type === 'bool' ? {} : undefined,
-          key: column.type === 'row' || column.type === 'foreignrow'
-            ? { foreign: column.type === 'foreignrow' }
-            : undefined,
-        },
-      };
-      headers.push(h);
-      offset += getHeaderLength(h, datFile);
-    }
-
-    return columnFilter
-      ? headers.filter((h) => !h.name || columnFilter.includes(h.name))
-      : headers;
-  }
+  const getHeaders = buildGetHeaders(schema, ValidFor, getHeaderLength);
 
   // ------------------------------------------------------------------
   // 5. Extract tables
@@ -224,21 +187,22 @@ async function main() {
         console.log('NOT FOUND (skip)');
         continue;
       }
-      const text = new TextDecoder('utf-16le').decode(contents);
+      // Fetch once, try UTF-16LE first (standard POE encoding), fall back to
+      // UTF-8. Re-fetching in the catch would race against clearBundleCache().
+      let text;
+      let usedFallback = false;
+      try {
+        text = new TextDecoder('utf-16le').decode(contents);
+      } catch {
+        text = new TextDecoder('utf-8').decode(contents);
+        usedFallback = true;
+      }
       const map = parseStatDescriptions(text);
       descMaps.push(map);
-      console.log(`${map.size} descriptions`);
+      const label = usedFallback ? ' (utf-8 fallback)' : '';
+      console.log(`${map.size} descriptions${label}`);
     } catch (e) {
-      // Try UTF-8 fallback
-      try {
-        const contents = await loader.tryGetFileContents(filePath);
-        const text = new TextDecoder('utf-8').decode(contents);
-        const map = parseStatDescriptions(text);
-        descMaps.push(map);
-        console.log(`${map.size} descriptions (utf-8 fallback)`);
-      } catch {
-        console.log(`ERROR: ${e.message}`);
-      }
+      console.log(`ERROR: ${e.message}`);
     }
     loader.clearBundleCache();
   }

@@ -1,10 +1,21 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import type { ItemData } from '@/types/item-data';
+import type {
+  GameDataVersion,
+  ItemCategory,
+  ItemData,
+  ItemSearchParams,
+  ItemSearchResult,
+} from '@/types/item-data';
 
 export const itemDataQueryKeys = {
   all: ['item-data'] as const,
+  byId: (id: string) => [...itemDataQueryKeys.all, 'by-id', id] as const,
   byName: (name: string) => [...itemDataQueryKeys.all, 'by-name', name] as const,
+  search: (params: ItemSearchParams) => [...itemDataQueryKeys.all, 'search', params] as const,
+  categories: () => [...itemDataQueryKeys.all, 'categories'] as const,
+  favorites: () => [...itemDataQueryKeys.all, 'favorites'] as const,
+  version: () => [...itemDataQueryKeys.all, 'version'] as const,
   image: (url: string) => [...itemDataQueryKeys.all, 'image', url] as const,
 };
 
@@ -24,6 +35,87 @@ export function useItemByName(name: string | null) {
     enabled: !!name,
     staleTime: Infinity,
     gcTime: Infinity,
+  });
+}
+
+/**
+ * Fetches a single item by its internal id (e.g. "base/Metadata/Items/...").
+ * Set id to null to disable.
+ */
+export function useItem(id: string | null) {
+  return useQuery({
+    queryKey: itemDataQueryKeys.byId(id ?? ''),
+    queryFn: () => invoke<ItemData | null>('get_item', { id }),
+    enabled: !!id,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+/**
+ * Searches items with optional filters and pagination.
+ * staleTime is Infinity because game data is static between patch imports.
+ */
+export function useSearchItems(params: ItemSearchParams) {
+  return useQuery({
+    queryKey: itemDataQueryKeys.search(params),
+    queryFn: () => invoke<ItemSearchResult>('search_items', { params }),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+/**
+ * Fetches the full list of item categories for populating filter dropdowns.
+ * staleTime is Infinity because categories only change on a patch import.
+ */
+export function useItemCategories() {
+  return useQuery({
+    queryKey: itemDataQueryKeys.categories(),
+    queryFn: () => invoke<ItemCategory[]>('get_item_categories'),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+/**
+ * Fetches all favorited items, ordered by most recently favorited first.
+ */
+export function useFavoriteItems() {
+  return useQuery({
+    queryKey: itemDataQueryKeys.favorites(),
+    queryFn: () => invoke<ItemData[]>('get_favorite_items'),
+    staleTime: 0,
+  });
+}
+
+/**
+ * Returns the currently imported game data version (patch version, extraction
+ * timestamp, import timestamp). Null when no data has been imported yet.
+ */
+export function useGameDataVersion() {
+  return useQuery({
+    queryKey: itemDataQueryKeys.version(),
+    queryFn: () => invoke<GameDataVersion | null>('get_game_data_version'),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+/**
+ * Toggles the favorite state for an item. Returns true if the item is now
+ * favorited, false if it was removed.
+ *
+ * Invalidates the favorites list on success so it stays in sync.
+ */
+export function useToggleFavorite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      invoke<boolean>('toggle_item_favorite', { itemId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: itemDataQueryKeys.favorites() });
+    },
   });
 }
 

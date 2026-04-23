@@ -3,6 +3,33 @@
  * These mirror the Rust structs in backend/src/domain/item_data/models.rs.
  */
 
+export interface ItemCategory {
+  id: string;
+  name: string;
+}
+
+export interface GameDataVersion {
+  patch_version: string;
+  extracted_at: string;
+  imported_at: string;
+}
+
+export interface ItemSearchParams {
+  query?: string | null;
+  category?: string | null;
+  is_unique?: boolean | null;
+  min_level?: number | null;
+  max_level?: number | null;
+  /** Clamped to 1–500 by the backend. Default: 50. */
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface ItemSearchResult {
+  items: ItemData[];
+  total_count: number;
+}
+
 export interface ModDisplay {
   id: string;
   text: string;

@@ -91,6 +91,56 @@ export const STAT_DESC_FILES = [
 ];
 
 /**
+ * Build the `getHeaders(tableName, datFile, columnFilter?)` function bound to
+ * a specific schema + runtime dependencies. Kept here so both extract.mjs and
+ * extract-local.mjs share the same logic without copy-pasting.
+ *
+ * @param {object} schema       Parsed schema JSON from pathofexile-dat-schema
+ * @param {object} ValidFor     ValidFor flags (from pathofexile-dat-schema)
+ * @param {Function} getHeaderLength  From pathofexile-dat dist/dat/header.js
+ */
+export function buildGetHeaders(schema, ValidFor, getHeaderLength) {
+  return function getHeaders(tableName, datFile, columnFilter) {
+    const foundByName = schema.tables.filter((s) => s.name === tableName);
+    const sch =
+      foundByName.find((s) => s.validFor & ValidFor.PoE2) ?? foundByName.at(0);
+    if (!sch) throw new Error(`No schema found for table "${tableName}"`);
+
+    let offset = 0;
+    const headers = [];
+    for (const column of sch.columns) {
+      const h = {
+        name: column.name ?? '',
+        offset,
+        type: {
+          array: column.array,
+          interval: column.interval,
+          integer:
+            column.type === 'u16' ? { unsigned: true,  size: 2 }
+            : column.type === 'u32' ? { unsigned: true,  size: 4 }
+            : column.type === 'i16' ? { unsigned: false, size: 2 }
+            : column.type === 'i32' ? { unsigned: false, size: 4 }
+            : column.type === 'enumrow' ? { unsigned: false, size: 4 }
+            : undefined,
+          decimal: column.type === 'f32' ? { size: 4 } : undefined,
+          string: column.type === 'string' ? {} : undefined,
+          boolean: column.type === 'bool' ? {} : undefined,
+          key: column.type === 'row' || column.type === 'foreignrow'
+            ? { foreign: column.type === 'foreignrow' }
+            : undefined,
+        },
+      };
+      headers.push(h);
+      offset += getHeaderLength(h, datFile);
+    }
+
+    return columnFilter
+      ? headers.filter((h) => !h.name || columnFilter.includes(h.name))
+      : headers;
+  };
+}
+
+/**
  * Build an `{ enumName: (index) => string | null }` map from the schema's
  * `enumerations` list. Respects `indexing` (0- or 1-based). Missing/null
  * positions return null so callers can distinguish "unknown index" from

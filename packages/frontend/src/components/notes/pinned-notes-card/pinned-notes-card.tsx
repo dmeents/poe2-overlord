@@ -24,13 +24,19 @@ export function PinnedNotesCard() {
     <Card
       title="Pinned Notes"
       icon={<DocumentTextIcon className="w-5 h-5" />}
-      rightAction={{ label: 'All Notes', onClick: () => navigate({ to: '/notes' }) }}>
+      rightAction={{
+        label: 'All Notes',
+        onClick: () => navigate({ to: '/notes', search: { noteId: undefined } }),
+      }}>
       {notes.length === 0 ? (
         <div className={pinnedNotesCardStyles.empty}>
           <p className={pinnedNotesCardStyles.emptyText}>No pinned notes</p>
           <p className={pinnedNotesCardStyles.emptyHint}>
             Pin notes from the{' '}
-            <Link to="/notes" className="text-ember-400 hover:text-ember-300">
+            <Link
+              to="/notes"
+              search={{ noteId: undefined }}
+              className="text-ember-400 hover:text-ember-300">
               Notes
             </Link>{' '}
             page to see them here

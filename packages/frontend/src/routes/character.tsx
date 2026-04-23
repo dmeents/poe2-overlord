@@ -2,9 +2,9 @@ import { ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
 import { LevelingInsights } from '@/components/insights/leveling-insights/leveling-insights';
+import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { LevelHistoryChart } from '@/components/leveling/level-history-chart/level-history-chart';
 import { LevelHistoryTable } from '@/components/leveling/level-history-table/level-history-table';
-import { PageLayout } from '@/components/layout/page-layout/page-layout';
 import { Card } from '@/components/ui/card/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { CurrentZoneCard } from '@/components/zones/current-zone-card/current-zone-card';
@@ -67,11 +67,7 @@ function CharacterDetailPage() {
   const rightColumn = (
     <>
       {stats && (
-        <LevelingInsights
-          events={allEvents}
-          currentLevel={stats.current_level}
-          liveStats={stats}
-        />
+        <LevelingInsights events={allEvents} currentLevel={stats.current_level} liveStats={stats} />
       )}
       {activeCharacter && <ZoneOverviewCard zones={zones} />}
       {activeCharacter && <ActDistributionChart character={activeCharacter} />}

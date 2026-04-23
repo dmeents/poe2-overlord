@@ -9,7 +9,7 @@ interface PageLayoutProps {
 
 export function PageLayout({ children, leftColumn, rightColumn, className = '' }: PageLayoutProps) {
   return (
-    <div className={`min-h-screen text-white ${className}`}>
+    <div className={`min-h-screen text-stone-50 ${className}`}>
       <div className="px-6 py-8 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Takes up 2/3 of the space */}

@@ -1,0 +1,16 @@
+export const currentZoneCardStyles = {
+  body: 'p-4',
+  header: 'flex items-start justify-between mb-4',
+  nameSection: 'flex-1 min-w-0',
+  zoneName: 'text-xl font-bold text-stone-50 mb-1 truncate',
+  badgeRow: 'flex items-center gap-2 flex-wrap',
+  actBadge: 'px-2 py-0.5 bg-ember-500/10 text-ember-400 text-xs rounded',
+  levelBadge: 'px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded',
+  iconRow: 'flex gap-1.5 ml-3',
+  icon: 'w-4 h-4 text-stone-400',
+  statsGrid: 'grid grid-cols-3 gap-3',
+  statBox: 'bg-stone-800/50 rounded px-3 py-2',
+  statLabel: 'text-xs text-stone-500 mb-0.5',
+  statValue: 'text-sm text-stone-200',
+  statValueMono: 'text-sm font-mono text-stone-200',
+} as const;

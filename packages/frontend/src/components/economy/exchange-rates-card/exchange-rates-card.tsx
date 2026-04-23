@@ -23,7 +23,7 @@ export function ExchangeRatesCard() {
                 className="w-8 h-8"
               />
             </ItemTooltip>
-            <span className="text-white font-semibold text-lg">1</span>
+            <span className="text-stone-50 font-semibold text-lg">1</span>
             <span className="text-xs text-stone-500 -mt-1">
               {currencyData.primary_currency.name}
             </span>
@@ -41,7 +41,7 @@ export function ExchangeRatesCard() {
                 className="w-8 h-8"
               />
             </ItemTooltip>
-            <span className="text-white font-semibold text-lg">
+            <span className="text-stone-50 font-semibold text-lg">
               {currencyData.secondary_rate.toFixed(2)}
             </span>
             <span className="text-xs text-stone-500 -mt-1">
@@ -63,7 +63,7 @@ export function ExchangeRatesCard() {
                     className="w-8 h-8"
                   />
                 </ItemTooltip>
-                <span className="text-white font-semibold text-lg">
+                <span className="text-stone-50 font-semibold text-lg">
                   {currencyData.tertiary_rate.toFixed(0)}
                 </span>
                 <span className="text-xs text-stone-500 -mt-1">

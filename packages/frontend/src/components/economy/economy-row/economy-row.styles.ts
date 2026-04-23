@@ -5,11 +5,11 @@ export const economyRowStyles = {
   containerClickable: 'cursor-pointer hover:bg-stone-800/30',
   leftSection: 'flex items-center gap-2 flex-1 min-w-0',
   starButton: 'flex-shrink-0 p-0.5 rounded transition-colors focus:outline-none',
-  starActive: 'text-amber-400 hover:text-amber-300',
+  starActive: 'text-molten-400 hover:text-molten-300',
   starInactive: 'text-stone-600 hover:text-stone-400',
   image: 'w-8 h-8 flex-shrink-0',
   nameContainer: 'flex-1 min-w-0',
-  name: 'text-white font-medium truncate',
+  name: 'text-stone-50 font-medium truncate',
   statsRow: 'flex items-center gap-3 text-xs text-stone-400 mt-1',
   valueContainer: 'text-right',
   valueRow: 'flex items-center gap-2 justify-end text-base font-semibold text-stone-200',
@@ -23,7 +23,7 @@ export const economyRowStyles = {
   tooltipHeader: 'font-semibold border-b border-stone-600 pb-1 mb-2',
   tooltipRow: 'flex justify-between gap-4',
   tooltipLabel: 'text-stone-400',
-  tooltipValue: 'text-white font-mono',
+  tooltipValue: 'text-stone-50 font-mono',
   // Compact variant
   containerCompact:
     'flex items-center justify-between py-2 px-4 border-b border-stone-700/30 last:border-b-0 transition-colors',

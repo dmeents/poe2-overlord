@@ -37,7 +37,7 @@ export const ZoneCard = memo(function ZoneCard({
       role="button"
       tabIndex={0}
       className={`
-        grid gap-2 px-4 py-3
+        zone-grid grid gap-2 px-4 py-3
         cursor-pointer transition-all
         hover:bg-stone-800/70
         ${
@@ -48,10 +48,7 @@ export const ZoneCard = memo(function ZoneCard({
               : 'bg-stone-900/60'
         }
         ${className}
-      `}
-      style={{
-        gridTemplateColumns: '5fr 1fr 1fr 1fr 1fr 1fr',
-      }}>
+      `}>
       {/* Zone Name with Icon */}
       <div className="flex items-center gap-2 min-w-0">
         {zone.has_waypoint && <MapIcon className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />}

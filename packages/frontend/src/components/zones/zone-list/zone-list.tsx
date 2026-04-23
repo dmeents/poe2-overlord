@@ -85,11 +85,7 @@ export const ZoneList = memo(function ZoneList({
       </div>
       {zones.length > 0 ? (
         <div className="border-t border-stone-800/60">
-          <div
-            className="grid gap-2 px-4 py-2 bg-stone-800/50 border-b border-stone-700/50 text-xs font-medium text-stone-400 uppercase tracking-wider"
-            style={{
-              gridTemplateColumns: '5fr 1fr 1fr 1fr 1fr 1fr',
-            }}>
+          <div className="zone-grid grid gap-2 px-4 py-2 bg-stone-800/50 border-b border-stone-700/50 text-xs font-medium text-stone-400 uppercase tracking-wider">
             <div>Zone</div>
             <div className="text-right">Act</div>
             <div className="text-right">Level</div>

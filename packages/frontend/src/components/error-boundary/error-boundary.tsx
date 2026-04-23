@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react';
 import type { AppError } from '@/types/error';
 import { parseError } from '@/utils/error-handling';
+import { Button } from '@/components/ui/button/button';
 
 interface Props {
   children: ReactNode;
@@ -56,12 +57,9 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <h2 className="text-xl font-semibold text-stone-100 mb-2">Something went wrong</h2>
             <p className="text-stone-400 mb-4">{this.state.error.message}</p>
-            <button
-              type="button"
-              onClick={this.reset}
-              className="px-4 py-2 bg-ember-600 hover:bg-ember-700 text-white rounded transition-colors">
+            <Button type="button" onClick={this.reset} variant="primary" size="sm">
               Try again
-            </button>
+            </Button>
           </div>
         </div>
       );

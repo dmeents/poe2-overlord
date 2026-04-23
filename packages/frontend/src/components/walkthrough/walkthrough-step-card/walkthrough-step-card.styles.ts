@@ -6,7 +6,7 @@ export const walkthroughStepCardStyles = {
   noStepCard: 'border-ember-700/50 bg-ember-500/10',
   noStepContent: 'text-center py-8',
   noStepIcon: 'w-16 h-16 text-stone-400 mx-auto mb-4',
-  noStepTitle: 'text-lg font-semibold text-white mb-2',
+  noStepTitle: 'text-lg font-semibold text-stone-50 mb-2',
   noStepText: 'text-stone-300 mb-4',
 
   // Active step card

@@ -7,6 +7,7 @@ import type { ZoneStats } from '@/types/character';
 import { getDisplayAct } from '@/utils/zone-utils';
 import { Card } from '../../ui/card/card';
 import { TimeDisplay } from '../../ui/time-display/time-display';
+import { currentZoneCardStyles as s } from './current-zone-card.styles';
 
 interface CurrentZoneCardProps {
   zone: ZoneStats;
@@ -33,46 +34,41 @@ export const CurrentZoneCard = memo(function CurrentZoneCard({ zone }: CurrentZo
         label: 'View Details →',
         onClick: handleViewDetails,
       }}>
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-white mb-1 truncate">{zone.zone_name}</h3>
-            <div className="flex items-center gap-2 flex-wrap">
+      <div className={s.body}>
+        <div className={s.header}>
+          <div className={s.nameSection}>
+            <h3 className={s.zoneName}>{zone.zone_name}</h3>
+            <div className={s.badgeRow}>
               {getDisplayAct(zone) && (
-                <span className="px-2 py-0.5 bg-ember-500/10 text-ember-400 text-xs rounded">
-                  {getDisplayAct(zone)}
-                </span>
+                <span className={s.actBadge}>{getDisplayAct(zone)}</span>
               )}
               {zone.area_level && (
-                <span className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded">
-                  Level {zone.area_level}
-                </span>
+                <span className={s.levelBadge}>Level {zone.area_level}</span>
               )}
             </div>
           </div>
-          <div className="flex gap-1.5 ml-3">
-            {zone.has_waypoint && <MapIcon className="w-4 h-4 text-stone-400" />}
-            {zone.is_town && <BuildingStorefrontIcon className="w-4 h-4 text-stone-400" />}
+          <div className={s.iconRow}>
+            {zone.has_waypoint && <MapIcon className={s.icon} />}
+            {zone.is_town && <BuildingStorefrontIcon className={s.icon} />}
             {zone.zone_name.toLowerCase().includes('hideout') && (
-              <HomeIcon className="w-4 h-4 text-stone-400" />
+              <HomeIcon className={s.icon} />
             )}
           </div>
         </div>
-        {/* Stat Boxes */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-stone-800/50 rounded px-3 py-2">
-            <div className="text-xs text-stone-500 mb-0.5">Time</div>
-            <div className="text-sm font-mono text-stone-200">
+        <div className={s.statsGrid}>
+          <div className={s.statBox}>
+            <div className={s.statLabel}>Time</div>
+            <div className={s.statValueMono}>
               <TimeDisplay seconds={elapsedSeconds} showSeconds={false} />
             </div>
           </div>
-          <div className="bg-stone-800/50 rounded px-3 py-2">
-            <div className="text-xs text-stone-500 mb-0.5">Visits</div>
-            <div className="text-sm text-stone-200">{zone.visits}</div>
+          <div className={s.statBox}>
+            <div className={s.statLabel}>Visits</div>
+            <div className={s.statValue}>{zone.visits}</div>
           </div>
-          <div className="bg-stone-800/50 rounded px-3 py-2">
-            <div className="text-xs text-stone-500 mb-0.5">Deaths</div>
-            <div className="text-sm text-stone-200">{zone.deaths}</div>
+          <div className={s.statBox}>
+            <div className={s.statLabel}>Deaths</div>
+            <div className={s.statValue}>{zone.deaths}</div>
           </div>
         </div>
       </div>

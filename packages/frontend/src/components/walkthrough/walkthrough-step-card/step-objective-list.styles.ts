@@ -1,0 +1,16 @@
+export const stepObjectiveListStyles = {
+  container: 'space-y-3 px-4',
+  heading: 'text-sm font-semibold text-stone-200',
+  list: 'space-y-4',
+  item: 'text-sm',
+  itemRow: 'flex items-start gap-2.5',
+  starRequired: 'w-4 h-4 text-ember-400 flex-shrink-0 mt-0.5',
+  starOptional: 'w-4 h-4 text-stone-400 flex-shrink-0 mt-0.5',
+  contentWrapper: 'flex-1 space-y-1.5',
+  mainText: 'font-medium text-stone-200 flex items-center gap-2 flex-wrap',
+  leagueStartBadge: 'text-xs font-semibold text-molten-400 uppercase tracking-wide',
+  detailsBlock: 'border-l-2 border-ember-500/30 pl-3 space-y-1.5',
+  details: 'text-xs text-stone-400 whitespace-pre-wrap',
+  rewardsRow: 'text-xs flex items-center gap-1 text-stone-400',
+  rewardsIcon: 'w-3.5 h-3.5 text-molten-400',
+} as const;

@@ -6,6 +6,11 @@
 @import "@poe2-overlord/theme/base.css";
 @import "@poe2-overlord/theme/effects.css";
 
+:root {
+  /* Shared form layout constant — used by form-field and form-checkbox-input */
+  --form-label-width: 220px;
+}
+
 body {
   background-color: var(--color-stone-950);
   color: var(--color-stone-50);
@@ -50,6 +55,11 @@ select option {
 
 select option:hover {
   background-color: var(--color-stone-800);
+}
+
+/* Zone history table grid — shared between ZoneList header and ZoneCard rows */
+.zone-grid {
+  grid-template-columns: 5fr 1fr 1fr 1fr 1fr 1fr;
 }
 
 /* Chrome shadows - filter-based for WebKitGTK compatibility (ADR-002) */

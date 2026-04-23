@@ -259,7 +259,9 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         limit_text: s.limit_text,
     });
 
-    let omen = imp.omen.map(|o| OmenInfo { description: o.description });
+    let omen = imp.omen.map(|o| OmenInfo {
+        description: o.description,
+    });
 
     let breachstone = imp.breachstone.map(|b| BreachstoneInfo {
         tier: b.tier,

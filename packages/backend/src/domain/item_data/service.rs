@@ -7,9 +7,10 @@ use log::{info, warn};
 use crate::errors::{AppError, AppResult};
 
 use super::models::{
-    AttributeRequirements, CurrencyData, DefenceValues, EssenceInfo, EssenceModifier, FlaskData,
-    GameDataVersion, GemData, ImportedCategory, ImportedItem, ImportedVersion, Item, ItemCategory,
-    ItemSearchParams, ItemSearchResult, ModDisplay, ShieldValues, SoulCoreInfo, WeaponValues,
+    AttributeRequirements, BreachstoneInfo, CurrencyData, DefenceValues, EssenceInfo,
+    EssenceModifier, FlaskData, GameDataVersion, GemData, ImportedCategory, ImportedItem,
+    ImportedVersion, Item, ItemCategory, ItemSearchParams, ItemSearchResult, ModDisplay, OmenInfo,
+    ShieldValues, SoulCoreInfo, WeaponValues,
 };
 use super::traits::{ItemDataRepository, ItemDataService};
 
@@ -258,6 +259,14 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         limit_text: s.limit_text,
     });
 
+    let omen = imp.omen.map(|o| OmenInfo { description: o.description });
+
+    let breachstone = imp.breachstone.map(|b| BreachstoneInfo {
+        tier: b.tier,
+        upgrades_to: b.upgrades_to,
+        upgrade_currency: b.upgrade_currency,
+    });
+
     let essence = imp.essence.map(|e| EssenceInfo {
         tier: e.tier,
         is_perfect: e.is_perfect,
@@ -312,6 +321,11 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         flask,
         soul_core,
         essence,
+        omen,
+        map_tier: imp.map_tier,
+        talisman_tier: imp.talisman_tier,
+        breachstone,
+        quest_description: imp.quest_description,
         implicit_mods,
         explicit_mods,
     }

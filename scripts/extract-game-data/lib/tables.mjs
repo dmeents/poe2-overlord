@@ -80,6 +80,23 @@ export const TABLES = [
   // UniqueStashLayout has no BaseItemTypes FK in POE2 — unique linking skipped for now
   { name: 'UniqueStashLayout', columns: ['WordsKey', 'ItemVisualIdentityKey'] },
   { name: 'Words',             columns: ['Text'] },
+
+  // Map tier — Maps.Tier is the waystone tier (1–16+)
+  { name: 'Maps', columns: ['BaseItemType', 'Tier'] },
+
+  // Talismans: BaseItemTypesKey is a string metadata path (like ComponentAttributeRequirements)
+  { name: 'Talismans', columns: ['BaseItemTypesKey', 'Tier', 'ModsKey'] },
+
+  // Breachstones: tier + upgrade chain
+  { name: 'Breachstones', columns: ['BaseType', 'MapTierEquivalent', 'UpgradesTo', 'UpgradeCurrency'] },
+
+  // Quest items: Description + HelpText are FKs into ClientStrings
+  { name: 'QuestItems',    columns: ['BaseItemType', 'Description', 'HelpText'] },
+  { name: 'ClientStrings', columns: ['Id', 'Text'] },
+
+  // Omens: one row per omen base; description sourced from CurrencyItems.Description
+  // but tracked here so omens render as a distinct type rather than generic currency.
+  { name: 'Omens', columns: ['BaseItemType'] },
 ];
 
 export const STAT_DESC_FILES = [

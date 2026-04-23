@@ -114,6 +114,17 @@ export interface EssenceModifier {
   mod_text: string;
 }
 
+export interface OmenInfo {
+  /** Full activation effect text (sourced from CurrencyItems.Description). */
+  description: string;
+}
+
+export interface BreachstoneInfo {
+  tier: number;
+  upgrades_to: string | null;
+  upgrade_currency: string | null;
+}
+
 export interface EssenceInfo {
   tier: number;
   is_perfect: boolean;
@@ -149,6 +160,16 @@ export interface ItemData {
   flask: FlaskData | null;
   soul_core: SoulCoreInfo | null;
   essence: EssenceInfo | null;
+  /** Omen activation effect; non-null for Omen-class items only. */
+  omen: OmenInfo | null;
+  /** Waystone/map tier (1–16+); non-null for Map-class items only. */
+  map_tier: number | null;
+  /** Talisman tier; non-null for Talisman-class items only. */
+  talisman_tier: number | null;
+  /** Breachstone tier + upgrade chain; non-null for Breachstone items only. */
+  breachstone: BreachstoneInfo | null;
+  /** Quest item description; non-null for QuestItem-class items only. */
+  quest_description: string | null;
   implicit_mods: ModDisplay[];
   explicit_mods: ModDisplay[];
 }

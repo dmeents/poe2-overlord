@@ -155,6 +155,23 @@ export function joinTables(tables, statDescriptions, options = {}) {
   // name + metadata path.
   const baseItemByIndex = buildIndexByCol(tables.BaseItemTypes ?? [], '_index');
 
+  // Maps: keyed by BaseItemType FK integer → tier
+  const mapByBase = buildFKIndex(tables.Maps ?? [], 'BaseItemType');
+
+  // Talismans: BaseItemTypesKey is a string metadata path (same convention as
+  // ComponentAttributeRequirements). Look up by baseId (BaseItemTypes.Id string).
+  const talismanByBaseId = buildIndexByCol(tables.Talismans ?? [], 'BaseItemTypesKey');
+
+  // Breachstones: keyed by BaseType FK integer
+  const breachstoneByBase = buildFKIndex(tables.Breachstones ?? [], 'BaseType');
+
+  // Quest items: keyed by BaseItemType FK integer; ClientStrings keyed by _index
+  const questByBase         = buildFKIndex(tables.QuestItems    ?? [], 'BaseItemType');
+  const clientStringByIndex = buildIndexByCol(tables.ClientStrings ?? [], '_index');
+
+  // Omens: keyed by BaseItemType FK integer
+  const omenByBase = buildFKIndex(tables.Omens ?? [], 'BaseItemType');
+
   // Essences: keyed by BaseItemType FK integer. Secondary index by _index
   // so UpgradeResult (a row FK into Essences itself) can resolve into the
   // upgraded essence's BaseItemType and then its display name.
@@ -260,12 +277,23 @@ export function joinTables(tables, statDescriptions, options = {}) {
     }
 
     // Sub-type data — all keyed by BaseItemTypes row index (base._index)
-    const armour       = buildArmour(baseIdx != null ? armourByBase.get(baseIdx) : null);
-    const weapon       = buildWeapon(baseIdx != null ? weaponByBase.get(baseIdx) : null);
-    const shield       = buildShield(baseIdx != null ? shieldByBase.get(baseIdx) : null);
-    const gem          = buildGem(baseIdx != null ? gemByBase.get(baseIdx) : null);
-    const currency     = buildCurrency(baseIdx != null ? currencyByBase.get(baseIdx) : null);
-    const flask        = buildFlask(baseIdx != null ? flaskByBase.get(baseIdx) : null, flaskTypeEnum);
+    const armour   = buildArmour(baseIdx != null ? armourByBase.get(baseIdx) : null);
+    const weapon   = buildWeapon(baseIdx != null ? weaponByBase.get(baseIdx) : null);
+    const shield   = buildShield(baseIdx != null ? shieldByBase.get(baseIdx) : null);
+    const gem      = buildGem(baseIdx != null ? gemByBase.get(baseIdx) : null);
+    const flask    = buildFlask(baseIdx != null ? flaskByBase.get(baseIdx) : null, flaskTypeEnum);
+
+    // Omens: if this base item has an Omens row, lift the description out of
+    // the generic currency object into a dedicated omen field so the tooltip
+    // can render it distinctly (and avoid the "No description" fallback path).
+    const omenRow    = baseIdx != null ? omenByBase.get(baseIdx) : null;
+    const currencyRaw = buildCurrency(baseIdx != null ? currencyByBase.get(baseIdx) : null);
+    const currency   = omenRow && currencyRaw
+      ? { stack_size: currencyRaw.stack_size, description: null }
+      : currencyRaw;
+    const omen       = omenRow && currencyRaw?.description
+      ? { description: currencyRaw.description }
+      : null;
     const essence      = buildEssence(
       baseIdx != null ? essenceByBase.get(baseIdx) : null,
       {
@@ -280,6 +308,32 @@ export function joinTables(tables, statDescriptions, options = {}) {
 
     // Requirements — keyed by BaseItemTypes.Id string (metadata path)
     const requirements = buildRequirements(reqByBaseId.get(baseId));
+
+    // Map tier (Map-category items only)
+    const mapTier = buildMapTier(baseIdx != null ? mapByBase.get(baseIdx) : null);
+
+    // Talisman tier + implicit mod (Talisman class items, keyed by string path)
+    const talismanRow = talismanByBaseId.get(baseId);
+    const talismanTier = talismanRow != null ? (intCol(talismanRow, 'Tier') ?? null) : null;
+    if (talismanRow != null) {
+      const modIdx = intCol(talismanRow, 'ModsKey');
+      const talismanMod = modIdx != null ? modDisplayByIndex.get(modIdx) : null;
+      if (talismanMod && !implicitMods.some((m) => m.id === talismanMod.id)) {
+        implicitMods = [...implicitMods, talismanMod];
+      }
+    }
+
+    // Breachstone info (Breachstone-class items)
+    const breachstone = buildBreachstone(
+      baseIdx != null ? breachstoneByBase.get(baseIdx) : null,
+      baseItemByIndex,
+    );
+
+    // Quest item description (resolved via ClientStrings FK)
+    const questDescription = buildQuestDescription(
+      baseIdx != null ? questByBase.get(baseIdx) : null,
+      clientStringByIndex,
+    );
 
     // Human-readable flavour text + tag list (both null/empty on base items
     // that don't set them).
@@ -319,6 +373,11 @@ export function joinTables(tables, statDescriptions, options = {}) {
       flask,
       soul_core: soulCoreInfo,
       essence,
+      omen,
+      map_tier: mapTier,
+      talisman_tier: talismanTier,
+      breachstone,
+      quest_description: questDescription,
       implicit_mods: implicitMods,
       explicit_mods: [],
     });
@@ -403,6 +462,31 @@ function buildFlask(row, flaskTypeEnum) {
     flask_mana:          intCol(row, 'ManaPerUse') ?? 0,
     flask_recovery_time: intCol(row, 'RecoveryTime') ?? 0,
   };
+}
+
+function buildMapTier(row) {
+  if (!row) return null;
+  return intCol(row, 'Tier');
+}
+
+function buildBreachstone(row, baseItemByIndex) {
+  if (!row) return null;
+  const tier = intCol(row, 'MapTierEquivalent') ?? 0;
+  const upgradeBaseIdx = intCol(row, 'UpgradesTo');
+  const upgradeBase = upgradeBaseIdx != null ? baseItemByIndex.get(upgradeBaseIdx) : null;
+  const upgradesTo = strCol(upgradeBase, 'Name');
+  const currencyBaseIdx = intCol(row, 'UpgradeCurrency');
+  const currencyBase = currencyBaseIdx != null ? baseItemByIndex.get(currencyBaseIdx) : null;
+  const upgradeCurrency = strCol(currencyBase, 'Name');
+  if (!tier && !upgradesTo && !upgradeCurrency) return null;
+  return { tier, upgrades_to: upgradesTo, upgrade_currency: upgradeCurrency };
+}
+
+function buildQuestDescription(row, clientStringByIndex) {
+  if (!row) return null;
+  const descIdx = intCol(row, 'Description');
+  const descRow = descIdx != null ? clientStringByIndex.get(descIdx) : null;
+  return strCol(descRow, 'Text');
 }
 
 /**

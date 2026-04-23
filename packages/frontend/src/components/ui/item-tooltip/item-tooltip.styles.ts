@@ -40,4 +40,8 @@ export const itemTooltipStyles = {
 
   // Fallback text when no game data is available
   noData: 'text-xs text-stone-600 italic',
+
+  // Corrupted / unmodifiable state badges
+  corruptedBadge: 'text-xs text-blood-400 bg-blood-950/60 px-2 py-0.5 rounded',
+  unmodifiableBadge: 'text-xs text-ash-400 bg-stone-800 px-2 py-0.5 rounded',
 } as const;

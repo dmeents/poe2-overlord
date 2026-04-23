@@ -59,11 +59,14 @@ function rarityClass(frame: number): string {
 
 /** Parses `[text]` / `[display|text]` wiki markup and `\n` line breaks. */
 function parseDescription(text: string) {
-  return text.split(/(\[[^\]]+\]|\n)/g).map((seg, i) => {
-    if (seg === '\n') return <br key={`br-${i}`} />;
+  let offset = 0;
+  return text.split(/(\[[^\]]+\]|\n)/g).map(seg => {
+    const key = `${offset}:${seg}`;
+    offset += seg.length;
+    if (seg === '\n') return <br key={key} />;
     const match = seg.match(/^\[(?:[^\]|]+\|)?([^\]]+)\]$/);
     return match ? (
-      <Fragment key={`${i}:${seg}`}>
+      <Fragment key={key}>
         <span className={styles.descriptionLink}>{match[1]}</span>
       </Fragment>
     ) : (
@@ -153,8 +156,20 @@ interface ItemTooltipContentProps {
 
 function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemTooltipContentProps) {
   const {
-    weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence,
-    omen, map_tier, talisman_tier, breachstone, quest_description,
+    weapon,
+    defences,
+    shield,
+    gem,
+    flask,
+    currency,
+    requirements,
+    soul_core,
+    essence,
+    omen,
+    map_tier,
+    talisman_tier,
+    breachstone,
+    quest_description,
   } = itemData;
 
   // Route the POE1-shaped `web.poecdn.com/image/Art/...` URLs through the
@@ -209,12 +224,8 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
       {/* Corrupted / unmodifiable state badges */}
       {(itemData.is_corrupted || itemData.unmodifiable) && (
         <div className="flex gap-1">
-          {itemData.is_corrupted && (
-            <span className={styles.corruptedBadge}>Corrupted</span>
-          )}
-          {itemData.unmodifiable && (
-            <span className={styles.unmodifiableBadge}>Unmodifiable</span>
-          )}
+          {itemData.is_corrupted && <span className={styles.corruptedBadge}>Corrupted</span>}
+          {itemData.unmodifiable && <span className={styles.unmodifiableBadge}>Unmodifiable</span>}
         </div>
       )}
 
@@ -224,9 +235,7 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
       )}
 
       {/* Omen activation effect */}
-      {omen && (
-        <p className={styles.description}>{parseDescription(omen.description)}</p>
-      )}
+      {omen && <p className={styles.description}>{parseDescription(omen.description)}</p>}
 
       {/* Currency description */}
       {currency?.description && (

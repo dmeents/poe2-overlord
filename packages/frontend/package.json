@@ -23,6 +23,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@floating-ui/react": "^0.27.19",
     "@heroicons/react": "^2.2.0",
     "@poe2-overlord/theme": "workspace:*",
     "@tanstack/react-query": "^5.90.16",

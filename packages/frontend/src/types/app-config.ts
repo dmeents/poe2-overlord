@@ -1,3 +1,17 @@
+export type BackgroundImage =
+  | 'None'
+  | 'VolcanicRuins'
+  | 'ManaStormRuins'
+  | 'NecroRuins'
+  | 'OvergrownForest'
+  | 'SpaceTime';
+
+export interface BackgroundImageOption {
+  value: string;
+  label: string;
+  filename: string | null;
+}
+
 export type ZoneRefreshInterval =
   | 'FiveMinutes'
   | 'OneHour'
@@ -24,6 +38,7 @@ export interface AppConfig {
   hide_flavor_text: boolean;
   hide_objective_descriptions: boolean;
   ui_zoom_level: number;
+  background_image: BackgroundImage;
 }
 
 /** Event emitted when configuration changes (from backend). */

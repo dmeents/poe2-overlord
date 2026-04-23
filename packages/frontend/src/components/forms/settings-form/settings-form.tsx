@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { HoverCard } from '@/components/ui/hover-card/hover-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
-import { Tooltip } from '@/components/ui/tooltip/tooltip';
 import { useConfiguration } from '@/contexts/ConfigurationContext';
-import type { AppConfig, ZoneRefreshIntervalOption } from '@/types/app-config';
+import type {
+  AppConfig,
+  BackgroundImageOption,
+  ZoneRefreshIntervalOption,
+} from '@/types/app-config';
 import { tauriUtils } from '@/utils/tauri';
 import { applyZoom, ZOOM_OPTIONS } from '@/utils/zoom';
 import { Button } from '../../ui/button/button';
@@ -64,6 +68,7 @@ const DEFAULT_FORM_STATE: AppConfig = {
   hide_flavor_text: false,
   hide_objective_descriptions: false,
   ui_zoom_level: 0,
+  background_image: 'VolcanicRuins',
 };
 
 interface SettingsFormProps {
@@ -79,6 +84,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [zoneRefreshOptions, setZoneRefreshOptions] = useState<ZoneRefreshIntervalOption[]>([]);
+  const [backgroundImageOptions, setBackgroundImageOptions] = useState<BackgroundImageOption[]>([]);
 
   // Sync draft when context config changes (initial load + external changes)
   useEffect(() => {
@@ -124,9 +130,19 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
     }
   }, []);
 
+  const loadBackgroundImageOptions = useCallback(async () => {
+    try {
+      const options = await tauriUtils.getBackgroundImageOptions();
+      setBackgroundImageOptions(options);
+    } catch (err) {
+      console.warn('Failed to load background image options:', extractErrorMessage(err));
+    }
+  }, []);
+
   useEffect(() => {
     loadZoneRefreshOptions();
-  }, [loadZoneRefreshOptions]);
+    loadBackgroundImageOptions();
+  }, [loadZoneRefreshOptions, loadBackgroundImageOptions]);
 
   const handleSave = async () => {
     // Pre-validate before backend call
@@ -242,10 +258,39 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
         <AlertMessage type="success" message={success || ''} />
       </div>
 
+      {/* Background Image */}
+      <FormField
+        label={
+          <HoverCard
+            content={
+              <div>
+                <p className="mb-2">
+                  <strong>Background Image:</strong> Choose the background image displayed behind
+                  the app interface.
+                </p>
+                <p className="text-stone-300">
+                  Select <strong>No Background</strong> for a plain dark interface, or choose a
+                  themed image to match your preferred aesthetic.
+                </p>
+              </div>
+            }>
+            Background Image
+          </HoverCard>
+        }
+        htmlFor="background-image">
+        <Select
+          id="background-image"
+          value={localConfig.background_image}
+          onChange={value => handleInputChange('background_image', value)}
+          options={backgroundImageOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+          variant="dropdown"
+        />
+      </FormField>
+
       {/* UI Zoom Level */}
       <FormField
         label={
-          <Tooltip
+          <HoverCard
             content={
               <div>
                 <p className="mb-2">
@@ -259,7 +304,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
               </div>
             }>
             UI Zoom Level
-          </Tooltip>
+          </HoverCard>
         }
         htmlFor="ui-zoom-level">
         <Select
@@ -274,7 +319,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       {/* POE Client Log Path */}
       <FormField
         label={
-          <Tooltip
+          <HoverCard
             content={
               <div>
                 <p className="mb-2">
@@ -305,7 +350,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
               </div>
             }>
             POE Client Log Path
-          </Tooltip>
+          </HoverCard>
         }
         htmlFor="poe-client-log-path">
         <Input
@@ -322,7 +367,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       {/* Log Level */}
       <FormField
         label={
-          <Tooltip
+          <HoverCard
             content={
               <div>
                 <p className="mb-2">
@@ -353,7 +398,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
               </div>
             }>
             Log Level
-          </Tooltip>
+          </HoverCard>
         }
         htmlFor="log-level">
         <Select
@@ -368,7 +413,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
       {/* Zone Refresh Interval */}
       <FormField
         label={
-          <Tooltip
+          <HoverCard
             content={
               <div>
                 <p className="mb-2">
@@ -402,7 +447,7 @@ export function SettingsForm({ onConfigUpdate }: SettingsFormProps) {
               </div>
             }>
             Zone Refresh Interval
-          </Tooltip>
+          </HoverCard>
         }
         htmlFor="zone-refresh-interval"
         className="last-form-item">

@@ -4,6 +4,8 @@ pub mod character;
 pub mod configuration;
 pub mod economy;
 pub mod game_monitoring;
+pub mod item_data;
+pub mod item_image;
 pub mod leveling;
 pub mod log_analysis;
 pub mod notes;

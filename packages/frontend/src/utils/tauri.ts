@@ -1,5 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { AppConfig, ZoneRefreshInterval, ZoneRefreshIntervalOption } from '@/types/app-config';
+import type {
+  AppConfig,
+  BackgroundImageOption,
+  ZoneRefreshInterval,
+  ZoneRefreshIntervalOption,
+} from '@/types/app-config';
 import { parseError } from '@/utils/error-handling';
 
 export const tauriUtils = {
@@ -145,6 +150,16 @@ export const tauriUtils = {
     } catch (err) {
       const error = parseError(err);
       console.error('Failed to get zone refresh interval options:', error.message);
+      throw error;
+    }
+  },
+
+  async getBackgroundImageOptions(): Promise<BackgroundImageOption[]> {
+    try {
+      return await invoke<BackgroundImageOption[]>('get_background_image_options');
+    } catch (err) {
+      const error = parseError(err);
+      console.error('Failed to get background image options:', error.message);
       throw error;
     }
   },

@@ -1,0 +1,11 @@
+{
+  "name": "extract-game-data",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Extracts POE2 game data from GGG CDN bundles via pathofexile-dat",
+  "private": true,
+  "dependencies": {
+    "minimist": "^1.2.8",
+    "pathofexile-dat": "^15.1.0"
+  }
+}

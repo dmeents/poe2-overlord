@@ -8,6 +8,12 @@ vi.mock('@/contexts/EconomyContext', () => ({
   useEconomy: mockUseEconomy,
 }));
 
+// ItemTooltip uses useItemByName which requires a QueryClient.
+// Mock it here since ExchangeRatesCard tests aren't testing item data queries.
+vi.mock('@/queries/item-data', () => ({
+  useItemByName: vi.fn(() => ({ data: null, isLoading: false })),
+}));
+
 const createMockCurrencyData = () => ({
   primary_currency: {
     id: 'divine',

@@ -234,6 +234,7 @@ mod tests {
             hide_flavor_text: false,
             hide_objective_descriptions: false,
             ui_zoom_level: 0.0,
+            background_image: BackgroundImage::VolcanicRuins,
         };
 
         let json = serde_json::to_string(&config).unwrap();
@@ -246,6 +247,86 @@ mod tests {
             config.zone_refresh_interval
         );
         assert_eq!(deserialized.config_version, config.config_version);
+        assert_eq!(deserialized.background_image, config.background_image);
+    }
+
+    // ============= BackgroundImage Tests =============
+
+    #[test]
+    fn test_background_image_all_options() {
+        let options = BackgroundImage::all_options();
+        assert_eq!(options.len(), 6);
+        assert!(options.contains(&BackgroundImage::None));
+        assert!(options.contains(&BackgroundImage::VolcanicRuins));
+        assert!(options.contains(&BackgroundImage::ManaStormRuins));
+        assert!(options.contains(&BackgroundImage::NecroRuins));
+        assert!(options.contains(&BackgroundImage::OvergrownForest));
+        assert!(options.contains(&BackgroundImage::SpaceTime));
+    }
+
+    #[test]
+    fn test_background_image_labels() {
+        assert_eq!(BackgroundImage::None.label(), "No Background");
+        assert_eq!(BackgroundImage::VolcanicRuins.label(), "Volcanic Ruins");
+        assert_eq!(BackgroundImage::ManaStormRuins.label(), "Mana Storm Ruins");
+        assert_eq!(BackgroundImage::NecroRuins.label(), "Necro Ruins");
+        assert_eq!(BackgroundImage::OvergrownForest.label(), "Overgrown Forest");
+        assert_eq!(BackgroundImage::SpaceTime.label(), "Space Time");
+    }
+
+    #[test]
+    fn test_background_image_filename() {
+        assert_eq!(BackgroundImage::None.filename(), None);
+        assert_eq!(
+            BackgroundImage::VolcanicRuins.filename(),
+            Some("bg-volcanic-ruins.png")
+        );
+        assert_eq!(
+            BackgroundImage::ManaStormRuins.filename(),
+            Some("bg-mana-storm-ruins.png")
+        );
+        assert_eq!(
+            BackgroundImage::NecroRuins.filename(),
+            Some("bg-necro-ruins.png")
+        );
+        assert_eq!(
+            BackgroundImage::OvergrownForest.filename(),
+            Some("bg-overgrown-forest.png")
+        );
+        assert_eq!(
+            BackgroundImage::SpaceTime.filename(),
+            Some("bg-space-time.png")
+        );
+    }
+
+    #[test]
+    fn test_background_image_default() {
+        let bg: BackgroundImage = Default::default();
+        assert_eq!(bg, BackgroundImage::VolcanicRuins);
+    }
+
+    #[test]
+    fn test_background_image_display() {
+        assert_eq!(format!("{}", BackgroundImage::None), "No Background");
+        assert_eq!(
+            format!("{}", BackgroundImage::VolcanicRuins),
+            "Volcanic Ruins"
+        );
+    }
+
+    #[test]
+    fn test_background_image_serialization_roundtrip() {
+        for variant in BackgroundImage::all_options() {
+            let json = serde_json::to_string(&variant).unwrap();
+            let deserialized: BackgroundImage = serde_json::from_str(&json).unwrap();
+            assert_eq!(deserialized, variant);
+        }
+    }
+
+    #[test]
+    fn test_background_image_from_str_invalid() {
+        assert!(serde_json::from_str::<BackgroundImage>("\"invalid\"").is_err());
+        assert!(serde_json::from_str::<BackgroundImage>("\"\"").is_err());
     }
 
     // ============= Config Version and Security Tests =============

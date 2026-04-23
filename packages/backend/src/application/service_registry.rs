@@ -7,6 +7,10 @@ use crate::domain::economy::{EconomyRepository, EconomyRepositoryImpl, EconomySe
 use crate::domain::game_monitoring::{
     traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
 };
+use crate::domain::item_data::{
+    repository::ItemDataRepositoryImpl, service::ItemDataServiceImpl, traits::ItemDataService,
+};
+use crate::domain::item_image::{service::ItemImageServiceImpl, traits::ItemImageService};
 use crate::domain::leveling::{LevelingRepositoryImpl, LevelingService, LevelingServiceImpl};
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
@@ -122,6 +126,32 @@ impl ServiceInitializer {
         app.manage(leveling_service.clone());
 
         let resource_dir = app.path().resource_dir()?;
+
+        // Item data service — checks bundled version on startup and imports to SQLite if new
+        let item_data_repo = Arc::new(ItemDataRepositoryImpl::new(pool.clone()))
+            as Arc<dyn crate::domain::item_data::traits::ItemDataRepository + Send + Sync>;
+        let item_data_service = Arc::new(ItemDataServiceImpl::new(
+            item_data_repo,
+            resource_dir.join("data").join("game_data"),
+        )) as Arc<dyn ItemDataService>;
+
+        tauri::async_runtime::block_on(async {
+            if let Err(e) = item_data_service.ensure_data_imported().await {
+                error!("Failed to import item data: {e}");
+            }
+        });
+        app.manage(item_data_service);
+
+        // Item image proxy — fetches POE2 art from cdn.poe2db.tw (which
+        // requires a Referer header browsers can't send) and caches to disk.
+        let image_cache_dir = AppPaths::data_dir().join("item_images");
+        let item_image_service =
+            Arc::new(ItemImageServiceImpl::new(image_cache_dir).map_err(|e| {
+                error!("Failed to initialize ItemImageService: {e}");
+                e
+            })?) as Arc<dyn ItemImageService>;
+        app.manage(item_image_service);
+
         let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(
             resource_dir.join("config").join("walkthrough_guide.json"),
         ));

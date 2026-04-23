@@ -29,19 +29,25 @@ if (!/^\d+\.\d+\.\d+$/.test(version)) {
 // Update packages/backend/Cargo.toml
 const cargoPath = resolve(root, 'packages/backend/Cargo.toml');
 const cargo = readFileSync(cargoPath, 'utf8');
-// Only replace the version in the [package] section (first occurrence)
-const updatedCargo = cargo.replace(/^(version\s*=\s*)"[^"]*"/m, `$1"${version}"`);
-if (updatedCargo === cargo) {
+const cargoVersionRe = /^(version\s*=\s*)"([^"]*)"/m;
+const cargoMatch = cargoVersionRe.exec(cargo);
+if (!cargoMatch) {
   console.error('Could not find version field in Cargo.toml');
   process.exit(1);
 }
+const prev = cargoMatch[2];
+if (prev === version) {
+  console.error(`Version is already ${version}. Nothing to bump.`);
+  process.exit(1);
+}
+// Only replace the version in the [package] section (first occurrence)
+const updatedCargo = cargo.replace(cargoVersionRe, `$1"${version}"`);
 writeFileSync(cargoPath, updatedCargo);
 console.log(`  packages/backend/Cargo.toml -> ${version}`);
 
 // Update root package.json
 const pkgPath = resolve(root, 'package.json');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
-const prev = pkg.version;
 pkg.version = version;
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 console.log(`  package.json -> ${version}`);
@@ -49,14 +55,24 @@ console.log(`  package.json -> ${version}`);
 // Update aur/PKGBUILD
 const pkgbuildPath = resolve(root, 'aur/PKGBUILD');
 const pkgbuild = readFileSync(pkgbuildPath, 'utf8');
-const updatedPkgbuild = pkgbuild
-  .replace(/^pkgver=.*/m, `pkgver=${version}`)
-  .replace(/^pkgrel=.*/m, 'pkgrel=1');
-if (updatedPkgbuild === pkgbuild) {
+if (!/^pkgver=.*/m.test(pkgbuild)) {
   console.error('Could not find pkgver field in aur/PKGBUILD');
   process.exit(1);
 }
+const updatedPkgbuild = pkgbuild
+  .replace(/^pkgver=.*/m, `pkgver=${version}`)
+  .replace(/^pkgrel=.*/m, 'pkgrel=1');
 writeFileSync(pkgbuildPath, updatedPkgbuild);
 console.log(`  aur/PKGBUILD -> ${version}`);
+
+// Update release workflow description so the dropdown shows the current version
+const workflowPath = resolve(root, '.github/workflows/release.yml');
+const workflow = readFileSync(workflowPath, 'utf8');
+const updatedWorkflow = workflow.replace(
+  /description: '.*'/,
+  `description: 'Current: ${version}. Enter the next version (e.g. X.Y.Z)'`
+);
+writeFileSync(workflowPath, updatedWorkflow);
+console.log(`  .github/workflows/release.yml description -> ${version}`);
 
 console.log(`\nBumped ${prev} -> ${version}`);

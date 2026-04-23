@@ -1,7 +1,7 @@
 import { Component, type ReactNode } from 'react';
+import { Button } from '@/components/ui/button/button';
 import type { AppError } from '@/types/error';
 import { parseError } from '@/utils/error-handling';
-import { Button } from '@/components/ui/button/button';
 
 interface Props {
   children: ReactNode;

@@ -17,7 +17,7 @@ describe('PageLayout', () => {
 
       // Base styling classes
       expect(container.firstChild).toHaveClass('min-h-screen');
-      expect(container.firstChild).toHaveClass('text-white');
+      expect(container.firstChild).toHaveClass('text-stone-50');
     });
   });
 

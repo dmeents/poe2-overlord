@@ -39,20 +39,14 @@ export const CurrentZoneCard = memo(function CurrentZoneCard({ zone }: CurrentZo
           <div className={s.nameSection}>
             <h3 className={s.zoneName}>{zone.zone_name}</h3>
             <div className={s.badgeRow}>
-              {getDisplayAct(zone) && (
-                <span className={s.actBadge}>{getDisplayAct(zone)}</span>
-              )}
-              {zone.area_level && (
-                <span className={s.levelBadge}>Level {zone.area_level}</span>
-              )}
+              {getDisplayAct(zone) && <span className={s.actBadge}>{getDisplayAct(zone)}</span>}
+              {zone.area_level && <span className={s.levelBadge}>Level {zone.area_level}</span>}
             </div>
           </div>
           <div className={s.iconRow}>
             {zone.has_waypoint && <MapIcon className={s.icon} />}
             {zone.is_town && <BuildingStorefrontIcon className={s.icon} />}
-            {zone.zone_name.toLowerCase().includes('hideout') && (
-              <HomeIcon className={s.icon} />
-            )}
+            {zone.zone_name.toLowerCase().includes('hideout') && <HomeIcon className={s.icon} />}
           </div>
         </div>
         <div className={s.statsGrid}>

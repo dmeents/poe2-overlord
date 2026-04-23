@@ -44,9 +44,7 @@ export function StepObjectiveList({
       <h5 className={s.heading}>{countLabel}</h5>
       <ul className={s.list}>
         {filteredObjectives.map((objective, objectiveIndex) => (
-          <li
-            key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`}
-            className={s.item}>
+          <li key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`} className={s.item}>
             <div className={s.itemRow}>
               <StarIcon
                 className={

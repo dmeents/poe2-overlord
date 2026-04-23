@@ -371,21 +371,20 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         // constraint is silently skipped and rows_affected == 0. This avoids
         // the TOCTOU race of SELECT-then-INSERT that could produce a UNIQUE
         // constraint violation on rapid double-clicks.
-        let inserted = sqlx::query(
-            "INSERT OR IGNORE INTO item_favorites (item_id, created_at) VALUES (?, ?)",
-        )
-        .bind(item_id)
-        .bind(&now)
-        .execute(&self.pool)
-        .await
-        .map_err(|e| {
-            AppError::internal_error(
-                "toggle_favorite",
-                &format!("Failed to insert favourite: {e}"),
-            )
-        })?
-        .rows_affected()
-            > 0;
+        let inserted =
+            sqlx::query("INSERT OR IGNORE INTO item_favorites (item_id, created_at) VALUES (?, ?)")
+                .bind(item_id)
+                .bind(&now)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| {
+                    AppError::internal_error(
+                        "toggle_favorite",
+                        &format!("Failed to insert favourite: {e}"),
+                    )
+                })?
+                .rows_affected()
+                > 0;
 
         if inserted {
             return Ok(true);

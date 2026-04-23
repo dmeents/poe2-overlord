@@ -111,8 +111,7 @@ export function useGameDataVersion() {
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (itemId: string) =>
-      invoke<boolean>('toggle_item_favorite', { itemId }),
+    mutationFn: (itemId: string) => invoke<boolean>('toggle_item_favorite', { itemId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: itemDataQueryKeys.favorites() });
     },

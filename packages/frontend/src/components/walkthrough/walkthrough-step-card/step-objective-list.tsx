@@ -2,6 +2,7 @@ import { GiftIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
 import type { Objective, StepLink } from '../../../types/walkthrough';
 import { ParsedText } from '../../../utils/text-parser';
+import { stepObjectiveListStyles as s } from './step-objective-list.styles';
 
 interface StepObjectiveListProps {
   objectives: Objective[];
@@ -39,46 +40,40 @@ export function StepObjectiveList({
     : `Objectives (${objectives.length}):`;
 
   return (
-    <div className="space-y-3 px-4">
-      <h5 className="text-sm font-semibold text-stone-200">{countLabel}</h5>
-      <ul className="space-y-4">
+    <div className={s.container}>
+      <h5 className={s.heading}>{countLabel}</h5>
+      <ul className={s.list}>
         {filteredObjectives.map((objective, objectiveIndex) => (
           <li
             key={`objective-${objectiveIndex}-${objective.text.slice(0, 20)}`}
-            className="text-sm">
-            <div className="flex items-start gap-2.5">
-              {/* Star icon as leading indicator */}
+            className={s.item}>
+            <div className={s.itemRow}>
               <StarIcon
                 className={
                   objective.required !== undefined && objective.required
-                    ? 'w-4 h-4 text-ember-400 flex-shrink-0 mt-0.5'
-                    : 'w-4 h-4 text-stone-400 flex-shrink-0 mt-0.5'
+                    ? s.starRequired
+                    : s.starOptional
                 }
                 title={
                   objective.required !== undefined && objective.required ? 'Required' : 'Optional'
                 }
               />
-
-              {/* Objective content */}
-              <div className="flex-1 space-y-1.5">
-                {/* Main text */}
-                <div className="font-medium text-stone-200 flex items-center gap-2 flex-wrap">
+              <div className={s.contentWrapper}>
+                <div className={s.mainText}>
                   <ParsedText text={objective.text} links={links} onLinkClick={onLinkClick} />
                   {objective.leagueStart && (
                     <span
-                      className="text-[10px] font-semibold text-molten-400"
+                      className={s.leagueStartBadge}
                       title="Only needs to be completed on your first character per league">
                       LEAGUE START
                     </span>
                   )}
                 </div>
-
-                {/* Details and rewards */}
                 {(!hideObjectiveDescriptions ||
                   (objective.rewards && objective.rewards.length > 0)) && (
-                  <div className="border-l-2 border-ember-500/30 pl-3 space-y-1.5">
+                  <div className={s.detailsBlock}>
                     {!hideObjectiveDescriptions && objective.details && (
-                      <div className="text-xs text-stone-400 whitespace-pre-wrap">
+                      <div className={s.details}>
                         <ParsedText
                           text={objective.details}
                           links={links}
@@ -87,8 +82,8 @@ export function StepObjectiveList({
                       </div>
                     )}
                     {objective.rewards && objective.rewards.length > 0 && (
-                      <div className="text-xs flex items-center gap-1 text-stone-400">
-                        <GiftIcon className="w-3.5 h-3.5 text-molten-400" title="Rewards" />
+                      <div className={s.rewardsRow}>
+                        <GiftIcon className={s.rewardsIcon} title="Rewards" />
                         <ParsedText
                           text={objective.rewards.join(', ')}
                           links={links}

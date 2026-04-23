@@ -11,9 +11,9 @@ export const itemTooltipStyles = {
 
   // Item name — use a rarity variant alongside this base class
   name: 'font-semibold text-sm text-center',
-  nameNormal: 'text-white',
-  nameMagic: 'text-blue-300',
-  nameRare: 'text-yellow-300',
+  nameNormal: 'text-stone-50',
+  nameMagic: 'text-arcane-400',
+  nameRare: 'text-molten-300',
   nameUnique: 'text-molten-300',
 
   // Category badge

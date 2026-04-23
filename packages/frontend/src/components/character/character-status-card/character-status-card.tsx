@@ -1,3 +1,4 @@
+import { UserCircleIcon } from '@heroicons/react/24/outline';
 import { Link } from '@tanstack/react-router';
 import { useCharacter } from '../../../contexts/CharacterContext';
 import { Button } from '../../ui/button/button';
@@ -25,11 +26,7 @@ export function CharacterStatusCard({ className = '' }: CharacterStatusCardProps
     return (
       <Card title="Active Character" className={className}>
         <EmptyState
-          icon={
-            <div className="h-12 w-12 rounded-full bg-stone-700 flex items-center justify-center text-stone-400 text-xl">
-              👤
-            </div>
-          }
+          icon={<UserCircleIcon className="h-12 w-12 text-stone-400" />}
           title="No Active Character"
           description="Create or select a character to start tracking"
           action={

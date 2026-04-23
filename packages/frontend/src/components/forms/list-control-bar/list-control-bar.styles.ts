@@ -3,18 +3,18 @@ export const controlBarClasses = 'flex items-center gap-2 px-3 py-2 border-b bor
 export const searchInputClasses = 'flex-1 min-w-0';
 
 export const filterButtonClasses =
-  'relative px-3 h-10 text-sm font-medium text-stone-300 hover:text-white bg-stone-800/60 hover:bg-stone-700 border border-stone-700/60 transition-colors';
+  'relative px-3 h-10 text-sm font-medium text-stone-300 hover:text-stone-50 bg-stone-800/60 hover:bg-stone-700 border border-stone-700/60 transition-colors';
 
 export const filterButtonActiveClasses =
   'relative px-3 h-10 text-sm font-medium text-ember-400 bg-ember-500/20 hover:bg-ember-500/30 border border-ember-500/30 transition-colors';
 
 export const filterBadgeClasses =
-  'absolute -top-1.5 -right-1.5 flex items-center justify-center w-5 h-5 text-xs font-bold bg-ember-500 text-white rounded-full';
+  'absolute -top-1.5 -right-1.5 flex items-center justify-center w-5 h-5 text-xs font-bold bg-ember-500 text-stone-50 rounded-full';
 
 export const sortSelectWrapperClasses = 'w-40';
 
 export const resetButtonClasses =
-  'px-3 h-10 text-sm font-medium text-stone-400 hover:text-white bg-stone-800/60 hover:bg-stone-700 border border-stone-700/60 transition-colors whitespace-nowrap';
+  'px-3 h-10 text-sm font-medium text-stone-400 hover:text-stone-50 bg-stone-800/60 hover:bg-stone-700 border border-stone-700/60 transition-colors whitespace-nowrap';
 
 export const countBadgeClasses = 'text-xs text-stone-500 whitespace-nowrap';
 

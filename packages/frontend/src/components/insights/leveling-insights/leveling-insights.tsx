@@ -1,9 +1,11 @@
 import { ChartBarIcon } from '@heroicons/react/24/outline';
+import { getThemeHexColor } from '@poe2-overlord/theme';
 import type { LevelEventResponse, LevelingStats } from '@/types/leveling';
 import { formatDuration, formatDurationMinutes } from '@/utils/format-duration';
 import { formatXpAmount, formatXpRate } from '@/utils/format-xp';
 import { Card } from '../../ui/card/card';
 import { DataItem } from '../../ui/data-item/data-item';
+import { levelingInsightsStyles as s } from './leveling-insights.styles';
 
 interface LevelingInsightsProps {
   events: LevelEventResponse[];
@@ -15,7 +17,7 @@ export function LevelingInsights({ events, currentLevel, liveStats }: LevelingIn
   if (events.length === 0) {
     return (
       <Card title="Leveling Insights" icon={<ChartBarIcon />}>
-        <div className="text-stone-500 text-sm py-4 text-center">No level history yet</div>
+        <div className={s.emptyText}>No level history yet</div>
       </Card>
     );
   }
@@ -66,13 +68,13 @@ export function LevelingInsights({ events, currentLevel, liveStats }: LevelingIn
             <DataItem
               label="Est. next level"
               value={formatDuration(liveStats.estimated_seconds_to_next_level)}
-              color="ember"
+              color={getThemeHexColor('ember-500')}
             />
           )}
           {liveStats.current_level < 100 && (
             <DataItem label="XP to next level" value={formatXpAmount(liveStats.xp_to_next_level)} />
           )}
-          <div className="border-t border-stone-800 my-1" />
+          <div className={s.divider} />
         </>
       )}
       <DataItem label="Current Level" value={currentLevel} />

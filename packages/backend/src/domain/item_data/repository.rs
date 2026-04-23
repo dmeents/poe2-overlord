@@ -94,6 +94,10 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         }
 
         // Insert items
+        // Columns beyond the 011 baseline (movement_speed, reload_time, gem_*_req_percent,
+        // soul_core_*, is_corrupted, unmodifiable, flask_name) were added in later migrations.
+        // This INSERT is safe because sqlx::migrate!() runs all migrations before
+        // ensure_data_imported() is ever called in service_registry.rs.
         for item in items {
             let tags_json = serde_json::to_string(&item.tags).unwrap_or_else(|_| "[]".to_string());
             let implicit_json =
@@ -286,7 +290,9 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
             format!("WHERE {}", where_parts.join(" AND "))
         };
 
-        let limit = params.limit.unwrap_or(50).min(500);
+        // clamp lower bound to 1 so a negative value can't produce LIMIT -1
+        // (SQLite interprets LIMIT -1 as "no limit" — full-table scan).
+        let limit = params.limit.unwrap_or(50).clamp(1, 500);
         let offset = params.offset.unwrap_or(0).max(0);
 
         let count_sql = format!("SELECT COUNT(*) FROM items {where_clause}");
@@ -360,48 +366,44 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
     }
 
     async fn toggle_favorite(&self, item_id: &str) -> AppResult<bool> {
-        // Check if it's already a favourite
-        let exists: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM item_favorites WHERE item_id = ?")
-                .bind(item_id)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(|e| {
-                    AppError::internal_error(
-                        "toggle_favorite",
-                        &format!("Failed to check favourite status: {e}"),
-                    )
-                })?;
+        let now = Utc::now().to_rfc3339();
+        // INSERT OR IGNORE is atomic: if the row already exists the UNIQUE
+        // constraint is silently skipped and rows_affected == 0. This avoids
+        // the TOCTOU race of SELECT-then-INSERT that could produce a UNIQUE
+        // constraint violation on rapid double-clicks.
+        let inserted = sqlx::query(
+            "INSERT OR IGNORE INTO item_favorites (item_id, created_at) VALUES (?, ?)",
+        )
+        .bind(item_id)
+        .bind(&now)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| {
+            AppError::internal_error(
+                "toggle_favorite",
+                &format!("Failed to insert favourite: {e}"),
+            )
+        })?
+        .rows_affected()
+            > 0;
 
-        if exists.is_some() {
-            // Remove
-            sqlx::query("DELETE FROM item_favorites WHERE item_id = ?")
-                .bind(item_id)
-                .execute(&self.pool)
-                .await
-                .map_err(|e| {
-                    AppError::internal_error(
-                        "toggle_favorite",
-                        &format!("Failed to remove favourite: {e}"),
-                    )
-                })?;
-            Ok(false)
-        } else {
-            // Add
-            let now = Utc::now().to_rfc3339();
-            sqlx::query("INSERT INTO item_favorites (item_id, created_at) VALUES (?, ?)")
-                .bind(item_id)
-                .bind(&now)
-                .execute(&self.pool)
-                .await
-                .map_err(|e| {
-                    AppError::internal_error(
-                        "toggle_favorite",
-                        &format!("Failed to add favourite: {e}"),
-                    )
-                })?;
-            Ok(true)
+        if inserted {
+            return Ok(true);
         }
+
+        // Row already existed — remove it.
+        sqlx::query("DELETE FROM item_favorites WHERE item_id = ?")
+            .bind(item_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| {
+                AppError::internal_error(
+                    "toggle_favorite",
+                    &format!("Failed to remove favourite: {e}"),
+                )
+            })?;
+
+        Ok(false)
     }
 
     async fn get_favorites(&self) -> AppResult<Vec<Item>> {
@@ -483,20 +485,21 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
     };
 
     let gem = {
-        let gem_type: Option<String> = r.try_get("gem_type").ok().flatten();
-        if gem_type.is_some() {
-            Some(GemData {
-                gem_type,
-                gem_colour: r.try_get("gem_colour").ok().flatten(),
-                gem_min_level: r.try_get("gem_min_level").unwrap_or(1),
-                gem_tier: r.try_get("gem_tier").ok().flatten(),
-                str_req_percent: r.try_get("gem_str_req_percent").unwrap_or(0),
-                dex_req_percent: r.try_get("gem_dex_req_percent").unwrap_or(0),
-                int_req_percent: r.try_get("gem_int_req_percent").unwrap_or(0),
-            })
-        } else {
-            None
-        }
+        // Use gem_min_level as the sentinel: gem_type is NULL for uncut/typeless
+        // gems (e.g. Uncut Skill Gems), but gem_min_level is always set when a
+        // SkillGems row exists. Using gem_type as the sentinel would silently
+        // drop all uncut gems.
+        let gem_min_level: Option<i64> =
+            r.try_get::<Option<i64>, _>("gem_min_level").ok().flatten();
+        gem_min_level.map(|lvl| GemData {
+            gem_type: r.try_get("gem_type").ok().flatten(),
+            gem_colour: r.try_get("gem_colour").ok().flatten(),
+            gem_min_level: lvl,
+            gem_tier: r.try_get("gem_tier").ok().flatten(),
+            str_req_percent: r.try_get("gem_str_req_percent").unwrap_or(0),
+            dex_req_percent: r.try_get("gem_dex_req_percent").unwrap_or(0),
+            int_req_percent: r.try_get("gem_int_req_percent").unwrap_or(0),
+        })
     };
 
     let currency = {

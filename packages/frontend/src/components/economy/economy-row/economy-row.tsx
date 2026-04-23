@@ -14,6 +14,9 @@ interface EconomyRowProps {
   isStarred?: boolean;
   onToggleStar?: (currencyId: string, economyType: BackendEconomyType) => void;
   onClick?: (currency: CurrencyExchangeRate) => void;
+  variant?: 'full' | 'compact';
+  /** Compact variant only: override the value/image shown on the right (e.g. primary currency cost) */
+  compactValueDisplay?: { value: number; imageUrl: string; imageName: string };
 }
 
 export function EconomyRow({
@@ -22,6 +25,8 @@ export function EconomyRow({
   isStarred,
   onToggleStar,
   onClick,
+  variant = 'full',
+  compactValueDisplay,
 }: EconomyRowProps) {
   const { display_value } = currency;
   const { currencyData } = useEconomy();
@@ -86,6 +91,81 @@ export function EconomyRow({
       onClick(currency);
     }
   };
+
+  if (variant === 'compact') {
+    const compactValue = compactValueDisplay ?? {
+      value: display_value.value,
+      imageUrl: display_value.currency_image_url,
+      imageName: display_value.currency_name,
+    };
+    const formattedCompactValue = compactValue.value.toLocaleString('en-US', {
+      minimumFractionDigits: compactValue.value >= 10 ? 1 : 2,
+      maximumFractionDigits: compactValue.value >= 10 ? 1 : 2,
+    });
+
+    return (
+      <div className={economyRowStyles.containerCompact}>
+        <div className={economyRowStyles.leftSection}>
+          <ItemTooltip itemName={currency.name} fallbackImageUrl={currency.image_url}>
+            <img
+              src={currency.image_url}
+              alt={currency.name}
+              className={economyRowStyles.imageCompact}
+              onError={hideOnError}
+            />
+          </ItemTooltip>
+          <div className={economyRowStyles.nameContainer}>
+            <div className={economyRowStyles.nameCompact}>{currency.name}</div>
+            {currency.volume !== null && (
+              <div className={economyRowStyles.volumeRow}>
+                {calculateItemsSoldPerHour(currency.volume, currency.primary_value)} / hr
+              </div>
+            )}
+          </div>
+        </div>
+        <div className={economyRowStyles.rightSection}>
+          <div className={economyRowStyles.valueRowCompact}>
+            <span>{formattedCompactValue}</span>
+            <img
+              src={compactValue.imageUrl}
+              alt={compactValue.imageName}
+              className={economyRowStyles.valueIconCompact}
+              title={compactValue.imageName}
+              onError={e => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {onToggleStar && economyType && economyType !== 'All' && (
+              <button
+                type="button"
+                tabIndex={0}
+                onClick={handleStarClick}
+                onKeyDown={handleStarKeyDown}
+                title={isStarred ? 'Unstar currency' : 'Star currency'}
+                className={`${economyRowStyles.starButton} ${isStarred ? economyRowStyles.starActive : economyRowStyles.starInactive}`}>
+                {isStarred ? (
+                  <StarSolidIcon className="w-3.5 h-3.5" />
+                ) : (
+                  <StarOutlineIcon className="w-3.5 h-3.5" />
+                )}
+              </button>
+            )}
+          </div>
+          {currency.change_percent !== null && (
+            <span
+              className={
+                currency.change_percent >= 0
+                  ? economyRowStyles.changePositiveCompact
+                  : economyRowStyles.changeNegativeCompact
+              }>
+              {currency.change_percent >= 0 ? '+' : ''}
+              {currency.change_percent.toFixed(2)}%
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: handleClick is a no-op when onClick is undefined

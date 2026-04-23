@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 import { HoverCard } from '@/components/ui/hover-card/hover-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
-import { useItemByName } from '@/queries/item-data';
+import { useItemByName, useItemImage } from '@/queries/item-data';
 import type { ItemData, ModDisplay } from '@/types/item-data';
 import { hideOnError } from '@/utils/image-utils';
 import { itemTooltipStyles as styles } from './item-tooltip.styles';
@@ -153,6 +153,13 @@ interface ItemTooltipContentProps {
 function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemTooltipContentProps) {
   const { weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence } = itemData;
 
+  // Route the POE1-shaped `web.poecdn.com/image/Art/...` URLs through the
+  // backend proxy, which serves the POE2 art from cdn.poe2db.tw. While the
+  // proxy is resolving, fall back to the fallback image if any, then the
+  // original URL (which at least renders the POE1 icon rather than nothing).
+  const { data: proxiedImageUrl, isLoading: isImageLoading } = useItemImage(itemData.image_url);
+  const imageSrc = proxiedImageUrl ?? fallbackImageUrl ?? itemData.image_url ?? undefined;
+
   const hasDefences =
     defences &&
     (defences.armour > 0 ||
@@ -171,9 +178,12 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
     <div className={styles.content}>
       {/* Image */}
       <img
-        src={itemData.image_url ?? fallbackImageUrl}
+        src={imageSrc}
         alt={itemName}
         className={styles.image}
+        // While the POE2 proxy is fetching, keep a neutral visual: don't
+        // show a broken-image icon flickering as onError fires.
+        style={isImageLoading && !imageSrc ? { opacity: 0 } : undefined}
         onError={e => {
           if (fallbackImageUrl && e.currentTarget.src !== fallbackImageUrl) {
             e.currentTarget.src = fallbackImageUrl;

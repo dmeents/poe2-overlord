@@ -1,7 +1,5 @@
-// Economy Row Styles
-// Uses stone/verdant/blood color palette from theme
-
 export const economyRowStyles = {
+  // Full variant
   container:
     'flex items-center justify-between py-3 px-6 border-b border-stone-700/50 transition-colors',
   containerClickable: 'cursor-pointer hover:bg-stone-800/30',
@@ -26,4 +24,15 @@ export const economyRowStyles = {
   tooltipRow: 'flex justify-between gap-4',
   tooltipLabel: 'text-stone-400',
   tooltipValue: 'text-white font-mono',
+  // Compact variant
+  containerCompact:
+    'flex items-center justify-between py-2 px-4 border-b border-stone-700/30 last:border-b-0 transition-colors',
+  imageCompact: 'w-6 h-6 flex-shrink-0',
+  nameCompact: 'text-stone-300 text-sm truncate',
+  volumeRow: 'text-xs text-stone-400 mt-0.5',
+  rightSection: 'flex flex-col items-end gap-0.5',
+  valueRowCompact: 'flex items-center gap-1.5 text-sm font-semibold text-stone-200',
+  valueIconCompact: 'w-4 h-4',
+  changePositiveCompact: 'text-xs font-semibold opacity-60 text-verdant-400',
+  changeNegativeCompact: 'text-xs font-semibold opacity-60 text-blood-400',
 } as const;

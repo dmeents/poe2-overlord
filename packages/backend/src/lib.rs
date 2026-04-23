@@ -18,6 +18,7 @@ pub use domain::configuration::commands::*; // Configuration management
 pub use domain::economy::commands::*; // Economy and currency exchange data
 pub use domain::game_monitoring::commands::*; // Game process monitoring
 pub use domain::item_data::commands::*; // Item database queries
+pub use domain::item_image::commands::*; // Item image proxy (POE2 assets via poe2db CDN)
 pub use domain::leveling::commands::*; // Leveling stats and XP tracking
 pub use domain::notes::commands::*;
 pub use domain::server_monitoring::commands::*; // Server status monitoring
@@ -111,6 +112,9 @@ pub fn run() {
             get_game_data_version,
             toggle_item_favorite,
             get_favorite_items,
+
+            // Item image proxy
+            get_item_image,
 
             // Configuration management commands
             get_config,

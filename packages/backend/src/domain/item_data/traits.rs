@@ -1,9 +1,7 @@
 use crate::errors::AppResult;
 use async_trait::async_trait;
 
-use super::models::{
-    GameDataVersion, Item, ItemCategory, ItemSearchParams, ItemSearchResult,
-};
+use super::models::{GameDataVersion, Item, ItemCategory, ItemSearchParams, ItemSearchResult};
 
 #[async_trait]
 pub trait ItemDataRepository: Send + Sync {

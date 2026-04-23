@@ -1,8 +1,4 @@
 use crate::domain::character::traits::CharacterService;
-use crate::domain::item_data::{
-    repository::ItemDataRepositoryImpl, service::ItemDataServiceImpl, traits::ItemDataService,
-};
-use crate::domain::item_image::{service::ItemImageServiceImpl, traits::ItemImageService};
 use crate::domain::configuration::{
     repository::ConfigurationRepositoryImpl, service::ConfigurationServiceImpl,
     traits::ConfigurationService,
@@ -11,6 +7,10 @@ use crate::domain::economy::{EconomyRepository, EconomyRepositoryImpl, EconomySe
 use crate::domain::game_monitoring::{
     traits::GameMonitoringService, GameMonitoringServiceImpl, ProcessDetectorImpl,
 };
+use crate::domain::item_data::{
+    repository::ItemDataRepositoryImpl, service::ItemDataServiceImpl, traits::ItemDataService,
+};
+use crate::domain::item_image::{service::ItemImageServiceImpl, traits::ItemImageService};
 use crate::domain::leveling::{LevelingRepositoryImpl, LevelingService, LevelingServiceImpl};
 use crate::domain::log_analysis::{
     models::LogAnalysisConfig, service::LogAnalysisServiceImpl, traits::LogAnalysisService,
@@ -145,12 +145,11 @@ impl ServiceInitializer {
         // Item image proxy — fetches POE2 art from cdn.poe2db.tw (which
         // requires a Referer header browsers can't send) and caches to disk.
         let image_cache_dir = AppPaths::data_dir().join("item_images");
-        let item_image_service = Arc::new(
-            ItemImageServiceImpl::new(image_cache_dir).map_err(|e| {
+        let item_image_service =
+            Arc::new(ItemImageServiceImpl::new(image_cache_dir).map_err(|e| {
                 error!("Failed to initialize ItemImageService: {e}");
                 e
-            })?,
-        ) as Arc<dyn ItemImageService>;
+            })?) as Arc<dyn ItemImageService>;
         app.manage(item_image_service);
 
         let walkthrough_repo = Arc::new(WalkthroughRepositoryImpl::new(

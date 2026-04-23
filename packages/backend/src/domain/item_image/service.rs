@@ -99,10 +99,7 @@ impl ItemImageServiceImpl {
             .send()
             .await
             .map_err(|e| {
-                AppError::network_error(
-                    "item_image::fetch",
-                    &format!("Failed to fetch {url}: {e}"),
-                )
+                AppError::network_error("item_image::fetch", &format!("Failed to fetch {url}: {e}"))
             })?;
 
         if !resp.status().is_success() {

@@ -151,7 +151,8 @@ interface ItemTooltipContentProps {
 }
 
 function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemTooltipContentProps) {
-  const { weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence } = itemData;
+  const { weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence } =
+    itemData;
 
   // Route the POE1-shaped `web.poecdn.com/image/Art/...` URLs through the
   // backend proxy, which serves the POE2 art from cdn.poe2db.tw. While the
@@ -171,7 +172,7 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
     requirements.str_req > 0 || requirements.dex_req > 0 || requirements.int_req > 0;
   const hasMeta = currency !== null || itemData.drop_level > 0 || soul_core !== null;
   const gemScaling = gem ? gemScalingAttributes(gem) : null;
-  const flaskTypeLabel = flask?.flask_type ? FLASK_TYPE_LABEL[flask.flask_type] ?? null : null;
+  const flaskTypeLabel = flask?.flask_type ? (FLASK_TYPE_LABEL[flask.flask_type] ?? null) : null;
   const implicitModGroups = groupModsBySlot(itemData.implicit_mods);
 
   return (
@@ -208,7 +209,8 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
           <div className={styles.statsGrid}>
             <span className={styles.statsLabel}>Tier</span>
             <span className={styles.statsValue}>
-              {essence.tier}{essence.is_perfect ? ' (Perfect)' : ''}
+              {essence.tier}
+              {essence.is_perfect ? ' (Perfect)' : ''}
             </span>
           </div>
           {essence.modifiers.length > 0 && (
@@ -252,9 +254,7 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
             {weapon.reload_time > 0 && (
               <>
                 <span className={styles.statsLabel}>Reload Time</span>
-                <span className={styles.statsValue}>
-                  {(weapon.reload_time / 1000).toFixed(2)}s
-                </span>
+                <span className={styles.statsValue}>{(weapon.reload_time / 1000).toFixed(2)}s</span>
               </>
             )}
           </div>
@@ -432,7 +432,9 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
       {itemData.implicit_mods.length > 0 && (
         <div className={styles.section}>
           {implicitModGroups.map((group, i) => (
-            <div key={group.slot ?? `group-${i}`} className={i > 0 ? 'mt-1 pt-1 border-t border-stone-700/30' : ''}>
+            <div
+              key={group.slot ?? `group-${i}`}
+              className={i > 0 ? 'mt-1 pt-1 border-t border-stone-700/30' : ''}>
               {group.slot && <div className={styles.sectionHeader}>{group.slot}</div>}
               {group.mods.map((mod, j) => (
                 <div key={`${mod.id}-${j}`} className={styles.modLine}>

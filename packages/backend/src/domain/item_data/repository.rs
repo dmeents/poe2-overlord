@@ -35,7 +35,10 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| {
-            AppError::internal_error("get_version", &format!("Failed to query game_data_version: {e}"))
+            AppError::internal_error(
+                "get_version",
+                &format!("Failed to query game_data_version: {e}"),
+            )
         })?;
 
         Ok(row.map(|r| GameDataVersion {
@@ -59,15 +62,21 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         })?;
 
         // Clear existing data (CASCADE takes care of item_favorites → items)
-        sqlx::query("DELETE FROM items").execute(&mut *tx).await.map_err(|e| {
-            AppError::internal_error("import_data", &format!("Failed to delete items: {e}"))
-        })?;
-        sqlx::query("DELETE FROM item_categories").execute(&mut *tx).await.map_err(|e| {
-            AppError::internal_error(
-                "import_data",
-                &format!("Failed to delete item_categories: {e}"),
-            )
-        })?;
+        sqlx::query("DELETE FROM items")
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                AppError::internal_error("import_data", &format!("Failed to delete items: {e}"))
+            })?;
+        sqlx::query("DELETE FROM item_categories")
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                AppError::internal_error(
+                    "import_data",
+                    &format!("Failed to delete item_categories: {e}"),
+                )
+            })?;
 
         // Insert categories
         for cat in categories {
@@ -87,10 +96,10 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         // Insert items
         for item in items {
             let tags_json = serde_json::to_string(&item.tags).unwrap_or_else(|_| "[]".to_string());
-            let implicit_json = serde_json::to_string(&item.implicit_mods)
-                .unwrap_or_else(|_| "[]".to_string());
-            let explicit_json = serde_json::to_string(&item.explicit_mods)
-                .unwrap_or_else(|_| "[]".to_string());
+            let implicit_json =
+                serde_json::to_string(&item.implicit_mods).unwrap_or_else(|_| "[]".to_string());
+            let explicit_json =
+                serde_json::to_string(&item.explicit_mods).unwrap_or_else(|_| "[]".to_string());
             let essence_json = item
                 .essence
                 .as_ref()
@@ -216,10 +225,7 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            AppError::internal_error(
-                "import_data",
-                &format!("Failed to upsert version: {e}"),
-            )
+            AppError::internal_error("import_data", &format!("Failed to upsert version: {e}"))
         })?;
 
         tx.commit().await.map_err(|e| {
@@ -230,15 +236,13 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
     }
 
     async fn get_item(&self, id: &str) -> AppResult<Option<Item>> {
-        let row = sqlx::query(
-            "SELECT * FROM items WHERE id = ?",
-        )
-        .bind(id)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| {
-            AppError::internal_error("get_item", &format!("Failed to query item {id}: {e}"))
-        })?;
+        let row = sqlx::query("SELECT * FROM items WHERE id = ?")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| {
+                AppError::internal_error("get_item", &format!("Failed to query item {id}: {e}"))
+            })?;
 
         Ok(row.map(|r| row_to_item(&r)))
     }
@@ -263,7 +267,11 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
             where_parts.push("category = ?");
         }
         if let Some(is_unique) = params.is_unique {
-            where_parts.push(if is_unique { "is_unique = 1" } else { "is_unique = 0" });
+            where_parts.push(if is_unique {
+                "is_unique = 1"
+            } else {
+                "is_unique = 0"
+            });
         }
         if params.min_level.is_some() {
             where_parts.push("drop_level >= ?");
@@ -308,21 +316,22 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         let total_count: i64 = {
             let q = bind_params!(sqlx::query_scalar(&count_sql));
             q.fetch_one(&self.pool).await.map_err(|e| {
-                AppError::internal_error(
-                    "search_items",
-                    &format!("Failed to count items: {e}"),
-                )
+                AppError::internal_error("search_items", &format!("Failed to count items: {e}"))
             })?
         };
 
         let rows = {
             let q = bind_params!(sqlx::query(&items_sql));
-            q.bind(limit).bind(offset).fetch_all(&self.pool).await.map_err(|e| {
-                AppError::internal_error(
-                    "search_items",
-                    &format!("Failed to search items: {e}"),
-                )
-            })?
+            q.bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(|e| {
+                    AppError::internal_error(
+                        "search_items",
+                        &format!("Failed to search items: {e}"),
+                    )
+                })?
         };
 
         let items = rows.iter().map(row_to_item).collect();
@@ -343,24 +352,26 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
 
         Ok(rows
             .iter()
-            .map(|r| ItemCategory { id: r.get("id"), name: r.get("name") })
+            .map(|r| ItemCategory {
+                id: r.get("id"),
+                name: r.get("name"),
+            })
             .collect())
     }
 
     async fn toggle_favorite(&self, item_id: &str) -> AppResult<bool> {
         // Check if it's already a favourite
-        let exists: Option<i64> = sqlx::query_scalar(
-            "SELECT id FROM item_favorites WHERE item_id = ?",
-        )
-        .bind(item_id)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| {
-            AppError::internal_error(
-                "toggle_favorite",
-                &format!("Failed to check favourite status: {e}"),
-            )
-        })?;
+        let exists: Option<i64> =
+            sqlx::query_scalar("SELECT id FROM item_favorites WHERE item_id = ?")
+                .bind(item_id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| {
+                    AppError::internal_error(
+                        "toggle_favorite",
+                        &format!("Failed to check favourite status: {e}"),
+                    )
+                })?;
 
         if exists.is_some() {
             // Remove
@@ -378,19 +389,17 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         } else {
             // Add
             let now = Utc::now().to_rfc3339();
-            sqlx::query(
-                "INSERT INTO item_favorites (item_id, created_at) VALUES (?, ?)",
-            )
-            .bind(item_id)
-            .bind(&now)
-            .execute(&self.pool)
-            .await
-            .map_err(|e| {
-                AppError::internal_error(
-                    "toggle_favorite",
-                    &format!("Failed to add favourite: {e}"),
-                )
-            })?;
+            sqlx::query("INSERT INTO item_favorites (item_id, created_at) VALUES (?, ?)")
+                .bind(item_id)
+                .bind(&now)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| {
+                    AppError::internal_error(
+                        "toggle_favorite",
+                        &format!("Failed to add favourite: {e}"),
+                    )
+                })?;
             Ok(true)
         }
     }
@@ -404,28 +413,23 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
         .fetch_all(&self.pool)
         .await
         .map_err(|e| {
-            AppError::internal_error(
-                "get_favorites",
-                &format!("Failed to load favourites: {e}"),
-            )
+            AppError::internal_error("get_favorites", &format!("Failed to load favourites: {e}"))
         })?;
 
         Ok(rows.iter().map(row_to_item).collect())
     }
 
     async fn get_item_by_name(&self, name: &str) -> AppResult<Option<Item>> {
-        let row = sqlx::query(
-            "SELECT * FROM items WHERE name = ? AND is_unique = 0 LIMIT 1",
-        )
-        .bind(name)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|e| {
-            AppError::internal_error(
-                "get_item_by_name",
-                &format!("Failed to query item by name '{name}': {e}"),
-            )
-        })?;
+        let row = sqlx::query("SELECT * FROM items WHERE name = ? AND is_unique = 0 LIMIT 1")
+            .bind(name)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| {
+                AppError::internal_error(
+                    "get_item_by_name",
+                    &format!("Failed to query item by name '{name}': {e}"),
+                )
+            })?;
 
         Ok(row.map(|r| row_to_item(&r)))
     }
@@ -519,8 +523,10 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
     };
 
     let soul_core = {
-        let required_level: Option<i64> =
-            r.try_get::<Option<i64>, _>("soul_core_required_level").ok().flatten();
+        let required_level: Option<i64> = r
+            .try_get::<Option<i64>, _>("soul_core_required_level")
+            .ok()
+            .flatten();
         required_level.map(|lvl| SoulCoreInfo {
             required_level: lvl,
             limit_count: r.try_get("soul_core_limit_count").ok().flatten(),

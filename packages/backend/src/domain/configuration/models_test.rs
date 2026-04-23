@@ -284,7 +284,10 @@ mod tests {
     #[test]
     fn test_background_image_display() {
         assert_eq!(format!("{}", BackgroundImage::None), "No Background");
-        assert_eq!(format!("{}", BackgroundImage::VolcanicRuins), "Volcanic Ruins");
+        assert_eq!(
+            format!("{}", BackgroundImage::VolcanicRuins),
+            "Volcanic Ruins"
+        );
     }
 
     #[test]

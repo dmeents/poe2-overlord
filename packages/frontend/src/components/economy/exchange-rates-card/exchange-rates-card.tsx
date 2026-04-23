@@ -1,7 +1,7 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Card } from '@/components/ui/card/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { ItemTooltip } from '@/components/ui/item-tooltip/item-tooltip';
+import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useEconomy } from '@/contexts/EconomyContext';
 
 export function ExchangeRatesCard() {

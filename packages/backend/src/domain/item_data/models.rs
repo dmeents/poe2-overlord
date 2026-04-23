@@ -300,9 +300,27 @@ pub struct ImportedRequirements {
 }
 
 impl ImportedRequirements {
-    pub fn str_val(&self) -> i64 { if self.str_req != 0 { self.str_req } else { self.str_alt } }
-    pub fn dex_val(&self) -> i64 { if self.dex_req != 0 { self.dex_req } else { self.dex_alt } }
-    pub fn int_val(&self) -> i64 { if self.int_req != 0 { self.int_req } else { self.int_alt } }
+    pub fn str_val(&self) -> i64 {
+        if self.str_req != 0 {
+            self.str_req
+        } else {
+            self.str_alt
+        }
+    }
+    pub fn dex_val(&self) -> i64 {
+        if self.dex_req != 0 {
+            self.dex_req
+        } else {
+            self.dex_alt
+        }
+    }
+    pub fn int_val(&self) -> i64 {
+        if self.int_req != 0 {
+            self.int_req
+        } else {
+            self.int_alt
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -411,7 +429,9 @@ pub struct ImportedEssence {
     pub modifiers: Vec<ImportedEssenceModifier>,
 }
 
-fn default_one() -> i64 { 1 }
+fn default_one() -> i64 {
+    1
+}
 
 /// Full item as emitted by the extraction script.
 #[derive(Debug, Deserialize)]

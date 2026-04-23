@@ -8,7 +8,7 @@ use crate::errors::{AppError, AppResult};
 
 use super::models::{
     AttributeRequirements, CurrencyData, DefenceValues, EssenceInfo, EssenceModifier, FlaskData,
-    GameDataVersion, GemData, Item, ItemCategory, ImportedCategory, ImportedItem, ImportedVersion,
+    GameDataVersion, GemData, ImportedCategory, ImportedItem, ImportedVersion, Item, ItemCategory,
     ItemSearchParams, ItemSearchResult, ModDisplay, ShieldValues, SoulCoreInfo, WeaponValues,
 };
 use super::traits::{ItemDataRepository, ItemDataService};
@@ -21,7 +21,10 @@ pub struct ItemDataServiceImpl {
 
 impl ItemDataServiceImpl {
     pub fn new(repository: Arc<dyn ItemDataRepository>, data_dir: PathBuf) -> Self {
-        Self { repository, data_dir }
+        Self {
+            repository,
+            data_dir,
+        }
     }
 
     fn version_path(&self) -> PathBuf {
@@ -65,7 +68,10 @@ impl ItemDataServiceImpl {
 
         let categories: Vec<ItemCategory> = imported_cats
             .into_iter()
-            .map(|c| ItemCategory { id: c.id, name: c.name })
+            .map(|c| ItemCategory {
+                id: c.id,
+                name: c.name,
+            })
             .collect();
 
         // Parse items
@@ -75,15 +81,17 @@ impl ItemDataServiceImpl {
                 &format!("Failed to read items.json: {e}"),
             )
         })?;
-        let imported_items: Vec<ImportedItem> =
-            serde_json::from_str(&items_text).map_err(|e| {
-                AppError::internal_error(
-                    "import_from_files",
-                    &format!("Failed to parse items.json: {e}"),
-                )
-            })?;
+        let imported_items: Vec<ImportedItem> = serde_json::from_str(&items_text).map_err(|e| {
+            AppError::internal_error(
+                "import_from_files",
+                &format!("Failed to parse items.json: {e}"),
+            )
+        })?;
 
-        let items: Vec<Item> = imported_items.into_iter().map(convert_imported_item).collect();
+        let items: Vec<Item> = imported_items
+            .into_iter()
+            .map(convert_imported_item)
+            .collect();
 
         Ok((categories, items))
     }
@@ -126,7 +134,10 @@ impl ItemDataService for ItemDataServiceImpl {
                 true
             }
             Some(v) => {
-                info!("Game data is current (patch {}). No import needed.", v.patch_version);
+                info!(
+                    "Game data is current (patch {}). No import needed.",
+                    v.patch_version
+                );
                 false
             }
         };
@@ -190,14 +201,14 @@ impl ItemDataService for ItemDataServiceImpl {
 // ---------------------------------------------------------------------------
 
 fn convert_imported_item(imp: ImportedItem) -> Item {
-    let requirements = imp.requirements.as_ref().map_or_else(
-        AttributeRequirements::default,
-        |r| AttributeRequirements {
+    let requirements = imp
+        .requirements
+        .as_ref()
+        .map_or_else(AttributeRequirements::default, |r| AttributeRequirements {
             str_req: r.str_val(),
             dex_req: r.dex_val(),
             int_req: r.int_val(),
-        },
-    );
+        });
 
     let defences = imp.defences.map(|d| DefenceValues {
         armour: d.armour,

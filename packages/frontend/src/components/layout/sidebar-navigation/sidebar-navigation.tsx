@@ -28,9 +28,9 @@ export function SidebarNavigation({ className = '' }: SidebarNavigationProps) {
     { path: '/', title: 'Dashboard', icon: HomeIcon },
     { path: '/character', title: 'Character', icon: UserIcon },
     { path: '/economy', title: 'Economy', icon: BanknotesIcon },
-    { path: '/notes', title: 'Notes', icon: DocumentTextIcon },
     { path: '/playtime', title: 'Playtime', icon: ClockIcon },
     { path: '/walkthrough', title: 'Walkthrough', icon: BookOpenIcon },
+    { path: '/notes', title: 'Notes', icon: DocumentTextIcon },
   ];
 
   const secondaryNavItems = [

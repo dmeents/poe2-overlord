@@ -1,7 +1,6 @@
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
-import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ExchangeRatesCard } from '../components/economy/exchange-rates-card/exchange-rates-card';
 import { StarredCurrenciesCard } from '../components/economy/starred-currencies-card/starred-currencies-card';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
@@ -36,7 +35,6 @@ function Index() {
 
   const leftColumn = (
     <>
-      <CharacterStatusCard />
       {activeCharacter && progress && !progress.is_completed && (
         <WalkthroughStepCard
           key={`${progress.current_step_id}-${progress.last_updated}`}
@@ -72,5 +70,5 @@ function Index() {
     </>
   );
 
-  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />;
+  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} showCharacterCard />;
 }

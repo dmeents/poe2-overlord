@@ -2,6 +2,8 @@
 
 A companion app for Path of Exile 2. Tracks your characters, zones, economy, and campaign progress in a lightweight desktop overlay built with Tauri and React.
 
+![POE2 Overlord screenshot showing the character leveling view with XP history chart and zone statistics](./docs/screenshot.png)
+
 ---
 
 ## Features

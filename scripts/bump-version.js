@@ -65,14 +65,4 @@ const updatedPkgbuild = pkgbuild
 writeFileSync(pkgbuildPath, updatedPkgbuild);
 console.log(`  aur/PKGBUILD -> ${version}`);
 
-// Update release workflow description so the dropdown shows the current version
-const workflowPath = resolve(root, '.github/workflows/release.yml');
-const workflow = readFileSync(workflowPath, 'utf8');
-const updatedWorkflow = workflow.replace(
-  /description: '.*'/,
-  `description: 'Current: ${version}. Enter the next version (e.g. X.Y.Z)'`
-);
-writeFileSync(workflowPath, updatedWorkflow);
-console.log(`  .github/workflows/release.yml description -> ${version}`);
-
 console.log(`\nBumped ${prev} -> ${version}`);

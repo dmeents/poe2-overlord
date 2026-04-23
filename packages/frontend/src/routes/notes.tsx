@@ -167,7 +167,7 @@ function NotesPage() {
 
   return (
     <>
-      <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />
+      <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} showCharacterCard />
       <DeleteNoteModal
         isOpen={deletingNote !== null}
         note={deletingNote}

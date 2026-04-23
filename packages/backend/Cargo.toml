@@ -1,6 +1,6 @@
 [package]
 name = "poe2-overlord"
-version = "0.0.5"
+version = "0.0.6"
 description = "A powerful companion app for Path of Exile 2"
 authors = ["David Meents <dmeents@pm.me>"]
 license = "PolyForm-Shield-1.0.0"

@@ -1,6 +1,5 @@
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
-import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
 import { ActDistributionChart } from '@/components/charts/act-distribution-chart/act-distribution-chart';
 import { PlaytimeInsights } from '@/components/insights/playtime-insights/playtime-insights';
 import { PageLayout } from '@/components/layout/page-layout/page-layout';
@@ -58,7 +57,6 @@ function PlaytimePage() {
 
   const leftColumn = (
     <>
-      <CharacterStatusCard />
       {activeCharacter && (
         <Card title="Zone History" icon={<MapPinIcon />} accentColor="ember">
           <ZoneList
@@ -88,5 +86,5 @@ function PlaytimePage() {
     </>
   );
 
-  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />;
+  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} showCharacterCard />;
 }

@@ -1,7 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { CharacterStatusCard } from '@/components/character/character-status-card/character-status-card';
 import { EconomyRow } from '@/components/economy/economy-row/economy-row';
 import { EconomyTypeBar } from '@/components/economy/economy-type-bar/economy-type-bar';
 import { ExchangeRatesCard } from '@/components/economy/exchange-rates-card/exchange-rates-card';
@@ -216,7 +215,6 @@ function EconomyPage() {
 
   const leftColumn = (
     <>
-      <CharacterStatusCard />
       <Card
         title={cardTitle}
         subtitle={getSubtitle()}
@@ -283,5 +281,5 @@ function EconomyPage() {
     </>
   );
 
-  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />;
+  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} showCharacterCard />;
 }

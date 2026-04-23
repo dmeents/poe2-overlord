@@ -1,7 +1,6 @@
 import { BookOpenIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
-import { CharacterStatusCard } from '../components/character/character-status-card/character-status-card';
 import { ActDistributionChart } from '../components/charts/act-distribution-chart/act-distribution-chart';
 import { CampaignInsights } from '../components/insights/campaign-insights/campaign-insights';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
@@ -45,7 +44,6 @@ function WalkthroughPage() {
 
   const leftColumn = (
     <>
-      <CharacterStatusCard />
       {activeCharacter && (
         <>
           <Card title="Display Settings" className="mb-6">
@@ -100,5 +98,5 @@ function WalkthroughPage() {
     </>
   );
 
-  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} />;
+  return <PageLayout leftColumn={leftColumn} rightColumn={rightColumn} showCharacterCard />;
 }

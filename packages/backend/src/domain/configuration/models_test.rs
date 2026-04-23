@@ -255,15 +255,23 @@ mod tests {
     #[test]
     fn test_background_image_all_options() {
         let options = BackgroundImage::all_options();
-        assert_eq!(options.len(), 2);
+        assert_eq!(options.len(), 6);
         assert!(options.contains(&BackgroundImage::None));
         assert!(options.contains(&BackgroundImage::VolcanicRuins));
+        assert!(options.contains(&BackgroundImage::ManaStormRuins));
+        assert!(options.contains(&BackgroundImage::NecroRuins));
+        assert!(options.contains(&BackgroundImage::OvergrownForest));
+        assert!(options.contains(&BackgroundImage::SpaceTime));
     }
 
     #[test]
     fn test_background_image_labels() {
         assert_eq!(BackgroundImage::None.label(), "No Background");
         assert_eq!(BackgroundImage::VolcanicRuins.label(), "Volcanic Ruins");
+        assert_eq!(BackgroundImage::ManaStormRuins.label(), "Mana Storm Ruins");
+        assert_eq!(BackgroundImage::NecroRuins.label(), "Necro Ruins");
+        assert_eq!(BackgroundImage::OvergrownForest.label(), "Overgrown Forest");
+        assert_eq!(BackgroundImage::SpaceTime.label(), "Space Time");
     }
 
     #[test]
@@ -272,6 +280,22 @@ mod tests {
         assert_eq!(
             BackgroundImage::VolcanicRuins.filename(),
             Some("bg-volcanic-ruins.png")
+        );
+        assert_eq!(
+            BackgroundImage::ManaStormRuins.filename(),
+            Some("bg-mana-storm-ruins.png")
+        );
+        assert_eq!(
+            BackgroundImage::NecroRuins.filename(),
+            Some("bg-necro-ruins.png")
+        );
+        assert_eq!(
+            BackgroundImage::OvergrownForest.filename(),
+            Some("bg-overgrown-forest.png")
+        );
+        assert_eq!(
+            BackgroundImage::SpaceTime.filename(),
+            Some("bg-space-time.png")
         );
     }
 

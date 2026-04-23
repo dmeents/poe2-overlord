@@ -142,7 +142,6 @@ export const HoverCard = memo(function HoverCard({
 
   return (
     <div className={`${hoverCardStyles.container} ${className}`}>
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: HoverCard trigger uses mouse/focus events for hover interaction */}
       <div
         ref={refs.setReference}
         className={hoverCardStyles.trigger}

@@ -62,7 +62,7 @@ function parseDescription(text: string) {
   return text.split(/(\[[^\]]+\])/g).map((seg, i) => {
     const match = seg.match(/^\[(?:[^\]|]+\|)?([^\]]+)\]$/);
     return match ? (
-      <span key={i} className={styles.descriptionLink}>
+      <span key={`${i}:${seg}`} className={styles.descriptionLink}>
         {match[1]}
       </span>
     ) : (

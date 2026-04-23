@@ -101,7 +101,7 @@ describe('HoverCard', () => {
     // requestAnimationFrame (polyfilled as setTimeout in jsdom), which act() alone
     // does not reliably flush.
     const trigger = screen.getByText('Hover me');
-    const referenceEl = trigger.parentElement!;
+    const referenceEl = trigger.parentElement ?? document.body;
 
     fireEvent.focus(referenceEl);
     await waitFor(() => expect(screen.getByText('Card text')).toBeInTheDocument());
@@ -237,7 +237,7 @@ describe('HoverCard', () => {
         </HoverCard>,
       );
 
-      const referenceEl = screen.getByText('Hover me').parentElement!;
+      const referenceEl = screen.getByText('Hover me').parentElement ?? document.body;
 
       // onPointerEnter fires our handlePointerEnter synchronously — before any delay
       fireEvent.pointerEnter(referenceEl);
@@ -255,7 +255,7 @@ describe('HoverCard', () => {
         </HoverCard>,
       );
 
-      const referenceEl = screen.getByText('Hover me').parentElement!;
+      const referenceEl = screen.getByText('Hover me').parentElement ?? document.body;
 
       fireEvent.pointerEnter(referenceEl);
       await act(async () => {});

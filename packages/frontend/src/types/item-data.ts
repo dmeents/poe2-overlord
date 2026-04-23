@@ -6,6 +6,15 @@
 export interface ModDisplay {
   id: string;
   text: string;
+  /** Decoded ModDomains enum (ITEM, SANCTUM_RELIC, IDOL, …) or 'BONDED' for
+   * the secondary stat group on a soul-core row. */
+  domain: string | null;
+  /** Human-readable slot label for rune / soul-core implicits
+   * (e.g. 'Weapon', 'Armour'). Null for normal item mods. */
+  slot: string | null;
+  /** ItemClasses.Id values the stats apply to when socketed. Empty for
+   * normal item mods. */
+  target_item_classes: string[];
 }
 
 export interface AttributeRequirements {
@@ -19,6 +28,8 @@ export interface DefenceValues {
   evasion: number;
   energy_shield: number;
   ward: number;
+  /** % movement speed bonus; non-zero on boots only. */
+  movement_speed: number;
 }
 
 export interface WeaponValues {
@@ -29,6 +40,8 @@ export interface WeaponValues {
   /** Stored x100 (e.g. 120 = 1.20 aps) */
   attack_speed: number;
   range_max: number;
+  /** Reload time in ms; non-zero on crossbows only. */
+  reload_time: number;
 }
 
 export interface ShieldValues {
@@ -40,6 +53,10 @@ export interface GemData {
   gem_colour: string | null;
   gem_min_level: number;
   gem_tier: number | null;
+  /** % of the per-level attribute requirement this gem scales with. */
+  str_req_percent: number;
+  dex_req_percent: number;
+  int_req_percent: number;
 }
 
 export interface CurrencyItemData {
@@ -48,11 +65,34 @@ export interface CurrencyItemData {
 }
 
 export interface FlaskData {
+  /** Decoded FlaskType: LIFE | MANA | HYBRID | UTILITY */
   flask_type: string | null;
+  flask_name: string | null;
   flask_life: number;
   flask_mana: number;
   /** Duration in milliseconds */
   flask_recovery_time: number;
+}
+
+export interface SoulCoreInfo {
+  required_level: number;
+  limit_count: number | null;
+  limit_text: string | null;
+}
+
+export interface EssenceModifier {
+  target_category: string | null;
+  target_item_classes: string[];
+  mod_id: string;
+  mod_text: string;
+}
+
+export interface EssenceInfo {
+  tier: number;
+  is_perfect: boolean;
+  upgrade_to_id: string | null;
+  upgrade_to_name: string | null;
+  modifiers: EssenceModifier[];
 }
 
 export interface ItemData {
@@ -71,6 +111,8 @@ export interface ItemData {
   image_url: string | null;
   flavour_text: string | null;
   tags: string[];
+  is_corrupted: boolean;
+  unmodifiable: boolean;
   requirements: AttributeRequirements;
   defences: DefenceValues | null;
   weapon: WeaponValues | null;
@@ -78,6 +120,8 @@ export interface ItemData {
   gem: GemData | null;
   currency: CurrencyItemData | null;
   flask: FlaskData | null;
+  soul_core: SoulCoreInfo | null;
+  essence: EssenceInfo | null;
   implicit_mods: ModDisplay[];
   explicit_mods: ModDisplay[];
 }

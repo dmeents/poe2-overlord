@@ -6,8 +6,9 @@ use sqlx::{Row, SqlitePool};
 use crate::errors::{AppError, AppResult};
 
 use super::models::{
-    AttributeRequirements, CurrencyData, DefenceValues, FlaskData, GameDataVersion, GemData, Item,
-    ItemCategory, ItemSearchParams, ItemSearchResult, ModDisplay, ShieldValues, WeaponValues,
+    AttributeRequirements, CurrencyData, DefenceValues, EssenceInfo, FlaskData, GameDataVersion,
+    GemData, Item, ItemCategory, ItemSearchParams, ItemSearchResult, ModDisplay, ShieldValues,
+    SoulCoreInfo, WeaponValues,
 };
 use super::traits::ItemDataRepository;
 
@@ -90,31 +91,43 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
                 .unwrap_or_else(|_| "[]".to_string());
             let explicit_json = serde_json::to_string(&item.explicit_mods)
                 .unwrap_or_else(|_| "[]".to_string());
+            let essence_json = item
+                .essence
+                .as_ref()
+                .and_then(|e| serde_json::to_string(e).ok());
 
             sqlx::query(
                 "INSERT INTO items (
                     id, name, is_unique, unique_name, base_type,
                     item_class_id, category, rarity_frame, width, height, drop_level,
                     image_url, flavour_text, tags,
+                    is_corrupted, unmodifiable,
                     req_str, req_dex, req_int,
-                    armour, evasion, energy_shield, ward,
-                    damage_min, damage_max, critical, attack_speed, range_max,
+                    armour, evasion, energy_shield, ward, movement_speed,
+                    damage_min, damage_max, critical, attack_speed, range_max, reload_time,
                     block,
                     gem_type, gem_colour, gem_min_level, gem_tier,
+                    gem_str_req_percent, gem_dex_req_percent, gem_int_req_percent,
                     stack_size, currency_description,
-                    flask_type, flask_life, flask_mana, flask_recovery_time,
+                    flask_type, flask_name, flask_life, flask_mana, flask_recovery_time,
+                    soul_core_required_level, soul_core_limit_count, soul_core_limit_text,
+                    essence,
                     implicit_mods, explicit_mods
                 ) VALUES (
                     ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, ?, ?,
                     ?, ?, ?,
+                    ?, ?,
                     ?, ?, ?,
-                    ?, ?, ?, ?,
                     ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?,
                     ?,
                     ?, ?, ?, ?,
+                    ?, ?, ?,
                     ?, ?,
-                    ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?,
+                    ?,
                     ?, ?
                 )",
             )
@@ -132,6 +145,8 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
             .bind(&item.image_url)
             .bind(&item.flavour_text)
             .bind(&tags_json)
+            .bind(i32::from(item.is_corrupted))
+            .bind(i32::from(item.unmodifiable))
             .bind(item.requirements.str_req)
             .bind(item.requirements.dex_req)
             .bind(item.requirements.int_req)
@@ -140,12 +155,14 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
             .bind(item.defences.as_ref().map(|d| d.evasion))
             .bind(item.defences.as_ref().map(|d| d.energy_shield))
             .bind(item.defences.as_ref().map(|d| d.ward))
+            .bind(item.defences.as_ref().map(|d| d.movement_speed))
             // Weapon
             .bind(item.weapon.as_ref().map(|w| w.damage_min))
             .bind(item.weapon.as_ref().map(|w| w.damage_max))
             .bind(item.weapon.as_ref().map(|w| w.critical))
             .bind(item.weapon.as_ref().map(|w| w.attack_speed))
             .bind(item.weapon.as_ref().map(|w| w.range_max))
+            .bind(item.weapon.as_ref().map(|w| w.reload_time))
             // Shield
             .bind(item.shield.as_ref().map(|s| s.block))
             // Gem
@@ -153,14 +170,24 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
             .bind(item.gem.as_ref().and_then(|g| g.gem_colour.as_deref()))
             .bind(item.gem.as_ref().map(|g| g.gem_min_level))
             .bind(item.gem.as_ref().and_then(|g| g.gem_tier))
+            .bind(item.gem.as_ref().map(|g| g.str_req_percent))
+            .bind(item.gem.as_ref().map(|g| g.dex_req_percent))
+            .bind(item.gem.as_ref().map(|g| g.int_req_percent))
             // Currency
             .bind(item.currency.as_ref().map(|c| c.stack_size))
             .bind(item.currency.as_ref().and_then(|c| c.description.as_deref()))
             // Flask
             .bind(item.flask.as_ref().and_then(|f| f.flask_type.as_deref()))
+            .bind(item.flask.as_ref().and_then(|f| f.flask_name.as_deref()))
             .bind(item.flask.as_ref().map(|f| f.flask_life))
             .bind(item.flask.as_ref().map(|f| f.flask_mana))
             .bind(item.flask.as_ref().map(|f| f.flask_recovery_time))
+            // Soul core
+            .bind(item.soul_core.as_ref().map(|s| s.required_level))
+            .bind(item.soul_core.as_ref().and_then(|s| s.limit_count))
+            .bind(item.soul_core.as_ref().and_then(|s| s.limit_text.as_deref()))
+            // Essence (JSON blob — modifier list is variable-length)
+            .bind(&essence_json)
             // Mods
             .bind(&implicit_json)
             .bind(&explicit_json)
@@ -430,6 +457,7 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
             evasion: r.try_get("evasion").unwrap_or(0),
             energy_shield: r.try_get("energy_shield").unwrap_or(0),
             ward: r.try_get("ward").unwrap_or(0),
+            movement_speed: r.try_get("movement_speed").unwrap_or(0),
         })
     };
 
@@ -441,6 +469,7 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
             critical: r.try_get("critical").unwrap_or(0),
             attack_speed: r.try_get("attack_speed").unwrap_or(0),
             range_max: r.try_get("range_max").unwrap_or(0),
+            reload_time: r.try_get("reload_time").unwrap_or(0),
         })
     };
 
@@ -457,6 +486,9 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
                 gem_colour: r.try_get("gem_colour").ok().flatten(),
                 gem_min_level: r.try_get("gem_min_level").unwrap_or(1),
                 gem_tier: r.try_get("gem_tier").ok().flatten(),
+                str_req_percent: r.try_get("gem_str_req_percent").unwrap_or(0),
+                dex_req_percent: r.try_get("gem_dex_req_percent").unwrap_or(0),
+                int_req_percent: r.try_get("gem_int_req_percent").unwrap_or(0),
             })
         } else {
             None
@@ -476,6 +508,7 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
         if flask_type.is_some() {
             Some(FlaskData {
                 flask_type,
+                flask_name: r.try_get("flask_name").ok().flatten(),
                 flask_life: r.try_get("flask_life").unwrap_or(0),
                 flask_mana: r.try_get("flask_mana").unwrap_or(0),
                 flask_recovery_time: r.try_get("flask_recovery_time").unwrap_or(0),
@@ -484,6 +517,22 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
             None
         }
     };
+
+    let soul_core = {
+        let required_level: Option<i64> =
+            r.try_get::<Option<i64>, _>("soul_core_required_level").ok().flatten();
+        required_level.map(|lvl| SoulCoreInfo {
+            required_level: lvl,
+            limit_count: r.try_get("soul_core_limit_count").ok().flatten(),
+            limit_text: r.try_get("soul_core_limit_text").ok().flatten(),
+        })
+    };
+
+    let essence: Option<EssenceInfo> = r
+        .try_get::<Option<String>, _>("essence")
+        .ok()
+        .flatten()
+        .and_then(|s| serde_json::from_str(&s).ok());
 
     Item {
         id: r.try_get("id").unwrap_or_default(),
@@ -500,6 +549,8 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
         image_url: r.try_get("image_url").ok().flatten(),
         flavour_text: r.try_get("flavour_text").ok().flatten(),
         tags,
+        is_corrupted: r.try_get::<i32, _>("is_corrupted").unwrap_or(0) != 0,
+        unmodifiable: r.try_get::<i32, _>("unmodifiable").unwrap_or(0) != 0,
         requirements: AttributeRequirements {
             str_req: r.try_get("req_str").unwrap_or(0),
             dex_req: r.try_get("req_dex").unwrap_or(0),
@@ -511,6 +562,8 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
         gem,
         currency,
         flask,
+        soul_core,
+        essence,
         implicit_mods,
         explicit_mods,
     }

@@ -35,6 +35,7 @@ import minimist from 'minimist';
 
 import { parseStatDescriptions, mergeDescriptions } from './lib/stat-descriptions.mjs';
 import { joinTables } from './lib/table-joiner.mjs';
+import { TABLES, STAT_DESC_FILES, buildEnumLookups } from './lib/tables.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
@@ -76,44 +77,8 @@ Options:
 const versionLabel = argv['version'] ?? 'local';
 const gameDir = argv['game-dir'] ?? DEFAULT_GAME_DIR;
 
-// ---------------------------------------------------------------------------
-// Tables and files to extract
-// ---------------------------------------------------------------------------
-
-const TABLES = [
-  // POE2 column names differ significantly from POE1.
-  // BaseItemTypes: ItemClass (not ItemClassesKey), ItemVisualIdentity (not ItemVisualIdentityKey), Implicit_Mods (not ImplicitMods)
-  // Sub-tables: BaseItemType (not BaseItemTypesKey)
-  // WeaponTypes: Speed (not AttackSpeed)
-  // Mods: Stat1..6 + Stat1Value..6Value (not StatsKey1..6 + Stat1Min/Max)
-  { name: 'BaseItemTypes',                 columns: ['Id', 'Name', 'ItemClass', 'DropLevel', 'Width', 'Height', 'Implicit_Mods', 'ItemVisualIdentity'] },
-  { name: 'ItemClasses',                   columns: ['Id', 'Name'] },
-  { name: 'ItemVisualIdentity',            columns: ['Id', 'DDSFile'] },
-  { name: 'ArmourTypes',                   columns: ['BaseItemType', 'Armour', 'Evasion', 'EnergyShield', 'Ward'] },
-  { name: 'WeaponTypes',                   columns: ['BaseItemType', 'DamageMin', 'DamageMax', 'Critical', 'Speed', 'RangeMax'] },
-  { name: 'ShieldTypes',                   columns: ['BaseItemType', 'Block'] },
-  { name: 'ComponentAttributeRequirements',columns: ['BaseItemTypesKey', 'ReqStr', 'ReqDex', 'ReqInt'] },
-  { name: 'Mods',                          columns: ['Id', 'Name', 'GenerationType', 'Domain', 'Stat1', 'Stat2', 'Stat3', 'Stat4', 'Stat5', 'Stat6', 'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value', 'Stat5Value', 'Stat6Value'] },
-  { name: 'Stats',                         columns: ['Id', 'IsLocal', 'IsWeaponLocal'] },
-  { name: 'SkillGems',                     columns: ['BaseItemType', 'Tier', 'GemType', 'GemColour', 'GemEffects'] },
-  { name: 'GemEffects',                    columns: ['Id', 'SupportText', 'SupportName'] },
-  { name: 'CurrencyItems',                 columns: ['BaseItemType', 'StackSize', 'Description'] },
-  { name: 'Flasks',                        columns: ['BaseItemType', 'LifePerUse', 'ManaPerUse', 'RecoveryTime'] },
-  // SoulCores (runes, soul cores, idols): stats come from SoulCoreStats, not BaseItemTypes.Implicit_Mods
-  { name: 'SoulCores',                     columns: ['BaseItemType', 'Type'] },
-  { name: 'SoulCoreStats',                 columns: ['SoulCore', 'Stats', 'StatsValues'] },
-  // UniqueStashLayout has no BaseItemTypes FK in POE2 — unique linking skipped for now
-  { name: 'UniqueStashLayout',             columns: ['WordsKey', 'ItemVisualIdentityKey'] },
-  { name: 'Words',                         columns: ['Text'] },
-];
-
-const STAT_DESC_FILES = [
-  'Metadata/StatDescriptions/stat_descriptions.txt',
-  'Metadata/StatDescriptions/skill_stat_descriptions.txt',
-  'Metadata/StatDescriptions/gem_stat_descriptions.txt',
-  'Metadata/StatDescriptions/passive_skill_stat_descriptions.txt',
-  'Metadata/StatDescriptions/advanced_mod_stat_descriptions.txt',
-];
+// Table/column definitions + stat-description file list live in lib/tables.mjs
+// so extract.mjs and extract-local.mjs stay in sync when new fields are added.
 
 // ---------------------------------------------------------------------------
 // Main
@@ -280,7 +245,8 @@ async function main() {
   // ------------------------------------------------------------------
   console.log('');
   console.log('Joining tables...');
-  const { categories, items } = joinTables(tables, statDescriptions);
+  const enums = buildEnumLookups(schema.enumerations ?? [], ['ModDomains', 'FlaskType']);
+  const { categories, items } = joinTables(tables, statDescriptions, { enums });
 
   const baseItems = items.filter((i) => !i.is_unique);
   const uniqueItems = items.filter((i) => i.is_unique);

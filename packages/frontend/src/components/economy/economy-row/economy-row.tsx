@@ -59,13 +59,13 @@ export function EconomyRow({
       <div className={economyRowStyles.tooltipHeader}>Raw Values</div>
       <div className={economyRowStyles.tooltipRow}>
         <span className={economyRowStyles.tooltipLabel}>{currencyData.primary_currency.name}:</span>
-        <span className={economyRowStyles.tooltipValue}>{currency.primary_value.toFixed(6)}</span>
+        <span className={economyRowStyles.tooltipValue}>{currency.primary_value.toFixed(2)}</span>
       </div>
       <div className={economyRowStyles.tooltipRow}>
         <span className={economyRowStyles.tooltipLabel}>
           {currencyData.secondary_currency.name}:
         </span>
-        <span className={economyRowStyles.tooltipValue}>{currency.secondary_value.toFixed(4)}</span>
+        <span className={economyRowStyles.tooltipValue}>{currency.secondary_value.toFixed(2)}</span>
       </div>
       {currencyData.tertiary_currency && (
         <div className={economyRowStyles.tooltipRow}>

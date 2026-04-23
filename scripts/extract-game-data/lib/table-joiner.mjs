@@ -90,7 +90,11 @@ function buildMultiFKIndex(rows, fkColumn) {
 // Public API
 // ---------------------------------------------------------------------------
 
-export function joinTables(tables, statDescriptions) {
+export function joinTables(tables, statDescriptions, options = {}) {
+  const enums = options.enums ?? {};
+  const modDomain = enums.ModDomains ?? (() => null);
+  const flaskTypeEnum = enums.FlaskType ?? (() => null);
+
   // ------------------------------------------------------------------
   // 1. Build lookup indexes
   // ------------------------------------------------------------------
@@ -131,19 +135,56 @@ export function joinTables(tables, statDescriptions) {
   // SoulCoreStats: one-to-many by SoulCore FK integer (→ soulCore._index)
   const soulCoreStatsBySC = buildMultiFKIndex(tables.SoulCoreStats ?? [], 'SoulCore');
 
+  // SoulCoreStatCategories: keyed by _index (FK from SoulCoreStats.StatCategory).
+  // Each category carries a human-readable Display string + the list of item
+  // classes the stat group applies to when the rune/soul core is socketed.
+  const soulCoreStatCatByIndex = buildIndexByCol(tables.SoulCoreStatCategories ?? [], '_index');
+
+  // SoulCoreLimits: keyed by _index (FK from SoulCores.Limit). Text is the
+  // user-facing rule ("Only one per item" etc.).
+  const soulCoreLimitByIndex = buildIndexByCol(tables.SoulCoreLimits ?? [], '_index');
+
+  // FlavourText: keyed by _index (FK from BaseItemTypes.FlavourText).
+  const flavourTextByIndex = buildIndexByCol(tables.FlavourText ?? [], '_index');
+
+  // Tags: keyed by _index (FK from BaseItemTypes.Tags[] array).
+  const tagByIndex = buildIndexByCol(tables.Tags ?? [], '_index');
+
+  // BaseItemTypes: keyed by _index so FK resolutions that end in a
+  // BaseItemType (e.g. essence UpgradeResult chain) can fetch the display
+  // name + metadata path.
+  const baseItemByIndex = buildIndexByCol(tables.BaseItemTypes ?? [], '_index');
+
+  // Essences: keyed by BaseItemType FK integer. Secondary index by _index
+  // so UpgradeResult (a row FK into Essences itself) can resolve into the
+  // upgraded essence's BaseItemType and then its display name.
+  const essenceByBase     = buildFKIndex(tables.Essences ?? [], 'BaseItemType');
+  const essenceByIndex    = buildIndexByCol(tables.Essences ?? [], '_index');
+  const essenceModsByEss  = buildMultiFKIndex(tables.EssenceMods ?? [], 'Essence');
+  const essenceCatByIndex = buildIndexByCol(tables.EssenceTargetItemCategories ?? [], '_index');
+
   // ------------------------------------------------------------------
   // 2. Build mod display text lookup
   // ------------------------------------------------------------------
 
-  /** @type {Map<number, {id: string, text: string}>} */
+  /** @type {Map<number, {id: string, text: string, domain: string | null, slot: string | null, target_item_classes: string[]}>} */
   const modDisplayByIndex = new Map();
 
   for (const mod of (tables.Mods ?? [])) {
     const idx = mod._index;
     if (idx == null) continue;
-    const text = buildModText(mod, statDescriptions);
+    const text = buildModText(mod, statDescriptions, statByIndex);
     const modId = strCol(mod, 'Id') ?? '';
-    if (text) modDisplayByIndex.set(idx, { id: modId, text });
+    const domain = modDomain(intCol(mod, 'Domain'));
+    if (text) {
+      modDisplayByIndex.set(idx, {
+        id: modId,
+        text,
+        domain,
+        slot: null,
+        target_item_classes: [],
+      });
+    }
   }
 
   // ------------------------------------------------------------------
@@ -191,13 +232,17 @@ export function joinTables(tables, statDescriptions) {
       .map((idx) => (typeof idx === 'number' ? modDisplayByIndex.get(idx) : null))
       .filter(Boolean);
 
+    // Soul-core-specific info (null for non-socketable items).
+    let soulCoreInfo = null;
+
     // For soul core items (runes, idols, etc.) that have no implicit mods from the Mods table,
     // derive stat descriptions from SoulCoreStats instead.
     if (implicitMods.length === 0 && baseIdx != null) {
       const soulCore = soulCoresByBase.get(baseIdx);
       if (soulCore != null) {
         const scStatsRows = soulCoreStatsBySC.get(soulCore._index) ?? [];
-        implicitMods = buildSoulCoreMods(scStatsRows, statByIndex);
+        implicitMods = buildSoulCoreMods(scStatsRows, statByIndex, classById, soulCoreStatCatByIndex);
+        soulCoreInfo = buildSoulCoreInfo(soulCore, soulCoreLimitByIndex);
       }
     }
 
@@ -208,7 +253,7 @@ export function joinTables(tables, statDescriptions) {
         const gemEffectFks = rowArray(gemRow, 'GemEffects');
         const gemDesc = buildGemDescription(gemEffectFks, gemEffectByIndex);
         if (gemDesc) {
-          implicitMods = [{ id: 'gem_support_text', text: gemDesc }];
+          implicitMods = [{ id: 'gem_support_text', text: gemDesc, domain: null, slot: null, target_item_classes: [] }];
         }
       }
     }
@@ -219,10 +264,33 @@ export function joinTables(tables, statDescriptions) {
     const shield       = buildShield(baseIdx != null ? shieldByBase.get(baseIdx) : null);
     const gem          = buildGem(baseIdx != null ? gemByBase.get(baseIdx) : null);
     const currency     = buildCurrency(baseIdx != null ? currencyByBase.get(baseIdx) : null);
-    const flask        = buildFlask(baseIdx != null ? flaskByBase.get(baseIdx) : null);
+    const flask        = buildFlask(baseIdx != null ? flaskByBase.get(baseIdx) : null, flaskTypeEnum);
+    const essence      = buildEssence(
+      baseIdx != null ? essenceByBase.get(baseIdx) : null,
+      {
+        essenceByIndex,
+        essenceModsByEss,
+        essenceCatByIndex,
+        classByIndex: classById,
+        baseItemByIndex,
+        modDisplayByIndex,
+      },
+    );
 
     // Requirements — keyed by BaseItemTypes.Id string (metadata path)
     const requirements = buildRequirements(reqByBaseId.get(baseId));
+
+    // Human-readable flavour text + tag list (both null/empty on base items
+    // that don't set them).
+    const flavourIdx  = intCol(base, 'FlavourText');
+    const flavourRow  = flavourIdx != null ? flavourTextByIndex.get(flavourIdx) : null;
+    const flavourText = strCol(flavourRow, 'Text');
+
+    const tagFks = rowArray(base, 'Tags');
+    const tags = tagFks
+      .map((fk) => typeof fk === 'number' ? tagByIndex.get(fk) : null)
+      .map((row) => strCol(row, 'DisplayString') ?? strCol(row, 'Id'))
+      .filter(Boolean);
 
     items.push({
       id: `base/${baseId}`,
@@ -238,8 +306,10 @@ export function joinTables(tables, statDescriptions) {
       height,
       drop_level: dropLevel,
       image_url: imageUrl,
-      flavour_text: null,
-      tags: [],
+      flavour_text: flavourText,
+      tags,
+      is_corrupted: Boolean(col(base, 'IsCorrupted')),
+      unmodifiable: Boolean(col(base, 'Unmodifiable')),
       requirements,
       defences: armour,
       weapon,
@@ -247,6 +317,8 @@ export function joinTables(tables, statDescriptions) {
       gem,
       currency,
       flask,
+      soul_core: soulCoreInfo,
+      essence,
       implicit_mods: implicitMods,
       explicit_mods: [],
     });
@@ -262,10 +334,11 @@ export function joinTables(tables, statDescriptions) {
 function buildArmour(row) {
   if (!row) return null;
   return {
-    armour:        intCol(row, 'Armour') ?? 0,
-    evasion:       intCol(row, 'Evasion') ?? 0,
-    energy_shield: intCol(row, 'EnergyShield') ?? 0,
-    ward:          intCol(row, 'Ward') ?? 0,
+    armour:         intCol(row, 'Armour') ?? 0,
+    evasion:        intCol(row, 'Evasion') ?? 0,
+    energy_shield:  intCol(row, 'EnergyShield') ?? 0,
+    ward:           intCol(row, 'Ward') ?? 0,
+    movement_speed: intCol(row, 'IncreasedMovementSpeed') ?? 0,
   };
 }
 
@@ -277,6 +350,7 @@ function buildWeapon(row) {
     critical:     intCol(row, 'Critical')  ?? 0,  // stored x100
     attack_speed: intCol(row, 'Speed')     ?? 0,  // stored x100, POE2 column is "Speed"
     range_max:    intCol(row, 'RangeMax')  ?? 0,
+    reload_time:  intCol(row, 'ReloadTime') ?? 0, // ms; only meaningful on crossbows
   };
 }
 
@@ -302,10 +376,13 @@ function buildGem(row) {
   const gemType   = intCol(row, 'GemType');
   const gemColour = intCol(row, 'GemColour');
   return {
-    gem_type:      gemType   != null ? String(gemType)   : null,
-    gem_colour:    gemColour != null ? String(gemColour) : null,
-    gem_min_level: 1,
-    gem_tier:      intCol(row, 'Tier') ?? null,
+    gem_type:        gemType   != null ? String(gemType)   : null,
+    gem_colour:      gemColour != null ? String(gemColour) : null,
+    gem_min_level:   1,
+    gem_tier:        intCol(row, 'Tier') ?? null,
+    str_req_percent: intCol(row, 'StrengthRequirementPercent') ?? 0,
+    dex_req_percent: intCol(row, 'DexterityRequirementPercent') ?? 0,
+    int_req_percent: intCol(row, 'IntelligenceRequirementPercent') ?? 0,
   };
 }
 
@@ -317,12 +394,105 @@ function buildCurrency(row) {
   };
 }
 
-function buildFlask(row) {
+function buildFlask(row, flaskTypeEnum) {
   if (!row) return null;
   return {
+    flask_type:          flaskTypeEnum(intCol(row, 'Type')),   // LIFE | MANA | HYBRID | UTILITY | null
+    flask_name:          strCol(row, 'Name') ?? null,
     flask_life:          intCol(row, 'LifePerUse') ?? 0,
     flask_mana:          intCol(row, 'ManaPerUse') ?? 0,
     flask_recovery_time: intCol(row, 'RecoveryTime') ?? 0,
+  };
+}
+
+/**
+ * Build a soul-core descriptor from the SoulCores row + resolved limit row.
+ * Returns null for rune/soul-core bases that don't set either a required
+ * level or a socket limit.
+ */
+/**
+ * Build an essence descriptor: tier, Perfect flag, upgrade-to target (via
+ * UpgradeResult → essence → BaseItemType.Name), and the list of per-item-
+ * class guaranteed modifiers the essence grants.
+ *
+ * Returns null when the base item isn't an essence (no Essences row).
+ */
+function buildEssence(essenceRow, lookups) {
+  if (!essenceRow) return null;
+
+  const { essenceByIndex, essenceModsByEss, essenceCatByIndex, classByIndex,
+          baseItemByIndex, modDisplayByIndex } = lookups;
+
+  const essenceIdx = essenceRow._index;
+  const tier       = intCol(essenceRow, 'Tier') ?? 0;
+  const isPerfect  = Boolean(col(essenceRow, 'Perfect'));
+
+  // UpgradeResult is a row FK back into Essences itself. Walk to the
+  // upgraded essence's BaseItemType to surface the display name.
+  const upgradeIdx  = intCol(essenceRow, 'UpgradeResult');
+  const upgradeRow  = upgradeIdx != null ? essenceByIndex.get(upgradeIdx) : null;
+  const upgradeBaseIdx = intCol(upgradeRow, 'BaseItemType');
+  const upgradeBase = upgradeBaseIdx != null ? baseItemByIndex.get(upgradeBaseIdx) : null;
+  const upgradeBaseId = strCol(upgradeBase, 'Id');
+  const upgradeName  = strCol(upgradeBase, 'Name');
+
+  // Resolve per-category modifiers. Prefer DisplayMod (human-facing
+  // template) over Mod (internal) — the Text column is occasionally set to
+  // an override that overrides both.
+  const modifiers = [];
+  for (const emod of essenceModsByEss.get(essenceIdx) ?? []) {
+    const catIdx = intCol(emod, 'TargetItemCategory');
+    const catRow = catIdx != null ? essenceCatByIndex.get(catIdx) : null;
+    const categoryRaw = strCol(catRow, 'Text') ?? strCol(catRow, 'Id') ?? null;
+    // Strip wiki markup like `[EquipArmour|Armour] or Belt` → `Armour or Belt`.
+    const category = categoryRaw ? cleanGemMarkup(categoryRaw) : null;
+    const classFks = rowArray(catRow, 'ItemClasses');
+    const targetItemClasses = classFks
+      .map((fk) => typeof fk === 'number' ? strCol(classByIndex.get(fk), 'Id') : null)
+      .filter(Boolean);
+
+    const overrideText = strCol(emod, 'Text');
+    const displayIdx   = intCol(emod, 'DisplayMod');
+    const modIdx       = intCol(emod, 'Mod');
+    const displayMod   = displayIdx != null ? modDisplayByIndex.get(displayIdx) : null;
+    const baseMod      = modIdx != null ? modDisplayByIndex.get(modIdx) : null;
+    const modText      = overrideText || displayMod?.text || baseMod?.text;
+    const modId        = displayMod?.id || baseMod?.id || '';
+
+    if (!modText) continue;
+    modifiers.push({
+      target_category: category,
+      target_item_classes: targetItemClasses,
+      mod_id: modId,
+      mod_text: modText,
+    });
+  }
+
+  return {
+    tier,
+    is_perfect: isPerfect,
+    upgrade_to_id:   upgradeBaseId ? `base/${upgradeBaseId}` : null,
+    upgrade_to_name: upgradeName,
+    modifiers,
+  };
+}
+
+function buildSoulCoreInfo(soulCoreRow, soulCoreLimitByIndex) {
+  const requiredLevel = intCol(soulCoreRow, 'RequiredLevel') ?? 0;
+  const limitIdx = intCol(soulCoreRow, 'Limit');
+  const limitRow = limitIdx != null ? soulCoreLimitByIndex.get(limitIdx) : null;
+  const limitCount = intCol(limitRow, 'Limit');
+  const limitTextRaw = strCol(limitRow, 'Text');
+  // Templated strings like `{0} [Ancient|Ancient Augment]` aren't user-ready;
+  // fall back to a generic "Only N per item" in the frontend when null.
+  const limitText = limitTextRaw && !limitTextRaw.includes('{')
+    ? cleanGemMarkup(limitTextRaw)
+    : null;
+  if (!requiredLevel && limitCount == null && !limitText) return null;
+  return {
+    required_level: requiredLevel,
+    limit_count:    limitCount,
+    limit_text:     limitText,
   };
 }
 
@@ -331,26 +501,37 @@ function buildFlask(row) {
 // POE2 Mods: Stat1..6 are FK ints to Stats, Stat1Value..6Value are single values (no Min/Max range)
 // ---------------------------------------------------------------------------
 
-function buildModText(mod, statDescriptions) {
-  const statIds   = [];
-  const values    = [];
+function buildModText(mod, statDescriptions, statByIndex) {
+  const resolvedIds = [];
+  const synthIds    = [];
+  const values      = [];
 
   for (let i = 1; i <= 6; i++) {
     const statKeyIdx = intCol(mod, `Stat${i}`);
     if (statKeyIdx == null) continue;
 
     const value = intCol(mod, `Stat${i}Value`) ?? 0;
-    statIds.push(`stat_${statKeyIdx}`);
+    const statRow = statByIndex ? statByIndex.get(statKeyIdx) : null;
+    const realId  = strCol(statRow, 'Id');
+
+    synthIds.push(`stat_${statKeyIdx}`);        // for formatStatDisplay keying
+    resolvedIds.push(realId ?? `stat_${statKeyIdx}`);
     values.push(value);
   }
 
-  if (statIds.length === 0) {
+  if (synthIds.length === 0) {
     return strCol(mod, 'Name') ?? null;
   }
 
-  // If stat descriptions were loaded, try to format them; otherwise fall back to mod Name.
-  const text = formatStatDisplay(statDescriptions, statIds, values, values);
-  return text ?? strCol(mod, 'Name') ?? null;
+  // Prefer real stat-description formatting when stat_descriptions.txt is
+  // loaded (POE1-style extraction). POE2 bundles don't expose those files,
+  // so we synthesize display text from the resolved stat IDs + values —
+  // same path the soul-core implicits use.
+  const text = formatStatDisplay(statDescriptions, synthIds, values, values);
+  if (text) return text;
+
+  const synthesized = formatSoulCoreStatLine(resolvedIds, values);
+  return synthesized ?? strCol(mod, 'Name') ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -361,27 +542,76 @@ function buildModText(mod, statDescriptions) {
 
 /**
  * Build implicit-mod-like entries from SoulCoreStats rows.
- * Each row holds parallel Stats[] (FK int array) and StatsValues[] (int array).
+ * Each row holds parallel Stats[] (FK int array) and StatsValues[] (int array),
+ * plus a StatCategory FK that identifies which item classes the stats apply to
+ * when the rune/soul-core is socketed, plus optional BondedStats[] that kick
+ * in when two runes from different item classes are bonded.
  */
-function buildSoulCoreMods(scStatsRows, statByIndex) {
+function buildSoulCoreMods(scStatsRows, statByIndex, classByIndex, statCatByIndex) {
   const mods = [];
 
   for (const row of scStatsRows) {
     const statFks  = rowArray(row, 'Stats');
     const values   = rowArray(row, 'StatsValues');
 
-    if (statFks.length === 0) continue;
-
-    // Resolve FK ints → stat ID strings
-    const statIds = statFks
-      .map((fk) => (typeof fk === 'number' ? strCol(statByIndex.get(fk), 'Id') : null))
+    // Resolve the stat-category context: the Display label + the list of
+    // ItemClasses.Id strings this row's stats apply to. Null for older data
+    // without the join. The Display string occasionally contains wiki markup
+    // (e.g. `[MartialWeapon|Martial Weapon]`) — strip it for user display.
+    const catIdx = intCol(row, 'StatCategory');
+    const catRow = catIdx != null ? statCatByIndex.get(catIdx) : null;
+    const slotRaw = strCol(catRow, 'Display');
+    const targetClassFks = rowArray(catRow, 'TargetItemClasses');
+    const targetItemClasses = targetClassFks
+      .map((fk) => typeof fk === 'number' ? strCol(classByIndex.get(fk), 'Id') : null)
       .filter(Boolean);
+    // Prefer the designer-authored Display label; fall back to the list of
+    // target classes (e.g. "Helmet") when Display is empty.
+    const slot = slotRaw
+      ? cleanGemMarkup(slotRaw)
+      : (targetItemClasses.length ? targetItemClasses.join(', ') : null);
 
-    if (statIds.length === 0) continue;
+    if (statFks.length > 0) {
+      const statIds = statFks
+        .map((fk) => (typeof fk === 'number' ? strCol(statByIndex.get(fk), 'Id') : null))
+        .filter(Boolean);
 
-    const text = formatSoulCoreStatLine(statIds, values);
-    if (text) {
-      mods.push({ id: statIds.join(','), text });
+      if (statIds.length > 0) {
+        const text = formatSoulCoreStatLine(statIds, values);
+        if (text) {
+          mods.push({
+            id: statIds.join(','),
+            text,
+            domain: null,
+            slot,
+            target_item_classes: targetItemClasses,
+          });
+        }
+      }
+    }
+
+    // Bonded stats — extra mods that apply only when paired with a second rune
+    // from a different slot. Tag the display text so the tooltip can call it
+    // out; same slot/class context as the primary stats for this row.
+    const bondedFks    = rowArray(row, 'BondedStats');
+    const bondedValues = rowArray(row, 'BondedStatsValues');
+    if (bondedFks.length > 0) {
+      const bondedStatIds = bondedFks
+        .map((fk) => (typeof fk === 'number' ? strCol(statByIndex.get(fk), 'Id') : null))
+        .filter(Boolean);
+
+      if (bondedStatIds.length > 0) {
+        const bondedText = formatSoulCoreStatLine(bondedStatIds, bondedValues);
+        if (bondedText) {
+          mods.push({
+            id: `bonded:${bondedStatIds.join(',')}`,
+            text: bondedText,
+            domain: 'BONDED',
+            slot,
+            target_item_classes: targetItemClasses,
+          });
+        }
+      }
     }
   }
 
@@ -418,20 +648,23 @@ function formatSoulCoreStatLine(statIds, values) {
  * Convert a single stat ID + integer value to approximate display text.
  *
  * Examples:
- *   additional_strength, 6                             → "+6 to Strength"
- *   base_fire_damage_resistance_%, 12                  → "+12% Fire Damage Resistance"
- *   attack_speed_+%, 15                                → "+15% Attack Speed"
- *   base_maximum_life, 50                              → "+50 Maximum Life"
- *   energy_generated_+%, 10                            → "+10% Energy Generated"
- *   non_skill_base_all_damage_%_to_gain_as_fire, 8     → "+8% of Damage Gained as Fire"
+ *   additional_strength, 6                                  → "+6 to Strength"
+ *   base_fire_damage_resistance_%, 12                       → "+12% Fire Damage Resistance"
+ *   attack_speed_+%, 15                                     → "+15% Attack Speed"
+ *   base_maximum_life, 50                                   → "+50 Maximum Life"
+ *   energy_generated_+%, 10                                 → "+10% Energy Generated"
+ *   non_skill_base_all_damage_%_to_gain_as_fire, 8          → "+8% of Damage Gained as Fire"
+ *   enemies_damage_taken_+%_while_cursed, 6                 → "Enemies Damage Taken +6% While Cursed"
+ *   local_requirements_%_to_convert_to_strength, 20         → "Requirements +20% To Convert To Strength"
+ *   stun_threshold_+, 60                                    → "+60 Stun Threshold"
  */
-function formatSingleSoulCoreStat(id, value) {
+export function formatSingleSoulCoreStat(id, value) {
   const sign = value >= 0 ? '+' : '';
 
   // "damage_%_to_gain_as_X" pattern (e.g. non_skill_base_all_damage_%_to_gain_as_fire)
   const gainAs = id.match(/damage_%_to_gain_as_(\w+)$/);
   if (gainAs) {
-    const element = gainAs[1].charAt(0).toUpperCase() + gainAs[1].slice(1);
+    const element = humanizeStat(gainAs[1]);
     return `${sign}${value}% of Damage Gained as ${element}`;
   }
 
@@ -441,19 +674,33 @@ function formatSingleSoulCoreStat(id, value) {
     return `${sign}${value} to ${attr}`;
   }
 
-  // Detect percentage stat: id ends with %, _%,  _+%, or +%
-  const isPct = /[_%+]%$/.test(id) || id.endsWith('%');
-  const pctStr = isPct ? '%' : '';
+  const stripped = id.replace(/^(non_skill_base_|base_|local_|global_)/, '');
 
-  // Strip common prefixes, trailing underscores, and percent/plus markers
-  const name = humanizeStat(
-    id
-      .replace(/^(non_skill_base_|base_|local_|global_)/, '')
-      .replace(/[_+]*%$/, '')   // remove trailing _+%  (handles energy_generated_+%)
-      .replace(/_+$/, '')       // remove any remaining trailing underscores
-  );
+  // Find the value placeholder: `_+`, `_%`, `_+%`, `_%+` at an underscore
+  // boundary (or end of string). POE stat IDs often put this marker mid-ID
+  // (e.g. `enemies_damage_taken_+%_while_cursed`) rather than at the end;
+  // the formatted value must slot into that position, not at the start.
+  const markerRe = /_([+%]+)(?=_|$)/;
+  const m = stripped.match(markerRe);
 
-  return `${sign}${value}${pctStr} ${name}`;
+  if (m) {
+    const pctStr = m[1].includes('%') ? '%' : '';
+    const valueText = `${sign}${value}${pctStr}`;
+    const before = humanizeStat(stripped.slice(0, m.index));
+    const tailRaw = stripped.slice(m.index + m[0].length).replace(/^_+/, '');
+
+    if (!tailRaw) {
+      return `${valueText} ${before}`.trim();
+    }
+
+    // A tail with another orphan `_+`/`_%` marker means a baked-in constant
+    // we don't have a value for (e.g. `stun_threshold_+_from_%_maximum_es`).
+    // Drop the orphan marker so it doesn't appear as a stray "%" in output.
+    const tail = humanizeStat(tailRaw.replace(/_[+%]+(?=_|$)/g, ''));
+    return `${before} ${valueText} ${tail}`.trim();
+  }
+
+  return `${sign}${value} ${humanizeStat(stripped)}`;
 }
 
 /** Convert snake_case to Title Case words, ignoring empty segments. */
@@ -499,19 +746,120 @@ function cleanGemMarkup(text) {
 
 // ---------------------------------------------------------------------------
 // Category derivation
+//
+// High-level buckets used by the UI and for filtering. The source of truth
+// for category membership is the explicit per-class map below. A regex
+// fallback only catches unexpected weapon-class variants (POE has many of
+// the form "Thrown One Hand Axe", "Two Hand Sword", etc.) so new classes
+// don't silently end up as "Other".
 // ---------------------------------------------------------------------------
 
-function deriveCategory(classId) {
-  if (!classId) return 'Other';
-  const id = classId.toLowerCase();
+const CATEGORY_BY_CLASS_ID = {
+  // Accessories
+  Amulet: 'Accessory',
+  Ring: 'Accessory',
+  Belt: 'Accessory',
+  Talisman: 'Accessory',
+  Quiver: 'Accessory',
+  Trinket: 'Accessory',
 
-  if (/helmet|glove|boot|body|shield/.test(id)) return 'Armour';
-  if (/sword|axe|mace|bow|staff|wand|dagger|claw|spear|flail|crossbow/.test(id)) return 'Weapon';
-  if (/gem|skill|support/.test(id)) return 'Gem';
-  if (/currency|stackable/.test(id)) return 'Currency';
-  if (/flask/.test(id)) return 'Flask';
-  if (/map|fragment|piece|scarab/.test(id)) return 'Map';
-  if (/jewel/.test(id)) return 'Jewel';
-  if (/amulet|ring|belt/.test(id)) return 'Accessory';
+  // Armour (including offhands that are defensive)
+  'Body Armour': 'Armour',
+  Helmet: 'Armour',
+  Gloves: 'Armour',
+  Boots: 'Armour',
+  Shield: 'Armour',
+  Buckler: 'Armour',
+  Focus: 'Armour',
+
+  // Weapons — explicit entries for classes whose ID doesn't obviously
+  // read as a weapon (the regex fallback below catches "Sword", "Axe",
+  // "Mace", "Bow", "Staff", "Warstaff", "Wand", "Dagger", "Claw",
+  // "Spear", "Flail", "Crossbow").
+  Sceptre: 'Weapon',
+  FishingRod: 'Weapon',
+
+  // Flasks
+  LifeFlask: 'Flask',
+  ManaFlask: 'Flask',
+  UtilityFlask: 'Flask',
+
+  // Gems
+  'Active Skill Gem': 'Gem',
+  'Support Skill Gem': 'Gem',
+  'Meta Skill Gem': 'Gem',
+  UncutSkillGemStackable: 'Gem',
+  UncutSupportGemStackable: 'Gem',
+  UncutReservationGemStackable: 'Gem',
+  UncutSkillGem_OLD: 'Gem',
+  UncutSupportGem_OLD: 'Gem',
+  UncutReservationGem_OLD: 'Gem',
+
+  // Currency and currency-adjacent consumables
+  Currency: 'Currency',
+  StackableCurrency: 'Currency',
+  DelveSocketableCurrency: 'Currency',
+  DelveStackableSocketableCurrency: 'Currency',
+  SkillGemToken: 'Currency',
+  Omen: 'Currency',
+  Incubator: 'Currency',
+  IncubatorStackable: 'Currency',
+  SoulCore: 'Currency',
+  ArchnemesisMod: 'Currency',
+  DivinationCard: 'Currency',
+
+  // Jewels
+  Jewel: 'Jewel',
+  AbyssJewel: 'Jewel',
+
+  // Maps, fragments, keys, tablets, logbooks — anything consumed to open
+  // or modify endgame content.
+  Map: 'Map',
+  MapFragment: 'Map',
+  MiscMapItem: 'Map',
+  UniqueFragment: 'Map',
+  VaultKey: 'Map',
+  Breachstone: 'Map',
+  PinnacleKey: 'Map',
+  UltimatumKey: 'Map',
+  MemoryLine: 'Map',
+  ItemisedSanctum: 'Map',
+  TowerAugmentation: 'Map',
+  AtlasUpgradeItem: 'Map',
+  ExpeditionLogbook: 'Map',
+
+  // Sanctum relics
+  Relic: 'Relic',
+  SanctumSpecialRelic: 'Relic',
+  SmallRelic: 'Relic',
+  MediumRelic: 'Relic',
+  LargeRelic: 'Relic',
+
+  // Quest
+  QuestItem: 'Quest',
+
+  // Heist (POE1 mechanic still present in data tables; bucket separately
+  // so it doesn't pollute the main currency/map categories).
+  HeistObjective: 'Heist',
+  HeistContract: 'Heist',
+  HeistBlueprint: 'Heist',
+  HeistEquipmentWeapon: 'Heist',
+  HeistEquipmentTool: 'Heist',
+  HeistEquipmentUtility: 'Heist',
+  HeistEquipmentReward: 'Heist',
+};
+
+export function deriveCategory(classId) {
+  if (!classId) return 'Other';
+
+  const explicit = CATEGORY_BY_CLASS_ID[classId];
+  if (explicit) return explicit;
+
+  // Fallback: catch weapon-class variants not listed explicitly.
+  const id = classId.toLowerCase();
+  if (/sword|axe|mace|bow|staff|wand|dagger|claw|spear|flail|crossbow/.test(id)) {
+    return 'Weapon';
+  }
+
   return 'Other';
 }

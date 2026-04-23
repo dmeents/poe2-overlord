@@ -2,9 +2,38 @@ import { memo, useCallback, useState } from 'react';
 import { HoverCard } from '@/components/ui/hover-card/hover-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useItemByName } from '@/queries/item-data';
-import type { ItemData } from '@/types/item-data';
+import type { ItemData, ModDisplay } from '@/types/item-data';
 import { hideOnError } from '@/utils/image-utils';
 import { itemTooltipStyles as styles } from './item-tooltip.styles';
+
+const FLASK_TYPE_LABEL: Record<string, string> = {
+  LIFE: 'Life Flask',
+  MANA: 'Mana Flask',
+  HYBRID: 'Hybrid Flask',
+  UTILITY: 'Charm',
+};
+
+/** Returns a user-facing summary of which attribute(s) a gem scales with. */
+function gemScalingAttributes(gem: NonNullable<ItemData['gem']>): string | null {
+  const parts: string[] = [];
+  if (gem.str_req_percent > 0) parts.push('Strength');
+  if (gem.dex_req_percent > 0) parts.push('Dexterity');
+  if (gem.int_req_percent > 0) parts.push('Intelligence');
+  return parts.length ? parts.join(' / ') : null;
+}
+
+/** Partition soul-core mods into groups keyed by slot label, preserving order. */
+function groupModsBySlot(mods: ModDisplay[]): { slot: string | null; mods: ModDisplay[] }[] {
+  if (!mods.some(m => m.slot)) return [{ slot: null, mods }];
+  const groups: { slot: string | null; mods: ModDisplay[] }[] = [];
+  for (const mod of mods) {
+    const key = mod.slot ?? null;
+    const last = groups[groups.length - 1];
+    if (last && last.slot === key) last.mods.push(mod);
+    else groups.push({ slot: key, mods: [mod] });
+  }
+  return groups;
+}
 
 interface ItemTooltipProps {
   /** Item name — used to look up game data by exact match */
@@ -122,17 +151,21 @@ interface ItemTooltipContentProps {
 }
 
 function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemTooltipContentProps) {
-  const { weapon, defences, shield, gem, flask, currency, requirements } = itemData;
+  const { weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence } = itemData;
 
   const hasDefences =
     defences &&
     (defences.armour > 0 ||
       defences.evasion > 0 ||
       defences.energy_shield > 0 ||
-      defences.ward > 0);
+      defences.ward > 0 ||
+      defences.movement_speed > 0);
   const hasRequirements =
     requirements.str_req > 0 || requirements.dex_req > 0 || requirements.int_req > 0;
-  const hasMeta = currency !== null || itemData.drop_level > 0;
+  const hasMeta = currency !== null || itemData.drop_level > 0 || soul_core !== null;
+  const gemScaling = gem ? gemScalingAttributes(gem) : null;
+  const flaskTypeLabel = flask?.flask_type ? FLASK_TYPE_LABEL[flask.flask_type] ?? null : null;
+  const implicitModGroups = groupModsBySlot(itemData.implicit_mods);
 
   return (
     <div className={styles.content}>
@@ -159,6 +192,35 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
         <p className={styles.description}>{parseDescription(currency.description)}</p>
       )}
 
+      {/* Essence: tier, per-category guaranteed modifiers, upgrade chain */}
+      {essence && (
+        <div className={styles.section}>
+          <div className={styles.statsGrid}>
+            <span className={styles.statsLabel}>Tier</span>
+            <span className={styles.statsValue}>
+              {essence.tier}{essence.is_perfect ? ' (Perfect)' : ''}
+            </span>
+          </div>
+          {essence.modifiers.length > 0 && (
+            <div className="w-full flex flex-col gap-1 mt-1">
+              {essence.modifiers.map((m, i) => (
+                <div key={`${m.mod_id}-${i}`} className="flex flex-col">
+                  {m.target_category && (
+                    <div className={styles.sectionHeader}>{m.target_category}</div>
+                  )}
+                  <div className={styles.modLine}>{m.mod_text}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {essence.upgrade_to_name && (
+            <div className={`${styles.modLine} text-stone-400 italic mt-1`}>
+              Upgrades into {essence.upgrade_to_name}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Weapon stats */}
       {weapon && (
         <div className={styles.section}>
@@ -175,6 +237,14 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
               <>
                 <span className={styles.statsLabel}>Range</span>
                 <span className={styles.statsValue}>{weapon.range_max}</span>
+              </>
+            )}
+            {weapon.reload_time > 0 && (
+              <>
+                <span className={styles.statsLabel}>Reload Time</span>
+                <span className={styles.statsValue}>
+                  {(weapon.reload_time / 1000).toFixed(2)}s
+                </span>
               </>
             )}
           </div>
@@ -207,6 +277,12 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
               <>
                 <span className={styles.statsLabel}>Ward</span>
                 <span className={styles.statsValue}>{defences.ward}</span>
+              </>
+            )}
+            {defences && defences.movement_speed > 0 && (
+              <>
+                <span className={styles.statsLabel}>Movement Speed</span>
+                <span className={styles.statsValue}>+{defences.movement_speed}%</span>
               </>
             )}
             {shield && (
@@ -247,6 +323,12 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
                 <span className={styles.statsValue}>{gem.gem_tier}</span>
               </>
             )}
+            {gemScaling && (
+              <>
+                <span className={styles.statsLabel}>Scales With</span>
+                <span className={styles.statsValue}>{gemScaling}</span>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -255,10 +337,10 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
       {flask && (
         <div className={styles.section}>
           <div className={styles.statsGrid}>
-            {flask.flask_type && (
+            {flaskTypeLabel && (
               <>
                 <span className={styles.statsLabel}>Type</span>
-                <span className={styles.statsValue}>{flask.flask_type}</span>
+                <span className={styles.statsValue}>{flaskTypeLabel}</span>
               </>
             )}
             {flask.flask_life > 0 && (
@@ -285,13 +367,19 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
         </div>
       )}
 
-      {/* Common metadata: stack size + drop level */}
+      {/* Common metadata: stack size + drop level + soul-core required level */}
       {hasMeta && (
         <div className={styles.statsGrid}>
           {currency && (
             <>
               <span className={styles.statsLabel}>Stack size</span>
               <span className={styles.statsValue}>{currency.stack_size}</span>
+            </>
+          )}
+          {soul_core && soul_core.required_level > 0 && (
+            <>
+              <span className={styles.statsLabel}>Required Level</span>
+              <span className={styles.statsValue}>{soul_core.required_level}</span>
             </>
           )}
           {itemData.drop_level > 0 && (
@@ -330,14 +418,28 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
         </div>
       )}
 
-      {/* Implicit mods */}
+      {/* Implicit mods — grouped by slot for runes / soul cores */}
       {itemData.implicit_mods.length > 0 && (
         <div className={styles.section}>
-          {itemData.implicit_mods.map(mod => (
-            <div key={mod.id} className={styles.modLine}>
-              {mod.text}
+          {implicitModGroups.map((group, i) => (
+            <div key={group.slot ?? `group-${i}`} className={i > 0 ? 'mt-1 pt-1 border-t border-stone-700/30' : ''}>
+              {group.slot && <div className={styles.sectionHeader}>{group.slot}</div>}
+              {group.mods.map((mod, j) => (
+                <div key={`${mod.id}-${j}`} className={styles.modLine}>
+                  {mod.domain === 'BONDED' && <span className="text-bone-400 mr-1">Bonded:</span>}
+                  {mod.text}
+                </div>
+              ))}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Soul-core socket limit. Prefer the designer-authored text; fall
+          back to a synthesized message from the numeric limit. */}
+      {soul_core && (soul_core.limit_text || soul_core.limit_count != null) && (
+        <div className={`${styles.modLine} text-center italic text-stone-400`}>
+          {soul_core.limit_text ?? `Only ${soul_core.limit_count} per item`}
         </div>
       )}
 

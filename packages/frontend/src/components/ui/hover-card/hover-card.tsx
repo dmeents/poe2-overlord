@@ -7,6 +7,7 @@ import {
   offset,
   safePolygon,
   shift,
+  size,
   useFloating,
   useFocus,
   useHover,
@@ -82,6 +83,7 @@ export const HoverCard = memo(function HoverCard({
   onOpenChange,
 }: HoverCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined);
   const arrowRef = useRef<SVGSVGElement>(null);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -99,6 +101,12 @@ export const HoverCard = memo(function HoverCard({
       offset(ARROW_HEIGHT + 2),
       flip({ padding: 8 }),
       shift({ padding: 8 }),
+      size({
+        padding: 8,
+        apply({ availableHeight }) {
+          setMaxHeight(availableHeight);
+        },
+      }),
       arrow({ element: arrowRef, padding: 6 }),
     ],
     whileElementsMounted: autoUpdate,
@@ -151,7 +159,12 @@ export const HoverCard = memo(function HoverCard({
           <div
             ref={refs.setFloating}
             className={`${hoverCardStyles.card} ${width}`}
-            style={{ ...floatingStyles, ...transitionStyles }}
+            style={{
+              ...floatingStyles,
+              ...transitionStyles,
+              maxHeight: maxHeight !== undefined ? `${maxHeight}px` : undefined,
+              overflowY: 'auto',
+            }}
             {...getFloatingProps()}>
             {content}
             <FloatingArrow

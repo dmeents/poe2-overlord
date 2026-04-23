@@ -9,6 +9,21 @@ use serde::{Deserialize, Serialize};
 pub struct ModDisplay {
     pub id: String,
     pub text: String,
+    /// Decoded `ModDomains` enum value (e.g. `ITEM`, `SANCTUM_RELIC`, `IDOL`).
+    /// Also used to flag synthesized entries (e.g. `BONDED` for the secondary
+    /// stat group on a soul-core row).
+    #[serde(default)]
+    pub domain: Option<String>,
+    /// For rune / soul-core implicits, a human-readable label for which gear
+    /// slot the stats apply to when socketed (e.g. `Weapon`, `Armour`). Null
+    /// for normal item mods.
+    #[serde(default)]
+    pub slot: Option<String>,
+    /// For rune / soul-core implicits, the list of ItemClasses.Id values the
+    /// stats apply to (e.g. `["Body Armour", "Helmet", "Gloves", "Boots"]`).
+    /// Empty for normal item mods.
+    #[serde(default)]
+    pub target_item_classes: Vec<String>,
 }
 
 /// Attribute requirements for equipping an item.
@@ -26,6 +41,9 @@ pub struct DefenceValues {
     pub evasion: i64,
     pub energy_shield: i64,
     pub ward: i64,
+    /// Increased movement speed % bonus (boots only; 0 elsewhere).
+    #[serde(default)]
+    pub movement_speed: i64,
 }
 
 /// Weapon stats.
@@ -38,6 +56,9 @@ pub struct WeaponValues {
     /// Stored x100 (e.g. 120 = 1.20 aps)
     pub attack_speed: i64,
     pub range_max: i64,
+    /// Reload time in ms (crossbows only; 0 elsewhere).
+    #[serde(default)]
+    pub reload_time: i64,
 }
 
 /// Shield stats.
@@ -53,6 +74,14 @@ pub struct GemData {
     pub gem_colour: Option<String>,
     pub gem_min_level: i64,
     pub gem_tier: Option<i64>,
+    /// Percent of the per-level attribute requirement this gem scales with.
+    /// Zero means the attribute is not required for this gem.
+    #[serde(default)]
+    pub str_req_percent: i64,
+    #[serde(default)]
+    pub dex_req_percent: i64,
+    #[serde(default)]
+    pub int_req_percent: i64,
 }
 
 /// Currency item data.
@@ -65,11 +94,64 @@ pub struct CurrencyData {
 /// Flask data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlaskData {
+    /// Decoded `FlaskType` enum: `LIFE`, `MANA`, `HYBRID`, or `UTILITY`.
     pub flask_type: Option<String>,
+    /// In-game name from the Flasks table (may differ from the BaseItemTypes
+    /// name for buff variants — e.g. "Granite Flask of Iron Skin").
+    #[serde(default)]
+    pub flask_name: Option<String>,
     pub flask_life: i64,
     pub flask_mana: i64,
     /// Duration in milliseconds
     pub flask_recovery_time: i64,
+}
+
+/// Rune / soul-core socket data.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SoulCoreInfo {
+    /// Character level required to equip an item with this rune socketed.
+    pub required_level: i64,
+    /// Max number of this rune allowed per item (null if no numeric cap).
+    #[serde(default)]
+    pub limit_count: Option<i64>,
+    /// Display text of the socket-limit rule (e.g. "Only one per item").
+    #[serde(default)]
+    pub limit_text: Option<String>,
+}
+
+/// One guaranteed modifier granted by an essence when used on a specific
+/// item category (Weapon, Body Armour, Jewellery, ...).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EssenceModifier {
+    /// Human-readable category label (e.g. "Body Armour", "Jewellery").
+    #[serde(default)]
+    pub target_category: Option<String>,
+    /// Raw ItemClasses.Id values this category expands to.
+    #[serde(default)]
+    pub target_item_classes: Vec<String>,
+    /// Mods.Id for the resolved modifier (debug / filtering).
+    #[serde(default)]
+    pub mod_id: String,
+    /// User-facing modifier text (from Mods stat descriptions, or the
+    /// EssenceMods.Text override).
+    pub mod_text: String,
+}
+
+/// Essence-specific metadata: tier, Perfect flag, upgrade path, and the
+/// per-item-class guaranteed modifiers the essence grants when used.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EssenceInfo {
+    pub tier: i64,
+    #[serde(default)]
+    pub is_perfect: bool,
+    /// Item-id (`base/<path>`) of the essence this upgrades into, if any.
+    #[serde(default)]
+    pub upgrade_to_id: Option<String>,
+    /// Display name of the upgrade target (e.g. "Essence of the Body").
+    #[serde(default)]
+    pub upgrade_to_name: Option<String>,
+    #[serde(default)]
+    pub modifiers: Vec<EssenceModifier>,
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +178,12 @@ pub struct Item {
     pub image_url: Option<String>,
     pub flavour_text: Option<String>,
     pub tags: Vec<String>,
+    /// Base item is permanently corrupted (never drops in a non-corrupted form).
+    #[serde(default)]
+    pub is_corrupted: bool,
+    /// Base cannot have mods rolled onto it.
+    #[serde(default)]
+    pub unmodifiable: bool,
     pub requirements: AttributeRequirements,
     pub defences: Option<DefenceValues>,
     pub weapon: Option<WeaponValues>,
@@ -103,6 +191,12 @@ pub struct Item {
     pub gem: Option<GemData>,
     pub currency: Option<CurrencyData>,
     pub flask: Option<FlaskData>,
+    /// Populated for runes / soul cores / idols only.
+    #[serde(default)]
+    pub soul_core: Option<SoulCoreInfo>,
+    /// Populated for essence currency items only.
+    #[serde(default)]
+    pub essence: Option<EssenceInfo>,
     pub implicit_mods: Vec<ModDisplay>,
     pub explicit_mods: Vec<ModDisplay>,
 }
@@ -180,6 +274,12 @@ pub struct ImportedCategory {
 pub struct ImportedModDisplay {
     pub id: String,
     pub text: String,
+    #[serde(default)]
+    pub domain: Option<String>,
+    #[serde(default)]
+    pub slot: Option<String>,
+    #[serde(default)]
+    pub target_item_classes: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -215,6 +315,8 @@ pub struct ImportedDefences {
     pub energy_shield: i64,
     #[serde(default)]
     pub ward: i64,
+    #[serde(default)]
+    pub movement_speed: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -229,6 +331,8 @@ pub struct ImportedWeapon {
     pub attack_speed: i64,
     #[serde(default)]
     pub range_max: i64,
+    #[serde(default)]
+    pub reload_time: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -244,6 +348,12 @@ pub struct ImportedGem {
     #[serde(default = "default_one")]
     pub gem_min_level: i64,
     pub gem_tier: Option<i64>,
+    #[serde(default)]
+    pub str_req_percent: i64,
+    #[serde(default)]
+    pub dex_req_percent: i64,
+    #[serde(default)]
+    pub int_req_percent: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -257,11 +367,48 @@ pub struct ImportedCurrency {
 pub struct ImportedFlask {
     pub flask_type: Option<String>,
     #[serde(default)]
+    pub flask_name: Option<String>,
+    #[serde(default)]
     pub flask_life: i64,
     #[serde(default)]
     pub flask_mana: i64,
     #[serde(default)]
     pub flask_recovery_time: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImportedSoulCore {
+    #[serde(default)]
+    pub required_level: i64,
+    #[serde(default)]
+    pub limit_count: Option<i64>,
+    #[serde(default)]
+    pub limit_text: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImportedEssenceModifier {
+    #[serde(default)]
+    pub target_category: Option<String>,
+    #[serde(default)]
+    pub target_item_classes: Vec<String>,
+    #[serde(default)]
+    pub mod_id: String,
+    pub mod_text: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImportedEssence {
+    #[serde(default)]
+    pub tier: i64,
+    #[serde(default)]
+    pub is_perfect: bool,
+    #[serde(default)]
+    pub upgrade_to_id: Option<String>,
+    #[serde(default)]
+    pub upgrade_to_name: Option<String>,
+    #[serde(default)]
+    pub modifiers: Vec<ImportedEssenceModifier>,
 }
 
 fn default_one() -> i64 { 1 }
@@ -290,6 +437,10 @@ pub struct ImportedItem {
     #[serde(default)]
     pub tags: Vec<String>,
     #[serde(default)]
+    pub is_corrupted: bool,
+    #[serde(default)]
+    pub unmodifiable: bool,
+    #[serde(default)]
     pub requirements: Option<ImportedRequirements>,
     #[serde(default, rename = "defences")]
     pub defences: Option<ImportedDefences>,
@@ -298,6 +449,10 @@ pub struct ImportedItem {
     pub gem: Option<ImportedGem>,
     pub currency: Option<ImportedCurrency>,
     pub flask: Option<ImportedFlask>,
+    #[serde(default)]
+    pub soul_core: Option<ImportedSoulCore>,
+    #[serde(default)]
+    pub essence: Option<ImportedEssence>,
     #[serde(default)]
     pub implicit_mods: Vec<ImportedModDisplay>,
     #[serde(default)]

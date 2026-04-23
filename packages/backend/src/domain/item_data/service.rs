@@ -7,9 +7,9 @@ use log::{info, warn};
 use crate::errors::{AppError, AppResult};
 
 use super::models::{
-    AttributeRequirements, CurrencyData, DefenceValues, FlaskData, GameDataVersion, GemData, Item,
-    ItemCategory, ImportedCategory, ImportedItem, ImportedVersion, ItemSearchParams,
-    ItemSearchResult, ModDisplay, ShieldValues, WeaponValues,
+    AttributeRequirements, CurrencyData, DefenceValues, EssenceInfo, EssenceModifier, FlaskData,
+    GameDataVersion, GemData, Item, ItemCategory, ImportedCategory, ImportedItem, ImportedVersion,
+    ItemSearchParams, ItemSearchResult, ModDisplay, ShieldValues, SoulCoreInfo, WeaponValues,
 };
 use super::traits::{ItemDataRepository, ItemDataService};
 
@@ -116,6 +116,15 @@ impl ItemDataService for ItemDataServiceImpl {
                 );
                 true
             }
+            // Same patch_version but a newer extraction: lets us ship in-place
+            // fixes (e.g. recategorisation) without bumping the game patch.
+            Some(v) if v.extracted_at != bundled_version.extracted_at => {
+                info!(
+                    "Game data re-extracted: DB={}, bundled={}. Re-importing.",
+                    v.extracted_at, bundled_version.extracted_at
+                );
+                true
+            }
             Some(v) => {
                 info!("Game data is current (patch {}). No import needed.", v.patch_version);
                 false
@@ -195,6 +204,7 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         evasion: d.evasion,
         energy_shield: d.energy_shield,
         ward: d.ward,
+        movement_speed: d.movement_speed,
     });
 
     let weapon = imp.weapon.map(|w| WeaponValues {
@@ -203,6 +213,7 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         critical: w.critical,
         attack_speed: w.attack_speed,
         range_max: w.range_max,
+        reload_time: w.reload_time,
     });
 
     let shield = imp.shield.map(|s| ShieldValues { block: s.block });
@@ -212,6 +223,9 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         gem_colour: g.gem_colour,
         gem_min_level: g.gem_min_level,
         gem_tier: g.gem_tier,
+        str_req_percent: g.str_req_percent,
+        dex_req_percent: g.dex_req_percent,
+        int_req_percent: g.int_req_percent,
     });
 
     let currency = imp.currency.map(|c| CurrencyData {
@@ -221,22 +235,45 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
 
     let flask = imp.flask.map(|f| FlaskData {
         flask_type: f.flask_type,
+        flask_name: f.flask_name,
         flask_life: f.flask_life,
         flask_mana: f.flask_mana,
         flask_recovery_time: f.flask_recovery_time,
     });
 
-    let implicit_mods = imp
-        .implicit_mods
-        .into_iter()
-        .map(|m| ModDisplay { id: m.id, text: m.text })
-        .collect();
+    let soul_core = imp.soul_core.map(|s| SoulCoreInfo {
+        required_level: s.required_level,
+        limit_count: s.limit_count,
+        limit_text: s.limit_text,
+    });
 
-    let explicit_mods = imp
-        .explicit_mods
-        .into_iter()
-        .map(|m| ModDisplay { id: m.id, text: m.text })
-        .collect();
+    let essence = imp.essence.map(|e| EssenceInfo {
+        tier: e.tier,
+        is_perfect: e.is_perfect,
+        upgrade_to_id: e.upgrade_to_id,
+        upgrade_to_name: e.upgrade_to_name,
+        modifiers: e
+            .modifiers
+            .into_iter()
+            .map(|m| EssenceModifier {
+                target_category: m.target_category,
+                target_item_classes: m.target_item_classes,
+                mod_id: m.mod_id,
+                mod_text: m.mod_text,
+            })
+            .collect(),
+    });
+
+    let convert_mod = |m: super::models::ImportedModDisplay| ModDisplay {
+        id: m.id,
+        text: m.text,
+        domain: m.domain,
+        slot: m.slot,
+        target_item_classes: m.target_item_classes,
+    };
+
+    let implicit_mods = imp.implicit_mods.into_iter().map(convert_mod).collect();
+    let explicit_mods = imp.explicit_mods.into_iter().map(convert_mod).collect();
 
     Item {
         id: imp.id,
@@ -253,6 +290,8 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         image_url: imp.image_url,
         flavour_text: imp.flavour_text,
         tags: imp.tags,
+        is_corrupted: imp.is_corrupted,
+        unmodifiable: imp.unmodifiable,
         requirements,
         defences,
         weapon,
@@ -260,6 +299,8 @@ fn convert_imported_item(imp: ImportedItem) -> Item {
         gem,
         currency,
         flask,
+        soul_core,
+        essence,
         implicit_mods,
         explicit_mods,
     }

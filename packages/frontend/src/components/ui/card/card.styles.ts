@@ -3,10 +3,10 @@ export const cardStyles = {
   header: 'px-5 py-3 border-b border-stone-800/50',
   headerContent: 'flex items-center justify-between',
   headerLeft: 'flex items-center gap-2',
-  title: 'text-xs font-medium uppercase tracking-wider',
+  title: 'text-xs font-medium uppercase tracking-wider leading-none',
   subtitle: 'text-xs text-stone-400 font-normal',
   statusDot: 'w-2 h-2 rounded-full animate-pulse',
-  icon: 'w-4 h-4',
+  icon: 'w-4 h-4 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full',
   body: '',
   accentGradient: {
     ember: 'bg-gradient-to-r from-ember-500/10 to-transparent',

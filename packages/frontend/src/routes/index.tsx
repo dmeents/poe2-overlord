@@ -56,7 +56,7 @@ function Index() {
       {activeZone ? (
         <CurrentZoneCard zone={activeZone} />
       ) : (
-        <Card title="Current Location" icon={<MapPinIcon className="w-5 h-5" />}>
+        <Card title="Current Location" icon={<MapPinIcon />}>
           <EmptyState
             icon={<MapPinIcon className="w-12 h-12" />}
             title={activeCharacter ? 'No active zone' : 'No Active Character'}

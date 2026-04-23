@@ -6,9 +6,9 @@ use sqlx::{Row, SqlitePool};
 use crate::errors::{AppError, AppResult};
 
 use super::models::{
-    AttributeRequirements, CurrencyData, DefenceValues, EssenceInfo, FlaskData, GameDataVersion,
-    GemData, Item, ItemCategory, ItemSearchParams, ItemSearchResult, ModDisplay, ShieldValues,
-    SoulCoreInfo, WeaponValues,
+    AttributeRequirements, BreachstoneInfo, CurrencyData, DefenceValues, EssenceInfo, FlaskData,
+    GameDataVersion, GemData, Item, ItemCategory, ItemSearchParams, ItemSearchResult, ModDisplay,
+    OmenInfo, ShieldValues, SoulCoreInfo, WeaponValues,
 };
 use super::traits::ItemDataRepository;
 
@@ -108,6 +108,10 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
                 .essence
                 .as_ref()
                 .and_then(|e| serde_json::to_string(e).ok());
+            let breachstone_json = item
+                .breachstone
+                .as_ref()
+                .and_then(|b| serde_json::to_string(b).ok());
 
             sqlx::query(
                 "INSERT INTO items (
@@ -125,6 +129,8 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
                     flask_type, flask_name, flask_life, flask_mana, flask_recovery_time,
                     soul_core_required_level, soul_core_limit_count, soul_core_limit_text,
                     essence,
+                    omen_description,
+                    map_tier, talisman_tier, breachstone, quest_description,
                     implicit_mods, explicit_mods
                 ) VALUES (
                     ?, ?, ?, ?, ?,
@@ -141,6 +147,8 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
                     ?, ?, ?, ?, ?,
                     ?, ?, ?,
                     ?,
+                    ?,
+                    ?, ?, ?, ?,
                     ?, ?
                 )",
             )
@@ -201,6 +209,13 @@ impl ItemDataRepository for ItemDataRepositoryImpl {
             .bind(item.soul_core.as_ref().and_then(|s| s.limit_text.as_deref()))
             // Essence (JSON blob — modifier list is variable-length)
             .bind(&essence_json)
+            // Omen description (plain text column)
+            .bind(item.omen.as_ref().map(|o| o.description.as_str()))
+            // Per-class enrichment
+            .bind(item.map_tier)
+            .bind(item.talisman_tier)
+            .bind(&breachstone_json)
+            .bind(&item.quest_description)
             // Mods
             .bind(&implicit_json)
             .bind(&explicit_json)
@@ -542,6 +557,23 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
         .flatten()
         .and_then(|s| serde_json::from_str(&s).ok());
 
+    let omen: Option<OmenInfo> = r
+        .try_get::<Option<String>, _>("omen_description")
+        .ok()
+        .flatten()
+        .map(|d| OmenInfo { description: d });
+
+    let map_tier: Option<i64> = r.try_get::<Option<i64>, _>("map_tier").ok().flatten();
+    let talisman_tier: Option<i64> =
+        r.try_get::<Option<i64>, _>("talisman_tier").ok().flatten();
+    let breachstone: Option<BreachstoneInfo> = r
+        .try_get::<Option<String>, _>("breachstone")
+        .ok()
+        .flatten()
+        .and_then(|s| serde_json::from_str(&s).ok());
+    let quest_description: Option<String> =
+        r.try_get::<Option<String>, _>("quest_description").ok().flatten();
+
     Item {
         id: r.try_get("id").unwrap_or_default(),
         name: r.try_get("name").unwrap_or_default(),
@@ -572,6 +604,11 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
         flask,
         soul_core,
         essence,
+        omen,
+        map_tier,
+        talisman_tier,
+        breachstone,
+        quest_description,
         implicit_mods,
         explicit_mods,
     }

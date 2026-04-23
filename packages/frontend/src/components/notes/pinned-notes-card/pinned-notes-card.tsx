@@ -1,5 +1,5 @@
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import ReactMarkdown from 'react-markdown';
 import { usePinnedNotes } from '@/queries/notes';
 import { Card } from '../../ui/card/card';
@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../../ui/loading-spinner/loading-spinner';
 import { pinnedNotesCardStyles } from './pinned-notes-card.styles';
 
 export function PinnedNotesCard() {
+  const navigate = useNavigate();
   const { data: pinnedNotes, isLoading } = usePinnedNotes();
 
   if (isLoading) {
@@ -23,7 +24,7 @@ export function PinnedNotesCard() {
     <Card
       title="Pinned Notes"
       icon={<DocumentTextIcon className="w-5 h-5" />}
-      rightAction={{ label: 'All Notes', onClick: () => {} }}>
+      rightAction={{ label: 'All Notes', onClick: () => navigate({ to: '/notes' }) }}>
       {notes.length === 0 ? (
         <div className={pinnedNotesCardStyles.empty}>
           <p className={pinnedNotesCardStyles.emptyText}>No pinned notes</p>
@@ -38,7 +39,7 @@ export function PinnedNotesCard() {
       ) : (
         <div className={pinnedNotesCardStyles.grid}>
           {notes.map(note => (
-            <Link key={note.id} to="/notes" className="block">
+            <Link key={note.id} to="/notes" search={{ noteId: note.id }} className="block">
               <div className={pinnedNotesCardStyles.noteCard}>
                 <p className={pinnedNotesCardStyles.noteTitle}>{note.title}</p>
                 {note.content ? (

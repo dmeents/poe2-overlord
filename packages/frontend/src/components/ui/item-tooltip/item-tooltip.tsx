@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { Fragment, memo, useCallback, useState } from 'react';
 import { HoverCard } from '@/components/ui/hover-card/hover-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner/loading-spinner';
 import { useItemByName, useItemImage } from '@/queries/item-data';
@@ -57,16 +57,17 @@ function rarityClass(frame: number): string {
   return styles.nameNormal;
 }
 
-/** Parses `[text]` / `[display|text]` wiki markup into plain/styled segments. */
+/** Parses `[text]` / `[display|text]` wiki markup and `\n` line breaks. */
 function parseDescription(text: string) {
-  return text.split(/(\[[^\]]+\])/g).map((seg, i) => {
+  return text.split(/(\[[^\]]+\]|\n)/g).map((seg, i) => {
+    if (seg === '\n') return <br key={`br-${i}`} />;
     const match = seg.match(/^\[(?:[^\]|]+\|)?([^\]]+)\]$/);
     return match ? (
-      <span key={`${i}:${seg}`} className={styles.descriptionLink}>
-        {match[1]}
-      </span>
+      <Fragment key={`${i}:${seg}`}>
+        <span className={styles.descriptionLink}>{match[1]}</span>
+      </Fragment>
     ) : (
-      seg
+      seg || null
     );
   });
 }
@@ -151,8 +152,10 @@ interface ItemTooltipContentProps {
 }
 
 function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemTooltipContentProps) {
-  const { weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence } =
-    itemData;
+  const {
+    weapon, defences, shield, gem, flask, currency, requirements, soul_core, essence,
+    omen, map_tier, talisman_tier, breachstone, quest_description,
+  } = itemData;
 
   // Route the POE1-shaped `web.poecdn.com/image/Art/...` URLs through the
   // backend proxy, which serves the POE2 art from cdn.poe2db.tw. While the
@@ -170,7 +173,12 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
       defences.movement_speed > 0);
   const hasRequirements =
     requirements.str_req > 0 || requirements.dex_req > 0 || requirements.int_req > 0;
-  const hasMeta = currency !== null || itemData.drop_level > 0 || soul_core !== null;
+  const hasMeta =
+    currency !== null ||
+    itemData.drop_level > 0 ||
+    soul_core !== null ||
+    map_tier !== null ||
+    talisman_tier !== null;
   const gemScaling = gem ? gemScalingAttributes(gem) : null;
   const flaskTypeLabel = flask?.flask_type ? (FLASK_TYPE_LABEL[flask.flask_type] ?? null) : null;
   const implicitModGroups = groupModsBySlot(itemData.implicit_mods);
@@ -197,6 +205,28 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
       {/* Name + category */}
       <div className={`${styles.name} ${rarityClass(itemData.rarity_frame)}`}>{itemName}</div>
       <div className={styles.categoryBadge}>{itemData.category}</div>
+
+      {/* Corrupted / unmodifiable state badges */}
+      {(itemData.is_corrupted || itemData.unmodifiable) && (
+        <div className="flex gap-1">
+          {itemData.is_corrupted && (
+            <span className={styles.corruptedBadge}>Corrupted</span>
+          )}
+          {itemData.unmodifiable && (
+            <span className={styles.unmodifiableBadge}>Unmodifiable</span>
+          )}
+        </div>
+      )}
+
+      {/* Quest item description */}
+      {quest_description && (
+        <p className={styles.description}>{parseDescription(quest_description)}</p>
+      )}
+
+      {/* Omen activation effect */}
+      {omen && (
+        <p className={styles.description}>{parseDescription(omen.description)}</p>
+      )}
 
       {/* Currency description */}
       {currency?.description && (
@@ -377,13 +407,25 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
         </div>
       )}
 
-      {/* Common metadata: stack size + drop level + soul-core required level */}
+      {/* Common metadata: stack size, drop level, soul-core level, map/talisman tier */}
       {hasMeta && (
         <div className={styles.statsGrid}>
           {currency && (
             <>
               <span className={styles.statsLabel}>Stack size</span>
               <span className={styles.statsValue}>{currency.stack_size}</span>
+            </>
+          )}
+          {map_tier !== null && (
+            <>
+              <span className={styles.statsLabel}>Tier</span>
+              <span className={styles.statsValue}>{map_tier}</span>
+            </>
+          )}
+          {talisman_tier !== null && (
+            <>
+              <span className={styles.statsLabel}>Tier</span>
+              <span className={styles.statsValue}>{talisman_tier}</span>
             </>
           )}
           {soul_core && soul_core.required_level > 0 && (
@@ -397,6 +439,22 @@ function ItemTooltipContent({ itemName, itemData, fallbackImageUrl }: ItemToolti
               <span className={styles.statsLabel}>Drop level</span>
               <span className={styles.statsValue}>{itemData.drop_level}</span>
             </>
+          )}
+        </div>
+      )}
+
+      {/* Breachstone: tier + upgrade chain */}
+      {breachstone && (
+        <div className={styles.section}>
+          <div className={styles.statsGrid}>
+            <span className={styles.statsLabel}>Tier</span>
+            <span className={styles.statsValue}>{breachstone.tier}</span>
+          </div>
+          {breachstone.upgrades_to && (
+            <div className={`${styles.modLine} text-stone-400 italic mt-1`}>
+              Upgrades into {breachstone.upgrades_to}
+              {breachstone.upgrade_currency ? ` using ${breachstone.upgrade_currency}` : ''}
+            </div>
           )}
         </div>
       )}

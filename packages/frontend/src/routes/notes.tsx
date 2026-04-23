@@ -1,6 +1,6 @@
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PageLayout } from '../components/layout/page-layout/page-layout';
 import { DeleteNoteModal } from '../components/notes/delete-note-modal/delete-note-modal';
 import { NoteEditor } from '../components/notes/note-editor/note-editor';
@@ -22,9 +22,13 @@ import type { NoteData } from '../types/notes';
 
 export const Route = createFileRoute('/notes')({
   component: NotesPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    noteId: typeof search.noteId === 'string' ? search.noteId : undefined,
+  }),
 });
 
 function NotesPage() {
+  const { noteId: initialNoteId } = Route.useSearch();
   const { characters } = useCharacter();
   const { data: notes = [], isLoading } = useNotes();
   const createNote = useCreateNote();
@@ -36,6 +40,13 @@ function NotesPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [deletingNote, setDeletingNote] = useState<NoteData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (initialNoteId && notes.length > 0) {
+      const exists = notes.some(n => n.id === initialNoteId);
+      if (exists) setSelectedNoteId(initialNoteId);
+    }
+  }, [initialNoteId, notes]);
 
   const { result: filteredNotes } = useListControls(notes, noteListConfig);
 

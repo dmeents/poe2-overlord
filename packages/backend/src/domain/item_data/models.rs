@@ -137,6 +137,23 @@ pub struct EssenceModifier {
     pub mod_text: String,
 }
 
+/// Omen metadata: the full effect description (sourced from CurrencyItems.Description).
+/// Tracked separately from CurrencyData so the tooltip renders omens distinctly.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OmenInfo {
+    pub description: String,
+}
+
+/// Breachstone metadata: map-tier equivalent and optional upgrade chain.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BreachstoneInfo {
+    pub tier: i64,
+    #[serde(default)]
+    pub upgrades_to: Option<String>,
+    #[serde(default)]
+    pub upgrade_currency: Option<String>,
+}
+
 /// Essence-specific metadata: tier, Perfect flag, upgrade path, and the
 /// per-item-class guaranteed modifiers the essence grants when used.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -197,6 +214,21 @@ pub struct Item {
     /// Populated for essence currency items only.
     #[serde(default)]
     pub essence: Option<EssenceInfo>,
+    /// Populated for omen currency items only; holds the activation effect text.
+    #[serde(default)]
+    pub omen: Option<OmenInfo>,
+    /// Waystone/map tier (1–16+); populated for Map-class items only.
+    #[serde(default)]
+    pub map_tier: Option<i64>,
+    /// Talisman tier; populated for Talisman-class items only.
+    #[serde(default)]
+    pub talisman_tier: Option<i64>,
+    /// Breachstone tier and upgrade chain; populated for Breachstone items only.
+    #[serde(default)]
+    pub breachstone: Option<BreachstoneInfo>,
+    /// Quest item description text; populated for QuestItem-class items only.
+    #[serde(default)]
+    pub quest_description: Option<String>,
     pub implicit_mods: Vec<ModDisplay>,
     pub explicit_mods: Vec<ModDisplay>,
 }
@@ -405,6 +437,21 @@ pub struct ImportedSoulCore {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct ImportedOmen {
+    pub description: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImportedBreachstone {
+    #[serde(default)]
+    pub tier: i64,
+    #[serde(default)]
+    pub upgrades_to: Option<String>,
+    #[serde(default)]
+    pub upgrade_currency: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct ImportedEssenceModifier {
     #[serde(default)]
     pub target_category: Option<String>,
@@ -473,6 +520,16 @@ pub struct ImportedItem {
     pub soul_core: Option<ImportedSoulCore>,
     #[serde(default)]
     pub essence: Option<ImportedEssence>,
+    #[serde(default)]
+    pub omen: Option<ImportedOmen>,
+    #[serde(default)]
+    pub map_tier: Option<i64>,
+    #[serde(default)]
+    pub talisman_tier: Option<i64>,
+    #[serde(default)]
+    pub breachstone: Option<ImportedBreachstone>,
+    #[serde(default)]
+    pub quest_description: Option<String>,
     #[serde(default)]
     pub implicit_mods: Vec<ImportedModDisplay>,
     #[serde(default)]

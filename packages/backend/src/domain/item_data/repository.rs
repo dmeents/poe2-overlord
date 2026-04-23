@@ -564,15 +564,16 @@ fn row_to_item(r: &sqlx::sqlite::SqliteRow) -> Item {
         .map(|d| OmenInfo { description: d });
 
     let map_tier: Option<i64> = r.try_get::<Option<i64>, _>("map_tier").ok().flatten();
-    let talisman_tier: Option<i64> =
-        r.try_get::<Option<i64>, _>("talisman_tier").ok().flatten();
+    let talisman_tier: Option<i64> = r.try_get::<Option<i64>, _>("talisman_tier").ok().flatten();
     let breachstone: Option<BreachstoneInfo> = r
         .try_get::<Option<String>, _>("breachstone")
         .ok()
         .flatten()
         .and_then(|s| serde_json::from_str(&s).ok());
-    let quest_description: Option<String> =
-        r.try_get::<Option<String>, _>("quest_description").ok().flatten();
+    let quest_description: Option<String> = r
+        .try_get::<Option<String>, _>("quest_description")
+        .ok()
+        .flatten();
 
     Item {
         id: r.try_get("id").unwrap_or_default(),

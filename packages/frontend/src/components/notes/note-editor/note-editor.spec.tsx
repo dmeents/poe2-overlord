@@ -104,8 +104,11 @@ describe('NoteEditor', () => {
       isCreating: false,
     };
 
-    it('pre-fills title and content from existing note', () => {
+    it('pre-fills title and content from existing note', async () => {
+      const user = userEvent.setup();
       render(<NoteEditor {...editProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Write' }));
 
       expect(screen.getByPlaceholderText('Note title...')).toHaveValue('Build Guide');
       expect(screen.getByPlaceholderText('Write your note in markdown...')).toHaveValue(
@@ -194,8 +197,11 @@ describe('NoteEditor', () => {
   });
 
   describe('loading state', () => {
-    it('disables all inputs when isLoading is true', () => {
+    it('disables all inputs when isLoading is true', async () => {
+      const user = userEvent.setup();
       render(<NoteEditor {...defaultProps} note={mockNote} isCreating={false} isLoading={true} />);
+
+      await user.click(screen.getByRole('button', { name: 'Write' }));
 
       expect(screen.getByPlaceholderText('Note title...')).toBeDisabled();
       expect(screen.getByPlaceholderText('Write your note in markdown...')).toBeDisabled();

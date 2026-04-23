@@ -37,7 +37,7 @@ tauri-plugin-window-state = "2.4.0"
 tokio = { version = "1", features = ["full"] }
 tokio-util = "0.7"
 async-trait = "0.1"
-sysinfo = "0.32"
+sysinfo = "0.38"
 dirs = "5.0"
 notify = "6.1"
 thiserror = "1.0"

@@ -29,7 +29,7 @@ export const NoteEditor = memo(function NoteEditor({
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
   const [characterId, setCharacterId] = useState<string | null>(note?.character_id ?? null);
-  const [mode, setMode] = useState<'write' | 'preview'>('write');
+  const [mode, setMode] = useState<'write' | 'preview'>(isCreating ? 'write' : 'preview');
 
   // Reset form when note changes
   const noteId = note?.id;
@@ -39,7 +39,7 @@ export const NoteEditor = memo(function NoteEditor({
     setTitle(note?.title ?? '');
     setContent(note?.content ?? '');
     setCharacterId(note?.character_id ?? null);
-    setMode('write');
+    setMode(noteId ? 'preview' : 'write');
   }
 
   const handleSave = useCallback(() => {

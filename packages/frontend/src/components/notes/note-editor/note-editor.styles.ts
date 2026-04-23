@@ -9,7 +9,7 @@ export const noteEditorStyles = {
   textarea:
     'flex-1 w-full min-h-48 bg-stone-800/40 border border-stone-700/60 rounded text-sm text-stone-200 placeholder-stone-500 p-3 font-mono resize-none focus:outline-none focus:border-ember-500/40 transition-colors',
   preview:
-    'flex-1 min-h-48 prose prose-invert prose-sm max-w-none p-3 bg-stone-800/40 border border-stone-700/60 rounded text-stone-200 overflow-auto [&_h1]:text-stone-100 [&_h2]:text-stone-100 [&_h3]:text-stone-100 [&_a]:text-ember-400 [&_code]:bg-stone-700 [&_code]:text-ember-300 [&_pre]:bg-stone-900 [&_blockquote]:border-ember-500/40 [&_li]:text-stone-300',
+    'flex-1 min-h-48 p-3 bg-stone-800/40 border border-stone-700/60 rounded overflow-auto markdown-preview',
   emptyPreview: 'text-stone-500 italic text-sm',
   footer: 'flex items-center gap-2 mt-4 pt-3 border-t border-stone-800',
   characterSelect: 'flex-1',
